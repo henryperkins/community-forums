@@ -22,6 +22,45 @@ $author = ($p['author_display_name'] ?? '') !== '' ? $p['author_display_name'] :
                 <p><?= $e($p['body']) ?></p>
             <?php endif; ?>
         </div>
+        <?php
+        // Reactions (P2-02). $counts: emoji=>n; $mine: emoji the viewer added.
+        $engagement = $engagement ?? false;
+        $counts = $counts ?? [];
+        $mine = $mine ?? [];
+        $allowed = $allowed_emoji ?? [];
+        if ($engagement):
+            $threadPath = '/t/' . (int) $thread['id'] . '-' . $thread['slug'];
+        ?>
+        <div class="reactions" data-post="<?= (int) $p['id'] ?>">
+            <?php foreach ($counts as $emoji => $n): ?>
+                <?php $on = in_array($emoji, $mine, true); ?>
+                <?php if ($current_user !== null): ?>
+                    <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
+                        <?= $this->csrfField() ?>
+                        <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
+                        <button type="submit" class="reaction<?= $on ? ' reaction-on' : '' ?>" aria-pressed="<?= $on ? 'true' : 'false' ?>"
+                                title="<?= $on ? 'Remove your reaction' : 'React' ?>"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></button>
+                    </form>
+                <?php else: ?>
+                    <span class="reaction reaction-static"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></span>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            <?php if ($current_user !== null && $allowed !== []): ?>
+                <details class="reaction-add">
+                    <summary class="reaction reaction-pick" title="Add a reaction">＋</summary>
+                    <div class="reaction-menu">
+                        <?php foreach ($allowed as $emoji): ?>
+                            <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
+                                <button type="submit" class="reaction"><?= $e($emoji) ?></button>
+                            </form>
+                        <?php endforeach; ?>
+                    </div>
+                </details>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
         <?php if ($owner || $canModerate): ?>
             <div class="post-actions">
                 <?php if ($owner): ?>

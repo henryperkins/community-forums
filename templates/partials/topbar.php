@@ -4,6 +4,16 @@
         <a class="brand" href="/"><?= $e($site_name) ?></a>
         <div class="topbar-right">
             <?php if ($current_user !== null): ?>
+                <?php if (!empty($features['engagement'])): ?>
+                    <a class="topbar-link" href="/inbox">Inbox</a>
+                <?php endif; ?>
+                <?php if (!empty($features['notifications'])): ?>
+                    <a class="topbar-link bell" href="/notifications" data-bell title="Notifications">
+                        <span aria-hidden="true">🔔</span>
+                        <span class="bell-count" data-bell-count hidden>0</span>
+                        <span class="sr-only">Notifications</span>
+                    </a>
+                <?php endif; ?>
                 <a class="topbar-user" href="/u/<?= $e($current_user->username()) ?>">
                     <?= $this->partial('partials/monogram', ['name' => $current_user->displayName(), 'username' => $current_user->username()]) ?>
                     <span class="topbar-name"><?= $e($current_user->displayName()) ?></span>

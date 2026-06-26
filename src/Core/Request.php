@@ -120,6 +120,29 @@ final class Request
         return $ua !== null ? substr($ua, 0, 255) : null;
     }
 
+    /** A request header by name (e.g. "Accept", "X-Requested-With"). */
+    public function header(string $name): ?string
+    {
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
+        $value = $this->server[$key] ?? null;
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Progressive enhancement: a request prefers JSON when it sets
+     * ?format=json, Accept: application/json, or the AJAX header. Lets each
+     * engagement endpoint serve a no-JS redirect or a JSON fragment.
+     */
+    public function wantsJson(): bool
+    {
+        if ((string) ($this->input('format') ?? '') === 'json') {
+            return true;
+        }
+        $accept = (string) ($this->header('Accept') ?? '');
+        $requestedWith = strtolower((string) ($this->header('X-Requested-With') ?? ''));
+        return str_contains($accept, 'application/json') || $requestedWith === 'xmlhttprequest';
+    }
+
     /** Client IP for rate-limit keying only (never stored in Phase 1). */
     public function ip(): string
     {

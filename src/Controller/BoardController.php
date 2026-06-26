@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardRepository;
+use App\Repository\SettingRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 
@@ -46,6 +49,18 @@ final class BoardController extends Controller
         $total = $threadRepo->countByBoard((int) $board['id']);
         $page = $this->pageNumber($request, $total, $perPage);
         $threads = $threadRepo->listByBoard((int) $board['id'], $perPage, ($page - 1) * $perPage);
+
+        // Annotate unread state for the signed-in reader (P2-01).
+        if ($user !== null && $this->container->get(FeatureFlags::class)->enabled('engagement') && $threads !== []) {
+            $cutover = $this->container->get(SettingRepository::class)
+                ->getString('engagement_cutover_at', ThreadUserRepository::NO_CUTOVER);
+            $ids = array_map(static fn (array $t): int => (int) $t['id'], $threads);
+            $unread = $this->container->get(ThreadUserRepository::class)->unreadFlags($user->id(), $ids, $cutover);
+            foreach ($threads as &$t) {
+                $t['is_unread'] = $unread[(int) $t['id']] ?? false;
+            }
+            unset($t);
+        }
 
         $canPost = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)

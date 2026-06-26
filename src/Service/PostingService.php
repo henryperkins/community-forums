@@ -17,6 +17,7 @@ use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Support\Markdown;
+use App\Support\MentionParser;
 use App\Support\Str;
 
 /**
@@ -37,6 +38,7 @@ final class PostingService
         private WriteGate $writeGate,
         private BoardPolicy $policy,
         private Config $config,
+        private ?NotificationService $notifications = null,
     ) {
     }
 
@@ -77,6 +79,14 @@ final class PostingService
             $this->threads->updateLastPost($threadId, $postId, $user->id(), $now);
             $this->boards->onThreadCreated($boardId, $threadId, $now);
             $this->users->incrementPostCount($user->id(), 1);
+
+            if ($this->notifications !== null) {
+                $threadCtx = ['id' => $threadId, 'board_id' => $boardId, 'board_visibility' => $board['visibility'] ?? 'public'];
+                // The author follows their own thread so they hear about replies;
+                // they are still excluded from this post's own fan-out.
+                $this->notifications->autoSubscribeAuthor($user->id(), $threadId);
+                $this->notifications->fanOutNewPost($user->id(), $threadCtx, $postId, true, $body);
+            }
 
             return ['thread_id' => $threadId, 'slug' => $slug];
         });
@@ -120,6 +130,15 @@ final class PostingService
             $this->boards->onReplyCreated((int) $thread['board_id'], $now);
             $this->users->incrementPostCount($user->id(), 1);
 
+            if ($this->notifications !== null) {
+                $threadCtx = [
+                    'id' => $threadId,
+                    'board_id' => (int) $thread['board_id'],
+                    'board_visibility' => $thread['board_visibility'] ?? 'public',
+                ];
+                $this->notifications->fanOutNewPost($user->id(), $threadCtx, $postId, false, $body);
+            }
+
             return $postId;
         });
     }
@@ -140,7 +159,24 @@ final class PostingService
         $body = (string) ($input['body'] ?? '');
         $this->validate(null, $body, $input, requireTitle: false);
 
-        $this->posts->update($postId, $body, $this->markdown->render($body), $user->id());
+        // Only NEW @mentions introduced by the edit are notified; existing ones
+        // are not resent (PHASE_2_PLAN §8 "Mention edit").
+        $before = MentionParser::parse((string) $post['body']);
+        $after = MentionParser::parse($body);
+        $beforeLower = array_map('strtolower', $before);
+        $added = array_values(array_filter($after, static fn (string $h): bool => !in_array(strtolower($h), $beforeLower, true)));
+
+        $this->db->transaction(function () use ($post, $postId, $body, $user, $added): void {
+            $this->posts->update($postId, $body, $this->markdown->render($body), $user->id());
+            if ($this->notifications !== null && $added !== []) {
+                $threadCtx = [
+                    'id' => (int) $post['thread_id'],
+                    'board_id' => (int) $post['board_id'],
+                    'board_visibility' => $post['board_visibility'] ?? 'public',
+                ];
+                $this->notifications->notifyMentions($user->id(), $threadCtx, $postId, $added);
+            }
+        });
 
         return $post;
     }
@@ -187,8 +223,45 @@ final class PostingService
         if ((int) $post['is_op'] === 0) {
             $this->threads->incrementReplyCount((int) $post['thread_id'], -1);
         }
+        // Reputation derives from reactions received; remove this post's
+        // contribution (non-self reactions) so rep recomputes downward
+        // (COMMUNITY §2.1, PHASE_2_PLAN §7.3).
+        $received = $this->receivedReactionCount((int) $post['id'], (int) $post['user_id']);
+        if ($received > 0) {
+            $this->users->incrementReputation((int) $post['user_id'], -$received);
+        }
         $this->threads->recomputeLastPost((int) $post['thread_id']);
         $this->boards->recomputeLastPost((int) $post['board_id']);
+    }
+
+    /**
+     * Inverse of applyDeletionCounters for a restored post (moderation restore,
+     * P2-08). Re-adds counters and the post's reputation contribution.
+     *
+     * @param array<string,mixed> $post
+     */
+    public function applyRestorationCounters(array $post): void
+    {
+        $this->boards->incrementPostCount((int) $post['board_id'], 1);
+        $this->users->incrementPostCount((int) $post['user_id'], 1);
+        if ((int) $post['is_op'] === 0) {
+            $this->threads->incrementReplyCount((int) $post['thread_id'], 1);
+        }
+        $received = $this->receivedReactionCount((int) $post['id'], (int) $post['user_id']);
+        if ($received > 0) {
+            $this->users->incrementReputation((int) $post['user_id'], $received);
+        }
+        $this->threads->recomputeLastPost((int) $post['thread_id']);
+        $this->boards->recomputeLastPost((int) $post['board_id']);
+    }
+
+    /** Reactions on a post from users other than the author (reputation contribution). */
+    private function receivedReactionCount(int $postId, int $authorId): int
+    {
+        return (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM reactions WHERE post_id = ? AND user_id <> ?',
+            [$postId, $authorId],
+        );
     }
 
     /**

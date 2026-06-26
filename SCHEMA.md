@@ -309,6 +309,7 @@ CREATE TABLE dm_messages (
   conversation_id BIGINT UNSIGNED NOT NULL,
   user_id         BIGINT UNSIGNED NOT NULL,
   body            TEXT            NOT NULL,
+  body_html       MEDIUMTEXT      NULL,                       -- cached sanitised render, DM parity with posts.body_html (§7 #14); Phase 2
   created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dm_conv (conversation_id, created_at),
@@ -327,6 +328,7 @@ CREATE TABLE reports (
   status      ENUM('open','triaged','resolved','dismissed') NOT NULL DEFAULT 'open', -- 'triaged' = claimed (ADMIN §3.2)
   assigned_to BIGINT UNSIGNED NULL,                         -- ADMIN §10.2 (queue claim)
   handled_by  BIGINT UNSIGNED NULL,
+  notify_reporter TINYINT(1)  NOT NULL DEFAULT 0,            -- reporter outcome-notification opt-in (§7 #15; ADMIN §3.1/§11); Phase 2
   created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   resolved_at DATETIME        NULL,
   PRIMARY KEY (id),
@@ -693,6 +695,10 @@ Where the docs genuinely disagreed, this file picks one answer. Each is reversib
 12. **`oauth_identities.avatar_url` added (`VARCHAR(512) NULL`).** DECISIONS §5 #4 schedules **OAuth avatar-import for Phase 2**, and PHASE_1_MIGRATIONS §4 puts `users.avatar_source` in Phase 2 — but the consolidated schema gave the imported provider avatar nowhere to live (`users.avatar_path` is Phase 3, for the local uploads/Gravatar pipeline). Added `oauth_identities.avatar_url` as the Phase-2 cache of the provider avatar: import sets `users.avatar_source='oauth'` and renders from it (monogram fallback). The local copy (`users.avatar_path`), user uploads, and Gravatar stay Phase 3 (PHASE_3_PLAN P3-12). PHASE_2_PLAN P2-10 / §7.1 group 5 now build `avatar_source` + `avatar_url`. (Reconciled 2026-06-26.)
 
 13. **`notifications` enum gains `'announcement'`; admin announcements/broadcast get a schema home (no new table).** ADMIN §7.4 and PHASE_2_PLAN §3 (L92) commit Phase 2 to admin **announcements/broadcast** — a site-wide banner or pinned announcement plus an opt-in broadcast notification/email — and USER §4.6 lists a "System / announcement" notification type, but the `notifications` enum had no value for it. Added `'announcement'` to `notifications.type` for the in-app broadcast/system notice. The **banner** lives in `settings` (a `site_announcement` JSON key: active flag, message, dismissible); a **pinned announcement** is an ordinary pinned thread; the broadcast **email** reuses `email_deliveries.kind='system'`. No `announcements` table is required. Build phase: **Phase 2** (PHASE_2_PLAN §7). (Reconciled 2026-06-26.)
+
+14. **`dm_messages.body_html` added (`MEDIUMTEXT NULL`).** The unified composer (COMPOSER) treats DM bodies as canonical Markdown like posts; caching the sanitised render mirrors `posts.body_html` and avoids re-sanitising on every read. The consolidated `dm_messages` had only `body`. Added as a nullable cache column (Phase 2, P2-07). (Reconciled 2026-06-26 during the Phase-2 build review.)
+
+15. **`reports.notify_reporter` added (`TINYINT(1) NOT NULL DEFAULT 0`).** PHASE_2_PLAN §3 (L70) and ADMIN §3.1/§11 commit Phase 2 to **reporter outcome-notifications** ("notify me of the outcome" when a report resolves/dismisses), but the consolidated `reports` table had no opt-in flag for it. Added as a Phase-2 column (P2-08), mirroring how #9/#10/#12 gave other committed Phase-2 features a schema home. (Reconciled 2026-06-26 during the Phase-2 build review.)
 
 ## 8. Foreshadowed but not yet committed
 

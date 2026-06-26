@@ -38,6 +38,15 @@ return [
         'hsts' => Env::bool('SECURITY_HSTS', true),
     ],
 
+    'mail' => [
+        // 'sendmail' uses PHP mail(); swap to an SMTP/provider adapter behind the
+        // App\Mail\Mailer interface later. Empty `from` ⇒ not configured ⇒ email
+        // fails closed (in-app notifications still deliver).
+        'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
+        'from' => Env::get('MAIL_FROM', ''),
+        'from_name' => Env::get('MAIL_FROM_NAME', 'RetroBoards'),
+    ],
+
     'paths' => [
         'base' => dirname(__DIR__),
         'templates' => dirname(__DIR__) . '/templates',

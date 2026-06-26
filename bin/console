@@ -7,6 +7,17 @@ use App\Core\Config;
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Migrator;
+use App\Mail\ArrayMailer;
+use App\Mail\Mailer;
+use App\Mail\SendmailMailer;
+use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailSuppressionRepository;
+use App\Repository\PostRepository;
+use App\Repository\SettingRepository;
+use App\Repository\UserRepository;
+use App\Service\RepairService;
+use App\Worker\DailyDigestWorker;
+use App\Worker\NotificationEmailWorker;
 
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
@@ -21,6 +32,18 @@ $log = static fn (string $m): int => fwrite(STDOUT, $m . PHP_EOL);
 $migrator = static function () use ($config): Migrator {
     $db = new Database($config->get('db'));
     return new Migrator($db->pdo(), $config->get('paths.migrations'));
+};
+
+/** A Database bound to the configured database. */
+$database = static fn (): Database => new Database($config->get('db'));
+
+/** Build the configured mail transport (matches App::buildContainer). */
+$mailer = static function () use ($config): Mailer {
+    $mail = (array) $config->get('mail', []);
+    if (($mail['driver'] ?? 'sendmail') === 'array') {
+        return new ArrayMailer();
+    }
+    return new SendmailMailer((string) ($mail['from'] ?? ''), (string) ($mail['from_name'] ?? 'RetroBoards'));
 };
 
 try {
@@ -51,16 +74,79 @@ try {
             $log('APP_KEY=' . bin2hex(random_bytes(32)));
             break;
 
+        case 'repair':
+        case 'repair:all':
+            $result = (new RepairService($database()))->repairAll();
+            foreach ($result as $name => $rows) {
+                $log(sprintf('  repaired %-18s (%d rows)', $name, $rows));
+            }
+            $log('Counter reconciliation complete.');
+            break;
+
+        case 'repair:counters':
+            $svc = new RepairService($database());
+            $svc->repairUserPostCounts();
+            $svc->repairThreadCounters();
+            $svc->repairBoardCounters();
+            $log('Post/thread/board counters reconciled.');
+            break;
+
+        case 'repair:reputation':
+            (new RepairService($database()))->repairReputation();
+            $log('Reputation recomputed from reactions.');
+            break;
+
+        case 'worker:email':
+            $db = $database();
+            $worker = new NotificationEmailWorker(
+                new EmailDeliveryRepository($db),
+                new EmailSuppressionRepository($db),
+                new PostRepository($db),
+                new UserRepository($db),
+                $mailer(),
+                $config,
+            );
+            $stats = $worker->run((int) ($argv[2] ?? 100));
+            $log(sprintf('Instant email: sent=%d suppressed=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['failed'], $stats['skipped']));
+            break;
+
+        case 'worker:digest':
+            $db = $database();
+            $worker = new DailyDigestWorker(
+                $db,
+                new EmailDeliveryRepository($db),
+                new EmailSuppressionRepository($db),
+                $mailer(),
+                $config,
+            );
+            $stats = $worker->run(gmdate('Y-m-d H:i:s'));
+            $log(sprintf('Daily digest: sent=%d skipped_empty=%d suppressed=%d', $stats['sent'], $stats['skipped_empty'], $stats['suppressed']));
+            break;
+
+        case 'engagement:cutover':
+            // Record the Phase 2 unread cutover timestamp. Content before this
+            // moment starts read; later activity uses lazy thread_user rows.
+            $when = $argv[2] ?? gmdate('Y-m-d H:i:s');
+            (new SettingRepository($database()))->set('engagement_cutover_at', $when);
+            $log("Unread cutover set to $when UTC.");
+            break;
+
         case 'help':
         default:
             $log('RetroBoards console');
             $log('Usage: php bin/console <command>');
             $log('');
-            $log('  migrate            Apply pending migrations');
-            $log('  migrate:fresh      Drop all tables and re-migrate');
-            $log('  migrate:rollback   Roll back applied migrations');
-            $log('  migrate:status     Show migration status');
-            $log('  key:generate       Print a fresh APP_KEY');
+            $log('  migrate              Apply pending migrations');
+            $log('  migrate:fresh        Drop all tables and re-migrate');
+            $log('  migrate:rollback     Roll back applied migrations');
+            $log('  migrate:status       Show migration status');
+            $log('  key:generate         Print a fresh APP_KEY');
+            $log('  repair               Reconcile all denormalised counters + reputation');
+            $log('  repair:counters      Reconcile post/thread/board counters');
+            $log('  repair:reputation    Recompute reputation from reactions');
+            $log('  engagement:cutover [UTC]  Set the unread cutover timestamp');
+            $log('  worker:email [limit]  Drain the instant notification-email queue');
+            $log('  worker:digest         Send due daily digests');
             break;
     }
 } catch (Throwable $e) {

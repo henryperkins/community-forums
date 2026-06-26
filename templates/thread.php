@@ -8,6 +8,30 @@
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
             <?= $e($thread['title']) ?>
         </h1>
+        <?php if (($engagement ?? false) && $current_user !== null): ?>
+            <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
+                <?= $this->csrfField() ?>
+                <input type="hidden" name="return" value="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">
+                <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>">
+                    <?= ($is_starred ?? false) ? '★ Starred' : '☆ Star' ?>
+                </button>
+            </form>
+        <?php endif; ?>
+        <?php if (($notifications_on ?? false) && $current_user !== null): ?>
+            <?php $freq = $subscription['frequency'] ?? 'off'; ?>
+            <form class="inline subscribe-form" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
+                <?= $this->csrfField() ?>
+                <label class="sr-only" for="sub-freq">Notify me</label>
+                <select class="input input-small" id="sub-freq" name="frequency">
+                    <option value="instant"<?= $freq === 'instant' ? ' selected' : '' ?>>Notify: Instant</option>
+                    <option value="daily"<?= $freq === 'daily' ? ' selected' : '' ?>>Notify: Daily</option>
+                    <option value="off"<?= $freq === 'off' ? ' selected' : '' ?>>Notify: Off</option>
+                </select>
+                <input type="hidden" name="in_app" value="1">
+                <input type="hidden" name="email" value="1">
+                <button class="linkbtn" type="submit">Save</button>
+            </form>
+        <?php endif; ?>
         <?php if ($is_admin): ?>
             <div class="mod-bar">
                 <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
@@ -27,7 +51,14 @@
     <?php else: ?>
         <div class="post-stream">
             <?php foreach ($posts as $p): ?>
-                <?= $this->partial('partials/post', ['p' => $p, 'thread' => $thread]) ?>
+                <?= $this->partial('partials/post', [
+                    'p' => $p,
+                    'thread' => $thread,
+                    'engagement' => $engagement ?? false,
+                    'counts' => ($reaction_counts ?? [])[(int) $p['id']] ?? [],
+                    'mine' => ($my_reactions ?? [])[(int) $p['id']] ?? [],
+                    'allowed_emoji' => $allowed_emoji ?? [],
+                ]) ?>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>

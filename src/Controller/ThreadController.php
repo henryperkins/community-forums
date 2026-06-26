@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\PostRepository;
+use App\Repository\ReactionRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
+use App\Service\ReactionService;
 use App\Support\Markdown;
 
 /**
@@ -62,6 +67,33 @@ final class ThreadController extends Controller
             && $this->container->get(BoardPolicy::class)->canPost(['visibility' => $thread['board_visibility']], $user)
             && !$locked;
 
+        // Engagement: grouped reaction counts for the visible posts, the
+        // viewer's own reactions, the star state, and advancing the read
+        // position to the newest post shown on this page (P2-01/P2-02).
+        $engagement = (bool) ($this->container->get(FeatureFlags::class)->enabled('engagement'));
+        $postIds = array_map(static fn (array $p): int => (int) $p['id'], $posts);
+        $reactionRepo = $this->container->get(ReactionRepository::class);
+        $reactionCounts = $engagement ? $reactionRepo->countsForPosts($postIds) : [];
+        $myReactions = [];
+        $isStarred = false;
+
+        if ($engagement && $user !== null) {
+            $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
+            $tuRepo = $this->container->get(ThreadUserRepository::class);
+            $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
+            if ($postIds !== []) {
+                $tuRepo->markRead($user->id(), (int) $thread['id'], max($postIds));
+            }
+        }
+
+        // Subscription state for the subscribe control (P2-03).
+        $notificationsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('notifications');
+        $subscription = null;
+        if ($notificationsOn && $user !== null) {
+            $subscription = $this->container->get(SubscriptionRepository::class)
+                ->effectiveForThread($user->id(), (int) $thread['id'], (int) $thread['board_id']);
+        }
+
         return $this->view('thread', array_merge([
             'thread' => $thread,
             'posts' => $posts,
@@ -73,6 +105,13 @@ final class ThreadController extends Controller
             'can_reply' => $canReply,
             'locked' => $locked,
             'is_admin' => $user?->isAdmin() ?? false,
+            'engagement' => $engagement,
+            'reaction_counts' => $reactionCounts,
+            'my_reactions' => $myReactions,
+            'allowed_emoji' => ReactionService::ALLOWED,
+            'is_starred' => $isStarred,
+            'notifications_on' => $notificationsOn,
+            'subscription' => $subscription,
             'reply_errors' => [],
             'reply_old' => [],
         ], $extra));

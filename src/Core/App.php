@@ -8,20 +8,35 @@ use App\Controller\AccountController;
 use App\Controller\AdminController;
 use App\Controller\AuthController;
 use App\Controller\BoardController;
+use App\Controller\EngagementController;
 use App\Controller\HealthController;
 use App\Controller\HomeController;
+use App\Controller\InboxController;
 use App\Controller\ModerationController;
 use App\Controller\PostController;
 use App\Controller\ProfileController;
+use App\Controller\NotificationController;
 use App\Controller\SetupController;
+use App\Controller\SubscriptionController;
 use App\Controller\ThreadController;
+use App\Controller\UnsubscribeController;
+use App\Mail\ArrayMailer;
+use App\Mail\Mailer;
+use App\Mail\SendmailMailer;
+use App\Repository\BlockRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailSuppressionRepository;
+use App\Repository\NotificationRepository;
 use App\Repository\PostRepository;
+use App\Repository\ReactionRepository;
 use App\Repository\SessionRepository;
 use App\Repository\SettingRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\ThreadUserRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\Csrf;
@@ -35,7 +50,10 @@ use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AuthService;
 use App\Service\ModerationService;
+use App\Service\NotificationService;
 use App\Service\PostingService;
+use App\Service\ReactionService;
+use App\Service\RepairService;
 use App\Service\SetupService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
@@ -195,6 +213,13 @@ final class App
             $nav = [];
         }
 
+        $features = [];
+        try {
+            $features = $container->get(FeatureFlags::class)->all();
+        } catch (Throwable) {
+            $features = [];
+        }
+
         $container->get(View::class)->share([
             'site_name' => $siteName,
             'app_name' => $appName,
@@ -203,6 +228,7 @@ final class App
             'flash' => $flash->current(),
             'request_path' => $request->path(),
             'nav' => $nav,
+            'features' => $features,
         ]);
     }
 
@@ -268,6 +294,44 @@ final class App
         $c->bind(ThreadRepository::class, fn (Container $c) => new ThreadRepository($c->get(Database::class)));
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
+        $c->bind(BlockRepository::class, fn (Container $c) => new BlockRepository($c->get(Database::class)));
+        $c->bind(ThreadUserRepository::class, fn (Container $c) => new ThreadUserRepository($c->get(Database::class)));
+        $c->bind(ReactionRepository::class, fn (Container $c) => new ReactionRepository($c->get(Database::class)));
+        $c->bind(SubscriptionRepository::class, fn (Container $c) => new SubscriptionRepository($c->get(Database::class)));
+        $c->bind(NotificationRepository::class, fn (Container $c) => new NotificationRepository($c->get(Database::class)));
+        $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
+        $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));
+
+        // Phase 2 shared services.
+        $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
+        $c->bind(RepairService::class, fn (Container $c) => new RepairService($c->get(Database::class)));
+        $c->bind(Mailer::class, function () use ($config): Mailer {
+            $mail = (array) $config->get('mail', []);
+            if (($mail['driver'] ?? 'sendmail') === 'array') {
+                return new ArrayMailer();
+            }
+            return new SendmailMailer((string) ($mail['from'] ?? ''), (string) ($mail['from_name'] ?? 'RetroBoards'));
+        });
+        $c->bind(NotificationService::class, fn (Container $c) => new NotificationService(
+            $c->get(Database::class),
+            $c->get(NotificationRepository::class),
+            $c->get(SubscriptionRepository::class),
+            $c->get(EmailDeliveryRepository::class),
+            $c->get(EmailSuppressionRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(FeatureFlags::class),
+            $c->get(Mailer::class),
+        ));
+        $c->bind(ReactionService::class, fn (Container $c) => new ReactionService(
+            $c->get(Database::class),
+            $c->get(ReactionRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(WriteGate::class),
+            $c->get(NotificationService::class),
+        ));
 
         // Session + CSRF.
         $c->bind(Session::class, fn (Container $c) => new Session(
@@ -299,6 +363,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(BoardPolicy::class),
             $config,
+            $c->get(NotificationService::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -336,6 +401,7 @@ final class App
 
         $r->get('/', [HomeController::class, 'index']);
         $r->get('/healthz', [HealthController::class, 'check']);
+        $r->get('/inbox', [InboxController::class, 'index']);
 
         $r->get('/c/{slug}', [BoardController::class, 'show']);
         $r->get('/t/{id}-{slug}', [ThreadController::class, 'show']);
@@ -361,6 +427,24 @@ final class App
         $r->post('/t/{id}/reply', [PostController::class, 'reply']);
         $r->post('/posts/{id}/edit', [PostController::class, 'edit']);
         $r->post('/posts/{id}/delete', [PostController::class, 'delete']);
+
+        // Engagement (P2-01/P2-02): reactions + stars.
+        $r->post('/posts/{id}/react', [EngagementController::class, 'react']);
+        $r->post('/t/{id}/star', [EngagementController::class, 'star']);
+
+        // Subscriptions + notifications (P2-03).
+        $r->post('/t/{id}/subscribe', [SubscriptionController::class, 'subscribeThread']);
+        $r->post('/b/{id}/subscribe', [SubscriptionController::class, 'subscribeBoard']);
+        $r->get('/notifications', [NotificationController::class, 'index']);
+        $r->get('/notifications/bell', [NotificationController::class, 'bell']);
+        $r->post('/notifications/read-all', [NotificationController::class, 'readAll']);
+        $r->post('/notifications/clear', [NotificationController::class, 'clear']);
+        $r->post('/notifications/{id}/read', [NotificationController::class, 'read']);
+
+        // Login-free one-click unsubscribe (P2-04).
+        $r->get('/unsubscribe', [UnsubscribeController::class, 'show']);
+        $r->post('/unsubscribe', [UnsubscribeController::class, 'confirm']);
+        $r->post('/resubscribe', [UnsubscribeController::class, 'resubscribe']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);

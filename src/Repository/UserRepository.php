@@ -37,9 +37,62 @@ final class UserRepository
         return $this->db->fetch('SELECT * FROM users WHERE email = ?', [$email]);
     }
 
+    /**
+     * Resolve a list of @handles (case-insensitive) to active accounts.
+     *
+     * @param list<string> $usernames
+     * @return array<int,array{id:int,username:string,email:string,status:string}>
+     */
+    public function findByUsernames(array $usernames): array
+    {
+        $usernames = array_values(array_unique(array_filter($usernames, static fn ($u): bool => is_string($u) && $u !== '')));
+        if ($usernames === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($usernames), '?'));
+        $rows = $this->db->fetchAll(
+            "SELECT id, username, email, status FROM users WHERE username IN ($place)",
+            $usernames,
+        );
+        return array_map(static fn (array $r): array => [
+            'id' => (int) $r['id'],
+            'username' => (string) $r['username'],
+            'email' => (string) $r['email'],
+            'status' => (string) $r['status'],
+        ], $rows);
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return array<int,array{email:string,status:string}> id => contact
+     */
+    public function contactsForIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($ids), '?'));
+        $rows = $this->db->fetchAll("SELECT id, email, status FROM users WHERE id IN ($place)", $ids);
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['id']] = ['email' => (string) $r['email'], 'status' => (string) $r['status']];
+        }
+        return $out;
+    }
+
     public function usernameExists(string $username): bool
     {
         return $this->db->fetchValue('SELECT 1 FROM users WHERE username = ? LIMIT 1', [$username]) !== false;
+    }
+
+    /** Private-board membership check (board_members), used by access re-checks. */
+    public function isBoardMember(int $boardId, int $userId): bool
+    {
+        return $this->db->fetchValue(
+            'SELECT 1 FROM board_members WHERE board_id = ? AND user_id = ? LIMIT 1',
+            [$boardId, $userId],
+        ) !== false;
     }
 
     public function emailExists(string $email): bool
@@ -94,6 +147,19 @@ final class UserRepository
         // GREATEST guard keeps the unsigned counter from underflowing on delete.
         $this->db->run(
             'UPDATE users SET post_count = GREATEST(0, CAST(post_count AS SIGNED) + ?) WHERE id = ?',
+            [$delta, $id],
+        );
+    }
+
+    /**
+     * Adjust the denormalised reputation counter (Σ reactions received +
+     * solved bonus). Clamped at 0 — reputation never goes negative
+     * (COMMUNITY §2.1: "no negative reputation").
+     */
+    public function incrementReputation(int $id, int $delta): void
+    {
+        $this->db->run(
+            'UPDATE users SET reputation = GREATEST(0, reputation + ?) WHERE id = ?',
             [$delta, $id],
         );
     }
