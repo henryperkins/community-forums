@@ -113,20 +113,21 @@ final class ThreadUserRepository
     /** Total unread threads for the bell/inbox badge, read-gated by board visibility. */
     public function unreadCount(int $userId, bool $isAdmin, string $cutover): int
     {
+        [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
         return (int) $this->db->fetchValue(
             "SELECT COUNT(*)
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              WHERE t.is_deleted = 0
-               AND " . $this->visibilityClause($isAdmin) . "
+               AND ($visSql)
                AND (
                  CASE
                    WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
                    ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
                  END
                )",
-            [$userId, $cutover],
+            array_merge([$userId], $visParams, [$cutover]),
         );
     }
 
@@ -141,8 +142,12 @@ final class ThreadUserRepository
     {
         $limit = max(1, $limit);
         $offset = max(0, $offset);
-        // Param order follows SQL text order: SELECT CASE (cutover), JOIN (userId), then WHERE.
+        // Param order follows SQL text order: SELECT CASE (cutover), JOIN (userId), WHERE visibility, then filter.
         $params = [$cutover, $userId];
+        [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
+        foreach ($visParams as $p) {
+            $params[] = $p;
+        }
         [$where, $order] = $this->filterFragment($filter, $userId, $cutover, $params);
 
         return $this->db->fetchAll(
@@ -160,7 +165,7 @@ final class ThreadUserRepository
              LEFT JOIN users lu ON lu.id = t.last_post_user_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              WHERE t.is_deleted = 0
-               AND " . $this->visibilityClause($isAdmin) . "
+               AND ($visSql)
                $where
              ORDER BY $order
              LIMIT " . $limit . ' OFFSET ' . $offset,
@@ -171,6 +176,10 @@ final class ThreadUserRepository
     public function countInbox(int $userId, string $filter, bool $isAdmin, string $cutover): int
     {
         $params = [$userId]; // JOIN
+        [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
+        foreach ($visParams as $p) {
+            $params[] = $p;
+        }
         [$where] = $this->filterFragment($filter, $userId, $cutover, $params);
         return (int) $this->db->fetchValue(
             "SELECT COUNT(*)
@@ -178,7 +187,7 @@ final class ThreadUserRepository
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              WHERE t.is_deleted = 0
-               AND " . $this->visibilityClause($isAdmin) . "
+               AND ($visSql)
                $where",
             $params,
         );
@@ -217,14 +226,24 @@ final class ThreadUserRepository
         }
     }
 
-    private function visibilityClause(bool $isAdmin): string
+    /**
+     * Read gate for this cross-board LISTING (isListed semantics, not canRead):
+     * public boards for everyone, private boards only where the viewer is a
+     * board member; hidden boards are never listed. Admins see all. Returns the
+     * SQL fragment + its bound params (the board_members EXISTS needs the userId).
+     *
+     * @return array{0:string,1:list<int>}
+     */
+    private function visibility(bool $isAdmin, int $userId): array
     {
-        // This is a cross-board LISTING, so it uses isListed semantics, NOT
-        // canRead: hidden boards are "readable by direct link, never listed"
-        // and private boards are admin-only, so a non-admin's inbox/unread set
-        // is public-only — it must never enumerate a hidden/private thread the
-        // viewer isn't a member of (PHASE_2_PLAN §2; BoardPolicy::isListed).
-        // M4 (P2-08) ORs in an EXISTS(board_members) clause for membership.
-        return $isAdmin ? '1=1' : "b.visibility = 'public'";
+        if ($isAdmin) {
+            return ['1=1', []];
+        }
+        return [
+            "(b.visibility = 'public'
+              OR (b.visibility = 'private'
+                  AND EXISTS (SELECT 1 FROM board_members bm WHERE bm.board_id = b.id AND bm.user_id = ?)))",
+            [$userId],
+        ];
     }
 }

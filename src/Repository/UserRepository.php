@@ -110,6 +110,13 @@ final class UserRepository
         return (int) $this->db->fetchValue("SELECT COUNT(*) FROM users WHERE role = 'admin'");
     }
 
+    /** @return list<int> ids of all admins (for staff notifications) */
+    public function adminIds(): array
+    {
+        $rows = $this->db->fetchAll("SELECT id FROM users WHERE role = 'admin'");
+        return array_map(static fn (array $r): int => (int) $r['id'], $rows);
+    }
+
     /**
      * @param array{username:string,email:string,password_hash:?string,display_name:?string,role?:string,status?:string} $data
      */

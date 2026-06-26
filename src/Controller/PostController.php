@@ -30,7 +30,7 @@ final class PostController extends Controller
         $posting = $this->container->get(PostingService::class);
 
         try {
-            $result = $posting->createThread($user, $request->allInput());
+            $result = $posting->createThread($user, $request->allInput() + ['ip' => $request->ip()]);
         } catch (ValidationException $e) {
             return $this->view('compose', [
                 'errors' => $e->errors,
@@ -51,7 +51,7 @@ final class PostController extends Controller
         $posting = $this->container->get(PostingService::class);
 
         try {
-            $postId = $posting->reply($user, $threadId, $request->allInput());
+            $postId = $posting->reply($user, $threadId, $request->allInput() + ['ip' => $request->ip()]);
         } catch (ValidationException $e) {
             $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
             if ($thread === null) {
@@ -105,9 +105,10 @@ final class PostController extends Controller
             return $this->redirectWithFlash($threadUrl, 'Your post was deleted.');
         }
 
-        if ($user->isAdmin()) {
+        $moderation = $this->container->get(ModerationService::class);
+        if ($moderation->canModerate($user, (int) $post['board_id'])) {
             try {
-                $this->container->get(ModerationService::class)->deletePost($user, $postId, $request->str('reason'));
+                $moderation->deletePost($user, $postId, $request->str('reason'));
             } catch (ValidationException $e) {
                 return $this->redirectWithFlash($threadUrl . '#p' . $postId, $e->first());
             }

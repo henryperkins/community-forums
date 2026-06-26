@@ -88,5 +88,23 @@ $author = ($p['author_display_name'] ?? '') !== '' ? $p['author_display_name'] :
                 <?php endif; ?>
             </div>
         <?php endif; ?>
+        <?php if (!empty($features['moderation_queue']) && $current_user !== null && !$owner): ?>
+            <div class="post-report">
+                <details>
+                    <summary class="linkbtn muted">Report</summary>
+                    <form method="post" action="/posts/<?= (int) $p['id'] ?>/report" class="composer">
+                        <?= $this->csrfField() ?>
+                        <select name="reason_code" class="input input-small">
+                            <?php foreach (['spam', 'harassment', 'off_topic', 'nsfw', 'illegal', 'other'] as $rc): ?>
+                                <option value="<?= $e($rc) ?>"><?= $e(ucfirst(str_replace('_', ' ', $rc))) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="text" name="reason" class="input" placeholder="Details (optional)" maxlength="255">
+                        <label class="checkline"><input type="checkbox" name="notify_reporter" value="1"> Notify me of the outcome</label>
+                        <button class="btn btn-small" type="submit">Submit report</button>
+                    </form>
+                </details>
+            </div>
+        <?php endif; ?>
     </div>
 </div>

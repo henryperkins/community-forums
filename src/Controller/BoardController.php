@@ -8,6 +8,7 @@ use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadRepository;
@@ -30,17 +31,21 @@ final class BoardController extends Controller
         $policy = $this->container->get(BoardPolicy::class);
         $user = $this->currentUser();
 
+        $members = $this->container->get(BoardMemberRepository::class);
+        $isMemberOf = fn (array $b): bool => $user !== null && $members->isMember((int) $b['id'], $user->id());
+
         $board = $boards->findBySlug($slug);
         if ($board === null) {
             // Maybe a renamed slug → 301 to current (only if readable).
             $current = $boards->currentSlugForOld($slug);
-            if ($current !== null && $policy->canRead($current, $user)) {
+            if ($current !== null && $policy->canRead($current, $user, $isMemberOf($current))) {
                 return $this->redirect('/c/' . $current['slug'], 301);
             }
             throw new NotFoundException('Board not found.');
         }
 
-        if (!$policy->canRead($board, $user)) {
+        $isMember = $isMemberOf($board);
+        if (!$policy->canRead($board, $user, $isMember)) {
             throw new NotFoundException('Board not found.');
         }
 
@@ -64,7 +69,7 @@ final class BoardController extends Controller
 
         $canPost = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)
-            && $policy->canPost($board, $user);
+            && $policy->canPost($board, $user, $isMember);
 
         return $this->view('board', [
             'board' => $board,

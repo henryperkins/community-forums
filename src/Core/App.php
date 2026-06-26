@@ -16,10 +16,12 @@ use App\Controller\InboxController;
 use App\Controller\ModerationController;
 use App\Controller\PostController;
 use App\Controller\ProfileController;
+use App\Controller\ReportController;
 use App\Controller\SearchController;
 use App\Controller\NotificationController;
 use App\Controller\SetupController;
 use App\Controller\SubscriptionController;
+use App\Controller\UserModerationController;
 use App\Controller\ThreadController;
 use App\Controller\UnsubscribeController;
 use App\Mail\ArrayMailer;
@@ -28,6 +30,8 @@ use App\Mail\SendmailMailer;
 use App\Search\MysqlSearchService;
 use App\Search\SearchService;
 use App\Repository\BlockRepository;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
@@ -38,6 +42,7 @@ use App\Repository\EmailSuppressionRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
+use App\Repository\ReportRepository;
 use App\Repository\SessionRepository;
 use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
@@ -61,6 +66,8 @@ use App\Service\NotificationService;
 use App\Service\PostingService;
 use App\Service\ReactionService;
 use App\Service\RepairService;
+use App\Service\ReportService;
+use App\Service\UserModerationService;
 use App\Service\SetupService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
@@ -250,11 +257,18 @@ final class App
         $categories = $container->get(CategoryRepository::class)->all();
         $allBoards = $container->get(BoardRepository::class)->allOrdered();
 
+        // Private boards the viewer belongs to should appear in their sidebar.
+        $memberBoardIds = [];
+        if ($user !== null) {
+            $memberBoardIds = array_flip($container->get(BoardMemberRepository::class)->boardIdsFor($user->id()));
+        }
+
         $nav = [];
         foreach ($categories as $category) {
             $boards = array_values(array_filter(
                 $allBoards,
-                fn (array $b): bool => (int) $b['category_id'] === (int) $category['id'] && $policy->isListed($b, $user),
+                fn (array $b): bool => (int) $b['category_id'] === (int) $category['id']
+                    && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
             ));
             if ($boards !== []) {
                 $nav[] = ['category' => $category, 'boards' => $boards];
@@ -302,6 +316,8 @@ final class App
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
         $c->bind(BlockRepository::class, fn (Container $c) => new BlockRepository($c->get(Database::class)));
+        $c->bind(BoardModeratorRepository::class, fn (Container $c) => new BoardModeratorRepository($c->get(Database::class)));
+        $c->bind(BoardMemberRepository::class, fn (Container $c) => new BoardMemberRepository($c->get(Database::class)));
         $c->bind(ThreadUserRepository::class, fn (Container $c) => new ThreadUserRepository($c->get(Database::class)));
         $c->bind(ReactionRepository::class, fn (Container $c) => new ReactionRepository($c->get(Database::class)));
         $c->bind(SubscriptionRepository::class, fn (Container $c) => new SubscriptionRepository($c->get(Database::class)));
@@ -310,6 +326,7 @@ final class App
         $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));
         $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));
         $c->bind(DmMessageRepository::class, fn (Container $c) => new DmMessageRepository($c->get(Database::class)));
+        $c->bind(ReportRepository::class, fn (Container $c) => new ReportRepository($c->get(Database::class)));
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
@@ -332,6 +349,23 @@ final class App
             $c->get(UserRepository::class),
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
+        ));
+        $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(
+            $c->get(Database::class),
+            $c->get(UserRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(BoardModeratorRepository::class),
+        ));
+        $c->bind(ReportService::class, fn (Container $c) => new ReportService(
+            $c->get(Database::class),
+            $c->get(ReportRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(NotificationRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
             $c->get(Database::class),
@@ -393,6 +427,8 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(PostingService::class),
             $c->get(WriteGate::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardRepository::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
@@ -489,6 +525,22 @@ final class App
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);
+        $r->post('/mod/t/{id}/move', [ModerationController::class, 'move']);
+        $r->post('/mod/p/{id}/restore', [ModerationController::class, 'restorePost']);
+
+        // Reports queue (P2-08).
+        $r->post('/posts/{id}/report', [ReportController::class, 'report']);
+        $r->get('/mod/reports', [ReportController::class, 'queue']);
+        $r->post('/mod/reports/{id}/claim', [ReportController::class, 'claim']);
+        $r->post('/mod/reports/{id}/resolve', [ReportController::class, 'resolve']);
+        $r->post('/mod/reports/{id}/dismiss', [ReportController::class, 'dismiss']);
+
+        // User moderation (P2-08).
+        $r->post('/mod/u/{id}/warn', [UserModerationController::class, 'warn']);
+        $r->post('/mod/u/{id}/note', [UserModerationController::class, 'note']);
+        $r->post('/mod/u/{id}/suspend', [UserModerationController::class, 'suspend']);
+        $r->post('/mod/u/{id}/ban', [UserModerationController::class, 'ban']);
+        $r->post('/mod/u/{id}/lift', [UserModerationController::class, 'lift']);
 
         return $r;
     }

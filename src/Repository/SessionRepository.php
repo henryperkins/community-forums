@@ -13,17 +13,23 @@ final class SessionRepository
     }
 
     /**
-     * @param array{id:string,user_id:int,csrf_secret:string,user_agent:?string,expires_at:string} $data
+     * @param array{id:string,user_id:int,csrf_secret:string,user_agent:?string,expires_at:string,ip?:?string} $data
      */
     public function create(array $data): void
     {
+        // sessions.ip is VARBINARY(16) — store packed (inet_pton), NULL if absent/invalid.
+        $ip = isset($data['ip']) && is_string($data['ip']) && $data['ip'] !== ''
+            ? (@inet_pton($data['ip']) ?: null)
+            : null;
+
         $this->db->run(
-            'INSERT INTO sessions (id, user_id, csrf_secret, user_agent, created_at, last_seen_at, expires_at)
-             VALUES (:id, :user_id, :csrf_secret, :user_agent, UTC_TIMESTAMP(), UTC_TIMESTAMP(), :expires_at)',
+            'INSERT INTO sessions (id, user_id, csrf_secret, ip, user_agent, created_at, last_seen_at, expires_at)
+             VALUES (:id, :user_id, :csrf_secret, :ip, :user_agent, UTC_TIMESTAMP(), UTC_TIMESTAMP(), :expires_at)',
             [
                 'id' => $data['id'],
                 'user_id' => $data['user_id'],
                 'csrf_secret' => $data['csrf_secret'],
+                'ip' => $ip,
                 'user_agent' => $data['user_agent'],
                 'expires_at' => $data['expires_at'],
             ],

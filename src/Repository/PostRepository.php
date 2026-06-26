@@ -17,9 +17,14 @@ final class PostRepository
      */
     public function create(array $data): int
     {
+        // posts.ip is VARBINARY(16) — store packed (inet_pton), NULL if absent/invalid.
+        $ip = isset($data['ip']) && is_string($data['ip']) && $data['ip'] !== ''
+            ? (@inet_pton($data['ip']) ?: null)
+            : null;
+
         return $this->db->insert(
-            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, created_at)
-             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, UTC_TIMESTAMP())',
+            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, ip, created_at)
+             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, :ip, UTC_TIMESTAMP())',
             [
                 'thread_id' => $data['thread_id'],
                 'user_id' => $data['user_id'],
@@ -27,6 +32,7 @@ final class PostRepository
                 'body' => $data['body'],
                 'body_html' => $data['body_html'],
                 'is_op' => !empty($data['is_op']) ? 1 : 0,
+                'ip' => $ip,
             ],
         );
     }
@@ -94,6 +100,15 @@ final class PostRepository
         return $this->db->run(
             'UPDATE posts SET is_deleted = 1, deleted_by = ? WHERE id = ? AND is_deleted = 0',
             [$byUserId, $id],
+        )->rowCount();
+    }
+
+    /** @return int rows affected (0 if it was not deleted — caller skips counters) */
+    public function restore(int $id): int
+    {
+        return $this->db->run(
+            'UPDATE posts SET is_deleted = 0, deleted_by = NULL WHERE id = ? AND is_deleted = 1',
+            [$id],
         )->rowCount();
     }
 }

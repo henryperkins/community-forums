@@ -26,7 +26,7 @@ fresh-migrated by the bootstrap and rolled back per-test in a transaction.
 | M1 — Inbox state + reactions/reputation | P2-01, P2-02 | ✅ Done |
 | M2 — Notifications, mentions, email | P2-03, P2-04, P2-05 | ✅ Done (core) |
 | M3 — Search + DMs | P2-06, P2-07 | ✅ Done |
-| M4 — Scoped moderation + operator controls | P2-08 | ⬜ Planned |
+| M4 — Scoped moderation + operator controls | P2-08 | ✅ Done (core) |
 | M5 — Community identity + account expansion | P2-09, P2-10, P2-11 | ⬜ Planned |
 | M6 — Hardening + phase close | P2-12 | ⬜ Planned |
 
@@ -155,6 +155,36 @@ migration groups:
   read-on-view). Full suite: **140 tests / 434 assertions**.
 - **Deferred within M3** (small): "Message" button on profiles; the full reports
   queue/triage UI for DM reports is M4 (P2-08) — submission + storage land here.
+
+## M4 — Scoped moderation + operator controls (P2-08) ✅ core
+
+- **Capability/scope** (`BoardModeratorRepository`, `ModerationService::canModerate`):
+  a user moderates a board iff admin OR assigned board moderator. Content actions
+  (pin/lock/**delete/restore**/**move**) are scope-checked; a move requires the
+  capability on BOTH source and destination and updates both boards' counters +
+  last-post atomically with an audit row. Existing admin moderation still works.
+- **Reports queue** (`ReportRepository`, `ReportService`, `ReportController`):
+  post reporting (`POST /posts/{id}/report`) with one-open-report dedupe + opt-in
+  `notify_reporter`; board-scoped queue (`/mod/reports`, claim/resolve/dismiss);
+  new-report **staff alerts** and **reporter outcome-notifications**;
+  `moderation_queue` flag-gated. (DM report submission shipped in M3.)
+- **Private-board membership** (`BoardMemberRepository`): `BoardPolicy` now takes
+  an `$isMember` flag; board/thread reads, the sidebar nav, the **inbox** (OR-in
+  `board_members`), **search**, **notification fan-out**, and posting all honor
+  membership. Added member gains read+post; removal revokes immediately.
+- **User moderation** (`UserModerationService`, `UserModerationController`):
+  warn/note (staff) and suspend/ban/lift (admin) → `bans` system-of-record +
+  `users.status` fast-path (WriteGate-enforced) + immutable audit; cannot target
+  self or another admin.
+- **Ban-evasion signals:** `posts.ip` + `sessions.ip` captured (packed
+  `inet_pton`) on post/login; Admin-only display + 90-day purge are a Phase 3 seam.
+- **Evidence:** `AppModeratorScopeTest` (5), `AppReportQueueTest` (4),
+  `AppPrivateBoardMembershipTest` (3), `AppUserModerationTest` (5). Full suite:
+  **157 tests / 494 assertions**.
+- **Deferred within M4** (operator-UI polish, not security): admin pages to
+  assign board moderators/members (data layer + scope enforcement are done —
+  assignment is currently via repo/console), aging-report alerts, and a richer
+  DM-report triage view.
 
 ## Adversarial review (M0+M1) — applied
 

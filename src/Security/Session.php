@@ -93,6 +93,7 @@ final class Session
             'user_id' => $user->id(),
             'csrf_secret' => $csrfSecret,
             'user_agent' => $this->request?->userAgent(),
+            'ip' => $this->request?->ip(),
             'expires_at' => $expiresAt,
         ]);
 

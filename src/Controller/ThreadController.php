@@ -8,6 +8,7 @@ use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repository\BoardMemberRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\SubscriptionRepository;
@@ -61,10 +62,12 @@ final class ThreadController extends Controller
 
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage);
 
+        $isMember = $user !== null
+            && $this->container->get(BoardMemberRepository::class)->isMember((int) $thread['board_id'], $user->id());
         $locked = (int) $thread['is_locked'] === 1;
         $canReply = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)
-            && $this->container->get(BoardPolicy::class)->canPost(['visibility' => $thread['board_visibility']], $user)
+            && $this->container->get(BoardPolicy::class)->canPost(['visibility' => $thread['board_visibility']], $user, $isMember)
             && !$locked;
 
         // Engagement: grouped reaction counts for the visible posts, the
@@ -125,7 +128,10 @@ final class ThreadController extends Controller
             throw new NotFoundException('Thread not found.');
         }
         $policy = $this->container->get(BoardPolicy::class);
-        if (!$policy->canRead(['visibility' => $thread['board_visibility']], $this->currentUser())) {
+        $user = $this->currentUser();
+        $isMember = $user !== null
+            && $this->container->get(BoardMemberRepository::class)->isMember((int) $thread['board_id'], $user->id());
+        if (!$policy->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Thread not found.');
         }
         return $thread;

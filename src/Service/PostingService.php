@@ -55,7 +55,7 @@ final class PostingService
         if ($board === null) {
             throw new ValidationException(['board_id' => 'Choose a board to post in.'], $input);
         }
-        if (!$this->policy->canPost($board, $user)) {
+        if (!$this->policy->canPost($board, $user, $this->isBoardMember($boardId, $user->id()))) {
             throw new ForbiddenException('You cannot post in this board.');
         }
 
@@ -74,6 +74,7 @@ final class PostingService
                 'body' => $body,
                 'body_html' => $this->markdown->render($body),
                 'is_op' => true,
+                'ip' => $input['ip'] ?? null,
             ]);
 
             $this->threads->updateLastPost($threadId, $postId, $user->id(), $now);
@@ -105,7 +106,7 @@ final class PostingService
             throw new NotFoundException('Thread not found.');
         }
         $board = ['visibility' => $thread['board_visibility']];
-        if (!$this->policy->canPost($board, $user)) {
+        if (!$this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id()))) {
             throw new ForbiddenException('You cannot post in this board.');
         }
         if ((int) $thread['is_locked'] === 1) {
@@ -123,6 +124,7 @@ final class PostingService
                 'body' => $body,
                 'body_html' => $this->markdown->render($body),
                 'is_op' => false,
+                'ip' => $input['ip'] ?? null,
             ]);
 
             $this->threads->incrementReplyCount($threadId, 1);
@@ -253,6 +255,15 @@ final class PostingService
         }
         $this->threads->recomputeLastPost((int) $post['thread_id']);
         $this->boards->recomputeLastPost((int) $post['board_id']);
+    }
+
+    /** Private-board membership (board_members) — gates posting in private boards. */
+    private function isBoardMember(int $boardId, int $userId): bool
+    {
+        return $this->db->fetchValue(
+            'SELECT 1 FROM board_members WHERE board_id = ? AND user_id = ? LIMIT 1',
+            [$boardId, $userId],
+        ) !== false;
     }
 
     /** Reactions on a post from users other than the author (reputation contribution). */
