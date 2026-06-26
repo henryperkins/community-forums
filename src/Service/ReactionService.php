@@ -61,7 +61,8 @@ final class ReactionService
         if ($post === null || (int) $post['is_deleted'] === 1) {
             throw new NotFoundException('Post not found.');
         }
-        if (!$this->policy->canRead(['visibility' => $post['board_visibility']], $user)) {
+        $isMember = $this->users->isBoardMember((int) $post['board_id'], $user->id());
+        if (!$this->policy->canRead(['visibility' => $post['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Post not found.');
         }
 

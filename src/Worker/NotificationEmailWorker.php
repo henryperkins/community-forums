@@ -50,32 +50,42 @@ final class NotificationEmailWorker
             return $stats;
         }
 
-        foreach ($this->deliveries->pending($limit) as $row) {
-            $id = (int) $row['id'];
-            $email = (string) $row['email'];
+        // Only one worker may drain the outbox at a time; a second concurrent or
+        // overlapping run backs off so a queued row is never sent twice (EMAIL-1).
+        if (!$this->deliveries->acquireDrainLock()) {
+            return $stats;
+        }
 
-            if ($this->suppress->isSuppressed($email)) {
-                $this->deliveries->markSuppressed($id);
-                $stats['suppressed']++;
-                continue;
-            }
+        try {
+            foreach ($this->deliveries->pending($limit) as $row) {
+                $id = (int) $row['id'];
+                $email = (string) $row['email'];
 
-            $rendered = $this->renderInstant($row);
-            if ($rendered === null) {
-                // Target gone or recipient lost access — dequeue without leaking.
-                $this->deliveries->markSent($id, 'skipped:unavailable');
-                $stats['skipped']++;
-                continue;
-            }
+                if ($this->suppress->isSuppressed($email)) {
+                    $this->deliveries->markSuppressed($id);
+                    $stats['suppressed']++;
+                    continue;
+                }
 
-            try {
-                $messageId = $this->mailer->send($email, $rendered['subject'], $rendered['text'], $rendered['html']);
-                $this->deliveries->markSent($id, $messageId);
-                $stats['sent']++;
-            } catch (MailException | Throwable $e) {
-                $this->deliveries->markFailed($id, $e->getMessage());
-                $stats['failed']++;
+                $rendered = $this->renderInstant($row);
+                if ($rendered === null) {
+                    // Target gone or recipient lost access — dequeue without leaking.
+                    $this->deliveries->markSent($id, 'skipped:unavailable');
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                try {
+                    $messageId = $this->mailer->send($email, $rendered['subject'], $rendered['text'], $rendered['html']);
+                    $this->deliveries->markSent($id, $messageId);
+                    $stats['sent']++;
+                } catch (MailException | Throwable $e) {
+                    $this->deliveries->markFailed($id, $e->getMessage());
+                    $stats['failed']++;
+                }
             }
+        } finally {
+            $this->deliveries->releaseDrainLock();
         }
 
         return $stats;

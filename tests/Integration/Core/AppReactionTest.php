@@ -140,4 +140,33 @@ final class AppReactionTest extends TestCase
         self::assertSame('added', $data['state']);
         self::assertSame(1, $data['counts']['💯']);
     }
+
+    public function testPrivateBoardMemberCanReactAndStarButOutsiderCannot(): void
+    {
+        // A private-board member can read/post, so engagement must work for them
+        // too — the gate must resolve membership, not fail closed (ENG-1).
+        $members = new \App\Repository\BoardMemberRepository($this->db);
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory(), ['visibility' => 'private']);
+        $members->add((int) $board['id'], (int) $author['id'], null); // author must belong to post the OP
+        $thread = $this->makeThread($board, $author, 'Members only', 'Opening post.');
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+
+        $fan = $this->makeUser();
+        $members->add((int) $board['id'], (int) $fan['id'], null);
+        $this->actingAs($fan);
+
+        // React (service path) and star (controller path) both succeed for a member.
+        $this->assertRedirect($this->post('/posts/' . $opId . '/react', ['emoji' => '👍']));
+        self::assertSame(1, $this->reactionRows($opId));
+        self::assertSame(1, $this->reputation((int) $author['id']));
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/star'));
+
+        // A non-member is still blocked (404, no existence leak, no rep change).
+        $outsider = $this->makeUser();
+        $this->actingAs($outsider);
+        $blocked = $this->post('/posts/' . $opId . '/react', ['emoji' => '❤️', 'format' => 'json']);
+        $this->assertStatus(404, $blocked);
+        self::assertSame(1, $this->reactionRows($opId), 'outsider reaction is rejected');
+    }
 }

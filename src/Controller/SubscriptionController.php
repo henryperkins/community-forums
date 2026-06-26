@@ -32,7 +32,9 @@ final class SubscriptionController extends Controller
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $user)) {
+        $isMember = $this->container->get(\App\Repository\BoardMemberRepository::class)
+            ->isMember((int) $thread['board_id'], $user->id());
+        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Thread not found.');
         }
 
@@ -47,7 +49,9 @@ final class SubscriptionController extends Controller
         $boardId = (int) ($params['id'] ?? 0);
 
         $board = $this->container->get(BoardRepository::class)->find($boardId);
-        if ($board === null || !$this->container->get(BoardPolicy::class)->canRead($board, $user)) {
+        $isMember = $board !== null && $this->container->get(\App\Repository\BoardMemberRepository::class)
+            ->isMember((int) $board['id'], $user->id());
+        if ($board === null || !$this->container->get(BoardPolicy::class)->canRead($board, $user, $isMember)) {
             throw new NotFoundException('Board not found.');
         }
 

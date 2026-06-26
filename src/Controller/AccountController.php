@@ -75,6 +75,8 @@ final class AccountController extends Controller
         } catch (ValidationException $e) {
             return $this->view('account/security', ['errors' => $e->errors], 422);
         }
+        // A password change logs out every other session (SESS-1).
+        $this->revokeOtherSessionsFor($user);
         return $this->redirectWithFlash('/settings/security', 'Your password has been changed.');
     }
 }

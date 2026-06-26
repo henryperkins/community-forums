@@ -143,9 +143,14 @@ final class PostController extends Controller
         $user = $this->currentUser();
         $policy = $this->container->get(BoardPolicy::class);
         $boards = $this->container->get(BoardRepository::class)->allOrdered();
+        $memberBoardIds = $user !== null
+            ? array_flip($this->container->get(\App\Repository\BoardMemberRepository::class)->boardIdsFor($user->id()))
+            : [];
         return array_values(array_filter(
             $boards,
-            fn (array $b): bool => $user !== null && $policy->canPost($b, $user) && $policy->isListed($b, $user),
+            fn (array $b): bool => $user !== null
+                && $policy->canPost($b, $user, isset($memberBoardIds[(int) $b['id']]))
+                && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
         ));
     }
 }

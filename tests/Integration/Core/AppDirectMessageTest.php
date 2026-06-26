@@ -171,4 +171,32 @@ final class AppDirectMessageTest extends TestCase
         $this->assertStatus(200, $r);
         self::assertSame(0, (new ConversationRepository($this->db))->unreadConversationCount((int) $bob['id']), 'viewing marks the conversation read');
     }
+
+    public function testLongConversationOpensOnNewestPageAndClearsUnread(): void
+    {
+        $alice = $this->established();
+        $bob = $this->makeUser();
+        $convId = $this->dm()->start($this->userEntity($alice), (int) $bob['id'], 'SENTINEL-0001')['conversation_id'];
+
+        // Push the conversation well past one page (perPage = 50).
+        $msgs = new DmMessageRepository($this->db);
+        for ($i = 2; $i <= 60; $i++) {
+            $msgs->create($convId, (int) $alice['id'], sprintf('SENTINEL-%04d', $i), sprintf('<p>SENTINEL-%04d</p>', $i));
+        }
+        $latest = $msgs->latestId($convId);
+        self::assertSame(1, (new ConversationRepository($this->db))->unreadConversationCount((int) $bob['id']));
+
+        $this->actingAs($bob);
+        $res = $this->get('/messages/' . $convId);          // no ?page → newest page
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'SENTINEL-0060');         // newest message is visible
+        $this->assertDontSeeText($res, 'SENTINEL-0001');     // oldest page is not shown by default
+
+        // The unread badge clears even though the conversation spans multiple pages.
+        self::assertSame(0, (new ConversationRepository($this->db))->unreadConversationCount((int) $bob['id']));
+        self::assertSame($latest, (int) $this->db->fetchValue(
+            'SELECT last_read_message_id FROM conversation_participants WHERE conversation_id = ? AND user_id = ?',
+            [$convId, (int) $bob['id']],
+        ));
+    }
 }

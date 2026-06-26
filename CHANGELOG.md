@@ -2,6 +2,34 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] — Phase 2 review follow-ups
+
+Post-merge fixes from the PR #2 review (no schema changes; suite green at 221 tests / 726 assertions).
+
+### Fixed
+
+- **Engagement on private boards (ENG-1)** — `BoardPolicy::canRead/isListed/canPost`
+  now require an explicit `$isMember`, and the engagement, star, subscription,
+  notification deep-link, home index and post-target gates resolve board
+  membership before calling them. A private-board member can now react/star/
+  subscribe (previously every such action 404'd); non-members are still blocked.
+- **OAuth email squatting (OAUTH-1)** — a new account from an **unverified**
+  provider email no longer occupies the globally-unique `users.email`; the
+  address is parked on a synthetic placeholder and preserved on the
+  `oauth_identities` row, so an attacker can't deny a victim registration.
+- **Outbox double-send (EMAIL-1)** — the instant email worker takes a
+  connection-scoped advisory lock (`rb_email_outbox`) so concurrent/overlapping
+  runs can't send the same queued row twice.
+- **Sessions survive a password change (SESS-1)** — changing or first-setting a
+  password now revokes all other sessions, keeping only the current one.
+- **DM read state (DM-1)** — a conversation opens on its newest page and is
+  marked read up to the latest message, so the unread badge clears for
+  conversations longer than one page.
+- **Destructive `verify:upgrade` (CONSOLE-1)** — the rehearsal command refuses
+  when `APP_ENV=production` and otherwise requires an interactive `yes` (or
+  `--force`) before dropping tables, instead of wiping the configured database
+  on sight.
+
 ## [Unreleased] — Phase 2 (M5): community identity & account completion
 
 Milestone 5 of the Phase 2 release train. Builds on M0–M4 (engagement,

@@ -117,4 +117,29 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE status = 'queued'"));
         self::assertSame(3, $mailer->count(), 'every queued send delivered exactly once across batches');
     }
+
+    public function testConcurrentRunBacksOffWhileOutboxIsLocked(): void
+    {
+        // EMAIL-1: a second worker run must not drain the outbox while another
+        // worker (a separate connection) holds the advisory drain lock, or the
+        // same queued row would be sent twice.
+        $this->queuedDelivery();
+        $mailer = new ArrayMailer();
+
+        $other = new \App\Core\Database($GLOBALS['__RB_TEST_DBCONFIG']); // separate connection
+        self::assertSame(1, (int) $other->fetchValue("SELECT GET_LOCK('rb_email_outbox', 0)"));
+        try {
+            $stats = $this->worker($mailer)->run();
+            self::assertSame(0, $stats['sent'], 'a concurrent run must not send while the outbox is locked');
+            self::assertSame(0, $mailer->count());
+            self::assertSame('queued', (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"), 'row stays queued for the holder');
+        } finally {
+            $other->run("SELECT RELEASE_LOCK('rb_email_outbox')");
+        }
+
+        // Once the lock is free the next run drains it exactly once.
+        $after = $this->worker($mailer)->run();
+        self::assertSame(1, $after['sent']);
+        self::assertSame(1, $mailer->count());
+    }
 }

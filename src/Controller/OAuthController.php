@@ -134,6 +134,8 @@ final class OAuthController extends Controller
         } catch (ValidationException $e) {
             return $this->redirectWithFlash('/settings/connections', $e->first());
         }
+        // Setting the first password logs out every other session (SESS-1).
+        $this->revokeOtherSessionsFor($user);
         return $this->redirectWithFlash('/settings/connections', 'Password set — you can now sign in with your email.');
     }
 

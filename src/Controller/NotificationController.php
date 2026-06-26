@@ -123,7 +123,10 @@ final class NotificationController extends Controller
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             return null;
         }
-        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $this->currentUser())) {
+        $me = $this->currentUser();
+        $isMember = $me !== null && $this->container->get(\App\Repository\BoardMemberRepository::class)
+            ->isMember((int) $thread['board_id'], $me->id());
+        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $me, $isMember)) {
             return null;
         }
         $url = '/t/' . (int) $thread['id'] . '-' . $thread['slug'];
