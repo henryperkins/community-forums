@@ -89,4 +89,27 @@ final class AppSessionManagementTest extends TestCase
         // The current session still works (the client can still load a gated page).
         $this->assertStatus(200, $this->get('/settings/sessions'));
     }
+
+    public function test_password_change_revokes_other_sessions(): void
+    {
+        $user = $this->makeUser(['username' => 'rotator', 'password' => 'oldpassword1']);
+        $this->actingAs($user);
+        $currentId = hash('sha256', $this->cookies['rb_session']);
+        $other = $this->seedSession((int) $user['id'], 'OtherDevice');
+
+        $sessions = new SessionRepository($this->db);
+        self::assertNotNull($sessions->findActive($other));
+
+        $res = $this->post('/settings/security', [
+            'current_password' => 'oldpassword1',
+            'new_password' => 'brandnewpass1',
+            'new_password_confirm' => 'brandnewpass1',
+        ]);
+        $this->assertRedirect($res, '/settings/security');
+
+        // The other device is logged out; the current session is preserved.
+        self::assertNull($sessions->findActive($other), 'changing the password revokes other sessions');
+        self::assertNotNull($sessions->findActive($currentId), 'the current session survives the change');
+        $this->assertStatus(200, $this->get('/settings/security'));
+    }
 }

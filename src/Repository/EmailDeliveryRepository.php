@@ -46,6 +46,22 @@ final class EmailDeliveryRepository
         $this->db->run("UPDATE email_deliveries SET status = 'suppressed' WHERE id = ?", [$id]);
     }
 
+    /**
+     * Try to become the sole outbox drainer. Uses a connection-scoped MySQL
+     * advisory lock (auto-released when the connection closes) so two concurrent
+     * or overlapping worker runs cannot both send the same queued row. Returns
+     * false when another worker already holds it.
+     */
+    public function acquireDrainLock(): bool
+    {
+        return (int) $this->db->fetchValue("SELECT GET_LOCK('rb_email_outbox', 0)") === 1;
+    }
+
+    public function releaseDrainLock(): void
+    {
+        $this->db->run("SELECT RELEASE_LOCK('rb_email_outbox')");
+    }
+
     /** @return array<int,array<string,mixed>> oldest queued sends, for the worker */
     public function pending(int $limit = 50): array
     {

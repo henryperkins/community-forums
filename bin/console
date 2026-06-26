@@ -152,11 +152,31 @@ try {
             break;
 
         case 'verify:upgrade':
-            // Phase-1 → Phase-2 upgrade rehearsal (P2-12). DESTRUCTIVE: drops all
-            // tables in the target DB, so point it at a throwaway database.
+            // Phase-1 → Phase-2 upgrade rehearsal (P2-12). DESTRUCTIVE: it DROPS
+            // ALL TABLES in the target DB, so it is gated behind an env check and
+            // an explicit confirmation to keep it from wiping a real database
+            // (CONSOLE-1). Run it only against a throwaway/scratch database.
+            $env = (string) $config->get('app.env', 'production');
+            $dbName = (string) ($config->get('db')['database'] ?? '');
+            $force = in_array('--force', array_slice($argv, 2), true);
+
+            if ($env === 'production') {
+                $log('Refusing: verify:upgrade DROPS ALL TABLES and APP_ENV=production.');
+                $log('Point it at a throwaway database with APP_ENV!=production and re-run.');
+                exit(1);
+            }
+            if (!$force) {
+                fwrite(STDOUT, "verify:upgrade will DROP ALL TABLES in database '{$dbName}'.\n");
+                fwrite(STDOUT, "Type 'yes' to confirm (or pass --force for non-interactive use): ");
+                $answer = is_resource(STDIN) ? strtolower(trim((string) fgets(STDIN))) : '';
+                if ($answer !== 'yes') {
+                    $log('Aborted — no tables were dropped.');
+                    exit(1);
+                }
+            }
+
             $db = $database();
-            $log('Upgrade rehearsal against database: ' . $config->get('db')['database']);
-            $log('(this DROPS ALL TABLES — use a scratch database)');
+            $log('Upgrade rehearsal against database: ' . $dbName);
             $result = (new UpgradeRehearsal($db->pdo(), $config->get('paths.migrations')))->run($log);
             $log('');
             $passed = count(array_filter($result['checks'], static fn (array $c): bool => $c['ok']));

@@ -194,4 +194,32 @@ final class AppOAuthTest extends TestCase
         self::assertNotNull($hash);
         self::assertTrue((new PasswordHasher())->verify('brandnewpass', $hash));
     }
+
+    public function test_unverified_provider_email_does_not_occupy_the_unique_email_slot(): void
+    {
+        // A provider can surface an UNVERIFIED primary email; it must not squat a
+        // real address on the globally-unique users.email and deny the rightful
+        // owner registration (email squatting).
+        $out = $this->svc()->resolve($this->identity('sub-unv', 'victim@corp.test', false), null);
+        self::assertSame('created', $out['action']);
+
+        $row = $this->users()->find($out['user']->id());
+        self::assertNotSame('victim@corp.test', $row['email'], 'unverified provider email must not land on users.email');
+        self::assertStringEndsWith('.oauth.invalid', (string) $row['email']);
+        self::assertNull($row['email_verified_at']);
+
+        // The victim's real address is still free to register.
+        self::assertFalse($this->users()->emailExists('victim@corp.test'));
+        // …but it is preserved on the identity row for later promotion.
+        $identity = (new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-unv');
+        self::assertSame('victim@corp.test', $identity['email']);
+    }
+
+    public function test_verified_provider_email_still_lands_on_the_account(): void
+    {
+        $out = $this->svc()->resolve($this->identity('sub-ok', 'real@example.test', true), null);
+        $row = $this->users()->find($out['user']->id());
+        self::assertSame('real@example.test', $row['email']);
+        self::assertNotNull($row['email_verified_at']);
+    }
 }

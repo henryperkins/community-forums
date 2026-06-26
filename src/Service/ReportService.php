@@ -44,7 +44,8 @@ final class ReportService
         if ($post === null || (int) $post['is_deleted'] === 1) {
             throw new NotFoundException('Post not found.');
         }
-        if (!$this->policy->canRead(['visibility' => $post['board_visibility']], $reporter)) {
+        $isMember = $this->users->isBoardMember((int) $post['board_id'], $reporter->id());
+        if (!$this->policy->canRead(['visibility' => $post['board_visibility']], $reporter, $isMember)) {
             throw new NotFoundException('Post not found.');
         }
 

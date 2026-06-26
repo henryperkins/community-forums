@@ -22,7 +22,7 @@ use App\Domain\User;
 final class BoardPolicy
 {
     /** @param array<string,mixed> $board */
-    public function canRead(array $board, ?User $user, bool $isMember = false): bool
+    public function canRead(array $board, ?User $user, bool $isMember): bool
     {
         $visibility = (string) ($board['visibility'] ?? 'public');
         if ($visibility === 'private') {
@@ -32,7 +32,7 @@ final class BoardPolicy
     }
 
     /** @param array<string,mixed> $board */
-    public function isListed(array $board, ?User $user, bool $isMember = false): bool
+    public function isListed(array $board, ?User $user, bool $isMember): bool
     {
         $visibility = (string) ($board['visibility'] ?? 'public');
         return match ($visibility) {
@@ -43,7 +43,7 @@ final class BoardPolicy
     }
 
     /** @param array<string,mixed> $board */
-    public function canPost(array $board, User $user, bool $isMember = false): bool
+    public function canPost(array $board, User $user, bool $isMember): bool
     {
         return $this->canRead($board, $user, $isMember);
     }

@@ -136,7 +136,14 @@ final class OAuthService
     {
         return $this->db->transaction(function () use ($id): User {
             $username = $this->generateUsername($id->displayName ?? $this->localPart($id->email) ?? 'user');
-            $email = $id->email ?? ($username . '@' . $id->provider . '.oauth.invalid');
+            // Only a provider-VERIFIED email may occupy the globally-unique
+            // users.email slot. An unverified provider email (e.g. GitHub can
+            // surface one) would otherwise let an attacker squat a victim's
+            // address and deny them registration, so it is parked on a synthetic
+            // placeholder; the real address still rides on the oauth_identities
+            // row and can be promoted once verified.
+            $emailVerified = $id->email !== null && $id->emailVerified;
+            $email = $emailVerified ? $id->email : ($username . '@' . $id->provider . '.oauth.invalid');
 
             $userId = $this->users->create([
                 'username' => $username,
@@ -146,7 +153,7 @@ final class OAuthService
                 'role' => 'user',
                 'status' => 'active',
             ]);
-            if ($id->email !== null && $id->emailVerified) {
+            if ($emailVerified) {
                 $this->users->markEmailVerified($userId);
             }
             $this->linkToUser($userId, $id);

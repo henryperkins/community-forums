@@ -77,13 +77,15 @@ final class ConversationController extends Controller
         $perPage = 50;
         $total = $msgRepo->countByConversation($conversationId);
         $pages = max(1, (int) ceil($total / $perPage));
-        $page = min($pages, max(1, $request->int('page', 1)));
+        // Open on the newest page by default so the latest messages are visible;
+        // an explicit ?page= still pages backwards through history.
+        $page = min($pages, max(1, $request->int('page', $pages)));
         $messages = $msgRepo->listByConversation($conversationId, $perPage, ($page - 1) * $perPage);
 
-        // Mark read up to the newest message shown.
-        if ($messages !== []) {
-            $convRepo->markRead($conversationId, $user->id(), (int) end($messages)['id']);
-        }
+        // Viewing a conversation clears it: mark read up to the latest message,
+        // not just the last one on the rendered page, so the unread badge clears
+        // for conversations longer than one page.
+        $convRepo->markRead($conversationId, $user->id(), $msgRepo->latestId($conversationId));
         $otherId = $convRepo->otherParticipant($conversationId, $user->id());
         $other = $otherId !== null ? $this->container->get(UserRepository::class)->find($otherId) : null;
 

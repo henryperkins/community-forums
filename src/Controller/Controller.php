@@ -87,4 +87,18 @@ abstract class Controller
         }
         return $user;
     }
+
+    /**
+     * Revoke every other session for the user, keeping the current one. Called
+     * after a credential change so a parallel or hijacked session cannot survive
+     * (USER §3.3).
+     */
+    protected function revokeOtherSessionsFor(User $user): void
+    {
+        $current = $this->session()->currentSessionId();
+        if ($current !== null) {
+            $this->container->get(\App\Repository\SessionRepository::class)
+                ->revokeOthersForUser($user->id(), $current);
+        }
+    }
 }

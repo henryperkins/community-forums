@@ -78,7 +78,9 @@ final class EngagementController extends Controller
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $user)) {
+        $isMember = $this->container->get(\App\Repository\BoardMemberRepository::class)
+            ->isMember((int) $thread['board_id'], $user->id());
+        if (!$this->container->get(BoardPolicy::class)->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Thread not found.');
         }
 
