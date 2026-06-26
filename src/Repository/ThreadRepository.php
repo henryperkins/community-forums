@@ -134,6 +134,12 @@ final class ThreadRepository
         $this->db->run('UPDATE threads SET board_id = ? WHERE id = ?', [$boardId, $id]);
     }
 
+    /** Set/clear the accepted ("solved") answer post (COMMUNITY §11). */
+    public function setAcceptedAnswer(int $id, ?int $postId): void
+    {
+        $this->db->run('UPDATE threads SET accepted_answer_post_id = ? WHERE id = ?', [$postId, $id]);
+    }
+
     public function setPinned(int $id, bool $pinned): void
     {
         $this->db->run('UPDATE threads SET is_pinned = ? WHERE id = ?', [$pinned ? 1 : 0, $id]);

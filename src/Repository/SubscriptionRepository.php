@@ -95,4 +95,30 @@ final class SubscriptionRepository
             [$userId],
         );
     }
+
+    /**
+     * The user's active subscriptions with the thread title / board name resolved
+     * for the /settings/notifications list. Targets that no longer exist are
+     * dropped (LEFT JOIN + filter) so the list never links to deleted content.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function listForUserWithContext(int $userId): array
+    {
+        return $this->db->fetchAll(
+            "SELECT s.target_type, s.target_id, s.in_app_enabled, s.email_enabled, s.frequency,
+                    t.title AS thread_title, t.slug AS thread_slug, t.is_deleted AS thread_deleted,
+                    b.name AS board_name, b.slug AS board_slug
+             FROM subscriptions s
+             LEFT JOIN threads t ON s.target_type = 'thread' AND t.id = s.target_id
+             LEFT JOIN boards  b ON s.target_type = 'board'  AND b.id = s.target_id
+             WHERE s.user_id = ? AND s.frequency <> 'off'
+               AND (
+                    (s.target_type = 'thread' AND t.id IS NOT NULL AND t.is_deleted = 0)
+                 OR (s.target_type = 'board'  AND b.id IS NOT NULL)
+               )
+             ORDER BY s.target_type, s.target_id",
+            [$userId],
+        );
+    }
 }

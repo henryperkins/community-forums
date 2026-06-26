@@ -2,10 +2,7 @@
 <?php $this->layout('layout'); $this->section('title', 'Change password'); ?>
 <div class="settings">
     <h1>Account settings</h1>
-    <nav class="subnav">
-        <a href="/settings/account">Profile</a>
-        <a class="active" href="/settings/security">Password</a>
-    </nav>
+    <?= $this->partial('partials/settings_nav') ?>
 
     <form method="post" action="/settings/security" class="stacked card">
         <?= $this->csrfField() ?>

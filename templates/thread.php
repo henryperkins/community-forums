@@ -6,8 +6,15 @@
         <h1>
             <?php if ((int) $thread['is_pinned'] === 1): ?><span class="badge">Pinned</span><?php endif; ?>
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
+            <?php if (($accepted_post_id ?? null) !== null): ?><span class="badge badge-solved">✓ Solved</span><?php endif; ?>
             <?= $e($thread['title']) ?>
         </h1>
+        <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
+            <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept">
+                <?= $this->csrfField() ?>
+                <button class="linkbtn muted" type="submit">Clear accepted answer</button>
+            </form>
+        <?php endif; ?>
         <?php if (($engagement ?? false) && $current_user !== null): ?>
             <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
                 <?= $this->csrfField() ?>
@@ -58,6 +65,8 @@
                     'counts' => ($reaction_counts ?? [])[(int) $p['id']] ?? [],
                     'mine' => ($my_reactions ?? [])[(int) $p['id']] ?? [],
                     'allowed_emoji' => $allowed_emoji ?? [],
+                    'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
+                    'can_mark_solved' => $can_mark_solved ?? false,
                 ]) ?>
             <?php endforeach; ?>
         </div>

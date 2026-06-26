@@ -49,7 +49,9 @@ final class BoardController extends Controller
             throw new NotFoundException('Board not found.');
         }
 
-        $perPage = (int) $this->config()->get('pagination.threads_per_page', 20);
+        $perPage = $user !== null
+            ? $this->container->get(\App\Service\PreferenceService::class)->threadsPerPage($user->id())
+            : (int) $this->config()->get('pagination.threads_per_page', 20);
         $threadRepo = $this->container->get(ThreadRepository::class);
         $total = $threadRepo->countByBoard((int) $board['id']);
         $page = $this->pageNumber($request, $total, $perPage);

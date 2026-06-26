@@ -79,6 +79,12 @@ final class Session
         return $this->user?->id();
     }
 
+    /** The current session row id (SHA-256 of the cookie token), or null for guests. */
+    public function currentSessionId(): ?string
+    {
+        return isset($this->sessionRow['id']) ? (string) $this->sessionRow['id'] : null;
+    }
+
     /** Create a session for the user and queue the cookie. Rotates the id. */
     public function login(User $user): void
     {

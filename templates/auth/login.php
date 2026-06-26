@@ -16,5 +16,13 @@
         </label>
         <button class="btn" type="submit">Log in</button>
     </form>
+    <?php if (!empty($oauth_providers)): ?>
+        <div class="oauth-buttons">
+            <p class="muted oauth-sep">or sign in with</p>
+            <?php foreach ($oauth_providers as $p): ?>
+                <a class="btn btn-oauth btn-oauth-<?= $e($p) ?>" href="/auth/<?= $e($p) ?>/redirect"><?= $e(ucfirst($p)) ?></a>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
     <p class="muted">New here? <a href="/register">Create an account</a>.</p>
 </div>

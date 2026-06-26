@@ -22,4 +22,10 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </nav>
+    <?php if (!empty($features['presence']) && $current_user !== null): ?>
+        <section class="presence-widget" data-presence hidden aria-live="polite">
+            <h2 class="presence-title">Online <span class="presence-count" data-presence-count>0</span></h2>
+            <ul class="presence-list" data-presence-list></ul>
+        </section>
+    <?php endif; ?>
 </aside>

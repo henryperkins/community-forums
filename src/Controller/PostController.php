@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\Request;
@@ -13,6 +14,7 @@ use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\BoardPolicy;
+use App\Service\BadgeService;
 use App\Service\ModerationService;
 use App\Service\PostingService;
 
@@ -40,6 +42,7 @@ final class PostController extends Controller
             ], 422);
         }
 
+        $this->awardBadges($user->id());
         return $this->redirect('/t/' . $result['thread_id'] . '-' . $result['slug']);
     }
 
@@ -63,9 +66,19 @@ final class PostController extends Controller
             ])->withStatus(422);
         }
 
+        $this->awardBadges($user->id());
+
         $thread = $this->container->get(ThreadRepository::class)->find($threadId);
         $slug = $thread !== null ? $thread['slug'] : '';
         return $this->redirect('/t/' . $threadId . '-' . $slug . '#p' . $postId);
+    }
+
+    /** Evaluate auto badges for a user after they post (community flag aware). */
+    private function awardBadges(int $userId): void
+    {
+        if ($this->container->get(FeatureFlags::class)->enabled('community')) {
+            $this->container->get(BadgeService::class)->evaluateForUser($userId);
+        }
     }
 
     /** @param array<string,string> $params */

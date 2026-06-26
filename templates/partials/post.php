@@ -5,13 +5,15 @@ $admin = $current_user?->isAdmin() ?? false;
 $canModerate = $admin && !$owner;
 $author = ($p['author_display_name'] ?? '') !== '' ? $p['author_display_name'] : $p['author_username'];
 ?>
-<div class="post" id="p<?= (int) $p['id'] ?>">
+<?php $accepted = $accepted ?? false; ?>
+<div class="post<?= $accepted ? ' post-accepted' : '' ?>" id="p<?= (int) $p['id'] ?>">
     <?= $this->partial('partials/monogram', ['name' => $author, 'username' => $p['author_username']]) ?>
     <div class="post-main">
         <div class="post-head">
             <a class="post-author" href="/u/<?= $e($p['author_username']) ?>"><?= $e($author) ?></a>
             <?php if ((int) $p['is_op'] === 1): ?><span class="badge">OP</span><?php endif; ?>
             <?php if (($p['author_role'] ?? 'user') === 'admin'): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
+            <?php if ($accepted): ?><span class="badge badge-solved" title="Accepted answer">✓ Accepted answer</span><?php endif; ?>
             <span class="post-time"><?= $e(human_datetime($p['created_at'])) ?></span>
             <?php if (!empty($p['edited_at'])): ?><span class="muted post-edited">(edited)</span><?php endif; ?>
         </div>
@@ -60,6 +62,12 @@ $author = ($p['author_display_name'] ?? '') !== '' ? $p['author_display_name'] :
                 </details>
             <?php endif; ?>
         </div>
+        <?php endif; ?>
+        <?php if (!empty($can_mark_solved) && empty($accepted) && (int) $p['is_op'] === 0): ?>
+            <form class="inline solved-action" method="post" action="/posts/<?= (int) $p['id'] ?>/accept">
+                <?= $this->csrfField() ?>
+                <button class="linkbtn" type="submit">✓ Accept as answer</button>
+            </form>
         <?php endif; ?>
         <?php if ($owner || $canModerate): ?>
             <div class="post-actions">

@@ -34,6 +34,9 @@ final class AccountController extends Controller
                 'display_name' => $row['display_name'] ?? '',
                 'bio' => $row['bio'] ?? '',
                 'location' => $row['location'] ?? '',
+                'website' => $row['website'] ?? '',
+                'pronouns' => $row['pronouns'] ?? '',
+                'signature' => $row['signature'] ?? '',
             ],
             'email' => $row['email'] ?? '',
         ]);

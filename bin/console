@@ -10,11 +10,13 @@ use App\Core\Migrator;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
+use App\Repository\BadgeRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Service\BadgeService;
 use App\Service\RepairService;
 use App\Worker\DailyDigestWorker;
 use App\Worker\NotificationEmailWorker;
@@ -76,7 +78,7 @@ try {
 
         case 'repair':
         case 'repair:all':
-            $result = (new RepairService($database()))->repairAll();
+            $result = (new RepairService($database(), (int) $config->get('community.solved_bonus', 5)))->repairAll();
             foreach ($result as $name => $rows) {
                 $log(sprintf('  repaired %-18s (%d rows)', $name, $rows));
             }
@@ -92,8 +94,33 @@ try {
             break;
 
         case 'repair:reputation':
-            (new RepairService($database()))->repairReputation();
-            $log('Reputation recomputed from reactions.');
+            $svc = new RepairService($database(), (int) $config->get('community.solved_bonus', 5));
+            $svc->repairReputation();
+            $svc->reputationSolvedBonus();
+            $log('Reputation recomputed from reactions + solved bonuses.');
+            break;
+
+        case 'community:backfill-badges':
+            // Idempotently award auto badges (incl. anniversary) from current
+            // state, without synthesising historical notifications. Safe to run
+            // on a cron for the time-based Anniversary badge.
+            $db = $database();
+            $badges = new BadgeService(
+                $db,
+                new BadgeRepository($db),
+                new UserRepository($db),
+                null,
+                (int) $config->get('community.badge_conversation_starter_threads', 10),
+                (int) $config->get('community.badge_trusted_answerer_solved', 10),
+                (int) $config->get('community.badge_appreciated_rep', 100),
+                (int) $config->get('community.badge_well_liked_rep', 1000),
+            );
+            $ids = $db->fetchAll('SELECT id FROM users');
+            $awarded = 0;
+            foreach ($ids as $row) {
+                $awarded += count($badges->evaluateForUser((int) $row['id']));
+            }
+            $log("Badge backfill complete: $awarded new award(s) across " . count($ids) . ' user(s).');
             break;
 
         case 'worker:email':
@@ -143,7 +170,8 @@ try {
             $log('  key:generate         Print a fresh APP_KEY');
             $log('  repair               Reconcile all denormalised counters + reputation');
             $log('  repair:counters      Reconcile post/thread/board counters');
-            $log('  repair:reputation    Recompute reputation from reactions');
+            $log('  repair:reputation    Recompute reputation from reactions + solved bonuses');
+            $log('  community:backfill-badges  Idempotently award auto badges (run on a cron for Anniversary)');
             $log('  engagement:cutover [UTC]  Set the unread cutover timestamp');
             $log('  worker:email [limit]  Drain the instant notification-email queue');
             $log('  worker:digest         Send due daily digests');

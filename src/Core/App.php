@@ -7,19 +7,27 @@ namespace App\Core;
 use App\Controller\AccountController;
 use App\Controller\AdminController;
 use App\Controller\AuthController;
+use App\Controller\BlockController;
 use App\Controller\BoardController;
 use App\Controller\ConversationController;
 use App\Controller\EngagementController;
+use App\Controller\FeedController;
+use App\Controller\FollowController;
 use App\Controller\HealthController;
 use App\Controller\HomeController;
 use App\Controller\InboxController;
+use App\Controller\LeaderboardController;
 use App\Controller\ModerationController;
+use App\Controller\OAuthController;
 use App\Controller\PostController;
+use App\Controller\PresenceController;
 use App\Controller\ProfileController;
 use App\Controller\ReportController;
 use App\Controller\SearchController;
 use App\Controller\NotificationController;
+use App\Controller\SettingsController;
 use App\Controller\SetupController;
+use App\Controller\SolvedController;
 use App\Controller\SubscriptionController;
 use App\Controller\UserModerationController;
 use App\Controller\ThreadController;
@@ -29,6 +37,7 @@ use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
 use App\Search\MysqlSearchService;
 use App\Search\SearchService;
+use App\Repository\BadgeRepository;
 use App\Repository\BlockRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
@@ -39,7 +48,9 @@ use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
+use App\Repository\FollowRepository;
 use App\Repository\NotificationRepository;
+use App\Repository\OAuthIdentityRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
@@ -48,6 +59,9 @@ use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
+use App\Repository\UserBoardPrefRepository;
+use App\Repository\UserPreferenceRepository;
+use App\Repository\UsernameHistoryRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\Csrf;
@@ -60,13 +74,21 @@ use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AuthService;
+use App\Service\BadgeService;
 use App\Service\DirectMessageService;
+use App\Service\FeedService;
+use App\Service\FollowService;
 use App\Service\ModerationService;
 use App\Service\NotificationService;
+use App\Service\OAuthService;
+use App\Service\OAuth\ProviderRegistry;
 use App\Service\PostingService;
+use App\Service\PreferenceService;
 use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
+use App\Service\SolvedAnswerService;
+use App\Service\TitleService;
 use App\Service\UserModerationService;
 use App\Service\SetupService;
 use App\Support\HtmlSanitizer;
@@ -113,6 +135,7 @@ final class App
         $flash = $container->get(Flash::class);
 
         $session->start($request);
+        $this->heartbeat($container, $session->user());
         $flash->load($request);
         $this->shareViewGlobals($container, $request);
 
@@ -147,8 +170,12 @@ final class App
                 return $this->redirect('/');
             }
 
-            // CSRF on every state-changing request.
-            if ($request->isPost() && !$container->get(Csrf::class)->verify((string) ($request->post('_token') ?? ''))) {
+            // CSRF on every state-changing request, except the OAuth provider
+            // callback — that POST originates cross-site from the provider and is
+            // protected by the signed `state` cookie instead of a form token.
+            $oauthCallback = preg_match('#^/auth/[^/]+/callback$#', $path) === 1;
+            if ($request->isPost() && !$oauthCallback
+                && !$container->get(Csrf::class)->verify((string) ($request->post('_token') ?? ''))) {
                 return $this->renderError($container, 403, 'That form has expired or its security token was invalid. Please go back, reload, and try again.');
             }
 
@@ -170,6 +197,34 @@ final class App
     private function redirect(string $to, int $status = 302): Response
     {
         return Response::redirect($to, $status);
+    }
+
+    /**
+     * Presence heartbeat (P2-11): refresh users.last_seen_at at most once per
+     * heartbeat window for a signed-in user. Best-effort — never breaks a request.
+     */
+    private function heartbeat(Container $container, ?\App\Domain\User $user): void
+    {
+        if ($user === null) {
+            return;
+        }
+        try {
+            if (!$container->get(FeatureFlags::class)->enabled('presence')) {
+                return;
+            }
+            $lastSeen = $user->toArray()['last_seen_at'] ?? null;
+            $window = (int) $this->config->get('presence.heartbeat_seconds', 60);
+            $stale = true;
+            if (is_string($lastSeen) && $lastSeen !== '') {
+                $ts = strtotime($lastSeen . ' UTC');
+                $stale = $ts === false || $ts <= time() - $window;
+            }
+            if ($stale) {
+                $container->get(UserRepository::class)->updateLastSeen($user->id());
+            }
+        } catch (Throwable) {
+            // Presence is non-essential; swallow errors (e.g. pre-migration DB).
+        }
     }
 
     private function renderError(Container $container, int $status, string $message): Response
@@ -234,6 +289,16 @@ final class App
             $features = [];
         }
 
+        // Configured OAuth providers power the "Sign in with …" buttons.
+        $oauthProviders = [];
+        try {
+            if (!empty($features['oauth'])) {
+                $oauthProviders = $container->get(ProviderRegistry::class)->configuredNames();
+            }
+        } catch (Throwable) {
+            $oauthProviders = [];
+        }
+
         $container->get(View::class)->share([
             'site_name' => $siteName,
             'app_name' => $appName,
@@ -243,6 +308,7 @@ final class App
             'request_path' => $request->path(),
             'nav' => $nav,
             'features' => $features,
+            'oauth_providers' => $oauthProviders,
         ]);
     }
 
@@ -259,8 +325,11 @@ final class App
 
         // Private boards the viewer belongs to should appear in their sidebar.
         $memberBoardIds = [];
+        $mutedBoardIds = [];
         if ($user !== null) {
             $memberBoardIds = array_flip($container->get(BoardMemberRepository::class)->boardIdsFor($user->id()));
+            // Muted boards are excluded from the sidebar (USER §4.3).
+            $mutedBoardIds = array_flip($container->get(UserBoardPrefRepository::class)->mutedBoardIds($user->id()));
         }
 
         $nav = [];
@@ -268,6 +337,7 @@ final class App
             $boards = array_values(array_filter(
                 $allBoards,
                 fn (array $b): bool => (int) $b['category_id'] === (int) $category['id']
+                    && !isset($mutedBoardIds[(int) $b['id']])
                     && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
             ));
             if ($boards !== []) {
@@ -327,10 +397,19 @@ final class App
         $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));
         $c->bind(DmMessageRepository::class, fn (Container $c) => new DmMessageRepository($c->get(Database::class)));
         $c->bind(ReportRepository::class, fn (Container $c) => new ReportRepository($c->get(Database::class)));
+        $c->bind(FollowRepository::class, fn (Container $c) => new FollowRepository($c->get(Database::class)));
+        $c->bind(BadgeRepository::class, fn (Container $c) => new BadgeRepository($c->get(Database::class)));
+        $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
+        $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
+        $c->bind(UserBoardPrefRepository::class, fn (Container $c) => new UserBoardPrefRepository($c->get(Database::class)));
+        $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
-        $c->bind(RepairService::class, fn (Container $c) => new RepairService($c->get(Database::class)));
+        $c->bind(RepairService::class, fn (Container $c) => new RepairService(
+            $c->get(Database::class),
+            (int) $config->get('community.solved_bonus', 5),
+        ));
         $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
         $c->bind(Mailer::class, function () use ($config): Mailer {
             $mail = (array) $config->get('mail', []);
@@ -388,6 +467,46 @@ final class App
             $c->get(NotificationService::class),
         ));
 
+        // Community identity (P2-09).
+        $c->bind(TitleService::class, fn () => new TitleService(
+            (array) $config->get('community.title_thresholds', []),
+        ));
+        $c->bind(BadgeService::class, fn (Container $c) => new BadgeService(
+            $c->get(Database::class),
+            $c->get(BadgeRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(NotificationService::class),
+            (int) $config->get('community.badge_conversation_starter_threads', 10),
+            (int) $config->get('community.badge_trusted_answerer_solved', 10),
+            (int) $config->get('community.badge_appreciated_rep', 100),
+            (int) $config->get('community.badge_well_liked_rep', 1000),
+        ));
+        $c->bind(FollowService::class, fn (Container $c) => new FollowService(
+            $c->get(FollowRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(NotificationService::class),
+        ));
+        $c->bind(FeedService::class, fn (Container $c) => new FeedService(
+            $c->get(Database::class),
+            $c->get(FollowRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(BoardMemberRepository::class),
+        ));
+        $c->bind(SolvedAnswerService::class, fn (Container $c) => new SolvedAnswerService(
+            $c->get(Database::class),
+            $c->get(ThreadRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(BadgeService::class),
+            $c->get(NotificationService::class),
+            $c->get(WriteGate::class),
+            (int) $config->get('community.solved_bonus', 5),
+        ));
+
         // Session + CSRF.
         $c->bind(Session::class, fn (Container $c) => new Session(
             $c->get(SessionRepository::class),
@@ -407,6 +526,18 @@ final class App
             $c->get(PasswordHasher::class),
             $c->get(WriteGate::class),
             $config,
+            $c->get(UserPreferenceRepository::class),
+        ));
+        $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
+            $c->get(UserPreferenceRepository::class),
+            (int) $config->get('pagination.threads_per_page', 20),
+            (int) $config->get('pagination.posts_per_page', 20),
+        ));
+        $c->bind(ProviderRegistry::class, fn () => new ProviderRegistry((array) $config->get('oauth', [])));
+        $c->bind(OAuthService::class, fn (Container $c) => new OAuthService(
+            $c->get(Database::class),
+            $c->get(OAuthIdentityRepository::class),
+            $c->get(UserRepository::class),
         ));
         $c->bind(PostingService::class, fn (Container $c) => new PostingService(
             $c->get(Database::class),
@@ -460,11 +591,22 @@ final class App
         $r->get('/healthz', [HealthController::class, 'check']);
         $r->get('/inbox', [InboxController::class, 'index']);
         $r->get('/search', [SearchController::class, 'index']);
+        $r->get('/presence', [PresenceController::class, 'index']);
 
         $r->get('/c/{slug}', [BoardController::class, 'show']);
         $r->get('/t/{id}-{slug}', [ThreadController::class, 'show']);
         $r->get('/t/{id}', [ThreadController::class, 'show']);
         $r->get('/u/{username}', [ProfileController::class, 'show']);
+        $r->get('/u/{username}/followers', [ProfileController::class, 'followers']);
+        $r->get('/u/{username}/following', [ProfileController::class, 'following']);
+
+        // Community identity (P2-09): follows, feed, leaderboard, solved answers.
+        $r->get('/feed', [FeedController::class, 'index']);
+        $r->get('/leaderboard', [LeaderboardController::class, 'index']);
+        $r->post('/u/{username}/follow', [FollowController::class, 'toggle']);
+        $r->post('/u/{username}/block', [BlockController::class, 'toggle']);
+        $r->post('/posts/{id}/accept', [SolvedController::class, 'accept']);
+        $r->post('/t/{id}/unaccept', [SolvedController::class, 'unaccept']);
 
         $r->get('/login', [AuthController::class, 'showLogin']);
         $r->post('/login', [AuthController::class, 'login']);
@@ -472,11 +614,34 @@ final class App
         $r->post('/register', [AuthController::class, 'register']);
         $r->post('/logout', [AuthController::class, 'logout']);
 
+        // OAuth sign-in / account linking (P2-10). The callback is state-cookie
+        // protected (not _token), so it is exempt from the CSRF gate (see process()).
+        $r->get('/auth/{provider}/redirect', [OAuthController::class, 'start']);
+        $r->get('/auth/{provider}/callback', [OAuthController::class, 'callback']);
+        $r->post('/auth/{provider}/callback', [OAuthController::class, 'callback']);
+        $r->get('/settings/connections', [OAuthController::class, 'connections']);
+        $r->post('/settings/connections/unlink', [OAuthController::class, 'unlink']);
+        $r->post('/settings/connections/set-password', [OAuthController::class, 'setPassword']);
+
         $r->get('/settings', [AccountController::class, 'index']);
         $r->get('/settings/account', [AccountController::class, 'accountForm']);
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
         $r->get('/settings/security', [AccountController::class, 'securityForm']);
         $r->post('/settings/security', [AccountController::class, 'updateSecurity']);
+
+        // Member controls (P2-10): privacy, preferences, notifications, sessions, blocks, boards.
+        $r->get('/settings/privacy', [SettingsController::class, 'privacyForm']);
+        $r->post('/settings/privacy', [SettingsController::class, 'updatePrivacy']);
+        $r->get('/settings/preferences', [SettingsController::class, 'preferencesForm']);
+        $r->post('/settings/preferences', [SettingsController::class, 'updatePreferences']);
+        $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);
+        $r->post('/settings/notifications', [SettingsController::class, 'updateNotifications']);
+        $r->get('/settings/sessions', [SettingsController::class, 'sessions']);
+        $r->post('/settings/sessions/revoke', [SettingsController::class, 'revokeSession']);
+        $r->post('/settings/sessions/revoke-others', [SettingsController::class, 'revokeOtherSessions']);
+        $r->get('/settings/blocks', [BlockController::class, 'index']);
+        $r->get('/settings/boards', [SettingsController::class, 'boards']);
+        $r->post('/settings/boards/toggle', [SettingsController::class, 'toggleBoardPref']);
 
         $r->get('/setup', [SetupController::class, 'show']);
         $r->post('/setup', [SetupController::class, 'submit']);

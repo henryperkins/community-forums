@@ -85,6 +85,29 @@ final class PostRepository
         );
     }
 
+    /**
+     * Recent non-deleted posts by author for the PUBLIC profile activity tab.
+     * Restricted to public boards so activity never reveals hidden/private-board
+     * content (mirrors ThreadRepository::recentByUser). Joins thread title/slug.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function recentByUser(int $userId, int $limit): array
+    {
+        $limit = max(1, $limit);
+        return $this->db->fetchAll(
+            "SELECT p.id, p.thread_id, p.body, p.created_at, p.is_op,
+                    t.title AS thread_title, t.slug AS thread_slug, b.slug AS board_slug
+             FROM posts p
+             JOIN threads t ON t.id = p.thread_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE p.user_id = ? AND p.is_deleted = 0 AND t.is_deleted = 0 AND b.visibility = 'public'
+             ORDER BY p.created_at DESC, p.id DESC
+             LIMIT " . $limit,
+            [$userId],
+        );
+    }
+
     public function update(int $id, string $body, string $bodyHtml, int $editedBy): void
     {
         $this->db->run(

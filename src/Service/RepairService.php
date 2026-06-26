@@ -16,7 +16,7 @@ use App\Core\Database;
  */
 final class RepairService
 {
-    public function __construct(private Database $db)
+    public function __construct(private Database $db, private int $solvedBonus = 5)
     {
     }
 
@@ -44,6 +44,26 @@ final class RepairService
                 JOIN posts p ON p.id = r.post_id
                 WHERE p.user_id = u.id AND p.is_deleted = 0 AND r.user_id <> u.id
              )",
+        )->rowCount();
+    }
+
+    /**
+     * Add the accepted-answer reputation bonus on top of the reaction-derived
+     * base (COMMUNITY §2.1). Must run AFTER repairReputation(), which sets the
+     * reaction base. A bonus accrues once per accepted answer whose author is not
+     * the thread OP (self-answers earn nothing — see SolvedAnswerService).
+     */
+    public function reputationSolvedBonus(): int
+    {
+        return $this->db->run(
+            'UPDATE users u SET reputation = reputation + (
+                SELECT COALESCE(COUNT(*), 0) * :bonus
+                FROM threads t
+                JOIN posts p ON p.id = t.accepted_answer_post_id
+                WHERE p.user_id = u.id AND p.user_id <> t.user_id
+                  AND t.is_deleted = 0 AND p.is_deleted = 0
+             )',
+            ['bonus' => $this->solvedBonus],
         )->rowCount();
     }
 
@@ -114,11 +134,16 @@ final class RepairService
     /** Run every repair pass. @return array<string,int> */
     public function repairAll(): array
     {
-        return $this->db->transaction(fn (): array => [
-            'user_post_counts' => $this->repairUserPostCounts(),
-            'thread_counters' => $this->repairThreadCounters(),
-            'board_counters' => $this->repairBoardCounters(),
-            'reputation' => $this->repairReputation(),
-        ]);
+        return $this->db->transaction(function (): array {
+            $out = [
+                'user_post_counts' => $this->repairUserPostCounts(),
+                'thread_counters' => $this->repairThreadCounters(),
+                'board_counters' => $this->repairBoardCounters(),
+                'reputation' => $this->repairReputation(),
+            ];
+            // Layer the solved-answer bonus onto the reaction-derived base.
+            $this->reputationSolvedBonus();
+            return $out;
+        });
     }
 }

@@ -232,6 +232,17 @@ final class PostingService
         if ($received > 0) {
             $this->users->incrementReputation((int) $post['user_id'], -$received);
         }
+        // If this post was the thread's accepted answer, clear it and reverse the
+        // solved bonus (author != OP). RepairService::reputationSolvedBonus and
+        // solvedAnswerCount both already exclude deleted accepted answers, so the
+        // runtime path must match or reputation drifts on the next repair.
+        $thread = $this->threads->find((int) $post['thread_id']);
+        if ($thread !== null && (int) ($thread['accepted_answer_post_id'] ?? 0) === (int) $post['id']) {
+            $this->threads->setAcceptedAnswer((int) $post['thread_id'], null);
+            if ((int) $post['user_id'] !== (int) $thread['user_id']) {
+                $this->users->incrementReputation((int) $post['user_id'], -(int) $this->config->get('community.solved_bonus', 5));
+            }
+        }
         $this->threads->recomputeLastPost((int) $post['thread_id']);
         $this->boards->recomputeLastPost((int) $post['board_id']);
     }

@@ -13,6 +13,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
+use App\Service\BadgeService;
 use App\Service\ReactionService;
 
 /**
@@ -43,6 +44,13 @@ final class EngagementController extends Controller
 
         $post = $result['post'];
         $threadUrl = '/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'];
+
+        // A received reaction may cross a reputation badge milestone for the
+        // post author (Appreciated / Well-Liked). Idempotent + cheap when not due.
+        if ($result['state'] === 'added' && (int) $post['user_id'] !== $user->id()
+            && $this->container->get(FeatureFlags::class)->enabled('community')) {
+            $this->container->get(BadgeService::class)->evaluateForUser((int) $post['user_id']);
+        }
 
         if ($request->wantsJson()) {
             return Response::json([

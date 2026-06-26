@@ -60,6 +60,25 @@ final class NotificationRepository
         ]);
     }
 
+    /**
+     * Idempotent follow notification: at most one unread 'follow' row per
+     * (recipient, actor) so unfollow/refollow churn doesn't spam the bell.
+     */
+    public function createFollowOnce(int $recipientId, int $actorId): int
+    {
+        $exists = $this->db->fetchValue(
+            "SELECT 1 FROM notifications
+             WHERE user_id = ? AND type = 'follow' AND actor_id = ? AND is_read = 0 LIMIT 1",
+            [$recipientId, $actorId],
+        );
+        if ($exists !== false) {
+            return 0;
+        }
+        return $this->create([
+            'user_id' => $recipientId, 'type' => 'follow', 'actor_id' => $actorId,
+        ]);
+    }
+
     public function unreadCount(int $userId): int
     {
         return (int) $this->db->fetchValue(

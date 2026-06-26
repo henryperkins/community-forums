@@ -102,7 +102,20 @@ final class NotificationController extends Controller
                 break;
             }
         }
-        if ($n === null || $n['thread_id'] === null) {
+        if ($n === null) {
+            return null;
+        }
+
+        // Social notifications link to people, not threads.
+        if ($n['type'] === 'follow' && ($n['actor_username'] ?? '') !== '') {
+            return '/u/' . (string) $n['actor_username'];
+        }
+        if ($n['type'] === 'badge') {
+            $me = $this->currentUser();
+            return $me !== null ? '/u/' . $me->username() : '/notifications';
+        }
+
+        if ($n['thread_id'] === null) {
             return null;
         }
 

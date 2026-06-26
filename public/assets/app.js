@@ -70,4 +70,37 @@
         poll();
         setInterval(poll, 60000); // once a minute is plenty for a forum bell
     }
+
+    // Presence roster: short-poll who's online (P2-11). The server already
+    // excludes hidden users, the viewer, and blocked members — the client just
+    // renders. The widget stays hidden (no-JS) until there's someone to show.
+    var presence = document.querySelector('[data-presence]');
+    if (presence && window.fetch) {
+        var pList = presence.querySelector('[data-presence-list]');
+        var pCount = presence.querySelector('[data-presence-count]');
+        var pollPresence = function () {
+            fetch('/presence?format=json', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+                if (!data || !pList) { return; }
+                if (pCount) { pCount.textContent = data.count; }
+                pList.innerHTML = '';
+                (data.online || []).slice(0, 20).forEach(function (u) {
+                    var li = document.createElement('li');
+                    var a = document.createElement('a');
+                    a.href = '/u/' + encodeURIComponent(u.username);
+                    var dot = document.createElement('span');
+                    dot.className = 'dot';
+                    a.appendChild(dot);
+                    a.appendChild(document.createTextNode(u.display_name || u.username));
+                    li.appendChild(a);
+                    pList.appendChild(li);
+                });
+                presence.hidden = (data.count || 0) === 0;
+            }).catch(function () {});
+        };
+        pollPresence();
+        setInterval(pollPresence, 45000);
+    }
 })();

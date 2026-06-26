@@ -2,7 +2,7 @@
 
 **RetroBoards** is self-hostable forum / community software — a **Community Inbox**: durable forum topics (Discourse-style permanence) presented through the familiar Slack/email-style three-pane shell, with email-style triage. Stack: **vanilla PHP 8 + MySQL**, server-rendered with progressive-enhancement JavaScript, designed to run on a single VPS.
 
-> **Status: Phase 1 (MVP backend) implemented.** The vanilla-PHP application, the 10 Phase-1 migrations, the server-rendered three-pane UI, and the automated test suite are now on disk under `src/`, `templates/`, `database/`, and `tests/`. Phases 2–7 remain plans. See [`docs/PHASE_1_COMPLETION.md`](docs/PHASE_1_COMPLETION.md) for the acceptance-evidence index.
+> **Status: Phase 2 (community essentials) implemented — M0–M5 on disk.** Building on the Phase 1 MVP backend, Phase 2 adds engagement (reactions/stars/unread), notifications + email worker, mentions, FULLTEXT search, direct messages, scoped moderation + reports, and — in **Milestone 5** — the community-identity and account layer: follows + a query-time Following feed, badges, accepted/"solved" answers, an all-time leaderboard, cosmetic titles, member privacy/preference/block/board controls, active-session management, OAuth sign-in/linking (Google/GitHub/Apple) with avatar import, and privacy-respecting presence. The automated suite is green at **207 tests**. Phases 3–7 remain plans. See [`docs/PHASE_1_COMPLETION.md`](docs/PHASE_1_COMPLETION.md) for the Phase 1 evidence index.
 
 ## Running Phase 1
 

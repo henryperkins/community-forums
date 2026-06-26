@@ -9,6 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\SubscriptionRepository;
@@ -16,6 +17,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
+use App\Service\PreferenceService;
 use App\Service\ReactionService;
 use App\Support\Markdown;
 
@@ -52,7 +54,9 @@ final class ThreadController extends Controller
     public function renderThread(Request $request, array $thread, array $extra = []): Response
     {
         $user = $this->currentUser();
-        $perPage = (int) $this->config()->get('pagination.posts_per_page', 20);
+        $perPage = $user !== null
+            ? $this->container->get(PreferenceService::class)->postsPerPage($user->id())
+            : (int) $this->config()->get('pagination.posts_per_page', 20);
         $postRepo = $this->container->get(PostRepository::class);
         $markdown = $this->container->get(Markdown::class);
 
@@ -89,6 +93,18 @@ final class ThreadController extends Controller
             }
         }
 
+        // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
+        // may accept/clear an answer; everyone sees the accepted marker.
+        $community = (bool) $this->container->get(FeatureFlags::class)->enabled('community');
+        $acceptedPostId = $thread['accepted_answer_post_id'] !== null ? (int) $thread['accepted_answer_post_id'] : null;
+        $canMarkSolved = $community && $user !== null
+            && $this->container->get(WriteGate::class)->canWrite($user)
+            && (
+                (int) $thread['user_id'] === $user->id()
+                || $user->isAdmin()
+                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
+            );
+
         // Subscription state for the subscribe control (P2-03).
         $notificationsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('notifications');
         $subscription = null;
@@ -113,6 +129,9 @@ final class ThreadController extends Controller
             'my_reactions' => $myReactions,
             'allowed_emoji' => ReactionService::ALLOWED,
             'is_starred' => $isStarred,
+            'community' => $community,
+            'accepted_post_id' => $acceptedPostId,
+            'can_mark_solved' => $canMarkSolved,
             'notifications_on' => $notificationsOn,
             'subscription' => $subscription,
             'reply_errors' => [],

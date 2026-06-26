@@ -184,6 +184,50 @@ final class NotificationService
         $this->notifs->createReactionOnce($authorId, $actorId, (int) $post['thread_id'], (int) $post['id']);
     }
 
+    /** A new follow notifies the target once (in-app only), unless self or blocked (COMMUNITY §9). */
+    public function notifyFollow(int $actorId, int $targetId): void
+    {
+        if (!$this->flags->enabled('notifications') || $targetId === $actorId) {
+            return;
+        }
+        if ($this->blocks->blockedEitherWay($actorId, $targetId)) {
+            return;
+        }
+        $this->notifs->createFollowOnce($targetId, $actorId);
+    }
+
+    /** A newly-awarded badge notifies its owner (in-app only). Caller awards once, so no dedupe needed. */
+    public function notifyBadge(int $userId): void
+    {
+        if (!$this->flags->enabled('notifications')) {
+            return;
+        }
+        $this->notifs->create(['user_id' => $userId, 'type' => 'badge']);
+    }
+
+    /**
+     * An accepted answer notifies its author in-app + email (COMMUNITY §9). The
+     * actor (who accepted it) never notifies themselves; the email reuses the
+     * post:user idempotency key so retries/overlap deliver at most once.
+     */
+    public function notifySolved(int $answerAuthorId, int $actorId, int $threadId, int $postId): void
+    {
+        if (!$this->flags->enabled('notifications') || $answerAuthorId === $actorId) {
+            return;
+        }
+        $this->notifs->create([
+            'user_id' => $answerAuthorId, 'type' => 'solved',
+            'actor_id' => $actorId, 'thread_id' => $threadId, 'post_id' => $postId,
+        ]);
+
+        if ($this->flags->enabled('email') && $this->mailer->isConfigured()) {
+            $contact = $this->users->contactsForIds([$answerAuthorId])[$answerAuthorId] ?? null;
+            if ($contact !== null && ($contact['email'] ?? '') !== '') {
+                $this->enqueueInstant($answerAuthorId, (string) $contact['email'], $postId);
+            }
+        }
+    }
+
     private function enqueueInstant(int $userId, string $email, int $postId): void
     {
         if ($this->suppress->isSuppressed($email)) {

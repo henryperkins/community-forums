@@ -15,6 +15,10 @@
                 <?php if (!empty($features['dms'])): ?>
                     <a class="topbar-link" href="/messages">Messages</a>
                 <?php endif; ?>
+                <?php if (!empty($features['community'])): ?>
+                    <a class="topbar-link" href="/feed">Following</a>
+                    <a class="topbar-link" href="/leaderboard">Top</a>
+                <?php endif; ?>
                 <?php if (!empty($features['notifications'])): ?>
                     <a class="topbar-link bell" href="/notifications" data-bell title="Notifications">
                         <span aria-hidden="true">🔔</span>

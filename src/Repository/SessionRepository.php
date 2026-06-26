@@ -59,4 +59,44 @@ final class SessionRepository
     {
         $this->db->run('UPDATE sessions SET revoked_at = UTC_TIMESTAMP() WHERE user_id = ? AND revoked_at IS NULL', [$userId]);
     }
+
+    // ---- Active sessions & devices (USER §3.3, P2-10) ---------------------
+
+    /**
+     * Active (unrevoked, unexpired) sessions for a user, newest activity first.
+     * ip is returned as a human-readable string (VARBINARY(16) → inet_ntop).
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function listActiveForUser(int $userId): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT id, user_agent, INET6_NTOA(ip) AS ip, created_at, last_seen_at, expires_at
+             FROM sessions
+             WHERE user_id = ? AND revoked_at IS NULL AND expires_at > UTC_TIMESTAMP()
+             ORDER BY last_seen_at DESC, created_at DESC',
+            [$userId],
+        );
+        return $rows;
+    }
+
+    /** Revoke one session, but only if it belongs to $userId. @return bool revoked */
+    public function revokeForUser(string $id, int $userId): bool
+    {
+        return $this->db->run(
+            'UPDATE sessions SET revoked_at = UTC_TIMESTAMP()
+             WHERE id = ? AND user_id = ? AND revoked_at IS NULL',
+            [$id, $userId],
+        )->rowCount() > 0;
+    }
+
+    /** "Log out everywhere else": revoke all of the user's sessions except the current one. */
+    public function revokeOthersForUser(int $userId, string $exceptId): void
+    {
+        $this->db->run(
+            'UPDATE sessions SET revoked_at = UTC_TIMESTAMP()
+             WHERE user_id = ? AND id <> ? AND revoked_at IS NULL',
+            [$userId, $exceptId],
+        );
+    }
 }
