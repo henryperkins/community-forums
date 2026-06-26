@@ -1,0 +1,10 @@
+# Project knowledge archive (source material, not part of the repo)
+retroboards-project-knowledge.zip
+*.zip
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

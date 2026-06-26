@@ -1,0 +1,121 @@
+# RetroBoards — Decisions Log
+
+**Status:** v1.5 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-26
+**This file settles the open questions** across [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md), [COMPOSER.md](COMPOSER.md), and [COMMUNITY.md](COMMUNITY.md). Where a doc's "Open Questions" section lists an item, the resolution here is authoritative. Decisions are either **[Henry]** (an explicit choice) or **[Rec]** (a recommended default — easily changed, with rationale).
+
+## 1. Confirmed by Henry
+
+- **Stack:** PHP + MySQL, **server-rendered + progressive enhancement** — built on **vanilla PHP + a micro-router** (no Laravel/Slim).
+- **Product model:** the **Community Inbox** — Slack/email familiarity over durable forum topics; three-pane shell.
+- **Composer:** **hybrid live-Markdown**, one unified component (New Thread / Reply / DM / Edit), Markdown canonical; **spike Milkdown first**.
+- **Third-party login:** **Google, Apple, GitHub.**
+- **Roles:** fixed — **Guest / User / Moderator / Admin** — plus **Banned/Suspended** states and **Anonymous** = masked-identity posting mode. Role label standardised on **"User."**
+- **Community layer:** **lightweight / Twitter-like** (no Discourse trust-level gating).
+- **Hosting:** **VPS** (runs a background queue worker).
+- **Email:** **SMTP for now**, provider TBD — behind a swappable Mailer interface.
+
+## 2. Resolved stack summary
+
+| Layer | Decision |
+|---|---|
+| Language / runtime | **PHP 8.x**, vanilla + a small front-controller / router (no full framework) |
+| Database | **MySQL 8 / MariaDB**, InnoDB, `utf8mb4` |
+| Rendering | **Server-rendered HTML** + progressive-enhancement JS; no-JS fallbacks everywhere |
+| Composer editor | **Milkdown** (spike), **Markdown** canonical, sanitised render to HTML |
+| Background work | A **queue worker** (PHP CLI long-runner) on the VPS for notification/email fan-out |
+| Email | **SMTP** via a `Mailer` interface (swap to Postmark/SES/Resend later) |
+| Search | **MySQL FULLTEXT** (swap to Meilisearch later, behind a search interface) |
+| Realtime | **Short-polling** for the bell + presence; SSE later if needed; no WebSockets in v1 |
+| Media storage | **Local disk** on the VPS (non-exec path) behind a storage interface (S3/CDN later) |
+| Sessions | PHP native sessions **+ a `sessions` table** (device list / log-out-everywhere) |
+
+> **Design seam:** anything we might outgrow (email, search, media storage, the feed) sits **behind an interface**, so a single VPS today can become a bigger setup later without rewrites.
+
+> **Phase vs priority:** "P0/P1/P2/P3" in these docs are **MoSCoW priority tiers** — **P0** must-have, **P1** should-have, **P2** could-have, **P3** won't-have-this-round (deferred / later) — and are **not** delivery-phase numbers. Delivery is sequenced independently across **Phases 1–7** (see the PHASE_*_PLAN docs); a priority tier and a delivery phase are orthogonal, so a "P2" or "P3" item may land in any later delivery phase (e.g. Appeals and 2FA are P3 *and* delivered in Phase 3). Where a doc writes "P1…P7" as a shorthand for the **delivery** sequence, read it as "Phase 1…7."
+
+## 3. DESIGN.md decisions
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| 1 | Backend framework | **Vanilla PHP + micro-router** [Henry] | Portable, own-every-line, runs on any VPS. |
+| 2 | Post markup | **Hybrid live-Markdown** (Markdown canonical) [Henry] | Modern feel, portable storage; see COMPOSER.md. |
+| 3 | Unread model | **Per-thread `last_read_post_id`** [Rec] | Cheap and scales for our sizes; per-post receipts too costly. |
+| 4 | "Live" feel | **Short-polling v1** (bell/presence); SSE if needed [Rec] | Simple, VPS-friendly; WebSockets only if real-time chat becomes a goal. |
+| 5 | Search backend | **MySQL FULLTEXT v1**; Meilisearch later [Rec] | Good enough early; swap behind the search interface at scale. |
+| 6 | DMs phase | **Phase 2** [Rec] | Confirmed in scope; not in the MVP read/post slice. |
+| 7 | Email provider | **SMTP now, provider TBD** [Henry] | Behind a `Mailer` interface; pick Postmark/SES/Resend when ready. |
+| 8 | Hosting | **VPS** [Henry] | Enables the queue worker for fan-out. |
+| 9 | Retro theme toggle | **P2 optional skin** [Rec] | The preserved `styles.css` as a switchable theme; not v1. |
+| 10 | Single vs multi-community | **Single per install (v1)**; multi-tenant P2 [Rec] | Avoid `tenant_id` everywhere now; design doesn't preclude it. |
+| 11 | Anonymous/guest posting | **Account required to post**; "Anonymous" = masked logged-in User where a board allows [Henry/Rec] | No unaccountable guest posting; accountability preserved. |
+| 12 | Stack divergence (adjacent Postgres/React build) | **Stay PHP/MySQL; translate** [Henry] | Resolved (DESIGN §14 Q12); revisit only if stacks consolidate. |
+| 13 | Realtime mechanism | **Short-polling** (see #4) [Rec] | One mechanism for bell + presence. |
+| 14 | Notification fan-out | **App-layer, in the write transaction + queue worker** [Rec] | Portable; no DB-trigger lock-in; the VPS runs the worker. |
+| 15 | Reputation input | **Σ reactions received (+1 each); no separate Like** [Rec] | Simplest, reuses existing reactions; see COMMUNITY.md §2. |
+
+## 4. ADMIN.md decisions
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| 1 | "Anonymous" meaning | **Masked-identity for logged-in Users** (not guest posting) [Henry/Rec] | Privacy without an unaccountable actor; mods can reveal (audited). |
+| 2 | Role naming | **"User"** [Henry] | Standardised across all docs (v0.4). |
+| 3 | Custom roles timing | **Fixed roles v1**; granular custom roles P2 [Rec] | The capability model (ADMIN §2.6) is the forward seam. |
+| 4 | Plugin sandbox | **First-party/vetted only v1** (hook listeners from a trusted dir); public ecosystem + sandbox/review P2 [Rec] | Safe given server-side PHP plugins run with app privileges. |
+| 5 | IP storage / retention | **Store login + post IPs, retain 90 days then purge/anonymise; Admin-only + audited access** [Rec] | Abuse/ban-evasion signal balanced with privacy. |
+| 6 | Appeals | **P3, lightweight** (one appeal per action) [Rec] | Keep MVP lean; accountability via the audit log first. |
+| 7 | Registration model | **Open registration + email verification by default**; approval/invite as settings [Rec] | Lowest-friction growth; gates available when needed. |
+| 8 | Suspension modelling | **`users.status` + `suspended_until` (fast path) + `bans` table (history)** [Rec] | Cheap checks + a full system-of-record. |
+| 9 | Moderator scope | **Board-scoped v1**; category-scoped P1 convenience [Rec] | Matches `board_moderators`; least surprise. |
+| 10 | Webhooks / API | **Outbound webhooks P2** (Slack/Discord); admin REST API P3 [Rec] | "Mod alerts in chat" first; full API later. |
+
+## 5. USER.md decisions
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| 1 | Provider set | **Google / Apple / GitHub** [Henry] | Locked for v1. |
+| 2 | Username changes | **Once / 30 days**; old handle reserved 30 days + 301 redirect; history kept [Rec] | Allows change without churn/impersonation; SEO-safe. |
+| 3 | Apple private relay | **Store the relay as the contact email of record; never expose a real email; show "private" label** [Rec] | Respects Apple's privacy model. |
+| 4 | Avatar uploads phase | **Monogram in P1; OAuth avatar-import with OAuth in Phase 2; Gravatar + user uploads in Phase 3** (attachments pipeline) [Rec] | Keeps P1 lean (monogram only); defers Gravatar + upload moderation/storage to the Phase 3 attachments pipeline (USER §8). |
+| 5 | Signature threshold | **Unlocked after 10 posts (or 3 days)**; one small, height-capped image [Rec] | Kills the classic sig-spam vector. |
+| 6 | Profile visibility default | **Public** [Rec] | Forums live on discoverability/SEO; members-only is opt-in. |
+| 7 | Presence default | **On** (user can hide) [Rec] | Powers who's-online, a core Community-Inbox feature; opt-out respects privacy. |
+| 8 | Allow-DMs default | **Members** (logged-in); "no one" available; blocks always apply [Rec] | Open enough to be social, with an off switch. |
+| 9 | `sessions` table phase | **Phase 1** [Rec] | Enables log-out-everywhere + security activity; cheap. Device-mgmt UI P2. |
+| 10 | Emailless OAuth accounts | **Require an email** (prompt if a provider returns none; unverified until confirmed) [Rec] | Needed for recovery + notifications. |
+| 11 | Username + display name | **Keep both** (unique `@username` + editable display name) [Rec] | Stable handle + friendly name; Twitter-like, fits the community layer. |
+| 12 | 2FA | **P3** (TOTP + recovery codes) [Rec] | Important but not MVP-blocking. |
+
+## 6. COMPOSER.md decisions
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| 1 | Editor library | **Spike Milkdown first** (→ Tiptap/ProseMirror → CodeMirror/ink-mde) [Henry] | Markdown-native rich feel; fallbacks defined. |
+| 2 | Send default | **Enter-to-send** (switchable to `Cmd/Ctrl+Enter`); mobile soft-Enter = newline + button [Rec] | Slack-like default; user-overridable (USER.md §4.5). |
+| 3 | Headings in posts | **`##` and `###` only** [Rec] | Prevents a post impersonating page chrome. |
+| 4 | Tables | **P2** [Rec] | Not core to v1 posting. |
+| 5 | Embeds / unfurl | **P2; opt-in per board; server-side fetch with SSRF allowlist** (YouTube, images first) [Rec] | Nice but needs safety work. |
+| 6 | Attachment storage | **Local disk on the VPS (non-exec path) behind a storage interface; 5MB/image; png/jpg/webp/gif** [Rec] | Simple v1; S3/CDN swaps in later. |
+| 7 | Slash-command menu | **P2** [Rec] | Pleasant, not core. |
+| 8 | Per-post mention cap | **10** [Rec] | Curbs mention-spam. |
+| 9 | Server-side draft sync | **P2** (localStorage v1) [Rec] | Drafts already survive locally. |
+
+## 7. Deferred — decided as P2 / P3 / later (not open)
+
+These are **settled as future work**, intentionally out of v1: multi-community/multi-tenant · public plugin marketplace + sandbox/review · Meilisearch/Elastic search · CDN / object storage · 2FA / passkeys · WebSockets real-time · admin REST API · community memory (summaries, related topics, wiki posts, topic split/merge) · time-windowed leaderboards · admin-defined custom badges and custom roles.
+
+Here **"v1" means the Phase 1–2 initial release** (MVP core + community essentials); *"out of v1"* means *not in that first release*, **not** *never*. Most of these are sequenced into a later delivery phase rather than dropped: **2FA, appeals, admin REST API, retro skin, and category-scoped mods → Phase 3**; **time-windowed leaderboards and admin-defined custom badges → Phase 4**; **custom roles, passkeys/WebAuthn, and the public plugin marketplace + sandbox/review → Phase 5**; **Meilisearch and CDN/object storage → Phase 6** (SSE realtime also lands in Phase 6; full WebSockets stay deferred); **multi-community/multi-tenant, PWA, forum imports, and i18n → Phase 7, with separately-approved public federation also gated in Phase 7 (Gate B)** (see the PHASE_*_PLAN docs and SCHEMA §6). Community-memory features remain Phase 4 candidates gated on demand. Only items with no committed delivery phase are genuinely open.
+
+## 8. What's still genuinely open (minor, decide during build)
+
+Only small product-flavour calls remain (COMMUNITY.md §14.2), each with a lean already noted: reputation-milestone notifications (lean: skip/opt-in) and whether the Following feed includes every reply (lean: new threads + authored posts only). _(Title source and who-can-mark-"solved" are now settled — reputation/post-count-derived admin-overridable titles, and OP + moderators, respectively; see COMMUNITY §8 and the Phase 2 plan.)_ Plus the **email provider pick**, deferred until sending matters — when chosen it must support **bounce/complaint webhooks** and solid transactional deliverability (SMTP works in the meantime). Nothing here blocks starting Phase 1.
+
+## 9. Changelog
+
+| Version | Date | Notes |
+|---|---|---|
+| v1.5 | 2026-06-26 | Cross-doc review pass: §7 added **public federation** to the Phase 7 deferred-work map (it was only in PHASE_7_PLAN / SCHEMA §6). Companion fixes landed elsewhere — SCHEMA (`notifications.'announcement'` + announcements storage; default-collapsed flag; de-referenced the missing auth-design doc), DESIGN (sessions-table-ships-Phase-1 wording; mockup-status; composer phasing), COMPOSER (priority-tier→delivery-phase map), and the Phase 1/2/3/6/7 plans (Phase-1 rate-limit store; stale `sessions.ip` note; Phase-2 column enumeration + announcement storage; Phase-3 plugins/webhooks/api_tokens create-not-extend; README authority; Phase-7 draft/SSE conditionality). Added `README.md` as a thin orientation pointer. |
+| v1.4 | 2026-06-26 | Resolved the avatar/Gravatar phase conflict in §5 #4: **monogram P1; OAuth avatar-import P2; Gravatar + uploads P3** (was "Gravatar/OAuth-import in P1"), aligning DECISIONS to USER §8/§9 and PHASE_1_MIGRATIONS.md. |
+| v1.3 | 2026-06-26 | Consistency pass: defined **"v1" = the Phase 1–2 initial release** in §7 and mapped each "out of v1" item to the delivery phase that ships it (2FA/appeals/admin-API → Phase 3; time-windowed leaderboards/custom badges → Phase 4; custom roles/passkeys/plugin marketplace → Phase 5; Meilisearch/CDN/SSE → Phase 6; multi-tenant/PWA/imports/i18n → Phase 7), resolving the "'out of v1' vs 'delivered in Phase 3'" ambiguity. Header bumped (was v1.1, behind its own v1.2 row). |
+| v1.2 | 2026-06-26 | Consistency pass: **defined P3** in §2 (MoSCoW "won't-have-this-round"/later) so the tier used for Appeals/2FA/admin-API is no longer undefined, and clarified that "P1…P7" written as shorthand means "Phase 1…7"; widened the §7 header to "P2 / P3 / later". Companion edits aligned the docs: 2FA → P3 (USER), Appeals header → Phase 3 (ADMIN), `allow_dms` default → 'members' (USER/SCHEMA), Phase 2 community-layer scope (DESIGN), `posts.ip` added (SCHEMA), and owners assigned to the unscheduled operator features (ADMIN §11). |
+| v1.1 | 2026-06-25 | Consistency pass: added the previously-missing row 12 (stack divergence) to §3; added a "phase vs priority" clarifier to §2 (P0/P1/P2 are priority tiers, not delivery phases). |
+| v1.0 | 2026-06-19 | Initial decisions log. Records Henry's confirmed choices (vanilla PHP + micro-router, VPS, SMTP, lightweight community, Google/Apple/GitHub, fixed roles, hybrid Markdown/Milkdown) and resolves every open question across DESIGN/ADMIN/USER/COMPOSER with rationale; resolved stack summary; deferred-to-later list. |
