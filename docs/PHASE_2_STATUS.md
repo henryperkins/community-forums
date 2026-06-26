@@ -25,7 +25,7 @@ fresh-migrated by the bootstrap and rolled back per-test in a transaction.
 | M0 — Foundation | P2-00 | ✅ Done |
 | M1 — Inbox state + reactions/reputation | P2-01, P2-02 | ✅ Done |
 | M2 — Notifications, mentions, email | P2-03, P2-04, P2-05 | ✅ Done (core) |
-| M3 — Search + DMs | P2-06, P2-07 | ⬜ Planned |
+| M3 — Search + DMs | P2-06, P2-07 | ✅ Done |
 | M4 — Scoped moderation + operator controls | P2-08 | ⬜ Planned |
 | M5 — Community identity + account expansion | P2-09, P2-10, P2-11 | ⬜ Planned |
 | M6 — Hardening + phase close | P2-12 | ⬜ Planned |
@@ -130,6 +130,31 @@ migration groups:
   a subscriptions settings list, and admin announcements/broadcast
   (schema home already exists — `notifications.type='announcement'`,
   `settings.site_announcement`, `email_deliveries.kind='system'`).
+
+## M3 — Search + direct messages (P2-06, P2-07) ✅
+
+- **Search** (`SearchService` interface + `MysqlSearchService`): FULLTEXT over
+  thread titles + post bodies; **read gate = isListed semantics** (guest →
+  public; member → + private boards they belong to; admin → all; hidden excluded);
+  deleted/pending excluded; HTML-escaped snippets from canonical Markdown.
+  `SearchController` (`GET /search`), results page, topbar search box;
+  `search` feature-flag gated.
+- **Direct messages** (`ConversationRepository`, `DmMessageRepository`,
+  `DirectMessageService`): one-to-one conversations, send/reply, per-participant
+  unread, in-app `dm` notifications; **eligibility** = write gate + blocks (either
+  direction) + recipient `allow_dms` + **new-user throttle** (start only) +
+  per-sender rate limit. **DM reporting** stores `reports.dm_message_id`
+  (migration `0039`, SCHEMA §7 #16), participant-only, deduped — staff see only
+  the reported message, no DM browser. `ConversationController` + `dm/*`
+  templates + Messages topbar link; `dms` feature-flag gated.
+- **Evidence:** `tests/Integration/Core/AppSearchTest.php` (5 — visibility gate,
+  deleted exclusion, snippet XSS, route; runs on committed fixtures because
+  InnoDB FULLTEXT doesn't index uncommitted rows) and
+  `tests/Integration/Core/AppDirectMessageTest.php` (8 — exchange, block,
+  allow_dms=none, suspended, new-user throttle, report privacy/dedupe, reply,
+  read-on-view). Full suite: **140 tests / 434 assertions**.
+- **Deferred within M3** (small): "Message" button on profiles; the full reports
+  queue/triage UI for DM reports is M4 (P2-08) — submission + storage land here.
 
 ## Adversarial review (M0+M1) — applied
 

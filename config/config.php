@@ -59,6 +59,13 @@ return [
         'posts_per_page' => 20,
     ],
 
+    'dm' => [
+        // New-user anti-spam: a brand-new account (below both thresholds) cannot
+        // START a new conversation; replies to existing conversations are allowed.
+        'new_user_min_posts' => (int) Env::get('DM_NEW_USER_MIN_POSTS', '1'),
+        'new_user_min_age_minutes' => (int) Env::get('DM_NEW_USER_MIN_AGE_MINUTES', '1440'),
+    ],
+
     'limits' => [
         // Post/thread body maximum (COMPOSER.md ~20,000 chars).
         'post_body_max' => 20000,

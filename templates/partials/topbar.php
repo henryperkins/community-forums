@@ -2,10 +2,18 @@
 <header class="topbar">
     <div class="topbar-inner">
         <a class="brand" href="/"><?= $e($site_name) ?></a>
+        <?php if (!empty($features['search'])): ?>
+            <form class="topbar-search" method="get" action="/search" role="search">
+                <input class="input input-small" type="search" name="q" placeholder="Search…" aria-label="Search">
+            </form>
+        <?php endif; ?>
         <div class="topbar-right">
             <?php if ($current_user !== null): ?>
                 <?php if (!empty($features['engagement'])): ?>
                     <a class="topbar-link" href="/inbox">Inbox</a>
+                <?php endif; ?>
+                <?php if (!empty($features['dms'])): ?>
+                    <a class="topbar-link" href="/messages">Messages</a>
                 <?php endif; ?>
                 <?php if (!empty($features['notifications'])): ?>
                     <a class="topbar-link bell" href="/notifications" data-bell title="Notifications">

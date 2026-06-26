@@ -8,6 +8,7 @@ use App\Controller\AccountController;
 use App\Controller\AdminController;
 use App\Controller\AuthController;
 use App\Controller\BoardController;
+use App\Controller\ConversationController;
 use App\Controller\EngagementController;
 use App\Controller\HealthController;
 use App\Controller\HomeController;
@@ -15,6 +16,7 @@ use App\Controller\InboxController;
 use App\Controller\ModerationController;
 use App\Controller\PostController;
 use App\Controller\ProfileController;
+use App\Controller\SearchController;
 use App\Controller\NotificationController;
 use App\Controller\SetupController;
 use App\Controller\SubscriptionController;
@@ -23,10 +25,14 @@ use App\Controller\UnsubscribeController;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
+use App\Search\MysqlSearchService;
+use App\Search\SearchService;
 use App\Repository\BlockRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\ConversationRepository;
+use App\Repository\DmMessageRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\NotificationRepository;
@@ -49,6 +55,7 @@ use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AuthService;
+use App\Service\DirectMessageService;
 use App\Service\ModerationService;
 use App\Service\NotificationService;
 use App\Service\PostingService;
@@ -301,10 +308,13 @@ final class App
         $c->bind(NotificationRepository::class, fn (Container $c) => new NotificationRepository($c->get(Database::class)));
         $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
         $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));
+        $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));
+        $c->bind(DmMessageRepository::class, fn (Container $c) => new DmMessageRepository($c->get(Database::class)));
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
         $c->bind(RepairService::class, fn (Container $c) => new RepairService($c->get(Database::class)));
+        $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
         $c->bind(Mailer::class, function () use ($config): Mailer {
             $mail = (array) $config->get('mail', []);
             if (($mail['driver'] ?? 'sendmail') === 'array') {
@@ -322,6 +332,17 @@ final class App
             $c->get(UserRepository::class),
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
+        ));
+        $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
+            $c->get(Database::class),
+            $c->get(ConversationRepository::class),
+            $c->get(DmMessageRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(Markdown::class),
+            $c->get(NotificationService::class),
+            $config,
         ));
         $c->bind(ReactionService::class, fn (Container $c) => new ReactionService(
             $c->get(Database::class),
@@ -402,6 +423,7 @@ final class App
         $r->get('/', [HomeController::class, 'index']);
         $r->get('/healthz', [HealthController::class, 'check']);
         $r->get('/inbox', [InboxController::class, 'index']);
+        $r->get('/search', [SearchController::class, 'index']);
 
         $r->get('/c/{slug}', [BoardController::class, 'show']);
         $r->get('/t/{id}-{slug}', [ThreadController::class, 'show']);
@@ -445,6 +467,14 @@ final class App
         $r->get('/unsubscribe', [UnsubscribeController::class, 'show']);
         $r->post('/unsubscribe', [UnsubscribeController::class, 'confirm']);
         $r->post('/resubscribe', [UnsubscribeController::class, 'resubscribe']);
+
+        // Direct messages (P2-07).
+        $r->get('/messages', [ConversationController::class, 'index']);
+        $r->get('/messages/new', [ConversationController::class, 'newForm']);
+        $r->post('/messages', [ConversationController::class, 'create']);
+        $r->get('/messages/{id}', [ConversationController::class, 'show']);
+        $r->post('/messages/{id}', [ConversationController::class, 'reply']);
+        $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);

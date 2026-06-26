@@ -159,6 +159,18 @@ final class NotificationService
         return $notified;
     }
 
+    /** A new DM notifies the recipient in-app (P2-07). Block/eligibility checked by the caller. */
+    public function notifyDm(int $actorId, int $recipientId, int $conversationId): void
+    {
+        if (!$this->flags->enabled('notifications') || $recipientId === $actorId) {
+            return;
+        }
+        $this->notifs->create([
+            'user_id' => $recipientId, 'type' => 'dm',
+            'actor_id' => $actorId, 'conversation_id' => $conversationId,
+        ]);
+    }
+
     /** A reaction notifies the post author once (in-app only), unless self or blocked. */
     public function notifyReaction(int $actorId, array $post): void
     {
