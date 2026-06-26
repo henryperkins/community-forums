@@ -2,6 +2,21 @@
 retroboards-project-knowledge.zip
 *.zip
 
+# PHP / Composer
+/vendor/
+composer.lock
+
+# App runtime
+/.env
+/storage/cache/*
+/storage/ratelimit/*
+!/storage/cache/.gitkeep
+!/storage/ratelimit/.gitkeep
+
+# Test / coverage
+/.phpunit.cache/
+/coverage/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

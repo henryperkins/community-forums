@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Repository;
+
+use App\Core\Database;
+
+final class SessionRepository
+{
+    public function __construct(private Database $db)
+    {
+    }
+
+    /**
+     * @param array{id:string,user_id:int,csrf_secret:string,user_agent:?string,expires_at:string} $data
+     */
+    public function create(array $data): void
+    {
+        $this->db->run(
+            'INSERT INTO sessions (id, user_id, csrf_secret, user_agent, created_at, last_seen_at, expires_at)
+             VALUES (:id, :user_id, :csrf_secret, :user_agent, UTC_TIMESTAMP(), UTC_TIMESTAMP(), :expires_at)',
+            [
+                'id' => $data['id'],
+                'user_id' => $data['user_id'],
+                'csrf_secret' => $data['csrf_secret'],
+                'user_agent' => $data['user_agent'],
+                'expires_at' => $data['expires_at'],
+            ],
+        );
+    }
+
+    /** @return array<string,mixed>|null Active (unrevoked, unexpired) session by id. */
+    public function findActive(string $id): ?array
+    {
+        return $this->db->fetch(
+            'SELECT * FROM sessions WHERE id = ? AND revoked_at IS NULL AND expires_at > UTC_TIMESTAMP()',
+            [$id],
+        );
+    }
+
+    public function touch(string $id): void
+    {
+        $this->db->run('UPDATE sessions SET last_seen_at = UTC_TIMESTAMP() WHERE id = ?', [$id]);
+    }
+
+    public function revoke(string $id): void
+    {
+        $this->db->run('UPDATE sessions SET revoked_at = UTC_TIMESTAMP() WHERE id = ? AND revoked_at IS NULL', [$id]);
+    }
+
+    public function revokeAllForUser(int $userId): void
+    {
+        $this->db->run('UPDATE sessions SET revoked_at = UTC_TIMESTAMP() WHERE user_id = ? AND revoked_at IS NULL', [$userId]);
+    }
+}

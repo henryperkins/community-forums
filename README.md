@@ -2,7 +2,29 @@
 
 **RetroBoards** is self-hostable forum / community software — a **Community Inbox**: durable forum topics (Discourse-style permanence) presented through the familiar Slack/email-style three-pane shell, with email-style triage. Stack: **vanilla PHP 8 + MySQL**, server-rendered with progressive-enhancement JavaScript, designed to run on a single VPS.
 
-> **Status: planning / design.** Nothing is built yet — there is no application code, and the Phase 0 mockup artifacts (`app.html`, `app.css`, …) do not exist yet. Every document below is a plan.
+> **Status: Phase 1 (MVP backend) implemented.** The vanilla-PHP application, the 10 Phase-1 migrations, the server-rendered three-pane UI, and the automated test suite are now on disk under `src/`, `templates/`, `database/`, and `tests/`. Phases 2–7 remain plans. See [`docs/PHASE_1_COMPLETION.md`](docs/PHASE_1_COMPLETION.md) for the acceptance-evidence index.
+
+## Running Phase 1
+
+Requirements: **PHP 8.2+** (with `pdo_mysql`, `mbstring`, `dom`, `openssl`), **Composer**, and **MySQL 8 / MariaDB 10.6+**.
+
+```bash
+composer install                      # install league/commonmark + phpunit
+cp .env.example .env                  # then set DB_* and run: php bin/console key:generate
+php bin/console migrate               # apply the 10 Phase-1 migrations
+php -S 127.0.0.1:8000 -t public public/index.php
+```
+
+Open <http://127.0.0.1:8000> — a fresh install redirects to `/setup`, where you create the first admin, name the community, and get starter boards. Useful commands:
+
+```bash
+php bin/console migrate:status        # show applied migrations
+php bin/console migrate:fresh         # drop all tables and re-migrate (destructive)
+php bin/console migrate:rollback      # roll back (greenfield only)
+composer test                         # run the full PHPUnit suite
+```
+
+Tests run against a separate database (`retroboards_test` by default; override with `DB_TEST_DATABASE`).
 
 ## This is an orientation pointer, not a source of ground truth
 
