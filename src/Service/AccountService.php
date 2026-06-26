@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Config;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\UserPreferenceRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
 use App\Security\WriteGate;
@@ -24,6 +25,7 @@ final class AccountService
         private PasswordHasher $hasher,
         private WriteGate $writeGate,
         private Config $config,
+        private ?UserPreferenceRepository $prefs = null,
     ) {
     }
 
@@ -35,6 +37,9 @@ final class AccountService
         $displayName = trim((string) ($input['display_name'] ?? ''));
         $bio = trim((string) ($input['bio'] ?? ''));
         $location = trim((string) ($input['location'] ?? ''));
+        $website = trim((string) ($input['website'] ?? ''));
+        $pronouns = trim((string) ($input['pronouns'] ?? ''));
+        $signature = trim((string) ($input['signature'] ?? ''));
 
         $errors = [];
         if (mb_strlen($displayName) > (int) $this->config->get('limits.display_name_max', 64)) {
@@ -46,17 +51,89 @@ final class AccountService
         if (mb_strlen($bio) > (int) $this->config->get('limits.bio_max', 1000)) {
             $errors['bio'] = 'Bio is too long (max 1000).';
         }
+        if ($website !== '') {
+            if (mb_strlen($website) > 255) {
+                $errors['website'] = 'Website URL is too long (max 255).';
+            } elseif (!preg_match('~^https?://~i', $website) || filter_var($website, FILTER_VALIDATE_URL) === false) {
+                $errors['website'] = 'Enter a valid http(s) URL.';
+            }
+        }
+        if (mb_strlen($pronouns) > 32) {
+            $errors['pronouns'] = 'Pronouns are too long (max 32).';
+        }
+        if (mb_strlen($signature) > 500) {
+            $errors['signature'] = 'Signature is too long (max 500).';
+        }
 
         if ($errors !== []) {
             throw new ValidationException($errors, $input);
         }
 
-        $this->users->updateProfile(
+        $this->users->updateProfileFull(
             $user->id(),
             $displayName !== '' ? $displayName : null,
             $bio !== '' ? $bio : null,
             $location !== '' ? $location : null,
+            $website !== '' ? $website : null,
+            $pronouns !== '' ? $pronouns : null,
+            $signature !== '' ? $signature : null,
         );
+    }
+
+    /**
+     * Privacy controls (USER §4.7): profile visibility, DM policy, presence flag
+     * (columns), plus leaderboard opt-out + email discoverability (prefs blob).
+     *
+     * @param array<string,mixed> $input
+     */
+    public function updatePrivacy(User $user, array $input): void
+    {
+        $this->writeGate->assertCanWrite($user);
+
+        $visibility = in_array($input['profile_visibility'] ?? '', ['public', 'members'], true)
+            ? (string) $input['profile_visibility'] : 'public';
+        $allowDms = in_array($input['allow_dms'] ?? '', ['everyone', 'members', 'none'], true)
+            ? (string) $input['allow_dms'] : 'members';
+        $showPresence = array_key_exists('show_presence', $input) && (string) $input['show_presence'] !== '0';
+
+        $this->users->updatePrivacy($user->id(), $visibility, $allowDms, $showPresence);
+
+        if ($this->prefs !== null) {
+            $this->prefs->merge($user->id(), [
+                'hide_from_leaderboard' => array_key_exists('hide_from_leaderboard', $input) && (string) $input['hide_from_leaderboard'] !== '0',
+                'discoverable_by_email' => array_key_exists('discoverable_by_email', $input) && (string) $input['discoverable_by_email'] !== '0',
+            ]);
+        }
+    }
+
+    /**
+     * Set an initial password for an OAuth-only account (USER §2.4). No current
+     * password is required because there is none; refuses if one already exists
+     * (use changePassword instead).
+     *
+     * @param array<string,mixed> $input
+     */
+    public function setInitialPassword(User $user, array $input): void
+    {
+        $this->writeGate->assertCanWrite($user);
+        if ($user->passwordHash() !== null) {
+            throw new ValidationException(['new_password' => 'This account already has a password. Use change password instead.']);
+        }
+        $new = (string) ($input['new_password'] ?? '');
+        $confirm = (string) ($input['new_password_confirm'] ?? '');
+
+        $errors = [];
+        $min = (int) $this->config->get('limits.password_min', 8);
+        if (strlen($new) < $min) {
+            $errors['new_password'] = "Password must be at least {$min} characters.";
+        } elseif ($new !== $confirm) {
+            $errors['new_password_confirm'] = 'The passwords do not match.';
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
+
+        $this->users->setPassword($user->id(), $this->hasher->hash($new));
     }
 
     /** @param array<string,mixed> $input */

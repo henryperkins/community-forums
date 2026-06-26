@@ -1,0 +1,120 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Integration\Worker;
+
+use App\Mail\ArrayMailer;
+use App\Mail\SendmailMailer;
+use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailSuppressionRepository;
+use App\Repository\PostRepository;
+use App\Worker\NotificationEmailWorker;
+use Tests\Support\TestCase;
+
+/**
+ * Instant email worker (P2-04): at-most-once delivery per (post, recipient),
+ * suppression, fail-closed transport, and failure recording.
+ */
+final class NotificationEmailWorkerTest extends TestCase
+{
+    private function worker(ArrayMailer|SendmailMailer $mailer): NotificationEmailWorker
+    {
+        return new NotificationEmailWorker(
+            new EmailDeliveryRepository($this->db),
+            new EmailSuppressionRepository($this->db),
+            new PostRepository($this->db),
+            $this->users(),
+            $mailer,
+            $this->config,
+        );
+    }
+
+    /** @return array{post_id:int, user:array<string,mixed>} */
+    private function queuedDelivery(): array
+    {
+        $author = $this->makeUser();
+        $recipient = $this->makeUser(['email' => 'r@example.test']);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Email me', 'OP.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        (new EmailDeliveryRepository($this->db))->enqueue((int) $recipient['id'], 'r@example.test', 'instant', null, $postId . ':' . (int) $recipient['id']);
+        return ['post_id' => $postId, 'user' => $recipient];
+    }
+
+    public function testSendsQueuedThenDoesNotResendOnRerun(): void
+    {
+        $this->queuedDelivery();
+        $mailer = new ArrayMailer();
+
+        $first = $this->worker($mailer)->run();
+        self::assertSame(1, $first['sent']);
+        self::assertSame(1, $mailer->count());
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE status = 'sent'"));
+
+        // Re-running the worker must not resend an already-sent row.
+        $second = $this->worker($mailer)->run();
+        self::assertSame(0, $second['sent']);
+        self::assertSame(1, $mailer->count(), 'no duplicate delivery on worker re-run');
+    }
+
+    public function testSuppressedAddressIsDequeuedWithoutSending(): void
+    {
+        $d = $this->queuedDelivery();
+        (new EmailSuppressionRepository($this->db))->suppress('r@example.test', 'bounce');
+        $mailer = new ArrayMailer();
+
+        $stats = $this->worker($mailer)->run();
+        self::assertSame(1, $stats['suppressed']);
+        self::assertSame(0, $mailer->count());
+        self::assertSame("suppressed", (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"));
+    }
+
+    public function testFailsClosedWhenTransportUnconfigured(): void
+    {
+        $this->queuedDelivery();
+        $stats = $this->worker(new SendmailMailer(''))->run();
+        self::assertSame(0, $stats['sent']);
+        self::assertSame("queued", (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"), 'row stays queued for later');
+    }
+
+    public function testTransportFailureMarksRowFailed(): void
+    {
+        $this->queuedDelivery();
+        $mailer = new ArrayMailer();
+        $mailer->failNext = true;
+
+        $stats = $this->worker($mailer)->run();
+        self::assertSame(1, $stats['failed']);
+        self::assertSame("failed", (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"));
+    }
+
+    public function testBoundedDrainRespectsLimitAndResumesWithoutLoss(): void
+    {
+        // A backlog larger than the per-run limit must drain in bounded batches,
+        // oldest-first, losing nothing (PHASE_2_PLAN §9 "queue backlog").
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Backlog', 'OP.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        $deliveries = new EmailDeliveryRepository($this->db);
+        for ($i = 1; $i <= 3; $i++) {
+            $r = $this->makeUser(['email' => "b$i@example.test"]);
+            $deliveries->enqueue((int) $r['id'], "b$i@example.test", 'instant', null, $postId . ':' . (int) $r['id']);
+        }
+        $mailer = new ArrayMailer();
+
+        $first = $this->worker($mailer)->run(2);
+        self::assertSame(2, $first['sent']);
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE status = 'queued'"));
+        // Oldest-first: the two earliest-enqueued rows drained, the newest waits.
+        self::assertCount(1, $mailer->to('b1@example.test'));
+        self::assertCount(1, $mailer->to('b2@example.test'));
+        self::assertCount(0, $mailer->to('b3@example.test'), 'newest-enqueued row is not drained before the older ones');
+
+        $second = $this->worker($mailer)->run(2);
+        self::assertSame(1, $second['sent']);
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE status = 'queued'"));
+        self::assertSame(3, $mailer->count(), 'every queued send delivered exactly once across batches');
+    }
+}

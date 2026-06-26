@@ -309,6 +309,7 @@ CREATE TABLE dm_messages (
   conversation_id BIGINT UNSIGNED NOT NULL,
   user_id         BIGINT UNSIGNED NOT NULL,
   body            TEXT            NOT NULL,
+  body_html       MEDIUMTEXT      NULL,                       -- cached sanitised render, DM parity with posts.body_html (§7 #14); Phase 2
   created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_dm_conv (conversation_id, created_at),
@@ -321,17 +322,21 @@ CREATE TABLE dm_messages (
 CREATE TABLE reports (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   reporter_id BIGINT UNSIGNED NOT NULL,
-  post_id     BIGINT UNSIGNED NOT NULL,
+  post_id       BIGINT UNSIGNED NULL,                          -- target post (NULL when a DM report); §7 #16
+  dm_message_id BIGINT UNSIGNED NULL,                          -- target DM message (NULL when a post report); §7 #16; Phase 2 (P2-07)
   reason_code ENUM('spam','harassment','off_topic','nsfw','illegal','other') NULL, -- ADMIN §3.1 reasons (derived enum)
   reason      VARCHAR(255)    NULL,                         -- free-text (required for 'other')
   status      ENUM('open','triaged','resolved','dismissed') NOT NULL DEFAULT 'open', -- 'triaged' = claimed (ADMIN §3.2)
   assigned_to BIGINT UNSIGNED NULL,                         -- ADMIN §10.2 (queue claim)
   handled_by  BIGINT UNSIGNED NULL,
+  notify_reporter TINYINT(1)  NOT NULL DEFAULT 0,            -- reporter outcome-notification opt-in (§7 #15; ADMIN §3.1/§11); Phase 2
   created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   resolved_at DATETIME        NULL,
   PRIMARY KEY (id),
   KEY idx_reports_status (status, created_at),
-  CONSTRAINT fk_report_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+  KEY idx_reports_dm (dm_message_id),
+  CONSTRAINT fk_report_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  CONSTRAINT fk_report_dm FOREIGN KEY (dm_message_id) REFERENCES dm_messages(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- NOTE: "one open report per (user, post)" dedup (ADMIN §3.1) is enforced in app logic.
 
@@ -693,6 +698,12 @@ Where the docs genuinely disagreed, this file picks one answer. Each is reversib
 12. **`oauth_identities.avatar_url` added (`VARCHAR(512) NULL`).** DECISIONS §5 #4 schedules **OAuth avatar-import for Phase 2**, and PHASE_1_MIGRATIONS §4 puts `users.avatar_source` in Phase 2 — but the consolidated schema gave the imported provider avatar nowhere to live (`users.avatar_path` is Phase 3, for the local uploads/Gravatar pipeline). Added `oauth_identities.avatar_url` as the Phase-2 cache of the provider avatar: import sets `users.avatar_source='oauth'` and renders from it (monogram fallback). The local copy (`users.avatar_path`), user uploads, and Gravatar stay Phase 3 (PHASE_3_PLAN P3-12). PHASE_2_PLAN P2-10 / §7.1 group 5 now build `avatar_source` + `avatar_url`. (Reconciled 2026-06-26.)
 
 13. **`notifications` enum gains `'announcement'`; admin announcements/broadcast get a schema home (no new table).** ADMIN §7.4 and PHASE_2_PLAN §3 (L92) commit Phase 2 to admin **announcements/broadcast** — a site-wide banner or pinned announcement plus an opt-in broadcast notification/email — and USER §4.6 lists a "System / announcement" notification type, but the `notifications` enum had no value for it. Added `'announcement'` to `notifications.type` for the in-app broadcast/system notice. The **banner** lives in `settings` (a `site_announcement` JSON key: active flag, message, dismissible); a **pinned announcement** is an ordinary pinned thread; the broadcast **email** reuses `email_deliveries.kind='system'`. No `announcements` table is required. Build phase: **Phase 2** (PHASE_2_PLAN §7). (Reconciled 2026-06-26.)
+
+14. **`dm_messages.body_html` added (`MEDIUMTEXT NULL`).** The unified composer (COMPOSER) treats DM bodies as canonical Markdown like posts; caching the sanitised render mirrors `posts.body_html` and avoids re-sanitising on every read. The consolidated `dm_messages` had only `body`. Added as a nullable cache column (Phase 2, P2-07). (Reconciled 2026-06-26 during the Phase-2 build review.)
+
+15. **`reports.notify_reporter` added (`TINYINT(1) NOT NULL DEFAULT 0`).** PHASE_2_PLAN §3 (L70) and ADMIN §3.1/§11 commit Phase 2 to **reporter outcome-notifications** ("notify me of the outcome" when a report resolves/dismisses), but the consolidated `reports` table had no opt-in flag for it. Added as a Phase-2 column (P2-08), mirroring how #9/#10/#12 gave other committed Phase-2 features a schema home. (Reconciled 2026-06-26 during the Phase-2 build review.)
+
+16. **`reports` can target a DM message (`post_id` → NULLable, `dm_message_id` added).** PHASE_2_PLAN P2-07 commits Phase 2 to **DM reporting** ("report a specific DM; staff see only the reported message/context"), but the consolidated `reports` table was post-only (`post_id NOT NULL`, FK to `posts`). Made `post_id` nullable and added `dm_message_id BIGINT UNSIGNED NULL` + FK to `dm_messages` (migration `0039`), so a report targets exactly one of a post or a DM message. App logic enforces "one open report per (reporter, target)" for both. Build phase: **Phase 2** (P2-07 submission; P2-08 queue/triage). (Reconciled 2026-06-26.)
 
 ## 8. Foreshadowed but not yet committed
 

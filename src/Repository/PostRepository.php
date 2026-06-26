@@ -17,9 +17,14 @@ final class PostRepository
      */
     public function create(array $data): int
     {
+        // posts.ip is VARBINARY(16) — store packed (inet_pton), NULL if absent/invalid.
+        $ip = isset($data['ip']) && is_string($data['ip']) && $data['ip'] !== ''
+            ? (@inet_pton($data['ip']) ?: null)
+            : null;
+
         return $this->db->insert(
-            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, created_at)
-             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, UTC_TIMESTAMP())',
+            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, ip, created_at)
+             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, :ip, UTC_TIMESTAMP())',
             [
                 'thread_id' => $data['thread_id'],
                 'user_id' => $data['user_id'],
@@ -27,6 +32,7 @@ final class PostRepository
                 'body' => $data['body'],
                 'body_html' => $data['body_html'],
                 'is_op' => !empty($data['is_op']) ? 1 : 0,
+                'ip' => $ip,
             ],
         );
     }
@@ -79,6 +85,29 @@ final class PostRepository
         );
     }
 
+    /**
+     * Recent non-deleted posts by author for the PUBLIC profile activity tab.
+     * Restricted to public boards so activity never reveals hidden/private-board
+     * content (mirrors ThreadRepository::recentByUser). Joins thread title/slug.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function recentByUser(int $userId, int $limit): array
+    {
+        $limit = max(1, $limit);
+        return $this->db->fetchAll(
+            "SELECT p.id, p.thread_id, p.body, p.created_at, p.is_op,
+                    t.title AS thread_title, t.slug AS thread_slug, b.slug AS board_slug
+             FROM posts p
+             JOIN threads t ON t.id = p.thread_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE p.user_id = ? AND p.is_deleted = 0 AND t.is_deleted = 0 AND b.visibility = 'public'
+             ORDER BY p.created_at DESC, p.id DESC
+             LIMIT " . $limit,
+            [$userId],
+        );
+    }
+
     public function update(int $id, string $body, string $bodyHtml, int $editedBy): void
     {
         $this->db->run(
@@ -94,6 +123,15 @@ final class PostRepository
         return $this->db->run(
             'UPDATE posts SET is_deleted = 1, deleted_by = ? WHERE id = ? AND is_deleted = 0',
             [$byUserId, $id],
+        )->rowCount();
+    }
+
+    /** @return int rows affected (0 if it was not deleted — caller skips counters) */
+    public function restore(int $id): int
+    {
+        return $this->db->run(
+            'UPDATE posts SET is_deleted = 0, deleted_by = NULL WHERE id = ? AND is_deleted = 1',
+            [$id],
         )->rowCount();
     }
 }

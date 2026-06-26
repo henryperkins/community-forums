@@ -7,21 +7,61 @@ namespace App\Core;
 use App\Controller\AccountController;
 use App\Controller\AdminController;
 use App\Controller\AuthController;
+use App\Controller\BlockController;
 use App\Controller\BoardController;
+use App\Controller\ConversationController;
+use App\Controller\EngagementController;
+use App\Controller\FeedController;
+use App\Controller\FollowController;
 use App\Controller\HealthController;
 use App\Controller\HomeController;
+use App\Controller\InboxController;
+use App\Controller\LeaderboardController;
 use App\Controller\ModerationController;
+use App\Controller\OAuthController;
 use App\Controller\PostController;
+use App\Controller\PresenceController;
 use App\Controller\ProfileController;
+use App\Controller\ReportController;
+use App\Controller\SearchController;
+use App\Controller\NotificationController;
+use App\Controller\SettingsController;
 use App\Controller\SetupController;
+use App\Controller\SolvedController;
+use App\Controller\SubscriptionController;
+use App\Controller\UserModerationController;
 use App\Controller\ThreadController;
+use App\Controller\UnsubscribeController;
+use App\Mail\ArrayMailer;
+use App\Mail\Mailer;
+use App\Mail\SendmailMailer;
+use App\Search\MysqlSearchService;
+use App\Search\SearchService;
+use App\Repository\BadgeRepository;
+use App\Repository\BlockRepository;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\ConversationRepository;
+use App\Repository\DmMessageRepository;
+use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailSuppressionRepository;
+use App\Repository\FollowRepository;
+use App\Repository\NotificationRepository;
+use App\Repository\OAuthIdentityRepository;
 use App\Repository\PostRepository;
+use App\Repository\ReactionRepository;
+use App\Repository\ReportRepository;
 use App\Repository\SessionRepository;
 use App\Repository\SettingRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\ThreadUserRepository;
+use App\Repository\UserBoardPrefRepository;
+use App\Repository\UserPreferenceRepository;
+use App\Repository\UsernameHistoryRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\Csrf;
@@ -34,8 +74,22 @@ use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AuthService;
+use App\Service\BadgeService;
+use App\Service\DirectMessageService;
+use App\Service\FeedService;
+use App\Service\FollowService;
 use App\Service\ModerationService;
+use App\Service\NotificationService;
+use App\Service\OAuthService;
+use App\Service\OAuth\ProviderRegistry;
 use App\Service\PostingService;
+use App\Service\PreferenceService;
+use App\Service\ReactionService;
+use App\Service\RepairService;
+use App\Service\ReportService;
+use App\Service\SolvedAnswerService;
+use App\Service\TitleService;
+use App\Service\UserModerationService;
 use App\Service\SetupService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
@@ -81,6 +135,7 @@ final class App
         $flash = $container->get(Flash::class);
 
         $session->start($request);
+        $this->heartbeat($container, $session->user());
         $flash->load($request);
         $this->shareViewGlobals($container, $request);
 
@@ -115,8 +170,12 @@ final class App
                 return $this->redirect('/');
             }
 
-            // CSRF on every state-changing request.
-            if ($request->isPost() && !$container->get(Csrf::class)->verify((string) ($request->post('_token') ?? ''))) {
+            // CSRF on every state-changing request, except the OAuth provider
+            // callback — that POST originates cross-site from the provider and is
+            // protected by the signed `state` cookie instead of a form token.
+            $oauthCallback = preg_match('#^/auth/[^/]+/callback$#', $path) === 1;
+            if ($request->isPost() && !$oauthCallback
+                && !$container->get(Csrf::class)->verify((string) ($request->post('_token') ?? ''))) {
                 return $this->renderError($container, 403, 'That form has expired or its security token was invalid. Please go back, reload, and try again.');
             }
 
@@ -138,6 +197,34 @@ final class App
     private function redirect(string $to, int $status = 302): Response
     {
         return Response::redirect($to, $status);
+    }
+
+    /**
+     * Presence heartbeat (P2-11): refresh users.last_seen_at at most once per
+     * heartbeat window for a signed-in user. Best-effort — never breaks a request.
+     */
+    private function heartbeat(Container $container, ?\App\Domain\User $user): void
+    {
+        if ($user === null) {
+            return;
+        }
+        try {
+            if (!$container->get(FeatureFlags::class)->enabled('presence')) {
+                return;
+            }
+            $lastSeen = $user->toArray()['last_seen_at'] ?? null;
+            $window = (int) $this->config->get('presence.heartbeat_seconds', 60);
+            $stale = true;
+            if (is_string($lastSeen) && $lastSeen !== '') {
+                $ts = strtotime($lastSeen . ' UTC');
+                $stale = $ts === false || $ts <= time() - $window;
+            }
+            if ($stale) {
+                $container->get(UserRepository::class)->updateLastSeen($user->id());
+            }
+        } catch (Throwable) {
+            // Presence is non-essential; swallow errors (e.g. pre-migration DB).
+        }
     }
 
     private function renderError(Container $container, int $status, string $message): Response
@@ -195,6 +282,23 @@ final class App
             $nav = [];
         }
 
+        $features = [];
+        try {
+            $features = $container->get(FeatureFlags::class)->all();
+        } catch (Throwable) {
+            $features = [];
+        }
+
+        // Configured OAuth providers power the "Sign in with …" buttons.
+        $oauthProviders = [];
+        try {
+            if (!empty($features['oauth'])) {
+                $oauthProviders = $container->get(ProviderRegistry::class)->configuredNames();
+            }
+        } catch (Throwable) {
+            $oauthProviders = [];
+        }
+
         $container->get(View::class)->share([
             'site_name' => $siteName,
             'app_name' => $appName,
@@ -203,6 +307,8 @@ final class App
             'flash' => $flash->current(),
             'request_path' => $request->path(),
             'nav' => $nav,
+            'features' => $features,
+            'oauth_providers' => $oauthProviders,
         ]);
     }
 
@@ -217,11 +323,22 @@ final class App
         $categories = $container->get(CategoryRepository::class)->all();
         $allBoards = $container->get(BoardRepository::class)->allOrdered();
 
+        // Private boards the viewer belongs to should appear in their sidebar.
+        $memberBoardIds = [];
+        $mutedBoardIds = [];
+        if ($user !== null) {
+            $memberBoardIds = array_flip($container->get(BoardMemberRepository::class)->boardIdsFor($user->id()));
+            // Muted boards are excluded from the sidebar (USER §4.3).
+            $mutedBoardIds = array_flip($container->get(UserBoardPrefRepository::class)->mutedBoardIds($user->id()));
+        }
+
         $nav = [];
         foreach ($categories as $category) {
             $boards = array_values(array_filter(
                 $allBoards,
-                fn (array $b): bool => (int) $b['category_id'] === (int) $category['id'] && $policy->isListed($b, $user),
+                fn (array $b): bool => (int) $b['category_id'] === (int) $category['id']
+                    && !isset($mutedBoardIds[(int) $b['id']])
+                    && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
             ));
             if ($boards !== []) {
                 $nav[] = ['category' => $category, 'boards' => $boards];
@@ -268,6 +385,127 @@ final class App
         $c->bind(ThreadRepository::class, fn (Container $c) => new ThreadRepository($c->get(Database::class)));
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
+        $c->bind(BlockRepository::class, fn (Container $c) => new BlockRepository($c->get(Database::class)));
+        $c->bind(BoardModeratorRepository::class, fn (Container $c) => new BoardModeratorRepository($c->get(Database::class)));
+        $c->bind(BoardMemberRepository::class, fn (Container $c) => new BoardMemberRepository($c->get(Database::class)));
+        $c->bind(ThreadUserRepository::class, fn (Container $c) => new ThreadUserRepository($c->get(Database::class)));
+        $c->bind(ReactionRepository::class, fn (Container $c) => new ReactionRepository($c->get(Database::class)));
+        $c->bind(SubscriptionRepository::class, fn (Container $c) => new SubscriptionRepository($c->get(Database::class)));
+        $c->bind(NotificationRepository::class, fn (Container $c) => new NotificationRepository($c->get(Database::class)));
+        $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
+        $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));
+        $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));
+        $c->bind(DmMessageRepository::class, fn (Container $c) => new DmMessageRepository($c->get(Database::class)));
+        $c->bind(ReportRepository::class, fn (Container $c) => new ReportRepository($c->get(Database::class)));
+        $c->bind(FollowRepository::class, fn (Container $c) => new FollowRepository($c->get(Database::class)));
+        $c->bind(BadgeRepository::class, fn (Container $c) => new BadgeRepository($c->get(Database::class)));
+        $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
+        $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
+        $c->bind(UserBoardPrefRepository::class, fn (Container $c) => new UserBoardPrefRepository($c->get(Database::class)));
+        $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
+
+        // Phase 2 shared services.
+        $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
+        $c->bind(RepairService::class, fn (Container $c) => new RepairService(
+            $c->get(Database::class),
+            (int) $config->get('community.solved_bonus', 5),
+        ));
+        $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
+        $c->bind(Mailer::class, function () use ($config): Mailer {
+            $mail = (array) $config->get('mail', []);
+            if (($mail['driver'] ?? 'sendmail') === 'array') {
+                return new ArrayMailer();
+            }
+            return new SendmailMailer((string) ($mail['from'] ?? ''), (string) ($mail['from_name'] ?? 'RetroBoards'));
+        });
+        $c->bind(NotificationService::class, fn (Container $c) => new NotificationService(
+            $c->get(Database::class),
+            $c->get(NotificationRepository::class),
+            $c->get(SubscriptionRepository::class),
+            $c->get(EmailDeliveryRepository::class),
+            $c->get(EmailSuppressionRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(FeatureFlags::class),
+            $c->get(Mailer::class),
+        ));
+        $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(
+            $c->get(Database::class),
+            $c->get(UserRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(BoardModeratorRepository::class),
+        ));
+        $c->bind(ReportService::class, fn (Container $c) => new ReportService(
+            $c->get(Database::class),
+            $c->get(ReportRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(NotificationRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(WriteGate::class),
+        ));
+        $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
+            $c->get(Database::class),
+            $c->get(ConversationRepository::class),
+            $c->get(DmMessageRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(Markdown::class),
+            $c->get(NotificationService::class),
+            $config,
+        ));
+        $c->bind(ReactionService::class, fn (Container $c) => new ReactionService(
+            $c->get(Database::class),
+            $c->get(ReactionRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(WriteGate::class),
+            $c->get(NotificationService::class),
+        ));
+
+        // Community identity (P2-09).
+        $c->bind(TitleService::class, fn () => new TitleService(
+            (array) $config->get('community.title_thresholds', []),
+        ));
+        $c->bind(BadgeService::class, fn (Container $c) => new BadgeService(
+            $c->get(Database::class),
+            $c->get(BadgeRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(NotificationService::class),
+            (int) $config->get('community.badge_conversation_starter_threads', 10),
+            (int) $config->get('community.badge_trusted_answerer_solved', 10),
+            (int) $config->get('community.badge_appreciated_rep', 100),
+            (int) $config->get('community.badge_well_liked_rep', 1000),
+        ));
+        $c->bind(FollowService::class, fn (Container $c) => new FollowService(
+            $c->get(FollowRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(NotificationService::class),
+        ));
+        $c->bind(FeedService::class, fn (Container $c) => new FeedService(
+            $c->get(Database::class),
+            $c->get(FollowRepository::class),
+            $c->get(BlockRepository::class),
+            $c->get(BoardMemberRepository::class),
+        ));
+        $c->bind(SolvedAnswerService::class, fn (Container $c) => new SolvedAnswerService(
+            $c->get(Database::class),
+            $c->get(ThreadRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(BadgeService::class),
+            $c->get(NotificationService::class),
+            $c->get(WriteGate::class),
+            (int) $config->get('community.solved_bonus', 5),
+        ));
 
         // Session + CSRF.
         $c->bind(Session::class, fn (Container $c) => new Session(
@@ -288,6 +526,18 @@ final class App
             $c->get(PasswordHasher::class),
             $c->get(WriteGate::class),
             $config,
+            $c->get(UserPreferenceRepository::class),
+        ));
+        $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
+            $c->get(UserPreferenceRepository::class),
+            (int) $config->get('pagination.threads_per_page', 20),
+            (int) $config->get('pagination.posts_per_page', 20),
+        ));
+        $c->bind(ProviderRegistry::class, fn () => new ProviderRegistry((array) $config->get('oauth', [])));
+        $c->bind(OAuthService::class, fn (Container $c) => new OAuthService(
+            $c->get(Database::class),
+            $c->get(OAuthIdentityRepository::class),
+            $c->get(UserRepository::class),
         ));
         $c->bind(PostingService::class, fn (Container $c) => new PostingService(
             $c->get(Database::class),
@@ -299,6 +549,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(BoardPolicy::class),
             $config,
+            $c->get(NotificationService::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -307,6 +558,8 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(PostingService::class),
             $c->get(WriteGate::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardRepository::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
@@ -336,11 +589,24 @@ final class App
 
         $r->get('/', [HomeController::class, 'index']);
         $r->get('/healthz', [HealthController::class, 'check']);
+        $r->get('/inbox', [InboxController::class, 'index']);
+        $r->get('/search', [SearchController::class, 'index']);
+        $r->get('/presence', [PresenceController::class, 'index']);
 
         $r->get('/c/{slug}', [BoardController::class, 'show']);
         $r->get('/t/{id}-{slug}', [ThreadController::class, 'show']);
         $r->get('/t/{id}', [ThreadController::class, 'show']);
         $r->get('/u/{username}', [ProfileController::class, 'show']);
+        $r->get('/u/{username}/followers', [ProfileController::class, 'followers']);
+        $r->get('/u/{username}/following', [ProfileController::class, 'following']);
+
+        // Community identity (P2-09): follows, feed, leaderboard, solved answers.
+        $r->get('/feed', [FeedController::class, 'index']);
+        $r->get('/leaderboard', [LeaderboardController::class, 'index']);
+        $r->post('/u/{username}/follow', [FollowController::class, 'toggle']);
+        $r->post('/u/{username}/block', [BlockController::class, 'toggle']);
+        $r->post('/posts/{id}/accept', [SolvedController::class, 'accept']);
+        $r->post('/t/{id}/unaccept', [SolvedController::class, 'unaccept']);
 
         $r->get('/login', [AuthController::class, 'showLogin']);
         $r->post('/login', [AuthController::class, 'login']);
@@ -348,11 +614,34 @@ final class App
         $r->post('/register', [AuthController::class, 'register']);
         $r->post('/logout', [AuthController::class, 'logout']);
 
+        // OAuth sign-in / account linking (P2-10). The callback is state-cookie
+        // protected (not _token), so it is exempt from the CSRF gate (see process()).
+        $r->get('/auth/{provider}/redirect', [OAuthController::class, 'start']);
+        $r->get('/auth/{provider}/callback', [OAuthController::class, 'callback']);
+        $r->post('/auth/{provider}/callback', [OAuthController::class, 'callback']);
+        $r->get('/settings/connections', [OAuthController::class, 'connections']);
+        $r->post('/settings/connections/unlink', [OAuthController::class, 'unlink']);
+        $r->post('/settings/connections/set-password', [OAuthController::class, 'setPassword']);
+
         $r->get('/settings', [AccountController::class, 'index']);
         $r->get('/settings/account', [AccountController::class, 'accountForm']);
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
         $r->get('/settings/security', [AccountController::class, 'securityForm']);
         $r->post('/settings/security', [AccountController::class, 'updateSecurity']);
+
+        // Member controls (P2-10): privacy, preferences, notifications, sessions, blocks, boards.
+        $r->get('/settings/privacy', [SettingsController::class, 'privacyForm']);
+        $r->post('/settings/privacy', [SettingsController::class, 'updatePrivacy']);
+        $r->get('/settings/preferences', [SettingsController::class, 'preferencesForm']);
+        $r->post('/settings/preferences', [SettingsController::class, 'updatePreferences']);
+        $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);
+        $r->post('/settings/notifications', [SettingsController::class, 'updateNotifications']);
+        $r->get('/settings/sessions', [SettingsController::class, 'sessions']);
+        $r->post('/settings/sessions/revoke', [SettingsController::class, 'revokeSession']);
+        $r->post('/settings/sessions/revoke-others', [SettingsController::class, 'revokeOtherSessions']);
+        $r->get('/settings/blocks', [BlockController::class, 'index']);
+        $r->get('/settings/boards', [SettingsController::class, 'boards']);
+        $r->post('/settings/boards/toggle', [SettingsController::class, 'toggleBoardPref']);
 
         $r->get('/setup', [SetupController::class, 'show']);
         $r->post('/setup', [SetupController::class, 'submit']);
@@ -361,6 +650,32 @@ final class App
         $r->post('/t/{id}/reply', [PostController::class, 'reply']);
         $r->post('/posts/{id}/edit', [PostController::class, 'edit']);
         $r->post('/posts/{id}/delete', [PostController::class, 'delete']);
+
+        // Engagement (P2-01/P2-02): reactions + stars.
+        $r->post('/posts/{id}/react', [EngagementController::class, 'react']);
+        $r->post('/t/{id}/star', [EngagementController::class, 'star']);
+
+        // Subscriptions + notifications (P2-03).
+        $r->post('/t/{id}/subscribe', [SubscriptionController::class, 'subscribeThread']);
+        $r->post('/b/{id}/subscribe', [SubscriptionController::class, 'subscribeBoard']);
+        $r->get('/notifications', [NotificationController::class, 'index']);
+        $r->get('/notifications/bell', [NotificationController::class, 'bell']);
+        $r->post('/notifications/read-all', [NotificationController::class, 'readAll']);
+        $r->post('/notifications/clear', [NotificationController::class, 'clear']);
+        $r->post('/notifications/{id}/read', [NotificationController::class, 'read']);
+
+        // Login-free one-click unsubscribe (P2-04).
+        $r->get('/unsubscribe', [UnsubscribeController::class, 'show']);
+        $r->post('/unsubscribe', [UnsubscribeController::class, 'confirm']);
+        $r->post('/resubscribe', [UnsubscribeController::class, 'resubscribe']);
+
+        // Direct messages (P2-07).
+        $r->get('/messages', [ConversationController::class, 'index']);
+        $r->get('/messages/new', [ConversationController::class, 'newForm']);
+        $r->post('/messages', [ConversationController::class, 'create']);
+        $r->get('/messages/{id}', [ConversationController::class, 'show']);
+        $r->post('/messages/{id}', [ConversationController::class, 'reply']);
+        $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
@@ -375,6 +690,22 @@ final class App
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);
+        $r->post('/mod/t/{id}/move', [ModerationController::class, 'move']);
+        $r->post('/mod/p/{id}/restore', [ModerationController::class, 'restorePost']);
+
+        // Reports queue (P2-08).
+        $r->post('/posts/{id}/report', [ReportController::class, 'report']);
+        $r->get('/mod/reports', [ReportController::class, 'queue']);
+        $r->post('/mod/reports/{id}/claim', [ReportController::class, 'claim']);
+        $r->post('/mod/reports/{id}/resolve', [ReportController::class, 'resolve']);
+        $r->post('/mod/reports/{id}/dismiss', [ReportController::class, 'dismiss']);
+
+        // User moderation (P2-08).
+        $r->post('/mod/u/{id}/warn', [UserModerationController::class, 'warn']);
+        $r->post('/mod/u/{id}/note', [UserModerationController::class, 'note']);
+        $r->post('/mod/u/{id}/suspend', [UserModerationController::class, 'suspend']);
+        $r->post('/mod/u/{id}/ban', [UserModerationController::class, 'ban']);
+        $r->post('/mod/u/{id}/lift', [UserModerationController::class, 'lift']);
 
         return $r;
     }

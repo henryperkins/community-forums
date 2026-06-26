@@ -152,6 +152,15 @@ final class BoardRepository
         );
     }
 
+    /** Re-add to post_count when a soft-deleted post is restored (P2-08). */
+    public function incrementPostCount(int $boardId, int $delta = 1): void
+    {
+        $this->db->run(
+            'UPDATE boards SET post_count = post_count + ? WHERE id = ?',
+            [$delta, $boardId],
+        );
+    }
+
     /** Recompute the board's last-activity cache from its newest non-deleted post. */
     public function recomputeLastPost(int $boardId): void
     {

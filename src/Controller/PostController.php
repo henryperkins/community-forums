@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\Request;
@@ -13,6 +14,7 @@ use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\BoardPolicy;
+use App\Service\BadgeService;
 use App\Service\ModerationService;
 use App\Service\PostingService;
 
@@ -30,7 +32,7 @@ final class PostController extends Controller
         $posting = $this->container->get(PostingService::class);
 
         try {
-            $result = $posting->createThread($user, $request->allInput());
+            $result = $posting->createThread($user, $request->allInput() + ['ip' => $request->ip()]);
         } catch (ValidationException $e) {
             return $this->view('compose', [
                 'errors' => $e->errors,
@@ -40,6 +42,7 @@ final class PostController extends Controller
             ], 422);
         }
 
+        $this->awardBadges($user->id());
         return $this->redirect('/t/' . $result['thread_id'] . '-' . $result['slug']);
     }
 
@@ -51,7 +54,7 @@ final class PostController extends Controller
         $posting = $this->container->get(PostingService::class);
 
         try {
-            $postId = $posting->reply($user, $threadId, $request->allInput());
+            $postId = $posting->reply($user, $threadId, $request->allInput() + ['ip' => $request->ip()]);
         } catch (ValidationException $e) {
             $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
             if ($thread === null) {
@@ -63,9 +66,19 @@ final class PostController extends Controller
             ])->withStatus(422);
         }
 
+        $this->awardBadges($user->id());
+
         $thread = $this->container->get(ThreadRepository::class)->find($threadId);
         $slug = $thread !== null ? $thread['slug'] : '';
         return $this->redirect('/t/' . $threadId . '-' . $slug . '#p' . $postId);
+    }
+
+    /** Evaluate auto badges for a user after they post (community flag aware). */
+    private function awardBadges(int $userId): void
+    {
+        if ($this->container->get(FeatureFlags::class)->enabled('community')) {
+            $this->container->get(BadgeService::class)->evaluateForUser($userId);
+        }
     }
 
     /** @param array<string,string> $params */
@@ -105,9 +118,10 @@ final class PostController extends Controller
             return $this->redirectWithFlash($threadUrl, 'Your post was deleted.');
         }
 
-        if ($user->isAdmin()) {
+        $moderation = $this->container->get(ModerationService::class);
+        if ($moderation->canModerate($user, (int) $post['board_id'])) {
             try {
-                $this->container->get(ModerationService::class)->deletePost($user, $postId, $request->str('reason'));
+                $moderation->deletePost($user, $postId, $request->str('reason'));
             } catch (ValidationException $e) {
                 return $this->redirectWithFlash($threadUrl . '#p' . $postId, $e->first());
             }

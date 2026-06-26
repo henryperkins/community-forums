@@ -38,6 +38,15 @@ return [
         'hsts' => Env::bool('SECURITY_HSTS', true),
     ],
 
+    'mail' => [
+        // 'sendmail' uses PHP mail(); swap to an SMTP/provider adapter behind the
+        // App\Mail\Mailer interface later. Empty `from` ⇒ not configured ⇒ email
+        // fails closed (in-app notifications still deliver).
+        'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
+        'from' => Env::get('MAIL_FROM', ''),
+        'from_name' => Env::get('MAIL_FROM_NAME', 'RetroBoards'),
+    ],
+
     'paths' => [
         'base' => dirname(__DIR__),
         'templates' => dirname(__DIR__) . '/templates',
@@ -48,6 +57,62 @@ return [
     'pagination' => [
         'threads_per_page' => 20,
         'posts_per_page' => 20,
+    ],
+
+    'dm' => [
+        // New-user anti-spam: a brand-new account (below both thresholds) cannot
+        // START a new conversation; replies to existing conversations are allowed.
+        'new_user_min_posts' => (int) Env::get('DM_NEW_USER_MIN_POSTS', '1'),
+        'new_user_min_age_minutes' => (int) Env::get('DM_NEW_USER_MIN_AGE_MINUTES', '1440'),
+    ],
+
+    // Community layer (P2-09). Reputation/titles/badges are cosmetic — they grant
+    // no powers (COMMUNITY §1, §12). Thresholds are tunable but never gate ability.
+    'community' => [
+        // Accepted/"solved" answer reputation bonus (COMMUNITY §2.1: e.g. +5).
+        'solved_bonus' => (int) Env::get('COMMUNITY_SOLVED_BONUS', '5'),
+        // Cosmetic title ladder (New → … → Legend), by lifetime reputation. The
+        // highest threshold a user's reputation meets wins; users.title overrides.
+        'title_thresholds' => [
+            0 => 'New',
+            10 => 'Member',
+            50 => 'Regular',
+            200 => 'Veteran',
+            1000 => 'Legend',
+        ],
+        // Auto-badge milestones (COMMUNITY §6).
+        'badge_conversation_starter_threads' => 10,
+        'badge_trusted_answerer_solved' => 10,
+        'badge_appreciated_rep' => 100,
+        'badge_well_liked_rep' => 1000,
+        // Following feed page size.
+        'feed_per_page' => 20,
+        'leaderboard_size' => 50,
+    ],
+
+    // Presence (P2-11): only refresh last_seen_at at most once per this interval
+    // per request to keep writes cheap; the roster shows users seen within the window.
+    'presence' => [
+        'heartbeat_seconds' => (int) Env::get('PRESENCE_HEARTBEAT_SECONDS', '60'),
+        'online_window_seconds' => (int) Env::get('PRESENCE_ONLINE_WINDOW_SECONDS', '300'),
+    ],
+
+    // OAuth providers (P2-10). Each provider is "configured" only when it has a
+    // client id + secret; an unconfigured provider fails closed (no button, no
+    // callback). Tokens are never persisted; we store only the normalised identity.
+    'oauth' => [
+        'google' => [
+            'client_id' => Env::get('OAUTH_GOOGLE_CLIENT_ID', ''),
+            'client_secret' => Env::get('OAUTH_GOOGLE_CLIENT_SECRET', ''),
+        ],
+        'github' => [
+            'client_id' => Env::get('OAUTH_GITHUB_CLIENT_ID', ''),
+            'client_secret' => Env::get('OAUTH_GITHUB_CLIENT_SECRET', ''),
+        ],
+        'apple' => [
+            'client_id' => Env::get('OAUTH_APPLE_CLIENT_ID', ''),
+            'client_secret' => Env::get('OAUTH_APPLE_CLIENT_SECRET', ''),
+        ],
     ],
 
     'limits' => [

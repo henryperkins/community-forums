@@ -9,15 +9,20 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\WriteGate;
 
 /**
- * Inline admin moderation (Phase 1 is admin/site-scoped): pin/unpin,
- * lock/unlock, and soft-delete any post. Every action writes an append-only
- * moderation_log row. Per-board scoped moderators are Phase 2.
+ * Content moderation (P2-08), capability-based and board-scoped: pin/unpin,
+ * lock/unlock, soft-delete/restore a post, and move a thread. A user may act on
+ * a board iff they are an admin OR an assigned board moderator of it; a move
+ * requires the capability on BOTH source and destination. Every action writes an
+ * append-only moderation_log row with before/after snapshots, and counter
+ * changes commit atomically with the action.
  */
 final class ModerationService
 {
@@ -28,19 +33,30 @@ final class ModerationService
         private ModerationLogRepository $log,
         private PostingService $posting,
         private WriteGate $writeGate,
+        private BoardModeratorRepository $boardMods,
+        private BoardRepository $boards,
     ) {
     }
 
-    /** @return array{thread:array<string,mixed>, pinned:bool} */
-    public function togglePin(User $admin, int $threadId): array
+    /** Non-throwing capability check (admin anywhere, or assigned board moderator). */
+    public function canModerate(User $user, int $boardId): bool
     {
-        $thread = $this->requireThread($admin, $threadId);
+        if (!$this->writeGate->canWrite($user)) {
+            return false;
+        }
+        return $user->isAdmin() || $this->boardMods->isModerator($boardId, $user->id());
+    }
+
+    /** @return array{thread:array<string,mixed>, pinned:bool} */
+    public function togglePin(User $mod, int $threadId): array
+    {
+        $thread = $this->requireModeratableThread($mod, $threadId);
         $pinned = (int) $thread['is_pinned'] === 0;
 
-        $this->db->transaction(function () use ($admin, $threadId, $thread, $pinned): void {
+        $this->db->transaction(function () use ($mod, $threadId, $thread, $pinned): void {
             $this->threads->setPinned($threadId, $pinned);
             $this->log->log([
-                'actor_id' => $admin->id(),
+                'actor_id' => $mod->id(),
                 'action' => $pinned ? 'pin' : 'unpin',
                 'target_type' => 'thread',
                 'target_id' => $threadId,
@@ -53,15 +69,15 @@ final class ModerationService
     }
 
     /** @return array{thread:array<string,mixed>, locked:bool} */
-    public function toggleLock(User $admin, int $threadId): array
+    public function toggleLock(User $mod, int $threadId): array
     {
-        $thread = $this->requireThread($admin, $threadId);
+        $thread = $this->requireModeratableThread($mod, $threadId);
         $locked = (int) $thread['is_locked'] === 0;
 
-        $this->db->transaction(function () use ($admin, $threadId, $thread, $locked): void {
+        $this->db->transaction(function () use ($mod, $threadId, $thread, $locked): void {
             $this->threads->setLocked($threadId, $locked);
             $this->log->log([
-                'actor_id' => $admin->id(),
+                'actor_id' => $mod->id(),
                 'action' => $locked ? 'lock' : 'unlock',
                 'target_type' => 'thread',
                 'target_id' => $threadId,
@@ -73,11 +89,9 @@ final class ModerationService
         return ['thread' => $thread, 'locked' => $locked];
     }
 
-    /** Admin soft-delete of any post; reason required. @return array<string,mixed> the post */
-    public function deletePost(User $admin, int $postId, string $reason): array
+    /** Soft-delete any post within scope; reason required. @return array<string,mixed> the post */
+    public function deletePost(User $mod, int $postId, string $reason): array
     {
-        $this->assertAdmin($admin);
-
         $reason = trim($reason);
         if ($reason === '') {
             throw new ValidationException(['reason' => 'A reason is required to delete a post.']);
@@ -87,42 +101,128 @@ final class ModerationService
         if ($post === null || (int) $post['is_deleted'] === 1) {
             throw new NotFoundException('Post not found.');
         }
+        $this->assertCanModerate($mod, (int) $post['board_id']);
 
-        $this->db->transaction(function () use ($admin, $post, $postId, $reason): void {
-            if ($this->posts->softDelete($postId, $admin->id()) === 0) {
+        $this->db->transaction(function () use ($mod, $post, $postId, $reason): void {
+            if ($this->posts->softDelete($postId, $mod->id()) === 0) {
                 return; // already deleted concurrently — nothing to adjust or audit
             }
             $this->posting->applyDeletionCounters($post);
             $this->log->log([
-                'actor_id' => $admin->id(),
+                'actor_id' => $mod->id(),
                 'action' => 'delete_post',
                 'target_type' => 'post',
                 'target_id' => $postId,
                 'reason' => $reason,
                 'before' => ['is_deleted' => 0],
-                'after' => ['is_deleted' => 1, 'deleted_by' => $admin->id()],
+                'after' => ['is_deleted' => 1, 'deleted_by' => $mod->id()],
             ]);
         });
 
         return $post;
     }
 
-    /** @return array<string,mixed> */
-    private function requireThread(User $admin, int $threadId): array
+    /** Restore a soft-deleted post within scope. @return array<string,mixed> the post */
+    public function restorePost(User $mod, int $postId, string $reason = ''): array
     {
-        $this->assertAdmin($admin);
+        $post = $this->posts->findWithContext($postId);
+        if ($post === null) {
+            throw new NotFoundException('Post not found.');
+        }
+        $this->assertCanModerate($mod, (int) $post['board_id']);
+        if ((int) $post['is_deleted'] === 0) {
+            return $post; // already visible
+        }
+
+        $this->db->transaction(function () use ($mod, $post, $postId, $reason): void {
+            if ($this->posts->restore($postId) === 0) {
+                return;
+            }
+            $this->posting->applyRestorationCounters($post);
+            $this->log->log([
+                'actor_id' => $mod->id(),
+                'action' => 'restore_post',
+                'target_type' => 'post',
+                'target_id' => $postId,
+                'reason' => $reason !== '' ? $reason : null,
+                'before' => ['is_deleted' => 1],
+                'after' => ['is_deleted' => 0],
+            ]);
+        });
+
+        return $post;
+    }
+
+    /**
+     * Move a thread to another board. Requires moderation capability on BOTH
+     * source and destination; updates both boards' counters atomically and
+     * recomputes their last-post caches (no stale links/leaks).
+     *
+     * @return array{thread:array<string,mixed>, moved:bool}
+     */
+    public function moveThread(User $mod, int $threadId, int $destBoardId): array
+    {
         $thread = $this->threads->find($threadId);
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
+        $srcBoardId = (int) $thread['board_id'];
+        if ($srcBoardId === $destBoardId) {
+            return ['thread' => $thread, 'moved' => false];
+        }
+        $dest = $this->boards->find($destBoardId);
+        if ($dest === null) {
+            throw new ValidationException(['board_id' => 'Choose a destination board.']);
+        }
+        $this->assertCanModerate($mod, $srcBoardId);
+        $this->assertCanModerate($mod, $destBoardId);
+
+        $this->db->transaction(function () use ($mod, $threadId, $thread, $srcBoardId, $destBoardId): void {
+            $postCount = (int) $this->db->fetchValue(
+                'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0',
+                [$threadId],
+            );
+            $this->threads->setBoard($threadId, $destBoardId);
+            $this->db->run(
+                'UPDATE boards SET thread_count = GREATEST(0, CAST(thread_count AS SIGNED) - 1),
+                    post_count = GREATEST(0, CAST(post_count AS SIGNED) - ?) WHERE id = ?',
+                [$postCount, $srcBoardId],
+            );
+            $this->db->run(
+                'UPDATE boards SET thread_count = thread_count + 1, post_count = post_count + ? WHERE id = ?',
+                [$postCount, $destBoardId],
+            );
+            $this->boards->recomputeLastPost($srcBoardId);
+            $this->boards->recomputeLastPost($destBoardId);
+            $this->log->log([
+                'actor_id' => $mod->id(),
+                'action' => 'move_thread',
+                'target_type' => 'thread',
+                'target_id' => $threadId,
+                'before' => ['board_id' => $srcBoardId],
+                'after' => ['board_id' => $destBoardId],
+            ]);
+        });
+
+        return ['thread' => $thread, 'moved' => true];
+    }
+
+    /** @return array<string,mixed> */
+    private function requireModeratableThread(User $mod, int $threadId): array
+    {
+        $thread = $this->threads->find($threadId);
+        if ($thread === null || (int) $thread['is_deleted'] === 1) {
+            throw new NotFoundException('Thread not found.');
+        }
+        $this->assertCanModerate($mod, (int) $thread['board_id']);
         return $thread;
     }
 
-    private function assertAdmin(User $admin): void
+    private function assertCanModerate(User $mod, int $boardId): void
     {
-        if (!$admin->isAdmin()) {
-            throw new ForbiddenException('Moderation requires an administrator.');
+        $this->writeGate->assertCanWrite($mod);
+        if (!$mod->isAdmin() && !$this->boardMods->isModerator($boardId, $mod->id())) {
+            throw new ForbiddenException('You do not moderate this board.');
         }
-        $this->writeGate->assertCanWrite($admin);
     }
 }
