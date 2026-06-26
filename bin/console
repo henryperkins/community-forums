@@ -18,6 +18,7 @@ use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Service\BadgeService;
 use App\Service\RepairService;
+use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
 use App\Worker\NotificationEmailWorker;
 
@@ -150,6 +151,21 @@ try {
             $log(sprintf('Daily digest: sent=%d skipped_empty=%d suppressed=%d', $stats['sent'], $stats['skipped_empty'], $stats['suppressed']));
             break;
 
+        case 'verify:upgrade':
+            // Phase-1 → Phase-2 upgrade rehearsal (P2-12). DESTRUCTIVE: drops all
+            // tables in the target DB, so point it at a throwaway database.
+            $db = $database();
+            $log('Upgrade rehearsal against database: ' . $config->get('db')['database']);
+            $log('(this DROPS ALL TABLES — use a scratch database)');
+            $result = (new UpgradeRehearsal($db->pdo(), $config->get('paths.migrations')))->run($log);
+            $log('');
+            $passed = count(array_filter($result['checks'], static fn (array $c): bool => $c['ok']));
+            $log(sprintf('Result: %s (%d/%d checks passed)', $result['ok'] ? 'PASS ✓' : 'FAIL ✗', $passed, count($result['checks'])));
+            if (!$result['ok']) {
+                exit(1);
+            }
+            break;
+
         case 'engagement:cutover':
             // Record the Phase 2 unread cutover timestamp. Content before this
             // moment starts read; later activity uses lazy thread_user rows.
@@ -172,6 +188,7 @@ try {
             $log('  repair:counters      Reconcile post/thread/board counters');
             $log('  repair:reputation    Recompute reputation from reactions + solved bonuses');
             $log('  community:backfill-badges  Idempotently award auto badges (run on a cron for Anniversary)');
+            $log('  verify:upgrade        Rehearse a Phase-1→Phase-2 upgrade on a scratch DB (destructive)');
             $log('  engagement:cutover [UTC]  Set the unread cutover timestamp');
             $log('  worker:email [limit]  Drain the instant notification-email queue');
             $log('  worker:digest         Send due daily digests');

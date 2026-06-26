@@ -71,6 +71,29 @@ final class DailyDigestWorkerTest extends TestCase
         self::assertSame(0, $mailer->count());
     }
 
+    public function testDigestUsesRecipientLocalTimezoneNotUtc(): void
+    {
+        // Recipient wants the digest at 09:00 America/Chicago (UTC-5 in June).
+        // A UTC-only comparison would (wrongly) send at UTC 09:30; the correct,
+        // timezone-aware worker only sends when it is 09:xx in Chicago = UTC 14:xx.
+        $author = $this->makeUser();
+        $recipient = $this->makeDigestUser(9, 'America/Chicago');
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Daily topic', 'OP.');
+        $this->posting()->reply($this->userEntity($author), $thread['thread_id'], ['body' => 'Fresh reply.']);
+        (new SubscriptionRepository($this->db))->set((int) $recipient['id'], 'thread', $thread['thread_id'], true, true, 'daily');
+
+        // UTC 09:30 == 04:30 in Chicago → NOT the local digest hour → no send.
+        $early = $this->worker(new ArrayMailer())->run('2026-06-26 09:30:00');
+        self::assertSame(0, $early['sent'], 'must compare the digest hour in the recipient timezone, not UTC');
+
+        // UTC 14:30 == 09:30 in Chicago → the local digest hour → send once.
+        $mailer = new ArrayMailer();
+        $due = $this->worker($mailer)->run('2026-06-26 14:30:00');
+        self::assertSame(1, $due['sent']);
+        self::assertCount(1, $mailer->to($recipient['email']));
+    }
+
     public function testNeverSendsAnEmptyDigest(): void
     {
         $recipient = $this->makeDigestUser(9);

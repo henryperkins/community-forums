@@ -88,4 +88,33 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(1, $stats['failed']);
         self::assertSame("failed", (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"));
     }
+
+    public function testBoundedDrainRespectsLimitAndResumesWithoutLoss(): void
+    {
+        // A backlog larger than the per-run limit must drain in bounded batches,
+        // oldest-first, losing nothing (PHASE_2_PLAN §9 "queue backlog").
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Backlog', 'OP.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        $deliveries = new EmailDeliveryRepository($this->db);
+        for ($i = 1; $i <= 3; $i++) {
+            $r = $this->makeUser(['email' => "b$i@example.test"]);
+            $deliveries->enqueue((int) $r['id'], "b$i@example.test", 'instant', null, $postId . ':' . (int) $r['id']);
+        }
+        $mailer = new ArrayMailer();
+
+        $first = $this->worker($mailer)->run(2);
+        self::assertSame(2, $first['sent']);
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE status = 'queued'"));
+        // Oldest-first: the two earliest-enqueued rows drained, the newest waits.
+        self::assertCount(1, $mailer->to('b1@example.test'));
+        self::assertCount(1, $mailer->to('b2@example.test'));
+        self::assertCount(0, $mailer->to('b3@example.test'), 'newest-enqueued row is not drained before the older ones');
+
+        $second = $this->worker($mailer)->run(2);
+        self::assertSame(1, $second['sent']);
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE status = 'queued'"));
+        self::assertSame(3, $mailer->count(), 'every queued send delivered exactly once across batches');
+    }
 }

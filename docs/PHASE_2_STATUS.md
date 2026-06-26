@@ -1,6 +1,6 @@
 # RetroBoards — Phase 2 Implementation Status & Evidence Index
 
-**Status:** In progress · **Date:** 2026-06-26 · **Owner:** Henry (lakefrontdigital.io)
+**Status:** M0–M6 implemented; Gate A/B product-owner acceptance pending · **Date:** 2026-06-26 · **Owner:** Henry (lakefrontdigital.io)
 
 Living evidence index for `PHASE_2_PLAN.md` (Community Essentials). Tracks which
 milestone/workstream is implemented, where, and how it is verified. Entry gate
@@ -10,13 +10,16 @@ milestone/workstream is implemented, where, and how it is verified. Entry gate
 
 ```bash
 composer install
-php bin/console migrate        # Phase 1 (0001-0010) + Phase 2 (0011-0038)
-composer test                  # full PHPUnit suite (unit + integration)
+php bin/console migrate        # Phase 1 (0001-0010) + Phase 2 (0011-0041)
+composer test                  # full PHPUnit suite — 215 tests / 694 assertions
 php bin/console repair         # reconcile all denormalised counters + reputation
+php bin/console verify:upgrade # rehearse a Phase-1→Phase-2 upgrade (scratch DB)
 ```
 
 Integration tests run against `retroboards_test` (override `DB_TEST_DATABASE`),
-fresh-migrated by the bootstrap and rolled back per-test in a transaction.
+fresh-migrated by the bootstrap and rolled back per-test in a transaction. Every
+integration test drives the real kernel server-side over form POST → redirect, so
+the suite is itself the no-JavaScript proof for the Gate A write paths.
 
 ## Milestone status
 
@@ -27,8 +30,8 @@ fresh-migrated by the bootstrap and rolled back per-test in a transaction.
 | M2 — Notifications, mentions, email | P2-03, P2-04, P2-05 | ✅ Done (core) |
 | M3 — Search + DMs | P2-06, P2-07 | ✅ Done |
 | M4 — Scoped moderation + operator controls | P2-08 | ✅ Done (core) |
-| M5 — Community identity + account expansion | P2-09, P2-10, P2-11 | ⬜ Planned |
-| M6 — Hardening + phase close | P2-12 | ⬜ Planned |
+| M5 — Community identity + account expansion | P2-09, P2-10, P2-11 | ✅ Done |
+| M6 — Hardening + phase close | P2-12 | ✅ Done (acceptance pending) |
 
 ## M0 — Foundation (P2-00) ✅
 
@@ -209,3 +212,143 @@ fixed**: hidden-board leak in inbox/unread listing (now public-only +
 - A few extra secondary indexes (`idx_blocks_blocked`, `idx_reports_post`,
   `idx_bans_board`, `idx_cp_user`, `idx_bm_user`, `fk_notif_user`) — additive,
   consistent with SCHEMA's "sensible starting points" note.
+
+## M5 — Community identity + account expansion (P2-09/10/11) ✅
+
+- **P2-09 community identity.** `follows` (block-aware) + new-follower notification
+  (`FollowService`, `FollowRepository`, `FollowController`); query-time **Following
+  feed** (`FeedService`, `/feed`) gated to public + member-private boards, excluding
+  deleted/blocked; fixed **badge** catalogue seeded idempotently (migration `0040`,
+  `BadgeRepository`/`BadgeService`, auto-milestone + admin manual + revoke);
+  accepted/**"solved" answers** (`SolvedAnswerService`/`SolvedController`): OP or
+  board moderator, +5 reputation to the answerer with **self-answer exclusion**,
+  Problem Solver badge, in-app + email notification, audit row — one transaction;
+  all-time **leaderboard** (`/leaderboard`, opt-out + banned excluded); cosmetic
+  **titles** (`TitleService`, reputation thresholds + admin override). Profile
+  revamp: counts, badges, title, presence, Follow/Message/Block, renamed-handle
+  301 redirects (`username_history`).
+- **P2-10 member controls + account expansion.** `/settings/{privacy,preferences,
+  notifications,blocks,boards}` (`SettingsController`, `PreferenceService`,
+  `UserPreferenceRepository`, `UserBoardPrefRepository`) — server-enforced
+  pagination, muted boards leave the sidebar, leaderboard opt-out; **active
+  sessions/devices** (list, revoke one user-scoped, log out everywhere else);
+  **OAuth** (`OAuthService` + `App\Service\OAuth\*`: Google/GitHub/Apple,
+  `ProviderRegistry`) with `state` + PKCE + nonce, a signed state cookie, the
+  account-resolution tree (returning / link / **verified-email collision that
+  never auto-merges** / banned-refusal / new-signup with avatar import) and
+  **last-login-method protection** on unlink; OAuth-only accounts can set a
+  password.
+- **P2-11 presence.** Throttled `last_seen_at` heartbeat in the kernel; privacy-safe
+  roster (`/presence`, `PresenceController`) that never exposes a hidden / stale /
+  self / blocked member; sidebar widget + short-poll; focus-visible / 44px tap
+  target / reduced-motion CSS.
+- **Evidence:** `AppFollowFeedTest` (5), `AppBadgeSolvedTest` (13),
+  `AppLeaderboardTest` (1), `AppCommunityProfileTest` (6), `AppUserPreferencesTest`
+  (7), `AppSessionManagementTest` (4), `AppOAuthTest` (12), `AppPresenceTest` (4).
+
+## Adversarial review (M5) — applied
+
+A 4-dimension multi-agent review (authz/privacy, OAuth security, reputation
+integrity, injection/XSS/CSRF) with skeptical per-finding verification produced
+**3 confirmed findings, all fixed + regression-tested**:
+
+1. OAuth state cookie was `SameSite=Lax`, so Apple's `form_post` (cross-site POST)
+   callback dropped it and Apple sign-in failed closed → now `SameSite=None; Secure`
+   when secure, `Lax` fallback for non-secure local dev.
+2. Soft-deleting an accepted-answer post left the +5 solved bonus and a dangling
+   `accepted_answer_post_id` (runtime ↔ `repair` drift) → `applyDeletionCounters`
+   now clears it and reverses the bonus (author ≠ OP).
+3. `solvedAnswerCount` counted self-accepts, allowing badge self-farming → now
+   excludes self-answers, matching the reputation rule.
+
+Two further reports were correctly **refuted** (board-pref rows for inaccessible
+boards are re-gated downstream by `BoardPolicy::isListed`; the unused OIDC nonce is
+covered by state + PKCE).
+
+## M6 — Hardening + phase close (P2-12) ✅
+
+- **Clean-install migration.** `migrate:fresh` applies all 41 migrations; proven on
+  every test run (the bootstrap fresh-migrates `retroboards_test`).
+- **Phase-1 → Phase-2 upgrade rehearsal.** `php bin/console verify:upgrade`
+  (`App\Support\UpgradeRehearsal`) builds the Phase 1 schema (0001–0010), seeds
+  representative data, applies the Phase 2 migrations, and asserts no data loss:
+  **17/17 checks PASS** — all Phase 1 row counts + sample values preserved, 23 new
+  tables and 11 new columns present, **every Phase 1 column retained** (an
+  exhaustive 90-column before/after `information_schema` diff), 11 badges seeded.
+- **Feature-flag rollback.** `AppFeatureFlagTest` (4): disabling any Phase 2 flag
+  (`engagement`, `notifications`, `search`, `dms`, `community`, `moderation_queue`,
+  `oauth`, `presence`) 404s its routes while the core forum still serves; re-enabling
+  restores it — no data change.
+- **Worker / queue operations.** `NotificationEmailWorkerTest` (5): at-most-once per
+  `(post, recipient)`, suppression, **fail-closed transport** (rows stay queued),
+  failure marking, and **bounded backlog drain that resumes without loss**;
+  `DailyDigestWorkerTest` covers timezone/watermark/no-empty-send. Failed rows are
+  not auto-retried (operator replay — see runbook); `EmailDeliveryRepository::
+  statusCounts()` exposes queue depth.
+- **Query / index review.** Added migration `0041` (`idx_users_reputation`): the
+  leaderboard went from `type=ALL` (full scan + filesort) to a **filesort-free**
+  `type=range` index scan — its `reputation DESC, id DESC` order is served directly
+  by the index (InnoDB appends the PK `id`), verified by EXPLAIN (`Using where`, no
+  `Using filesort`). Presence uses `idx_users_last_seen`;
+  feed uses `idx_posts_author`; follows, notifications, and the email queue are
+  covered by existing composite indexes. No N+1: feed/leaderboard/presence/follows
+  are single bounded queries.
+- **No-JS / responsive.** Every Gate A action has a server-rendered POST→redirect
+  path exercised by the (JS-free) integration suite. Mobile widths get ≥44px tap
+  targets, a `prefers-reduced-motion` guard, and focus-visible outlines. _Browser/
+  Playwright capture at desktop+mobile widths is the one evidence item still owed by
+  a CI/browser pass — see Known gaps._
+
+## Operations runbook
+
+See `docs/PHASE_2_RUNBOOK.md` for the documented procedures required by
+PHASE_2_PLAN §10: pause email, disable a feature flag, drain/replay the queue,
+recompute counters, rebuild search indexes, and restore from backup.
+
+## Gate A acceptance checklist (PHASE_2_PLAN §13)
+
+- [x] Scope, deferrals, and evidence map approved (this document).
+- [x] Phase 1 regression baseline remains green (157 → 215 tests, additive only).
+- [x] Clean-install and populated-upgrade migrations pass (`verify:upgrade` 17/17).
+- [x] Email idempotency/outbox schema gap resolved (`email_deliveries.idempotency_key`, M0).
+- [x] Unread cutover policy implemented and verified (M1 + `engagement:cutover`).
+- [x] Reactions, stars, unread, subscriptions, notifications, mentions, search, DMs,
+      reports, scoped moderation, and minimal reputation pass acceptance.
+- [x] Notification / privacy / block / DM settings pass their server-side enforcement matrix.
+- [x] Worker, instant email, digest, suppression, and unsubscribe paths pass operational tests.
+- [x] Search / private-board / notification deep-link leakage tests pass.
+- [x] Guest, User, suspended, banned, scoped Moderator, out-of-scope Moderator, and Admin matrices pass.
+- [x] Gate A paths pass without JavaScript (server-rendered suite). [ ] Browser capture at desktop/mobile widths — owed by a CI/browser pass.
+- [x] Counter-repair and queue-operating procedures are documented (runbook).
+- [x] No critical/high defects remain (M5 review: 3 medium/low fixed).
+- [x] Feature-flag rollback rehearsed (`AppFeatureFlagTest`) and pause-worker fail-closed tested (`NotificationEmailWorkerTest`); [ ] backup-restore and staged-enablement procedures documented in the runbook but **not executed** in this environment.
+- [x] README, changelog, schema, and completion evidence updated.
+- [ ] **Gate A product-owner acceptance recorded** — pending Henry's sign-off.
+
+## Gate B acceptance checklist
+
+- [x] Follows/feed, badges, solved answers, activity profiles, and all-time leaderboard pass privacy + idempotency tests.
+- [x] OAuth provider, collision, linking/unlinking, and banned-account tests pass.
+- [x] Saved/board preferences and session/device controls pass.
+- [~] Approved export/delete behaviour — **formally re-scoped to Phase 3** (retention/anonymisation policy not yet approved; USER §3.5). Recorded below.
+- [x] Presence passes; mobile/keyboard/accessibility CSS in place. [ ] Browser evidence — see Gate A.
+- [~] Email delivery visibility/test/recovery tools — `statusCounts` + worker stats + suppression recovery present; a dedicated admin delivery dashboard is **re-scoped to Phase 3**.
+- [x] All Gate B deferrals recorded here rather than silently omitted.
+- [ ] **Full Phase 2 evidence index + product-owner closeout recorded** — pending sign-off.
+
+## Known gaps / formally re-scoped (carry to Phase 3)
+
+- **Browser/Playwright evidence** at desktop + mobile widths: not runnable in this
+  environment; owed by a CI/browser pass before production cutover. All paths have
+  JS-free server-rendered coverage.
+- **Self-service data export/delete** (USER §3.5): deferred pending an approved
+  retention/anonymisation/grace-period policy (the plan explicitly permits this).
+- **Admin assignment UIs** (board moderators/members, manual badge grant, title
+  override): data layer + scope enforcement are complete; assignment is via repo/
+  console today. Operator pages are Phase-3 polish.
+- **Admin announcements/broadcast** and **board archive/reorder** (Gate B extended,
+  reuse existing tables/flags): wiring deferred — recorded as Phase-3 carryover.
+- **Signature rendering under posts**: the field is stored/editable; display is a
+  small follow-up.
+- **Failed-email auto-retry**: failed rows require operator replay (runbook); an
+  automatic backoff retry is a Phase-3 enhancement.

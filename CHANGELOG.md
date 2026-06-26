@@ -6,7 +6,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 Milestone 5 of the Phase 2 release train. Builds on M0–M4 (engagement,
 notifications/email, mentions, search, DMs, scoped moderation). Additive
-migrations only; the full suite is green at 207 tests.
+migrations only; with the M6 hardening below the full suite is green at 215 tests / 694 assertions.
 
 ### Added
 
@@ -45,11 +45,31 @@ migrations only; the full suite is green at 207 tests.
 - **UI/accessibility** — community/settings/presence component styles, `:focus-visible`
   outlines, ≥44px mobile tap targets, and a `prefers-reduced-motion` guard.
 
+### Hardening & closeout (M6 / P2-12)
+
+- **Upgrade rehearsal** — `bin/console verify:upgrade` (`App\Support\UpgradeRehearsal`)
+  builds the Phase 1 schema, seeds data, applies the Phase 2 migrations, and
+  asserts no data loss: 17/17 checks (row counts + sample values preserved, 23 new
+  tables + 11 new columns present, every Phase 1 column retained (full 90-column
+  before/after diff), 11 badges seeded).
+- **Feature-flag rollback** — `AppFeatureFlagTest`: each Phase 2 flag disables its
+  routes (404) with the core forum still serving, no data change.
+- **Queue backlog** — bounded oldest-first drain that resumes without loss
+  (`NotificationEmailWorkerTest`).
+- **Index review** — migration `0041` adds `idx_users_reputation`; the leaderboard
+  goes from a full scan + filesort (`type=ALL`) to a **filesort-free** index range
+  scan — the `reputation DESC, id DESC` order is served directly by the index
+  (InnoDB appends the PK), verified by EXPLAIN (`Using where`, no `Using filesort`).
+- **Docs** — `docs/PHASE_2_STATUS.md` evidence index + Gate A/B checklist;
+  `docs/PHASE_2_RUNBOOK.md` operations (pause email, flags, drain/replay queue,
+  repair counters, rebuild search, restore).
+
 ### Tests
 
 - New integration suites: follows/feed, badges + solved answers, leaderboard,
   community profile, member preferences, session management, OAuth resolution,
-  and presence (+50 tests over the Phase 1 baseline).
+  presence, and feature-flag rollback (+58 tests over the Phase 1 baseline →
+  215 total / 694 assertions).
 
 ## [0.1.0] — 2026-06-26 — Phase 1: MVP backend
 

@@ -307,7 +307,7 @@ final class UserRepository
              LEFT JOIN user_preferences pf ON pf.user_id = u.id
              WHERE u.status <> 'banned' AND u.reputation > 0
                AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(pf.prefs, '$.hide_from_leaderboard')), 'false') <> 'true'
-             ORDER BY u.reputation DESC, u.id ASC
+             ORDER BY u.reputation DESC, u.id DESC
              LIMIT " . $limit,
         );
     }
