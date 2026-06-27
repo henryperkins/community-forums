@@ -4,7 +4,66 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **379 tests / 1285 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **405 tests / 1390 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+
+### Gate A gap closure (post-audit)
+
+- **Reading preferences are now server-enforced** (P3-01) — `show_avatars`,
+  `show_signatures`, `show_reactions`, and `thread_sort` previously persisted but
+  were never read by any render path. Avatars now hide in the post stream and the
+  board listing; author signatures render under posts (never for an anonymous
+  post — the masked byline must not be deanonymised); the reaction bar hides; and
+  the board list honours last-activity / newest / reply-count ordering (validated
+  enum → whitelisted `ORDER BY`, never raw SQL). New coverage:
+  `tests/Integration/Core/AppReadingPreferencesTest.php` (5 tests).
+- **Preferences can be exported** (P3-01) — `GET /settings/preferences/export`
+  returns the user's appearance/reading/composing preferences as a
+  self-describing JSON download (grouped by section, schema-versioned; non-schema
+  blob keys excluded). Owner-scoped and read-only.
+- **Preference schema upgrade path + corrupt-blob recovery** (P3-01) —
+  `PreferenceSchema::upgrade()` brings a stored blob to the current schema
+  version (version-stepped transform hook for future renames, drops values that
+  no longer validate, preserves other subsystems' keys, never downgrades a blob
+  written by a newer deploy), wired into `resolve()`. A corrupt/non-object stored
+  JSON value already recovered to defaults via the repository guard; both are now
+  covered by tests.
+- **Composing preferences now drive the composer** (P3-01) — `enter_to_send`,
+  `show_preview`, and `smart_lists` were persisted but never applied. The layout
+  stamps them on `<body>` for signed-in users and `composer.js` reads them:
+  Enter-to-send submits on Enter (Shift+Enter newlines); the live preview pane is
+  built only when enabled; smart lists continue/renumber a Markdown list on Enter
+  and exit it on an empty item. All progressive enhancement — the textarea still
+  posts with no JS. Server exposure is tested (`AppUserPreferencesTest`); the
+  runtime JS behaviour is pending the cross-cutting browser/Playwright evidence.
+  **This closes the last functional P3-01 gap.**
+- **Operator trust & safety controls** (P3-05) — the admin console gained a
+  "Trust & safety" panel that actually drives enforcement:
+  - **Registration mode** (open / closed). `registration_mode` was a dead
+    setting written once at install and never read; `AuthController` now enforces
+    it — a closed site shows a notice and rejects sign-ups (403). (An approval
+    queue would need a `users.status='pending'` migration and is left as a
+    follow-up.)
+  - **Anti-abuse posture** — the enforced mode (observe / flag / hold / block,
+    read by `AntiAbuseService`) and the admin-managed **blocked-word list** are
+    now editable in the UI instead of by raw setting edits; words are de-duped,
+    trimmed, and length-capped.
+  - **Board "Require approval"** — `boards.require_approval` (mig 0046) was
+    enforced in `PostingService` but had no UI; the board editor now has the
+    toggle, so a board's new threads/replies are held for moderator release.
+  All changes are audited. Tests: `AppAdminModerationTest` (persistence,
+  end-to-end hold, registration open/closed, invalid-mode fallback, non-admin
+  rejection).
+- **Spam-scoring provider seam** (P3-05) — a pluggable `App\Service\Spam\SpamScorer`
+  contract with a no-op `NullSpamScorer` default. `AntiAbuseService` consults the
+  bound scorer as one reviewable rule among the word/link/duplicate/flood checks:
+  its `[0,1]` score maps to a severity (≥ flag / ≥ hold thresholds, configurable;
+  capped at hold — automated scoring never auto-blocks), clamped to the operator
+  mode like every other rule, and audited. Calls are fail-safe (a throwing
+  provider abstains, never blocking posting). The default abstains, so Gate A
+  behaviour is unchanged; a first-party/external scorer (Gate B / P3-13) is
+  enabled by rebinding the interface in the container — no engine changes. Tests:
+  `AppSpamSeamTest`. Still open for P3-05: routing auth/DM/password-reset through
+  the central proxy-aware limiter, and the optional first-post hold.
 
 ### Hardening (post adversarial review)
 

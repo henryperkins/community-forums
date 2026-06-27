@@ -16,8 +16,9 @@ use App\Service\AttachmentService;
 /**
  * Operator branding (P3-07): site name, light/dark logo, favicon, and primary/
  * accent colors with a live-served stylesheet, reset, and audit. Brand colors
- * are delivered as an external /brand.css (the strict CSP forbids inline styles),
- * mapping onto the existing --accent token so the whole UI re-themes safely.
+ * are delivered as an external /brand.css (the strict CSP forbids inline styles):
+ * the primary colour maps onto --accent (the whole UI re-themes safely) and the
+ * accent colour onto --accent-2 (highlight/indicator surfaces).
  * Uploaded brand assets go through the same sniff/re-encode pipeline as post
  * media; everything falls back to the safe built-in chrome when unset or invalid.
  */
@@ -43,7 +44,7 @@ final class BrandingController extends Controller
             $css .= '--accent:' . $primary . ';--brand-primary:' . $primary . ';';
         }
         if (self::isHex($accent)) {
-            $css .= '--brand-accent:' . $accent . ';';
+            $css .= '--accent-2:' . $accent . ';';
         }
         $css .= '}';
 

@@ -123,8 +123,91 @@ final class AppUserPreferencesTest extends TestCase
     {
         $this->assertRedirectContains($this->get('/settings/privacy'), '/login');
         $this->assertRedirectContains($this->get('/settings/preferences'), '/login');
+        $this->assertRedirectContains($this->get('/settings/preferences/export'), '/login');
         $this->assertRedirectContains($this->get('/settings/sessions'), '/login');
         $this->assertRedirectContains($this->get('/settings/blocks'), '/login');
         $this->assertRedirectContains($this->get('/settings/boards'), '/login');
+    }
+
+    public function test_preferences_export_returns_a_self_describing_json_download(): void
+    {
+        $user = $this->makeUser(['username' => 'exporter']);
+        $this->actingAs($user);
+        // Persist non-default appearance prefs so the export reflects them.
+        $this->post('/settings/appearance', [
+            'theme' => 'dark', 'density' => 'compact', 'font_size' => 'large', 'reduced_motion' => '1',
+        ]);
+
+        $res = $this->get('/settings/preferences/export');
+        $this->assertStatus(200, $res);
+        self::assertStringContainsString('application/json', (string) $res->getHeader('content-type'));
+        $disposition = (string) $res->getHeader('content-disposition');
+        self::assertStringContainsString('attachment', $disposition);
+        self::assertStringContainsString('retroboards-preferences.json', $disposition);
+
+        $data = json_decode($res->body(), true);
+        self::assertIsArray($data);
+        self::assertSame(\App\Support\PreferenceSchema::VERSION, $data['schema_version']);
+        self::assertSame('exporter', $data['username']);
+        // Grouped by section, reflecting the saved overrides + schema defaults.
+        self::assertSame('dark', $data['preferences']['appearance']['theme']);
+        self::assertSame('compact', $data['preferences']['appearance']['density']);
+        self::assertTrue($data['preferences']['appearance']['reduced_motion']);
+        self::assertSame('last_post', $data['preferences']['reading']['thread_sort']);
+        self::assertArrayHasKey('composing', $data['preferences']);
+        // Non-schema blob keys are not leaked into the export.
+        self::assertArrayNotHasKey('hide_from_leaderboard', $data['preferences']);
+    }
+
+    public function test_corrupt_preference_blob_recovers_to_defaults(): void
+    {
+        $user = $this->makeUser(['username' => 'corrupt']);
+        // The prefs column has CHECK (json_valid), so truly malformed text can't
+        // be stored; the realistic "corrupt blob" is a valid-JSON value that is
+        // not the expected object (here a scalar). get() must recover to [] so
+        // rendering falls back to defaults instead of 500-ing.
+        $this->db->run(
+            'INSERT INTO user_preferences (user_id, prefs, updated_at) VALUES (?, ?, UTC_TIMESTAMP())',
+            [(int) $user['id'], '"corrupt-not-an-object"'],
+        );
+
+        $prefs = (new UserPreferenceRepository($this->db))->get((int) $user['id']);
+        self::assertSame([], $prefs, 'A non-object prefs blob must decode to an empty array.');
+
+        // The settings + thread render paths still serve 200 with defaults.
+        $this->actingAs($user);
+        $appearance = $this->get('/settings/appearance');
+        $this->assertStatus(200, $appearance);
+        $this->assertSeeText($appearance, 'System (match device)'); // default theme option rendered
+        $this->assertStatus(200, $this->get('/settings/preferences'));
+    }
+
+    public function test_composing_preferences_are_stamped_on_the_page_body(): void
+    {
+        // composer.js reads these <body> data attributes to gate enter-to-send,
+        // the live preview, and smart list continuation (P3-01).
+        $user = $this->makeUser(['username' => 'composeprefs']);
+        $this->actingAs($user);
+
+        // Schema defaults: enter-to-send off, preview on, smart lists on.
+        $home = $this->get('/')->body();
+        self::assertStringContainsString('data-enter-to-send="0"', $home);
+        self::assertStringContainsString('data-show-preview="1"', $home);
+        self::assertStringContainsString('data-smart-lists="1"', $home);
+
+        // Posting the composing form with only enter_to_send checked turns the
+        // others off (unchecked boxes persist false) — the body must reflect it.
+        $this->post('/settings/composing', ['enter_to_send' => '1']);
+        $after = $this->get('/')->body();
+        self::assertStringContainsString('data-enter-to-send="1"', $after);
+        self::assertStringContainsString('data-show-preview="0"', $after);
+        self::assertStringContainsString('data-smart-lists="0"', $after);
+    }
+
+    public function test_guest_body_has_no_composing_attributes(): void
+    {
+        // Guests never compose; the attributes are only stamped when signed in.
+        $body = $this->get('/')->body();
+        self::assertStringNotContainsString('data-enter-to-send', $body);
     }
 }

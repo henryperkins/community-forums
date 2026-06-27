@@ -21,6 +21,36 @@
     </section>
 
     <section class="card">
+        <h2>Trust &amp; safety</h2>
+        <form method="post" action="/admin/settings" class="stacked">
+            <?= $this->csrfField() ?>
+            <label class="field">
+                <span>Registration</span>
+                <select name="registration_mode" class="input">
+                    <?php foreach (($registration_modes ?? ['open', 'closed']) as $m): ?>
+                        <option value="<?= $e($m) ?>"<?= ($registration_mode ?? 'open') === $m ? ' selected' : '' ?>><?= $e(ucfirst($m)) ?><?= $m === 'closed' ? ' (no new sign-ups)' : '' ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label class="field">
+                <span>Anti-abuse enforcement</span>
+                <select name="antiabuse_mode" class="input">
+                    <?php foreach (($antiabuse_modes ?? ['observe', 'flag', 'hold', 'block']) as $m): ?>
+                        <option value="<?= $e($m) ?>"<?= ($antiabuse_mode ?? 'observe') === $m ? ' selected' : '' ?>><?= $e(ucfirst($m)) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="muted">observe = log only · flag · hold = queue for approval · block = reject</span>
+            </label>
+            <label class="field">
+                <span>Blocked words</span>
+                <textarea name="antiabuse_blocked_words" class="input" rows="4" placeholder="One word or phrase per line"><?= $e(implode("\n", $antiabuse_blocked_words ?? [])) ?></textarea>
+                <span class="muted">Case-insensitive; matched as substrings against new posts.</span>
+            </label>
+            <div class="form-actions"><button class="btn" type="submit">Save settings</button></div>
+        </form>
+    </section>
+
+    <section class="card">
         <h2>Recent activity</h2>
         <?php if (empty($audit)): ?>
             <p class="muted">No moderation or admin actions yet.</p>

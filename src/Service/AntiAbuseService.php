@@ -9,6 +9,9 @@ use App\Core\Database;
 use App\Domain\User;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
+use App\Service\Spam\NullSpamScorer;
+use App\Service\Spam\SpamScorer;
+use App\Service\Spam\SpamVerdict;
 
 /**
  * Central, reviewable anti-abuse automation (P3-05, ADMIN §10.2, DECISIONS #11).
@@ -34,6 +37,7 @@ final class AntiAbuseService
         private Config $config,
         private SettingRepository $settings,
         private ModerationLogRepository $log,
+        private SpamScorer $spamScorer = new NullSpamScorer(),
     ) {
     }
 
@@ -92,11 +96,42 @@ final class AntiAbuseService
             }
         }
 
+        // 5. Spam-scoring provider (seam, P3-05): a pluggable scorer contributes
+        //    a severity from its [0,1] score, clamped to the operator mode like
+        //    every other rule. The default scorer abstains (Gate A unchanged);
+        //    capped at hold — automated scoring never auto-blocks.
+        $verdict = $this->safeScore($user, $context, $text);
+        if ($verdict !== null) {
+            $holdAt = (float) ($cfg['spam_hold_score'] ?? 0.9);
+            $flagAt = (float) ($cfg['spam_flag_score'] ?? 0.6);
+            $spamSeverity = $verdict->score >= $holdAt
+                ? self::SEVERITY['hold']
+                : ($verdict->score >= $flagAt ? self::SEVERITY['flag'] : 0);
+            if ($spamSeverity > 0) {
+                $severity = max($severity, $spamSeverity);
+                $reasons[] = 'spam score ' . number_format($verdict->score, 2) . ' (' . $verdict->label . ')';
+                $rule = $rule ?: 'spam_score';
+            }
+        }
+
         $natural = self::ACTION[$severity];
         $ceiling = self::SEVERITY[$mode] ?? 0;
         $effective = self::ACTION[min($severity, $ceiling)];
 
         return new AntiAbuseDecision($effective, $natural, $reasons, $mode, $rule);
+    }
+
+    /**
+     * Consult the bound spam scorer, never letting a misbehaving provider break
+     * posting: any exception is swallowed and treated as "no opinion" (abstain).
+     */
+    private function safeScore(User $user, string $context, string $text): ?SpamVerdict
+    {
+        try {
+            return $this->spamScorer->score($user, $context, $text);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

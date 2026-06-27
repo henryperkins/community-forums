@@ -54,9 +54,12 @@ final class ThreadController extends Controller
     public function renderThread(Request $request, array $thread, array $extra = []): Response
     {
         $user = $this->currentUser();
+        $prefSvc = $this->container->get(PreferenceService::class);
         $perPage = $user !== null
-            ? $this->container->get(PreferenceService::class)->postsPerPage($user->id())
+            ? $prefSvc->postsPerPage($user->id())
             : (int) $this->config()->get('pagination.posts_per_page', 20);
+        // Reading display prefs (P3-01): avatar / signature / reaction visibility.
+        $reading = $user !== null ? $prefSvc->reading($user->id()) : $prefSvc->readingDefaults();
         $postRepo = $this->container->get(PostRepository::class);
         $markdown = $this->container->get(Markdown::class);
 
@@ -139,6 +142,9 @@ final class ThreadController extends Controller
             'locked' => $locked,
             'is_admin' => $user?->isAdmin() ?? false,
             'engagement' => $engagement,
+            'show_signatures' => $reading['show_signatures'],
+            'show_avatars' => $reading['show_avatars'],
+            'show_reactions' => $reading['show_reactions'],
             'reaction_counts' => $reactionCounts,
             'my_reactions' => $myReactions,
             'allowed_emoji' => ReactionService::ALLOWED,

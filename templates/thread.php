@@ -80,6 +80,9 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
                     'can_mark_solved' => $can_mark_solved ?? false,
                     'can_reveal_anon' => $can_reveal_anon ?? false,
+                    'show_avatars' => $show_avatars ?? true,
+                    'show_signatures' => $show_signatures ?? true,
+                    'show_reactions' => $show_reactions ?? true,
                 ]) ?>
             <?php endforeach; ?>
         </div>

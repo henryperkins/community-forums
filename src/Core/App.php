@@ -322,6 +322,19 @@ final class App
             // Pre-migration / DB-less render: keep safe defaults.
         }
 
+        // Composing prefs (P3-01) gate the shared composer client-side
+        // (enter-to-send, live preview, smart list continuation). Stamped on
+        // <body> for signed-in users; safe defaults if pre-migration or DB-less.
+        $composing = ['enter_to_send' => false, 'show_preview' => true, 'smart_lists' => true];
+        try {
+            $user = $session->user();
+            if ($user !== null) {
+                $composing = $container->get(PreferenceService::class)->composing($user->id());
+            }
+        } catch (Throwable) {
+            // keep safe defaults
+        }
+
         // Branding (P3-07): operator name/logo/favicon/colors with safe fallbacks.
         $branding = $this->branding($container, $siteName);
 
@@ -358,6 +371,7 @@ final class App
             'features' => $features,
             'oauth_providers' => $oauthProviders,
             'appearance' => $appearance,
+            'composing' => $composing,
             'branding' => $branding,
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
@@ -516,11 +530,15 @@ final class App
             $config,
             $c->get(ClientIdentifier::class),
         ));
+        // Spam-scoring provider seam (P3-05): the default scorer abstains. A
+        // first-party/external provider (Gate B) is enabled by rebinding this.
+        $c->bind(\App\Service\Spam\SpamScorer::class, fn (Container $c) => new \App\Service\Spam\NullSpamScorer());
         $c->bind(AntiAbuseService::class, fn (Container $c) => new AntiAbuseService(
             $c->get(Database::class),
             $config,
             $c->get(SettingRepository::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(\App\Service\Spam\SpamScorer::class),
         ));
 
         // Image uploads (P3-04).
@@ -815,6 +833,7 @@ final class App
         $r->get('/settings/composing', [SettingsController::class, 'composingForm']);
         $r->post('/settings/composing', [SettingsController::class, 'updateComposing']);
         $r->post('/settings/preferences/reset', [SettingsController::class, 'resetPreferences']);
+        $r->get('/settings/preferences/export', [SettingsController::class, 'exportPreferences']);
         $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);
         $r->post('/settings/notifications', [SettingsController::class, 'updateNotifications']);
         $r->get('/settings/sessions', [SettingsController::class, 'sessions']);
@@ -866,6 +885,7 @@ final class App
         $r->get('/admin', [AdminController::class, 'dashboard']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
+        $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
         $r->post('/admin/categories', [AdminController::class, 'createCategory']);
         $r->post('/admin/categories/{id}', [AdminController::class, 'updateCategory']);
         $r->post('/admin/categories/{id}/delete', [AdminController::class, 'deleteCategory']);

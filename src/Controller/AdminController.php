@@ -13,6 +13,7 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\SettingRepository;
 use App\Service\AdminService;
 
 /**
@@ -26,8 +27,14 @@ final class AdminController extends Controller
     public function dashboard(Request $request, array $params): Response
     {
         $this->requireAdmin();
+        $settings = $this->container->get(SettingRepository::class);
         return $this->view('admin/dashboard', [
             'audit' => $this->container->get(ModerationLogRepository::class)->recent(50),
+            'registration_mode' => $settings->getString('registration_mode', 'open'),
+            'antiabuse_mode' => $settings->getString('antiabuse_mode', 'observe'),
+            'antiabuse_blocked_words' => (array) $settings->get('antiabuse_blocked_words', []),
+            'registration_modes' => AdminService::REGISTRATION_MODES,
+            'antiabuse_modes' => AdminService::ANTIABUSE_MODES,
         ]);
     }
 
@@ -49,6 +56,17 @@ final class AdminController extends Controller
             fn () => $this->container->get(AdminService::class)->setSiteName($admin, $request->str('site_name')),
             '/admin',
             'Site name updated.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function updateSettings(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->updateModerationSettings($admin, $request->allInput()),
+            '/admin',
+            'Trust & safety settings saved.',
         );
     }
 

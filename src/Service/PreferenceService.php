@@ -59,6 +59,61 @@ final class PreferenceService
         ];
     }
 
+    /**
+     * The reading-display subset (thread_sort + show_signatures/avatars/reactions)
+     * the thread/board render paths consult so the toggles actually take effect
+     * (P3-01). Values are already validated by {@see PreferenceSchema}.
+     *
+     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     */
+    public function reading(int $userId): array
+    {
+        return $this->pickReading($this->resolved($userId));
+    }
+
+    /**
+     * The same reading subset at schema defaults — used for guests, who have no
+     * stored prefs but should still get the default (everything shown).
+     *
+     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     */
+    public function readingDefaults(): array
+    {
+        return $this->pickReading(PreferenceSchema::resolve([]));
+    }
+
+    /**
+     * @param array<string,mixed> $r
+     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     */
+    private function pickReading(array $r): array
+    {
+        return [
+            'thread_sort' => (string) ($r['thread_sort'] ?? 'last_post'),
+            'show_signatures' => (bool) ($r['show_signatures'] ?? true),
+            'show_avatars' => (bool) ($r['show_avatars'] ?? true),
+            'show_reactions' => (bool) ($r['show_reactions'] ?? true),
+        ];
+    }
+
+    /**
+     * The composing subset the shared composer reads to gate its behaviour
+     * (P3-01): enter-to-send, live preview, and smart list continuation. Values
+     * are already validated by {@see PreferenceSchema}; the layout stamps them on
+     * `<body>` for signed-in users so `composer.js` can apply them.
+     *
+     * @return array{enter_to_send:bool,show_preview:bool,smart_lists:bool}
+     */
+    public function composing(int $userId): array
+    {
+        $r = $this->resolved($userId);
+        return [
+            'enter_to_send' => (bool) ($r['enter_to_send'] ?? false),
+            'show_preview' => (bool) ($r['show_preview'] ?? true),
+            'smart_lists' => (bool) ($r['smart_lists'] ?? true),
+        ];
+    }
+
     public function threadsPerPage(int $userId): int
     {
         $v = (int) ($this->prefs->get($userId)['threads_per_page'] ?? 0);
@@ -111,5 +166,28 @@ final class PreferenceService
             }
         }
         $this->prefs->merge($userId, $removals);
+    }
+
+    /**
+     * A self-describing snapshot of the user's appearance / reading / composing
+     * preferences, grouped by section, for the Settings "export" action (P3-01,
+     * USER §4). Only schema-managed keys are included (not other subsystems'
+     * blob keys such as `hide_from_leaderboard`); a per-page key absent from the
+     * blob surfaces as null = the server default.
+     *
+     * @return array<string, array<string,mixed>>
+     */
+    public function export(int $userId): array
+    {
+        $resolved = $this->resolved($userId);
+        $sections = [];
+        foreach (PreferenceSchema::sections() as $section) {
+            $values = [];
+            foreach (array_keys(PreferenceSchema::fields($section)) as $key) {
+                $values[$key] = $resolved[$key] ?? null;
+            }
+            $sections[$section] = $values;
+        }
+        return $sections;
     }
 }

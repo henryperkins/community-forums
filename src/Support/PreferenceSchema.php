@@ -105,6 +105,7 @@ final class PreferenceSchema
      */
     public static function resolve(array $stored): array
     {
+        $stored = self::upgrade($stored);
         $out = self::defaults();
         foreach (self::SCHEMA as $fields) {
             foreach ($fields as $key => $spec) {
@@ -127,6 +128,65 @@ final class PreferenceSchema
             }
         }
         return $out;
+    }
+
+    /**
+     * Bring a stored (sparse, untrusted) preference blob up to the current
+     * {@see VERSION}: run any per-version value transforms, drop known-schema
+     * values that no longer validate (so stale data falls back to its default
+     * instead of persisting), and stamp `__v`. Unknown keys (other subsystems'
+     * prefs) are preserved; an empty blob and a blob written by a newer deploy
+     * (`__v` > VERSION) are returned untouched.
+     *
+     * v1 → v2 was purely additive (the reading-display + composing toggles were
+     * introduced at v2), so it needs no value transform yet — {@see transformTo}
+     * is the home for a future breaking change (e.g. a renamed enum value) so old
+     * blobs keep working across a schema bump. resolve() runs this on every read;
+     * a save (updateSection) re-stamps the version, so storage converges.
+     *
+     * @param array<string,mixed> $stored
+     * @return array<string,mixed>
+     */
+    public static function upgrade(array $stored): array
+    {
+        if ($stored === []) {
+            return $stored;
+        }
+        $from = isset($stored['__v']) && is_numeric($stored['__v']) ? (int) $stored['__v'] : 1;
+        if ($from > self::VERSION) {
+            return $stored; // written by a newer version — never downgrade.
+        }
+        for ($v = $from + 1; $v <= self::VERSION; $v++) {
+            $stored = self::transformTo($v, $stored);
+        }
+        // Drop a known-schema value that no longer validates so its default
+        // applies; leave unknown keys (other subsystems' prefs) intact.
+        foreach ($stored as $key => $value) {
+            if ($key === '__v') {
+                continue;
+            }
+            $spec = self::specFor((string) $key);
+            if ($spec !== null && self::coerce($spec, $value) === null) {
+                unset($stored[$key]);
+            }
+        }
+        $stored['__v'] = self::VERSION;
+        return $stored;
+    }
+
+    /**
+     * Per-version value transform applied when upgrading across a schema bump.
+     * No version has needed one yet (v2 was additive); add a match arm here when
+     * a future VERSION renames or retypes a key so old blobs keep working.
+     *
+     * @param array<string,mixed> $stored
+     * @return array<string,mixed>
+     */
+    private static function transformTo(int $version, array $stored): array
+    {
+        return match ($version) {
+            default => $stored,
+        };
     }
 
     /**
@@ -166,6 +226,22 @@ final class PreferenceSchema
             }
         }
         return false;
+    }
+
+    /**
+     * The spec for a schema key, searched across all sections, or null if the
+     * key is not schema-managed.
+     *
+     * @return array{type:string, values?:list<mixed>, default:mixed}|null
+     */
+    private static function specFor(string $key): ?array
+    {
+        foreach (self::SCHEMA as $fields) {
+            if (isset($fields[$key])) {
+                return $fields[$key];
+            }
+        }
+        return null;
     }
 
     /** @param array{type:string, values?:list<mixed>, default:mixed} $spec */

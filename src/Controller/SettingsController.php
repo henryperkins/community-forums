@@ -17,6 +17,7 @@ use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Service\AccountService;
 use App\Service\PreferenceService;
+use App\Support\PreferenceSchema;
 
 /**
  * Member self-service controls (USER §3–§4, P2-10): privacy, reading/appearance
@@ -98,6 +99,28 @@ final class SettingsController extends Controller
         $user = $this->requireUser();
         $this->container->get(PreferenceService::class)->reset($user->id());
         return $this->redirectWithFlash('/settings/appearance', 'Your appearance, reading, and composing preferences were reset to defaults.');
+    }
+
+    /**
+     * Download the user's appearance/reading/composing preferences as a
+     * self-describing JSON file (P3-01 Gate A "export of preferences"). Read-only
+     * and owner-scoped, so no CSRF token is required for the GET.
+     */
+    public function exportPreferences(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $payload = [
+            'app' => 'RetroBoards',
+            'schema_version' => PreferenceSchema::VERSION,
+            'exported_at' => gmdate('c'),
+            'username' => $user->username(),
+            'preferences' => $this->container->get(PreferenceService::class)->export($user->id()),
+        ];
+        $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{}';
+        return new Response($json, 200, [
+            'Content-Type' => 'application/json; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="retroboards-preferences.json"',
+        ]);
     }
 
     // ---- Notifications: digest + subscriptions ----------------------------

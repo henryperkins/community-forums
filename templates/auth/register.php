@@ -2,6 +2,9 @@
 <?php $this->layout('layout'); $this->section('title', 'Sign up'); $this->section('variant', 'plain'); ?>
 <div class="auth-card">
     <h1>Create your account</h1>
+    <?php if (!empty($registration_closed)): ?>
+        <p class="notice" role="status">New sign-ups are currently closed. Please check back later or contact an administrator.</p>
+    <?php endif; ?>
     <form method="post" action="/register" class="stacked">
         <?= $this->csrfField() ?>
         <label class="field">

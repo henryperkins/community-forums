@@ -8,7 +8,7 @@ $showBoard = ($show_board ?? false) && !empty($t['board_slug']);
 ?>
 <li class="thread-row<?= $unread ? ' thread-unread' : '' ?>">
     <?php if ($unread): ?><span class="unread-dot" title="Unread" aria-label="Unread"></span><?php endif; ?>
-    <?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?>
+    <?php if ($show_avatars ?? true): ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?><?php endif; ?>
     <div class="thread-row-main">
         <a class="thread-title" href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?>">
             <?php if ($starred): ?><span class="star-marker" title="Starred">★</span><?php endif; ?>
