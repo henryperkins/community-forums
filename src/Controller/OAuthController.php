@@ -177,6 +177,9 @@ final class OAuthController extends Controller
             case 'collision':
                 $response = $this->redirectWithFlash('/login', 'An account with this email already exists. Log in, then connect ' . ucfirst($provider) . ' from settings.');
                 break;
+            case 'registration_closed':
+                $response = $this->redirectWithFlash('/login', 'New registrations are currently closed, so an account could not be created.');
+                break;
             case 'banned':
                 $response = $this->redirectWithFlash('/login', 'This account is not permitted to sign in.');
                 break;

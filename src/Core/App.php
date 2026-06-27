@@ -702,6 +702,7 @@ final class App
             $c->get(Database::class),
             $c->get(OAuthIdentityRepository::class),
             $c->get(UserRepository::class),
+            $c->get(SettingRepository::class),
         ));
         $c->bind(PostingService::class, fn (Container $c) => new PostingService(
             $c->get(Database::class),

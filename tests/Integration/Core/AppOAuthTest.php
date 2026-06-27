@@ -6,6 +6,7 @@ namespace Tests\Integration\Core;
 
 use App\Domain\User;
 use App\Repository\OAuthIdentityRepository;
+use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
 use App\Service\OAuth\GoogleProvider;
@@ -30,7 +31,12 @@ final class AppOAuthTest extends TestCase
 
     private function svc(): OAuthService
     {
-        return new OAuthService($this->db, new OAuthIdentityRepository($this->db), new UserRepository($this->db));
+        return new OAuthService($this->db, new OAuthIdentityRepository($this->db), new UserRepository($this->db), $this->settings());
+    }
+
+    private function settings(): SettingRepository
+    {
+        return new SettingRepository($this->db);
     }
 
     private function identity(string $sub = 'sub-1', ?string $email = 'oauth@example.test', bool $verified = true): NormalizedIdentity
@@ -146,6 +152,48 @@ final class AppOAuthTest extends TestCase
         self::assertSame('AdaLovelace', $svc->generateUsername('Ada Lovelace'));
         $this->makeUser(['username' => 'AdaLovelace']);
         self::assertSame('AdaLovelace1', $svc->generateUsername('Ada Lovelace'));
+    }
+
+    // ---- closed registration gate (P3-05) --------------------------------
+
+    public function test_closed_registration_blocks_a_brand_new_oauth_signup(): void
+    {
+        $this->settings()->set('registration_mode', 'closed');
+        $before = $this->users()->count();
+
+        $out = $this->svc()->resolve($this->identity('sub-closed'), null);
+
+        self::assertSame('registration_closed', $out['action']);
+        self::assertArrayNotHasKey('user', $out);                    // nobody is logged in
+        self::assertSame($before, $this->users()->count());          // no account created
+        self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-closed'));
+    }
+
+    public function test_closed_registration_still_lets_an_existing_identity_log_in(): void
+    {
+        // Provision the account while sign-ups are open…
+        $created = $this->svc()->resolve($this->identity('sub-return'), null);
+        self::assertSame('created', $created['action']);
+
+        // …then close registration: the returning user must still get in.
+        $this->settings()->set('registration_mode', 'closed');
+        $again = $this->svc()->resolve($this->identity('sub-return'), null);
+
+        self::assertSame('login', $again['action']);
+        self::assertSame($created['user']->id(), $again['user']->id());
+    }
+
+    public function test_closed_registration_still_lets_a_signed_in_user_link_a_provider(): void
+    {
+        // Linking a provider to an already-existing account is not a sign-up, so
+        // the closed-registration gate must not block it.
+        $this->settings()->set('registration_mode', 'closed');
+        $current = User::fromRow($this->makeUser(['username' => 'closedlinker']));
+
+        $out = $this->svc()->resolve($this->identity('sub-link-closed'), $current);
+
+        self::assertSame('linked', $out['action']);
+        self::assertTrue((new OAuthIdentityRepository($this->db))->existsForUserProvider($current->id(), 'google'));
     }
 
     // ---- provider + controller guards ------------------------------------

@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\OAuthIdentityRepository;
+use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Service\OAuth\NormalizedIdentity;
 
@@ -26,6 +27,7 @@ use App\Service\OAuth\NormalizedIdentity;
  *   already_linked         — this provider is already connected to the signed-in user
  *   already_linked_elsewhere — the identity belongs to a different account
  *   collision              — a local account owns this email; require login to link (never auto-merge)
+ *   registration_closed    — public sign-ups are closed; a new account is refused (existing logins still work)
  *   banned                 — the resolved account is banned; refuse
  *   error                  — malformed identity
  */
@@ -35,6 +37,7 @@ final class OAuthService
         private Database $db,
         private OAuthIdentityRepository $identities,
         private UserRepository $users,
+        private SettingRepository $settings,
     ) {
     }
 
@@ -85,7 +88,15 @@ final class OAuthService
             }
         }
 
-        // 4. New account from the identity.
+        // 4. New account from the identity — but only when public registration is
+        // open. An operator who closed sign-ups (P3-05 registration_mode) closes
+        // the OAuth provisioning channel too, not just the email/password form;
+        // otherwise "close sign-ups entirely" would leak a side door. Returning
+        // logins (step 1) and linking to a signed-in account (step 2) are
+        // deliberately unaffected — neither creates a new account.
+        if ($this->settings->getString('registration_mode', 'open') === 'closed') {
+            return ['action' => 'registration_closed'];
+        }
         $user = $this->createFromIdentity($id);
         return ['action' => 'created', 'user' => $user];
     }
