@@ -9,6 +9,7 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Security\RateLimiter;
 use App\Service\AuthService;
+use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 
 /**
@@ -24,6 +25,8 @@ final class AuthController extends Controller
     private const REGISTER_WINDOW = 3600;  // 1 hour
     private const FORGOT_MAX = 5;
     private const FORGOT_WINDOW = 3600;    // 1 hour
+    private const VERIFY_RESEND_MAX = 3;
+    private const VERIFY_RESEND_WINDOW = 3600; // 1 hour
 
     /** @param array<string,string> $params */
     public function showLogin(Request $request, array $params): Response
@@ -110,7 +113,8 @@ final class AuthController extends Controller
         }
 
         $this->session()->login($user);
-        return $this->redirectWithFlash('/', 'Welcome to the community, ' . $user->displayName() . '!');
+        $this->container->get(EmailVerificationService::class)->issue($user->id(), $user->email());
+        return $this->redirectWithFlash('/', 'Welcome to the community, ' . $user->displayName() . '! Please check your email to verify your address.');
     }
 
     /** @param array<string,string> $params */
@@ -197,6 +201,47 @@ final class AuthController extends Controller
         }
 
         return $this->redirectWithFlash('/login', 'Your password has been updated. Please sign in.');
+    }
+
+    /**
+     * Confirm an email address from the link in the verification email. GET is
+     * required (it is clicked from an email); confirming is idempotent and only
+     * ever sets the verified flag for the link's own account, so prefetch is safe.
+     *
+     * @param array<string,string> $params
+     */
+    public function verifyEmail(Request $request, array $params): Response
+    {
+        $service = $this->container->get(EmailVerificationService::class);
+        $verification = $service->findValid((string) $request->query('token', ''));
+        if ($verification === null) {
+            return $this->view('auth/verify', ['ok' => false], 400);
+        }
+        $service->verify($verification);
+        return $this->view('auth/verify', ['ok' => true]);
+    }
+
+    /**
+     * Re-send the verification email to the signed-in user (rate-limited).
+     *
+     * @param array<string,string> $params
+     */
+    public function resendVerification(Request $request, array $params): Response
+    {
+        $user = $this->requireUser();
+        if ($user->isEmailVerified()) {
+            return $this->redirectWithFlash('/settings/account', 'Your email address is already verified.');
+        }
+
+        $limiter = $this->container->get(RateLimiter::class);
+        $key = 'verify-resend:' . $user->id();
+        if ($limiter->tooManyAttempts($key, self::VERIFY_RESEND_MAX)) {
+            return $this->redirectWithFlash('/settings/account', 'Please wait a little before requesting another verification email.');
+        }
+        $limiter->hit($key, self::VERIFY_RESEND_WINDOW);
+
+        $this->container->get(EmailVerificationService::class)->issue($user->id(), $user->email());
+        return $this->redirectWithFlash('/settings/account', 'Verification email sent — check your inbox.');
     }
 
     /**

@@ -42,6 +42,8 @@ return [
         // Password-reset link lifetime in seconds (default 1 hour). Tokens are
         // single-use; this only bounds how long an unused link stays valid.
         'password_reset_ttl' => (int) Env::get('AUTH_PASSWORD_RESET_TTL', '3600'),
+        // Email-verification link lifetime in seconds (default 24 hours).
+        'email_verify_ttl' => (int) Env::get('AUTH_EMAIL_VERIFY_TTL', '86400'),
     ],
 
     'mail' => [

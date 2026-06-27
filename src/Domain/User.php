@@ -95,6 +95,11 @@ final class User
         return $this->status() === 'banned';
     }
 
+    public function isEmailVerified(): bool
+    {
+        return ($this->row['email_verified_at'] ?? null) !== null;
+    }
+
     public function owns(int $authorId): bool
     {
         return $this->id() === $authorId;

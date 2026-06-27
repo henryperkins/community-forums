@@ -39,6 +39,7 @@ final class AccountController extends Controller
                 'signature' => $row['signature'] ?? '',
             ],
             'email' => $row['email'] ?? '',
+            'email_verified' => ($row['email_verified_at'] ?? null) !== null,
         ]);
     }
 
@@ -54,6 +55,7 @@ final class AccountController extends Controller
                 'errors' => $e->errors,
                 'old' => $e->old,
                 'email' => $row['email'] ?? '',
+                'email_verified' => ($row['email_verified_at'] ?? null) !== null,
             ], 422);
         }
         return $this->redirectWithFlash('/settings/account', 'Your profile has been updated.');

@@ -75,6 +75,7 @@ use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AuthService;
+use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeService;
 use App\Service\DirectMessageService;
@@ -532,6 +533,13 @@ final class App
             $c->get(Mailer::class),
             $config,
         ));
+        $c->bind(EmailVerificationService::class, fn (Container $c) => new EmailVerificationService(
+            $c->get(UserRepository::class),
+            $c->get(VerificationRepository::class),
+            $c->get(BadgeService::class),
+            $c->get(Mailer::class),
+            $config,
+        ));
         $c->bind(AccountService::class, fn (Container $c) => new AccountService(
             $c->get(UserRepository::class),
             $c->get(PasswordHasher::class),
@@ -630,6 +638,10 @@ final class App
         $r->post('/forgot', [AuthController::class, 'forgot']);
         $r->get('/reset', [AuthController::class, 'showReset']);
         $r->post('/reset', [AuthController::class, 'reset']);
+
+        // Registration email verification (P2 Gate A "email-verification").
+        $r->get('/verify', [AuthController::class, 'verifyEmail']);
+        $r->post('/verify/resend', [AuthController::class, 'resendVerification']);
 
         // OAuth sign-in / account linking (P2-10). The callback is state-cookie
         // protected (not _token), so it is exempt from the CSRF gate (see process()).

@@ -43,6 +43,8 @@ final class SetupServiceTest extends TestCase
         ]);
 
         self::assertSame('admin', $admin->role());
+        // The operator account is auto-verified (owns the install, no email round-trip).
+        self::assertNotNull($this->db->fetchValue('SELECT email_verified_at FROM users WHERE id = ?', [$admin->id()]));
         self::assertTrue($this->service()->isInitialized());
         self::assertSame('My Community', (new SettingRepository($this->db))->getString('site_name'));
 
