@@ -368,7 +368,7 @@ recompute counters, rebuild search indexes, and restore from backup.
 - [x] Gate A paths pass without JavaScript (server-rendered suite). [x] Browser capture at desktop/mobile widths (`tests/browser/` Playwright harness → `docs/evidence/browser/`, CI-reproduced).
 - [x] Counter-repair and queue-operating procedures are documented (runbook).
 - [x] No critical/high defects remain (M5 review: 3 medium/low fixed).
-- [x] Feature-flag rollback rehearsed (`AppFeatureFlagTest`) and pause-worker fail-closed tested (`NotificationEmailWorkerTest`); [ ] backup-restore and staged-enablement procedures documented in the runbook but **not executed** in this environment.
+- [x] Feature-flag rollback rehearsed (`AppFeatureFlagTest`) and pause-worker fail-closed tested (`NotificationEmailWorkerTest`); [x] **backup-restore rehearsed** (`tests/backup/rehearse.sh` → `docs/evidence/backup-restore/`: 34 tables / 76 rows backed up + restored, row count + `CHECKSUM TABLE` match, schema intact, app boots). Staged-enablement order is documented in the runbook (§8); executing it is an operator/deploy step.
 - [x] README, changelog, schema, and completion evidence updated.
 - [ ] **Gate A product-owner acceptance recorded** — pending Henry's sign-off.
 

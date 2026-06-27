@@ -1,0 +1,21 @@
+== Backup → restore rehearsal (PHASE_2_RUNBOOK §7) ==
+-- 1. Build + seed source DB (retroboards_backup_src)
+   seeded.
+-- 2. Snapshot source
+   34 tables, 76 rows.
+-- 3. Back up with mariadb-dump
+   wrote /tmp/tmp.9LzsjDWfvL/retroboards-backup.sql (49197 bytes).
+-- 4. Restore into a fresh DB (retroboards_backup_dst)
+   restored.
+-- 5. Snapshot restore + diff vs source
+   PASS: every table's row count AND checksum match the source.
+-- 6. Restored schema is complete (migrate is a no-op)
+   Nothing to migrate.
+   PASS: no pending migrations.
+-- 7. Reconcile counters/reputation on the restore (runbook step 4)
+   PASS: repair ran clean.
+-- 8. Boot the app on the restored DB and serve the home page
+   PASS: home returned 200 and rendered restored content.
+
+== REHEARSAL PASSED ==
+Backup: 49197 bytes · 34 tables · 76 rows · restore verified byte-for-byte by row count + CHECKSUM TABLE, schema intact, app boots.

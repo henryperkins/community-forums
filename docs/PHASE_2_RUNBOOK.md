@@ -109,15 +109,28 @@ Deploy schema before the application code that uses it.
 
 ## 7. Restore from backup
 
+Take backups with a transaction-consistent dump, e.g.:
+
+```bash
+mariadb-dump --single-transaction --routines --triggers retroboards > backup.sql
+# restore: mariadb retroboards < backup.sql
+```
+
 1. Disable the affected feature flag(s) and pause the email workers (preserve
    queued rows for inspection — do not delete them).
-2. Restore the database from the most recent good backup.
+2. Restore the database from the most recent good backup
+   (`mariadb retroboards < backup.sql`).
 3. Roll application code back only to a version that tolerates the current
    tables/columns (migrations stay additive, so the newer code usually tolerates
    an older row shape).
 4. Run `php bin/console repair` to reconcile counters/reputation.
 5. Run the permission smoke checks (the integration suite, or a targeted subset)
    before re-enabling flags.
+
+This cycle is **rehearsed** by `tests/backup/rehearse.sh` (back up a seeded DB,
+restore into a fresh one, and assert per-table row count + `CHECKSUM TABLE` match,
+the schema is complete, and the app boots). Evidence:
+`docs/evidence/backup-restore/`.
 
 ## 8. Staged enablement order (new install / first Phase 2 rollout)
 
