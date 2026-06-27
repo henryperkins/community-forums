@@ -1,6 +1,6 @@
 # RetroBoards — Phase 2 Implementation Status & Evidence Index
 
-**Status:** M0–M6 implemented; Gate A/B product-owner acceptance pending · **Date:** 2026-06-26 · **Owner:** Henry (lakefrontdigital.io)
+**Status:** M0–M6 + Gate A follow-ups implemented; Gate A/B product-owner acceptance pending · **Date:** 2026-06-27 · **Owner:** Henry (lakefrontdigital.io)
 
 Living evidence index for `PHASE_2_PLAN.md` (Community Essentials). Tracks which
 milestone/workstream is implemented, where, and how it is verified. Entry gate
@@ -11,7 +11,7 @@ milestone/workstream is implemented, where, and how it is verified. Entry gate
 ```bash
 composer install
 php bin/console migrate        # Phase 1 (0001-0010) + Phase 2 (0011-0041)
-composer test                  # full PHPUnit suite — 215 tests / 694 assertions
+composer test                  # full PHPUnit suite — 259 tests / 919 assertions
 php bin/console repair         # reconcile all denormalised counters + reputation
 php bin/console verify:upgrade # rehearse a Phase-1→Phase-2 upgrade (scratch DB)
 ```
@@ -299,6 +299,45 @@ covered by state + PKCE).
   Playwright capture at desktop+mobile widths is the one evidence item still owed by
   a CI/browser pass — see Known gaps._
 
+## Gate A follow-ups — auth flows + masked-anonymous posting (PR #5 / #6)
+
+Three security-sensitive Gate A flows shipped after the initial M0–M6 build and
+are tracked here for completeness:
+
+- **Email verification** (`EmailVerificationService`, `AuthController`): single-use,
+  expiring tokens consumed on `GET /verify`; `POST /verify/resend` capped at 3/hour
+  (`AuthController::VERIFY_RESEND_MAX`), each accepted resend retiring the prior token.
+- **Password reset** (`PasswordResetService`): single-use expiring tokens, a generic
+  request response that only issues for real accounts, and weak-password rejection
+  that does **not** consume the token.
+- **Masked-anonymous posting** (`PostingService`, `NotificationRepository`,
+  `PostRepository`, `ThreadController` reveal): anonymous threads/replies collapse the
+  public byline, the notification actor, profile activity, and the Following feed to
+  "Anonymous" while preserving the real author's reputation/post-count and an audited
+  admin/board-moderator reveal.
+
+**PR #5** (merged) delivered the feature code. **PR #6** (merged 2026-06-27) is a
+**test-only** fast-follow that closes the coverage gaps the PR #5 multi-agent
+adversarial review surfaced (0 blockers / 0 high, but several enforced properties
+had no asserting test, so a future regression would pass silently). The 9 added
+regression guards:
+
+- *Email verification* — a used token cannot be reused (verified timestamp left
+  untouched on the second hit); an expired token is rejected (drives the
+  `expires_at > UTC_TIMESTAMP()` clause); resend is throttled past the 3/hour cap.
+- *Password reset* — an expired token is rejected on **both** the `/reset` form and
+  the POST submit, and the password is not rotated.
+- *Masked-anonymous* — an anonymous **reply** (not just the OP) is excluded from
+  profile activity and the Following feed; the notification actor is masked for the
+  `new_thread` and `mention` types (previously only `reply` was asserted); reputation
+  and `post_count` are unaffected by anonymity (an anon post still counts, and a
+  reaction on it still credits the real author).
+
+**Evidence:** `tests/Integration/Core/AppEmailVerificationTest.php`,
+`AppPasswordResetTest.php`, `AppAnonymousPostingTest.php`. Full suite:
+**259 tests / 919 assertions** green (was 250 / 870). PR #6 carries no production,
+schema, or runtime changes.
+
 ## Operations runbook
 
 See `docs/PHASE_2_RUNBOOK.md` for the documented procedures required by
@@ -308,7 +347,7 @@ recompute counters, rebuild search indexes, and restore from backup.
 ## Gate A acceptance checklist (PHASE_2_PLAN §13)
 
 - [x] Scope, deferrals, and evidence map approved (this document).
-- [x] Phase 1 regression baseline remains green (157 → 215 tests, additive only).
+- [x] Phase 1 regression baseline remains green (157 → 259 tests, additive only).
 - [x] Clean-install and populated-upgrade migrations pass (`verify:upgrade` 17/17).
 - [x] Email idempotency/outbox schema gap resolved (`email_deliveries.idempotency_key`, M0).
 - [x] Unread cutover policy implemented and verified (M1 + `engagement:cutover`).
