@@ -25,17 +25,19 @@ final class BoardModeratorRepository
         ) !== false;
     }
 
-    public function assign(int $boardId, int $userId): void
+    /** @return int rows affected (1 on a real assignment, 0 if already a moderator). */
+    public function assign(int $boardId, int $userId): int
     {
-        $this->db->run(
+        return $this->db->run(
             'INSERT IGNORE INTO board_moderators (board_id, user_id) VALUES (?, ?)',
             [$boardId, $userId],
-        );
+        )->rowCount();
     }
 
-    public function unassign(int $boardId, int $userId): void
+    /** @return int rows removed (1 on a real removal, 0 if not a moderator). */
+    public function unassign(int $boardId, int $userId): int
     {
-        $this->db->run('DELETE FROM board_moderators WHERE board_id = ? AND user_id = ?', [$boardId, $userId]);
+        return $this->db->run('DELETE FROM board_moderators WHERE board_id = ? AND user_id = ?', [$boardId, $userId])->rowCount();
     }
 
     /** @return list<int> board ids this user moderates */

@@ -26,17 +26,19 @@ final class BoardMemberRepository
         ) !== false;
     }
 
-    public function add(int $boardId, int $userId, ?int $addedBy): void
+    /** @return int rows affected (1 on a real add, 0 if already a member). */
+    public function add(int $boardId, int $userId, ?int $addedBy): int
     {
-        $this->db->run(
+        return $this->db->run(
             'INSERT IGNORE INTO board_members (board_id, user_id, added_by, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP())',
             [$boardId, $userId, $addedBy],
-        );
+        )->rowCount();
     }
 
-    public function remove(int $boardId, int $userId): void
+    /** @return int rows removed (1 on a real removal, 0 if not a member). */
+    public function remove(int $boardId, int $userId): int
     {
-        $this->db->run('DELETE FROM board_members WHERE board_id = ? AND user_id = ?', [$boardId, $userId]);
+        return $this->db->run('DELETE FROM board_members WHERE board_id = ? AND user_id = ?', [$boardId, $userId])->rowCount();
     }
 
     /** Board ids the user belongs to (to annotate nav/listings in one query). */

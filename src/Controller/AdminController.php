@@ -8,6 +8,8 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
@@ -94,12 +96,7 @@ final class AdminController extends Controller
         if ($board === null) {
             throw new NotFoundException('Board not found.');
         }
-        return $this->view('admin/board_edit', [
-            'board' => $board,
-            'categories' => $this->container->get(CategoryRepository::class)->all(),
-            'errors' => [],
-            'old' => $board,
-        ]);
+        return $this->boardEditView($board, [], $board);
     }
 
     /** @param array<string,string> $params */
@@ -126,14 +123,59 @@ final class AdminController extends Controller
             if ($board === null) {
                 throw new NotFoundException('Board not found.');
             }
-            return $this->view('admin/board_edit', [
-                'board' => $board,
-                'categories' => $this->container->get(CategoryRepository::class)->all(),
-                'errors' => $e->errors,
-                'old' => $e->old + $board,
-            ], 422);
+            return $this->boardEditView($board, $e->errors, $e->old + $board, 422);
         }
         return $this->redirectWithFlash('/admin/structure', 'Board updated.');
+    }
+
+    // ---- Board roster: moderators + members (P2-08) -----------------------
+
+    /** @param array<string,string> $params */
+    public function assignModerator(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->assignModerator($admin, $id, $request->str('username')),
+            '/admin/boards/' . $id . '/edit',
+            'Moderator assigned.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function unassignModerator(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->unassignModerator($admin, $id, $request->int('user_id')),
+            '/admin/boards/' . $id . '/edit',
+            'Moderator removed.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function addMember(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->addMember($admin, $id, $request->str('username')),
+            '/admin/boards/' . $id . '/edit',
+            'Member added.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function removeMember(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->removeMember($admin, $id, $request->int('user_id')),
+            '/admin/boards/' . $id . '/edit',
+            'Member removed.',
+        );
     }
 
     /** @param array<string,string> $params */
@@ -146,6 +188,27 @@ final class AdminController extends Controller
             '/admin/structure',
             'Board deleted.',
         );
+    }
+
+    /**
+     * Render the board edit screen with its moderator + member rosters. Shared by
+     * the GET form and the POST 422 re-render so both always show the rosters.
+     *
+     * @param array<string,mixed> $board
+     * @param array<string,string> $errors
+     * @param array<string,mixed> $old
+     */
+    private function boardEditView(array $board, array $errors, array $old, int $status = 200): Response
+    {
+        $id = (int) $board['id'];
+        return $this->view('admin/board_edit', [
+            'board' => $board,
+            'categories' => $this->container->get(CategoryRepository::class)->all(),
+            'errors' => $errors,
+            'old' => $old,
+            'moderators' => $this->container->get(BoardModeratorRepository::class)->moderatorsFor($id),
+            'members' => $this->container->get(BoardMemberRepository::class)->membersFor($id),
+        ], $status);
     }
 
     /**

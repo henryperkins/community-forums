@@ -9,10 +9,13 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
+use App\Repository\UserRepository;
 use App\Security\WriteGate;
 use App\Support\Str;
 
@@ -33,6 +36,9 @@ final class AdminService
         private SettingRepository $settings,
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
+        private UserRepository $users,
+        private BoardModeratorRepository $boardMods,
+        private BoardMemberRepository $boardMembers,
     ) {
     }
 
@@ -216,6 +222,140 @@ final class AdminService
                 'before' => ['name' => $board['name'], 'slug' => $board['slug']],
             ]);
         });
+    }
+
+    // ---- Board roster: moderators + members (P2-08) -----------------------
+
+    /**
+     * Assign a member as a scoped moderator of a board. The capability model is
+     * board-scoped (ModerationService::canModerate), so an admin is intentionally
+     * rejected here — admins already moderate every board.
+     */
+    public function assignModerator(User $admin, int $boardId, string $username): void
+    {
+        $this->assertAdmin($admin);
+        $this->boardOrFail($boardId);
+        $user = $this->resolveMember($username);
+        $userId = (int) $user['id'];
+
+        if (($user['role'] ?? 'user') === 'admin') {
+            throw new ValidationException(['username' => '@' . $user['username'] . ' is an administrator and already moderates every board.']);
+        }
+        if ($this->boardMods->isModerator($boardId, $userId)) {
+            throw new ValidationException(['username' => '@' . $user['username'] . ' already moderates this board.']);
+        }
+
+        // Log inside the transaction and only when a row actually changed, so the
+        // audit entry is exactly-once even if two identical requests race past the
+        // pre-check above (the INSERT IGNORE absorbs the loser, rowCount 0).
+        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
+            if ($this->boardMods->assign($boardId, $userId) > 0) {
+                $this->log->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'assign_moderator',
+                    'target_type' => 'board',
+                    'target_id' => $boardId,
+                    'after' => ['user_id' => $userId, 'username' => $user['username']],
+                ]);
+            }
+        });
+    }
+
+    public function unassignModerator(User $admin, int $boardId, int $userId): void
+    {
+        $this->assertAdmin($admin);
+        $this->boardOrFail($boardId);
+        if (!$this->boardMods->isModerator($boardId, $userId)) {
+            throw new ValidationException(['moderator' => 'That member does not moderate this board.']);
+        }
+        $user = $this->users->find($userId);
+
+        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
+            if ($this->boardMods->unassign($boardId, $userId) > 0) {
+                $this->log->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'unassign_moderator',
+                    'target_type' => 'board',
+                    'target_id' => $boardId,
+                    'before' => ['user_id' => $userId, 'username' => $user['username'] ?? null],
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Grant a member access to a private/hidden board. On a public board this is
+     * a harmless no-op for access (everyone can already read), so it is allowed
+     * but the UI explains where membership actually matters.
+     */
+    public function addMember(User $admin, int $boardId, string $username): void
+    {
+        $this->assertAdmin($admin);
+        $this->boardOrFail($boardId);
+        $user = $this->resolveMember($username);
+        $userId = (int) $user['id'];
+
+        if ($this->boardMembers->isMember($boardId, $userId)) {
+            throw new ValidationException(['username' => '@' . $user['username'] . ' is already a member of this board.']);
+        }
+
+        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
+            if ($this->boardMembers->add($boardId, $userId, $admin->id()) > 0) {
+                $this->log->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'add_member',
+                    'target_type' => 'board',
+                    'target_id' => $boardId,
+                    'after' => ['user_id' => $userId, 'username' => $user['username']],
+                ]);
+            }
+        });
+    }
+
+    public function removeMember(User $admin, int $boardId, int $userId): void
+    {
+        $this->assertAdmin($admin);
+        $this->boardOrFail($boardId);
+        if (!$this->boardMembers->isMember($boardId, $userId)) {
+            throw new ValidationException(['member' => 'That member is not on this board.']);
+        }
+        $user = $this->users->find($userId);
+
+        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
+            if ($this->boardMembers->remove($boardId, $userId) > 0) {
+                $this->log->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'remove_member',
+                    'target_type' => 'board',
+                    'target_id' => $boardId,
+                    'before' => ['user_id' => $userId, 'username' => $user['username'] ?? null],
+                ]);
+            }
+        });
+    }
+
+    /** @return array<string,mixed> the existing board row, or 404. */
+    private function boardOrFail(int $boardId): array
+    {
+        $board = $this->boards->find($boardId);
+        if ($board === null) {
+            throw new NotFoundException('Board not found.');
+        }
+        return $board;
+    }
+
+    /** Resolve a typed @handle to an existing account, or a friendly validation error. */
+    private function resolveMember(string $username): array
+    {
+        $username = ltrim(trim($username), '@');
+        if ($username === '') {
+            throw new ValidationException(['username' => 'Enter a username.']);
+        }
+        $user = $this->users->findByUsername($username);
+        if ($user === null) {
+            throw new ValidationException(['username' => 'No member found with the username “' . $username . '”.']);
+        }
+        return $user;
     }
 
     // ---- validation -------------------------------------------------------

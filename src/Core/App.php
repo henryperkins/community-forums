@@ -588,6 +588,9 @@ final class App
             $c->get(SettingRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardMemberRepository::class),
         ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),
@@ -717,6 +720,12 @@ final class App
         $r->post('/admin/boards', [AdminController::class, 'createBoard']);
         $r->post('/admin/boards/{id}', [AdminController::class, 'updateBoard']);
         $r->post('/admin/boards/{id}/delete', [AdminController::class, 'deleteBoard']);
+
+        // Board roster management (P2-08): assign/remove scoped moderators + members.
+        $r->post('/admin/boards/{id}/moderators', [AdminController::class, 'assignModerator']);
+        $r->post('/admin/boards/{id}/moderators/remove', [AdminController::class, 'unassignModerator']);
+        $r->post('/admin/boards/{id}/members', [AdminController::class, 'addMember']);
+        $r->post('/admin/boards/{id}/members/remove', [AdminController::class, 'removeMember']);
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);

@@ -11,7 +11,7 @@ milestone/workstream is implemented, where, and how it is verified. Entry gate
 ```bash
 composer install
 php bin/console migrate        # Phase 1 (0001-0010) + Phase 2 (0011-0041)
-composer test                  # full PHPUnit suite — 259 tests / 919 assertions
+composer test                  # full PHPUnit suite — 275 tests / 987 assertions
 php bin/console repair         # reconcile all denormalised counters + reputation
 php bin/console verify:upgrade # rehearse a Phase-1→Phase-2 upgrade (scratch DB)
 ```
@@ -184,10 +184,15 @@ migration groups:
 - **Evidence:** `AppModeratorScopeTest` (5), `AppReportQueueTest` (4),
   `AppPrivateBoardMembershipTest` (3), `AppUserModerationTest` (5). Full suite:
   **157 tests / 494 assertions**.
-- **Deferred within M4** (operator-UI polish, not security): admin pages to
-  assign board moderators/members (data layer + scope enforcement are done —
-  assignment is currently via repo/console), aging-report alerts, and a richer
-  DM-report triage view.
+- **Operator UI shipped (post-M4 follow-up):** the admin board-edit page
+  (`/admin/boards/{id}/edit`) now assigns/removes board **moderators** and
+  private/hidden-board **members** — admin-gated, CSRF-protected, validated
+  (unknown/`@`-prefixed/blank username, admin-as-moderator, duplicate), and audited
+  (`assign_moderator`/`unassign_moderator`/`add_member`/`remove_member`, written
+  exactly-once). `AdminService` + `AdminController` + `templates/admin/board_edit.php`;
+  evidence `AppAdminBoardRosterTest` (16).
+- **Still deferred within M4** (operator-UI polish, not security): aging-report
+  alerts and a richer DM-report triage view.
 
 ## Adversarial review (M0+M1) — applied
 
@@ -347,7 +352,7 @@ recompute counters, rebuild search indexes, and restore from backup.
 ## Gate A acceptance checklist (PHASE_2_PLAN §13)
 
 - [x] Scope, deferrals, and evidence map approved (this document).
-- [x] Phase 1 regression baseline remains green (157 → 259 tests, additive only).
+- [x] Phase 1 regression baseline remains green (157 → 275 tests, additive only).
 - [x] Clean-install and populated-upgrade migrations pass (`verify:upgrade` 17/17).
 - [x] Email idempotency/outbox schema gap resolved (`email_deliveries.idempotency_key`, M0).
 - [x] Unread cutover policy implemented and verified (M1 + `engagement:cutover`).
@@ -382,9 +387,10 @@ recompute counters, rebuild search indexes, and restore from backup.
   JS-free server-rendered coverage.
 - **Self-service data export/delete** (USER §3.5): deferred pending an approved
   retention/anonymisation/grace-period policy (the plan explicitly permits this).
-- **Admin assignment UIs** (board moderators/members, manual badge grant, title
-  override): data layer + scope enforcement are complete; assignment is via repo/
-  console today. Operator pages are Phase-3 polish.
+- **Admin assignment UIs**: board moderator/member assignment **shipped** (see M4
+  follow-up above). Manual badge grant and cosmetic title override still have no
+  operator page — data layer + scope enforcement are complete; both are set via
+  repo/console today and remain Phase-3 polish.
 - **Admin announcements/broadcast** and **board archive/reorder** (Gate B extended,
   reuse existing tables/flags): wiring deferred — recorded as Phase-3 carryover.
 - **Signature rendering under posts**: the field is stored/editable; display is a

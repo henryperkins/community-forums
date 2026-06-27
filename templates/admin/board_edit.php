@@ -52,4 +52,58 @@
             <a class="linkbtn" href="/admin/structure">Cancel</a>
         </div>
     </form>
+
+    <section class="card">
+        <h2>Moderators</h2>
+        <p class="muted">Board moderators can pin, lock, move, and remove content in <strong><?= $e($board['name']) ?></strong>. Administrators already moderate every board.</p>
+        <ul class="admin-board-list">
+            <?php foreach (($moderators ?? []) as $mod): ?>
+                <li class="admin-board-row">
+                    <span><a href="/u/<?= $e($mod['username']) ?>">@<?= $e($mod['username']) ?></a>
+                        <?php if (!empty($mod['display_name'])): ?><span class="muted"><?= $e($mod['display_name']) ?></span><?php endif; ?>
+                    </span>
+                    <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/moderators/remove" class="inline">
+                        <?= $this->csrfField() ?>
+                        <input type="hidden" name="user_id" value="<?= (int) $mod['user_id'] ?>">
+                        <button class="linkbtn danger" type="submit" aria-label="Remove @<?= $e($mod['username']) ?> as moderator">Remove</button>
+                    </form>
+                </li>
+            <?php endforeach; ?>
+            <?php if (empty($moderators)): ?>
+                <li class="admin-board-row"><span class="muted">No board moderators yet — only administrators moderate this board.</span></li>
+            <?php endif; ?>
+        </ul>
+        <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/moderators" class="inline-form">
+            <?= $this->csrfField() ?>
+            <input type="text" name="username" class="input" placeholder="username" maxlength="32" aria-label="Username to assign as moderator" required>
+            <button class="btn btn-small" type="submit">Assign moderator</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>Members <span class="muted">— private &amp; hidden boards</span></h2>
+        <p class="muted">Members can read and post here when this board is <strong>private</strong> or <strong>hidden</strong>. On a public board everyone already has access, so membership has no effect. Removing a member revokes their read, search, unread, and notification access immediately.</p>
+        <ul class="admin-board-list">
+            <?php foreach (($members ?? []) as $m): ?>
+                <li class="admin-board-row">
+                    <span><a href="/u/<?= $e($m['username']) ?>">@<?= $e($m['username']) ?></a>
+                        <?php if (!empty($m['display_name'])): ?><span class="muted"><?= $e($m['display_name']) ?></span><?php endif; ?>
+                    </span>
+                    <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/members/remove" class="inline">
+                        <?= $this->csrfField() ?>
+                        <input type="hidden" name="user_id" value="<?= (int) $m['user_id'] ?>">
+                        <button class="linkbtn danger" type="submit" aria-label="Remove @<?= $e($m['username']) ?> as member">Remove</button>
+                    </form>
+                </li>
+            <?php endforeach; ?>
+            <?php if (empty($members)): ?>
+                <li class="admin-board-row"><span class="muted">No members yet.</span></li>
+            <?php endif; ?>
+        </ul>
+        <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/members" class="inline-form">
+            <?= $this->csrfField() ?>
+            <input type="text" name="username" class="input" placeholder="username" maxlength="32" aria-label="Username to add as member" required>
+            <button class="btn btn-small" type="submit">Add member</button>
+        </form>
+    </section>
 </div>
