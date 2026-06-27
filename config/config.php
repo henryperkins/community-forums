@@ -176,6 +176,12 @@ return [
         'flood_max_posts' => (int) Env::get('ANTIABUSE_FLOOD_MAX', '10'),
         // Case-insensitive substring blocklist; operator-extendable via settings.
         'blocked_words' => [],
+        // Spam-scoring provider seam (P3-05): an optional pluggable SpamScorer
+        // contributes a severity from its [0,1] score. Default scorer abstains,
+        // so these are inert until a provider is bound (first-party = Gate B).
+        // Capped at hold — automated scoring never auto-blocks.
+        'spam_flag_score' => (float) Env::get('ANTIABUSE_SPAM_FLAG_SCORE', '0.6'),
+        'spam_hold_score' => (float) Env::get('ANTIABUSE_SPAM_HOLD_SCORE', '0.9'),
     ],
 
     // Named rate-limit policies (P3-05): [max_attempts, decay_seconds]. The

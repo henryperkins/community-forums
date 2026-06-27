@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **399 tests / 1375 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **405 tests / 1390 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
 
 ### Gate A gap closure (post-audit)
 
@@ -52,9 +52,18 @@ Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **399
     toggle, so a board's new threads/replies are held for moderator release.
   All changes are audited. Tests: `AppAdminModerationTest` (persistence,
   end-to-end hold, registration open/closed, invalid-mode fallback, non-admin
-  rejection). Still open for P3-05: the spam-scoring provider seam, routing
-  auth/DM/password-reset through the central proxy-aware limiter, and the
-  optional first-post hold.
+  rejection).
+- **Spam-scoring provider seam** (P3-05) — a pluggable `App\Service\Spam\SpamScorer`
+  contract with a no-op `NullSpamScorer` default. `AntiAbuseService` consults the
+  bound scorer as one reviewable rule among the word/link/duplicate/flood checks:
+  its `[0,1]` score maps to a severity (≥ flag / ≥ hold thresholds, configurable;
+  capped at hold — automated scoring never auto-blocks), clamped to the operator
+  mode like every other rule, and audited. Calls are fail-safe (a throwing
+  provider abstains, never blocking posting). The default abstains, so Gate A
+  behaviour is unchanged; a first-party/external scorer (Gate B / P3-13) is
+  enabled by rebinding the interface in the container — no engine changes. Tests:
+  `AppSpamSeamTest`. Still open for P3-05: routing auth/DM/password-reset through
+  the central proxy-aware limiter, and the optional first-post hold.
 
 ### Hardening (post adversarial review)
 

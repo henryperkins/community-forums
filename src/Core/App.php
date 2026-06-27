@@ -530,11 +530,15 @@ final class App
             $config,
             $c->get(ClientIdentifier::class),
         ));
+        // Spam-scoring provider seam (P3-05): the default scorer abstains. A
+        // first-party/external provider (Gate B) is enabled by rebinding this.
+        $c->bind(\App\Service\Spam\SpamScorer::class, fn (Container $c) => new \App\Service\Spam\NullSpamScorer());
         $c->bind(AntiAbuseService::class, fn (Container $c) => new AntiAbuseService(
             $c->get(Database::class),
             $config,
             $c->get(SettingRepository::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(\App\Service\Spam\SpamScorer::class),
         ));
 
         // Image uploads (P3-04).
