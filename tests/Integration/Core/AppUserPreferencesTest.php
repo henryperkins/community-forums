@@ -181,4 +181,33 @@ final class AppUserPreferencesTest extends TestCase
         $this->assertSeeText($appearance, 'System (match device)'); // default theme option rendered
         $this->assertStatus(200, $this->get('/settings/preferences'));
     }
+
+    public function test_composing_preferences_are_stamped_on_the_page_body(): void
+    {
+        // composer.js reads these <body> data attributes to gate enter-to-send,
+        // the live preview, and smart list continuation (P3-01).
+        $user = $this->makeUser(['username' => 'composeprefs']);
+        $this->actingAs($user);
+
+        // Schema defaults: enter-to-send off, preview on, smart lists on.
+        $home = $this->get('/')->body();
+        self::assertStringContainsString('data-enter-to-send="0"', $home);
+        self::assertStringContainsString('data-show-preview="1"', $home);
+        self::assertStringContainsString('data-smart-lists="1"', $home);
+
+        // Posting the composing form with only enter_to_send checked turns the
+        // others off (unchecked boxes persist false) — the body must reflect it.
+        $this->post('/settings/composing', ['enter_to_send' => '1']);
+        $after = $this->get('/')->body();
+        self::assertStringContainsString('data-enter-to-send="1"', $after);
+        self::assertStringContainsString('data-show-preview="0"', $after);
+        self::assertStringContainsString('data-smart-lists="0"', $after);
+    }
+
+    public function test_guest_body_has_no_composing_attributes(): void
+    {
+        // Guests never compose; the attributes are only stamped when signed in.
+        $body = $this->get('/')->body();
+        self::assertStringNotContainsString('data-enter-to-send', $body);
+    }
 }

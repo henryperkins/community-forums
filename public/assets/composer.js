@@ -8,6 +8,18 @@
 
     var BODY_MAX = 20000;
 
+    // Composing preferences (P3-01) are stamped on <body> by the layout for
+    // signed-in users. Defaults match the schema: enter-to-send off, preview on,
+    // smart lists on.
+    function composingPrefs() {
+        var b = document.body;
+        return {
+            enterToSend: b.getAttribute('data-enter-to-send') === '1',
+            showPreview: b.getAttribute('data-show-preview') !== '0',
+            smartLists: b.getAttribute('data-smart-lists') !== '0'
+        };
+    }
+
     function tokenField(form) {
         var t = form.querySelector('input[name="_token"]');
         return t ? t.value : '';
@@ -155,20 +167,63 @@
         });
     }
 
-    function enhance(form) {
+    // ---- Enter-to-send + smart list continuation (P3-01) ------------------
+    // Continue or end a Markdown list when Enter is pressed inside one. Returns
+    // true when it handled the key (so the caller suppresses the default newline).
+    function continueList(ta) {
+        if (ta.selectionStart !== ta.selectionEnd) { return false; }
+        var v = ta.value, pos = ta.selectionStart;
+        var lineStart = v.lastIndexOf('\n', pos - 1) + 1;
+        var line = v.slice(lineStart, pos);
+        var um = line.match(/^(\s*)([-*+])\s+(\S.*)?$/);          // - item / * item
+        var om = line.match(/^(\s*)(\d+)([.)])\s+(\S.*)?$/);      // 1. item / 1) item
+        if (!um && !om) { return false; }
+        var empty = um ? !um[3] : !om[4];
+        if (empty) {
+            // Enter on a bare marker ends the list: drop the marker, blank line.
+            ta.value = v.slice(0, lineStart) + v.slice(pos);
+            ta.selectionStart = ta.selectionEnd = lineStart;
+        } else {
+            var next = um ? (um[1] + um[2] + ' ')
+                          : (om[1] + (parseInt(om[2], 10) + 1) + om[3] + ' ');
+            ta.value = v.slice(0, pos) + '\n' + next + v.slice(pos);
+            ta.selectionStart = ta.selectionEnd = pos + 1 + next.length;
+        }
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+    }
+    function wireKeys(form, ta, prefs) {
+        if (!prefs.enterToSend && !prefs.smartLists) { return; }
+        ta.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' || e.isComposing) { return; }
+            // Shift/modifier+Enter always inserts a newline (default behaviour).
+            if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) { return; }
+            if (prefs.enterToSend) {
+                e.preventDefault();
+                if (typeof form.requestSubmit === 'function') { form.requestSubmit(); }
+                else { form.submit(); }
+                return;
+            }
+            if (prefs.smartLists && continueList(ta)) { e.preventDefault(); }
+        });
+    }
+
+    function enhance(form, prefs) {
         var ta = form.querySelector('.composer-input');
         if (!ta || ta.getAttribute('data-rb-enhanced')) { return; }
         ta.setAttribute('data-rb-enhanced', '1');
         buildToolbar(ta);
         buildCounter(ta);
-        buildPreview(form, ta);
+        if (prefs.showPreview) { buildPreview(form, ta); }
+        wireKeys(form, ta, prefs);
         stampIdempotency(form);
         wireDrafts(form, ta);
         wireUploads(form, ta);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        var prefs = composingPrefs();
         var forms = document.querySelectorAll('form.composer');
-        for (var i = 0; i < forms.length; i++) { enhance(forms[i]); }
+        for (var i = 0; i < forms.length; i++) { enhance(forms[i], prefs); }
     });
 })();

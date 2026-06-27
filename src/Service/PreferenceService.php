@@ -96,6 +96,24 @@ final class PreferenceService
         ];
     }
 
+    /**
+     * The composing subset the shared composer reads to gate its behaviour
+     * (P3-01): enter-to-send, live preview, and smart list continuation. Values
+     * are already validated by {@see PreferenceSchema}; the layout stamps them on
+     * `<body>` for signed-in users so `composer.js` can apply them.
+     *
+     * @return array{enter_to_send:bool,show_preview:bool,smart_lists:bool}
+     */
+    public function composing(int $userId): array
+    {
+        $r = $this->resolved($userId);
+        return [
+            'enter_to_send' => (bool) ($r['enter_to_send'] ?? false),
+            'show_preview' => (bool) ($r['show_preview'] ?? true),
+            'smart_lists' => (bool) ($r['smart_lists'] ?? true),
+        ];
+    }
+
     public function threadsPerPage(int $userId): int
     {
         $v = (int) ($this->prefs->get($userId)['threads_per_page'] ?? 0);

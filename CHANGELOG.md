@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **392 tests / 1347 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **394 tests / 1354 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
 
 ### Gate A gap closure (post-audit)
 
@@ -26,7 +26,16 @@ Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **392
   no longer validate, preserves other subsystems' keys, never downgrades a blob
   written by a newer deploy), wired into `resolve()`. A corrupt/non-object stored
   JSON value already recovered to defaults via the repository guard; both are now
-  covered by tests. **Only the composing toggles remain open for P3-01.**
+  covered by tests.
+- **Composing preferences now drive the composer** (P3-01) — `enter_to_send`,
+  `show_preview`, and `smart_lists` were persisted but never applied. The layout
+  stamps them on `<body>` for signed-in users and `composer.js` reads them:
+  Enter-to-send submits on Enter (Shift+Enter newlines); the live preview pane is
+  built only when enabled; smart lists continue/renumber a Markdown list on Enter
+  and exit it on an empty item. All progressive enhancement — the textarea still
+  posts with no JS. Server exposure is tested (`AppUserPreferencesTest`); the
+  runtime JS behaviour is pending the cross-cutting browser/Playwright evidence.
+  **This closes the last functional P3-01 gap.**
 
 ### Hardening (post adversarial review)
 

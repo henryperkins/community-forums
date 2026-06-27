@@ -2,6 +2,7 @@
 <?php
 $variant = $this->block('variant', 'app');
 $appearance = $appearance ?? ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'reduced_motion' => false];
+$composing = $composing ?? ['enter_to_send' => false, 'show_preview' => true, 'smart_lists' => true];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
 $appUrl = rtrim((string) ($app_url ?? ''), '/');
 $canonical = $this->block('canonical', '');
@@ -35,7 +36,7 @@ $desc = $this->block('description', $brand['name'] . ' — a community forum.');
     <link rel="stylesheet" href="/assets/app.css">
     <?php if (!empty($brand['has_custom_colors'])): ?><link rel="stylesheet" href="/brand.css"><?php endif; ?>
 </head>
-<body class="variant-<?= $e($variant) ?>"<?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
+<body class="variant-<?= $e($variant) ?>"<?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>
 <?= $this->partial('partials/topbar') ?>
 <?php if ($variant === 'app'): ?>
