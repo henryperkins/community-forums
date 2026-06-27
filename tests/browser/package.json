@@ -1,0 +1,13 @@
+{
+  "name": "retroboards-browser-evidence",
+  "private": true,
+  "description": "Playwright browser-evidence run for RetroBoards Gate A (desktop + mobile capture).",
+  "scripts": {
+    "prepare-db": "bash prepare.sh",
+    "evidence": "bash prepare.sh && playwright test",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}

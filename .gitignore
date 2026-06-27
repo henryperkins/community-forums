@@ -17,6 +17,12 @@ composer.lock
 /.phpunit.cache/
 /coverage/
 
+# Browser evidence (Playwright): keep the committed PNGs + lockfile, ignore deps + run artifacts
+/tests/browser/node_modules/
+/tests/browser/test-results/
+/tests/browser/playwright-report/
+/docs/evidence/browser/.artifacts/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

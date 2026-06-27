@@ -1,0 +1,79 @@
+name: Browser evidence
+
+# Regenerates the Gate A desktop + mobile screenshots by driving the real
+# server-rendered app in Chromium, and uploads them as a build artifact.
+# Runs on demand and when the app or the harness changes.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'templates/**'
+      - 'public/**'
+      - 'database/migrations/**'
+      - 'tests/browser/**'
+      - '.github/workflows/browser-evidence.yml'
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+
+    services:
+      # Throwaway database for this job only — reachable solely from the runner,
+      # torn down when the job ends. The password is not a secret (nothing
+      # sensitive lives here); a literal keeps the ephemeral service self-contained.
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: retroboards_e2e
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: retroboards_e2e
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo, pdo_mysql, mbstring, dom, json
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install browser harness + Chromium
+        working-directory: tests/browser
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Capture screenshots (prepare DB + run Playwright)
+        working-directory: tests/browser
+        env:
+          CI: 'true'
+        run: npm run evidence
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-a-browser-evidence
+          path: docs/evidence/browser/**/*.png
+          if-no-files-found: error
