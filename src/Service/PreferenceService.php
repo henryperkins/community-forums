@@ -59,6 +59,43 @@ final class PreferenceService
         ];
     }
 
+    /**
+     * The reading-display subset (thread_sort + show_signatures/avatars/reactions)
+     * the thread/board render paths consult so the toggles actually take effect
+     * (P3-01). Values are already validated by {@see PreferenceSchema}.
+     *
+     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     */
+    public function reading(int $userId): array
+    {
+        return $this->pickReading($this->resolved($userId));
+    }
+
+    /**
+     * The same reading subset at schema defaults — used for guests, who have no
+     * stored prefs but should still get the default (everything shown).
+     *
+     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     */
+    public function readingDefaults(): array
+    {
+        return $this->pickReading(PreferenceSchema::resolve([]));
+    }
+
+    /**
+     * @param array<string,mixed> $r
+     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     */
+    private function pickReading(array $r): array
+    {
+        return [
+            'thread_sort' => (string) ($r['thread_sort'] ?? 'last_post'),
+            'show_signatures' => (bool) ($r['show_signatures'] ?? true),
+            'show_avatars' => (bool) ($r['show_avatars'] ?? true),
+            'show_reactions' => (bool) ($r['show_reactions'] ?? true),
+        ];
+    }
+
     public function threadsPerPage(int $userId): int
     {
         $v = (int) ($this->prefs->get($userId)['threads_per_page'] ?? 0);

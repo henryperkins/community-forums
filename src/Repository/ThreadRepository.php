@@ -79,17 +79,27 @@ final class ThreadRepository
     }
 
     /**
-     * One page of non-deleted threads for a board: pinned first, then by last
-     * activity (idx_threads_inbox), with author + last-poster names joined.
+     * One page of non-deleted threads for a board: pinned first, then by the
+     * reader's chosen sort — last activity (default, idx_threads_inbox), newest,
+     * or reply count (P3-01) — with author + last-poster names joined.
      *
+     * @param string $sort one of last_post|newest|replies (already validated)
      * @return array<int,array<string,mixed>>
      */
-    public function listByBoard(int $boardId, int $limit, int $offset): array
+    public function listByBoard(int $boardId, int $limit, int $offset, string $sort = 'last_post'): array
     {
         // LIMIT/OFFSET are app-controlled integers, inlined after an int cast
         // because native prepared statements can't bind them as placeholders.
         $limit = max(1, $limit);
         $offset = max(0, $offset);
+        // Map the reader's thread_sort preference to a fixed ORDER BY via a
+        // whitelist match() so the enum can never reach SQL as raw text; pinned
+        // threads always lead, and the default mirrors Phase 2 "last activity".
+        $orderBy = match ($sort) {
+            'newest' => 't.is_pinned DESC, t.created_at DESC, t.id DESC',
+            'replies' => 't.is_pinned DESC, t.reply_count DESC, t.id DESC',
+            default => 't.is_pinned DESC, t.last_post_at DESC, t.id DESC',
+        };
         return $this->db->fetchAll(
             // last_post_user identity is intentionally NOT selected: the listing
             // shows only last_post_at, and joining the last poster would leak the
@@ -101,7 +111,7 @@ final class ThreadRepository
              JOIN users au ON au.id = t.user_id
              LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
              WHERE t.board_id = :board_id AND t.is_deleted = 0 AND t.is_pending = 0
-             ORDER BY t.is_pinned DESC, t.last_post_at DESC, t.id DESC
+             ORDER BY ' . $orderBy . '
              LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['board_id' => $boardId],
         );

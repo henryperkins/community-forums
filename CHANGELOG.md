@@ -4,7 +4,19 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **379 tests / 1285 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **384 tests / 1313 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+
+### Gate A gap closure (post-audit)
+
+- **Reading preferences are now server-enforced** (P3-01) — `show_avatars`,
+  `show_signatures`, `show_reactions`, and `thread_sort` previously persisted but
+  were never read by any render path. Avatars now hide in the post stream and the
+  board listing; author signatures render under posts (never for an anonymous
+  post — the masked byline must not be deanonymised); the reaction bar hides; and
+  the board list honours last-activity / newest / reply-count ordering (validated
+  enum → whitelisted `ORDER BY`, never raw SQL). New coverage:
+  `tests/Integration/Core/AppReadingPreferencesTest.php` (5 tests). The composing
+  toggles + preference export remain open (see `docs/PHASE_3_STATUS.md` §11).
 
 ### Hardening (post adversarial review)
 

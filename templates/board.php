@@ -32,7 +32,7 @@ if (($board['visibility'] ?? 'public') !== 'public') {
     <?php else: ?>
         <ul class="thread-list">
             <?php foreach ($threads as $t): ?>
-                <?= $this->partial('partials/thread_row', ['t' => $t, 'board' => $board]) ?>
+                <?= $this->partial('partials/thread_row', ['t' => $t, 'board' => $board, 'show_avatars' => $show_avatars ?? true]) ?>
             <?php endforeach; ?>
         </ul>
     <?php endif; ?>

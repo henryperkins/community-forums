@@ -78,7 +78,8 @@ final class PostRepository
         // thread render; the author is told their reply awaits approval and it
         // becomes visible only when a moderator releases it.
         return $this->db->fetchAll(
-            'SELECT p.*, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role
+            'SELECT p.*, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role,
+                    u.signature AS author_signature
              FROM posts p
              JOIN users u ON u.id = p.user_id
              WHERE p.thread_id = :thread_id AND p.is_deleted = 0 AND p.is_pending = 0

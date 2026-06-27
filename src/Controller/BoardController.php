@@ -49,13 +49,16 @@ final class BoardController extends Controller
             throw new NotFoundException('Board not found.');
         }
 
+        $prefSvc = $this->container->get(\App\Service\PreferenceService::class);
         $perPage = $user !== null
-            ? $this->container->get(\App\Service\PreferenceService::class)->threadsPerPage($user->id())
+            ? $prefSvc->threadsPerPage($user->id())
             : (int) $this->config()->get('pagination.threads_per_page', 20);
+        // Reading prefs (P3-01): thread-sort order + avatar visibility in the list.
+        $reading = $user !== null ? $prefSvc->reading($user->id()) : $prefSvc->readingDefaults();
         $threadRepo = $this->container->get(ThreadRepository::class);
         $total = $threadRepo->countByBoard((int) $board['id']);
         $page = $this->pageNumber($request, $total, $perPage);
-        $threads = $threadRepo->listByBoard((int) $board['id'], $perPage, ($page - 1) * $perPage);
+        $threads = $threadRepo->listByBoard((int) $board['id'], $perPage, ($page - 1) * $perPage, $reading['thread_sort']);
 
         // Annotate unread state for the signed-in reader (P2-01).
         if ($user !== null && $this->container->get(FeatureFlags::class)->enabled('engagement') && $threads !== []) {
@@ -80,6 +83,7 @@ final class BoardController extends Controller
             'total' => $total,
             'per_page' => $perPage,
             'can_post' => $canPost,
+            'show_avatars' => $reading['show_avatars'],
         ]);
     }
 

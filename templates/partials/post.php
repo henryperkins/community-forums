@@ -10,7 +10,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
 ?>
 <?php $accepted = $accepted ?? false; ?>
 <div class="post<?= $accepted ? ' post-accepted' : '' ?>" id="p<?= (int) $p['id'] ?>">
-    <?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?>
+    <?php if ($show_avatars ?? true): ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?><?php endif; ?>
     <div class="post-main">
         <div class="post-head">
             <?php if ($a['profile_url'] !== null): ?>
@@ -38,12 +38,21 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
             <?php endif; ?>
         </div>
         <?php
+        // Author signature (P3-01): shown only when the reader keeps signatures on
+        // and the author has one. Never shown for an anonymous post — the byline is
+        // masked, so a signature would deanonymise. Plain text: escaped + nl2br.
+        $authorSig = $isAnon ? '' : trim((string) ($p['author_signature'] ?? ''));
+        ?>
+        <?php if (($show_signatures ?? true) && $authorSig !== ''): ?>
+            <div class="post-signature muted"><?= nl2br($e($authorSig)) ?></div>
+        <?php endif; ?>
+        <?php
         // Reactions (P2-02). $counts: emoji=>n; $mine: emoji the viewer added.
         $engagement = $engagement ?? false;
         $counts = $counts ?? [];
         $mine = $mine ?? [];
         $allowed = $allowed_emoji ?? [];
-        if ($engagement):
+        if ($engagement && ($show_reactions ?? true)):
             $threadPath = '/t/' . (int) $thread['id'] . '-' . $thread['slug'];
         ?>
         <div class="reactions" data-post="<?= (int) $p['id'] ?>">

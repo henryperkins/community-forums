@@ -285,6 +285,7 @@ a:hover { text-decoration: underline; }
 .post-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
 .post-author { font-weight: 600; color: var(--text); }
 .post-time { color: var(--text-muted); font-size: .82rem; }
+.post-signature { margin-top: .6rem; padding-top: .5rem; border-top: 1px dashed var(--border); font-size: .85rem; }
 .post-body { overflow-wrap: anywhere; }
 .post-body p:first-child { margin-top: 0; }
 .post-body pre {
