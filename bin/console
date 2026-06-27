@@ -18,9 +18,14 @@ use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Service\BadgeService;
 use App\Service\RepairService;
+use App\Repository\AttachmentRepository;
+use App\Repository\ModerationLogRepository;
+use App\Service\AttachmentService;
 use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
+use App\Worker\IpRetentionPurger;
 use App\Worker\NotificationEmailWorker;
+use App\Worker\OrphanAttachmentCleaner;
 
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
@@ -186,6 +191,34 @@ try {
             }
             break;
 
+        case 'worker:purge-ips':
+            // 90-day IP-retention purge (P3-05, ADMIN §5.5). Anonymises
+            // sessions.ip / posts.ip older than the retention window (override
+            // the day count with the first argument). Idempotent + audited.
+            $db = $database();
+            $days = isset($argv[2]) ? (int) $argv[2] : (int) $config->get('retention.ip_days', 90);
+            $stats = (new IpRetentionPurger($db, new ModerationLogRepository($db), $days))->run();
+            $log(sprintf('IP retention purge (>%d days): sessions=%d posts=%d (cutoff %s UTC)', $stats['days'], $stats['sessions'], $stats['posts'], $stats['cutoff']));
+            break;
+
+        case 'worker:attachments':
+            // Reclaim orphaned upload storage (P3-04): abandoned temp uploads
+            // past their TTL + finalized media whose parent post was deleted.
+            $db = $database();
+            $repo = new AttachmentRepository($db);
+            $svc = new AttachmentService(
+                $repo,
+                (string) $config->get('uploads.storage_path'),
+                (int) $config->get('uploads.max_bytes', 5_242_880),
+                (int) $config->get('uploads.max_width', 4096),
+                (int) $config->get('uploads.max_height', 4096),
+                (int) $config->get('uploads.max_pixels', 24_000_000),
+                (array) $config->get('uploads.allowed_mime', []),
+            );
+            $stats = (new OrphanAttachmentCleaner($repo, $svc, (int) $config->get('uploads.temp_ttl_hours', 24), (int) $config->get('uploads.deleted_grace_days', 30)))->run();
+            $log(sprintf('Attachment sweep: temp=%d deleted_parent=%d', $stats['temp'], $stats['deleted_parent']));
+            break;
+
         case 'engagement:cutover':
             // Record the Phase 2 unread cutover timestamp. Content before this
             // moment starts read; later activity uses lazy thread_user rows.
@@ -212,6 +245,8 @@ try {
             $log('  engagement:cutover [UTC]  Set the unread cutover timestamp');
             $log('  worker:email [limit]  Drain the instant notification-email queue');
             $log('  worker:digest         Send due daily digests');
+            $log('  worker:purge-ips [days]  Anonymise sessions.ip/posts.ip older than N days (default 90)');
+            $log('  worker:attachments    Sweep orphaned/deleted-parent upload files');
             break;
     }
 } catch (Throwable $e) {

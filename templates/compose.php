@@ -4,6 +4,8 @@
     <h1>New topic</h1>
     <form method="post" action="/threads" class="composer stacked">
         <?= $this->csrfField() ?>
+        <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
+        <p class="muted">Markdown supported — <strong>**bold**</strong>, <em>*italic*</em>, <code>`code`</code>, <code>||spoiler||</code>, and <code>![alt](image)</code> after uploading.</p>
         <label class="field">
             <span>Board</span>
             <select name="board_id" class="input">

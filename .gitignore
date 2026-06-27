@@ -29,3 +29,5 @@ Thumbs.db
 *.swp
 .idea/
 .vscode/
+/storage/media/*
+!/storage/media/.gitkeep

@@ -1,5 +1,17 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', $thread['title']); ?>
+<?php
+$this->layout('layout');
+$this->section('title', $thread['title']);
+// SEO (P3-10): canonical URL + description for public threads; threads in a
+// private/hidden board are excluded from indexing (defence in depth — the read
+// gate already blocks crawlers).
+$this->section('canonical', '/t/' . (int) $thread['id'] . '-' . $thread['slug']);
+$this->section('og_type', 'article');
+$this->section('description', mb_strimwidth(preg_replace('/\s+/', ' ', (string) $thread['title']) ?? '', 0, 160, '…'));
+if (($thread['board_visibility'] ?? 'public') !== 'public') {
+    $this->section('robots', 'noindex, nofollow');
+}
+?>
 <article class="thread">
     <header class="thread-head">
         <p class="breadcrumb"><a href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>

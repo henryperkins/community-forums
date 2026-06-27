@@ -15,6 +15,7 @@ final class Request
      * @param array<string,mixed> $post
      * @param array<string,string> $cookies
      * @param array<string,string> $server
+     * @param array<string,mixed> $files normalized $_FILES entries
      */
     public function __construct(
         private string $method,
@@ -23,6 +24,7 @@ final class Request
         private array $post = [],
         private array $cookies = [],
         private array $server = [],
+        private array $files = [],
     ) {
         $this->method = strtoupper($method);
     }
@@ -44,7 +46,32 @@ final class Request
             $_POST,
             $_COOKIE,
             $server,
+            $_FILES,
         );
+    }
+
+    /**
+     * A single uploaded file entry by field name (the $_FILES shape:
+     * name/type/tmp_name/error/size), or null when absent or errored.
+     *
+     * @return array{name:string,type:string,tmp_name:string,error:int,size:int}|null
+     */
+    public function file(string $key): ?array
+    {
+        $f = $this->files[$key] ?? null;
+        if (!is_array($f) || !isset($f['tmp_name'], $f['error'])) {
+            return null;
+        }
+        if ((int) $f['error'] !== UPLOAD_ERR_OK || (string) $f['tmp_name'] === '') {
+            return null;
+        }
+        return [
+            'name' => (string) ($f['name'] ?? ''),
+            'type' => (string) ($f['type'] ?? ''),
+            'tmp_name' => (string) $f['tmp_name'],
+            'error' => (int) $f['error'],
+            'size' => (int) ($f['size'] ?? 0),
+        ];
     }
 
     private static function normalizePath(string $path): string

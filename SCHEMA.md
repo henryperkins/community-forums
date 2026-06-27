@@ -583,26 +583,54 @@ CREATE TABLE email_deliveries (
 ## 4. Composer (COMPOSER.md §16.2)
 
 ```sql
--- Uploaded files referenced from Markdown; tracks ownership, limits, moderation.
+-- Uploaded images referenced from Markdown; full Phase-3 lifecycle (resolves the
+-- PHASE_3_PLAN §8.2 #1 schema gap). BUILT by migration 0043 (P3-04). The same
+-- table backs per-post + per-DM media and operator brand assets (purpose).
 CREATE TABLE attachments (
   id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id        BIGINT UNSIGNED NOT NULL,
-  post_id        BIGINT UNSIGNED NULL,                      -- set when attached to a post
-  dm_message_id  BIGINT UNSIGNED NULL,                      -- set when attached to a DM
+  user_id        BIGINT UNSIGNED NOT NULL,                  -- owner/uploader
+  post_id        BIGINT UNSIGNED NULL,                      -- set at finalize (post media)
+  dm_message_id  BIGINT UNSIGNED NULL,                      -- set at finalize (DM media)
+  purpose        ENUM('post','dm','brand_logo','brand_favicon','avatar') NOT NULL DEFAULT 'post',
   kind           ENUM('image','file') NOT NULL DEFAULT 'image',
-  path           VARCHAR(512)    NOT NULL,                  -- served from a non-exec path (S3/CDN later)
+  status         ENUM('temp','finalized','deleted') NOT NULL DEFAULT 'temp', -- visible only once finalized
+  storage_key    VARCHAR(255)    NOT NULL,                  -- unguessable relative path under a non-exec/non-public media root
+  sha256         CHAR(64)        NOT NULL,                  -- content hash (dedupe + integrity)
   mime           VARCHAR(100)    NOT NULL,
   size_bytes     INT UNSIGNED    NOT NULL,
   width          INT UNSIGNED    NULL,
   height         INT UNSIGNED    NULL,
   alt            VARCHAR(255)    NULL,
+  visibility     ENUM('public','private') NOT NULL DEFAULT 'public', -- derived from parent at finalize
   created_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  finalized_at   DATETIME        NULL,
+  deleted_at     DATETIME        NULL,
   PRIMARY KEY (id),
+  UNIQUE KEY uq_attach_storage_key (storage_key),
+  KEY idx_attach_owner (user_id),
   KEY idx_attach_post (post_id),
   KEY idx_attach_dm (dm_message_id),
+  KEY idx_attach_sweep (status, created_at),
   CONSTRAINT fk_attach_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- At-most-once logical submit (P3-03, §8.5). BUILT by migration 0044.
+CREATE TABLE submission_idempotency (
+  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id     BIGINT UNSIGNED NOT NULL,
+  idem_key    CHAR(64)        NOT NULL,                     -- sha256 of the client token
+  context     VARCHAR(32)     NOT NULL,                     -- thread | reply | dm
+  result_type VARCHAR(32)     NOT NULL,                     -- thread | post | dm_message
+  result_id   BIGINT UNSIGNED NOT NULL,
+  created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_idem (user_id, idem_key),
+  KEY idx_idem_sweep (created_at),
+  CONSTRAINT fk_idem_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
+
+> **Phase-3 build note (reconciled 2026-06-27).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. Still **not built** (Gate B / later): `plugins`, `webhooks`, `api_tokens`, and the TOTP/recovery, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
 
 ---
 

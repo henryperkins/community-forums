@@ -1,5 +1,5 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Messages'); ?>
+<?php $this->layout('layout'); $this->section('title', 'Messages'); $this->section('robots', 'noindex, nofollow'); ?>
 <div class="dm-view">
     <header class="board-header">
         <h1>Messages</h1>

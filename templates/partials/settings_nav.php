@@ -5,7 +5,9 @@ $items = [
     '/settings/account' => 'Profile',
     '/settings/security' => 'Password',
     '/settings/privacy' => 'Privacy',
-    '/settings/preferences' => 'Preferences',
+    '/settings/appearance' => 'Appearance',
+    '/settings/preferences' => 'Reading',
+    '/settings/composing' => 'Composing',
     '/settings/notifications' => 'Notifications',
 ];
 if (!empty($features['oauth'])) {

@@ -67,7 +67,8 @@ final class FeedService
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
              JOIN users u ON u.id = p.user_id
-             WHERE p.user_id IN ($fPlace) AND p.is_deleted = 0 AND p.is_anonymous = 0 AND t.is_deleted = 0
+             WHERE p.user_id IN ($fPlace) AND p.is_deleted = 0 AND p.is_pending = 0 AND p.is_anonymous = 0
+               AND t.is_deleted = 0 AND t.is_pending = 0
                AND ($boardClause)
              ORDER BY p.created_at DESC, p.id DESC
              LIMIT " . $limit . ' OFFSET ' . $offset,

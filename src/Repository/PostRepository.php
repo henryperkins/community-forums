@@ -23,8 +23,8 @@ final class PostRepository
             : null;
 
         return $this->db->insert(
-            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, is_anonymous, ip, created_at)
-             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, :is_anonymous, :ip, UTC_TIMESTAMP())',
+            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, is_anonymous, is_pending, ip, created_at)
+             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, :is_anonymous, :is_pending, :ip, UTC_TIMESTAMP())',
             [
                 'thread_id' => $data['thread_id'],
                 'user_id' => $data['user_id'],
@@ -33,9 +33,16 @@ final class PostRepository
                 'body_html' => $data['body_html'],
                 'is_op' => !empty($data['is_op']) ? 1 : 0,
                 'is_anonymous' => !empty($data['is_anonymous']) ? 1 : 0,
+                'is_pending' => !empty($data['is_pending']) ? 1 : 0,
                 'ip' => $ip,
             ],
         );
+    }
+
+    /** Clear/set a post's approval-hold flag (P3-05). */
+    public function setPending(int $id, bool $pending): void
+    {
+        $this->db->run('UPDATE posts SET is_pending = ? WHERE id = ?', [$pending ? 1 : 0, $id]);
     }
 
     /** @return array<string,mixed>|null */
@@ -67,11 +74,14 @@ final class PostRepository
     {
         $limit = max(1, $limit);
         $offset = max(0, $offset);
+        // Approval-held replies (is_pending=1, P3-05) are excluded from the public
+        // thread render; the author is told their reply awaits approval and it
+        // becomes visible only when a moderator releases it.
         return $this->db->fetchAll(
             'SELECT p.*, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role
              FROM posts p
              JOIN users u ON u.id = p.user_id
-             WHERE p.thread_id = :thread_id AND p.is_deleted = 0
+             WHERE p.thread_id = :thread_id AND p.is_deleted = 0 AND p.is_pending = 0
              ORDER BY p.created_at ASC, p.id ASC
              LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['thread_id' => $threadId],
@@ -81,8 +91,41 @@ final class PostRepository
     public function countByThread(int $threadId): int
     {
         return (int) $this->db->fetchValue(
-            'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0',
+            'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0',
             [$threadId],
+        );
+    }
+
+    /**
+     * Approval queue (P3-05): pending non-OP replies, oldest first, with author +
+     * thread + board context. Optionally scoped to a set of board ids (NULL = all,
+     * for admins). OP holds are surfaced via the pending-threads query instead.
+     *
+     * @param list<int>|null $boardIds
+     * @return array<int,array<string,mixed>>
+     */
+    public function listPending(?array $boardIds, int $limit = 100): array
+    {
+        $limit = max(1, $limit);
+        $scope = '';
+        if ($boardIds !== null) {
+            if ($boardIds === []) {
+                return [];
+            }
+            $ids = implode(',', array_map('intval', $boardIds));
+            $scope = ' AND t.board_id IN (' . $ids . ')';
+        }
+        return $this->db->fetchAll(
+            'SELECT p.id, p.body, p.created_at, p.thread_id,
+                    u.username AS author_username, t.title AS thread_title, t.slug AS thread_slug,
+                    b.id AS board_id, b.slug AS board_slug, b.name AS board_name
+             FROM posts p
+             JOIN users u ON u.id = p.user_id
+             JOIN threads t ON t.id = p.thread_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE p.is_pending = 1 AND p.is_deleted = 0 AND p.is_op = 0' . $scope . '
+             ORDER BY p.created_at ASC, p.id ASC
+             LIMIT ' . $limit,
         );
     }
 
@@ -104,7 +147,7 @@ final class PostRepository
              FROM posts p
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
-             WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_anonymous = 0
+             WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_anonymous = 0 AND p.is_pending = 0
                AND t.is_deleted = 0 AND b.visibility = 'public'
              ORDER BY p.created_at DESC, p.id DESC
              LIMIT " . $limit,
@@ -125,7 +168,7 @@ final class PostRepository
     public function softDelete(int $id, int $byUserId): int
     {
         return $this->db->run(
-            'UPDATE posts SET is_deleted = 1, deleted_by = ? WHERE id = ? AND is_deleted = 0',
+            'UPDATE posts SET is_deleted = 1, deleted_by = ?, deleted_at = UTC_TIMESTAMP() WHERE id = ? AND is_deleted = 0',
             [$byUserId, $id],
         )->rowCount();
     }
@@ -133,8 +176,9 @@ final class PostRepository
     /** @return int rows affected (0 if it was not deleted — caller skips counters) */
     public function restore(int $id): int
     {
+        // Clear deleted_at so a restored post's media is never reclaimed by the sweep.
         return $this->db->run(
-            'UPDATE posts SET is_deleted = 0, deleted_by = NULL WHERE id = ? AND is_deleted = 1',
+            'UPDATE posts SET is_deleted = 0, deleted_by = NULL, deleted_at = NULL WHERE id = ? AND is_deleted = 1',
             [$id],
         )->rowCount();
     }

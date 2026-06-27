@@ -38,7 +38,7 @@ final class MysqlSearchService implements SearchService
             "SELECT 'thread' AS type, t.id AS thread_id, t.slug, t.title, b.slug AS board_slug, b.name AS board_name,
                     MATCH(t.title) AGAINST (? IN NATURAL LANGUAGE MODE) AS score
              FROM threads t JOIN boards b ON b.id = t.board_id
-             WHERE t.is_deleted = 0 AND ($visSql)
+             WHERE t.is_deleted = 0 AND t.is_pending = 0 AND ($visSql)
                AND MATCH(t.title) AGAINST (? IN NATURAL LANGUAGE MODE)
              ORDER BY score DESC LIMIT " . $limit,
             array_merge([$query], $visParams, [$query]),
@@ -51,7 +51,7 @@ final class MysqlSearchService implements SearchService
              FROM posts p
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
-             WHERE p.is_deleted = 0 AND t.is_deleted = 0 AND ($visSql)
+             WHERE p.is_deleted = 0 AND p.is_pending = 0 AND t.is_deleted = 0 AND t.is_pending = 0 AND ($visSql)
                AND MATCH(p.body) AGAINST (? IN NATURAL LANGUAGE MODE)
              ORDER BY score DESC LIMIT " . $limit,
             array_merge([$query], $visParams, [$query]),

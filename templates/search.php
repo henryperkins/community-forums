@@ -1,5 +1,5 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', $query !== '' ? 'Search: ' . $query : 'Search'); ?>
+<?php $this->layout('layout'); $this->section('title', $query !== '' ? 'Search: ' . $query : 'Search'); $this->section('robots', 'noindex, nofollow'); ?>
 <div class="search-view">
     <header class="board-header">
         <h1>Search</h1>

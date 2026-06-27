@@ -125,8 +125,8 @@ final class DailyDigestWorker
              FROM posts p
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
-             WHERE p.is_deleted = 0 AND p.user_id <> :uid AND p.created_at > :since
-               AND t.is_deleted = 0
+             WHERE p.is_deleted = 0 AND p.is_pending = 0 AND p.user_id <> :uid AND p.created_at > :since
+               AND t.is_deleted = 0 AND t.is_pending = 0
                AND (
                  EXISTS (SELECT 1 FROM subscriptions s
                          WHERE s.user_id = :uid2 AND s.target_type = 'thread' AND s.target_id = t.id

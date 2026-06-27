@@ -10,6 +10,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\AttachmentRepository;
 use App\Repository\BlockRepository;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
@@ -40,6 +41,7 @@ final class DirectMessageService
         private Markdown $markdown,
         private NotificationService $notifications,
         private Config $config,
+        private ?AttachmentRepository $attachments = null,
     ) {
     }
 
@@ -122,6 +124,13 @@ final class DirectMessageService
     {
         $now = gmdate('Y-m-d H:i:s');
         $messageId = $this->messages->create($conversationId, $sender->id(), $body, $this->markdown->render($body));
+        // Bind any /media/{id} the message references to this DM (private). P3-04.
+        if ($this->attachments !== null) {
+            $ids = \App\Service\AttachmentService::referencedIds($body);
+            if ($ids !== []) {
+                $this->attachments->finalizeForDm($sender->id(), $messageId, $ids);
+            }
+        }
         $this->conversations->touch($conversationId, $now);
         $this->conversations->markRead($conversationId, $sender->id(), $messageId); // sender has "read" their own
         $this->notifications->notifyDm($sender->id(), $recipientId, $conversationId);

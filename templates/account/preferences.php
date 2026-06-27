@@ -1,15 +1,14 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 $this->layout('layout');
-$this->section('title', 'Preferences');
+$this->section('title', 'Reading');
+$this->section('robots', 'noindex, nofollow');
 $tpp = (int) ($prefs['threads_per_page'] ?? 0);
 $ppp = (int) ($prefs['posts_per_page'] ?? 0);
 $sort = (string) ($prefs['thread_sort'] ?? 'last_post');
-$theme = (string) ($prefs['theme'] ?? 'system');
-$density = (string) ($prefs['density'] ?? 'comfortable');
-$sig = !array_key_exists('show_signatures', $prefs) || !empty($prefs['show_signatures']);
-$av = !array_key_exists('show_avatars', $prefs) || !empty($prefs['show_avatars']);
-$rx = !array_key_exists('show_reactions', $prefs) || !empty($prefs['show_reactions']);
+$sig = !empty($prefs['show_signatures']);
+$av = !empty($prefs['show_avatars']);
+$rx = !empty($prefs['show_reactions']);
 $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
 ?>
 <div class="settings">
@@ -42,24 +41,9 @@ $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
                 <option value="replies"<?= $sort === 'replies' ? ' selected' : '' ?>>Most replies</option>
             </select>
         </label>
-        <label class="field">
-            <span>Theme</span>
-            <select name="theme" class="input">
-                <option value="system"<?= $theme === 'system' ? ' selected' : '' ?>>System</option>
-                <option value="light"<?= $theme === 'light' ? ' selected' : '' ?>>Light</option>
-                <option value="dark"<?= $theme === 'dark' ? ' selected' : '' ?>>Dark</option>
-            </select>
-        </label>
-        <label class="field">
-            <span>Density</span>
-            <select name="density" class="input">
-                <option value="comfortable"<?= $density === 'comfortable' ? ' selected' : '' ?>>Comfortable</option>
-                <option value="compact"<?= $density === 'compact' ? ' selected' : '' ?>>Compact</option>
-            </select>
-        </label>
         <label class="checkline"><input type="checkbox" name="show_signatures" value="1"<?= $sig ? ' checked' : '' ?>> Show signatures</label>
         <label class="checkline"><input type="checkbox" name="show_avatars" value="1"<?= $av ? ' checked' : '' ?>> Show avatars</label>
         <label class="checkline"><input type="checkbox" name="show_reactions" value="1"<?= $rx ? ' checked' : '' ?>> Show reactions</label>
-        <button class="btn" type="submit">Save preferences</button>
+        <button class="btn" type="submit">Save reading preferences</button>
     </form>
 </div>
