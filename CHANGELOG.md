@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **368 tests / 1248 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **379 tests / 1285 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
 
 ### Hardening (post adversarial review)
 
@@ -19,6 +19,29 @@ Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **368
   `posts.deleted_at`), so a restored/appealed post keeps its images.
 - Re-encoded upload output is re-checked against the size cap; the onboarding
   `next` redirect is constrained to same-origin paths.
+
+### Hardening (second review pass)
+
+- **Held content no longer leaks into the Inbox** — `inbox`/`countInbox`/
+  `unreadCount`/`unreadFlags` now filter `is_pending = 0`, so a held thread's
+  title/author/existence and the unread badge stay hidden until approval.
+- **Editing a post to add an image no longer destroys it** — `editOwnPost` now
+  finalizes newly referenced `/media/{id}` uploads in its transaction, so the
+  attachment is bound (not left `temp` and swept by the orphan cleaner).
+- **Access-restricted media is never publicly cached** — the `/media/{id}`
+  `Cache-Control` is derived from the live authorization (held-post or
+  private-board media → `private, no-store`), not the stored columns.
+- **Held posts never become cached "last activity"** — `recomputeLastPost`
+  (thread + board) and every `RepairService` counter exclude `is_pending = 1`,
+  matching the runtime that defers counters until approval.
+- New-user anti-abuse throttle treats an account as established only once it
+  clears **both** the post-count and account-age thresholds (per config).
+- Feature-flag gating completed for SEO (`/sitemap.xml`, `/robots.txt`),
+  branding (`/admin/branding`, `/brand.css`), and the onboarding tour; the
+  sitemap also excludes archived public boards' threads.
+- Smaller fixes: idempotency replay tolerates lock-wait/deadlock and is
+  result-type-scoped; per-post image cap enforced; CIDR prefix bounds-checked;
+  composer upload placeholders are unique per file.
 
 ### Added
 

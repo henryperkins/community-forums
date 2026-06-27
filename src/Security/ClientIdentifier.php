@@ -62,6 +62,11 @@ final class ClientIdentifier
         if ($ipBin === false || $subnetBin === false || strlen($ipBin) !== strlen($subnetBin)) {
             return false;
         }
+        // Reject a malformed prefix (negative, or wider than the address) before the
+        // bit math — otherwise $ipBin[$bytes] below can read past the binary string.
+        if ($bits < 0 || $bits > strlen($ipBin) * 8) {
+            return false;
+        }
         $bytes = intdiv($bits, 8);
         $rem = $bits % 8;
         if ($bytes > 0 && strncmp($ipBin, $subnetBin, $bytes) !== 0) {

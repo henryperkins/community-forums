@@ -47,6 +47,43 @@ final class AppAutomationAuditTest extends TestCase
         self::assertStringContainsString('too many links', (string) $row['reason']);
     }
 
+    public function test_new_user_throttle_requires_clearing_both_thresholds(): void
+    {
+        // config.php documents a new user as "below either threshold", so an
+        // account is only established once it clears BOTH the post-count AND the
+        // account-age minimums. With both configured, the strict link ceiling must
+        // still apply to a young account even if it has many posts.
+        $config = new \App\Core\Config(['antiabuse' => [
+            'mode' => 'hold',
+            'new_user_min_posts' => 3,
+            'new_user_min_age_minutes' => 60,
+            'new_user_max_links' => 2,
+            'max_links' => 25,
+        ]]);
+        $svc = new \App\Service\AntiAbuseService(
+            $this->db,
+            $config,
+            new \App\Repository\SettingRepository($this->db),
+            new \App\Repository\ModerationLogRepository($this->db),
+        );
+        $body = 'see http://a.example http://b.example http://c.example'; // 3 links
+
+        // Clears the post threshold (9 posts) but the account is seconds old →
+        // still a new user, so the strict ceiling (2) holds the 3-link post.
+        $young = \App\Domain\User::fromRow([
+            'id' => 90001, 'role' => 'user', 'post_count' => 9,
+            'created_at' => gmdate('Y-m-d H:i:s'),
+        ]);
+        self::assertTrue($svc->evaluate($young, 'thread', $body)->holds());
+
+        // Clears BOTH thresholds → established → the relaxed 25-link limit applies.
+        $established = \App\Domain\User::fromRow([
+            'id' => 90002, 'role' => 'user', 'post_count' => 9,
+            'created_at' => gmdate('Y-m-d H:i:s', time() - 7200),
+        ]);
+        self::assertFalse($svc->evaluate($established, 'thread', $body)->holds());
+    }
+
     public function test_clean_post_writes_no_audit(): void
     {
         $cat = $this->makeCategory();

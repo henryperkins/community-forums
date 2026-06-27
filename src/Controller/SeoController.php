@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\Database;
+use App\Core\FeatureFlags;
+use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 
@@ -21,6 +23,9 @@ final class SeoController extends Controller
 
     public function sitemap(Request $request): Response
     {
+        if (!$this->container->get(FeatureFlags::class)->enabled('seo')) {
+            throw new NotFoundException();
+        }
         $base = rtrim((string) $this->config()->get('app.url', ''), '/');
         $db = $this->container->get(Database::class);
 
@@ -33,7 +38,8 @@ final class SeoController extends Controller
         $threads = $db->fetchAll(
             "SELECT t.id, t.slug FROM threads t
              JOIN boards b ON b.id = t.board_id
-             WHERE b.visibility = 'public' AND t.is_deleted = 0 AND t.is_pending = 0
+             WHERE b.visibility = 'public' AND b.is_archived = 0
+               AND t.is_deleted = 0 AND t.is_pending = 0
              ORDER BY t.last_post_at DESC
              LIMIT " . self::MAX_THREADS,
         );
@@ -71,8 +77,11 @@ final class SeoController extends Controller
             'Disallow: /reset',
             'Disallow: /verify',
             'Allow: /',
-            'Sitemap: ' . $base . '/sitemap.xml',
         ];
+        // Only advertise the sitemap when the SEO subsystem is enabled (else it 404s).
+        if ($this->container->get(FeatureFlags::class)->enabled('seo')) {
+            $lines[] = 'Sitemap: ' . $base . '/sitemap.xml';
+        }
         return Response::text(implode("\n", $lines) . "\n");
     }
 }

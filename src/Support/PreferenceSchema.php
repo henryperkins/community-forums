@@ -22,7 +22,11 @@ namespace App\Support;
  */
 final class PreferenceSchema
 {
-    /** Bump when the shape changes; resolve()/migrate() keep old blobs readable. */
+    /**
+     * Bump when the shape changes. resolve() is version-agnostic — each key is
+     * validated independently against its own spec, so older blobs stay readable
+     * without an explicit migration; `__v` is a forward-compat marker only.
+     */
     public const VERSION = 2;
 
     public const THREADS_PER_PAGE = [25, 50, 100];

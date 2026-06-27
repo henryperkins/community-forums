@@ -61,4 +61,16 @@ final class AppProductTourTest extends TestCase
         // No session → CSRF/auth rejects it; nothing is recorded.
         self::assertNotSame(200, $res->status());
     }
+
+    public function test_tour_endpoints_are_inert_when_the_subsystem_is_disabled(): void
+    {
+        (new \App\Repository\SettingRepository($this->db))->set('features', ['product_tour' => false]);
+        $user = $this->makeUser(['username' => 'noTour']);
+        $this->actingAs($user);
+
+        $this->assertStatus(404, $this->post('/onboarding/complete'));
+        $this->assertStatus(404, $this->post('/onboarding/replay'));
+        // The flag being off must not have recorded completion.
+        self::assertNull($this->users()->find((int) $user['id'])['onboarded_at']);
+    }
 }

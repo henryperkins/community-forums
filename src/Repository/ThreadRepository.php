@@ -157,7 +157,7 @@ final class ThreadRepository
     {
         $row = $this->db->fetch(
             'SELECT id, user_id, created_at FROM posts
-             WHERE thread_id = ? AND is_deleted = 0 ORDER BY created_at DESC, id DESC LIMIT 1',
+             WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0 ORDER BY created_at DESC, id DESC LIMIT 1',
             [$id],
         );
         if ($row === null) {

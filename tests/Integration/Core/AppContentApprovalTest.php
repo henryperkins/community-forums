@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\SettingRepository;
+use App\Repository\ThreadUserRepository;
+use App\Service\RepairService;
 use Tests\Support\TestCase;
 
 /**
@@ -166,6 +168,60 @@ final class AppContentApprovalTest extends TestCase
         $this->logoutClient();
         $res = $this->get('/search', ['q' => 'Zorblax']);
         $this->assertDontSeeText($res, 'Zorblax marketing spam');
+    }
+
+    public function test_held_thread_is_excluded_from_the_inbox(): void
+    {
+        // Engagement cutover in the past so the "unread" filter/badge is active.
+        (new SettingRepository($this->db))->set('engagement_cutover_at', gmdate('Y-m-d H:i:s', time() - 3600));
+
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'inbox-hold', 'name' => 'InboxHold']);
+        $this->db->run('UPDATE boards SET require_approval = 1 WHERE id = ?', [(int) $board['id']]);
+
+        $author = $this->makeUser(['username' => 'inboxauthor']);
+        $this->actingAs($author);
+        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Held inbox topic', 'body' => 'review me']);
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT is_pending FROM threads WHERE board_id = ?', [(int) $board['id']]));
+
+        // A different user must not see the held thread title in ANY inbox filter,
+        // and the unread badge must not count it (the Inbox was the one read
+        // surface the held-content hardening missed).
+        $viewer = $this->makeUser(['username' => 'inboxviewer']);
+        $this->actingAs($viewer);
+        foreach (['newest', 'active', 'unanswered', 'unread'] as $filter) {
+            $this->assertDontSeeText($this->get('/inbox', ['filter' => $filter]), 'Held inbox topic');
+        }
+        $cutover = gmdate('Y-m-d H:i:s', time() - 3600);
+        self::assertSame(0, (new ThreadUserRepository($this->db))->unreadCount((int) $viewer['id'], false, $cutover));
+    }
+
+    public function test_repair_excludes_held_content_from_counters(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'repair-hold']);
+        $author = $this->makeUser(['username' => 'repairauthor']);
+        $thread = $this->makeThread($board, $author, 'Live for repair', 'Opening.');
+
+        // Hold replies, then add one held reply.
+        $this->db->run('UPDATE boards SET require_approval = 1 WHERE id = ?', [(int) $board['id']]);
+        $replier = $this->makeUser(['username' => 'repairreplier']);
+        $this->actingAs($replier);
+        $this->post('/t/' . $thread['thread_id'] . '/reply', ['body' => 'held reply for repair']);
+        $reply = $this->db->fetch('SELECT * FROM posts WHERE thread_id = ? AND is_op = 0 ORDER BY id DESC LIMIT 1', [$thread['thread_id']]);
+        self::assertSame(1, (int) $reply['is_pending']);
+
+        // Scramble the denormalised counters, then reconcile from authoritative rows.
+        $this->db->run('UPDATE threads SET reply_count = 99, last_post_id = ? WHERE id = ?', [(int) $reply['id'], $thread['thread_id']]);
+        (new RepairService($this->db))->repairAll();
+
+        // The held reply is neither counted nor chosen as last activity, and its
+        // author gains no counted post — repair must match the runtime, which
+        // defers all of this until approval.
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT reply_count FROM threads WHERE id = ?', [$thread['thread_id']]));
+        self::assertSame($opId, (int) $this->db->fetchValue('SELECT last_post_id FROM threads WHERE id = ?', [$thread['thread_id']]));
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT post_count FROM users WHERE id = ?', [(int) $replier['id']]));
     }
 
     public function test_moderator_is_exempt_from_holds(): void

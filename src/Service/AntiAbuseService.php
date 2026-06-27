@@ -133,22 +133,28 @@ final class AntiAbuseService
         return isset(self::SEVERITY[$mode]) && $mode !== 'allow' ? $mode : 'observe';
     }
 
-    /** @param array<string,mixed> $cfg */
+    /**
+     * A "new user" for throttling is below EITHER threshold (config.php): an
+     * account is only "established" once it clears BOTH the post-count and the
+     * account-age minimums. (At the default min_age of 0 the age test is a no-op,
+     * so behaviour reduces to the post-count threshold alone.)
+     *
+     * @param array<string,mixed> $cfg
+     */
     private function isNewUser(User $user, array $cfg): bool
     {
         $row = $user->toArray();
         $minPosts = (int) ($cfg['new_user_min_posts'] ?? 3);
-        if ((int) ($row['post_count'] ?? 0) >= $minPosts) {
-            return false;
-        }
+        $hasPosts = (int) ($row['post_count'] ?? 0) >= $minPosts;
+
         $minAge = (int) ($cfg['new_user_min_age_minutes'] ?? 0) * 60;
+        $oldEnough = true;
         if ($minAge > 0) {
             $created = strtotime((string) ($row['created_at'] ?? '') . ' UTC');
-            if ($created !== false && (time() - $created) >= $minAge) {
-                return false;
-            }
+            $oldEnough = $created !== false && (time() - $created) >= $minAge;
         }
-        return true;
+
+        return !($hasPosts && $oldEnough);
     }
 
     private function matchedBlockedWord(string $text): ?string

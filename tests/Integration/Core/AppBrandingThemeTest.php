@@ -80,4 +80,18 @@ final class AppBrandingThemeTest extends TestCase
         $this->assertStatus(403, $this->get('/admin/branding'));
         $this->assertStatus(403, $this->post('/admin/branding', ['site_name' => 'Hijack', 'theme_default' => 'system']));
     }
+
+    public function test_branding_subsystem_can_be_disabled(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin5']);
+        $this->actingAs($admin);
+        // Set a colour while enabled, then disable the subsystem.
+        $this->post('/admin/branding', ['site_name' => 'Soon Off', 'color_primary' => '#654321', 'theme_default' => 'system']);
+        (new \App\Repository\SettingRepository($this->db))->set('features', ['branding' => false]);
+
+        // The admin form/update 404 and /brand.css emits no stored colours.
+        $this->assertStatus(404, $this->get('/admin/branding'));
+        $this->assertStatus(404, $this->post('/admin/branding', ['site_name' => 'Nope', 'theme_default' => 'system']));
+        $this->assertDontSeeText($this->get('/brand.css'), '#654321');
+    }
 }

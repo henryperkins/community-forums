@@ -167,7 +167,9 @@ final class PostingService
             });
         } catch (DuplicateSubmissionException) {
             $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
-            $thread = $prior !== null ? $this->threads->find($prior['result_id']) : null;
+            // Only replay when the stored result is actually a thread — a token
+            // reused across a thread and a reply must not cross result types.
+            $thread = ($prior !== null && $prior['result_type'] === 'thread') ? $this->threads->find($prior['result_id']) : null;
             if ($thread !== null) {
                 return ['thread_id' => (int) $thread['id'], 'slug' => (string) $thread['slug'], 'pending' => (int) $thread['is_pending'] === 1, 'duplicate' => true];
             }
@@ -269,7 +271,7 @@ final class PostingService
             });
         } catch (DuplicateSubmissionException) {
             $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
-            if ($prior !== null) {
+            if ($prior !== null && $prior['result_type'] === 'post') {
                 return $prior['result_id'];
             }
             throw new ValidationException(['body' => 'That reply was already submitted.'], $input);
@@ -301,6 +303,13 @@ final class PostingService
 
         $this->db->transaction(function () use ($post, $postId, $body, $user, $added): void {
             $this->posts->update($postId, $body, $this->markdown->render($body), $user->id());
+            // Bind images the edit newly references. The edit composer uploads
+            // pasted/dropped images as temp attachments exactly like create/reply;
+            // without finalizing here they stay 'temp' (invisible to other readers)
+            // and the orphan sweep permanently purges them while the live post
+            // still links /media/{id}. finalizeForPost is owner/temp-scoped, so
+            // re-finalizing already-bound images is a harmless no-op.
+            $this->finalizeAttachments($user->id(), $postId, $body, (string) ($post['board_visibility'] ?? 'public'));
             if ($this->notifications !== null && $added !== []) {
                 $threadCtx = [
                     'id' => (int) $post['thread_id'],
@@ -530,6 +539,13 @@ final class PostingService
             $errors['body'] = 'Write something before posting.';
         } elseif (mb_strlen($body) > (int) $this->config->get('limits.post_body_max', 20000)) {
             $errors['body'] = 'Your post is too long.';
+        }
+
+        // Enforce the per-post image ceiling (uploads.per_post_max) before any
+        // write, so an over-cap post is rejected and never partially created.
+        $maxImages = (int) $this->config->get('uploads.per_post_max', 10);
+        if ($maxImages > 0 && count(\App\Service\AttachmentService::referencedIds($body)) > $maxImages) {
+            $errors['body'] = "You can attach at most {$maxImages} images to a post.";
         }
 
         if ($errors !== []) {

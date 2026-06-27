@@ -63,6 +63,13 @@ final class IdempotencyRepository
             if ($this->isDuplicateKey($e)) {
                 return false;
             }
+            // The dedup design relies on a blocking INSERT against the winner's
+            // still-uncommitted unique-key row. Under contention that can surface
+            // as a lock-wait timeout / deadlock instead of a clean 1062 — treat it
+            // as a lost race too, so the caller replays the original instead of 500.
+            if ($this->isLockContention($e)) {
+                return false;
+            }
             throw $e;
         }
     }
@@ -77,5 +84,11 @@ final class IdempotencyRepository
     private function isDuplicateKey(PDOException $e): bool
     {
         return ($e->errorInfo[1] ?? null) === 1062;
+    }
+
+    /** MySQL lock-wait timeout (1205) or deadlock (1213). */
+    private function isLockContention(PDOException $e): bool
+    {
+        return in_array($e->errorInfo[1] ?? null, [1205, 1213], true);
     }
 }

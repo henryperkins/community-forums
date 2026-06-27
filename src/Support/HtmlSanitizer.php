@@ -50,9 +50,9 @@ final class HtmlSanitizer
         'link' => true, 'meta' => true, 'base' => true, 'title' => true,
         'head' => true, 'body' => true, 'html' => true, 'audio' => true,
         'video' => true, 'source' => true, 'track' => true, 'canvas' => true,
-        'applet' => true, 'frame' => true, 'frameset' => true, 'iframe ' => true,
+        'applet' => true, 'frame' => true, 'frameset' => true,
         'noscript' => true, 'template' => true, 'picture' => true, 'map' => true,
-        'area' => true, 'script ' => true,
+        'area' => true,
     ];
 
     public function sanitize(string $html): string

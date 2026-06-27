@@ -122,7 +122,10 @@
         var data = new FormData();
         data.append('_token', tokenField(form));
         data.append('image', file);
-        var placeholder = '![uploading…]()';
+        // Unique per upload so several images pasted/dropped at once each resolve
+        // into their OWN marker — String.replace(str) only swaps the first match.
+        var token = 'rbup-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+        var placeholder = '![uploading…](' + token + ')';
         insertAtCursor(ta, placeholder);
         fetch('/upload', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.json(); })

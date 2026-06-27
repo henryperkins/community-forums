@@ -61,6 +61,32 @@ final class AppSeoVisibilityTest extends TestCase
         $this->assertDontSeeText($res, '/t/' . $pending['thread_id'] . '-');
     }
 
+    public function test_sitemap_excludes_archived_board_threads(): void
+    {
+        $cat = $this->makeCategory();
+        $live = $this->makeBoard($cat, ['slug' => 'live-board']);
+        $archived = $this->makeBoard($cat, ['slug' => 'archived-board']);
+        $author = $this->makeUser(['username' => 'archauthor']);
+        $liveT = $this->makeThread($live, $author, 'Live indexable');
+        $archT = $this->makeThread($archived, $author, 'Archived topic');
+        $this->db->run('UPDATE boards SET is_archived = 1 WHERE id = ?', [(int) $archived['id']]);
+
+        $res = $this->get('/sitemap.xml');
+        $this->assertSeeText($res, '/t/' . $liveT['thread_id'] . '-' . $liveT['slug']);
+        $this->assertDontSeeText($res, '/c/archived-board');               // board already excluded
+        $this->assertDontSeeText($res, '/t/' . $archT['thread_id'] . '-'); // and now its threads too
+    }
+
+    public function test_seo_subsystem_can_be_disabled(): void
+    {
+        (new \App\Repository\SettingRepository($this->db))->set('features', ['seo' => false]);
+        $this->assertStatus(404, $this->get('/sitemap.xml'));
+        // robots still serves, but no longer advertises the (now 404) sitemap.
+        $robots = $this->get('/robots.txt');
+        $this->assertStatus(200, $robots);
+        $this->assertDontSeeText($robots, 'Sitemap:');
+    }
+
     public function test_public_thread_has_canonical_link(): void
     {
         $cat = $this->makeCategory();

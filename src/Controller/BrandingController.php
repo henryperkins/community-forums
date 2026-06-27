@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
+use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\AttachmentRepository;
@@ -24,6 +26,14 @@ final class BrandingController extends Controller
     /** Public dynamic stylesheet: only emitted when colors are customized. */
     public function css(Request $request): Response
     {
+        // When branding is disabled the UI falls back to the built-in chrome, so
+        // emit an empty rule set rather than the stored brand colours.
+        if (!$this->container->get(FeatureFlags::class)->enabled('branding')) {
+            return new Response(':root{}', 200, [
+                'Content-Type' => 'text/css; charset=UTF-8',
+                'Cache-Control' => 'public, max-age=300',
+            ]);
+        }
         $settings = $this->container->get(SettingRepository::class);
         $primary = $settings->getString('brand_color_primary', '');
         $accent = $settings->getString('brand_color_accent', '');
@@ -46,6 +56,7 @@ final class BrandingController extends Controller
     public function form(Request $request): Response
     {
         $this->requireAdmin();
+        $this->requireBrandingEnabled();
         $settings = $this->container->get(SettingRepository::class);
         return $this->view('admin/branding', [
             'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
@@ -61,6 +72,7 @@ final class BrandingController extends Controller
     public function update(Request $request): Response
     {
         $admin = $this->requireAdmin();
+        $this->requireBrandingEnabled();
         $settings = $this->container->get(SettingRepository::class);
 
         if ($request->str('reset') === '1') {
@@ -136,6 +148,13 @@ final class BrandingController extends Controller
             'target_type' => 'setting',
             'target_id' => 0,
         ]);
+    }
+
+    private function requireBrandingEnabled(): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('branding')) {
+            throw new NotFoundException();
+        }
     }
 
     private static function isHex(string $v): bool

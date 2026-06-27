@@ -100,7 +100,7 @@ final class ThreadUserRepository
                     END AS is_unread
              FROM threads t
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
-             WHERE t.id IN ($place)",
+             WHERE t.id IN ($place) AND t.is_pending = 0",
             array_merge([$cutover, $userId], $threadIds),
         );
         $map = [];
@@ -120,6 +120,7 @@ final class ThreadUserRepository
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              WHERE t.is_deleted = 0
+               AND t.is_pending = 0
                AND ($visSql)
                AND (
                  CASE
@@ -165,6 +166,7 @@ final class ThreadUserRepository
              LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              WHERE t.is_deleted = 0
+               AND t.is_pending = 0
                AND ($visSql)
                $where
              ORDER BY $order
@@ -187,6 +189,7 @@ final class ThreadUserRepository
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              WHERE t.is_deleted = 0
+               AND t.is_pending = 0
                AND ($visSql)
                $where",
             $params,

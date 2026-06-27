@@ -78,4 +78,13 @@ final class RateLimitServiceTest extends TestCase
         // REMOTE_ADDR is NOT a trusted proxy → XFF is ignored entirely.
         self::assertSame('8.8.8.8', $id->ipFor($this->request('8.8.8.8', '203.0.113.7')));
     }
+
+    public function test_client_identifier_handles_a_malformed_cidr_prefix(): void
+    {
+        // A prefix wider than the address (/33 on IPv4) is malformed: it must not
+        // emit a warning or spuriously match (failOnWarning would otherwise fail).
+        // The remote is then untrusted, so X-Forwarded-For is ignored.
+        $id = new ClientIdentifier(['10.0.0.0/33']);
+        self::assertSame('10.0.0.5', $id->ipFor($this->request('10.0.0.5', '8.8.8.8')));
+    }
 }
