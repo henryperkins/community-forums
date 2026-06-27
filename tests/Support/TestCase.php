@@ -225,6 +225,7 @@ abstract class TestCase extends BaseTestCase
             'description' => $attrs['description'] ?? null,
             'visibility' => $attrs['visibility'] ?? 'public',
             'post_min_role' => $attrs['post_min_role'] ?? 'user',
+            'allow_anonymous' => $attrs['allow_anonymous'] ?? 0,
         ]);
         return $boards->find($id);
     }

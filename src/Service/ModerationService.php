@@ -14,6 +14,7 @@ use App\Repository\BoardRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\UserRepository;
 use App\Security\WriteGate;
 
 /**
@@ -35,6 +36,7 @@ final class ModerationService
         private WriteGate $writeGate,
         private BoardModeratorRepository $boardMods,
         private BoardRepository $boards,
+        private UserRepository $users,
     ) {
     }
 
@@ -216,6 +218,46 @@ final class ModerationService
         }
         $this->assertCanModerate($mod, (int) $thread['board_id']);
         return $thread;
+    }
+
+    /**
+     * Reveal the real author of an anonymous post to a scoped moderator. The
+     * reveal IS the audited action (moderation_log 'reveal_anon'); the public
+     * render stays masked for everyone, including the revealing moderator's page
+     * — the handle is returned only for a one-off flash to the acting mod.
+     *
+     * @return array{username:string, user_id:int, thread_id:int, thread_slug:string, post_id:int}
+     */
+    public function revealAuthor(User $mod, int $postId): array
+    {
+        $post = $this->posts->findWithContext($postId);
+        if ($post === null) {
+            throw new NotFoundException('Post not found.');
+        }
+        $this->assertCanModerate($mod, (int) $post['board_id']);
+        if ((int) ($post['is_anonymous'] ?? 0) !== 1) {
+            throw new ForbiddenException('That post was not posted anonymously.');
+        }
+
+        $authorId = (int) $post['user_id'];
+        $author = $this->users->find($authorId);
+        $username = is_array($author) && isset($author['username']) ? (string) $author['username'] : ('#' . $authorId);
+
+        $this->log->log([
+            'actor_id' => $mod->id(),
+            'action' => 'reveal_anon',
+            'target_type' => 'post',
+            'target_id' => $postId,
+            'after' => ['user_id' => $authorId, 'username' => $username],
+        ]);
+
+        return [
+            'username' => $username,
+            'user_id' => $authorId,
+            'thread_id' => (int) $post['thread_id'],
+            'thread_slug' => (string) ($post['thread_slug'] ?? ''),
+            'post_id' => $postId,
+        ];
     }
 
     private function assertCanModerate(User $mod, int $boardId): void

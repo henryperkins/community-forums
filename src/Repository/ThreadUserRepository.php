@@ -153,7 +153,7 @@ final class ThreadUserRepository
         return $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
                     au.username AS author_username, au.display_name AS author_display_name,
-                    lu.username AS last_post_username, lu.display_name AS last_post_display_name,
+                    COALESCE(op.is_anonymous, 0) AS op_is_anonymous,
                     COALESCE(tu.is_starred, 0) AS is_starred,
                     CASE
                       WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
@@ -162,7 +162,7 @@ final class ThreadUserRepository
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              JOIN users au ON au.id = t.user_id
-             LEFT JOIN users lu ON lu.id = t.last_post_user_id
+             LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
              WHERE t.is_deleted = 0
                AND ($visSql)

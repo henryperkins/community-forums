@@ -16,6 +16,7 @@
         </label>
         <button class="btn" type="submit">Log in</button>
     </form>
+    <p class="muted"><a href="/forgot">Forgot your password?</a></p>
     <?php if (!empty($oauth_providers)): ?>
         <div class="oauth-buttons">
             <p class="muted oauth-sep">or sign in with</p>

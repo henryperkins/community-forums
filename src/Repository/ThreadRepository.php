@@ -32,6 +32,7 @@ final class ThreadRepository
     {
         return $this->db->fetch(
             'SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
+                    b.post_min_role AS board_post_min_role, b.allow_anonymous AS board_allow_anonymous,
                     b.id AS board_id, au.username AS author_username, au.display_name AS author_display_name
              FROM threads t
              JOIN boards b ON b.id = t.board_id
@@ -54,11 +55,15 @@ final class ThreadRepository
         $limit = max(1, $limit);
         $offset = max(0, $offset);
         return $this->db->fetchAll(
+            // last_post_user identity is intentionally NOT selected: the listing
+            // shows only last_post_at, and joining the last poster would leak the
+            // real author of an anonymous final reply. Add a masked column if a
+            // "last reply by" byline is ever introduced.
             'SELECT t.*, au.username AS author_username, au.display_name AS author_display_name,
-                    lu.username AS last_post_username, lu.display_name AS last_post_display_name
+                    COALESCE(op.is_anonymous, 0) AS op_is_anonymous
              FROM threads t
              JOIN users au ON au.id = t.user_id
-             LEFT JOIN users lu ON lu.id = t.last_post_user_id
+             LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
              WHERE t.board_id = :board_id AND t.is_deleted = 0
              ORDER BY t.is_pinned DESC, t.last_post_at DESC, t.id DESC
              LIMIT ' . $limit . ' OFFSET ' . $offset,
@@ -78,6 +83,8 @@ final class ThreadRepository
      * Recent non-deleted threads by author, for the PUBLIC profile. Restricted
      * to public boards so a member's activity never reveals the existence or
      * titles of threads in hidden/private boards (the board read/list gate).
+     * Threads whose OP was posted anonymously are EXCLUDED (anonymity lives on
+     * the OP post, so a NOT EXISTS guard keeps them off the author's profile).
      *
      * @return array<int,array<string,mixed>>
      */
@@ -87,6 +94,7 @@ final class ThreadRepository
         return $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug FROM threads t JOIN boards b ON b.id = t.board_id
              WHERE t.user_id = ? AND t.is_deleted = 0 AND b.visibility = 'public'
+               AND NOT EXISTS (SELECT 1 FROM posts op WHERE op.thread_id = t.id AND op.is_op = 1 AND op.is_anonymous = 1)
              ORDER BY t.created_at DESC LIMIT " . $limit,
             [$userId],
         );

@@ -67,6 +67,7 @@
                     'allowed_emoji' => $allowed_emoji ?? [],
                     'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
                     'can_mark_solved' => $can_mark_solved ?? false,
+                    'can_reveal_anon' => $can_reveal_anon ?? false,
                 ]) ?>
             <?php endforeach; ?>
         </div>
@@ -86,5 +87,7 @@
         <div class="joinbar">You're browsing as a guest — <a href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">log in</a> to reply.</div>
     <?php elseif ($current_user !== null && !$current_user->isActive()): ?>
         <div class="joinbar">Your account cannot post right now.</div>
+    <?php elseif ($current_user !== null): ?>
+        <div class="joinbar">You don't have permission to reply in this board.</div>
     <?php endif; ?>
 </article>

@@ -71,6 +71,8 @@ final class SetupService
 
         $admin = $this->db->transaction(function () use ($input, $siteName): User {
             $admin = $this->auth->register($input, 'admin');
+            // The site operator owns the install — no email round-trip needed.
+            $this->users->markEmailVerified($admin->id());
 
             $this->settings->set('site_name', $siteName);
             $this->settings->set('registration_mode', 'open');

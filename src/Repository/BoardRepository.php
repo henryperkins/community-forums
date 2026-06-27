@@ -60,13 +60,13 @@ final class BoardRepository
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int} $data
      */
     public function create(array $data): int
     {
         return $this->db->insert(
-            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, created_at)
-             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, UTC_TIMESTAMP())',
+            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, created_at)
+             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, UTC_TIMESTAMP())',
             [
                 'category_id' => $data['category_id'],
                 'slug' => $data['slug'],
@@ -75,18 +75,19 @@ final class BoardRepository
                 'position' => $data['position'] ?? $this->nextPosition($data['category_id']),
                 'post_min_role' => $data['post_min_role'] ?? 'user',
                 'visibility' => $data['visibility'] ?? 'public',
+                'allow_anonymous' => !empty($data['allow_anonymous']) ? 1 : 0,
             ],
         );
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int} $data
      */
     public function update(int $id, array $data): void
     {
         $this->db->run(
             'UPDATE boards SET category_id = :category_id, slug = :slug, name = :name, description = :description,
-                visibility = :visibility, post_min_role = :post_min_role WHERE id = :id',
+                visibility = :visibility, post_min_role = :post_min_role, allow_anonymous = :allow_anonymous WHERE id = :id',
             [
                 'category_id' => $data['category_id'],
                 'slug' => $data['slug'],
@@ -94,6 +95,7 @@ final class BoardRepository
                 'description' => $data['description'],
                 'visibility' => $data['visibility'],
                 'post_min_role' => $data['post_min_role'],
+                'allow_anonymous' => !empty($data['allow_anonymous']) ? 1 : 0,
                 'id' => $id,
             ],
         );

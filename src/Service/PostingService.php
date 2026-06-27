@@ -63,7 +63,12 @@ final class PostingService
         $body = (string) ($input['body'] ?? '');
         $this->validate($title, $body, $input, requireTitle: true);
 
-        return $this->db->transaction(function () use ($user, $board, $boardId, $title, $body): array {
+        // Anonymity is granted only when the board allows it AND the author opted
+        // in — the server is the sole source of truth; the form value alone is
+        // never trusted (ADMIN §1.3 masked-identity posting).
+        $anon = !empty($input['is_anonymous']) && (int) ($board['allow_anonymous'] ?? 0) === 1;
+
+        return $this->db->transaction(function () use ($user, $board, $boardId, $title, $body, $anon): array {
             $now = gmdate('Y-m-d H:i:s');
             $slug = Str::slug($title, 180);
             $threadId = $this->threads->create($boardId, $user->id(), $title, $slug);
@@ -74,6 +79,7 @@ final class PostingService
                 'body' => $body,
                 'body_html' => $this->markdown->render($body),
                 'is_op' => true,
+                'is_anonymous' => $anon,
                 'ip' => $input['ip'] ?? null,
             ]);
 
@@ -105,7 +111,10 @@ final class PostingService
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        $board = ['visibility' => $thread['board_visibility']];
+        $board = [
+            'visibility' => $thread['board_visibility'],
+            'post_min_role' => $thread['board_post_min_role'] ?? 'user',
+        ];
         if (!$this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id()))) {
             throw new ForbiddenException('You cannot post in this board.');
         }
@@ -116,7 +125,12 @@ final class PostingService
         $body = (string) ($input['body'] ?? '');
         $this->validate(null, $body, $input, requireTitle: false);
 
-        return $this->db->transaction(function () use ($user, $thread, $threadId, $body): int {
+        // Server-side anonymity gate (board allows it AND author opted in). The
+        // board flag comes from findWithBoard's board_allow_anonymous alias, so
+        // the synthetic $board above is never trusted for this decision.
+        $anon = !empty($input['is_anonymous']) && (int) ($thread['board_allow_anonymous'] ?? 0) === 1;
+
+        return $this->db->transaction(function () use ($user, $thread, $threadId, $body, $anon): int {
             $now = gmdate('Y-m-d H:i:s');
             $postId = $this->posts->create([
                 'thread_id' => $threadId,
@@ -124,6 +138,7 @@ final class PostingService
                 'body' => $body,
                 'body_html' => $this->markdown->render($body),
                 'is_op' => false,
+                'is_anonymous' => $anon,
                 'ip' => $input['ip'] ?? null,
             ]);
 

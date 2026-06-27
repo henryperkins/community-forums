@@ -135,9 +135,9 @@ final class AdminService
     public function createBoard(User $admin, array $input): int
     {
         $this->assertAdmin($admin);
-        [$categoryId, $name, $slug, $description, $visibility, $role] = $this->validateBoard($input, null);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon] = $this->validateBoard($input, null);
 
-        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role): int {
+        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon): int {
             $id = $this->boards->create([
                 'category_id' => $categoryId,
                 'slug' => $slug,
@@ -145,13 +145,14 @@ final class AdminService
                 'description' => $description,
                 'visibility' => $visibility,
                 'post_min_role' => $role,
+                'allow_anonymous' => $allowAnon,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'create_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon],
             ]);
             return $id;
         });
@@ -165,12 +166,12 @@ final class AdminService
         if ($board === null) {
             throw new NotFoundException('Board not found.');
         }
-        [$categoryId, $name, $slug, $description, $visibility, $role] = $this->validateBoard($input, $board);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon] = $this->validateBoard($input, $board);
 
         $oldSlug = (string) $board['slug'];
         $slugChanged = $slug !== $oldSlug;
 
-        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $oldSlug, $slugChanged, $board): void {
+        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $oldSlug, $slugChanged, $board): void {
             if ($slugChanged) {
                 $this->boards->recordSlugChange($id, $oldSlug);
             }
@@ -181,14 +182,15 @@ final class AdminService
                 'description' => $description,
                 'visibility' => $visibility,
                 'post_min_role' => $role,
+                'allow_anonymous' => $allowAnon,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'update_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility']],
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility],
+                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0)],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon],
             ]);
         });
     }
@@ -265,6 +267,8 @@ final class AdminService
             $role = 'user';
         }
 
+        $allowAnon = !empty($input['allow_anonymous']) ? 1 : 0;
+
         if ($errors !== []) {
             throw new ValidationException($errors, $input);
         }
@@ -273,7 +277,7 @@ final class AdminService
         // unless it already belongs to the board being edited.
         $slug = $this->uniqueSlug($slug, $existing !== null ? (int) $existing['id'] : null);
 
-        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role];
+        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon];
     }
 
     private function uniqueSlug(string $slug, ?int $boardId): string

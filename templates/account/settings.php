@@ -4,6 +4,16 @@
     <h1>Account settings</h1>
     <?= $this->partial('partials/settings_nav') ?>
 
+    <?php if (isset($email_verified) && !$email_verified): ?>
+        <div class="card notice" role="status">
+            <p><strong>Verify your email address.</strong> We've sent a confirmation link to your inbox. Verifying keeps your account recoverable and unlocks your welcome badge.</p>
+            <form method="post" action="/verify/resend" class="inline">
+                <?= $this->csrfField() ?>
+                <button class="btn" type="submit">Resend verification email</button>
+            </form>
+        </div>
+    <?php endif; ?>
+
     <form method="post" action="/settings/account" class="stacked card">
         <?= $this->csrfField() ?>
         <label class="field">

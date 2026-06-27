@@ -32,6 +32,35 @@ if (!function_exists('monogram_class')) {
     }
 }
 
+if (!function_exists('mask_author')) {
+    /**
+     * Single decision point for rendering a post/thread author byline. When the
+     * post is anonymous every field collapses to the constant "Anonymous"
+     * identity — no display name, username, profile link, monogram seed, or role
+     * — so nothing can fingerprint or correlate the real author across posts
+     * (ADMIN §1.3 masked-identity posting). The real user_id is never touched, so
+     * owner/mod affordances and reputation are unaffected; unmasking is a
+     * separate, audited moderator action.
+     *
+     * @return array{label:string, profile_url:?string, mono_name:string, mono_seed:string, is_staff:bool}
+     */
+    function mask_author(?string $displayName, ?string $username, ?string $role = 'user', bool $isAnon = false): array
+    {
+        if ($isAnon) {
+            return ['label' => 'Anonymous', 'profile_url' => null, 'mono_name' => 'Anonymous', 'mono_seed' => '', 'is_staff' => false];
+        }
+        $username = (string) $username;
+        $label = ($displayName ?? '') !== '' ? (string) $displayName : $username;
+        return [
+            'label' => $label !== '' ? $label : 'Unknown',
+            'profile_url' => $username !== '' ? '/u/' . $username : null,
+            'mono_name' => $label,
+            'mono_seed' => $username,
+            'is_staff' => $role === 'admin',
+        ];
+    }
+}
+
 if (!function_exists('human_datetime')) {
     function human_datetime(?string $utcDateTime): string
     {

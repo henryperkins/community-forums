@@ -3,19 +3,32 @@
 $owner = $current_user !== null && $current_user->id() === (int) $p['user_id'];
 $admin = $current_user?->isAdmin() ?? false;
 $canModerate = $admin && !$owner;
-$author = ($p['author_display_name'] ?? '') !== '' ? $p['author_display_name'] : $p['author_username'];
+$isAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
+// Public byline is ALWAYS masked when anonymous; a mod "reveal" is a separate
+// audited action (flash), never an un-mask of this render.
+$a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? null, $p['author_role'] ?? 'user', $isAnon);
 ?>
 <?php $accepted = $accepted ?? false; ?>
 <div class="post<?= $accepted ? ' post-accepted' : '' ?>" id="p<?= (int) $p['id'] ?>">
-    <?= $this->partial('partials/monogram', ['name' => $author, 'username' => $p['author_username']]) ?>
+    <?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?>
     <div class="post-main">
         <div class="post-head">
-            <a class="post-author" href="/u/<?= $e($p['author_username']) ?>"><?= $e($author) ?></a>
+            <?php if ($a['profile_url'] !== null): ?>
+                <a class="post-author" href="<?= $e($a['profile_url']) ?>"><?= $e($a['label']) ?></a>
+            <?php else: ?>
+                <span class="post-author"><?= $e($a['label']) ?></span>
+            <?php endif; ?>
             <?php if ((int) $p['is_op'] === 1): ?><span class="badge">OP</span><?php endif; ?>
-            <?php if (($p['author_role'] ?? 'user') === 'admin'): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
+            <?php if ($a['is_staff']): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
             <?php if ($accepted): ?><span class="badge badge-solved" title="Accepted answer">✓ Accepted answer</span><?php endif; ?>
             <span class="post-time"><?= $e(human_datetime($p['created_at'])) ?></span>
             <?php if (!empty($p['edited_at'])): ?><span class="muted post-edited">(edited)</span><?php endif; ?>
+            <?php if ($isAnon && !empty($can_reveal_anon)): ?>
+                <form class="inline reveal-anon" method="post" action="/mod/p/<?= (int) $p['id'] ?>/reveal">
+                    <?= $this->csrfField() ?>
+                    <button class="linkbtn muted" type="submit" title="Reveal the real author — this is logged">Reveal author</button>
+                </form>
+            <?php endif; ?>
         </div>
         <div class="post-body">
             <?php if (($p['body_html'] ?? '') !== ''): ?>
