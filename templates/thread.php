@@ -86,5 +86,7 @@
         <div class="joinbar">You're browsing as a guest — <a href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">log in</a> to reply.</div>
     <?php elseif ($current_user !== null && !$current_user->isActive()): ?>
         <div class="joinbar">Your account cannot post right now.</div>
+    <?php elseif ($current_user !== null): ?>
+        <div class="joinbar">You don't have permission to reply in this board.</div>
     <?php endif; ?>
 </article>

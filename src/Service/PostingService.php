@@ -105,7 +105,10 @@ final class PostingService
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        $board = ['visibility' => $thread['board_visibility']];
+        $board = [
+            'visibility' => $thread['board_visibility'],
+            'post_min_role' => $thread['board_post_min_role'] ?? 'user',
+        ];
         if (!$this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id()))) {
             throw new ForbiddenException('You cannot post in this board.');
         }

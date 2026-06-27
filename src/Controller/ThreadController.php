@@ -71,7 +71,11 @@ final class ThreadController extends Controller
         $locked = (int) $thread['is_locked'] === 1;
         $canReply = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)
-            && $this->container->get(BoardPolicy::class)->canPost(['visibility' => $thread['board_visibility']], $user, $isMember)
+            && $this->container->get(BoardPolicy::class)->canPost(
+                ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                $user,
+                $isMember,
+            )
             && !$locked;
 
         // Engagement: grouped reaction counts for the visible posts, the

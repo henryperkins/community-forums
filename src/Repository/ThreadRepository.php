@@ -32,6 +32,7 @@ final class ThreadRepository
     {
         return $this->db->fetch(
             'SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
+                    b.post_min_role AS board_post_min_role,
                     b.id AS board_id, au.username AS author_username, au.display_name AS author_display_name
              FROM threads t
              JOIN boards b ON b.id = t.board_id
