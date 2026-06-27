@@ -300,9 +300,12 @@ covered by state + PKCE).
   are single bounded queries.
 - **No-JS / responsive.** Every Gate A action has a server-rendered POST→redirect
   path exercised by the (JS-free) integration suite. Mobile widths get ≥44px tap
-  targets, a `prefers-reduced-motion` guard, and focus-visible outlines. _Browser/
-  Playwright capture at desktop+mobile widths is the one evidence item still owed by
-  a CI/browser pass — see Known gaps._
+  targets, a `prefers-reduced-motion` guard, and focus-visible outlines. **Browser
+  capture at desktop (1280×800) + mobile (390×844) widths is now done** — a Playwright
+  harness (`tests/browser/`) drives the real app in Chromium and captures 14 Gate A
+  surfaces at both widths (`docs/evidence/browser/{desktop,mobile}/`), regenerated in
+  CI by `.github/workflows/browser-evidence.yml` (on pushes touching the app or
+  harness, and on demand) against an ephemeral MariaDB service.
 
 ## Gate A follow-ups — auth flows + masked-anonymous posting (PR #5 / #6)
 
@@ -362,7 +365,7 @@ recompute counters, rebuild search indexes, and restore from backup.
 - [x] Worker, instant email, digest, suppression, and unsubscribe paths pass operational tests.
 - [x] Search / private-board / notification deep-link leakage tests pass.
 - [x] Guest, User, suspended, banned, scoped Moderator, out-of-scope Moderator, and Admin matrices pass.
-- [x] Gate A paths pass without JavaScript (server-rendered suite). [ ] Browser capture at desktop/mobile widths — owed by a CI/browser pass.
+- [x] Gate A paths pass without JavaScript (server-rendered suite). [x] Browser capture at desktop/mobile widths (`tests/browser/` Playwright harness → `docs/evidence/browser/`, CI-reproduced).
 - [x] Counter-repair and queue-operating procedures are documented (runbook).
 - [x] No critical/high defects remain (M5 review: 3 medium/low fixed).
 - [x] Feature-flag rollback rehearsed (`AppFeatureFlagTest`) and pause-worker fail-closed tested (`NotificationEmailWorkerTest`); [ ] backup-restore and staged-enablement procedures documented in the runbook but **not executed** in this environment.
@@ -375,16 +378,17 @@ recompute counters, rebuild search indexes, and restore from backup.
 - [x] OAuth provider, collision, linking/unlinking, and banned-account tests pass.
 - [x] Saved/board preferences and session/device controls pass.
 - [~] Approved export/delete behaviour — **formally re-scoped to Phase 3** (retention/anonymisation policy not yet approved; USER §3.5). Recorded below.
-- [x] Presence passes; mobile/keyboard/accessibility CSS in place. [ ] Browser evidence — see Gate A.
+- [x] Presence passes; mobile/keyboard/accessibility CSS in place. [x] Browser evidence — see Gate A.
 - [~] Email delivery visibility/test/recovery tools — `statusCounts` + worker stats + suppression recovery present; a dedicated admin delivery dashboard is **re-scoped to Phase 3**.
 - [x] All Gate B deferrals recorded here rather than silently omitted.
 - [ ] **Full Phase 2 evidence index + product-owner closeout recorded** — pending sign-off.
 
 ## Known gaps / formally re-scoped (carry to Phase 3)
 
-- **Browser/Playwright evidence** at desktop + mobile widths: not runnable in this
-  environment; owed by a CI/browser pass before production cutover. All paths have
-  JS-free server-rendered coverage.
+- ~~**Browser/Playwright evidence** at desktop + mobile widths~~ — **DONE.** Playwright
+  harness in `tests/browser/` captures 14 Gate A surfaces at 1280×800 and 390×844
+  (`docs/evidence/browser/`), with `.github/workflows/browser-evidence.yml`
+  regenerating them in CI against a MariaDB service.
 - **Self-service data export/delete** (USER §3.5): deferred pending an approved
   retention/anonymisation/grace-period policy (the plan explicitly permits this).
 - **Admin assignment UIs**: board moderator/member assignment **shipped** (see M4
