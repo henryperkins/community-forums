@@ -8,6 +8,7 @@ use App\Repository\BlockRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\FollowRepository;
+use App\Repository\SubscriptionRepository;
 use App\Service\FeedService;
 use Tests\Support\TestCase;
 
@@ -162,6 +163,126 @@ final class AppAnonymousPostingTest extends TestCase
         $bodies = array_map(static fn (array $r): string => (string) $r['body'], $feed->forUser((int) $viewer['id'])['items']);
         self::assertContains('normalfeedbody', $bodies);
         self::assertNotContains('anonfeedbody', $bodies);
+    }
+
+    public function test_anonymous_reply_is_excluded_from_profile_activity(): void
+    {
+        // Exclusion lives on the post, not only the thread OP: an anonymous REPLY
+        // must also stay off its author's public activity.
+        $board = $this->anonBoard();
+        $owner = $this->makeUser(['username' => 'owner']);
+        $t = $this->posting()->createThread($this->userEntity($owner), [
+            'board_id' => (int) $board['id'], 'title' => 'Host thread', 'body' => 'host body',
+        ]);
+
+        $carl = $this->makeUser(['username' => 'carl', 'display_name' => 'Carl']);
+        $this->posting()->reply($this->userEntity($carl), $t['thread_id'], ['body' => 'visiblecarlreply']);
+        $this->posting()->reply($this->userEntity($carl), $t['thread_id'], ['body' => 'secretcarlreply', 'is_anonymous' => '1']);
+
+        $resp = $this->get('/u/carl');
+        $this->assertStatus(200, $resp);
+        $this->assertSeeText($resp, 'visiblecarlreply');     // the normal reply is listed
+        $this->assertDontSeeText($resp, 'secretcarlreply');  // the anonymous reply is withheld
+    }
+
+    public function test_anonymous_reply_is_excluded_from_the_following_feed(): void
+    {
+        $board = $this->anonBoard();
+        $author = $this->makeUser(['username' => 'replyauthor']);
+        $viewer = $this->makeUser(['username' => 'replyfollower']);
+        (new FollowRepository($this->db))->follow((int) $viewer['id'], (int) $author['id']);
+
+        $t = $this->posting()->createThread($this->userEntity($author), [
+            'board_id' => (int) $board['id'], 'title' => 'Feed host', 'body' => 'feedhostbody',
+        ]);
+        $this->posting()->reply($this->userEntity($author), $t['thread_id'], ['body' => 'normalreplybody']);
+        $this->posting()->reply($this->userEntity($author), $t['thread_id'], ['body' => 'anonreplybody', 'is_anonymous' => '1']);
+
+        $feed = new FeedService(
+            $this->db,
+            new FollowRepository($this->db),
+            new BlockRepository($this->db),
+            new BoardMemberRepository($this->db),
+        );
+        $bodies = array_map(static fn (array $r): string => (string) $r['body'], $feed->forUser((int) $viewer['id'])['items']);
+        self::assertContains('normalreplybody', $bodies);
+        self::assertNotContains('anonreplybody', $bodies);
+    }
+
+    public function test_notification_actor_is_masked_for_an_anonymous_new_thread(): void
+    {
+        $board = $this->anonBoard();
+        $alice = $this->makeUser(['username' => 'alice', 'display_name' => 'Alice Real']);
+        $carl = $this->makeUser(['username' => 'carl']);
+
+        // Carl watches the board, so a new thread generates a 'new_thread' notification for him.
+        (new SubscriptionRepository($this->db))->set((int) $carl['id'], 'board', (int) $board['id'], true, false, 'instant');
+
+        // Alice starts an anonymous thread over HTTP (the container PostingService fans out).
+        $this->actingAs($alice);
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'], 'title' => 'Masked starter', 'body' => 'opening', 'is_anonymous' => '1',
+        ]));
+
+        $this->actingAs($carl);
+        $resp = $this->get('/notifications');
+        $this->assertStatus(200, $resp);
+        $this->assertSeeText($resp, 'Anonymous started a thread');
+        $this->assertDontSeeText($resp, 'Alice Real');
+    }
+
+    public function test_notification_actor_is_masked_for_an_anonymous_mention(): void
+    {
+        $board = $this->anonBoard();
+        $alice = $this->makeUser(['username' => 'alice']);
+        $bob = $this->makeUser(['username' => 'bob', 'display_name' => 'Bob Real']);
+        $carl = $this->makeUser(['username' => 'carl']);
+
+        // Alice starts a thread; Bob replies anonymously and @mentions Carl. Carl is
+        // not a subscriber, so his only notification is the 'mention'.
+        $this->actingAs($alice);
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'], 'title' => 'Mention host', 'body' => 'opening',
+        ]));
+        $threadId = (int) $this->db->fetchValue(
+            'SELECT id FROM threads WHERE board_id = ? ORDER BY id DESC LIMIT 1',
+            [(int) $board['id']],
+        );
+
+        $this->actingAs($bob);
+        $this->assertRedirectContains($this->post('/t/' . $threadId . '/reply', [
+            'body' => 'look at this @carl', 'is_anonymous' => '1',
+        ]), '#p');
+
+        $this->actingAs($carl);
+        $resp = $this->get('/notifications');
+        $this->assertStatus(200, $resp);
+        $this->assertSeeText($resp, 'Anonymous mentioned you');
+        $this->assertDontSeeText($resp, 'Bob Real');
+    }
+
+    // ---- reputation / totals ----------------------------------------------
+
+    public function test_reputation_and_totals_are_unaffected_by_anonymity(): void
+    {
+        $board = $this->anonBoard();
+        $carl = $this->makeUser(['username' => 'carl']);
+
+        // A normal then an anonymous thread: post_count counts BOTH — masking the
+        // public byline never suppresses the real author's totals.
+        $this->posting()->createThread($this->userEntity($carl), [
+            'board_id' => (int) $board['id'], 'title' => 'Open one', 'body' => 'a',
+        ]);
+        $anon = $this->posting()->createThread($this->userEntity($carl), [
+            'board_id' => (int) $board['id'], 'title' => 'Open two', 'body' => 'b', 'is_anonymous' => '1',
+        ]);
+        self::assertSame(2, (int) $this->db->fetchValue('SELECT post_count FROM users WHERE id = ?', [(int) $carl['id']]));
+
+        // A reaction on the anonymous post still credits the real author's reputation.
+        $dan = $this->makeUser(['username' => 'dan']);
+        $this->actingAs($dan);
+        $this->assertRedirect($this->post('/posts/' . $this->opPostId($anon['thread_id']) . '/react', ['emoji' => '👍']));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT reputation FROM users WHERE id = ?', [(int) $carl['id']]));
     }
 
     // ---- notifications -----------------------------------------------------

@@ -200,6 +200,35 @@ final class AppPasswordResetTest extends TestCase
         self::assertNotNull($auth->attempt('wes@example.test', 'oldpassword1'));
     }
 
+    public function test_expired_token_is_rejected_and_changes_nothing(): void
+    {
+        $user = $this->makeUser(['username' => 'eli', 'email' => 'eli@example.test', 'password' => 'oldpassword1']);
+        $mailer = new ArrayMailer();
+        $this->resetService($mailer)->request('eli@example.test');
+        $token = $this->tokenFromEmail($mailer, 'eli@example.test');
+
+        // Push the still-unused token past its TTL.
+        $this->db->run(
+            "UPDATE verifications SET expires_at = ? WHERE user_id = ? AND type = 'password_reset'",
+            [gmdate('Y-m-d H:i:s', time() - 3600), (int) $user['id']],
+        );
+
+        // The form treats the expired link as invalid (and seeds the guest CSRF cookie)…
+        $show = $this->get('/reset', ['token' => $token]);
+        $this->assertStatus(200, $show);
+        $this->assertSeeText($show, 'invalid or has expired');
+
+        // …and submitting it fails closed without rotating the password.
+        $resp = $this->post('/reset', [
+            'token' => $token, 'password' => 'newpassword9', 'password_confirm' => 'newpassword9',
+        ]);
+        $this->assertStatus(400, $resp);
+
+        $auth = new AuthService(new UserRepository($this->db), new PasswordHasher(), $this->config);
+        self::assertNotNull($auth->attempt('eli@example.test', 'oldpassword1'));
+        self::assertNull($auth->attempt('eli@example.test', 'newpassword9'));
+    }
+
     public function test_http_forgot_is_generic_and_only_issues_for_real_accounts(): void
     {
         $user = $this->makeUser(['username' => 'cara', 'email' => 'cara@example.test']);

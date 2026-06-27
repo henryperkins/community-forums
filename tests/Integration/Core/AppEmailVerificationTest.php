@@ -159,4 +159,73 @@ final class AppEmailVerificationTest extends TestCase
             [(int) $user['id'], 'email_verify'],
         ));
     }
+
+    public function test_used_verification_token_cannot_be_reused(): void
+    {
+        $user = $this->makeUser(['username' => 'gus', 'email' => 'gus@example.test']);
+        $mailer = new ArrayMailer();
+        $this->verifyService($mailer)->issue((int) $user['id'], 'gus@example.test');
+        $token = $this->tokenFromEmail($mailer, 'gus@example.test');
+
+        // First click verifies and consumes the single-use token.
+        $first = $this->get('/verify', ['token' => $token]);
+        $this->assertStatus(200, $first);
+        $this->assertSeeText($first, 'Email verified');
+        $verifiedAt = $this->db->fetchValue('SELECT email_verified_at FROM users WHERE id = ?', [(int) $user['id']]);
+        self::assertNotNull($verifiedAt);
+
+        // Re-using the same link fails closed, and the verified timestamp is left
+        // untouched (no second processing of the token).
+        $second = $this->get('/verify', ['token' => $token]);
+        $this->assertStatus(400, $second);
+        $this->assertSeeText($second, 'invalid or has expired');
+        self::assertSame($verifiedAt, $this->db->fetchValue('SELECT email_verified_at FROM users WHERE id = ?', [(int) $user['id']]));
+    }
+
+    public function test_expired_verification_token_is_rejected(): void
+    {
+        $user = $this->makeUser(['username' => 'hal', 'email' => 'hal@example.test']);
+        $mailer = new ArrayMailer();
+        $this->verifyService($mailer)->issue((int) $user['id'], 'hal@example.test');
+        $token = $this->tokenFromEmail($mailer, 'hal@example.test');
+
+        // Push the still-unused token past its expiry window.
+        $this->db->run(
+            "UPDATE verifications SET expires_at = ? WHERE user_id = ? AND type = 'email_verify'",
+            [gmdate('Y-m-d H:i:s', time() - 3600), (int) $user['id']],
+        );
+
+        $resp = $this->get('/verify', ['token' => $token]);
+        $this->assertStatus(400, $resp);
+        $this->assertSeeText($resp, 'invalid or has expired');
+        self::assertNull($this->db->fetchValue('SELECT email_verified_at FROM users WHERE id = ?', [(int) $user['id']]));
+    }
+
+    public function test_resend_is_rate_limited_after_the_cap(): void
+    {
+        $user = $this->makeUser(['username' => 'ivy', 'email' => 'ivy@example.test']);
+        $this->actingAs($user);
+
+        // The cap is 3 resends per hour (AuthController::VERIFY_RESEND_MAX); each
+        // accepted resend issues a fresh token (retiring the prior one).
+        for ($i = 0; $i < 3; $i++) {
+            $this->assertRedirect($this->post('/verify/resend'), '/settings/account');
+        }
+        self::assertSame(3, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM verifications WHERE user_id = ? AND type = 'email_verify'",
+            [(int) $user['id']],
+        ));
+
+        // The fourth request is throttled: it still redirects gracefully but issues
+        // no further token — only the latest of the three remains live.
+        $this->assertRedirect($this->post('/verify/resend'), '/settings/account');
+        self::assertSame(3, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM verifications WHERE user_id = ? AND type = 'email_verify'",
+            [(int) $user['id']],
+        ));
+        self::assertSame(1, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM verifications WHERE user_id = ? AND type = 'email_verify' AND used_at IS NULL",
+            [(int) $user['id']],
+        ));
+    }
 }
