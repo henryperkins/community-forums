@@ -9,6 +9,7 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Security\RateLimiter;
 use App\Service\AuthService;
+use App\Service\PasswordResetService;
 
 /**
  * Registration, login, logout. Login and registration are rate-limited; login
@@ -21,6 +22,8 @@ final class AuthController extends Controller
     private const LOGIN_WINDOW = 900;      // 15 minutes
     private const REGISTER_MAX = 5;
     private const REGISTER_WINDOW = 3600;  // 1 hour
+    private const FORGOT_MAX = 5;
+    private const FORGOT_WINDOW = 3600;    // 1 hour
 
     /** @param array<string,string> $params */
     public function showLogin(Request $request, array $params): Response
@@ -117,6 +120,83 @@ final class AuthController extends Controller
         // a content write. CSRF is already enforced by the kernel.
         $this->session()->logout();
         return $this->redirectWithFlash('/', 'You have been signed out.');
+    }
+
+    /** @param array<string,string> $params */
+    public function showForgot(Request $request, array $params): Response
+    {
+        if ($this->currentUser() !== null) {
+            return $this->redirect('/');
+        }
+        return $this->view('auth/forgot', ['errors' => [], 'old' => [], 'sent' => false]);
+    }
+
+    /**
+     * Request a reset link. The response is identical whether or not the email
+     * belongs to an account (no enumeration); only the IP is rate-limited.
+     *
+     * @param array<string,string> $params
+     */
+    public function forgot(Request $request, array $params): Response
+    {
+        if ($this->currentUser() !== null) {
+            return $this->redirect('/');
+        }
+
+        $limiter = $this->container->get(RateLimiter::class);
+        $email = $request->str('email');
+        $key = 'pwreset:' . $request->ip();
+
+        if ($limiter->tooManyAttempts($key, self::FORGOT_MAX)) {
+            return $this->view('auth/forgot', [
+                'errors' => ['email' => 'Too many requests. Please wait a while and try again.'],
+                'old' => ['email' => $email],
+                'sent' => false,
+            ], 429);
+        }
+        $limiter->hit($key, self::FORGOT_WINDOW);
+
+        $this->container->get(PasswordResetService::class)->request($email);
+
+        return $this->view('auth/forgot', ['errors' => [], 'old' => [], 'sent' => true]);
+    }
+
+    /** @param array<string,string> $params */
+    public function showReset(Request $request, array $params): Response
+    {
+        if ($this->currentUser() !== null) {
+            return $this->redirect('/');
+        }
+        $token = (string) $request->query('token', '');
+        $valid = $this->container->get(PasswordResetService::class)->findValid($token) !== null;
+        return $this->view('auth/reset', ['token' => $token, 'valid' => $valid, 'errors' => []]);
+    }
+
+    /** @param array<string,string> $params */
+    public function reset(Request $request, array $params): Response
+    {
+        if ($this->currentUser() !== null) {
+            return $this->redirect('/');
+        }
+
+        $service = $this->container->get(PasswordResetService::class);
+        $token = (string) $request->post('token', '');
+        $verification = $service->findValid($token);
+        if ($verification === null) {
+            return $this->view('auth/reset', ['token' => $token, 'valid' => false, 'errors' => []], 400);
+        }
+
+        try {
+            $service->reset(
+                $verification,
+                (string) $request->post('password', ''),
+                (string) $request->post('password_confirm', ''),
+            );
+        } catch (ValidationException $e) {
+            return $this->view('auth/reset', ['token' => $token, 'valid' => true, 'errors' => $e->errors], 422);
+        }
+
+        return $this->redirectWithFlash('/login', 'Your password has been updated. Please sign in.');
     }
 
     /**

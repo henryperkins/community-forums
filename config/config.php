@@ -38,6 +38,12 @@ return [
         'hsts' => Env::bool('SECURITY_HSTS', true),
     ],
 
+    'auth' => [
+        // Password-reset link lifetime in seconds (default 1 hour). Tokens are
+        // single-use; this only bounds how long an unused link stays valid.
+        'password_reset_ttl' => (int) Env::get('AUTH_PASSWORD_RESET_TTL', '3600'),
+    ],
+
     'mail' => [
         // 'sendmail' uses PHP mail(); swap to an SMTP/provider adapter behind the
         // App\Mail\Mailer interface later. Empty `from` ⇒ not configured ⇒ email

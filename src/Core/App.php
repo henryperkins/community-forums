@@ -62,6 +62,7 @@ use App\Repository\ThreadUserRepository;
 use App\Repository\UserBoardPrefRepository;
 use App\Repository\UserPreferenceRepository;
 use App\Repository\UsernameHistoryRepository;
+use App\Repository\VerificationRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\Csrf;
@@ -74,6 +75,7 @@ use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AuthService;
+use App\Service\PasswordResetService;
 use App\Service\BadgeService;
 use App\Service\DirectMessageService;
 use App\Service\FeedService;
@@ -403,6 +405,7 @@ final class App
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
         $c->bind(UserBoardPrefRepository::class, fn (Container $c) => new UserBoardPrefRepository($c->get(Database::class)));
         $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
+        $c->bind(VerificationRepository::class, fn (Container $c) => new VerificationRepository($c->get(Database::class)));
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
@@ -521,6 +524,14 @@ final class App
             $c->get(PasswordHasher::class),
             $config,
         ));
+        $c->bind(PasswordResetService::class, fn (Container $c) => new PasswordResetService(
+            $c->get(UserRepository::class),
+            $c->get(VerificationRepository::class),
+            $c->get(SessionRepository::class),
+            $c->get(PasswordHasher::class),
+            $c->get(Mailer::class),
+            $config,
+        ));
         $c->bind(AccountService::class, fn (Container $c) => new AccountService(
             $c->get(UserRepository::class),
             $c->get(PasswordHasher::class),
@@ -613,6 +624,12 @@ final class App
         $r->get('/register', [AuthController::class, 'showRegister']);
         $r->post('/register', [AuthController::class, 'register']);
         $r->post('/logout', [AuthController::class, 'logout']);
+
+        // Forgotten-password recovery (P2 Gate A "account recovery").
+        $r->get('/forgot', [AuthController::class, 'showForgot']);
+        $r->post('/forgot', [AuthController::class, 'forgot']);
+        $r->get('/reset', [AuthController::class, 'showReset']);
+        $r->post('/reset', [AuthController::class, 'reset']);
 
         // OAuth sign-in / account linking (P2-10). The callback is state-cookie
         // protected (not _token), so it is exempt from the CSRF gate (see process()).
