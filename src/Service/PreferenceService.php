@@ -149,4 +149,27 @@ final class PreferenceService
         }
         $this->prefs->merge($userId, $removals);
     }
+
+    /**
+     * A self-describing snapshot of the user's appearance / reading / composing
+     * preferences, grouped by section, for the Settings "export" action (P3-01,
+     * USER §4). Only schema-managed keys are included (not other subsystems'
+     * blob keys such as `hide_from_leaderboard`); a per-page key absent from the
+     * blob surfaces as null = the server default.
+     *
+     * @return array<string, array<string,mixed>>
+     */
+    public function export(int $userId): array
+    {
+        $resolved = $this->resolved($userId);
+        $sections = [];
+        foreach (PreferenceSchema::sections() as $section) {
+            $values = [];
+            foreach (array_keys(PreferenceSchema::fields($section)) as $key) {
+                $values[$key] = $resolved[$key] ?? null;
+            }
+            $sections[$section] = $values;
+        }
+        return $sections;
+    }
 }

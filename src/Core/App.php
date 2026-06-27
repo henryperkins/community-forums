@@ -815,6 +815,7 @@ final class App
         $r->get('/settings/composing', [SettingsController::class, 'composingForm']);
         $r->post('/settings/composing', [SettingsController::class, 'updateComposing']);
         $r->post('/settings/preferences/reset', [SettingsController::class, 'resetPreferences']);
+        $r->get('/settings/preferences/export', [SettingsController::class, 'exportPreferences']);
         $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);
         $r->post('/settings/notifications', [SettingsController::class, 'updateNotifications']);
         $r->get('/settings/sessions', [SettingsController::class, 'sessions']);

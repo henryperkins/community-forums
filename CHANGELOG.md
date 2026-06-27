@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **384 tests / 1313 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **385 tests / 1328 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
 
 ### Gate A gap closure (post-audit)
 
@@ -15,8 +15,12 @@ Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **384
   post — the masked byline must not be deanonymised); the reaction bar hides; and
   the board list honours last-activity / newest / reply-count ordering (validated
   enum → whitelisted `ORDER BY`, never raw SQL). New coverage:
-  `tests/Integration/Core/AppReadingPreferencesTest.php` (5 tests). The composing
-  toggles + preference export remain open (see `docs/PHASE_3_STATUS.md` §11).
+  `tests/Integration/Core/AppReadingPreferencesTest.php` (5 tests).
+- **Preferences can be exported** (P3-01) — `GET /settings/preferences/export`
+  returns the user's appearance/reading/composing preferences as a
+  self-describing JSON download (grouped by section, schema-versioned; non-schema
+  blob keys excluded). Owner-scoped and read-only. Closes the named Gate A
+  "export of preferences" item; only the composing toggles remain open for P3-01.
 
 ### Hardening (post adversarial review)
 

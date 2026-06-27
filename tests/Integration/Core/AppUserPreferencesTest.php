@@ -123,8 +123,39 @@ final class AppUserPreferencesTest extends TestCase
     {
         $this->assertRedirectContains($this->get('/settings/privacy'), '/login');
         $this->assertRedirectContains($this->get('/settings/preferences'), '/login');
+        $this->assertRedirectContains($this->get('/settings/preferences/export'), '/login');
         $this->assertRedirectContains($this->get('/settings/sessions'), '/login');
         $this->assertRedirectContains($this->get('/settings/blocks'), '/login');
         $this->assertRedirectContains($this->get('/settings/boards'), '/login');
+    }
+
+    public function test_preferences_export_returns_a_self_describing_json_download(): void
+    {
+        $user = $this->makeUser(['username' => 'exporter']);
+        $this->actingAs($user);
+        // Persist non-default appearance prefs so the export reflects them.
+        $this->post('/settings/appearance', [
+            'theme' => 'dark', 'density' => 'compact', 'font_size' => 'large', 'reduced_motion' => '1',
+        ]);
+
+        $res = $this->get('/settings/preferences/export');
+        $this->assertStatus(200, $res);
+        self::assertStringContainsString('application/json', (string) $res->getHeader('content-type'));
+        $disposition = (string) $res->getHeader('content-disposition');
+        self::assertStringContainsString('attachment', $disposition);
+        self::assertStringContainsString('retroboards-preferences.json', $disposition);
+
+        $data = json_decode($res->body(), true);
+        self::assertIsArray($data);
+        self::assertSame(\App\Support\PreferenceSchema::VERSION, $data['schema_version']);
+        self::assertSame('exporter', $data['username']);
+        // Grouped by section, reflecting the saved overrides + schema defaults.
+        self::assertSame('dark', $data['preferences']['appearance']['theme']);
+        self::assertSame('compact', $data['preferences']['appearance']['density']);
+        self::assertTrue($data['preferences']['appearance']['reduced_motion']);
+        self::assertSame('last_post', $data['preferences']['reading']['thread_sort']);
+        self::assertArrayHasKey('composing', $data['preferences']);
+        // Non-schema blob keys are not leaked into the export.
+        self::assertArrayNotHasKey('hide_from_leaderboard', $data['preferences']);
     }
 }

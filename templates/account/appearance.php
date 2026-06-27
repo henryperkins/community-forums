@@ -42,6 +42,11 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
         <button class="btn" type="submit">Save appearance</button>
     </form>
 
+    <div class="stacked card">
+        <p class="muted">Download a copy of your appearance, reading, and composing preferences as a JSON file.</p>
+        <a class="btn btn-secondary" href="/settings/preferences/export" download>Export preferences</a>
+    </div>
+
     <form method="post" action="/settings/preferences/reset" class="stacked card">
         <?= $this->csrfField() ?>
         <p class="muted">Reset appearance, reading, and composing preferences to their defaults.</p>
