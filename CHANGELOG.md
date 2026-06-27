@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **394 tests / 1354 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **399 tests / 1375 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
 
 ### Gate A gap closure (post-audit)
 
@@ -36,6 +36,25 @@ Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **394
   posts with no JS. Server exposure is tested (`AppUserPreferencesTest`); the
   runtime JS behaviour is pending the cross-cutting browser/Playwright evidence.
   **This closes the last functional P3-01 gap.**
+- **Operator trust & safety controls** (P3-05) — the admin console gained a
+  "Trust & safety" panel that actually drives enforcement:
+  - **Registration mode** (open / closed). `registration_mode` was a dead
+    setting written once at install and never read; `AuthController` now enforces
+    it — a closed site shows a notice and rejects sign-ups (403). (An approval
+    queue would need a `users.status='pending'` migration and is left as a
+    follow-up.)
+  - **Anti-abuse posture** — the enforced mode (observe / flag / hold / block,
+    read by `AntiAbuseService`) and the admin-managed **blocked-word list** are
+    now editable in the UI instead of by raw setting edits; words are de-duped,
+    trimmed, and length-capped.
+  - **Board "Require approval"** — `boards.require_approval` (mig 0046) was
+    enforced in `PostingService` but had no UI; the board editor now has the
+    toggle, so a board's new threads/replies are held for moderator release.
+  All changes are audited. Tests: `AppAdminModerationTest` (persistence,
+  end-to-end hold, registration open/closed, invalid-mode fallback, non-admin
+  rejection). Still open for P3-05: the spam-scoring provider seam, routing
+  auth/DM/password-reset through the central proxy-aware limiter, and the
+  optional first-post hold.
 
 ### Hardening (post adversarial review)
 

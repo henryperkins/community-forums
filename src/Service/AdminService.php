@@ -29,6 +29,11 @@ final class AdminService
     private const VISIBILITIES = ['public', 'hidden', 'private'];
     private const ROLES = ['user', 'moderator', 'admin'];
 
+    /** Registration modes enforced by AuthController (P3-05). */
+    public const REGISTRATION_MODES = ['open', 'closed'];
+    /** Anti-abuse enforcement postures (AntiAbuseService::mode), safest first. */
+    public const ANTIABUSE_MODES = ['observe', 'flag', 'hold', 'block'];
+
     public function __construct(
         private Database $db,
         private CategoryRepository $categories,
@@ -60,6 +65,57 @@ final class AdminService
                 'reason' => 'site_name',
                 'before' => ['site_name' => $before],
                 'after' => ['site_name' => $name],
+            ]);
+        });
+    }
+
+    /**
+     * Trust & safety settings (P3-05): registration mode plus the enforced
+     * anti-abuse posture (mode + admin-managed blocked words). Persisted to
+     * `settings` (read by AuthController / AntiAbuseService) and audited.
+     *
+     * @param array<string,mixed> $input
+     */
+    public function updateModerationSettings(User $admin, array $input): void
+    {
+        $this->assertAdmin($admin);
+
+        $regMode = (string) ($input['registration_mode'] ?? 'open');
+        if (!in_array($regMode, self::REGISTRATION_MODES, true)) {
+            $regMode = 'open';
+        }
+        $aaMode = (string) ($input['antiabuse_mode'] ?? 'observe');
+        if (!in_array($aaMode, self::ANTIABUSE_MODES, true)) {
+            $aaMode = 'observe';
+        }
+        // Blocked words: one per line or comma-separated; trimmed, de-duped
+        // (case-insensitively), empties dropped, each capped at 100 chars.
+        $words = [];
+        foreach (preg_split('/[\r\n,]+/', (string) ($input['antiabuse_blocked_words'] ?? '')) ?: [] as $w) {
+            $w = trim((string) $w);
+            if ($w !== '' && mb_strlen($w) <= 100) {
+                $words[mb_strtolower($w)] = $w;
+            }
+        }
+        $words = array_values($words);
+
+        $before = [
+            'registration_mode' => $this->settings->getString('registration_mode', 'open'),
+            'antiabuse_mode' => $this->settings->getString('antiabuse_mode', 'observe'),
+            'antiabuse_blocked_words' => (array) $this->settings->get('antiabuse_blocked_words', []),
+        ];
+        $this->db->transaction(function () use ($admin, $regMode, $aaMode, $words, $before): void {
+            $this->settings->set('registration_mode', $regMode);
+            $this->settings->set('antiabuse_mode', $aaMode);
+            $this->settings->set('antiabuse_blocked_words', $words);
+            $this->log->log([
+                'actor_id' => $admin->id(),
+                'action' => 'update_setting',
+                'target_type' => 'setting',
+                'target_id' => 0,
+                'reason' => 'moderation_settings',
+                'before' => $before,
+                'after' => ['registration_mode' => $regMode, 'antiabuse_mode' => $aaMode, 'antiabuse_blocked_words' => $words],
             ]);
         });
     }
@@ -141,9 +197,9 @@ final class AdminService
     public function createBoard(User $admin, array $input): int
     {
         $this->assertAdmin($admin);
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon] = $this->validateBoard($input, null);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval] = $this->validateBoard($input, null);
 
-        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon): int {
+        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval): int {
             $id = $this->boards->create([
                 'category_id' => $categoryId,
                 'slug' => $slug,
@@ -152,13 +208,14 @@ final class AdminService
                 'visibility' => $visibility,
                 'post_min_role' => $role,
                 'allow_anonymous' => $allowAnon,
+                'require_approval' => $requireApproval,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'create_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval],
             ]);
             return $id;
         });
@@ -172,12 +229,12 @@ final class AdminService
         if ($board === null) {
             throw new NotFoundException('Board not found.');
         }
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon] = $this->validateBoard($input, $board);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval] = $this->validateBoard($input, $board);
 
         $oldSlug = (string) $board['slug'];
         $slugChanged = $slug !== $oldSlug;
 
-        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $oldSlug, $slugChanged, $board): void {
+        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $oldSlug, $slugChanged, $board): void {
             if ($slugChanged) {
                 $this->boards->recordSlugChange($id, $oldSlug);
             }
@@ -189,14 +246,15 @@ final class AdminService
                 'visibility' => $visibility,
                 'post_min_role' => $role,
                 'allow_anonymous' => $allowAnon,
+                'require_approval' => $requireApproval,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'update_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0)],
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon],
+                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0), 'require_approval' => (int) ($board['require_approval'] ?? 0)],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval],
             ]);
         });
     }
@@ -408,6 +466,7 @@ final class AdminService
         }
 
         $allowAnon = !empty($input['allow_anonymous']) ? 1 : 0;
+        $requireApproval = !empty($input['require_approval']) ? 1 : 0;
 
         if ($errors !== []) {
             throw new ValidationException($errors, $input);
@@ -417,7 +476,7 @@ final class AdminService
         // unless it already belongs to the board being edited.
         $slug = $this->uniqueSlug($slug, $existing !== null ? (int) $existing['id'] : null);
 
-        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon];
+        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon, $requireApproval];
     }
 
     private function uniqueSlug(string $slug, ?int $boardId): string

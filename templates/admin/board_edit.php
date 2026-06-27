@@ -47,6 +47,9 @@
         <?php $anon = $old['allow_anonymous'] ?? ($board['allow_anonymous'] ?? 0); ?>
         <label class="checkline"><input type="checkbox" name="allow_anonymous" value="1" <?= !empty($anon) ? 'checked' : '' ?>> Allow anonymous posting <span class="muted">(members may hide their name from other members; moderators can still reveal the author)</span></label>
 
+        <?php $reqApproval = $old['require_approval'] ?? ($board['require_approval'] ?? 0); ?>
+        <label class="checkline"><input type="checkbox" name="require_approval" value="1" <?= !empty($reqApproval) ? 'checked' : '' ?>> Require approval before posts appear <span class="muted">(new threads and replies are held for a moderator to release; admins and board moderators post without holds)</span></label>
+
         <div class="form-actions">
             <button class="btn" type="submit">Save board</button>
             <a class="linkbtn" href="/admin/structure">Cancel</a>

@@ -881,6 +881,7 @@ final class App
         $r->get('/admin', [AdminController::class, 'dashboard']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
+        $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
         $r->post('/admin/categories', [AdminController::class, 'createCategory']);
         $r->post('/admin/categories/{id}', [AdminController::class, 'updateCategory']);
         $r->post('/admin/categories/{id}/delete', [AdminController::class, 'deleteCategory']);

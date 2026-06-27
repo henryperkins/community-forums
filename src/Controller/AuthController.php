@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Repository\SettingRepository;
 use App\Security\RateLimiter;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
@@ -86,7 +87,13 @@ final class AuthController extends Controller
         if ($this->currentUser() !== null) {
             return $this->redirect('/');
         }
-        return $this->view('auth/register', ['errors' => [], 'old' => []]);
+        return $this->view('auth/register', ['errors' => [], 'old' => [], 'registration_closed' => $this->registrationClosed()]);
+    }
+
+    /** Whether an admin has closed public sign-ups (P3-05 registration mode). */
+    private function registrationClosed(): bool
+    {
+        return $this->container->get(SettingRepository::class)->getString('registration_mode', 'open') === 'closed';
     }
 
     /** @param array<string,string> $params */
@@ -94,6 +101,15 @@ final class AuthController extends Controller
     {
         if ($this->currentUser() !== null) {
             return $this->redirect('/');
+        }
+
+        // Registration mode (P3-05): an admin may close public sign-ups entirely.
+        if ($this->registrationClosed()) {
+            return $this->view('auth/register', [
+                'errors' => ['email' => 'Registration is currently closed.'],
+                'old' => [],
+                'registration_closed' => true,
+            ], 403);
         }
 
         $limiter = $this->container->get(RateLimiter::class);
