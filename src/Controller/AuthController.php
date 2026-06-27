@@ -8,6 +8,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\SettingRepository;
+use App\Security\ClientIdentifier;
 use App\Security\RateLimiter;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
@@ -51,7 +52,7 @@ final class AuthController extends Controller
 
         $limiter = $this->container->get(RateLimiter::class);
         $email = $request->str('email');
-        $key = 'login:' . $request->ip() . ':' . strtolower($email);
+        $key = 'login:' . $this->clientIp($request) . ':' . strtolower($email);
 
         if ($limiter->tooManyAttempts($key, self::LOGIN_MAX)) {
             return $this->view('auth/login', [
@@ -113,7 +114,7 @@ final class AuthController extends Controller
         }
 
         $limiter = $this->container->get(RateLimiter::class);
-        $key = 'register:' . $request->ip();
+        $key = 'register:' . $this->clientIp($request);
         if ($limiter->tooManyAttempts($key, self::REGISTER_MAX)) {
             return $this->view('auth/register', [
                 'errors' => ['email' => 'Too many sign-up attempts from your network. Please try again later.'],
@@ -165,7 +166,7 @@ final class AuthController extends Controller
 
         $limiter = $this->container->get(RateLimiter::class);
         $email = $request->str('email');
-        $key = 'pwreset:' . $request->ip();
+        $key = 'pwreset:' . $this->clientIp($request);
 
         if ($limiter->tooManyAttempts($key, self::FORGOT_MAX)) {
             return $this->view('auth/forgot', [
@@ -258,6 +259,17 @@ final class AuthController extends Controller
 
         $this->container->get(EmailVerificationService::class)->issue($user->id(), $user->email());
         return $this->redirectWithFlash('/settings/account', 'Verification email sent — check your inbox.');
+    }
+
+    /**
+     * Trusted-proxy-aware client IP for rate-limit keying (P3-05). Behind a
+     * configured reverse proxy the raw REMOTE_ADDR is the proxy, so login,
+     * registration, and password-reset throttles would otherwise collapse every
+     * client into one shared bucket; ClientIdentifier resolves the real client.
+     */
+    private function clientIp(Request $request): string
+    {
+        return $this->container->get(ClientIdentifier::class)->ipFor($request);
     }
 
     /**

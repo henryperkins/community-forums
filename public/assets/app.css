@@ -11,6 +11,10 @@
     --text-muted: #5b6573;
     --accent: #2f6feb;
     --accent-contrast: #ffffff;
+    /* Secondary brand accent: highlight/indicator colour (active tabs, unread
+       markers). Defaults to the primary --accent, so it only diverges once an
+       operator sets a distinct brand accent in /brand.css. */
+    --accent-2: var(--accent);
     --danger: #c0392b;
     --radius: 8px;
     --maxw: 1200px;
@@ -206,7 +210,7 @@ a:hover { text-decoration: underline; }
 
 .subnav { display: flex; gap: 6px; margin: 12px 0 20px; border-bottom: 1px solid var(--border); }
 .subnav a { padding: 8px 12px; color: var(--text-muted); }
-.subnav a.active { color: var(--text); border-bottom: 2px solid var(--accent); }
+.subnav a.active { color: var(--text); border-bottom: 2px solid var(--accent-2); }
 
 /* Auth / cards */
 .auth-card { max-width: 420px; margin: 24px auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
@@ -387,14 +391,14 @@ a:hover { text-decoration: underline; }
 .thread-unread .thread-title { font-weight: 700; }
 .unread-dot {
     display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-    background: var(--accent); margin-right: 6px; flex: 0 0 auto;
+    background: var(--accent-2); margin-right: 6px; flex: 0 0 auto;
 }
 .thread-board { color: var(--text-muted); }
 
 .inbox-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 12px 0 16px; border-bottom: 1px solid var(--border); }
 .inbox-tab { padding: 8px 12px; border-radius: var(--radius) var(--radius) 0 0; color: var(--text-muted); }
 .inbox-tab:hover { background: var(--surface-3); }
-.inbox-tab.is-active { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--accent); }
+.inbox-tab.is-active { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--accent-2); }
 
 /* ── Phase 2: notifications + bell ── */
 .bell { position: relative; }

@@ -26,12 +26,20 @@ final class AppBrandingThemeTest extends TestCase
         ]);
         $this->assertRedirect($res, '/admin/branding');
 
-        // The dynamic stylesheet maps the brand colour onto --accent.
+        // The dynamic stylesheet maps the primary colour onto --accent and the
+        // accent colour onto --accent-2.
         $css = $this->get('/brand.css');
         $this->assertStatus(200, $css);
         self::assertStringContainsString('text/css', (string) $css->getHeader('content-type'));
         $this->assertSeeText($css, '--accent:#123456');
-        $this->assertSeeText($css, '--brand-accent:#abcdef');
+        $this->assertSeeText($css, '--accent-2:#abcdef');
+
+        // Regression guard: both brand tokens must be CONSUMED by the stylesheet,
+        // otherwise the colour picker is inert (the accent previously emitted a
+        // --brand-accent token that no rule referenced).
+        $appCss = (string) file_get_contents(dirname(__DIR__, 3) . '/public/assets/app.css');
+        self::assertStringContainsString('var(--accent-2)', $appCss, 'the brand accent colour must drive at least one rule');
+        self::assertStringContainsString('var(--accent)', $appCss);
 
         // The shell now links it and shows the new name; the signed-out default
         // theme is dark.
