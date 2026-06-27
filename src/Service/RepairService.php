@@ -20,12 +20,12 @@ final class RepairService
     {
     }
 
-    /** users.post_count = number of the user's non-deleted posts. */
+    /** users.post_count = number of the user's non-deleted, non-held posts. */
     public function repairUserPostCounts(): int
     {
         return $this->db->run(
             'UPDATE users u SET post_count = (
-                SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0
+                SELECT COUNT(*) FROM posts p WHERE p.user_id = u.id AND p.is_deleted = 0 AND p.is_pending = 0
              )',
         )->rowCount();
     }
@@ -68,18 +68,19 @@ final class RepairService
     }
 
     /**
-     * threads: reply_count = non-OP non-deleted posts; last_post_* = newest
-     * non-deleted post (NULL when none).
+     * threads: reply_count = non-OP non-deleted non-held posts; last_post_* =
+     * newest non-deleted non-held post (NULL when none). Held (pending) posts are
+     * excluded to match the runtime, which defers all counters until approval.
      */
     public function repairThreadCounters(): int
     {
         $this->db->run(
             'UPDATE threads t SET reply_count = (
                 SELECT COUNT(*) FROM posts p
-                WHERE p.thread_id = t.id AND p.is_deleted = 0 AND p.is_op = 0
+                WHERE p.thread_id = t.id AND p.is_deleted = 0 AND p.is_pending = 0 AND p.is_op = 0
              )',
         );
-        // last_post_* from the newest non-deleted post in the thread.
+        // last_post_* from the newest non-deleted, non-held post in the thread.
         $this->db->run(
             'UPDATE threads t
              LEFT JOIN (
@@ -87,7 +88,7 @@ final class RepairService
                 FROM posts x
                 JOIN (
                     SELECT thread_id, MAX(id) AS max_id
-                    FROM posts WHERE is_deleted = 0 GROUP BY thread_id
+                    FROM posts WHERE is_deleted = 0 AND is_pending = 0 GROUP BY thread_id
                 ) m ON m.thread_id = x.thread_id AND m.max_id = x.id
              ) lp ON lp.thread_id = t.id
              SET t.last_post_id = lp.pid, t.last_post_user_id = lp.uid, t.last_post_at = lp.at',
@@ -96,21 +97,24 @@ final class RepairService
     }
 
     /**
-     * boards: thread_count = non-deleted threads; post_count = non-deleted posts
-     * across non-deleted threads; last_thread_id/last_post_at = newest activity.
+     * boards: thread_count = non-deleted non-held threads; post_count = non-deleted
+     * non-held posts across non-deleted non-held threads; last_thread_id/
+     * last_post_at = newest visible activity. Held content is excluded to match the
+     * runtime, which counts it only once a moderator approves it.
      */
     public function repairBoardCounters(): int
     {
         $this->db->run(
             'UPDATE boards b SET thread_count = (
-                SELECT COUNT(*) FROM threads t WHERE t.board_id = b.id AND t.is_deleted = 0
+                SELECT COUNT(*) FROM threads t WHERE t.board_id = b.id AND t.is_deleted = 0 AND t.is_pending = 0
              )',
         );
         $this->db->run(
             'UPDATE boards b SET post_count = (
                 SELECT COUNT(*) FROM posts p
                 JOIN threads t ON t.id = p.thread_id
-                WHERE t.board_id = b.id AND p.is_deleted = 0 AND t.is_deleted = 0
+                WHERE t.board_id = b.id AND p.is_deleted = 0 AND p.is_pending = 0
+                  AND t.is_deleted = 0 AND t.is_pending = 0
              )',
         );
         $this->db->run(
@@ -122,7 +126,8 @@ final class RepairService
                 JOIN (
                     SELECT t2.board_id, MAX(p2.id) AS max_id
                     FROM posts p2 JOIN threads t2 ON t2.id = p2.thread_id
-                    WHERE p2.is_deleted = 0 AND t2.is_deleted = 0
+                    WHERE p2.is_deleted = 0 AND p2.is_pending = 0
+                      AND t2.is_deleted = 0 AND t2.is_pending = 0
                     GROUP BY t2.board_id
                 ) m ON m.board_id = t.board_id AND m.max_id = x.id
              ) lp ON lp.board_id = b.id

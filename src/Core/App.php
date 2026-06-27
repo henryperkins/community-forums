@@ -6,8 +6,11 @@ namespace App\Core;
 
 use App\Controller\AccountController;
 use App\Controller\AdminController;
+use App\Controller\ApprovalController;
 use App\Controller\AuthController;
 use App\Controller\BlockController;
+use App\Controller\BrandingController;
+use App\Controller\ComposerController;
 use App\Controller\BoardController;
 use App\Controller\ConversationController;
 use App\Controller\EngagementController;
@@ -17,6 +20,7 @@ use App\Controller\HealthController;
 use App\Controller\HomeController;
 use App\Controller\InboxController;
 use App\Controller\LeaderboardController;
+use App\Controller\MediaController;
 use App\Controller\ModerationController;
 use App\Controller\OAuthController;
 use App\Controller\PostController;
@@ -24,7 +28,9 @@ use App\Controller\PresenceController;
 use App\Controller\ProfileController;
 use App\Controller\ReportController;
 use App\Controller\SearchController;
+use App\Controller\SeoController;
 use App\Controller\NotificationController;
+use App\Controller\OnboardingController;
 use App\Controller\SettingsController;
 use App\Controller\SetupController;
 use App\Controller\SolvedController;
@@ -46,9 +52,11 @@ use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
+use App\Repository\AttachmentRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\FollowRepository;
+use App\Repository\IdempotencyRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\OAuthIdentityRepository;
 use App\Repository\PostRepository;
@@ -65,6 +73,7 @@ use App\Repository\UsernameHistoryRepository;
 use App\Repository\VerificationRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
+use App\Security\ClientIdentifier;
 use App\Security\Csrf;
 use App\Security\FileRateLimiter;
 use App\Security\PasswordHasher;
@@ -74,6 +83,8 @@ use App\Security\Session;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
+use App\Service\AntiAbuseService;
+use App\Service\AttachmentService;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
@@ -87,6 +98,7 @@ use App\Service\OAuthService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\PostingService;
 use App\Service\PreferenceService;
+use App\Service\RateLimitService;
 use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
@@ -157,8 +169,9 @@ final class App
             $path = $request->path();
 
             // The health check must answer even when the database is unreachable,
-            // so it is dispatched BEFORE the setup gate (which queries the DB).
-            if ($path === '/healthz') {
+            // and robots/sitemap should serve regardless of first-run state, so
+            // these are dispatched BEFORE the setup gate (which queries the DB).
+            if (in_array($path, ['/healthz', '/robots.txt', '/sitemap.xml'], true)) {
                 [$handler, $params] = $this->router->match($request->method(), $path);
                 [$class, $method] = $handler;
                 return (new $class($container))->{$method}($request, $params);
@@ -292,6 +305,26 @@ final class App
             $features = [];
         }
 
+        // Appearance prefs stamp the document root (no theme flash; no-JS themes).
+        // Guests use the site default; a signed-in user's resolved prefs win.
+        $appearance = ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'reduced_motion' => false];
+        try {
+            $user = $session->user();
+            if ($user !== null) {
+                $appearance = $container->get(PreferenceService::class)->appearance($user->id());
+            } else {
+                $default = $container->get(SettingRepository::class)->getString('brand_theme_default', 'system');
+                if (in_array($default, ['system', 'light', 'dark'], true)) {
+                    $appearance['theme'] = $default;
+                }
+            }
+        } catch (Throwable) {
+            // Pre-migration / DB-less render: keep safe defaults.
+        }
+
+        // Branding (P3-07): operator name/logo/favicon/colors with safe fallbacks.
+        $branding = $this->branding($container, $siteName);
+
         // Configured OAuth providers power the "Sign in with …" buttons.
         $oauthProviders = [];
         try {
@@ -300,6 +333,18 @@ final class App
             }
         } catch (Throwable) {
             $oauthProviders = [];
+        }
+
+        // Product tour (P3-11): a signed-in user who hasn't completed it yet gets
+        // the tour on enhanced pages. Never throws if the column is pre-migration.
+        $needsTour = false;
+        try {
+            $user = $session->user();
+            if ($user !== null && !empty($features['product_tour'])) {
+                $needsTour = ($user->toArray()['onboarded_at'] ?? null) === null;
+            }
+        } catch (Throwable) {
+            $needsTour = false;
         }
 
         $container->get(View::class)->share([
@@ -312,7 +357,61 @@ final class App
             'nav' => $nav,
             'features' => $features,
             'oauth_providers' => $oauthProviders,
+            'appearance' => $appearance,
+            'branding' => $branding,
+            'app_url' => (string) $this->config->get('app.url', ''),
+            'needs_tour' => $needsTour,
         ]);
+    }
+
+    /**
+     * Operator branding (P3-07): site name + optional logo/favicon/colors with
+     * safe built-in fallbacks. Never throws — a missing setting or table yields
+     * the default RetroBoards chrome so the shell always renders.
+     *
+     * @return array{name:string,logo_path:?string,favicon_path:?string,color_primary:string,color_accent:string}
+     */
+    private function branding(Container $container, string $siteName): array
+    {
+        $brand = [
+            'name' => $siteName,
+            'logo_path' => null,
+            'favicon_path' => null,
+            'color_primary' => '',
+            'color_accent' => '',
+            'has_custom_colors' => false,
+        ];
+        try {
+            if (!$container->get(FeatureFlags::class)->enabled('branding')) {
+                return $brand;
+            }
+            $settings = $container->get(SettingRepository::class);
+            $logo = $settings->getString('brand_logo_path', '');
+            $favicon = $settings->getString('brand_favicon_path', '');
+            $primary = $settings->getString('brand_color_primary', '');
+            $accent = $settings->getString('brand_color_accent', '');
+            if ($logo !== '') {
+                $brand['logo_path'] = $logo;
+            }
+            if ($favicon !== '') {
+                $brand['favicon_path'] = $favicon;
+            }
+            if (self::isHexColor($primary)) {
+                $brand['color_primary'] = $primary;
+            }
+            if (self::isHexColor($accent)) {
+                $brand['color_accent'] = $accent;
+            }
+            $brand['has_custom_colors'] = $brand['color_primary'] !== '' || $brand['color_accent'] !== '';
+        } catch (Throwable) {
+            // Keep safe defaults.
+        }
+        return $brand;
+    }
+
+    private static function isHexColor(string $value): bool
+    {
+        return preg_match('/^#[0-9a-fA-F]{6}$/', $value) === 1;
     }
 
     /**
@@ -407,6 +506,33 @@ final class App
         $c->bind(UserBoardPrefRepository::class, fn (Container $c) => new UserBoardPrefRepository($c->get(Database::class)));
         $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
         $c->bind(VerificationRepository::class, fn (Container $c) => new VerificationRepository($c->get(Database::class)));
+        $c->bind(IdempotencyRepository::class, fn (Container $c) => new IdempotencyRepository($c->get(Database::class)));
+        $c->bind(AttachmentRepository::class, fn (Container $c) => new AttachmentRepository($c->get(Database::class)));
+
+        // Phase 3 anti-abuse + rate limiting (P3-05).
+        $c->bind(ClientIdentifier::class, fn () => new ClientIdentifier((array) $config->get('trusted_proxies', [])));
+        $c->bind(RateLimitService::class, fn (Container $c) => new RateLimitService(
+            $c->get(RateLimiter::class),
+            $config,
+            $c->get(ClientIdentifier::class),
+        ));
+        $c->bind(AntiAbuseService::class, fn (Container $c) => new AntiAbuseService(
+            $c->get(Database::class),
+            $config,
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+        ));
+
+        // Image uploads (P3-04).
+        $c->bind(AttachmentService::class, fn (Container $c) => new AttachmentService(
+            $c->get(AttachmentRepository::class),
+            (string) $config->get('uploads.storage_path'),
+            (int) $config->get('uploads.max_bytes', 5_242_880),
+            (int) $config->get('uploads.max_width', 4096),
+            (int) $config->get('uploads.max_height', 4096),
+            (int) $config->get('uploads.max_pixels', 24_000_000),
+            (array) $config->get('uploads.allowed_mime', ['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+        ));
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
@@ -460,6 +586,7 @@ final class App
             $c->get(Markdown::class),
             $c->get(NotificationService::class),
             $config,
+            $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
         ));
         $c->bind(ReactionService::class, fn (Container $c) => new ReactionService(
             $c->get(Database::class),
@@ -569,6 +696,9 @@ final class App
             $c->get(BoardPolicy::class),
             $config,
             $c->get(NotificationService::class),
+            $c->get(FeatureFlags::class)->enabled('anti_abuse') ? $c->get(AntiAbuseService::class) : null,
+            $c->get(IdempotencyRepository::class),
+            $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -612,6 +742,8 @@ final class App
 
         $r->get('/', [HomeController::class, 'index']);
         $r->get('/healthz', [HealthController::class, 'check']);
+        $r->get('/sitemap.xml', [SeoController::class, 'sitemap']);
+        $r->get('/robots.txt', [SeoController::class, 'robots']);
         $r->get('/inbox', [InboxController::class, 'index']);
         $r->get('/search', [SearchController::class, 'index']);
         $r->get('/presence', [PresenceController::class, 'index']);
@@ -626,6 +758,13 @@ final class App
         // Community identity (P2-09): follows, feed, leaderboard, solved answers.
         $r->get('/feed', [FeedController::class, 'index']);
         $r->get('/leaderboard', [LeaderboardController::class, 'index']);
+
+        // Image uploads + authorization-gated delivery (P3-04).
+        $r->post('/upload', [MediaController::class, 'upload']);
+        $r->get('/media/{id}', [MediaController::class, 'show']);
+
+        // Shared composer live preview (P3-02) — same render+sanitize pipeline.
+        $r->post('/composer/preview', [ComposerController::class, 'preview']);
         $r->post('/u/{username}/follow', [FollowController::class, 'toggle']);
         $r->post('/u/{username}/block', [BlockController::class, 'toggle']);
         $r->post('/posts/{id}/accept', [SolvedController::class, 'accept']);
@@ -656,6 +795,10 @@ final class App
         $r->post('/settings/connections/unlink', [OAuthController::class, 'unlink']);
         $r->post('/settings/connections/set-password', [OAuthController::class, 'setPassword']);
 
+        // Onboarding product tour (P3-11): record completion / request a replay.
+        $r->post('/onboarding/complete', [OnboardingController::class, 'complete']);
+        $r->post('/onboarding/replay', [OnboardingController::class, 'replay']);
+
         $r->get('/settings', [AccountController::class, 'index']);
         $r->get('/settings/account', [AccountController::class, 'accountForm']);
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
@@ -665,8 +808,13 @@ final class App
         // Member controls (P2-10): privacy, preferences, notifications, sessions, blocks, boards.
         $r->get('/settings/privacy', [SettingsController::class, 'privacyForm']);
         $r->post('/settings/privacy', [SettingsController::class, 'updatePrivacy']);
+        $r->get('/settings/appearance', [SettingsController::class, 'appearanceForm']);
+        $r->post('/settings/appearance', [SettingsController::class, 'updateAppearance']);
         $r->get('/settings/preferences', [SettingsController::class, 'preferencesForm']);
         $r->post('/settings/preferences', [SettingsController::class, 'updatePreferences']);
+        $r->get('/settings/composing', [SettingsController::class, 'composingForm']);
+        $r->post('/settings/composing', [SettingsController::class, 'updateComposing']);
+        $r->post('/settings/preferences/reset', [SettingsController::class, 'resetPreferences']);
         $r->get('/settings/notifications', [SettingsController::class, 'notificationsForm']);
         $r->post('/settings/notifications', [SettingsController::class, 'updateNotifications']);
         $r->get('/settings/sessions', [SettingsController::class, 'sessions']);
@@ -678,6 +826,11 @@ final class App
 
         $r->get('/setup', [SetupController::class, 'show']);
         $r->post('/setup', [SetupController::class, 'submit']);
+
+        // Operator branding (P3-07): dynamic brand stylesheet + admin controls.
+        $r->get('/brand.css', [BrandingController::class, 'css']);
+        $r->get('/admin/branding', [BrandingController::class, 'form']);
+        $r->post('/admin/branding', [BrandingController::class, 'update']);
 
         $r->post('/threads', [PostController::class, 'createThread']);
         $r->post('/t/{id}/reply', [PostController::class, 'reply']);
@@ -732,6 +885,13 @@ final class App
         $r->post('/mod/t/{id}/move', [ModerationController::class, 'move']);
         $r->post('/mod/p/{id}/restore', [ModerationController::class, 'restorePost']);
         $r->post('/mod/p/{id}/reveal', [ModerationController::class, 'reveal']);
+
+        // Approval queue (P3-05): release/reject content held by anti-abuse or board approval.
+        $r->get('/mod/approvals', [ApprovalController::class, 'queue']);
+        $r->post('/mod/approvals/thread/{id}/approve', [ApprovalController::class, 'approveThread']);
+        $r->post('/mod/approvals/thread/{id}/reject', [ApprovalController::class, 'rejectThread']);
+        $r->post('/mod/approvals/post/{id}/approve', [ApprovalController::class, 'approvePost']);
+        $r->post('/mod/approvals/post/{id}/reject', [ApprovalController::class, 'rejectPost']);
 
         // Reports queue (P2-08).
         $r->post('/posts/{id}/report', [ReportController::class, 'report']);

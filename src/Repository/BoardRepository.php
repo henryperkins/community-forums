@@ -170,6 +170,7 @@ final class BoardRepository
             'SELECT p.thread_id, p.created_at FROM posts p
              JOIN threads t ON t.id = p.thread_id
              WHERE t.board_id = ? AND p.is_deleted = 0 AND t.is_deleted = 0
+               AND p.is_pending = 0 AND t.is_pending = 0
              ORDER BY p.created_at DESC, p.id DESC LIMIT 1',
             [$boardId],
         );

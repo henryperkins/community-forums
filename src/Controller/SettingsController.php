@@ -46,21 +46,58 @@ final class SettingsController extends Controller
         return $this->redirectWithFlash('/settings/privacy', 'Your privacy settings were saved.');
     }
 
-    // ---- Reading / appearance preferences ---------------------------------
+    // ---- Appearance / reading / composing preferences (P3-01) -------------
+
+    public function appearanceForm(Request $request): Response
+    {
+        $user = $this->requireUser();
+        return $this->view('account/appearance', [
+            'prefs' => $this->container->get(PreferenceService::class)->resolved($user->id()),
+        ]);
+    }
+
+    public function updateAppearance(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $this->container->get(PreferenceService::class)->updateSection($user->id(), 'appearance', $request->allInput());
+        return $this->redirectWithFlash('/settings/appearance', 'Your appearance settings were saved.');
+    }
 
     public function preferencesForm(Request $request): Response
     {
         $user = $this->requireUser();
         return $this->view('account/preferences', [
-            'prefs' => $this->container->get(PreferenceService::class)->forUser($user->id()),
+            'prefs' => $this->container->get(PreferenceService::class)->resolved($user->id()),
         ]);
     }
 
     public function updatePreferences(Request $request): Response
     {
         $user = $this->requireUser();
-        $this->container->get(PreferenceService::class)->update($user->id(), $request->allInput());
-        return $this->redirectWithFlash('/settings/preferences', 'Your preferences were saved.');
+        $this->container->get(PreferenceService::class)->updateSection($user->id(), 'reading', $request->allInput());
+        return $this->redirectWithFlash('/settings/preferences', 'Your reading preferences were saved.');
+    }
+
+    public function composingForm(Request $request): Response
+    {
+        $user = $this->requireUser();
+        return $this->view('account/composing', [
+            'prefs' => $this->container->get(PreferenceService::class)->resolved($user->id()),
+        ]);
+    }
+
+    public function updateComposing(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $this->container->get(PreferenceService::class)->updateSection($user->id(), 'composing', $request->allInput());
+        return $this->redirectWithFlash('/settings/composing', 'Your composing preferences were saved.');
+    }
+
+    public function resetPreferences(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $this->container->get(PreferenceService::class)->reset($user->id());
+        return $this->redirectWithFlash('/settings/appearance', 'Your appearance, reading, and composing preferences were reset to defaults.');
     }
 
     // ---- Notifications: digest + subscriptions ----------------------------

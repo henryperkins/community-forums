@@ -7,13 +7,18 @@ namespace App\Core;
 use App\Repository\SettingRepository;
 
 /**
- * Phase 2 feature flags (PHASE_2_PLAN §6 Milestone 0, §12 staged release).
+ * Phase 2 + Phase 3 feature flags (PHASE_2_PLAN §6 Milestone 0; PHASE_3_PLAN
+ * §6 / §13 staged release).
  *
- * Each Phase 2 subsystem is gated so it can be enabled independently and rolled
- * back without a data change. Code defaults are ON so a fresh install is fully
+ * Each subsystem is gated so it can be enabled independently and rolled back
+ * without a data change. Code defaults are ON so a fresh install is fully
  * functional and the test suite exercises every path; an operator running a
  * "deploy dark" staged rollout disables flags via the `features` setting
  * (a JSON object of flag => bool), which overrides the defaults per flag.
+ *
+ * Note: a Phase 3 flag only gates feature *availability*. The conservative
+ * staged-rollout posture (e.g. anti-abuse "observe" mode) lives in config, not
+ * here, so enabling the flag never silently holds or blocks content.
  */
 final class FeatureFlags
 {
@@ -29,6 +34,15 @@ final class FeatureFlags
         'community' => true,         // follows/feed, badges, solved, leaderboard (P2-09)
         'oauth' => true,             // OAuth sign-in / account linking (P2-10)
         'presence' => true,          // last-seen presence roster (P2-11)
+
+        // ── Phase 3 (Gate A) ─────────────────────────────────────────────
+        'rich_composer' => true,     // shared composer toolbar + server preview (P3-02); textarea always works
+        'drafts' => true,            // local autosave drafts + Drafts view (P3-03)
+        'uploads' => true,           // image upload/paste/drop + private delivery (P3-04)
+        'anti_abuse' => true,        // central limiter, content filters, holds, audit (P3-05)
+        'branding' => true,          // operator branding: name/logo/favicon/colors (P3-07)
+        'seo' => true,               // public metadata, sitemap, robots (P3-10)
+        'product_tour' => true,      // new-user onboarding tour (P3-11)
     ];
 
     /** @var array<string,bool>|null */

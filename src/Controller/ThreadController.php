@@ -168,6 +168,16 @@ final class ThreadController extends Controller
         if (!$policy->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Thread not found.');
         }
+        // A held (pending) thread is not public yet: only its author or a
+        // moderator of the board may load it (mirrors the held-media gate). P3-05.
+        if ((int) ($thread['is_pending'] ?? 0) === 1) {
+            $isAuthor = $user !== null && $user->owns((int) $thread['user_id']);
+            $canMod = $user !== null
+                && $this->container->get(\App\Service\ModerationService::class)->canModerate($user, (int) $thread['board_id']);
+            if (!$isAuthor && !$canMod) {
+                throw new NotFoundException('Thread not found.');
+            }
+        }
         return $thread;
     }
 }

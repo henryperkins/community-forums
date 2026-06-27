@@ -35,12 +35,14 @@ final class HtmlSanitizer
         'code' => true, 'pre' => true, 'blockquote' => true,
         'ul' => true, 'ol' => true, 'li' => true,
         'a' => true, 'h2' => true, 'h3' => true,
+        // P3-04: uploaded images, referenced from Markdown as /media/{id}.
+        'img' => true, 'span' => true,
     ];
 
     /** @var array<string,true> elements dropped together with their content */
     private const DROP = [
         'script' => true, 'style' => true, 'iframe' => true, 'object' => true,
-        'embed' => true, 'svg' => true, 'math' => true, 'img' => true,
+        'embed' => true, 'svg' => true, 'math' => true,
         'table' => true, 'thead' => true, 'tbody' => true, 'tfoot' => true,
         'tr' => true, 'td' => true, 'th' => true, 'caption' => true, 'colgroup' => true,
         'col' => true, 'form' => true, 'input' => true, 'textarea' => true,
@@ -48,9 +50,9 @@ final class HtmlSanitizer
         'link' => true, 'meta' => true, 'base' => true, 'title' => true,
         'head' => true, 'body' => true, 'html' => true, 'audio' => true,
         'video' => true, 'source' => true, 'track' => true, 'canvas' => true,
-        'applet' => true, 'frame' => true, 'frameset' => true, 'iframe ' => true,
+        'applet' => true, 'frame' => true, 'frameset' => true,
         'noscript' => true, 'template' => true, 'picture' => true, 'map' => true,
-        'area' => true, 'script ' => true,
+        'area' => true,
     ];
 
     public function sanitize(string $html): string
@@ -128,6 +130,25 @@ final class HtmlSanitizer
             return;
         }
 
+        // Images (P3-04): only same-origin /media/{id} sources survive; an <img>
+        // without a safe src is dropped entirely so it can't carry an onerror
+        // payload or hotlink an off-site tracker.
+        if ($tag === 'img') {
+            $src = $this->safeImageSrc((string) $el->getAttribute('src'));
+            $alt = (string) $el->getAttribute('alt');
+            foreach (iterator_to_array($el->attributes ?? []) as $attr) {
+                $el->removeAttribute($attr->nodeName);
+            }
+            if ($src === null) {
+                $el->parentNode?->removeChild($el);
+                return;
+            }
+            $el->setAttribute('src', $src);
+            $el->setAttribute('alt', mb_substr($alt, 0, 255));
+            $el->setAttribute('loading', 'lazy');
+            return;
+        }
+
         $this->scrubAttributes($el, $tag);
         $this->cleanChildren($el);
     }
@@ -136,6 +157,8 @@ final class HtmlSanitizer
     {
         // Capture href before stripping (links are the only tag that keeps one).
         $href = $tag === 'a' ? $this->safeHref((string) $el->getAttribute('href')) : null;
+        // Spoilers (P3-02): a <span> keeps only class="spoiler"; all else is dropped.
+        $spoiler = $tag === 'span' && $this->hasSpoilerClass((string) $el->getAttribute('class'));
 
         foreach (iterator_to_array($el->attributes ?? []) as $attr) {
             $el->removeAttribute($attr->nodeName);
@@ -145,6 +168,22 @@ final class HtmlSanitizer
             $el->setAttribute('href', $href);
             $el->setAttribute('rel', 'nofollow ugc noopener noreferrer');
         }
+        if ($spoiler) {
+            $el->setAttribute('class', 'spoiler');
+            $el->setAttribute('tabindex', '0');
+        }
+    }
+
+    private function hasSpoilerClass(string $class): bool
+    {
+        return in_array('spoiler', preg_split('/\s+/', trim($class)) ?: [], true);
+    }
+
+    /** Only same-origin /media/{id} (optionally with a query) is a valid image src. */
+    private function safeImageSrc(string $src): ?string
+    {
+        $src = trim($src);
+        return preg_match('~^/media/\d+(?:\?[^\s"\'<>]*)?$~', $src) === 1 ? $src : null;
     }
 
     private function safeHref(string $href): ?string

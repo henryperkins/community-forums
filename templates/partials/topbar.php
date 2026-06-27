@@ -1,7 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <header class="topbar">
     <div class="topbar-inner">
-        <a class="brand" href="/"><?= $e($site_name) ?></a>
+        <a class="brand" href="/"><?php if (!empty($branding['logo_path'])): ?><img class="brand-logo" src="<?= $e($branding['logo_path']) ?>" alt="<?= $e($site_name) ?>" height="28"><?php else: ?><?= $e($site_name) ?><?php endif; ?></a>
         <?php if (!empty($features['search'])): ?>
             <form class="topbar-search" method="get" action="/search" role="search">
                 <input class="input input-small" type="search" name="q" placeholder="Search…" aria-label="Search">

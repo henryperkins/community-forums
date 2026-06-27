@@ -6,11 +6,14 @@ namespace App\Service;
 
 use App\Core\Config;
 use App\Core\Database;
+use App\Core\DuplicateSubmissionException;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\AttachmentRepository;
 use App\Repository\BoardRepository;
+use App\Repository\IdempotencyRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
@@ -39,7 +42,28 @@ final class PostingService
         private BoardPolicy $policy,
         private Config $config,
         private ?NotificationService $notifications = null,
+        private ?AntiAbuseService $antiAbuse = null,
+        private ?IdempotencyRepository $idempotency = null,
+        private ?AttachmentRepository $attachments = null,
     ) {
+    }
+
+    /**
+     * Bind any /media/{id} images the body references to this post + visibility
+     * (P3-04). Only the author's own temp uploads are finalized; media in a
+     * private/hidden board is marked private so delivery stays access-gated.
+     */
+    private function finalizeAttachments(int $ownerId, int $postId, string $body, string $boardVisibility): void
+    {
+        if ($this->attachments === null) {
+            return;
+        }
+        $ids = \App\Service\AttachmentService::referencedIds($body);
+        if ($ids === []) {
+            return;
+        }
+        $visibility = $boardVisibility === 'public' ? 'public' : 'private';
+        $this->attachments->finalizeForPost($ownerId, $postId, $ids, $visibility);
     }
 
     /**
@@ -63,40 +87,94 @@ final class PostingService
         $body = (string) ($input['body'] ?? '');
         $this->validate($title, $body, $input, requireTitle: true);
 
+        // Idempotent submit (P3-03): replay the original result if this client
+        // token already produced a thread (double-click, retry, browser resend).
+        $idemKey = $this->idempotency?->hash($input['idempotency_key'] ?? null);
+        if ($idemKey !== null) {
+            $existing = $this->idempotency->find($user->id(), $idemKey);
+            if ($existing !== null && $existing['result_type'] === 'thread') {
+                $prior = $this->threads->find($existing['result_id']);
+                if ($prior !== null) {
+                    return ['thread_id' => (int) $prior['id'], 'slug' => (string) $prior['slug'], 'pending' => (int) $prior['is_pending'] === 1, 'duplicate' => true];
+                }
+            }
+        }
+
+        // Central anti-abuse evaluation (P3-05). block ⇒ reject (no content);
+        // hold ⇒ create pending; flag/observe ⇒ create + audit only.
+        $decision = $this->antiAbuse?->evaluate($user, 'thread', $body, $title);
+        if ($decision !== null && $decision->blocks()) {
+            $this->antiAbuse->audit($decision, 'thread', 0);
+            throw new ValidationException(['body' => 'Your post couldn’t be published by the automated content filters. Please revise it and try again.'], $input);
+        }
+        $pending = ($decision !== null && $decision->holds()) || (int) ($board['require_approval'] ?? 0) === 1;
+
         // Anonymity is granted only when the board allows it AND the author opted
         // in — the server is the sole source of truth; the form value alone is
         // never trusted (ADMIN §1.3 masked-identity posting).
         $anon = !empty($input['is_anonymous']) && (int) ($board['allow_anonymous'] ?? 0) === 1;
 
-        return $this->db->transaction(function () use ($user, $board, $boardId, $title, $body, $anon): array {
-            $now = gmdate('Y-m-d H:i:s');
-            $slug = Str::slug($title, 180);
-            $threadId = $this->threads->create($boardId, $user->id(), $title, $slug);
+        try {
+            return $this->db->transaction(function () use ($user, $board, $boardId, $title, $body, $anon, $pending, $decision, $idemKey, $input): array {
+                $now = gmdate('Y-m-d H:i:s');
+                $slug = Str::slug($title, 180);
+                $threadId = $this->threads->create($boardId, $user->id(), $title, $slug, $pending);
 
-            $postId = $this->posts->create([
-                'thread_id' => $threadId,
-                'user_id' => $user->id(),
-                'body' => $body,
-                'body_html' => $this->markdown->render($body),
-                'is_op' => true,
-                'is_anonymous' => $anon,
-                'ip' => $input['ip'] ?? null,
-            ]);
+                $postId = $this->posts->create([
+                    'thread_id' => $threadId,
+                    'user_id' => $user->id(),
+                    'body' => $body,
+                    'body_html' => $this->markdown->render($body),
+                    'is_op' => true,
+                    'is_anonymous' => $anon,
+                    'is_pending' => $pending,
+                    'ip' => $input['ip'] ?? null,
+                ]);
 
-            $this->threads->updateLastPost($threadId, $postId, $user->id(), $now);
-            $this->boards->onThreadCreated($boardId, $threadId, $now);
-            $this->users->incrementPostCount($user->id(), 1);
+                // Claim the idempotency key BEFORE any further side effects. Under a
+                // concurrent double-submit the unique-key INSERT blocks until the
+                // winner commits, then collides here — we throw to roll the whole
+                // transaction back (undoing this thread) and replay the original.
+                if ($idemKey !== null && !$this->idempotency->record($user->id(), $idemKey, 'thread', 'thread', $threadId)) {
+                    throw new DuplicateSubmissionException();
+                }
 
-            if ($this->notifications !== null) {
-                $threadCtx = ['id' => $threadId, 'board_id' => $boardId, 'board_visibility' => $board['visibility'] ?? 'public'];
-                // The author follows their own thread so they hear about replies;
-                // they are still excluded from this post's own fan-out.
-                $this->notifications->autoSubscribeAuthor($user->id(), $threadId);
-                $this->notifications->fanOutNewPost($user->id(), $threadCtx, $postId, true, $body);
+                $this->finalizeAttachments($user->id(), $postId, $body, (string) ($board['visibility'] ?? 'public'));
+
+                // A held thread does not yet touch board counters, last-post, the
+                // author's post_count, or notification fan-out — those run only when a
+                // moderator releases it (PHASE_3_PLAN §8.5: media/holds become visible
+                // only after approval). The author still auto-subscribes.
+                if (!$pending) {
+                    $this->threads->updateLastPost($threadId, $postId, $user->id(), $now);
+                    $this->boards->onThreadCreated($boardId, $threadId, $now);
+                    $this->users->incrementPostCount($user->id(), 1);
+                    if ($this->notifications !== null) {
+                        $threadCtx = ['id' => $threadId, 'board_id' => $boardId, 'board_visibility' => $board['visibility'] ?? 'public'];
+                        $this->notifications->autoSubscribeAuthor($user->id(), $threadId);
+                        $this->notifications->fanOutNewPost($user->id(), $threadCtx, $postId, true, $body);
+                    }
+                } elseif ($this->notifications !== null) {
+                    $this->notifications->autoSubscribeAuthor($user->id(), $threadId);
+                }
+
+                // Audit + hold commit together (immutable system-actor record).
+                if ($decision !== null) {
+                    $this->antiAbuse->audit($decision, 'thread', $threadId);
+                }
+
+                return ['thread_id' => $threadId, 'slug' => $slug, 'pending' => $pending];
+            });
+        } catch (DuplicateSubmissionException) {
+            $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
+            // Only replay when the stored result is actually a thread — a token
+            // reused across a thread and a reply must not cross result types.
+            $thread = ($prior !== null && $prior['result_type'] === 'thread') ? $this->threads->find($prior['result_id']) : null;
+            if ($thread !== null) {
+                return ['thread_id' => (int) $thread['id'], 'slug' => (string) $thread['slug'], 'pending' => (int) $thread['is_pending'] === 1, 'duplicate' => true];
             }
-
-            return ['thread_id' => $threadId, 'slug' => $slug];
-        });
+            throw new ValidationException(['body' => 'That post was already submitted.'], $input);
+        }
     }
 
     /**
@@ -125,39 +203,79 @@ final class PostingService
         $body = (string) ($input['body'] ?? '');
         $this->validate(null, $body, $input, requireTitle: false);
 
+        // Idempotent submit (P3-03): replay the original reply on a duplicate.
+        $idemKey = $this->idempotency?->hash($input['idempotency_key'] ?? null);
+        if ($idemKey !== null) {
+            $existing = $this->idempotency->find($user->id(), $idemKey);
+            if ($existing !== null && $existing['result_type'] === 'post') {
+                return $existing['result_id'];
+            }
+        }
+
+        // Anti-abuse (P3-05): block ⇒ reject; hold/board-approval ⇒ pending reply.
+        $decision = $this->antiAbuse?->evaluate($user, 'reply', $body);
+        if ($decision !== null && $decision->blocks()) {
+            $this->antiAbuse->audit($decision, 'post', 0);
+            throw new ValidationException(['body' => 'Your reply couldn’t be published by the automated content filters. Please revise it and try again.'], $input);
+        }
+        $pending = ($decision !== null && $decision->holds()) || (int) ($thread['board_require_approval'] ?? 0) === 1;
+
         // Server-side anonymity gate (board allows it AND author opted in). The
         // board flag comes from findWithBoard's board_allow_anonymous alias, so
         // the synthetic $board above is never trusted for this decision.
         $anon = !empty($input['is_anonymous']) && (int) ($thread['board_allow_anonymous'] ?? 0) === 1;
 
-        return $this->db->transaction(function () use ($user, $thread, $threadId, $body, $anon): int {
-            $now = gmdate('Y-m-d H:i:s');
-            $postId = $this->posts->create([
-                'thread_id' => $threadId,
-                'user_id' => $user->id(),
-                'body' => $body,
-                'body_html' => $this->markdown->render($body),
-                'is_op' => false,
-                'is_anonymous' => $anon,
-                'ip' => $input['ip'] ?? null,
-            ]);
+        try {
+            return $this->db->transaction(function () use ($user, $thread, $threadId, $body, $anon, $pending, $decision, $idemKey, $input): int {
+                $now = gmdate('Y-m-d H:i:s');
+                $postId = $this->posts->create([
+                    'thread_id' => $threadId,
+                    'user_id' => $user->id(),
+                    'body' => $body,
+                    'body_html' => $this->markdown->render($body),
+                    'is_op' => false,
+                    'is_anonymous' => $anon,
+                    'is_pending' => $pending,
+                    'ip' => $input['ip'] ?? null,
+                ]);
 
-            $this->threads->incrementReplyCount($threadId, 1);
-            $this->threads->updateLastPost($threadId, $postId, $user->id(), $now);
-            $this->boards->onReplyCreated((int) $thread['board_id'], $now);
-            $this->users->incrementPostCount($user->id(), 1);
+                // Claim the idempotency key before side effects (see createThread).
+                if ($idemKey !== null && !$this->idempotency->record($user->id(), $idemKey, 'reply', 'post', $postId)) {
+                    throw new DuplicateSubmissionException();
+                }
 
-            if ($this->notifications !== null) {
-                $threadCtx = [
-                    'id' => $threadId,
-                    'board_id' => (int) $thread['board_id'],
-                    'board_visibility' => $thread['board_visibility'] ?? 'public',
-                ];
-                $this->notifications->fanOutNewPost($user->id(), $threadCtx, $postId, false, $body);
+                $this->finalizeAttachments($user->id(), $postId, $body, (string) ($thread['board_visibility'] ?? 'public'));
+
+                // A held reply defers reply-count, last-post, board activity, the
+                // author's post_count, and fan-out until a moderator releases it.
+                if (!$pending) {
+                    $this->threads->incrementReplyCount($threadId, 1);
+                    $this->threads->updateLastPost($threadId, $postId, $user->id(), $now);
+                    $this->boards->onReplyCreated((int) $thread['board_id'], $now);
+                    $this->users->incrementPostCount($user->id(), 1);
+                    if ($this->notifications !== null) {
+                        $threadCtx = [
+                            'id' => $threadId,
+                            'board_id' => (int) $thread['board_id'],
+                            'board_visibility' => $thread['board_visibility'] ?? 'public',
+                        ];
+                        $this->notifications->fanOutNewPost($user->id(), $threadCtx, $postId, false, $body);
+                    }
+                }
+
+                if ($decision !== null) {
+                    $this->antiAbuse->audit($decision, 'post', $postId);
+                }
+
+                return $postId;
+            });
+        } catch (DuplicateSubmissionException) {
+            $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
+            if ($prior !== null && $prior['result_type'] === 'post') {
+                return $prior['result_id'];
             }
-
-            return $postId;
-        });
+            throw new ValidationException(['body' => 'That reply was already submitted.'], $input);
+        }
     }
 
     /** @param array<string,mixed> $input body */
@@ -185,6 +303,13 @@ final class PostingService
 
         $this->db->transaction(function () use ($post, $postId, $body, $user, $added): void {
             $this->posts->update($postId, $body, $this->markdown->render($body), $user->id());
+            // Bind images the edit newly references. The edit composer uploads
+            // pasted/dropped images as temp attachments exactly like create/reply;
+            // without finalizing here they stay 'temp' (invisible to other readers)
+            // and the orphan sweep permanently purges them while the live post
+            // still links /media/{id}. finalizeForPost is owner/temp-scoped, so
+            // re-finalizing already-bound images is a harmless no-op.
+            $this->finalizeAttachments($user->id(), $postId, $body, (string) ($post['board_visibility'] ?? 'public'));
             if ($this->notifications !== null && $added !== []) {
                 $threadCtx = [
                     'id' => (int) $post['thread_id'],
@@ -283,6 +408,97 @@ final class PostingService
         $this->boards->recomputeLastPost((int) $post['board_id']);
     }
 
+    /**
+     * Release a held thread (P3-05): clear is_pending on the thread + its OP, then
+     * run the counter/notification work that was deferred at submit time. Returns
+     * false if it is not a live pending thread (idempotent against double-approve).
+     */
+    public function approvePendingThread(int $threadId): bool
+    {
+        return $this->db->transaction(function () use ($threadId): bool {
+            $thread = $this->threads->find($threadId);
+            if ($thread === null || (int) $thread['is_pending'] !== 1 || (int) $thread['is_deleted'] === 1) {
+                return false;
+            }
+            $op = $this->db->fetch('SELECT * FROM posts WHERE thread_id = ? AND is_op = 1 LIMIT 1', [$threadId]);
+            if ($op === null) {
+                return false;
+            }
+            $board = $this->boards->find((int) $thread['board_id']);
+            $now = gmdate('Y-m-d H:i:s');
+
+            $this->threads->setPending($threadId, false);
+            $this->posts->setPending((int) $op['id'], false);
+            $this->threads->updateLastPost($threadId, (int) $op['id'], (int) $thread['user_id'], $now);
+            $this->boards->onThreadCreated((int) $thread['board_id'], $threadId, $now);
+            $this->users->incrementPostCount((int) $thread['user_id'], 1);
+
+            if ($this->notifications !== null) {
+                $threadCtx = ['id' => $threadId, 'board_id' => (int) $thread['board_id'], 'board_visibility' => $board['visibility'] ?? 'public'];
+                $this->notifications->fanOutNewPost((int) $thread['user_id'], $threadCtx, (int) $op['id'], true, (string) $op['body']);
+            }
+            return true;
+        });
+    }
+
+    /**
+     * Release a held reply (P3-05): clear is_pending and run the deferred
+     * reply-count, last-post, board activity, post_count, and fan-out work.
+     */
+    public function approvePendingPost(int $postId): bool
+    {
+        return $this->db->transaction(function () use ($postId): bool {
+            $post = $this->posts->findWithContext($postId);
+            if ($post === null || (int) $post['is_pending'] !== 1 || (int) $post['is_deleted'] === 1) {
+                return false;
+            }
+            $threadId = (int) $post['thread_id'];
+            $now = gmdate('Y-m-d H:i:s');
+
+            $this->posts->setPending($postId, false);
+            $this->threads->incrementReplyCount($threadId, 1);
+            $this->threads->updateLastPost($threadId, $postId, (int) $post['user_id'], $now);
+            $this->boards->onReplyCreated((int) $post['board_id'], $now);
+            $this->users->incrementPostCount((int) $post['user_id'], 1);
+
+            if ($this->notifications !== null) {
+                $threadCtx = ['id' => $threadId, 'board_id' => (int) $post['board_id'], 'board_visibility' => $post['board_visibility'] ?? 'public'];
+                $this->notifications->fanOutNewPost((int) $post['user_id'], $threadCtx, $postId, false, (string) $post['body']);
+            }
+            return true;
+        });
+    }
+
+    /** Reject a held thread: soft-delete it + its OP (no counters were applied). */
+    public function rejectPendingThread(int $threadId, int $byUserId): bool
+    {
+        return $this->db->transaction(function () use ($threadId, $byUserId): bool {
+            $thread = $this->threads->find($threadId);
+            if ($thread === null || (int) $thread['is_pending'] !== 1 || (int) $thread['is_deleted'] === 1) {
+                return false;
+            }
+            $this->threads->softDelete($threadId, $byUserId);
+            $op = $this->db->fetch('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1 LIMIT 1', [$threadId]);
+            if ($op !== null) {
+                $this->posts->softDelete((int) $op['id'], $byUserId);
+            }
+            return true;
+        });
+    }
+
+    /** Reject a held reply: soft-delete it (no counters were applied). */
+    public function rejectPendingPost(int $postId, int $byUserId): bool
+    {
+        return $this->db->transaction(function () use ($postId, $byUserId): bool {
+            $post = $this->posts->find($postId);
+            if ($post === null || (int) $post['is_pending'] !== 1 || (int) $post['is_deleted'] === 1) {
+                return false;
+            }
+            $this->posts->softDelete($postId, $byUserId);
+            return true;
+        });
+    }
+
     /** Private-board membership (board_members) — gates posting in private boards. */
     private function isBoardMember(int $boardId, int $userId): bool
     {
@@ -323,6 +539,13 @@ final class PostingService
             $errors['body'] = 'Write something before posting.';
         } elseif (mb_strlen($body) > (int) $this->config->get('limits.post_body_max', 20000)) {
             $errors['body'] = 'Your post is too long.';
+        }
+
+        // Enforce the per-post image ceiling (uploads.per_post_max) before any
+        // write, so an over-cap post is rejected and never partially created.
+        $maxImages = (int) $this->config->get('uploads.per_post_max', 10);
+        if ($maxImages > 0 && count(\App\Service\AttachmentService::referencedIds($body)) > $maxImages) {
+            $errors['body'] = "You can attach at most {$maxImages} images to a post.";
         }
 
         if ($errors !== []) {

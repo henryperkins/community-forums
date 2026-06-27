@@ -5,23 +5,19 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Repository\UserPreferenceRepository;
+use App\Support\PreferenceSchema;
 
 /**
- * Reading + appearance preferences (USER §4.1–§4.2, P2-10). Stored in the
- * per-user JSON blob. Server-enforced prefs (pagination, sort) are read back here
- * and shape queries so they hold across devices; client-only prefs (theme,
- * density, display toggles) are merely persisted for the browser. Every value is
- * validated against a fixed allow-list so a tampered blob can never inject SQL or
- * an out-of-range page size.
+ * Appearance / reading / composing preferences (USER §4, P3-01). Stored in the
+ * per-user JSON blob and validated against {@see PreferenceSchema} so a tampered
+ * or stale document can never inject SQL, an out-of-range page size, or break
+ * rendering. Server-enforced prefs (pagination, sort) are read back here and
+ * shape queries so they hold across devices; client prefs (theme, density,
+ * font size, reduced motion, composing toggles) are persisted server-side too,
+ * so the experience is consistent on every device.
  */
 final class PreferenceService
 {
-    private const THREADS_PER_PAGE = [25, 50, 100];
-    private const POSTS_PER_PAGE = [10, 20, 40];
-    private const THREAD_SORT = ['last_post', 'newest', 'replies'];
-    private const THEME = ['system', 'light', 'dark'];
-    private const DENSITY = ['comfortable', 'compact'];
-
     public function __construct(
         private UserPreferenceRepository $prefs,
         private int $defaultThreadsPerPage = 20,
@@ -29,62 +25,91 @@ final class PreferenceService
     ) {
     }
 
-    /** @return array<string,mixed> the stored reading/appearance prefs (raw) */
+    /** @return array<string,mixed> the raw stored blob ({} when none) */
     public function forUser(int $userId): array
     {
         return $this->prefs->get($userId);
     }
 
+    /**
+     * Defaults merged with the user's validated overrides — safe for rendering
+     * and for read-path decisions.
+     *
+     * @return array<string,mixed>
+     */
+    public function resolved(int $userId): array
+    {
+        return PreferenceSchema::resolve($this->prefs->get($userId));
+    }
+
+    /**
+     * The appearance subset (theme/density/font_size/reduced_motion) used to
+     * stamp the document root so there is no theme flash and no-JS still themes.
+     *
+     * @return array{theme:string,density:string,font_size:string,reduced_motion:bool}
+     */
+    public function appearance(int $userId): array
+    {
+        $r = $this->resolved($userId);
+        return [
+            'theme' => (string) $r['theme'],
+            'density' => (string) $r['density'],
+            'font_size' => (string) $r['font_size'],
+            'reduced_motion' => (bool) $r['reduced_motion'],
+        ];
+    }
+
     public function threadsPerPage(int $userId): int
     {
         $v = (int) ($this->prefs->get($userId)['threads_per_page'] ?? 0);
-        return in_array($v, self::THREADS_PER_PAGE, true) ? $v : $this->defaultThreadsPerPage;
+        return in_array($v, PreferenceSchema::THREADS_PER_PAGE, true) ? $v : $this->defaultThreadsPerPage;
     }
 
     public function postsPerPage(int $userId): int
     {
         $v = (int) ($this->prefs->get($userId)['posts_per_page'] ?? 0);
-        return in_array($v, self::POSTS_PER_PAGE, true) ? $v : $this->defaultPostsPerPage;
+        return in_array($v, PreferenceSchema::POSTS_PER_PAGE, true) ? $v : $this->defaultPostsPerPage;
     }
 
     /**
-     * Validate + persist a reading/appearance preference update. Unknown or
-     * out-of-range values are dropped (not stored), so the blob stays clean.
+     * Validate + persist one settings section's form. Stamps the schema version
+     * and only touches that section's keys.
+     *
+     * @param array<string,mixed> $input
+     */
+    public function updateSection(int $userId, string $section, array $input): void
+    {
+        if (!PreferenceSchema::hasSection($section)) {
+            return;
+        }
+        $changes = PreferenceSchema::validateSection($section, $input);
+        $changes['__v'] = PreferenceSchema::VERSION;
+        $this->prefs->merge($userId, $changes);
+    }
+
+    /**
+     * Backwards-compatible reading-section update (the Phase 2 `/settings/
+     * preferences` form posts here). Theme/density moved to the appearance form.
      *
      * @param array<string,mixed> $input
      */
     public function update(int $userId, array $input): void
     {
-        $changes = [];
-        $changes['threads_per_page'] = $this->oneOfInt($input['threads_per_page'] ?? null, self::THREADS_PER_PAGE);
-        $changes['posts_per_page'] = $this->oneOfInt($input['posts_per_page'] ?? null, self::POSTS_PER_PAGE);
-        $changes['thread_sort'] = $this->oneOf($input['thread_sort'] ?? null, self::THREAD_SORT);
-        $changes['theme'] = $this->oneOf($input['theme'] ?? null, self::THEME);
-        $changes['density'] = $this->oneOf($input['density'] ?? null, self::DENSITY);
-        $changes['show_signatures'] = $this->boolOrNull($input, 'show_signatures');
-        $changes['show_avatars'] = $this->boolOrNull($input, 'show_avatars');
-        $changes['show_reactions'] = $this->boolOrNull($input, 'show_reactions');
-
-        $this->prefs->merge($userId, $changes);
+        $this->updateSection($userId, 'reading', $input);
     }
 
-    /** @param list<int> $allowed */
-    private function oneOfInt(mixed $value, array $allowed): ?int
+    /**
+     * Reset every schema-managed key to its default (removes them from the blob),
+     * preserving non-schema keys such as `hide_from_leaderboard`.
+     */
+    public function reset(int $userId): void
     {
-        $v = (int) $value;
-        return in_array($v, $allowed, true) ? $v : null;
-    }
-
-    /** @param list<string> $allowed */
-    private function oneOf(mixed $value, array $allowed): ?string
-    {
-        $v = is_string($value) ? $value : '';
-        return in_array($v, $allowed, true) ? $v : null;
-    }
-
-    /** A submitted checkbox is true when present; this form always submits all toggles. */
-    private function boolOrNull(array $input, string $key): bool
-    {
-        return array_key_exists($key, $input) && (string) $input[$key] !== '0' && $input[$key] !== false;
+        $removals = ['__v' => null];
+        foreach (PreferenceSchema::sections() as $section) {
+            foreach (PreferenceSchema::fields($section) as $key => $_spec) {
+                $removals[$key] = null;
+            }
+        }
+        $this->prefs->merge($userId, $removals);
     }
 }

@@ -12,12 +12,47 @@ final class ThreadRepository
     {
     }
 
-    public function create(int $boardId, int $userId, string $title, string $slug): int
+    public function create(int $boardId, int $userId, string $title, string $slug, bool $pending = false): int
     {
         return $this->db->insert(
-            'INSERT INTO threads (board_id, user_id, title, slug, created_at, last_post_at)
-             VALUES (:board_id, :user_id, :title, :slug, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
-            ['board_id' => $boardId, 'user_id' => $userId, 'title' => $title, 'slug' => $slug],
+            'INSERT INTO threads (board_id, user_id, title, slug, is_pending, created_at, last_post_at)
+             VALUES (:board_id, :user_id, :title, :slug, :pending, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
+            ['board_id' => $boardId, 'user_id' => $userId, 'title' => $title, 'slug' => $slug, 'pending' => $pending ? 1 : 0],
+        );
+    }
+
+    /** Clear/set a thread's approval-hold flag (P3-05). */
+    public function setPending(int $id, bool $pending): void
+    {
+        $this->db->run('UPDATE threads SET is_pending = ? WHERE id = ?', [$pending ? 1 : 0, $id]);
+    }
+
+    /**
+     * Approval queue (P3-05): pending threads (OP held), optionally scoped to a
+     * set of board ids (NULL = all, for admins).
+     *
+     * @param list<int>|null $boardIds
+     * @return array<int,array<string,mixed>>
+     */
+    public function listPending(?array $boardIds, int $limit = 100): array
+    {
+        $limit = max(1, $limit);
+        $scope = '';
+        if ($boardIds !== null) {
+            if ($boardIds === []) {
+                return [];
+            }
+            $scope = ' AND t.board_id IN (' . implode(',', array_map('intval', $boardIds)) . ')';
+        }
+        return $this->db->fetchAll(
+            'SELECT t.id, t.title, t.slug, t.created_at, t.board_id,
+                    u.username AS author_username, b.slug AS board_slug, b.name AS board_name
+             FROM threads t
+             JOIN users u ON u.id = t.user_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE t.is_pending = 1 AND t.is_deleted = 0' . $scope . '
+             ORDER BY t.created_at ASC, t.id ASC
+             LIMIT ' . $limit,
         );
     }
 
@@ -33,6 +68,7 @@ final class ThreadRepository
         return $this->db->fetch(
             'SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
                     b.post_min_role AS board_post_min_role, b.allow_anonymous AS board_allow_anonymous,
+                    b.require_approval AS board_require_approval,
                     b.id AS board_id, au.username AS author_username, au.display_name AS author_display_name
              FROM threads t
              JOIN boards b ON b.id = t.board_id
@@ -64,7 +100,7 @@ final class ThreadRepository
              FROM threads t
              JOIN users au ON au.id = t.user_id
              LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
-             WHERE t.board_id = :board_id AND t.is_deleted = 0
+             WHERE t.board_id = :board_id AND t.is_deleted = 0 AND t.is_pending = 0
              ORDER BY t.is_pinned DESC, t.last_post_at DESC, t.id DESC
              LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['board_id' => $boardId],
@@ -74,7 +110,7 @@ final class ThreadRepository
     public function countByBoard(int $boardId): int
     {
         return (int) $this->db->fetchValue(
-            'SELECT COUNT(*) FROM threads WHERE board_id = ? AND is_deleted = 0',
+            'SELECT COUNT(*) FROM threads WHERE board_id = ? AND is_deleted = 0 AND is_pending = 0',
             [$boardId],
         );
     }
@@ -93,7 +129,7 @@ final class ThreadRepository
         $limit = max(1, $limit);
         return $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug FROM threads t JOIN boards b ON b.id = t.board_id
-             WHERE t.user_id = ? AND t.is_deleted = 0 AND b.visibility = 'public'
+             WHERE t.user_id = ? AND t.is_deleted = 0 AND t.is_pending = 0 AND b.visibility = 'public'
                AND NOT EXISTS (SELECT 1 FROM posts op WHERE op.thread_id = t.id AND op.is_op = 1 AND op.is_anonymous = 1)
              ORDER BY t.created_at DESC LIMIT " . $limit,
             [$userId],
@@ -121,7 +157,7 @@ final class ThreadRepository
     {
         $row = $this->db->fetch(
             'SELECT id, user_id, created_at FROM posts
-             WHERE thread_id = ? AND is_deleted = 0 ORDER BY created_at DESC, id DESC LIMIT 1',
+             WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0 ORDER BY created_at DESC, id DESC LIMIT 1',
             [$id],
         );
         if ($row === null) {

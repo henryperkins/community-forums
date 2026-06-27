@@ -254,6 +254,18 @@ final class UserRepository
     }
 
     /**
+     * Mark the product tour complete (cross-device) or clear it for a replay
+     * (P3-11). Completion persists server-side so it carries across devices.
+     */
+    public function setOnboarded(int $id, bool $done): void
+    {
+        $this->db->run(
+            'UPDATE users SET onboarded_at = ' . ($done ? 'UTC_TIMESTAMP()' : 'NULL') . ' WHERE id = ?',
+            [$id],
+        );
+    }
+
+    /**
      * Members visible in the presence roster: opted-in (show_presence = 1) and
      * seen since $since (UTC 'Y-m-d H:i:s'). Block filtering is applied by the caller.
      *

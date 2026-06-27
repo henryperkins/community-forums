@@ -14,7 +14,7 @@
     <?php elseif ($resubscribed): ?>
         <p><strong><?= $e($email) ?></strong> has been re-subscribed to notification emails.</p>
     <?php else: ?>
-        <p>Unsubscribe <strong><?= $e($email) ?></strong> from RetroBoards notification emails?</p>
+        <p>Unsubscribe <strong><?= $e($email) ?></strong> from <?= $e($site_name) ?> notification emails?</p>
         <form method="post" action="/unsubscribe">
             <?= $this->csrfField() ?>
             <input type="hidden" name="email" value="<?= $e($email) ?>">

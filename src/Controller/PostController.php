@@ -29,6 +29,7 @@ final class PostController extends Controller
     public function createThread(Request $request, array $params): Response
     {
         $user = $this->requireUser();
+        $this->container->get(\App\Service\RateLimitService::class)->enforce('post', $request, $user);
         $posting = $this->container->get(PostingService::class);
 
         try {
@@ -43,6 +44,14 @@ final class PostController extends Controller
         }
 
         $this->awardBadges($user->id());
+
+        // A held thread is not yet visible; send the author back to the board with
+        // a clear status rather than to an empty (pending) thread page (P3-05).
+        if (!empty($result['pending'])) {
+            $board = $this->container->get(BoardRepository::class)->find((int) $request->int('board_id', 0));
+            $dest = $board !== null ? '/c/' . $board['slug'] : '/';
+            return $this->redirectWithFlash($dest, 'Your topic was submitted and is awaiting moderator approval.');
+        }
         return $this->redirect('/t/' . $result['thread_id'] . '-' . $result['slug']);
     }
 
@@ -51,10 +60,12 @@ final class PostController extends Controller
     {
         $user = $this->requireUser();
         $threadId = (int) ($params['id'] ?? 0);
+        $this->container->get(\App\Service\RateLimitService::class)->enforce('post', $request, $user);
         $posting = $this->container->get(PostingService::class);
 
+        $input = $request->allInput() + ['ip' => $request->ip()];
         try {
-            $postId = $posting->reply($user, $threadId, $request->allInput() + ['ip' => $request->ip()]);
+            $postId = $posting->reply($user, $threadId, $input);
         } catch (ValidationException $e) {
             $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
             if ($thread === null) {
@@ -70,6 +81,11 @@ final class PostController extends Controller
 
         $thread = $this->container->get(ThreadRepository::class)->find($threadId);
         $slug = $thread !== null ? $thread['slug'] : '';
+        // A held reply isn't shown yet; tell the author it awaits approval (P3-05).
+        $post = $this->container->get(PostRepository::class)->find($postId);
+        if ($post !== null && (int) $post['is_pending'] === 1) {
+            return $this->redirectWithFlash('/t/' . $threadId . '-' . $slug, 'Your reply was submitted and is awaiting moderator approval.');
+        }
         return $this->redirect('/t/' . $threadId . '-' . $slug . '#p' . $postId);
     }
 

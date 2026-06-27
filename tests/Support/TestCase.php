@@ -87,18 +87,56 @@ abstract class TestCase extends BaseTestCase
     /**
      * @param array<string,mixed> $body
      * @param array<string,mixed> $query
+     * @param array<string,mixed> $files
      */
-    protected function request(string $method, string $path, array $body, array $query): Response
+    protected function request(string $method, string $path, array $body, array $query, array $files = []): Response
     {
         $request = new Request($method, $path, $query, $body, $this->cookies, [
             'REMOTE_ADDR' => '127.0.0.1',
             'HTTP_USER_AGENT' => 'phpunit',
-        ]);
+        ], $files);
 
         $response = $this->app->handle($request);
         $this->applyCookies($response);
         $this->refreshSecret();
         return $response;
+    }
+
+    /**
+     * POST a multipart form with one uploaded file. $file is the $_FILES-shaped
+     * entry (name/type/tmp_name/error/size).
+     *
+     * @param array<string,mixed> $body
+     * @param array<string,mixed> $file
+     */
+    protected function postFile(string $path, string $field, array $file, array $body = [], bool $withToken = true): Response
+    {
+        if ($withToken && !array_key_exists('_token', $body)) {
+            $body['_token'] = $this->csrfToken();
+        }
+        return $this->request('POST', $path, $body, [], [$field => $file]);
+    }
+
+    /**
+     * Write $bytes to a temp file and return a $_FILES-shaped entry for it.
+     *
+     * @return array{name:string,type:string,tmp_name:string,error:int,size:int}
+     */
+    protected function fakeUpload(string $bytes, string $name = 'image.png', string $type = 'image/png'): array
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'rbup');
+        file_put_contents($tmp, $bytes);
+        return ['name' => $name, 'type' => $type, 'tmp_name' => $tmp, 'error' => UPLOAD_ERR_OK, 'size' => strlen($bytes)];
+    }
+
+    /** A small valid PNG as raw bytes (GD-encoded). */
+    protected function pngBytes(int $w = 8, int $h = 8): string
+    {
+        $im = imagecreatetruecolor($w, $h);
+        imagefilledrectangle($im, 0, 0, $w - 1, $h - 1, imagecolorallocate($im, 10, 120, 200));
+        ob_start();
+        imagepng($im);
+        return (string) ob_get_clean();
     }
 
     protected function csrfToken(): string

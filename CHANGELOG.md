@@ -2,6 +2,81 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
+
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **379 tests / 1285 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+
+### Hardening (post adversarial review)
+
+- **Held content no longer leaks** into FULLTEXT search, the Following feed, the
+  daily digest, or a direct thread URL — every read surface now filters
+  `is_pending = 0` (matching the listing/sitemap/profile gates).
+- **Idempotent submit is concurrency-safe** — the idempotency key is claimed
+  inside the transaction before side effects, so a true double-submit rolls back
+  and replays instead of leaving a duplicate (`DuplicateSubmissionException`).
+- **Attachment retention** — media of a soft-deleted post is reclaimed only after
+  a configurable grace window (`uploads.deleted_grace_days`, default 30; new
+  `posts.deleted_at`), so a restored/appealed post keeps its images.
+- Re-encoded upload output is re-checked against the size cap; the onboarding
+  `next` redirect is constrained to same-origin paths.
+
+### Hardening (second review pass)
+
+- **Held content no longer leaks into the Inbox** — `inbox`/`countInbox`/
+  `unreadCount`/`unreadFlags` now filter `is_pending = 0`, so a held thread's
+  title/author/existence and the unread badge stay hidden until approval.
+- **Editing a post to add an image no longer destroys it** — `editOwnPost` now
+  finalizes newly referenced `/media/{id}` uploads in its transaction, so the
+  attachment is bound (not left `temp` and swept by the orphan cleaner).
+- **Access-restricted media is never publicly cached** — the `/media/{id}`
+  `Cache-Control` is derived from the live authorization (held-post or
+  private-board media → `private, no-store`), not the stored columns.
+- **Held posts never become cached "last activity"** — `recomputeLastPost`
+  (thread + board) and every `RepairService` counter exclude `is_pending = 1`,
+  matching the runtime that defers counters until approval.
+- New-user anti-abuse throttle treats an account as established only once it
+  clears **both** the post-count and account-age thresholds (per config).
+- Feature-flag gating completed for SEO (`/sitemap.xml`, `/robots.txt`),
+  branding (`/admin/branding`, `/brand.css`), and the onboarding tour; the
+  sitemap also excludes archived public boards' threads.
+- Smaller fixes: idempotency replay tolerates lock-wait/deadlock and is
+  result-type-scoped; per-post image cap enforced; CIDR prefix bounds-checked;
+  composer upload placeholders are unique per file.
+
+### Added
+
+- **Preferences & settings IA (P3-01)** — versioned, validated preference schema
+  (`PreferenceSchema`) with separate Appearance / Reading / Composing forms, a
+  reset, and theme/density/font-size/reduced-motion stamped on `<html>` (no flash,
+  no-JS themed). Dark theme + brand colors via CSS variables.
+- **Shared composer (P3-02)** — one server render+sanitize pipeline for new
+  thread / reply / DM / edit; live preview endpoint `/composer/preview`; `||spoiler||`
+  Markdown extension; same-origin `/media/{id}` images allowed in the sanitizer;
+  `composer.js` progressive enhancement (toolbar, counter, preview, paste/drop
+  upload, local draft autosave). ADR `docs/adr/0001-composer-engine.md`.
+- **Submission idempotency (P3-03)** — `submission_idempotency` table; double-click /
+  retry / resend creates one logical thread/reply/DM.
+- **Image uploads (P3-04)** — `attachments` lifecycle table; content-sniffed +
+  GD-re-encoded uploads (strips metadata/polyglots), dimension/size/decompression
+  guards; authorization-gated `/media/{id}` delivery (private boards + DMs);
+  finalize-on-publish; `worker:attachments` orphan sweep.
+- **Anti-abuse + holds (P3-05)** — central `RateLimitService` (named policies,
+  trusted-proxy-aware client IP); `AntiAbuseService` word/link/duplicate/flood rules
+  with observe→flag→hold→block modes; board approval holds; `/mod/approvals` queue;
+  immutable system-actor audit; `worker:purge-ips` 90-day IP-retention purge.
+- **Branding (P3-07)** — `/admin/branding` for name/logo/favicon/colors + signed-out
+  default theme; dynamic `/brand.css` (CSP-safe); placeholder retirement; reset + audit.
+- **SEO (P3-10)** — `/sitemap.xml` (public-only, excludes private/hidden/deleted/held),
+  `/robots.txt`, canonical/OpenGraph/description meta, noindex on private surfaces.
+- **Onboarding tour (P3-11)** — `users.onboarded_at`; `/onboarding/complete`·`/replay`;
+  skippable/replayable `tour.js` (missing-target tolerant, no-JS safe).
+
+### Schema
+
+- Migrations `0042`–`0047`: `users.avatar_path`/`onboarded_at`; `attachments`;
+  `submission_idempotency`; `threads.is_pending`/`posts.is_pending`;
+  `boards.require_approval`; `posts.deleted_at`. Reconciled in `SCHEMA.md`.
+
 ## [Unreleased] — Phase 2 review follow-ups
 
 Post-merge fixes from the PR #2 review (no schema changes; suite green at 221 tests / 726 assertions).

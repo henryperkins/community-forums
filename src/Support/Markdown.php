@@ -9,6 +9,7 @@ use League\CommonMark\Extension\Autolink\AutolinkExtension;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
 use League\CommonMark\MarkdownConverter;
+use App\Support\Markdown\SpoilerExtension;
 
 /**
  * Renders canonical Markdown (posts.body, bios) to the cached sanitised HTML
@@ -34,6 +35,7 @@ final class Markdown
         $environment->addExtension(new CommonMarkCoreExtension());
         $environment->addExtension(new StrikethroughExtension());
         $environment->addExtension(new AutolinkExtension());
+        $environment->addExtension(new SpoilerExtension());
 
         $this->converter = new MarkdownConverter($environment);
     }

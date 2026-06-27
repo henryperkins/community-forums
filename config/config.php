@@ -134,4 +134,66 @@ return [
         'username_min' => 3,
         'password_min' => 8,
     ],
+
+    // ── Phase 3 ──────────────────────────────────────────────────────────────
+
+    // Image uploads (P3-04). Files are sniffed, re-encoded, and stored OUTSIDE
+    // the executable/public path; delivery is authorization-gated per parent.
+    'uploads' => [
+        'max_bytes' => (int) Env::get('UPLOADS_MAX_BYTES', (string) (5 * 1024 * 1024)), // 5 MB
+        'max_width' => (int) Env::get('UPLOADS_MAX_WIDTH', '4096'),
+        'max_height' => (int) Env::get('UPLOADS_MAX_HEIGHT', '4096'),
+        // Decompression-bomb guard: reject before decoding when w*h exceeds this.
+        'max_pixels' => (int) Env::get('UPLOADS_MAX_PIXELS', (string) (24_000_000)),
+        'allowed_mime' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        'per_post_max' => (int) Env::get('UPLOADS_PER_POST_MAX', '10'),
+        // A brand-new account (below this many posts) cannot upload (anti-abuse).
+        'new_user_min_posts' => (int) Env::get('UPLOADS_NEW_USER_MIN_POSTS', '0'),
+        'storage_path' => Env::get('UPLOADS_PATH', dirname(__DIR__) . '/storage/media'),
+        // Unfinalised temp uploads older than this are swept by worker:attachments.
+        'temp_ttl_hours' => (int) Env::get('UPLOADS_TEMP_TTL_HOURS', '24'),
+        // Media of a soft-deleted post is only reclaimed after this grace window,
+        // so a restored/appealed post keeps its images (PHASE_3_PLAN §8.5).
+        'deleted_grace_days' => (int) Env::get('UPLOADS_DELETED_GRACE_DAYS', '30'),
+    ],
+
+    // Central anti-abuse automation (P3-05). Defaults to OBSERVE so a fresh
+    // install never silently holds/blocks legitimate content; an operator opts
+    // up to flag → hold → block after reviewing false positives (PHASE_3_PLAN
+    // §7 Milestone 3 / §13.1 step 7). Per-rule modes can also live in `settings`.
+    'antiabuse' => [
+        'mode' => Env::get('ANTIABUSE_MODE', 'observe'), // observe | flag | hold | block
+        // A "new user" for throttling purposes is below either threshold.
+        'new_user_min_posts' => (int) Env::get('ANTIABUSE_NEW_USER_MIN_POSTS', '3'),
+        'new_user_min_age_minutes' => (int) Env::get('ANTIABUSE_NEW_USER_MIN_AGE_MINUTES', '0'),
+        // Link ceilings (whole numbers). New users get the stricter limit.
+        'new_user_max_links' => (int) Env::get('ANTIABUSE_NEW_USER_MAX_LINKS', '2'),
+        'max_links' => (int) Env::get('ANTIABUSE_MAX_LINKS', '25'),
+        // Identical body re-posted by the same user within this window = duplicate.
+        'duplicate_window_seconds' => (int) Env::get('ANTIABUSE_DUP_WINDOW', '3600'),
+        // More than N posts inside this window by one user = flood.
+        'flood_window_seconds' => (int) Env::get('ANTIABUSE_FLOOD_WINDOW', '60'),
+        'flood_max_posts' => (int) Env::get('ANTIABUSE_FLOOD_MAX', '10'),
+        // Case-insensitive substring blocklist; operator-extendable via settings.
+        'blocked_words' => [],
+    ],
+
+    // Named rate-limit policies (P3-05): [max_attempts, decay_seconds]. The
+    // central RateLimitService keys these per account+client-ip.
+    'rate_limits' => [
+        'login' => [10, 900],
+        'register' => [5, 3600],
+        'post' => [30, 600],
+        'dm' => [20, 600],
+        'upload' => [40, 3600],
+        'composer_preview' => [120, 600],
+        'password_reset' => [5, 3600],
+    ],
+    // Trusted reverse-proxy CIDRs whose X-Forwarded-For we honour for client IP.
+    'trusted_proxies' => array_values(array_filter(array_map('trim', explode(',', (string) Env::get('TRUSTED_PROXIES', ''))))),
+
+    // Data retention (P3-05 / ADMIN §5.5): purge/anonymise captured IPs after N days.
+    'retention' => [
+        'ip_days' => (int) Env::get('RETENTION_IP_DAYS', '90'),
+    ],
 ];

@@ -1,5 +1,15 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', '#' . $board['name']); ?>
+<?php
+$this->layout('layout');
+$this->section('title', '#' . $board['name']);
+$this->section('canonical', '/c/' . $board['slug']);
+if (!empty($board['description'])) {
+    $this->section('description', mb_strimwidth((string) $board['description'], 0, 160, '…'));
+}
+if (($board['visibility'] ?? 'public') !== 'public') {
+    $this->section('robots', 'noindex, nofollow');
+}
+?>
 <div class="board-view">
     <header class="board-header">
         <h1><span class="hash">#</span><?= $e($board['name']) ?>
