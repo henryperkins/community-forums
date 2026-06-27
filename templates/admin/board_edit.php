@@ -44,6 +44,9 @@
             </select>
         </label>
 
+        <?php $anon = $old['allow_anonymous'] ?? ($board['allow_anonymous'] ?? 0); ?>
+        <label class="checkline"><input type="checkbox" name="allow_anonymous" value="1" <?= !empty($anon) ? 'checked' : '' ?>> Allow anonymous posting <span class="muted">(members may hide their name from other members; moderators can still reveal the author)</span></label>
+
         <div class="form-actions">
             <button class="btn" type="submit">Save board</button>
             <a class="linkbtn" href="/admin/structure">Cancel</a>

@@ -26,6 +26,10 @@
         </label>
         <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
 
+        <?php if (array_filter($boards, static fn (array $b): bool => !empty($b['allow_anonymous']))): ?>
+            <label class="checkline"><input type="checkbox" name="is_anonymous" value="1" <?= !empty($old['is_anonymous']) ? 'checked' : '' ?>> Post anonymously <span class="muted">(only takes effect on boards that allow it; your name stays visible to moderators)</span></label>
+        <?php endif; ?>
+
         <button class="btn" type="submit">Create topic</button>
     </form>
 </div>

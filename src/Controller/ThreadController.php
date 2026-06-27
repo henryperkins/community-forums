@@ -109,6 +109,16 @@ final class ThreadController extends Controller
                 || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
             );
 
+        // Anonymous-author reveal (P2-08): an admin or this board's moderator may
+        // unmask an anonymous post; the byline stays masked for everyone — the
+        // reveal is a separate audited action.
+        $canRevealAnon = $user !== null
+            && $this->container->get(WriteGate::class)->canWrite($user)
+            && (
+                $user->isAdmin()
+                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
+            );
+
         // Subscription state for the subscribe control (P2-03).
         $notificationsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('notifications');
         $subscription = null;
@@ -136,6 +146,7 @@ final class ThreadController extends Controller
             'community' => $community,
             'accepted_post_id' => $acceptedPostId,
             'can_mark_solved' => $canMarkSolved,
+            'can_reveal_anon' => $canRevealAnon,
             'notifications_on' => $notificationsOn,
             'subscription' => $subscription,
             'reply_errors' => [],

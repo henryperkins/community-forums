@@ -579,6 +579,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(BoardModeratorRepository::class),
             $c->get(BoardRepository::class),
+            $c->get(UserRepository::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
@@ -721,6 +722,7 @@ final class App
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);
         $r->post('/mod/t/{id}/move', [ModerationController::class, 'move']);
         $r->post('/mod/p/{id}/restore', [ModerationController::class, 'restorePost']);
+        $r->post('/mod/p/{id}/reveal', [ModerationController::class, 'reveal']);
 
         // Reports queue (P2-08).
         $r->post('/posts/{id}/report', [ReportController::class, 'report']);

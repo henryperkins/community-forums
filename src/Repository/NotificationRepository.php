@@ -91,17 +91,34 @@ final class NotificationRepository
     public function recent(int $userId, int $limit = 20): array
     {
         $limit = max(1, $limit);
-        return $this->db->fetchAll(
+        $rows = $this->db->fetchAll(
             'SELECT n.*, a.username AS actor_username, a.display_name AS actor_display_name,
-                    t.title AS thread_title, t.slug AS thread_slug
+                    t.title AS thread_title, t.slug AS thread_slug,
+                    COALESCE(pp.is_anonymous, 0) AS post_is_anonymous
              FROM notifications n
              LEFT JOIN users a ON a.id = n.actor_id
              LEFT JOIN threads t ON t.id = n.thread_id
+             LEFT JOIN posts pp ON pp.id = n.post_id
              WHERE n.user_id = ?
              ORDER BY n.id DESC
              LIMIT ' . $limit,
             [$userId],
         );
+
+        // Mask the actor of content posted anonymously (reply / new thread /
+        // mention). actor_id is retained for dedupe + deep links; only the
+        // displayed identity collapses to "Anonymous" so the bell and list
+        // (and any consumer of recent()) cannot leak the real author.
+        foreach ($rows as &$r) {
+            if ((int) ($r['post_is_anonymous'] ?? 0) === 1
+                && in_array($r['type'], ['reply', 'new_thread', 'mention'], true)) {
+                $r['actor_username'] = null;
+                $r['actor_display_name'] = 'Anonymous';
+            }
+        }
+        unset($r);
+
+        return $rows;
     }
 
     public function markRead(int $userId, int $id): void

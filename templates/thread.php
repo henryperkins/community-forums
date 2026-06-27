@@ -67,6 +67,7 @@
                     'allowed_emoji' => $allowed_emoji ?? [],
                     'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
                     'can_mark_solved' => $can_mark_solved ?? false,
+                    'can_reveal_anon' => $can_reveal_anon ?? false,
                 ]) ?>
             <?php endforeach; ?>
         </div>

@@ -75,6 +75,7 @@
                         <option value="private">Private (admins only)</option>
                     </select>
                 </label>
+                <label class="checkline"><input type="checkbox" name="allow_anonymous" value="1"> Allow anonymous posting</label>
                 <button class="btn btn-small" type="submit">Add board</button>
             </form>
         </section>

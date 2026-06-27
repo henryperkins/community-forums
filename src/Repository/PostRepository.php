@@ -13,7 +13,7 @@ final class PostRepository
     }
 
     /**
-     * @param array{thread_id:int,user_id:int,body:string,body_html:string,is_op?:bool,parent_post_id?:?int} $data
+     * @param array{thread_id:int,user_id:int,body:string,body_html:string,is_op?:bool,is_anonymous?:bool,parent_post_id?:?int} $data
      */
     public function create(array $data): int
     {
@@ -23,8 +23,8 @@ final class PostRepository
             : null;
 
         return $this->db->insert(
-            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, ip, created_at)
-             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, :ip, UTC_TIMESTAMP())',
+            'INSERT INTO posts (thread_id, user_id, parent_post_id, body, body_html, is_op, is_anonymous, ip, created_at)
+             VALUES (:thread_id, :user_id, :parent_post_id, :body, :body_html, :is_op, :is_anonymous, :ip, UTC_TIMESTAMP())',
             [
                 'thread_id' => $data['thread_id'],
                 'user_id' => $data['user_id'],
@@ -32,6 +32,7 @@ final class PostRepository
                 'body' => $data['body'],
                 'body_html' => $data['body_html'],
                 'is_op' => !empty($data['is_op']) ? 1 : 0,
+                'is_anonymous' => !empty($data['is_anonymous']) ? 1 : 0,
                 'ip' => $ip,
             ],
         );
@@ -89,6 +90,8 @@ final class PostRepository
      * Recent non-deleted posts by author for the PUBLIC profile activity tab.
      * Restricted to public boards so activity never reveals hidden/private-board
      * content (mirrors ThreadRepository::recentByUser). Joins thread title/slug.
+     * Anonymous posts are EXCLUDED — listing them under their author's profile
+     * would defeat the masking (the page itself is the author's identity).
      *
      * @return array<int,array<string,mixed>>
      */
@@ -101,7 +104,8 @@ final class PostRepository
              FROM posts p
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
-             WHERE p.user_id = ? AND p.is_deleted = 0 AND t.is_deleted = 0 AND b.visibility = 'public'
+             WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_anonymous = 0
+               AND t.is_deleted = 0 AND b.visibility = 'public'
              ORDER BY p.created_at DESC, p.id DESC
              LIMIT " . $limit,
             [$userId],

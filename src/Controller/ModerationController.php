@@ -61,6 +61,18 @@ final class ModerationController extends Controller
         return $this->redirectWithFlash('/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'] . '#p' . $postId, 'Post restored.');
     }
 
+    /** Reveal the author of an anonymous post (scoped + audited). @param array<string,string> $params post id */
+    public function reveal(Request $request, array $params): Response
+    {
+        $user = $this->requireUser();
+        $postId = (int) ($params['id'] ?? 0);
+        $r = $this->container->get(ModerationService::class)->revealAuthor($user, $postId);
+        return $this->redirectWithFlash(
+            '/t/' . $r['thread_id'] . '-' . $r['thread_slug'] . '#p' . $r['post_id'],
+            'Author of this anonymous post: ' . $r['username'] . ' (this reveal has been logged).',
+        );
+    }
+
     /** @param array<string,mixed> $thread */
     private function threadUrl(array $thread): string
     {
