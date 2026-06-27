@@ -86,4 +86,61 @@ final class PreferenceSchemaTest extends TestCase
         self::assertFalse(PreferenceSchema::hasSection('nope'));
         self::assertTrue(PreferenceSchema::hasSection('appearance'));
     }
+
+    // ---- Versioned upgrade path (P3-01) ----------------------------------
+
+    public function test_upgrade_ignores_an_empty_blob(): void
+    {
+        // A never-saved user keeps an empty blob (no stray __v persisted).
+        self::assertSame([], PreferenceSchema::upgrade([]));
+    }
+
+    public function test_upgrade_stamps_the_current_version_on_a_legacy_blob(): void
+    {
+        // No __v marker → treated as legacy and brought to the current version.
+        $up = PreferenceSchema::upgrade(['theme' => 'dark', 'density' => 'compact']);
+        self::assertSame(PreferenceSchema::VERSION, $up['__v']);
+        self::assertSame('dark', $up['theme']);     // valid value preserved
+        self::assertSame('compact', $up['density']);
+    }
+
+    public function test_upgrade_is_idempotent_for_a_current_blob(): void
+    {
+        $current = ['__v' => PreferenceSchema::VERSION, 'theme' => 'light', 'show_avatars' => false];
+        self::assertSame($current, PreferenceSchema::upgrade($current));
+    }
+
+    public function test_upgrade_drops_invalid_known_values_but_keeps_unknown_keys(): void
+    {
+        $up = PreferenceSchema::upgrade([
+            '__v' => 1,
+            'theme' => 'midnight',           // invalid enum → dropped (falls to default)
+            'threads_per_page' => 999,       // out of range → dropped
+            'font_size' => 'large',          // valid → kept
+            'hide_from_leaderboard' => true, // unknown (other subsystem) → kept
+        ]);
+        self::assertArrayNotHasKey('theme', $up);
+        self::assertArrayNotHasKey('threads_per_page', $up);
+        self::assertSame('large', $up['font_size']);
+        self::assertTrue($up['hide_from_leaderboard']);
+        self::assertSame(PreferenceSchema::VERSION, $up['__v']);
+    }
+
+    public function test_upgrade_never_downgrades_a_future_blob(): void
+    {
+        // A blob written by a newer deploy must be left untouched (rollback-safe).
+        $future = ['__v' => PreferenceSchema::VERSION + 5, 'theme' => 'dark'];
+        self::assertSame($future, PreferenceSchema::upgrade($future));
+    }
+
+    public function test_resolve_upgrades_a_legacy_blob_and_fills_new_defaults(): void
+    {
+        // A v1-era blob predates the reading-display keys; resolve() upgrades it,
+        // keeps the old value, and fills the new keys with their defaults.
+        $r = PreferenceSchema::resolve(['__v' => 1, 'theme' => 'dark']);
+        self::assertSame(PreferenceSchema::VERSION, $r['__v']);
+        self::assertSame('dark', $r['theme']);
+        self::assertSame('last_post', $r['thread_sort']); // new-in-v2 default
+        self::assertTrue($r['show_reactions']);
+    }
 }

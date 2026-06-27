@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **385 tests / 1328 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **392 tests / 1347 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
 
 ### Gate A gap closure (post-audit)
 
@@ -19,8 +19,14 @@ Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **385
 - **Preferences can be exported** (P3-01) — `GET /settings/preferences/export`
   returns the user's appearance/reading/composing preferences as a
   self-describing JSON download (grouped by section, schema-versioned; non-schema
-  blob keys excluded). Owner-scoped and read-only. Closes the named Gate A
-  "export of preferences" item; only the composing toggles remain open for P3-01.
+  blob keys excluded). Owner-scoped and read-only.
+- **Preference schema upgrade path + corrupt-blob recovery** (P3-01) —
+  `PreferenceSchema::upgrade()` brings a stored blob to the current schema
+  version (version-stepped transform hook for future renames, drops values that
+  no longer validate, preserves other subsystems' keys, never downgrades a blob
+  written by a newer deploy), wired into `resolve()`. A corrupt/non-object stored
+  JSON value already recovered to defaults via the repository guard; both are now
+  covered by tests. **Only the composing toggles remain open for P3-01.**
 
 ### Hardening (post adversarial review)
 

@@ -158,4 +158,27 @@ final class AppUserPreferencesTest extends TestCase
         // Non-schema blob keys are not leaked into the export.
         self::assertArrayNotHasKey('hide_from_leaderboard', $data['preferences']);
     }
+
+    public function test_corrupt_preference_blob_recovers_to_defaults(): void
+    {
+        $user = $this->makeUser(['username' => 'corrupt']);
+        // The prefs column has CHECK (json_valid), so truly malformed text can't
+        // be stored; the realistic "corrupt blob" is a valid-JSON value that is
+        // not the expected object (here a scalar). get() must recover to [] so
+        // rendering falls back to defaults instead of 500-ing.
+        $this->db->run(
+            'INSERT INTO user_preferences (user_id, prefs, updated_at) VALUES (?, ?, UTC_TIMESTAMP())',
+            [(int) $user['id'], '"corrupt-not-an-object"'],
+        );
+
+        $prefs = (new UserPreferenceRepository($this->db))->get((int) $user['id']);
+        self::assertSame([], $prefs, 'A non-object prefs blob must decode to an empty array.');
+
+        // The settings + thread render paths still serve 200 with defaults.
+        $this->actingAs($user);
+        $appearance = $this->get('/settings/appearance');
+        $this->assertStatus(200, $appearance);
+        $this->assertSeeText($appearance, 'System (match device)'); // default theme option rendered
+        $this->assertStatus(200, $this->get('/settings/preferences'));
+    }
 }
