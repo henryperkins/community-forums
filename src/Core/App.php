@@ -13,6 +13,7 @@ use App\Controller\BrandingController;
 use App\Controller\ComposerController;
 use App\Controller\BoardController;
 use App\Controller\ConversationController;
+use App\Controller\DraftController;
 use App\Controller\EngagementController;
 use App\Controller\FeedController;
 use App\Controller\FollowController;
@@ -394,6 +395,7 @@ final class App
             'color_primary' => '',
             'color_accent' => '',
             'has_custom_colors' => false,
+            'version' => '',
         ];
         try {
             if (!$container->get(FeatureFlags::class)->enabled('branding')) {
@@ -404,6 +406,7 @@ final class App
             $favicon = $settings->getString('brand_favicon_path', '');
             $primary = $settings->getString('brand_color_primary', '');
             $accent = $settings->getString('brand_color_accent', '');
+            $brand['version'] = $settings->getString('brand_version', '');
             if ($logo !== '') {
                 $brand['logo_path'] = $logo;
             }
@@ -559,12 +562,20 @@ final class App
             (int) $config->get('community.solved_bonus', 5),
         ));
         $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
-        $c->bind(Mailer::class, function () use ($config): Mailer {
+        $c->bind(Mailer::class, function (Container $c) use ($config): Mailer {
             $mail = (array) $config->get('mail', []);
             if (($mail['driver'] ?? 'sendmail') === 'array') {
                 return new ArrayMailer();
             }
-            return new SendmailMailer((string) ($mail['from'] ?? ''), (string) ($mail['from_name'] ?? 'RetroBoards'));
+            $fromName = (string) ($mail['from_name'] ?? '');
+            if ($fromName === '') {
+                try {
+                    $fromName = $c->get(SettingRepository::class)->getString('site_name', (string) $config->get('app.name', ''));
+                } catch (Throwable) {
+                    $fromName = (string) $config->get('app.name', '');
+                }
+            }
+            return new SendmailMailer((string) ($mail['from'] ?? ''), $fromName);
         });
         $c->bind(NotificationService::class, fn (Container $c) => new NotificationService(
             $c->get(Database::class),
@@ -784,6 +795,7 @@ final class App
 
         // Shared composer live preview (P3-02) — same render+sanitize pipeline.
         $r->post('/composer/preview', [ComposerController::class, 'preview']);
+        $r->get('/drafts', [DraftController::class, 'index']);
         $r->post('/u/{username}/follow', [FollowController::class, 'toggle']);
         $r->post('/u/{username}/block', [BlockController::class, 'toggle']);
         $r->post('/posts/{id}/accept', [SolvedController::class, 'accept']);

@@ -172,6 +172,25 @@ final class AppDirectMessageTest extends TestCase
         self::assertSame(0, (new ConversationRepository($this->db))->unreadConversationCount((int) $bob['id']), 'viewing marks the conversation read');
     }
 
+    public function testHttpSendUsesCentralDmLimiter(): void
+    {
+        $this->config = new \App\Core\Config(array_replace_recursive($this->config->all(), [
+            'rate_limits' => ['dm' => [1, 600]],
+        ]));
+        $this->app = new \App\Core\App($this->config, $this->db, $this->rateLimiter);
+        $alice = $this->established(['username' => 'dmhttplimit']);
+        $bob = $this->makeUser(['username' => 'dmrecipient']);
+
+        $this->actingAs($alice);
+        $this->get('/messages/new');
+        $first = $this->post('/messages', ['to' => 'dmrecipient', 'body' => 'one']);
+        $this->assertRedirectContains($first, '/messages/');
+
+        $this->get('/messages/new');
+        $blocked = $this->post('/messages', ['to' => 'dmrecipient', 'body' => 'two']);
+        $this->assertStatus(429, $blocked);
+    }
+
     public function testLongConversationOpensOnNewestPageAndClearsUnread(): void
     {
         $alice = $this->established();

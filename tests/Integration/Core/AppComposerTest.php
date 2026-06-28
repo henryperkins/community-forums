@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\ConversationRepository;
+use App\Repository\DmMessageRepository;
+use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -69,5 +72,69 @@ final class AppComposerTest extends TestCase
         $rows = $this->db->fetchAll('SELECT is_op, body_html FROM posts WHERE thread_id = ? ORDER BY id ASC', [(int) $thread['id']]);
         self::assertCount(2, $rows);
         self::assertSame($rows[0]['body_html'], $rows[1]['body_html'], 'same Markdown must render identically in thread + reply');
+    }
+
+    public function test_shared_composer_surfaces_render_plain_textareas(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'composer-surfaces']);
+        $author = $this->makeUser(['username' => 'surfaceauthor']);
+        $recipient = $this->makeUser(['username' => 'surfacerecipient']);
+        $thread = $this->makeThread($board, $author, 'Surface thread', 'Opening body.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [(int) $thread['thread_id']]);
+        $convId = (new ConversationRepository($this->db))->between((int) $author['id'], (int) $recipient['id']);
+        (new DmMessageRepository($this->db))->create($convId, (int) $recipient['id'], 'hello', '<p>hello</p>');
+
+        $this->actingAs($author);
+
+        $boardPage = $this->get('/c/composer-surfaces');
+        $this->assertStatus(200, $boardPage);
+        self::assertStringContainsString('action="/threads"', $boardPage->body());
+        self::assertStringContainsString('class="composer-input"', $boardPage->body());
+
+        $threadPage = $this->get('/t/' . (int) $thread['thread_id']);
+        $this->assertStatus(200, $threadPage);
+        self::assertStringContainsString('action="/t/' . (int) $thread['thread_id'] . '/reply"', $threadPage->body());
+        self::assertStringContainsString('action="/posts/' . $postId . '/edit"', $threadPage->body());
+        self::assertStringContainsString('class="composer-input"', $threadPage->body());
+
+        $newDm = $this->get('/messages/new');
+        $this->assertStatus(200, $newDm);
+        self::assertStringContainsString('action="/messages"', $newDm->body());
+        self::assertStringContainsString('class="composer-input"', $newDm->body());
+
+        $dmThread = $this->get('/messages/' . $convId);
+        $this->assertStatus(200, $dmThread);
+        self::assertStringContainsString('action="/messages/' . $convId . '"', $dmThread->body());
+        self::assertStringContainsString('class="composer-input"', $dmThread->body());
+    }
+
+    public function test_rich_composer_kill_switch_keeps_textarea_fallback(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['rich_composer' => false]);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'textarea-fallback']);
+        $user = $this->makeUser(['username' => 'fallbackuser']);
+        $thread = $this->makeThread($board, $user, 'Fallback thread', 'Fallback body.');
+        $this->actingAs($user);
+
+        $page = $this->get('/t/' . (int) $thread['thread_id']);
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('<textarea name="body"', $page->body());
+        self::assertStringNotContainsString('/assets/composer.js', $page->body());
+
+        $reply = $this->post('/t/' . (int) $thread['thread_id'] . '/reply', ['body' => 'Textarea fallback reply.']);
+        $this->assertRedirectContains($reply, '/t/' . (int) $thread['thread_id']);
+        self::assertSame(2, (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE thread_id = ?', [(int) $thread['thread_id']]));
+    }
+
+    public function test_drafts_route_renders_browser_local_shell(): void
+    {
+        $user = $this->makeUser(['username' => 'draftshell']);
+        $this->actingAs($user);
+
+        $page = $this->get('/drafts');
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('data-drafts-list', $page->body());
+        self::assertStringContainsString('Drafts are browser-local', $page->body());
     }
 }

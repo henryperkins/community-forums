@@ -8,6 +8,7 @@ $items = [
     '/settings/appearance' => 'Appearance',
     '/settings/preferences' => 'Reading',
     '/settings/composing' => 'Composing',
+    '/drafts' => 'Drafts',
     '/settings/notifications' => 'Notifications',
 ];
 if (!empty($features['oauth'])) {

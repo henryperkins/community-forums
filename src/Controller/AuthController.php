@@ -7,12 +7,13 @@ namespace App\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Core\HttpException;
 use App\Repository\SettingRepository;
-use App\Security\ClientIdentifier;
 use App\Security\RateLimiter;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
+use App\Service\RateLimitService;
 
 /**
  * Registration, login, logout. Login and registration are rate-limited; login
@@ -21,12 +22,6 @@ use App\Service\PasswordResetService;
  */
 final class AuthController extends Controller
 {
-    private const LOGIN_MAX = 5;
-    private const LOGIN_WINDOW = 900;      // 15 minutes
-    private const REGISTER_MAX = 5;
-    private const REGISTER_WINDOW = 3600;  // 1 hour
-    private const FORGOT_MAX = 5;
-    private const FORGOT_WINDOW = 3600;    // 1 hour
     private const VERIFY_RESEND_MAX = 3;
     private const VERIFY_RESEND_WINDOW = 3600; // 1 hour
 
@@ -50,11 +45,12 @@ final class AuthController extends Controller
             return $this->redirect('/');
         }
 
-        $limiter = $this->container->get(RateLimiter::class);
+        $limiter = $this->container->get(RateLimitService::class);
         $email = $request->str('email');
-        $key = 'login:' . $this->clientIp($request) . ':' . strtolower($email);
-
-        if ($limiter->tooManyAttempts($key, self::LOGIN_MAX)) {
+        $subject = strtolower($email);
+        try {
+            $limiter->enforceSubject('login', $request, $subject);
+        } catch (HttpException) {
             return $this->view('auth/login', [
                 'next' => $this->safeNext((string) $request->input('next', '')),
                 'errors' => ['email' => 'Too many attempts. Please wait a few minutes and try again.'],
@@ -65,7 +61,6 @@ final class AuthController extends Controller
         $user = $this->container->get(AuthService::class)->attempt($email, (string) $request->post('password', ''));
 
         if ($user === null || $user->isBanned()) {
-            $limiter->hit($key, self::LOGIN_WINDOW);
             $message = $user !== null && $user->isBanned()
                 ? 'This account is not permitted to sign in.'
                 : 'The email or password you entered is incorrect.';
@@ -76,7 +71,7 @@ final class AuthController extends Controller
             ], 422);
         }
 
-        $limiter->clear($key);
+        $limiter->clearSubject('login', $request, $subject);
         $this->session()->login($user);
 
         return $this->redirect($this->safeNext((string) $request->input('next', '')));
@@ -113,15 +108,15 @@ final class AuthController extends Controller
             ], 403);
         }
 
-        $limiter = $this->container->get(RateLimiter::class);
-        $key = 'register:' . $this->clientIp($request);
-        if ($limiter->tooManyAttempts($key, self::REGISTER_MAX)) {
+        $limiter = $this->container->get(RateLimitService::class);
+        try {
+            $limiter->enforce('register', $request);
+        } catch (HttpException) {
             return $this->view('auth/register', [
                 'errors' => ['email' => 'Too many sign-up attempts from your network. Please try again later.'],
                 'old' => $this->oldRegister($request),
             ], 429);
         }
-        $limiter->hit($key, self::REGISTER_WINDOW);
 
         try {
             $user = $this->container->get(AuthService::class)->register($request->allInput());
@@ -164,18 +159,17 @@ final class AuthController extends Controller
             return $this->redirect('/');
         }
 
-        $limiter = $this->container->get(RateLimiter::class);
+        $limiter = $this->container->get(RateLimitService::class);
         $email = $request->str('email');
-        $key = 'pwreset:' . $this->clientIp($request);
-
-        if ($limiter->tooManyAttempts($key, self::FORGOT_MAX)) {
+        try {
+            $limiter->enforce('password_reset', $request);
+        } catch (HttpException) {
             return $this->view('auth/forgot', [
                 'errors' => ['email' => 'Too many requests. Please wait a while and try again.'],
                 'old' => ['email' => $email],
                 'sent' => false,
             ], 429);
         }
-        $limiter->hit($key, self::FORGOT_WINDOW);
 
         $this->container->get(PasswordResetService::class)->request($email);
 
@@ -259,17 +253,6 @@ final class AuthController extends Controller
 
         $this->container->get(EmailVerificationService::class)->issue($user->id(), $user->email());
         return $this->redirectWithFlash('/settings/account', 'Verification email sent — check your inbox.');
-    }
-
-    /**
-     * Trusted-proxy-aware client IP for rate-limit keying (P3-05). Behind a
-     * configured reverse proxy the raw REMOTE_ADDR is the proxy, so login,
-     * registration, and password-reset throttles would otherwise collapse every
-     * client into one shared bucket; ClientIdentifier resolves the real client.
-     */
-    private function clientIp(Request $request): string
-    {
-        return $this->container->get(ClientIdentifier::class)->ipFor($request);
     }
 
     /**

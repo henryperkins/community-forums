@@ -32,7 +32,9 @@ final class AppBrandingThemeTest extends TestCase
         $this->assertStatus(200, $css);
         self::assertStringContainsString('text/css', (string) $css->getHeader('content-type'));
         $this->assertSeeText($css, '--accent:#123456');
+        $this->assertSeeText($css, '--accent-contrast:#ffffff');
         $this->assertSeeText($css, '--accent-2:#abcdef');
+        $this->assertSeeText($css, '--brand-accent-contrast:#0f1218');
 
         // Regression guard: both brand tokens must be CONSUMED by the stylesheet,
         // otherwise the colour picker is inert (the accent previously emitted a
@@ -44,7 +46,7 @@ final class AppBrandingThemeTest extends TestCase
         // The shell now links it and shows the new name; the signed-out default
         // theme is dark.
         $home = $this->get('/');
-        $this->assertSeeText($home, '/brand.css');
+        $this->assertSeeText($home, '/brand.css?v=');
         $this->assertSeeText($home, 'Lakeside Forum');
     }
 
@@ -78,6 +80,15 @@ final class AppBrandingThemeTest extends TestCase
         $this->actingAs($admin);
         $res = $this->post('/admin/branding', ['site_name' => 'X', 'color_primary' => 'red', 'theme_default' => 'system']);
         $this->assertStatus(422, $res);
+    }
+
+    public function test_low_contrast_brand_colour_is_rejected(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin6']);
+        $this->actingAs($admin);
+        $res = $this->post('/admin/branding', ['site_name' => 'X', 'color_primary' => '#7a7a7a', 'theme_default' => 'system']);
+        $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'readable button text');
     }
 
     public function test_non_admin_cannot_change_branding(): void

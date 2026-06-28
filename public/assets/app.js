@@ -103,4 +103,49 @@
         pollPresence();
         setInterval(pollPresence, 45000);
     }
+
+    // Operator branding preview (P3-07). The saved /brand.css remains the source
+    // of truth; this only previews unsaved form values inside the admin card.
+    var brandForm = document.querySelector('[data-brand-form]');
+    var brandPreview = document.querySelector('[data-brand-preview]');
+    if (brandForm && brandPreview) {
+        var brandName = brandForm.querySelector('[data-brand-name]');
+        var brandPrimary = brandForm.querySelector('[data-brand-primary]');
+        var brandAccent = brandForm.querySelector('[data-brand-accent]');
+        var brandTheme = brandForm.querySelector('[data-brand-theme]');
+        var previewName = brandPreview.querySelector('[data-brand-preview-name]');
+        var previewTheme = brandPreview.querySelector('[data-brand-preview-theme]');
+        var hex = function (v) { return /^#[0-9a-fA-F]{6}$/.test((v || '').trim()); };
+        var rgb = function (v) {
+            v = v.replace('#', '');
+            return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
+        };
+        var lum = function (v) {
+            return rgb(v).map(function (n) {
+                n = n / 255;
+                return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+            }).reduce(function (sum, n, i) {
+                return sum + n * [0.2126, 0.7152, 0.0722][i];
+            }, 0);
+        };
+        var contrast = function (a, b) {
+            var l1 = lum(a), l2 = lum(b), hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+            return (hi + 0.05) / (lo + 0.05);
+        };
+        var contrastToken = function (v) {
+            return contrast(v, '#ffffff') >= contrast(v, '#0f1218') ? '#ffffff' : '#0f1218';
+        };
+        var updateBrandPreview = function () {
+            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value : '#2f6feb';
+            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value : primary;
+            brandPreview.style.setProperty('--preview-accent', primary);
+            brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
+            brandPreview.style.setProperty('--preview-accent-2', accent);
+            if (previewName && brandName) { previewName.textContent = brandName.value || 'Community'; }
+            if (previewTheme && brandTheme) { previewTheme.textContent = brandTheme.value.charAt(0).toUpperCase() + brandTheme.value.slice(1); }
+        };
+        brandForm.addEventListener('input', updateBrandPreview);
+        brandForm.addEventListener('change', updateBrandPreview);
+        updateBrandPreview();
+    }
 })();

@@ -35,6 +35,7 @@ final class AppFeatureFlagTest extends TestCase
             'dms' => '/messages',
             'community' => '/feed',
             'presence' => '/presence',
+            'drafts' => '/drafts',
             'moderation_queue' => '/mod/reports',
             // /settings/connections is gated by the flag itself (the /auth/*
             // routes additionally require a configured provider, absent in tests).

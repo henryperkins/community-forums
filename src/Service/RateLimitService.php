@@ -33,12 +33,26 @@ final class RateLimitService
      */
     public function enforce(string $policy, Request $request, ?User $user = null): void
     {
+        $this->consume($policy, $request, $user, null);
+    }
+
+    /**
+     * Consume a policy for an unauthenticated target such as a login email. The
+     * subject is hashed into the key so limiter storage never contains raw emails.
+     */
+    public function enforceSubject(string $policy, Request $request, string $subject, ?User $user = null): void
+    {
+        $this->consume($policy, $request, $user, $subject);
+    }
+
+    private function consume(string $policy, Request $request, ?User $user, ?string $subject): void
+    {
         $limits = $this->policy($policy);
         if ($limits === null) {
             return;
         }
         [$max, $decay] = $limits;
-        $key = $this->key($policy, $request, $user);
+        $key = $this->key($policy, $request, $user, $subject);
         if ($this->limiter->tooManyAttempts($key, $max)) {
             $wait = max(1, $this->limiter->availableIn($key));
             throw new HttpException(429, "You're doing that too quickly. Please wait {$wait} second(s) and try again.");
@@ -52,7 +66,16 @@ final class RateLimitService
         if ($this->policy($policy) === null) {
             return;
         }
-        $this->limiter->clear($this->key($policy, $request, $user));
+        $this->limiter->clear($this->key($policy, $request, $user, null));
+    }
+
+    /** Reset a subject-scoped policy window after a successful action. */
+    public function clearSubject(string $policy, Request $request, string $subject, ?User $user = null): void
+    {
+        if ($this->policy($policy) === null) {
+            return;
+        }
+        $this->limiter->clear($this->key($policy, $request, $user, $subject));
     }
 
     /** @return array{0:int,1:int}|null [max, decaySeconds] */
@@ -66,9 +89,14 @@ final class RateLimitService
         return [(int) $p[0], (int) $p[1]];
     }
 
-    private function key(string $policy, Request $request, ?User $user): string
+    private function key(string $policy, Request $request, ?User $user, ?string $subject): string
     {
-        $who = $user !== null ? 'u' . $user->id() : 'ip' . $this->clientId->ipFor($request);
+        $ip = $this->clientId->ipFor($request);
+        $who = $user !== null ? 'u' . $user->id() . ':ip' . $ip : 'ip' . $ip;
+        $subject = trim((string) $subject);
+        if ($subject !== '') {
+            $who .= ':s' . hash('sha256', strtolower($subject));
+        }
         return 'rl:' . $policy . ':' . $who;
     }
 }

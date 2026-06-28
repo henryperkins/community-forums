@@ -14,7 +14,7 @@ final class SendmailMailer implements Mailer
 {
     public function __construct(
         private string $fromEmail,
-        private string $fromName = 'RetroBoards',
+        private string $fromName = '',
     ) {
     }
 
@@ -37,7 +37,6 @@ final class SendmailMailer implements Mailer
             'From: ' . $from,
             'MIME-Version: 1.0',
             'Message-ID: ' . $messageId,
-            'X-Mailer: RetroBoards',
         ];
 
         if ($htmlBody !== null && $htmlBody !== '') {

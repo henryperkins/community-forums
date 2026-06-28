@@ -19,6 +19,9 @@
             smartLists: b.getAttribute('data-smart-lists') !== '0'
         };
     }
+    function draftsEnabled() {
+        return document.body.getAttribute('data-drafts') !== '0';
+    }
 
     function tokenField(form) {
         var t = form.querySelector('input[name="_token"]');
@@ -37,25 +40,87 @@
     }
 
     var ACTIONS = {
-        bold: ['**', '**'], italic: ['*', '*'], strike: ['~~', '~~'],
-        code: ['`', '`'], spoiler: ['||', '||'], quote: ['\n> ', ''],
-        link: ['[', '](https://)'], h2: ['\n## ', ''], list: ['\n- ', '']
+        bold: { label: 'bold', before: '**', after: '**', shortcut: 'b', active: 'inline' },
+        italic: { label: 'italic', before: '*', after: '*', shortcut: 'i', active: 'inline' },
+        strike: { label: 'strike', before: '~~', after: '~~', active: 'inline' },
+        code: { label: 'code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
+        spoiler: { label: 'spoiler', before: '||', after: '||', active: 'inline' },
+        quote: { label: 'quote', before: '\n> ', after: '', prefix: '> ', active: 'line' },
+        link: { label: 'link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' },
+        h2: { label: 'heading', before: '\n## ', after: '', prefix: '## ', active: 'line' },
+        list: { label: 'list', before: '\n- ', after: '', prefix: '- ', active: 'line' },
+        codeblock: { label: 'code block', before: '\n```\n', after: '\n```\n', active: 'fence' },
+        emoji: { label: 'emoji', before: ':smile:', after: '' }
     };
+
+    function applyAction(ta, key) {
+        var action = ACTIONS[key];
+        if (!action) { return false; }
+        wrapSelection(ta, action.before, action.after);
+        return true;
+    }
+
+    function currentLine(ta) {
+        var v = ta.value, pos = ta.selectionStart;
+        var lineStart = v.lastIndexOf('\n', pos - 1) + 1;
+        var lineEnd = v.indexOf('\n', pos);
+        if (lineEnd < 0) { lineEnd = v.length; }
+        return v.slice(lineStart, lineEnd);
+    }
+
+    function inFence(ta) {
+        var before = ta.value.slice(0, ta.selectionStart);
+        return ((before.match(/^```/gm) || []).length % 2) === 1;
+    }
+
+    function actionActive(ta, action) {
+        if (!action.active) { return false; }
+        var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value;
+        if (action.active === 'inline') {
+            return s >= action.before.length
+                && v.slice(s - action.before.length, s) === action.before
+                && v.slice(e, e + action.after.length) === action.after;
+        }
+        if (action.active === 'line') {
+            return currentLine(ta).indexOf(action.prefix || '') === 0;
+        }
+        if (action.active === 'fence') {
+            return inFence(ta);
+        }
+        return false;
+    }
 
     function buildToolbar(ta) {
         var bar = document.createElement('div');
         bar.className = 'composer-toolbar';
+        var buttons = [];
+        function updateState() {
+            buttons.forEach(function (item) {
+                item.button.setAttribute('aria-pressed', actionActive(ta, item.action) ? 'true' : 'false');
+            });
+        }
         Object.keys(ACTIONS).forEach(function (key) {
+            var action = ACTIONS[key];
             var b = document.createElement('button');
             b.type = 'button';
-            b.textContent = key;
-            b.setAttribute('aria-label', 'Insert ' + key);
+            b.textContent = action.label;
+            b.setAttribute('aria-label', 'Insert ' + action.label);
+            if (action.shortcut) {
+                b.setAttribute('aria-keyshortcuts', 'Control+' + action.shortcut.toUpperCase() + ' Meta+' + action.shortcut.toUpperCase());
+            }
+            b.setAttribute('aria-pressed', 'false');
             b.addEventListener('click', function () {
-                wrapSelection(ta, ACTIONS[key][0], ACTIONS[key][1]);
+                applyAction(ta, key);
+                updateState();
             });
+            buttons.push({ button: b, action: action });
             bar.appendChild(b);
         });
+        ['input', 'keyup', 'mouseup', 'select'].forEach(function (evt) {
+            ta.addEventListener(evt, updateState);
+        });
         ta.parentNode.insertBefore(bar, ta);
+        updateState();
     }
 
     // ---- Character counter ------------------------------------------------
@@ -105,21 +170,151 @@
     }
 
     // ---- Local draft autosave (per user+context, P3-03) -------------------
-    function draftKey(form) {
-        var who = document.body.getAttribute('data-user') || 'anon';
-        return 'rb-draft:' + who + ':' + (form.getAttribute('action') || location.pathname);
+    function draftUser() {
+        return document.body.getAttribute('data-user') || 'anon';
+    }
+    function draftContext(form) {
+        return form.getAttribute('action') || location.pathname;
+    }
+    function draftKeyFor(who, context) {
+        return 'rb-draft:' + who + ':' + context;
+    }
+    function migrateAnonDrafts(who) {
+        if (who === 'anon') { return; }
+        try {
+            var anonPrefix = 'rb-draft:anon:';
+            for (var i = localStorage.length - 1; i >= 0; i--) {
+                var key = localStorage.key(i);
+                if (!key || key.indexOf(anonPrefix) !== 0) { continue; }
+                var context = key.slice(anonPrefix.length);
+                var target = draftKeyFor(who, context);
+                if (!localStorage.getItem(target)) {
+                    localStorage.setItem(target, localStorage.getItem(key) || '');
+                }
+                localStorage.removeItem(key);
+            }
+        } catch (e) {}
+    }
+    function buildDiscard(form, ta, key) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'btn btn-secondary btn-small composer-discard';
+        b.textContent = 'Discard draft';
+        function update() {
+            var hasSaved = false;
+            try { hasSaved = !!localStorage.getItem(key); } catch (e) {}
+            b.hidden = !hasSaved && !ta.value;
+        }
+        b.addEventListener('click', function () {
+            try { localStorage.removeItem(key); } catch (e) {}
+            ta.value = '';
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+            update();
+        });
+        ta.parentNode.appendChild(b);
+        update();
+        return update;
     }
     function wireDrafts(form, ta) {
-        var key = draftKey(form);
+        var who = draftUser();
+        var context = draftContext(form);
+        migrateAnonDrafts(who);
+        var key = draftKeyFor(who, context);
         try {
             var saved = localStorage.getItem(key);
             if (saved && !ta.value) { ta.value = saved; ta.dispatchEvent(new Event('input', { bubbles: true })); }
         } catch (e) {}
+        var updateDiscard = buildDiscard(form, ta, key);
         ta.addEventListener('input', function () {
             try { ta.value ? localStorage.setItem(key, ta.value) : localStorage.removeItem(key); } catch (e) {}
+            updateDiscard();
         });
         form.addEventListener('submit', function () {
-            try { localStorage.removeItem(key); } catch (e) {}
+            // Do not clear here: the browser has not confirmed that the POST
+            // succeeded yet. Keeping the draft prevents network/validation loss;
+            // explicit discard and the Drafts page handle cleanup.
+            try { if (ta.value) { localStorage.setItem(key, ta.value); } } catch (e) {}
+        });
+    }
+
+    function draftResumeHref(context) {
+        var m = context.match(/^\/t\/(\d+)\/reply$/);
+        if (m) { return '/t/' + m[1]; }
+        m = context.match(/^\/messages\/(\d+)$/);
+        if (m) { return context; }
+        if (context === '/messages') { return '/messages/new'; }
+        if (context === '/threads') { return '/'; }
+        return '';
+    }
+    function draftLabel(context) {
+        if (context === '/threads') { return 'New topic'; }
+        if (context === '/messages') { return 'New direct message'; }
+        if (/^\/messages\/\d+$/.test(context)) { return 'Direct-message reply'; }
+        if (/^\/t\/\d+\/reply$/.test(context)) { return 'Thread reply'; }
+        if (/^\/posts\/\d+\/edit$/.test(context)) { return 'Post edit'; }
+        return context;
+    }
+    function renderDraftsPage() {
+        var host = document.querySelector('[data-drafts-list]');
+        if (!host || !draftsEnabled()) { return; }
+        var who = draftUser();
+        migrateAnonDrafts(who);
+        var prefix = 'rb-draft:' + who + ':';
+        var drafts = [];
+        try {
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (!key || key.indexOf(prefix) !== 0) { continue; }
+                var body = localStorage.getItem(key) || '';
+                if (!body) { continue; }
+                drafts.push({ key: key, context: key.slice(prefix.length), body: body });
+            }
+        } catch (e) {}
+        drafts.sort(function (a, b) { return a.context.localeCompare(b.context); });
+        host.innerHTML = '';
+        if (!drafts.length) {
+            var empty = document.createElement('p');
+            empty.className = 'muted empty';
+            empty.textContent = 'No saved drafts in this browser.';
+            host.appendChild(empty);
+            return;
+        }
+        drafts.forEach(function (d) {
+            var card = document.createElement('article');
+            card.className = 'card';
+            var h = document.createElement('h2');
+            h.textContent = draftLabel(d.context);
+            var p = document.createElement('p');
+            p.className = 'muted';
+            p.textContent = d.context;
+            var pre = document.createElement('pre');
+            pre.className = 'draft-preview';
+            pre.textContent = d.body.length > 500 ? d.body.slice(0, 500) + '...' : d.body;
+            var actions = document.createElement('p');
+            actions.className = 'form-actions';
+            var href = draftResumeHref(d.context);
+            if (href) {
+                var resume = document.createElement('a');
+                resume.className = 'btn btn-small';
+                resume.href = href;
+                resume.textContent = 'Resume';
+                actions.appendChild(resume);
+            }
+            var discard = document.createElement('button');
+            discard.type = 'button';
+            discard.className = 'btn btn-secondary btn-small';
+            discard.textContent = 'Discard';
+            discard.addEventListener('click', function () {
+                try { localStorage.removeItem(d.key); } catch (e) {}
+                card.remove();
+                if (!host.querySelector('article')) { renderDraftsPage(); }
+            });
+            actions.appendChild(discard);
+            card.appendChild(h);
+            card.appendChild(p);
+            card.appendChild(pre);
+            card.appendChild(actions);
+            host.appendChild(card);
         });
     }
 
@@ -130,22 +325,181 @@
         ta.selectionStart = ta.selectionEnd = s + text.length;
         ta.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    function replaceOnce(ta, from, to) {
+        var idx = ta.value.indexOf(from);
+        if (idx < 0) { return false; }
+        ta.value = ta.value.slice(0, idx) + to + ta.value.slice(idx + from.length);
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+    }
+    function markdownAlt(alt) {
+        return (alt || '').replace(/[\r\n]+/g, ' ').replace(/]/g, '\\]');
+    }
+    function imageMarkdown(url, alt) {
+        return '![' + markdownAlt(alt) + '](' + url + ')';
+    }
+    function uploadPurpose(form) {
+        var action = form.getAttribute('action') || '';
+        return action.indexOf('/messages') === 0 ? 'dm' : 'post';
+    }
+    function uploadTray(form, ta) {
+        var tray = form.querySelector('.composer-upload-tray');
+        if (tray) { return tray; }
+        tray = document.createElement('div');
+        tray.className = 'composer-upload-tray';
+        tray.setAttribute('aria-live', 'polite');
+        ta.parentNode.appendChild(tray);
+        return tray;
+    }
+    function moveSnippetBefore(ta, moving, anchor) {
+        if (!moving || !anchor || moving === anchor) { return false; }
+        var v = ta.value;
+        var mi = v.indexOf(moving);
+        if (mi < 0 || v.indexOf(anchor) < 0) { return false; }
+        v = v.slice(0, mi) + v.slice(mi + moving.length);
+        var ai = v.indexOf(anchor);
+        if (ai < 0) { return false; }
+        ta.value = v.slice(0, ai) + moving + v.slice(ai);
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+    }
+    function moveSnippetAfter(ta, moving, anchor) {
+        if (!moving || !anchor || moving === anchor) { return false; }
+        var v = ta.value;
+        var mi = v.indexOf(moving);
+        if (mi < 0 || v.indexOf(anchor) < 0) { return false; }
+        v = v.slice(0, mi) + v.slice(mi + moving.length);
+        var ai = v.indexOf(anchor);
+        if (ai < 0) { return false; }
+        ta.value = v.slice(0, ai + anchor.length) + moving + v.slice(ai + anchor.length);
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+    }
+    function uploadCard(form, ta, file, placeholder) {
+        var tray = uploadTray(form, ta);
+        var card = document.createElement('div');
+        card.className = 'composer-upload-card is-uploading';
+        var preview = document.createElement('img');
+        preview.className = 'composer-upload-thumb';
+        preview.alt = '';
+        preview.hidden = true;
+        var meta = document.createElement('div');
+        meta.className = 'composer-upload-meta';
+        var status = document.createElement('div');
+        status.className = 'composer-upload-status';
+        status.textContent = 'Uploading ' + (file && file.name ? file.name : 'image') + '...';
+        var progress = document.createElement('progress');
+        progress.max = 100;
+        progress.value = 0;
+        var alt = document.createElement('input');
+        alt.type = 'text';
+        alt.className = 'input input-small';
+        alt.placeholder = 'Alt text';
+        alt.setAttribute('aria-label', 'Image alt text');
+        alt.disabled = true;
+        var actions = document.createElement('div');
+        actions.className = 'composer-upload-actions';
+        var up = document.createElement('button');
+        up.type = 'button';
+        up.className = 'btn btn-secondary btn-small';
+        up.textContent = 'Up';
+        var down = document.createElement('button');
+        down.type = 'button';
+        down.className = 'btn btn-secondary btn-small';
+        down.textContent = 'Down';
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn btn-secondary btn-small';
+        remove.textContent = 'Remove';
+        actions.appendChild(up);
+        actions.appendChild(down);
+        actions.appendChild(remove);
+        meta.appendChild(status);
+        meta.appendChild(progress);
+        meta.appendChild(alt);
+        meta.appendChild(actions);
+        card.appendChild(preview);
+        card.appendChild(meta);
+        tray.appendChild(card);
+        card._rbMarkdown = '';
+        remove.addEventListener('click', function () {
+            replaceOnce(ta, card._rbMarkdown || placeholder, '');
+            card.remove();
+        });
+        up.addEventListener('click', function () {
+            var prev = card.previousElementSibling;
+            if (prev && moveSnippetBefore(ta, card._rbMarkdown, prev._rbMarkdown || '')) {
+                card.parentNode.insertBefore(card, prev);
+            }
+        });
+        down.addEventListener('click', function () {
+            var next = card.nextElementSibling;
+            if (next && moveSnippetAfter(ta, card._rbMarkdown, next._rbMarkdown || '')) {
+                card.parentNode.insertBefore(next, card);
+            }
+        });
+        alt.addEventListener('input', function () {
+            if (!card._rbUrl || !card._rbMarkdown) { return; }
+            var next = imageMarkdown(card._rbUrl, alt.value);
+            if (replaceOnce(ta, card._rbMarkdown, next)) {
+                card._rbMarkdown = next;
+                preview.alt = alt.value;
+            }
+        });
+        return {
+            progress: function (pct) { progress.value = Math.max(0, Math.min(100, pct)); },
+            complete: function (json) {
+                var markdown = imageMarkdown(json.url, '');
+                replaceOnce(ta, placeholder, markdown);
+                card._rbUrl = json.url;
+                card._rbMarkdown = markdown;
+                preview.src = json.url;
+                preview.alt = '';
+                preview.hidden = false;
+                alt.disabled = false;
+                progress.value = 100;
+                status.textContent = 'Uploaded image ' + json.width + 'x' + json.height + '.';
+                card.classList.remove('is-uploading');
+                card.classList.add('is-complete');
+            },
+            fail: function (message) {
+                replaceOnce(ta, placeholder, '');
+                progress.remove();
+                alt.disabled = true;
+                status.textContent = message || 'Upload failed.';
+                card.classList.remove('is-uploading');
+                card.classList.add('is-failed');
+            }
+        };
+    }
     function uploadImage(form, ta, file) {
         var data = new FormData();
         data.append('_token', tokenField(form));
         data.append('image', file);
+        data.append('purpose', uploadPurpose(form));
         // Unique per upload so several images pasted/dropped at once each resolve
         // into their OWN marker — String.replace(str) only swaps the first match.
         var token = 'rbup-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
         var placeholder = '![uploading…](' + token + ')';
         insertAtCursor(ta, placeholder);
-        fetch('/upload', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function (r) { return r.json(); })
-            .then(function (j) {
-                ta.value = ta.value.replace(placeholder, (j && j.ok) ? j.markdown : '');
-                ta.dispatchEvent(new Event('input', { bubbles: true }));
-            })
-            .catch(function () { ta.value = ta.value.replace(placeholder, ''); });
+        var card = uploadCard(form, ta, file, placeholder);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.upload.onprogress = function (e) {
+            if (e.lengthComputable) { card.progress((e.loaded / e.total) * 95); }
+        };
+        xhr.onload = function () {
+            var j = null;
+            try { j = JSON.parse(xhr.responseText || '{}'); } catch (e) {}
+            if (xhr.status >= 200 && xhr.status < 300 && j && j.ok) {
+                card.complete(j);
+            } else {
+                card.fail((j && j.error) || 'Upload failed.');
+            }
+        };
+        xhr.onerror = function () { card.fail('Upload failed. Check your connection and try again.'); };
+        xhr.send(data);
     }
     function wireUploads(form, ta) {
         ta.addEventListener('paste', function (e) {
@@ -193,8 +547,20 @@
         return true;
     }
     function wireKeys(form, ta, prefs) {
-        if (!prefs.enterToSend && !prefs.smartLists) { return; }
         ta.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                var key = e.key.toLowerCase();
+                var action = key === 'b' ? 'bold'
+                    : key === 'i' ? 'italic'
+                    : key === 'k' ? 'link'
+                    : key === 'e' ? 'code'
+                    : null;
+                if (action !== null) {
+                    e.preventDefault();
+                    applyAction(ta, action);
+                    return;
+                }
+            }
             if (e.key !== 'Enter' || e.isComposing) { return; }
             // Shift/modifier+Enter always inserts a newline (default behaviour).
             if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) { return; }
@@ -217,7 +583,7 @@
         if (prefs.showPreview) { buildPreview(form, ta); }
         wireKeys(form, ta, prefs);
         stampIdempotency(form);
-        wireDrafts(form, ta);
+        if (draftsEnabled()) { wireDrafts(form, ta); }
         wireUploads(form, ta);
     }
 
@@ -225,5 +591,6 @@
         var prefs = composingPrefs();
         var forms = document.querySelectorAll('form.composer');
         for (var i = 0; i < forms.length; i++) { enhance(forms[i], prefs); }
+        renderDraftsPage();
     });
 })();
