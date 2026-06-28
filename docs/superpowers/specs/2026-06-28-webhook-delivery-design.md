@@ -51,7 +51,7 @@ Each unit has one purpose, a defined interface, and is independently testable.
 | Migration | `database/migrations/0057_phase5_webhooks.php` | Create `webhooks` + `webhook_deliveries`; extend `moderation_log.target_type` enum with `'webhook'` |
 | `WebhookEvents` | `src/Security/WebhookEvents.php` | `final` catalogue of event-name strings (like `ApiScopes`): `const EVENTS`, `isValid(string): bool`, `all(): array` |
 | `WebhookRepository` | `src/Repository/WebhookRepository.php` | `final`, single-table SQL for endpoints |
-| `WebhookDeliveryRepository` | `src/Repository/WebhookDeliveryRepository.php` | `final`, the durable ledger (claim/enqueue/transitions/lock/observability) |
+| `WebhookDeliveryRepository` | `src/Repository/WebhookDeliveryRepository.php` | `final`, the durable ledger (enqueue/transitions/lock/observability + a backoff-aware `claim` that joins `webhooks` to gate on `is_active=1`) |
 | `EgressGuard` | `src/Security/EgressGuard.php` | `final`, pure SSRF policy — validate URL + resolved IPs vs deny-ranges & allowlist |
 | `Cidr` | `src/Support/Cidr.php` | `final`, pure static `contains(ip, cidr): bool` (`inet_pton` byte-prefix, v4/v6); extracted so `EgressGuard` can reuse it (`ClientIdentifier::matches` is `private`) |
 | `WebhookTransport` | `src/Service/Webhook/WebhookTransport.php` | interface — `deliver(string $url, array $headers, string $body, int $timeoutSeconds): WebhookResponse` |
@@ -219,10 +219,14 @@ The signed message is `"{timestamp}.{rawBody}"`, MAC'd with `hash_hmac('sha256',
 
 `EgressGuard` is pure and unit-testable: given a URL and a DNS resolver, it returns allow / block-with-reason.
 
-- **Two-tier scheme/port policy.** *Public targets* (resolved IP **not** in the allowlist): `https` only, port **443** (or **80** only if `WEBHOOK_ALLOW_HTTP`), and the IP must not be in the deny set. *Allowlisted targets* (resolved IP within `WEBHOOK_ALLOWED_PRIVATE_CIDRS`): the operator has explicitly trusted them, so they may use `http` **and any port** — internal services run on arbitrary ports (n8n on `:5678`, a local test receiver on a random port). `user:pass@host` credential forms are rejected on **both** tiers. (This is what lets the Playwright local receiver on a random port be delivered to — see §12.)
-- **Resolve-then-pin:** resolve the host to A/AAAA records; validate **every** returned IP against the deny CIDR set; connect via `CURLOPT_RESOLVE` pinned to a validated literal IP so the socket cannot use a re-resolved address (DNS-rebinding defense).
+- **Two-tier scheme/port policy** (the tier is decided across *all* resolved addresses — see resolve-then-pin). *Public tier*: `https` only, port **443** (or **80** only if `WEBHOOK_ALLOW_HTTP`). *Relaxed (private) tier*: may use `http` **and any port** — internal services run on arbitrary ports (n8n on `:5678`, a local test receiver on a random port). `user:pass@host` credential forms are rejected on **both** tiers. (The relaxed tier is what lets the Playwright local receiver on a random port be delivered to — see §12.)
+- **Resolve-then-pin, with the tier decided across the whole address set** (DNS-rebinding defense). Resolve the host to its full A/AAAA set (reject if empty), then:
+  - **Relaxed (private) tier** applies **only if every** resolved IP is within `WEBHOOK_ALLOWED_PRIVATE_CIDRS`.
+  - Otherwise the **public tier** applies and **every** resolved IP must be public-safe (none in the deny set), with the public scheme/port rules.
+  - **Any mix is blocked** — e.g. one allowlisted-private address alongside a public or non-allowlisted-private one. (A host that resolves to both a trusted private IP *and* a public IP is exactly the rebinding shape this guard exists to stop; it must not inherit the relaxed `http`/any-port latitude.)
+  Then connect via `CURLOPT_RESOLVE` pinned to one validated address **of the decided tier**, so the socket cannot use a re-resolved address.
 - **Deny CIDRs** (matched via the new `App\Support\Cidr::contains()` helper): `127.0.0.0/8`, `::1`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`, `169.254.0.0/16` (covers `169.254.169.254`), `fe80::/10`, `0.0.0.0/8`, broadcast/multicast/reserved, and IPv4-mapped IPv6 `::ffff:0:0/96`.
-- **Opt-in allowlist** (`WEBHOOK_ALLOWED_PRIVATE_CIDRS`, comma-separated, env→config) takes precedence over the deny set, enabling localhost/LAN targets for self-hosters.
+- **Opt-in allowlist** (`WEBHOOK_ALLOWED_PRIVATE_CIDRS`, comma-separated, env→config) re-permits otherwise-denied private ranges **only when every resolved address is within it** (per the tier rule above), enabling localhost/LAN targets for self-hosters.
 
 `CurlWebhookTransport` runs `EgressGuard` first (throwing `EgressBlockedException` on block), then performs the cURL with: `CURLOPT_PROTOCOLS`/`CURLOPT_REDIR_PROTOCOLS` pinned to allowed schemes, `CURLOPT_FOLLOWLOCATION=false`, `CURLOPT_SSL_VERIFYPEER=true`, `CURLOPT_SSL_VERIFYHOST=2`, `CURLOPT_CONNECTTIMEOUT` + `CURLOPT_TIMEOUT=5` (D11), and a response-size cap (write-callback abort). Returns a `WebhookResponse{status:int, error:?string}`; never logs the secret, signature, or auth headers.
 
@@ -237,8 +241,18 @@ Mirrors `NotificationEmailWorker`. `run(int $limit): array{delivered,retrying,de
 1. Flag dark → return zero stats (paused; rows left `queued`).
 2. `$deliveries->acquireDrainLock()` (`GET_LOCK('rb_webhook_outbox', 0)`) or return zero stats.
 3. `try` `foreach ($deliveries->claim($limit) as $row)`:
-   - Load endpoint; if missing/inactive → skip (leave queued or mark skipped — inactive endpoints are not delivered to).
-   - `$secrets = $vault->usableSecrets($row['secret_ref'])`; build signed request via `WebhookSigner`.
+   `claim()` selects **only deliveries whose endpoint is active**, so a paused or auto-disabled endpoint never consumes the batch or starves active endpoints — `is_active=0` *is* the pause; there is no `skipped` row state:
+   ```sql
+   SELECT d.* FROM webhook_deliveries d
+     JOIN webhooks w ON w.id = d.webhook_id
+    WHERE d.status = 'queued'
+      AND w.is_active = 1
+      AND (d.next_attempt_at IS NULL OR d.next_attempt_at <= UTC_TIMESTAMP())
+    ORDER BY d.next_attempt_at ASC, d.id ASC   -- NULLs (immediate) sort first
+    LIMIT <int>
+   ```
+   A paused endpoint's queued rows are simply not claimed; they resume when it is re-enabled. `idx_delivery_claim (status, next_attempt_at)` backs the scan; the join is on the `webhooks` PK. (This is the one place the delivery repo reads a second table — the active-endpoint gate — a deliberate, documented exception to the single-table rule.)
+   - `$secrets = $vault->usableSecrets($row['secret_ref'])`; build signed request via `WebhookSigner`. (If `usableSecrets` unexpectedly throws — e.g. a transient vault error — leave the row `queued` and count it `skipped` for this run; do not dead-letter.)
    - `try { $resp = $transport->deliver($url, $headers, $payload, 5); }`
      - **2xx** → `markDelivered(id, status)`; `webhooks->resetConsecutiveFailures(webhookId)`; `webhooks->touchLastStatus(webhookId, status)`.
      - **non-2xx / timeout / connection error** → `$next = backoffNext($attempt_count)`; if `attempt_count+1 >= max_attempts` → `recordFailure(id, status, error, next:null, dead:true)` else `recordFailure(id, status, error, next, dead:false)`; `webhooks->incrementConsecutiveFailures(webhookId)`; if it crosses the circuit-breaker threshold → `webhooks->autoDisable(webhookId, 'auto-paused after N consecutive failures')` + audit `webhook_auto_disabled`.
@@ -343,10 +357,10 @@ Per-test isolation is one rolled-back transaction (no savepoints); assert observ
 
 - **Unit**
   - `tests/Unit/Security/WebhookEventsTest.php` — catalogue validity, `ping` present, unknown rejected.
-  - `tests/Unit/Security/EgressGuardTest.php` — **the critical security unit:** blocks `127.0.0.1`, `::1`, `10/172.16/192.168` ranges, `169.254.169.254`, `fe80::`, `::ffff:10.0.0.1` (v4-mapped); allows a public IP; opt-in allowlist re-permits a chosen CIDR; rejects non-https (unless allowed), odd ports, and `user:pass@` URLs; resolve-then-pin uses an injectable resolver.
+  - `tests/Unit/Security/EgressGuardTest.php` — **the critical security unit:** blocks `127.0.0.1`, `::1`, `10/172.16/192.168` ranges, `169.254.169.254`, `fe80::`, `::ffff:10.0.0.1` (v4-mapped); allows a public IP; opt-in allowlist re-permits a chosen CIDR (relaxed tier → `http` + non-standard port allowed when **all** addresses are allowlisted); **mixed-DNS resolver returning one allowlisted-private + one public IP is BLOCKED** (and a non-allowlisted private mixed with public is blocked); rejects non-https (unless allowed), odd ports on the public tier, and `user:pass@` URLs; resolve-then-pin uses an injectable resolver and pins one validated address of the decided tier.
   - `tests/Unit/Service/WebhookSignerTest.php` — header set + exact `sha256=` HMAC over `"{ts}.{body}"`; two comma-separated signatures when given two secrets.
 - **Integration — service** (`tests/Integration/Service/WebhookServiceTest.php`): register returns secret once and stores a `svcsec_*` ref (not plaintext) recoverable via the vault; wrong reauth → `ValidationException`; suspended admin → `ForbiddenException`; flag dark → `register` throws `WebhooksDisabledException` and `dispatch` returns 0; `webhooks` on but `service_secrets` dark → `register`/`rotateSecret` raise a `ValidationException` (not an uncaught `SecretsDisabledException`); `dispatch` enqueues exactly one delivery per subscribed active endpoint, dedupes a repeat of the same `(webhook_id, event_type, event_id)`, and does NOT collapse two different event types for one source id; `update`/`toggle`/`delete`/`rotate`; audit rows contain neither the secret nor the password.
-- **Integration — worker** (`tests/Integration/Worker/WebhookDeliveryWorkerTest.php`, the path PHASE_3_PLAN §457 already names): 2xx → `delivered` + signature header present & valid; failure → `attempt_count` incremented, `next_attempt_at` set, still `queued`; reaching `max_attempts` → `dead`; circuit breaker auto-disables after threshold; flag dark → worker delivers nothing; `EgressBlockedException` → immediate `dead`; `replay` re-queues a dead delivery; rotation → two signatures emitted.
+- **Integration — worker** (`tests/Integration/Worker/WebhookDeliveryWorkerTest.php`, the path PHASE_3_PLAN §457 already names): 2xx → `delivered` + signature header present & valid; failure → `attempt_count` incremented, `next_attempt_at` set, still `queued`; reaching `max_attempts` → `dead`; circuit breaker auto-disables after threshold; flag dark → worker delivers nothing; `EgressBlockedException` → immediate `dead`; `replay` re-queues a dead delivery; rotation → two signatures emitted; **a paused (`is_active=0`) endpoint's queued deliveries are NOT claimed — they don't consume the batch (an active endpoint's row queued behind them still delivers in the same run) and they resume after re-enable.**
 - **Integration — admin HTTP** (`tests/Integration/Admin/AdminWebhookTest.php`): register shows secret once (200, not redirect; subsequent GET hides it); wrong reauth → 422 with typed `name`/`url` preserved; all routes 404 when flag dark; suspended admin → 403; `toggle`/`delete`/`test`/`replay` PRG; delivery log renders.
 - **Schema** (`tests/Integration/Core/AppWebhooksSchemaTest.php`): `webhooks.secret_ref` exists and **no** plaintext `secret` column; `webhook_deliveries` has `uq_delivery_idem` (unique, spanning `webhook_id, event_type, event_id`) and `idx_delivery_claim`; `moderation_log.target_type` enum contains `'webhook'`.
 - **Flag-dark regression** added to `tests/Integration/Core/AppFeatureFlagTest.php`: `webhooks` defaults dark; per-flag override isolation.
