@@ -203,4 +203,64 @@ final class AppComposerTest extends TestCase
             'the inline edit form must carry data-no-draft so composer.js skips draft autosave',
         );
     }
+
+    /**
+     * A failed inline edit re-renders the thread (HTTP 422) with this post's edit
+     * form re-opened and the rejected text + error preserved, instead of
+     * redirecting to the thread and dropping the typed edit (symmetric with the
+     * reply/DM re-render). The post itself is left unchanged.
+     */
+    public function test_failed_inline_edit_rerenders_thread_with_typed_body(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'edit-rerender']);
+        $user = $this->makeUser(['username' => 'editrerender']);
+        $thread = $this->makeThread($board, $user, 'Editable', 'Original body.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [(int) $thread['thread_id']]);
+        $this->actingAs($user);
+
+        $tooLong = str_repeat('y', 20001);                      // > limits.post_body_max (20000) → ValidationException
+        $res = $this->post('/posts/' . $postId . '/edit', ['body' => $tooLong]);
+
+        // Re-rendered in place (not a PRG redirect to the thread) with the text kept.
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('Your post is too long.', $res->body());
+        self::assertStringContainsString($tooLong, $res->body(), 'the rejected edit text is preserved in the re-opened edit form');
+        self::assertStringContainsString('class="post-edit" open', $res->body(), 'the failing post\'s edit form is re-opened');
+        // The stored post is untouched by the failed edit.
+        self::assertSame('Original body.', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+    }
+
+    /**
+     * pageOfPost returns the 1-based page (at $perPage) on which a post falls in
+     * the public thread render order, so a failed inline edit can re-render the
+     * page that actually contains the post (not just page 1).
+     */
+    public function test_page_of_post_locates_the_post_across_pages(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'pageofpost']);
+        $author = $this->makeUser(['username' => 'pageofpostauthor']);
+        $thread = $this->makeThread($board, $author, 'Paged', 'OP body.');
+        $threadId = (int) $thread['thread_id'];
+
+        $repo = $this->posts();
+        $ids = [(int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$threadId])];
+        for ($i = 1; $i <= 5; $i++) {
+            $ids[] = $repo->create([
+                'thread_id' => $threadId,
+                'user_id' => (int) $author['id'],
+                'body' => "reply {$i}",
+                'body_html' => "<p>reply {$i}</p>",
+            ]);
+        }
+
+        // perPage = 2 → 6 posts over 3 pages in (created_at, id ASC) order.
+        self::assertSame(1, $repo->pageOfPost($threadId, $ids[0], 2));
+        self::assertSame(1, $repo->pageOfPost($threadId, $ids[1], 2));
+        self::assertSame(2, $repo->pageOfPost($threadId, $ids[2], 2));
+        self::assertSame(2, $repo->pageOfPost($threadId, $ids[3], 2));
+        self::assertSame(3, $repo->pageOfPost($threadId, $ids[4], 2));
+        self::assertSame(3, $repo->pageOfPost($threadId, $ids[5], 2));
+        // A missing/hidden post falls back to page 1.
+        self::assertSame(1, $repo->pageOfPost($threadId, 999999, 2));
+    }
 }

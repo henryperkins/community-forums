@@ -83,6 +83,9 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     'show_avatars' => $show_avatars ?? true,
                     'show_signatures' => $show_signatures ?? true,
                     'show_reactions' => $show_reactions ?? true,
+                    'edit_post_id' => $edit_post_id ?? 0,
+                    'edit_old' => $edit_old ?? '',
+                    'edit_error' => $edit_error ?? '',
                 ]) ?>
             <?php endforeach; ?>
         </div>

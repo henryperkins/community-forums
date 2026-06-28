@@ -111,7 +111,19 @@ final class PostController extends Controller
             if ($post === null) {
                 throw new NotFoundException('Post not found.');
             }
-            return $this->redirectWithFlash($this->threadUrl($post) . '#p' . $postId, $e->first());
+            $thread = $this->container->get(ThreadRepository::class)->findWithBoard((int) $post['thread_id']);
+            if ($thread === null) {
+                throw new NotFoundException('Thread not found.');
+            }
+            // Re-render the thread (on the page containing the post) with this
+            // post's edit form re-opened and the rejected text + error preserved,
+            // instead of redirecting to the thread and dropping the typed edit —
+            // symmetric with the reply re-render (renderThread + reply_old).
+            return (new ThreadController($this->container))->renderThread($request, $thread, [
+                'edit_post_id' => $postId,
+                'edit_old' => (string) $request->post('body', ''),
+                'edit_error' => $e->first(),
+            ])->withStatus(422);
         }
 
         return $this->redirect($this->threadUrl($post) . '#p' . $postId);
