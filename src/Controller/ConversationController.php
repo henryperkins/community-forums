@@ -38,7 +38,8 @@ final class ConversationController extends Controller
     {
         $user = $this->requireDms();
         $to = trim((string) $request->query('to', ''));
-        return $this->view('dm/new', ['to' => $to, 'title' => '', 'errors' => [], 'body' => '']);
+        $allowGroups = $this->container->get(FeatureFlags::class)->enabled('group_dms');
+        return $this->view('dm/new', ['to' => $to, 'title' => '', 'errors' => [], 'body' => '', 'allowGroups' => $allowGroups]);
     }
 
     public function create(Request $request): Response
@@ -46,6 +47,7 @@ final class ConversationController extends Controller
         $user = $this->requireDms();
         $this->throttle($request, $user);
 
+        $allowGroups = $this->container->get(FeatureFlags::class)->enabled('group_dms');
         $to = trim((string) $request->str('to'));
         $title = trim((string) $request->str('title'));
         $body = (string) $request->post('body', '');
@@ -55,12 +57,18 @@ final class ConversationController extends Controller
             if ($recipientIds === []) {
                 throw new ValidationException(['to' => 'Enter at least one username.']);
             }
+            // Group conversations are a deploy-dark Phase 4 feature (group_dms):
+            // until the flag is flipped, only a 1:1 direct message may be started.
+            $isDirect = count($recipientIds) === 1 && $title === '';
+            if (!$isDirect && !$allowGroups) {
+                throw new ValidationException(['to' => 'Group conversations are not available yet.']);
+            }
             $service = $this->container->get(DirectMessageService::class);
-            $result = count($recipientIds) === 1 && $title === ''
+            $result = $isDirect
                 ? $service->start($user, $recipientIds[0], $body)
                 : $service->startGroup($user, $recipientIds, $title, $body);
         } catch (ValidationException $e) {
-            return $this->view('dm/new', ['to' => $to, 'title' => $title, 'errors' => $e->errors, 'body' => $body], 422);
+            return $this->view('dm/new', ['to' => $to, 'title' => $title, 'errors' => $e->errors, 'body' => $body, 'allowGroups' => $allowGroups], 422);
         }
         return $this->redirect('/messages/' . $result['conversation_id']);
     }
@@ -153,7 +161,7 @@ final class ConversationController extends Controller
     /** @param array<string,string> $params */
     public function addMember(Request $request, array $params): Response
     {
-        $user = $this->requireDms();
+        $user = $this->requireGroupDms();
         $conversationId = (int) ($params['id'] ?? 0);
         return $this->runGroupAction(
             fn () => $this->container->get(DirectMessageService::class)->addParticipant(
@@ -169,7 +177,7 @@ final class ConversationController extends Controller
     /** @param array<string,string> $params */
     public function removeMember(Request $request, array $params): Response
     {
-        $user = $this->requireDms();
+        $user = $this->requireGroupDms();
         $conversationId = (int) ($params['id'] ?? 0);
         $target = (int) $request->post('user_id', 0);
         return $this->runGroupAction(
@@ -182,7 +190,7 @@ final class ConversationController extends Controller
     /** @param array<string,string> $params */
     public function rename(Request $request, array $params): Response
     {
-        $user = $this->requireDms();
+        $user = $this->requireGroupDms();
         $conversationId = (int) ($params['id'] ?? 0);
         return $this->runGroupAction(
             fn () => $this->container->get(DirectMessageService::class)->rename($user, $conversationId, (string) $request->str('title')),
@@ -204,7 +212,7 @@ final class ConversationController extends Controller
     /** @param array<string,string> $params */
     public function transfer(Request $request, array $params): Response
     {
-        $user = $this->requireDms();
+        $user = $this->requireGroupDms();
         $conversationId = (int) ($params['id'] ?? 0);
         $target = (int) $request->post('user_id', 0);
         return $this->runGroupAction(
@@ -233,6 +241,21 @@ final class ConversationController extends Controller
     private function requireDms(): User
     {
         if (!$this->container->get(FeatureFlags::class)->enabled('dms')) {
+            throw new NotFoundException('Not found.');
+        }
+        return $this->requireUser();
+    }
+
+    /**
+     * Group conversations are a deploy-dark Phase 4 feature (group_dms). Creating
+     * and managing groups requires both the base DM flag and group_dms, so the
+     * subsystem stays fully dark until the flag is flipped — rather than shipping
+     * live just because the legacy `dms` flag defaults on.
+     */
+    private function requireGroupDms(): User
+    {
+        $flags = $this->container->get(FeatureFlags::class);
+        if (!$flags->enabled('dms') || !$flags->enabled('group_dms')) {
             throw new NotFoundException('Not found.');
         }
         return $this->requireUser();
