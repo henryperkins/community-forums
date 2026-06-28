@@ -126,7 +126,7 @@ Indexes: `UNIQUE KEY uq_service_secret_ref (secret_ref)`, `KEY idx_owner (owner_
 | `id` | BIGINT UNSIGNED PK AUTO_INCREMENT | |
 | `secret_id` | BIGINT UNSIGNED NOT NULL | FK `service_secrets(id)` ON DELETE CASCADE |
 | `version` | INT UNSIGNED NOT NULL | monotonic per secret |
-| `ciphertext` | VARBINARY(4096) NOT NULL | AES-256-GCM output; zeroed on destroy |
+| `ciphertext` | VARBINARY(4096) NOT NULL | AES-256-GCM output; emptied (zero-length) on destroy |
 | `nonce` | VARBINARY(12) NOT NULL | per-encryption random nonce |
 | `tag` | VARBINARY(16) NOT NULL | GCM auth tag |
 | `cipher` | VARCHAR(32) NOT NULL DEFAULT 'aes-256-gcm' | forward-compat label |
@@ -135,14 +135,16 @@ Indexes: `UNIQUE KEY uq_service_secret_ref (secret_ref)`, `KEY idx_owner (owner_
 | `created_at` | DATETIME NOT NULL | UTC |
 | `retire_after` | DATETIME NULL | grace deadline; set when retired |
 | `retired_at` | DATETIME NULL | |
-| `destroyed_at` | DATETIME NULL | set when ciphertext zeroed |
+| `destroyed_at` | DATETIME NULL | set when ciphertext emptied |
 
 Indexes: `UNIQUE KEY uq_secret_version (secret_id, version)`, `KEY idx_prune (state, retire_after)`. `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`.
 
 **Destroy semantics:** prune does **not** delete the row — it keeps the version history
 (audit) and sets `state=destroyed`, `destroyed_at`, and overwrites
-`ciphertext`/`nonce`/`tag` with zero bytes so no plaintext-recoverable material
-remains.
+`ciphertext`/`nonce`/`tag` with a **zero-length (empty) `VARBINARY` value** (not
+same-length zero bytes — emptying also drops the plaintext-length signal) so no
+recoverable material remains. The destroy UPDATE is gated on `WHERE id = ? AND state =
+'retired'` and returns its affected-row count (see Concurrency: prune).
 
 `SCHEMA.md` is updated after the migration lands: shape rows for both tables, a §9
 changelog entry, and a version bump.
@@ -151,22 +153,35 @@ changelog entry, and a version bump.
 
 ## 3. Components & API
 
-Layering mirrors the MFA slice exactly: thin SQL repository, a service that owns all
-rules, crypto orchestration, audit, and transactions.
+Layering follows the **service-owned-transaction** pattern (`ThreadWorkflowService`,
+`PostingService`): a thin SQL repository, and a service that takes `Database` directly
+and wraps every multi-step write + its audit row in one `$this->db->transaction(fn)`.
+(The MFA slice delegates its transaction into the repository; that does **not** work
+here because a single transaction must span two repositories — `ServiceSecretRepository`
+and `ModerationLogRepository` — which it can only do from the service that holds the
+shared `Database`.)
 
 ### `App\Repository\ServiceSecretRepository` (constructor `(private Database $db)`)
-Prepared-statement SQL only, returns associative arrays:
-- `insertSecret(...)`, `insertVersion(...)`, `findByRef(string)`,
-  `currentVersionRow(int secretId)`, `usableVersionRows(int secretId, string nowUtc)`
-  (current + retired with `retire_after >= now`), `retireVersion(int versionId, string retireAfterUtc)`,
-  `bumpCurrentVersion(int secretId, int version)`, `markRevoked(int secretId, ?int actorId)`,
-  `retireAllVersions(int secretId)`, `pruneRetiredBefore(string nowUtc, int limit)` →
-  rows eligible, `destroyVersion(int versionId)` (zero ciphertext/nonce/tag, set state/destroyed_at).
+Prepared-statement SQL only, returns associative arrays. Methods:
+- `insertSecret(ref, ownerType, ?ownerId, label, ?createdBy): int` — parent row, `status='active'`, `latest_version=1`.
+- `insertCurrentVersion(secretId, version, enc): int` — version row, `state='current'`, `enc` is `SecretBox::encrypt`'s `{ciphertext,nonce,tag}`.
+- `findSecretByRef(ref): ?array` — plain read.
+- `lockSecretByRef(ref): ?array` — `SELECT id, latest_version, status … FOR UPDATE` (rotate/revoke serialization).
+- `currentVersionRow(secretId): ?array` — the single `state='current'` row.
+- `usableVersionRows(secretId): array` — `state='current'` ∪ (`state='retired'` AND `retire_after >= UTC_TIMESTAMP()`), newest-version first.
+- `versionCount(secretId): int`.
+- `retireCurrentVersion(secretId, graceSeconds): void` — `state='retired'`, `retired_at=UTC_TIMESTAMP()`, `retire_after=DATE_ADD(UTC_TIMESTAMP(), INTERVAL <int> SECOND)` (grace int-cast + concatenated, never bound).
+- `retireAllVersions(secretId): void` — revoke path; `retire_after=UTC_TIMESTAMP()` on all non-destroyed versions (immediately prunable).
+- `markRevoked(secretId, ?actorId): void` — parent `status='revoked'`, `revoked_at`, `revoked_by`, `updated_at`.
+- `bumpLatestVersion(secretId, version): void` — parent `latest_version`, `updated_at`.
+- `pruneCandidates(limit): array` — `id, secret_id, version` of `state='retired'` AND `retire_after < UTC_TIMESTAMP()`, `LIMIT <int>` (int-cast + concatenated).
+- `destroyVersion(versionId): int` — **idempotent**: `UPDATE … SET state='destroyed', destroyed_at=UTC_TIMESTAMP(), ciphertext='', nonce='', tag='' WHERE id=? AND state='retired'`; returns affected-row count.
+- `acquirePruneLock(): bool` / `releasePruneLock(): void` — `GET_LOCK('rb_secret_prune', 0)` / `RELEASE_LOCK(...)`, mirroring `EmailDeliveryRepository`'s drain lock.
 
-Time is UTC everywhere (`UTC_TIMESTAMP()` / `gmdate()`). `LIMIT` is clamped to int and
-concatenated, never bound (PDO `EMULATE_PREPARES=false`).
+Time is UTC everywhere (`UTC_TIMESTAMP()` / `gmdate()`). `LIMIT` and `INTERVAL`
+quantities are clamped to int and concatenated, never bound (PDO `EMULATE_PREPARES=false`).
 
-### `App\Service\SecretVault` (constructor `(ServiceSecretRepository, SecretBox, ModerationLogRepository, FeatureFlags, Config)`)
+### `App\Service\SecretVault` (constructor `(Database, ServiceSecretRepository, SecretBox, ModerationLogRepository, FeatureFlags, Config)`)
 
 | method | behavior |
 |---|---|
@@ -176,11 +191,11 @@ concatenated, never bound (PDO `EMULATE_PREPARES=false`).
 | `rotate(string ref, string newPlaintext, ?User actor = null, ?int graceSeconds = null): int` | flag-gated; **txn**: `SELECT … FOR UPDATE` the parent row (serialize — see Concurrency), derive new version = `latest_version + 1`, retire the prior `current` (`state=retired`, `retire_after = now + grace`), insert new `current`, bump `latest_version`, touch `updated_at`; audit `service_secret_rotated`. Returns new version number. `graceSeconds` defaults to `secrets.rotation_grace_seconds`. |
 | `revoke(string ref, ?User actor = null): void` | **txn**: `SELECT … FOR UPDATE` the parent row; parent `status=revoked` + `revoked_at`/`revoked_by`; retire all versions immediately (`retire_after = now`). `latest_version` is left unchanged (it is a high-water mark, not a live pointer). Audit `service_secret_revoked`. Subsequent `reveal`/`usableSecrets` throw `SecretRevokedException`. Allowed even when the flag is dark. |
 | `metadata(string ref): array` | status, `latest_version`, whether a live (`state='current'`) version exists, owner_type/id, label, created/updated/revoked timestamps, version count. **Never** plaintext or ciphertext. For the future admin listing. |
-| `prune(int limit = 100): int` | destroy retired versions past `retire_after`; per-version audit `service_secret_version_destroyed`. Allowed when the flag is dark. Returns count destroyed. |
+| `prune(int limit = 100): int` | worker drain. Acquire `acquirePruneLock()`; if not held, return 0 (another run owns it). In `try/finally`: for each `pruneCandidates`, in a per-version txn call `destroyVersion()` and write the `service_secret_version_destroyed` audit **only when it affected 1 row** (so a racing run can't double-audit); release the lock in `finally`. Allowed when the flag is dark. Returns count destroyed. |
 
 **Console:** add a `bin/console worker:secret-prune` case (news up `Database` →
 `ServiceSecretRepository` → `SecretVault`, calls `prune`, prints `destroyed=N`),
-plus a help line — mirroring the existing `worker:*` cases.
+plus a help line — mirroring the existing `worker:*` cases and their advisory-lock drain.
 
 ### Audit shape (`ModerationLogRepository::log`)
 `target_type = 'service_secret'`, `target_id = service_secrets.id`. `before`/`after`
@@ -204,9 +219,19 @@ mutations on the **same** secret are serialized. Under the lock:
 `store()` needs no parent lock: it mints a fresh random `secret_ref`, so there is no
 contended row, and the unique `secret_ref` insert is its own guard. `SELECT … FOR
 UPDATE` is new to this codebase, but real prepared statements + InnoDB + the existing
-transaction wrapper support it; the `GET_LOCK` advisory-lock idiom
-(`EmailDeliveryRepository`) is reserved for cross-process worker drains, not per-row
-serialization, and is intentionally not used here.
+transaction wrapper support it. The `FOR UPDATE` row lock is the right tool for
+**per-secret** rotate/revoke serialization; the `GET_LOCK` advisory lock is the wrong
+tool there (it would serialize across unrelated secrets).
+
+**Prune (cross-process worker drain) is the opposite case and DOES use the advisory
+lock.** `prune()` selects eligible retired rows and destroys them with per-version
+audit, so two overlapping `worker:secret-prune` runs could otherwise process the same
+version twice and emit duplicate `service_secret_version_destroyed` rows. It therefore
+mirrors `EmailDeliveryRepository`'s drain exactly: a connection-scoped
+`GET_LOCK('rb_secret_prune', 0)` makes a run a no-op (`return 0`) when another holds it.
+As defense-in-depth, `destroyVersion()` is itself idempotent (`… WHERE id = ? AND state
+= 'retired'`) and the audit write is gated on its affected-row count being `1`, so even
+without the lock no row is double-destroyed or double-audited.
 
 ### Transactional ownership contract
 
@@ -266,8 +291,9 @@ A regression test asserts the flag defaults dark.
 ## 6. Wiring & config
 
 - `App::buildContainer()`: bind `ServiceSecretRepository` (takes the shared
-  `Database`), then `SecretVault` (one-liner closure pulling its collaborators via
-  `$c->get(...)`), following the `MfaService` binding template.
+  `Database`), then `SecretVault` (closure pulling `Database` **first** plus its other
+  collaborators via `$c->get(...)`), following the `ThreadWorkflowService` /
+  `PostingService` binding template (service receives `Database`).
 - `config/config.php`: a `secrets` block —
   `'rotation_grace_seconds' => 86400` (24h) and `'max_secret_bytes' => 4096`.
 
@@ -315,6 +341,11 @@ commit):
     exercised in-process (PHPUnit per-test isolation is single-connection); the
     `SELECT … FOR UPDATE` serialization is relied on by design and stated here rather
     than silently assumed.
+13. **Prune idempotency:** after the test-4 destroy, a *second* `prune()` over the same
+    secret destroys **0** versions and writes **no** new `service_secret_version_destroyed`
+    audit row (count the `moderation_log` rows for that action before and after). Proves
+    the `WHERE … state='retired'` + affected-row gating, so overlapping worker runs
+    can't double-destroy or double-audit.
 
 **`tests/Integration/Core/AppFeatureFlagTest`**: extend to assert `service_secrets`
 defaults dark (and per-flag override stays isolated).
@@ -340,8 +371,8 @@ B2 program decomposition is recorded so it is an explicit decision, not implied 
 |---|---|---|---|
 | `SecretBox` (existing) | AES-256-GCM encrypt/decrypt | `encrypt()/decrypt()` | APP_KEY |
 | `ServiceSecretRepository` | single-table SQL for the two tables | typed methods returning arrays | `Database` |
-| `SecretVault` | rules, crypto orchestration, audit, txns, flag gate | `store/reveal/usableSecrets/rotate/revoke/metadata/prune` | repo, `SecretBox`, `ModerationLogRepository`, `FeatureFlags`, `Config` |
-| `worker:secret-prune` | scheduled destroy of expired retired versions | `bin/console` | `SecretVault` |
+| `SecretVault` | rules, crypto orchestration, audit, service-owned txns, flag gate | `store/reveal/usableSecrets/rotate/revoke/metadata/prune` | `Database`, repo, `SecretBox`, `ModerationLogRepository`, `FeatureFlags`, `Config` |
+| `worker:secret-prune` | scheduled destroy of expired retired versions, behind the `rb_secret_prune` advisory lock | `bin/console` | `SecretVault` |
 
 Each unit is independently understandable and testable; consumers (providers,
 webhooks) depend only on `SecretVault`'s opaque-ref API, never on its internals or the
