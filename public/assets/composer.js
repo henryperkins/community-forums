@@ -632,7 +632,12 @@
         if (prefs.showPreview) { buildPreview(form, ta); }
         wireKeys(form, ta, prefs);
         stampIdempotency(form);
-        if (draftsEnabled()) { wireDrafts(form, ta); }
+        // A form may opt out of local draft autosave (data-no-draft). The inline
+        // post-edit form does: its textarea is server-pre-filled with the current
+        // body, so a saved draft is never restored into it (the !ta.value guard
+        // fails) and there is no Drafts-page resume target — autosaving would only
+        // leave a misleading, unrecoverable draft that the next load discards.
+        if (draftsEnabled() && !form.hasAttribute('data-no-draft')) { wireDrafts(form, ta); }
         wireUploads(form, ta);
     }
 

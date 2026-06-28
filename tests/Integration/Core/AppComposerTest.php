@@ -179,4 +179,28 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('data-drafts-list', $page->body());
         self::assertStringContainsString('Drafts are browser-local', $page->body());
     }
+
+    /**
+     * The inline post-edit form opts out of local draft autosave (data-no-draft):
+     * its textarea is server-pre-filled with the current body, so a saved draft
+     * can never be restored into it and there is no Drafts resume target —
+     * autosaving would only leave a misleading, unrecoverable "Post edit" draft
+     * that the next page load discards (P3-03 draft-loss follow-up).
+     */
+    public function test_inline_edit_form_opts_out_of_draft_autosave(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'edit-nodraft']);
+        $user = $this->makeUser(['username' => 'editnodraft']);
+        $thread = $this->makeThread($board, $user, 'Edit opt-out', 'Original body.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [(int) $thread['thread_id']]);
+        $this->actingAs($user);
+
+        $page = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        self::assertMatchesRegularExpression(
+            '/action="\/posts\/' . $postId . '\/edit"[^>]*\bdata-no-draft\b/',
+            $page->body(),
+            'the inline edit form must carry data-no-draft so composer.js skips draft autosave',
+        );
+    }
 }
