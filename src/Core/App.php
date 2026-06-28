@@ -6,6 +6,8 @@ namespace App\Core;
 
 use App\Controller\AccountController;
 use App\Controller\AdminController;
+use App\Controller\Api\BoardsController as ApiBoardsController;
+use App\Controller\Api\MeController as ApiMeController;
 use App\Controller\ApprovalController;
 use App\Controller\AuthController;
 use App\Controller\BlockController;
@@ -849,6 +851,12 @@ final class App
         $r->get('/inbox', [InboxController::class, 'index']);
         $r->get('/search', [SearchController::class, 'index']);
         $r->get('/presence', [PresenceController::class, 'index']);
+
+        // Read-only Bearer API (B2 sub-project 2); GET-only so the CSRF/HTML
+        // kernel is bypassed — ApiController self-authenticates and emits JSON.
+        $r->get('/api/v1/me', [ApiMeController::class, 'show']);
+        $r->get('/api/v1/boards', [ApiBoardsController::class, 'index']);
+        $r->get('/api/v1/boards/{id}/threads', [ApiBoardsController::class, 'threads']);
 
         $r->get('/c/{slug}', [BoardController::class, 'show']);
         $r->get('/t/{id}-{slug}', [ThreadController::class, 'show']);
