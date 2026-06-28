@@ -218,4 +218,30 @@ final class AppDirectMessageTest extends TestCase
             [$convId, (int) $bob['id']],
         ));
     }
+
+    /**
+     * A reply that fails validation re-renders the conversation in place (422)
+     * with the typed body echoed back, instead of redirecting to an empty
+     * composer. The echoed body keeps location.pathname === the form action with
+     * a non-empty textarea, which is the signal composer.js uses to preserve the
+     * local draft — so a failed reply no longer silently discards the user's text
+     * (P3-03 draft-loss follow-up).
+     */
+    public function testFailedReplyOverHttpReRendersWithTypedBody(): void
+    {
+        $alice = $this->established(['username' => 'draftreplyalice']);
+        $bob = $this->established(['username' => 'draftreplybob']);
+        $convId = $this->dm()->start($this->userEntity($alice), (int) $bob['id'], 'Hello')['conversation_id'];
+
+        $this->actingAs($bob);
+        $tooLong = str_repeat('x', 5001);                       // > BODY_MAX (5000) → ValidationException
+        $res = $this->post('/messages/' . $convId, ['body' => $tooLong]);
+
+        // Re-rendered in place (not a PRG redirect) so the draft-keep heuristic fires.
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('Your message is too long.', $res->body());
+        self::assertStringContainsString($tooLong, $res->body(), 'the submitted body is echoed back so the draft is not discarded');
+        // Nothing was persisted — only the opening message exists.
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM dm_messages WHERE conversation_id = ?', [$convId]));
+    }
 }

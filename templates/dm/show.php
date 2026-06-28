@@ -56,7 +56,8 @@ $this->section('title', 'Conversation with ' . $otherName);
 
     <form class="composer dm-composer" method="post" action="/messages/<?= (int) $conversation_id ?>">
         <?= $this->csrfField() ?>
-        <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required></textarea>
+        <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
+        <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
         <button class="btn" type="submit">Send</button>
     </form>
 </div>

@@ -65,7 +65,20 @@ final class ConversationController extends Controller
     public function show(Request $request, array $params): Response
     {
         $user = $this->requireDms();
-        $conversationId = (int) ($params['id'] ?? 0);
+        return $this->renderConversation($request, $user, (int) ($params['id'] ?? 0));
+    }
+
+    /**
+     * Render a single conversation. Reused by reply() when a message fails
+     * validation so the typed body is re-rendered in place (HTTP 422) instead of
+     * a redirect to an empty composer — matching the new-message/thread-reply
+     * pattern, and so the local composer draft is preserved rather than discarded
+     * by the next page load (P3-03 follow-up).
+     *
+     * @param array<string,mixed> $extra body / errors to repopulate
+     */
+    private function renderConversation(Request $request, User $user, int $conversationId, array $extra = [], int $status = 200): Response
+    {
         $convRepo = $this->container->get(ConversationRepository::class);
         if (!$convRepo->isParticipant($conversationId, $user->id())) {
             throw new NotFoundException('Conversation not found.');
@@ -87,7 +100,7 @@ final class ConversationController extends Controller
         $otherId = $convRepo->otherParticipant($conversationId, $user->id());
         $other = $otherId !== null ? $this->container->get(UserRepository::class)->find($otherId) : null;
 
-        return $this->view('dm/show', [
+        return $this->view('dm/show', array_merge([
             'conversation_id' => $conversationId,
             'messages' => $messages,
             'other' => $other,
@@ -95,7 +108,8 @@ final class ConversationController extends Controller
             'pages' => $pages,
             'reasons' => self::REASONS,
             'errors' => [],
-        ]);
+            'body' => '',
+        ], $extra), $status);
     }
 
     /** @param array<string,string> $params */
@@ -104,11 +118,15 @@ final class ConversationController extends Controller
         $user = $this->requireDms();
         $this->throttle($request, $user);
         $conversationId = (int) ($params['id'] ?? 0);
+        $body = (string) $request->post('body', '');
 
         try {
-            $this->container->get(DirectMessageService::class)->reply($user, $conversationId, (string) $request->post('body', ''));
+            $this->container->get(DirectMessageService::class)->reply($user, $conversationId, $body);
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/messages/' . $conversationId, $e->first());
+            return $this->renderConversation($request, $user, $conversationId, [
+                'errors' => $e->errors,
+                'body' => $body,
+            ], 422);
         }
         return $this->redirect('/messages/' . $conversationId);
     }
