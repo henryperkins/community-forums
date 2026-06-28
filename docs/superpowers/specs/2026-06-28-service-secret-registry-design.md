@@ -110,7 +110,7 @@ one live version per reference.
 | `owner_id` | BIGINT UNSIGNED NULL | informational owner row id when applicable |
 | `label` | VARCHAR(190) NOT NULL | human description; never the secret |
 | `status` | ENUM('active','revoked') NOT NULL DEFAULT 'active' | |
-| `current_version` | INT UNSIGNED NOT NULL DEFAULT 0 | points at the live version number |
+| `latest_version` | INT UNSIGNED NOT NULL DEFAULT 0 | monotonic high-water mark of the newest version issued; **status-independent** (never decremented, unchanged by revoke). Next rotation version = `latest_version + 1`. This is **not** a live pointer — "which version is live" is the single row with `state='current'`, and reads gate on parent `status='active'` + that `state`, never on this column. |
 | `created_by` | BIGINT UNSIGNED NULL | FK `users(id)` ON DELETE SET NULL |
 | `revoked_by` | BIGINT UNSIGNED NULL | FK `users(id)` ON DELETE SET NULL |
 | `created_at` | DATETIME NOT NULL | UTC |
@@ -170,12 +170,12 @@ concatenated, never bound (PDO `EMULATE_PREPARES=false`).
 
 | method | behavior |
 |---|---|
-| `store(string ownerType, ?int ownerId, string label, string plaintext, ?User actor = null): string` | flag-gated (see §5); validate `strlen(plaintext) <= max_secret_bytes`; `SecretBox::encrypt`; **txn**: insert parent (`active`, `current_version=1`) + version 1 (`current`); audit `service_secret_stored`. Returns `secret_ref`. |
+| `store(string ownerType, ?int ownerId, string label, string plaintext, ?User actor = null): string` | flag-gated (see §5); validate `strlen(plaintext) <= max_secret_bytes`; `SecretBox::encrypt`; **txn**: insert parent (`active`, `latest_version=1`) + version 1 (`current`); audit `service_secret_stored`. Returns `secret_ref`. No parent lock needed — the random `secret_ref` has no contended row. Must be called inside the caller's consumer-save txn (see Transactional ownership contract). |
 | `reveal(string ref): string` | load secret; throw `SecretNotFoundException` if absent, `SecretRevokedException` if revoked; decrypt the **current** version and return plaintext. The single egress; server-side only; never logged. |
 | `usableSecrets(string ref): string[]` | decrypt current **plus** still-in-grace retired versions, newest first — for webhook signature-verification overlap. Throws `SecretNotFoundException` if missing, `SecretRevokedException` if revoked. |
-| `rotate(string ref, string newPlaintext, ?User actor = null, ?int graceSeconds = null): int` | flag-gated; **txn**: retire current (`state=retired`, `retire_after = now + grace`), insert new `current`, bump `current_version`, touch `updated_at`; audit `service_secret_rotated`. Returns new version number. `graceSeconds` defaults to `secrets.rotation_grace_seconds`. |
-| `revoke(string ref, ?User actor = null): void` | **txn**: parent `status=revoked` + `revoked_at`/`revoked_by`; retire all versions immediately (`retire_after = now`); audit `service_secret_revoked`. Subsequent `reveal`/`usableSecrets` throw `SecretRevokedException`. Allowed even when the flag is dark. |
-| `metadata(string ref): array` | status, current_version, owner_type/id, label, created/updated/revoked timestamps, version count. **Never** plaintext or ciphertext. For the future admin listing. |
+| `rotate(string ref, string newPlaintext, ?User actor = null, ?int graceSeconds = null): int` | flag-gated; **txn**: `SELECT … FOR UPDATE` the parent row (serialize — see Concurrency), derive new version = `latest_version + 1`, retire the prior `current` (`state=retired`, `retire_after = now + grace`), insert new `current`, bump `latest_version`, touch `updated_at`; audit `service_secret_rotated`. Returns new version number. `graceSeconds` defaults to `secrets.rotation_grace_seconds`. |
+| `revoke(string ref, ?User actor = null): void` | **txn**: `SELECT … FOR UPDATE` the parent row; parent `status=revoked` + `revoked_at`/`revoked_by`; retire all versions immediately (`retire_after = now`). `latest_version` is left unchanged (it is a high-water mark, not a live pointer). Audit `service_secret_revoked`. Subsequent `reveal`/`usableSecrets` throw `SecretRevokedException`. Allowed even when the flag is dark. |
+| `metadata(string ref): array` | status, `latest_version`, whether a live (`state='current'`) version exists, owner_type/id, label, created/updated/revoked timestamps, version count. **Never** plaintext or ciphertext. For the future admin listing. |
 | `prune(int limit = 100): int` | destroy retired versions past `retire_after`; per-version audit `service_secret_version_destroyed`. Allowed when the flag is dark. Returns count destroyed. |
 
 **Console:** add a `bin/console worker:secret-prune` case (news up `Database` →
@@ -189,6 +189,44 @@ JSON carry only non-secret metadata:
 - `service_secret_rotated`: before `{version: old}`, after `{version: new, grace_seconds}`
 - `service_secret_revoked`: before `{status: 'active'}`, after `{status: 'revoked'}`
 - `service_secret_version_destroyed`: before `{version, state: 'retired'}`, after `{version, state: 'destroyed'}`
+
+### Concurrency & serialization
+
+`rotate()` and `revoke()` open their transaction by locking the parent row —
+`SELECT id, latest_version FROM service_secrets WHERE secret_ref = ? FOR UPDATE` — so
+mutations on the **same** secret are serialized. Under the lock:
+- the next version is derived as `latest_version + 1`, so two concurrent `rotate()`
+  calls can never pick the same number and the `uq_secret_version (secret_id, version)`
+  constraint is never hit as a raw error;
+- the single-`state='current'` invariant holds, because retire-old + insert-new + bump
+  `latest_version` happen atomically while the row is locked.
+
+`store()` needs no parent lock: it mints a fresh random `secret_ref`, so there is no
+contended row, and the unique `secret_ref` insert is its own guard. `SELECT … FOR
+UPDATE` is new to this codebase, but real prepared statements + InnoDB + the existing
+transaction wrapper support it; the `GET_LOCK` advisory-lock idiom
+(`EmailDeliveryRepository`) is reserved for cross-process worker drains, not per-row
+serialization, and is intentionally not used here.
+
+### Transactional ownership contract
+
+The authoritative association between a secret and its consumer lives only on the
+**consumer's** `_ref` column (e.g. `identity_providers.client_secret_ref`); the
+registry's `owner_type`/`owner_id` are informational. To prevent an orphaned active
+secret when a consumer save fails *after* `store()` returns, **callers MUST invoke
+`store()` (and `rotate()`) inside their own consumer-save transaction**
+(`$db->transaction(fn)`). `Database::transaction` is reentrant
+(`src/Core/Database.php:111` — `if ($pdo->inTransaction()) return $callback();`), so the
+vault's inner transaction joins the caller's; if the consumer write then fails and the
+outer transaction rolls back, the secret row is never persisted.
+
+No existing spec mandates this contract, so **this document establishes it** as a
+requirement for the B2 consumer sub-projects (providers, webhooks). This increment
+ships no consumers, so there is no orphan risk yet; a future consumer-scoped
+reconciliation (RepairService-style: refs not referenced by any consumer row) is
+explicitly out of scope here and belongs to whichever sub-project introduces the first
+consumer. We deliberately do **not** add a `delete(ref)` method (YAGNI) — the
+reentrant-transaction contract is the sole, idiomatic orphan-prevention mechanism.
 
 ---
 
@@ -247,11 +285,17 @@ commit):
 1. `store` → `reveal` returns the exact plaintext.
 2. `store` → `metadata` shows `active`, version 1; no plaintext in the returned array.
 3. `rotate` → `reveal` returns the **new** value; `usableSecrets` returns
-   `[new, old]` within grace; `current_version` bumped.
-4. rotate, then simulate grace expiry by directly updating the retired version's
-   `retire_after` to a past UTC timestamp (the vault is clock-free — grace is compared
-   in SQL via `UTC_TIMESTAMP()`), `prune` → old version destroyed: `usableSecrets`
-   returns `[new]` only, the destroyed row's ciphertext is zero-length.
+   `[new, old]` within grace; `latest_version` incremented; exactly one version row is
+   `state='current'` and it is the new one.
+4. **Grace expiry and destruction are separate steps, asserted separately.** Rotate,
+   then simulate grace expiry by directly updating the retired version's `retire_after`
+   to a past UTC timestamp (the vault is clock-free — grace is compared in SQL via
+   `UTC_TIMESTAMP()`). *Before* `prune`: `usableSecrets` already returns `[new]` only
+   (grace expiry alone removes the old value from use) **while the old version row
+   still holds its ciphertext**. *After* `prune`: the old version row still exists
+   (history retained) with `state='destroyed'`, `destroyed_at` set, and `ciphertext`,
+   `nonce`, **and** `tag` all zero-length — proving full destruction, not just
+   ciphertext nulling. A partial prune (e.g. ciphertext-only) must fail this test.
 5. `revoke` → `reveal`/`usableSecrets` throw `SecretRevokedException`; `metadata`
    shows `revoked`.
 6. **Redaction:** after store/rotate/revoke, assert the plaintext string appears in
@@ -264,6 +308,13 @@ commit):
 9. Oversize plaintext → `ValidationException`.
 10. Two stores yield distinct refs; a ref round-trips and fits `VARCHAR(190)`.
 11. Unknown ref → `SecretNotFoundException`.
+12. **Serialized rotation determinism** (the row-lock contract, to the extent a
+    single-connection harness can prove it): N sequential `rotate()` calls yield
+    versions `2..N+1` with no `uq_secret_version` collision, and after each there is
+    exactly one `state='current'` row. A genuine two-connection parallel race is **not**
+    exercised in-process (PHPUnit per-test isolation is single-connection); the
+    `SELECT … FOR UPDATE` serialization is relied on by design and stated here rather
+    than silently assumed.
 
 **`tests/Integration/Core/AppFeatureFlagTest`**: extend to assert `service_secrets`
 defaults dark (and per-flag override stays isolated).
