@@ -22,6 +22,7 @@ use App\Repository\UserPreferenceRepository;
 use App\Security\WriteGate;
 use App\Service\DirectMessageService;
 use App\Service\NotificationService;
+use App\Service\RepairService;
 use App\Service\ReputationLedgerService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
@@ -106,6 +107,22 @@ final class AppPhase4GateATest extends TestCase
         $this->assertSeeText($snoozed, 'Needs triage');
     }
 
+    public function testTopicAuthorCannotReopenStaffSetStatus(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'staffstatusadmin']);
+        $author = $this->makeUser(['username' => 'staffstatusauthor']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Staff Status']);
+        $thread = $this->makeThread($board, $author, 'Staff decision', 'Opening body');
+
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/status', ['status' => 'decision_made', 'reason' => 'moderated']));
+        self::assertSame('decision_made', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$thread['thread_id']]));
+
+        $this->actingAs($author);
+        $this->assertStatus(403, $this->post('/t/' . $thread['thread_id'] . '/status', ['status' => 'open', 'reason' => 'undo']));
+        self::assertSame('decision_made', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$thread['thread_id']]));
+    }
+
     public function testGroupDmMembershipBoundaries(): void
     {
         $owner = $this->established(['username' => 'groupowner']);
@@ -152,6 +169,23 @@ final class AppPhase4GateATest extends TestCase
         $this->assertStatus(200, $page);
         $this->assertSeeText($page, 'reported-dm-body-marker');
         $this->assertSeeText($page, 'Report room');
+    }
+
+    public function testDmReportEndpointIsRateLimited(): void
+    {
+        $owner = $this->established(['username' => 'dmratelimitowner']);
+        $bob = $this->established(['username' => 'dmratelimitbob']);
+        $created = $this->dm()->start($this->userEntity($owner), (int) $bob['id'], 'Opening note');
+        $messageIds = [];
+        for ($i = 0; $i < 11; $i++) {
+            $messageIds[] = $this->dm()->reply($this->userEntity($bob), (int) $created['conversation_id'], 'Reportable note ' . $i);
+        }
+
+        $this->actingAs($owner);
+        for ($i = 0; $i < 10; $i++) {
+            $this->assertRedirect($this->post('/dm/' . $messageIds[$i] . '/report', ['reason_code' => 'harassment', 'reason' => 'Review']));
+        }
+        $this->assertStatus(429, $this->post('/dm/' . $messageIds[10] . '/report', ['reason_code' => 'harassment', 'reason' => 'Review']));
     }
 
     public function testGroupDmAddParticipantRejectsInactiveAccounts(): void
@@ -227,6 +261,41 @@ final class AppPhase4GateATest extends TestCase
             'SELECT COUNT(*) FROM thread_tags WHERE thread_id = ? AND tag_id = ?',
             [$thread['thread_id'], $tagId],
         ));
+    }
+
+    public function testAdminCanHideDisableAndMergeTags(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'tagadmin']);
+        $author = $this->makeUser(['username' => 'tagmergeauthor']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Tag Lifecycle']);
+        $thread = $this->makeThread($board, $author, 'Tagged merge target', 'Body');
+        $repo = new TagRepository($this->db);
+        $oldId = $repo->create('old-tag', 'Old Tag', null, (int) $admin['id']);
+        $newId = $repo->create('new-tag', 'New Tag', null, (int) $admin['id']);
+        $repo->setForThread($thread['thread_id'], [$oldId], (int) $admin['id']);
+        (new FollowRepository($this->db))->followTarget((int) $author['id'], 'tag', $oldId);
+
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/admin/tags/' . $oldId . '/merge', ['target_id' => $newId]));
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT is_enabled FROM tags WHERE id = ?', [$oldId]));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM thread_tags WHERE thread_id = ? AND tag_id = ?', [$thread['thread_id'], $newId]));
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM follows WHERE user_id = ? AND target_type = 'tag' AND target_id = ?", [(int) $author['id'], $newId]));
+        self::assertSame($newId, (int) $this->db->fetchValue('SELECT tag_id FROM tag_aliases WHERE alias_slug = ?', ['old-tag']));
+
+        $this->assertRedirect($this->post('/admin/tags/' . $newId, [
+            'name' => 'New Tag',
+            'slug' => 'new-tag',
+            'description' => '',
+            'visibility' => 'hidden',
+            'enabled' => '1',
+        ]));
+        $index = $this->get('/tags');
+        $this->assertDontSeeText($index, 'New Tag');
+        $this->assertStatus(404, $this->get('/tags/new-tag'));
+
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/tags', ['tag_ids' => [$newId]]));
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM thread_tags WHERE thread_id = ?', [$thread['thread_id']]));
     }
 
     public function testWikiBoardToggleIsEnforced(): void
@@ -333,6 +402,25 @@ final class AppPhase4GateATest extends TestCase
         ));
     }
 
+    public function testLegacyReputationRepairRebuildsLedger(): void
+    {
+        $author = $this->makeUser(['username' => 'legacyrepairauthor']);
+        $reactor = $this->makeUser(['username' => 'legacyrepairreactor']);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Legacy repair target', 'React here');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        $this->db->run('INSERT INTO reactions (post_id, user_id, emoji, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP())', [$postId, (int) $reactor['id'], '👍']);
+        $this->db->run('UPDATE users SET reputation = 999 WHERE id = ?', [(int) $author['id']]);
+
+        (new RepairService($this->db, 5))->repairReputation();
+
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT reputation FROM users WHERE id = ?', [(int) $author['id']]));
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM reputation_events WHERE user_id = ? AND source_type = \'reaction\' AND source_id = ? AND reversed_at IS NULL',
+            [(int) $author['id'], $postId],
+        ));
+    }
+
     public function testProfileOwnerCanRemoveFollower(): void
     {
         $owner = $this->makeUser(['username' => 'followowner']);
@@ -377,5 +465,69 @@ final class AppPhase4GateATest extends TestCase
         $this->assertSeeText($page, 'Related topic');
         $this->assertSeeText($page, 'Updated wiki body');
         self::assertGreaterThanOrEqual(2, (int) $this->db->fetchValue('SELECT COUNT(*) FROM post_revisions WHERE post_id = ?', [$postId]));
+    }
+
+    public function testCommunityMemorySummaryRollbackSourcesAndWikiRevert(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'rollbackadmin']);
+        $author = $this->makeUser(['username' => 'rollbackauthor']);
+        $board = $this->makeBoard($this->makeCategory());
+        $this->db->run('UPDATE boards SET wiki_enabled = 1 WHERE id = ?', [(int) $board['id']]);
+        $thread = $this->makeThread($board, $author, 'Rollback topic', 'Original body');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/summary', ['body' => 'First summary', 'source_post_ids' => (string) $postId]));
+        $firstSummaryId = (int) $this->db->fetchValue('SELECT id FROM thread_summaries WHERE thread_id = ? AND version = 1', [$thread['thread_id']]);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/summary', ['body' => 'Second summary', 'source_post_ids' => '']));
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertSeeText($page, 'Second summary');
+
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/summary/restore', ['summary_id' => $firstSummaryId]));
+        $restored = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertSeeText($restored, 'First summary');
+        $this->assertSeeText($restored, 'Source');
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/summary/retire'));
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM thread_summaries WHERE thread_id = ? AND status = 'published'", [$thread['thread_id']]));
+
+        $this->assertRedirect($this->post('/posts/' . $postId . '/wiki'));
+        $originalRevisionId = (int) $this->db->fetchValue('SELECT MIN(id) FROM post_revisions WHERE post_id = ?', [$postId]);
+        $this->assertRedirect($this->post('/posts/' . $postId . '/wiki/edit', ['body' => 'Updated wiki body', 'reason' => 'change']));
+        self::assertSame('Updated wiki body', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+        $this->assertRedirect($this->post('/posts/' . $postId . '/wiki/revert', ['revision_id' => $originalRevisionId]));
+        self::assertSame('Original body', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+    }
+
+    public function testSummarySourceMasksAnonymousAuthor(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'memoryanonadmin']);
+        $author = $this->makeUser(['username' => 'memoryanonauthor', 'display_name' => 'Anon Author Real']);
+        $board = $this->makeBoard($this->makeCategory(), ['allow_anonymous' => 1]);
+        $thread = $this->posting()->createThread($this->userEntity($author), [
+            'board_id' => (int) $board['id'],
+            'title' => 'Anon source topic',
+            'body' => 'Anon source body',
+            'is_anonymous' => '1',
+        ]);
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT is_anonymous FROM posts WHERE id = ?', [$postId]));
+
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/summary', [
+            'body' => 'Summary citing an anonymous post',
+            'source_post_ids' => (string) $postId,
+        ]));
+
+        // The summary source list renders to every viewer (not just curators), so an
+        // anonymously-posted source must show "Anonymous", never the real author.
+        $reader = $this->makeUser(['username' => 'memoryanonreader']);
+        $this->actingAs($reader);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'Summary citing an anonymous post');
+        $this->assertSeeText($page, 'Anonymous');
+        $this->assertDontSeeText($page, '@memoryanonauthor');
+        $this->assertDontSeeText($page, 'Anon Author Real');
+        $this->assertDontSeeText($page, '/u/memoryanonauthor');
     }
 }

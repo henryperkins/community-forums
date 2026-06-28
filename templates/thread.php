@@ -112,6 +112,19 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 <h2>Summary</h2>
                 <div class="post-body"><?= $summary['body_html'] ?></div>
                 <p class="muted">Version <?= (int) $summary['version'] ?> by @<?= $e($summary['author_username']) ?></p>
+                <?php if (!empty($summary_sources)): ?>
+                    <ul class="muted">
+                        <?php foreach ($summary_sources as $src): ?>
+                            <li>Source <a href="/t/<?= (int) $src['thread_id'] ?>-<?= $e($src['thread_slug']) ?>#p<?= (int) $src['id'] ?>">#<?= (int) $src['id'] ?></a> by <?= ($src['author_username'] ?? '') !== '' ? '@' . $e($src['author_username']) : 'Anonymous' ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+                <?php if (!empty($can_curate_memory)): ?>
+                    <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/retire">
+                        <?= $this->csrfField() ?>
+                        <button class="linkbtn muted" type="submit">Retire summary</button>
+                    </form>
+                <?php endif; ?>
             </section>
         <?php endif; ?>
         <?php if (($memory_on ?? false) && !empty($related_threads)): ?>
@@ -137,6 +150,18 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     <input id="summary-sources" class="input" type="text" name="source_post_ids" placeholder="1, 2, 3">
                     <button class="btn btn-small" type="submit">Publish summary</button>
                 </form>
+                <?php if (!empty($summary_history)): ?>
+                    <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/restore">
+                        <?= $this->csrfField() ?>
+                        <label class="sr-only" for="summary-restore">Restore summary</label>
+                        <select id="summary-restore" class="input input-small" name="summary_id">
+                            <?php foreach ($summary_history as $item): ?>
+                                <option value="<?= (int) $item['id'] ?>">v<?= (int) $item['version'] ?> · <?= $e($item['status']) ?> · @<?= $e($item['author_username']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button class="btn btn-small" type="submit">Restore summary</button>
+                    </form>
+                <?php endif; ?>
                 <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/related">
                     <?= $this->csrfField() ?>
                     <input class="input input-small" type="number" name="related_thread_id" min="1" placeholder="Thread ID" required>
@@ -206,6 +231,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     'can_reveal_anon' => $can_reveal_anon ?? false,
                     'can_curate_memory' => $can_curate_memory ?? false,
                     'can_curate_wiki' => $can_curate_wiki ?? false,
+                    'wiki_revisions' => ($wiki_revisions_by_post ?? [])[(int) $p['id']] ?? [],
                     'memory_on' => $memory_on ?? false,
                     'show_avatars' => $show_avatars ?? true,
                     'show_signatures' => $show_signatures ?? true,

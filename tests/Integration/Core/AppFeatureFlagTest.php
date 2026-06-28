@@ -82,6 +82,21 @@ final class AppFeatureFlagTest extends TestCase
         );
     }
 
+    public function test_tags_flag_gates_public_and_admin_tag_routes(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'flagtagsadmin']);
+        $this->setFlags(['tags' => false]);
+
+        $this->assertStatus(404, $this->get('/tags'));
+        $this->assertStatus(404, $this->get('/tags/anything'));
+
+        $this->actingAs($admin);
+        $this->assertStatus(404, $this->get('/admin/tags'));
+        $this->assertStatus(404, $this->post('/admin/tags', ['name' => 'Hidden']));
+        $this->assertStatus(404, $this->post('/admin/tags/1', ['name' => 'Hidden', 'slug' => 'hidden']));
+        $this->assertStatus(404, $this->post('/admin/tags/1/merge', ['target_id' => 2]));
+    }
+
     public function test_disabling_a_flag_takes_its_get_routes_offline_but_keeps_core_up(): void
     {
         $cases = [

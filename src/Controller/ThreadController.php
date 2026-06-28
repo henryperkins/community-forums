@@ -187,18 +187,32 @@ final class ThreadController extends Controller
 
         $memoryOn = (bool) $this->container->get(FeatureFlags::class)->enabled('community_memory');
         $summary = null;
+        $summarySources = [];
+        $summaryHistory = [];
         $related = [];
         $canCurateMemory = false;
         $canCurateWiki = false;
+        $wikiRevisions = [];
         if ($memoryOn) {
             $memory = $this->container->get(CommunityMemoryService::class);
             $summary = $memory->publishedSummary((int) $thread['id']);
+            if ($summary !== null) {
+                $summarySources = $memory->summarySources((int) $summary['id'], $user);
+            }
+            $summaryHistory = $memory->summaries((int) $thread['id']);
             $related = $memory->relatedForViewer((int) $thread['id'], $user);
             $canCurateMemory = $user !== null && (
                 $user->isAdmin()
                 || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
             );
             $canCurateWiki = $canCurateMemory && (int) ($thread['board_wiki_enabled'] ?? 0) === 1;
+            if ($canCurateWiki) {
+                foreach ($posts as $post) {
+                    if ((int) ($post['is_wiki'] ?? 0) === 1) {
+                        $wikiRevisions[(int) $post['id']] = $memory->revisions((int) $post['id']);
+                    }
+                }
+            }
         }
 
         return $this->view('thread', array_merge([
@@ -240,9 +254,12 @@ final class ThreadController extends Controller
             'can_edit_tags' => $canEditTags,
             'memory_on' => $memoryOn,
             'summary' => $summary,
+            'summary_sources' => $summarySources,
+            'summary_history' => $summaryHistory,
             'related_threads' => $related,
             'can_curate_memory' => $canCurateMemory,
             'can_curate_wiki' => $canCurateWiki,
+            'wiki_revisions_by_post' => $wikiRevisions,
             'reply_errors' => [],
             'reply_old' => [],
             'edit_post_id' => 0,

@@ -52,6 +52,36 @@ final class CommunityMemoryController extends Controller
     }
 
     /** @param array<string,string> $params */
+    public function retireSummary(Request $request, array $params): Response
+    {
+        $this->requireMemory();
+        $user = $this->requireUser();
+        $threadId = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(CommunityMemoryService::class)->retireSummary($user, $threadId),
+            $this->threadUrl($threadId),
+            'Summary retired.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function republishSummary(Request $request, array $params): Response
+    {
+        $this->requireMemory();
+        $user = $this->requireUser();
+        $threadId = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(CommunityMemoryService::class)->republishSummary(
+                $user,
+                (int) $request->post('summary_id', 0),
+                $threadId,
+            ),
+            $this->threadUrl($threadId),
+            'Summary restored.',
+        );
+    }
+
+    /** @param array<string,string> $params */
     public function makeWiki(Request $request, array $params): Response
     {
         $this->requireMemory();
@@ -81,6 +111,24 @@ final class CommunityMemoryController extends Controller
             ),
             $this->threadUrl((int) $post['thread_id']) . '#p' . $postId,
             'Wiki post updated.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function revertWiki(Request $request, array $params): Response
+    {
+        $this->requireMemory();
+        $user = $this->requireUser();
+        $postId = (int) ($params['id'] ?? 0);
+        $post = $this->postOrFail($postId);
+        return $this->run(
+            fn () => $this->container->get(CommunityMemoryService::class)->revertWiki(
+                $user,
+                $postId,
+                (int) $request->post('revision_id', 0),
+            ),
+            $this->threadUrl((int) $post['thread_id']) . '#p' . $postId,
+            'Wiki revision restored.',
         );
     }
 

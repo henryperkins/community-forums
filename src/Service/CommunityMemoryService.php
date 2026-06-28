@@ -85,6 +85,43 @@ final class CommunityMemoryService
         );
     }
 
+    public function retireSummary(User $actor, int $threadId): void
+    {
+        $this->assertCurator($actor, $threadId);
+        $this->db->run(
+            "UPDATE thread_summaries
+             SET status = 'retired', retired_at = UTC_TIMESTAMP(), reviewer_id = ?, updated_at = UTC_TIMESTAMP()
+             WHERE thread_id = ? AND status = 'published'",
+            [$actor->id(), $threadId],
+        );
+    }
+
+    public function republishSummary(User $actor, int $summaryId, ?int $expectedThreadId = null): void
+    {
+        $summary = $this->db->fetch('SELECT * FROM thread_summaries WHERE id = ?', [$summaryId]);
+        if ($summary === null) {
+            throw new NotFoundException('Summary not found.');
+        }
+        $threadId = (int) $summary['thread_id'];
+        if ($expectedThreadId !== null && $threadId !== $expectedThreadId) {
+            throw new NotFoundException('Summary not found.');
+        }
+        $this->assertCurator($actor, $threadId);
+        $this->db->transaction(function () use ($actor, $threadId, $summaryId): void {
+            $this->db->run(
+                "UPDATE thread_summaries SET status = 'retired', retired_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP()
+                 WHERE thread_id = ? AND status = 'published' AND id <> ?",
+                [$threadId, $summaryId],
+            );
+            $this->db->run(
+                "UPDATE thread_summaries
+                 SET status = 'published', reviewer_id = ?, published_at = UTC_TIMESTAMP(), retired_at = NULL, updated_at = UTC_TIMESTAMP()
+                 WHERE id = ?",
+                [$actor->id(), $summaryId],
+            );
+        });
+    }
+
     public function makeWiki(User $actor, int $postId): void
     {
         $post = $this->postOrFail($postId);
@@ -118,6 +155,27 @@ final class CommunityMemoryService
         });
     }
 
+    public function revertWiki(User $actor, int $postId, int $revisionId): void
+    {
+        $this->writeGate->assertCanWrite($actor);
+        $post = $this->postOrFail($postId);
+        if ((int) ($post['is_wiki'] ?? 0) !== 1) {
+            throw new ForbiddenException('This post is not wiki-editable.');
+        }
+        $this->assertWikiEnabled((int) $post['thread_id']);
+        $this->assertCurator($actor, (int) $post['thread_id']);
+        $revision = $this->db->fetch('SELECT * FROM post_revisions WHERE id = ? AND post_id = ?', [$revisionId, $postId]);
+        if ($revision === null) {
+            throw new NotFoundException('Revision not found.');
+        }
+        $body = (string) $revision['body'];
+        $html = (string) ($revision['body_html'] ?? $this->markdown->render($body));
+        $this->db->transaction(function () use ($actor, $postId, $body, $html, $revisionId): void {
+            $this->recordRevision($postId, $actor->id(), $body, $html, 'revert:' . $revisionId);
+            $this->posts->update($postId, $body, $html, $actor->id());
+        });
+    }
+
     /** @return array<string,mixed>|null */
     public function publishedSummary(int $threadId): ?array
     {
@@ -128,6 +186,54 @@ final class CommunityMemoryService
              ORDER BY s.version DESC LIMIT 1",
             [$threadId],
         );
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function summaries(int $threadId): array
+    {
+        return $this->db->fetchAll(
+            'SELECT s.*, u.username AS author_username
+             FROM thread_summaries s JOIN users u ON u.id = s.author_id
+             WHERE s.thread_id = ?
+             ORDER BY s.version DESC, s.id DESC',
+            [$threadId],
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function summarySources(int $summaryId, ?User $viewer): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT p.id, p.thread_id, p.body, p.created_at, p.is_deleted, p.is_pending, p.is_anonymous,
+                    t.slug AS thread_slug, b.id AS board_id, b.visibility AS board_visibility,
+                    u.username AS author_username, u.display_name AS author_display_name
+             FROM thread_summary_sources ss
+             JOIN posts p ON p.id = ss.post_id
+             JOIN threads t ON t.id = p.thread_id
+             JOIN boards b ON b.id = t.board_id
+             JOIN users u ON u.id = p.user_id
+             WHERE ss.summary_id = ?
+             ORDER BY p.id ASC',
+            [$summaryId],
+        );
+        $visible = array_values(array_filter($rows, function (array $row) use ($viewer): bool {
+            if ((int) ($row['is_deleted'] ?? 0) === 1 || (int) ($row['is_pending'] ?? 0) === 1) {
+                return false;
+            }
+            $isMember = $viewer !== null && $this->members->isMember((int) $row['board_id'], $viewer->id());
+            return $this->policy->canRead(['visibility' => $row['board_visibility']], $viewer, $isMember);
+        }));
+
+        // Preserve the masked-anonymous invariant (mask_author): this source list
+        // renders to every thread viewer, not just curators, so a source post that
+        // was published anonymously must never expose its real author here.
+        return array_map(static function (array $row): array {
+            if ((int) ($row['is_anonymous'] ?? 0) === 1) {
+                $row['author_username'] = null;
+                $row['author_display_name'] = null;
+            }
+            return $row;
+        }, $visible);
     }
 
     /** @return array<int,array<string,mixed>> */
