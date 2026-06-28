@@ -9,10 +9,12 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Mail\MailException;
 use App\Mail\Mailer;
+use App\Repository\SettingRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
 use App\Repository\VerificationRepository;
 use App\Security\PasswordHasher;
+use Throwable;
 
 /**
  * Forgotten-password recovery (PHASE_2_PLAN §3 Gate A: "Account recovery").
@@ -36,6 +38,7 @@ final class PasswordResetService
         private PasswordHasher $hasher,
         private Mailer $mailer,
         private Config $config,
+        private ?SettingRepository $settings = null,
     ) {
     }
 
@@ -144,7 +147,7 @@ final class PasswordResetService
         $base = rtrim((string) $this->config->get('app.url', ''), '/');
         $link = $base . '/reset?token=' . $rawToken;
         $minutes = max(1, (int) round($ttl / 60));
-        $appName = (string) $this->config->get('app.name', 'RetroBoards');
+        $appName = $this->siteName();
 
         $subject = "Reset your {$appName} password";
         $text = "We received a request to reset your password.\n\n"
@@ -159,6 +162,19 @@ final class PasswordResetService
             $this->mailer->send($to, $subject, $text, $html);
         } catch (MailException) {
             // Never surface delivery status to the requester (anti-enumeration).
+        }
+    }
+
+    private function siteName(): string
+    {
+        $fallback = (string) $this->config->get('app.name', 'RetroBoards');
+        if ($this->settings === null) {
+            return $fallback;
+        }
+        try {
+            return $this->settings->getString('site_name', $fallback);
+        } catch (Throwable) {
+            return $fallback;
         }
     }
 }

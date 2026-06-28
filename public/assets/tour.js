@@ -32,22 +32,51 @@
         if (!steps.length) { return; }
 
         var i = 0;
+        var previousFocus = document.activeElement;
         var pop = document.createElement('div');
         pop.className = 'tour-popover';
         pop.setAttribute('role', 'dialog');
+        pop.setAttribute('aria-modal', 'true');
         pop.setAttribute('aria-live', 'polite');
+        pop.setAttribute('tabindex', '-1');
         document.body.appendChild(pop);
         var highlighted = null;
 
         function clearHighlight() {
             if (highlighted) { highlighted.classList.remove('tour-highlight'); highlighted = null; }
         }
+        function focusables() {
+            return Array.prototype.slice.call(pop.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+                .filter(function (el) { return !el.disabled && el.offsetParent !== null; });
+        }
 
         function finish(replay) {
             clearHighlight();
+            document.removeEventListener('keydown', onKeydown);
             if (pop.parentNode) { pop.parentNode.removeChild(pop); }
             document.body.removeAttribute('data-tour');
+            if (previousFocus && previousFocus.focus) { previousFocus.focus(); }
             if (!replay) { record('/onboarding/complete'); }
+        }
+
+        function onKeydown(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                finish(false);
+                return;
+            }
+            if (e.key !== 'Tab') { return; }
+            var nodes = focusables();
+            if (!nodes.length) { return; }
+            var first = nodes[0];
+            var last = nodes[nodes.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
         }
 
         function show() {
@@ -61,8 +90,10 @@
             }
             var last = i === steps.length - 1;
             pop.innerHTML = '';
-            var h = document.createElement('h3'); h.textContent = step.title; pop.appendChild(h);
-            var p = document.createElement('p'); p.textContent = step.text; pop.appendChild(p);
+            var h = document.createElement('h3'); h.id = 'tour-title'; h.textContent = step.title; pop.appendChild(h);
+            var p = document.createElement('p'); p.id = 'tour-desc'; p.textContent = step.text; pop.appendChild(p);
+            pop.setAttribute('aria-labelledby', h.id);
+            pop.setAttribute('aria-describedby', p.id);
             var actions = document.createElement('div'); actions.className = 'tour-actions';
             var prog = document.createElement('span'); prog.className = 'tour-progress';
             prog.textContent = (i + 1) + ' of ' + steps.length; actions.appendChild(prog);
@@ -75,6 +106,7 @@
             pop.appendChild(actions);
             next.focus();
         }
+        document.addEventListener('keydown', onKeydown);
         show();
     }
 

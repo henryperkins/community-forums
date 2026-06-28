@@ -553,6 +553,7 @@ final class App
             (int) $config->get('uploads.max_height', 4096),
             (int) $config->get('uploads.max_pixels', 24_000_000),
             (array) $config->get('uploads.allowed_mime', ['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+            (int) $config->get('uploads.min_free_bytes', 0),
         ));
 
         // Phase 2 shared services.
@@ -688,6 +689,7 @@ final class App
             $c->get(PasswordHasher::class),
             $c->get(Mailer::class),
             $config,
+            $c->get(SettingRepository::class),
         ));
         $c->bind(EmailVerificationService::class, fn (Container $c) => new EmailVerificationService(
             $c->get(UserRepository::class),
@@ -695,6 +697,7 @@ final class App
             $c->get(BadgeService::class),
             $c->get(Mailer::class),
             $config,
+            $c->get(SettingRepository::class),
         ));
         $c->bind(AccountService::class, fn (Container $c) => new AccountService(
             $c->get(UserRepository::class),

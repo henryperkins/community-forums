@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\SettingRepository;
+use App\Repository\AttachmentRepository;
+use App\Service\AttachmentService;
 use Tests\Support\TestCase;
 
 /**
@@ -208,5 +210,54 @@ final class AppImageUploadTest extends TestCase
         $res = $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Too many', 'body' => 'pics' . $refs]);
         $this->assertStatus(422, $res);
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM threads WHERE user_id = ?', [(int) $author['id']]));
+    }
+
+    public function test_disk_pressure_threshold_rejects_before_storing(): void
+    {
+        $user = $this->makeUser(['username' => 'fullstore']);
+        $svc = new AttachmentService(
+            new AttachmentRepository($this->db),
+            (string) $this->config->get('uploads.storage_path'),
+            5_242_880,
+            4096,
+            4096,
+            24_000_000,
+            ['image/png'],
+            PHP_INT_MAX,
+        );
+
+        try {
+            $svc->storeUpload((int) $user['id'], $this->fakeUpload($this->pngBytes()));
+            self::fail('Expected disk-pressure validation.');
+        } catch (\App\Core\ValidationException $e) {
+            self::assertSame('The image store is temporarily full. Please try again later.', $e->first());
+            self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM attachments'));
+        }
+    }
+
+    public function test_write_failure_is_reported_without_creating_attachment_row(): void
+    {
+        $user = $this->makeUser(['username' => 'writefail']);
+        $blockedRoot = tempnam(sys_get_temp_dir(), 'rb-media-file');
+        self::assertIsString($blockedRoot);
+        $svc = new AttachmentService(
+            new AttachmentRepository($this->db),
+            $blockedRoot,
+            5_242_880,
+            4096,
+            4096,
+            24_000_000,
+            ['image/png'],
+        );
+
+        try {
+            $svc->storeUpload((int) $user['id'], $this->fakeUpload($this->pngBytes()));
+            self::fail('Expected write-failure validation.');
+        } catch (\App\Core\ValidationException $e) {
+            self::assertSame('The image could not be stored. Please try again.', $e->first());
+            self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM attachments'));
+        } finally {
+            @unlink($blockedRoot);
+        }
     }
 }

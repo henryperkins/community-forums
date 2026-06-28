@@ -51,7 +51,16 @@ $mailer = static function () use ($config): Mailer {
     if (($mail['driver'] ?? 'sendmail') === 'array') {
         return new ArrayMailer();
     }
-    return new SendmailMailer((string) ($mail['from'] ?? ''), (string) ($mail['from_name'] ?? 'RetroBoards'));
+    $fromName = (string) ($mail['from_name'] ?? '');
+    if ($fromName === '') {
+        try {
+            $fromName = (new SettingRepository(new Database($config->get('db'))))
+                ->getString('site_name', (string) $config->get('app.name', 'RetroBoards'));
+        } catch (Throwable) {
+            $fromName = (string) $config->get('app.name', 'RetroBoards');
+        }
+    }
+    return new SendmailMailer((string) ($mail['from'] ?? ''), $fromName);
 };
 
 try {
@@ -138,6 +147,7 @@ try {
                 new UserRepository($db),
                 $mailer(),
                 $config,
+                new SettingRepository($db),
             );
             $stats = $worker->run((int) ($argv[2] ?? 100));
             $log(sprintf('Instant email: sent=%d suppressed=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['failed'], $stats['skipped']));
@@ -151,6 +161,7 @@ try {
                 new EmailSuppressionRepository($db),
                 $mailer(),
                 $config,
+                new SettingRepository($db),
             );
             $stats = $worker->run(gmdate('Y-m-d H:i:s'));
             $log(sprintf('Daily digest: sent=%d skipped_empty=%d suppressed=%d', $stats['sent'], $stats['skipped_empty'], $stats['suppressed']));
@@ -214,6 +225,7 @@ try {
                 (int) $config->get('uploads.max_height', 4096),
                 (int) $config->get('uploads.max_pixels', 24_000_000),
                 (array) $config->get('uploads.allowed_mime', []),
+                (int) $config->get('uploads.min_free_bytes', 0),
             );
             $stats = (new OrphanAttachmentCleaner($repo, $svc, (int) $config->get('uploads.temp_ttl_hours', 24), (int) $config->get('uploads.deleted_grace_days', 30)))->run();
             $log(sprintf('Attachment sweep: temp=%d deleted_parent=%d', $stats['temp'], $stats['deleted_parent']));

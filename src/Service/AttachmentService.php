@@ -36,6 +36,7 @@ final class AttachmentService
         private int $maxHeight = 4096,
         private int $maxPixels = 24_000_000,
         private array $allowedMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        private int $minFreeBytes = 0,
     ) {
     }
 
@@ -201,6 +202,12 @@ final class AttachmentService
         $dir = dirname($path);
         if (!is_dir($dir)) {
             @mkdir($dir, 0775, true);
+        }
+        if ($this->minFreeBytes > 0) {
+            $free = @disk_free_space($dir);
+            if ($free === false || $free < ($this->minFreeBytes + strlen($bytes))) {
+                throw new ValidationException(['image' => 'The image store is temporarily full. Please try again later.']);
+            }
         }
         if (@file_put_contents($path, $bytes) === false) {
             throw new ValidationException(['image' => 'The image could not be stored. Please try again.']);

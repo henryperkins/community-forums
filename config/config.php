@@ -150,6 +150,8 @@ return [
         // A brand-new account (below this many posts) cannot upload (anti-abuse).
         'new_user_min_posts' => (int) Env::get('UPLOADS_NEW_USER_MIN_POSTS', '0'),
         'storage_path' => Env::get('UPLOADS_PATH', dirname(__DIR__) . '/storage/media'),
+        // Refuse new uploads when free space drops below this reserve.
+        'min_free_bytes' => (int) Env::get('UPLOADS_MIN_FREE_BYTES', (string) (256 * 1024 * 1024)),
         // Unfinalised temp uploads older than this are swept by worker:attachments.
         'temp_ttl_hours' => (int) Env::get('UPLOADS_TEMP_TTL_HOURS', '24'),
         // Media of a soft-deleted post is only reclaimed after this grace window,

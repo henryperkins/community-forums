@@ -47,6 +47,57 @@ final class Markdown
             return '';
         }
         $html = $this->converter->convert($markdown)->getContent();
+        $html = $this->renderEmojiShortcodes($html);
         return $this->sanitizer->sanitize($html);
+    }
+
+    private function renderEmojiShortcodes(string $html): string
+    {
+        if (!str_contains($html, ':')) {
+            return $html;
+        }
+
+        $doc = new \DOMDocument('1.0', 'UTF-8');
+        libxml_use_internal_errors(true);
+        $ok = $doc->loadHTML(
+            '<?xml encoding="UTF-8">' . $html,
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD,
+        );
+        libxml_clear_errors();
+        if (!$ok) {
+            return $html;
+        }
+
+        $map = [
+            ':smile:' => '😄',
+            ':heart:' => '❤️',
+            ':thumbsup:' => '👍',
+            ':thumbs_up:' => '👍',
+            ':tada:' => '🎉',
+        ];
+        $walker = function (\DOMNode $node) use (&$walker, $map): void {
+            if ($node instanceof \DOMText) {
+                $parent = $node->parentNode;
+                while ($parent !== null) {
+                    $name = strtolower($parent->nodeName);
+                    if ($name === 'code' || $name === 'pre') {
+                        return;
+                    }
+                    $parent = $parent->parentNode;
+                }
+                $node->nodeValue = strtr($node->nodeValue, $map);
+                return;
+            }
+            foreach (iterator_to_array($node->childNodes) as $child) {
+                $walker($child);
+            }
+        };
+        $walker($doc);
+
+        $out = $doc->saveHTML();
+        if (!is_string($out)) {
+            return $html;
+        }
+        return preg_replace('/^<\?xml encoding="UTF-8"\?>\s*/', '', $out) ?? $out;
     }
 }

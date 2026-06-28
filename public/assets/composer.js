@@ -179,6 +179,52 @@
     function draftKeyFor(who, context) {
         return 'rb-draft:' + who + ':' + context;
     }
+    var pendingDraftSubmitKey = 'rb-draft:pending-submits';
+    function pendingDraftSubmits() {
+        try {
+            var raw = sessionStorage.getItem(pendingDraftSubmitKey);
+            var parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    function writePendingDraftSubmits(items) {
+        try {
+            if (items.length) { sessionStorage.setItem(pendingDraftSubmitKey, JSON.stringify(items)); }
+            else { sessionStorage.removeItem(pendingDraftSubmitKey); }
+        } catch (e) {}
+    }
+    function rememberPendingDraftSubmit(key, context) {
+        var items = pendingDraftSubmits().filter(function (item) { return item && item.key !== key; });
+        items.push({ key: key, context: context, at: Date.now() });
+        writePendingDraftSubmits(items.slice(-20));
+    }
+    function clearCompletedDraftSubmits() {
+        var pending = pendingDraftSubmits();
+        if (!pending.length) { return; }
+        var keep = [];
+        var forms = document.querySelectorAll('form.composer');
+        pending.forEach(function (item) {
+            if (!item || !item.key || !item.context) { return; }
+            var samePostUrlWithBody = false;
+            for (var i = 0; i < forms.length; i++) {
+                var form = forms[i];
+                if (form.getAttribute('action') !== item.context) { continue; }
+                var ta = form.querySelector('.composer-input');
+                if (location.pathname === item.context && ta && ta.value) {
+                    samePostUrlWithBody = true;
+                    break;
+                }
+            }
+            if (samePostUrlWithBody) {
+                keep.push(item);
+                return;
+            }
+            try { localStorage.removeItem(item.key); } catch (e) {}
+        });
+        writePendingDraftSubmits(keep);
+    }
     function migrateAnonDrafts(who) {
         if (who === 'anon') { return; }
         try {
@@ -230,12 +276,10 @@
             updateDiscard();
         });
         form.addEventListener('submit', function () {
-            // Clear on submit so a successful post does not leave the just-sent
-            // body in the composer after the redirect-back (which would invite a
-            // duplicate post under a freshly minted idempotency_key). Validation
-            // failures re-render the composer with the server-side reply_old/old
-            // values, so the draft is not lost on the error path.
-            try { localStorage.removeItem(key); } catch (e) {}
+            // Do not clear immediately: a dropped connection can leave the user on
+            // the same page. The next successfully loaded page clears this context
+            // before an empty composer can repopulate from localStorage.
+            rememberPendingDraftSubmit(key, context);
             updateDiscard();
         });
     }
@@ -594,6 +638,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         var prefs = composingPrefs();
+        clearCompletedDraftSubmits();
         var forms = document.querySelectorAll('form.composer');
         for (var i = 0; i < forms.length; i++) { enhance(forms[i], prefs); }
         renderDraftsPage();

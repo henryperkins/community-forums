@@ -74,6 +74,48 @@ final class AppComposerTest extends TestCase
         self::assertSame($rows[0]['body_html'], $rows[1]['body_html'], 'same Markdown must render identically in thread + reply');
     }
 
+    public function test_all_write_contexts_share_the_markdown_render_pipeline(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'all-context-parity']);
+        $author = $this->makeUser(['username' => 'allcontext']);
+        $recipient = $this->makeUser(['username' => 'allcontextdm']);
+        $this->actingAs($author);
+
+        $body = "**same** ||markdown|| with `code`, [a](https://example.com), and :smile:";
+        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'New context', 'body' => $body]);
+        $thread = $this->db->fetch('SELECT * FROM threads WHERE title = ? LIMIT 1', ['New context']);
+        $newThreadHtml = (string) $this->db->fetchValue(
+            'SELECT body_html FROM posts WHERE thread_id = ? AND is_op = 1',
+            [(int) $thread['id']],
+        );
+
+        $this->post('/t/' . (int) $thread['id'] . '/reply', ['body' => $body]);
+        $replyHtml = (string) $this->db->fetchValue(
+            'SELECT body_html FROM posts WHERE thread_id = ? AND is_op = 0 ORDER BY id DESC LIMIT 1',
+            [(int) $thread['id']],
+        );
+
+        $editThread = $this->makeThread($board, $author, 'Edit context', 'before edit');
+        $editPostId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [(int) $editThread['thread_id']],
+        );
+        $this->post('/posts/' . $editPostId . '/edit', ['body' => $body]);
+        $editHtml = (string) $this->db->fetchValue('SELECT body_html FROM posts WHERE id = ?', [$editPostId]);
+
+        $this->post('/messages', ['to' => 'allcontextdm', 'body' => $body]);
+        $dmHtml = (string) $this->db->fetchValue(
+            'SELECT body_html FROM dm_messages WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+            [(int) $author['id']],
+        );
+
+        self::assertSame($newThreadHtml, $replyHtml);
+        self::assertSame($newThreadHtml, $editHtml);
+        self::assertSame($newThreadHtml, $dmHtml);
+        self::assertStringContainsString('😄', $newThreadHtml);
+    }
+
     public function test_shared_composer_surfaces_render_plain_textareas(): void
     {
         $cat = $this->makeCategory();

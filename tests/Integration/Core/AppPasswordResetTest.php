@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Mail\ArrayMailer;
+use App\Repository\SettingRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
@@ -37,6 +38,7 @@ final class AppPasswordResetTest extends TestCase
             new PasswordHasher(),
             $mailer,
             $this->config,
+            new SettingRepository($this->db),
         );
     }
 
@@ -67,6 +69,19 @@ final class AppPasswordResetTest extends TestCase
         $token = $this->tokenFromEmail($mailer, 'amy@example.test');
         self::assertSame(hash('sha256', $token), $row['token_hash']);
         self::assertStringNotContainsString($token, (string) $row['token_hash']);
+    }
+
+    public function test_reset_email_uses_operator_site_name(): void
+    {
+        (new SettingRepository($this->db))->set('site_name', 'Lakeside Forum');
+        $this->makeUser(['username' => 'brandreset', 'email' => 'brandreset@example.test']);
+        $mailer = new ArrayMailer();
+
+        $this->resetService($mailer)->request('brandreset@example.test');
+
+        $message = $mailer->to('brandreset@example.test')[0];
+        self::assertSame('Reset your Lakeside Forum password', $message['subject']);
+        self::assertStringNotContainsString('RetroBoards', $message['subject'] . $message['text'] . (string) $message['html']);
     }
 
     public function test_request_for_unknown_email_is_silent(): void

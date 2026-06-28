@@ -11,6 +11,7 @@ use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
+use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use Throwable;
 
@@ -33,6 +34,7 @@ final class NotificationEmailWorker
         private UserRepository $users,
         private Mailer $mailer,
         private Config $config,
+        private ?SettingRepository $settings = null,
     ) {
     }
 
@@ -116,10 +118,11 @@ final class NotificationEmailWorker
         $appUrl = (string) $this->config->get('app.url', '');
         $url = rtrim($appUrl, '/') . '/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'] . '#p' . $postId;
         $unsub = UnsubscribeController::link($appUrl, (string) $row['email'], (string) $this->config->get('app.key', ''));
-        $subject = 'New activity on ' . (string) $this->config->get('app.name', 'RetroBoards');
-        $text = "There's new activity in a thread you're following.\n\n" . $url
+        $siteName = $this->siteName();
+        $subject = 'New activity on ' . $siteName;
+        $text = "There's new activity in a thread you're following on {$siteName}.\n\n" . $url
             . "\n\nUnsubscribe from these emails: " . $unsub;
-        $html = '<p>There&#39;s new activity in a thread you&#39;re following.</p>'
+        $html = '<p>There&#39;s new activity in a thread you&#39;re following on ' . htmlspecialchars($siteName, ENT_QUOTES) . '.</p>'
             . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">View the thread</a></p>'
             . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
@@ -139,5 +142,18 @@ final class NotificationEmailWorker
             return true;
         }
         return $this->users->isBoardMember($boardId, $userId);
+    }
+
+    private function siteName(): string
+    {
+        $fallback = (string) $this->config->get('app.name', 'RetroBoards');
+        if ($this->settings === null) {
+            return $fallback;
+        }
+        try {
+            return $this->settings->getString('site_name', $fallback);
+        } catch (Throwable) {
+            return $fallback;
+        }
     }
 }

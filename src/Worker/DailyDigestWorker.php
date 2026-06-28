@@ -10,6 +10,7 @@ use App\Mail\MailException;
 use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
+use App\Repository\SettingRepository;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
@@ -31,6 +32,7 @@ final class DailyDigestWorker
         private EmailSuppressionRepository $suppress,
         private Mailer $mailer,
         private Config $config,
+        private ?SettingRepository $settings = null,
     ) {
     }
 
@@ -151,6 +153,19 @@ final class DailyDigestWorker
         ], $rows);
     }
 
+    private function siteName(): string
+    {
+        $fallback = (string) $this->config->get('app.name', 'RetroBoards');
+        if ($this->settings === null) {
+            return $fallback;
+        }
+        try {
+            return $this->settings->getString('site_name', $fallback);
+        } catch (Throwable) {
+            return $fallback;
+        }
+    }
+
     /**
      * @param array<int,array{thread_id:int,title:string,slug:string,n:int}> $threads
      * @return array{subject:string,text:string,html:string}
@@ -158,7 +173,7 @@ final class DailyDigestWorker
     private function render(array $threads): array
     {
         $base = rtrim((string) $this->config->get('app.url', ''), '/');
-        $app = (string) $this->config->get('app.name', 'RetroBoards');
+        $app = $this->siteName();
         $subject = 'Your daily digest — ' . count($threads) . ' active ' . (count($threads) === 1 ? 'thread' : 'threads');
         $lines = [];
         $html = ['<p>New activity since your last digest:</p><ul>'];

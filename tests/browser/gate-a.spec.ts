@@ -14,6 +14,8 @@ import path from 'node:path';
  */
 
 const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const PNG_1X1 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({
@@ -34,6 +36,33 @@ async function login(page: Page, email: string): Promise<void> {
   await page.fill('input[name="password"]', 'password123');
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => !u.pathname.endsWith('/login')); // PRG redirect off the login page
+  await dismissTour(page);
+}
+
+async function dismissTour(page: Page): Promise<void> {
+  const skip = page.getByRole('button', { name: 'Skip' });
+  if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await skip.click();
+    await expect(page.locator('.tour-popover')).toHaveCount(0);
+  }
+}
+
+async function openNewTopicComposer(page: Page): Promise<void> {
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+  await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
+}
+
+async function dropTinyPng(page: Page): Promise<void> {
+  const dataTransfer = await page.evaluateHandle((base64) => {
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], 'tiny.png', { type: 'image/png' }));
+    return dt;
+  }, PNG_1X1);
+  await page.locator('form.composer textarea.composer-input').first().dispatchEvent('drop', { dataTransfer });
 }
 
 test('public pages render and capture', async ({ page }, info) => {
@@ -101,4 +130,75 @@ test('private board access for a member', async ({ page }, info) => {
   await visit(page, '/c/staff-room');
   await expect(page.getByText('Staff Room').first()).toBeVisible();
   await shot(page, info, '14-private-board-member');
+});
+
+test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ page }, info) => {
+  await login(page, 'bob@retro.test');
+
+  await visit(page, '/settings/preferences');
+  await expect(page.locator('select[name="threads_per_page"]')).toHaveValue('20');
+  await expect(page.locator('select[name="posts_per_page"]')).toHaveValue('20');
+  await shot(page, info, '15-reading-preferences');
+
+  await openNewTopicComposer(page);
+  const textarea = page.locator('form.composer textarea.composer-input').first();
+  await expect(page.getByRole('button', { name: 'Insert bold' }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Insert bold' }).first().click();
+  await expect(textarea).toHaveValue('****');
+  await expect(page.getByRole('button', { name: 'Insert bold' }).first()).toHaveAttribute('aria-pressed', 'true');
+
+  await textarea.fill('Browser evidence **bold** :smile:');
+  await expect(page.locator('.composer-preview strong').first()).toHaveText('bold');
+  await expect(page.locator('.composer-preview').first()).toContainText('😄');
+
+  await page.reload();
+  await openNewTopicComposer(page);
+  await expect(textarea).toHaveValue(/Browser evidence/);
+
+  await visit(page, '/drafts');
+  await expect(page.locator('[data-drafts-list] article')).toContainText('New topic');
+  await expect(page.locator('[data-drafts-list] article')).toContainText('Browser evidence');
+  await shot(page, info, '16-drafts-view');
+  const discard = page.getByRole('button', { name: 'Discard' });
+  await discard.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'nearest' }));
+  await discard.click();
+  await expect(page.locator('[data-drafts-list]')).toContainText('No saved drafts');
+
+  await openNewTopicComposer(page);
+  await dropTinyPng(page);
+  await expect(page.locator('.composer-upload-status').first()).toContainText('Uploaded image');
+  await expect(textarea).toHaveValue(/!\[\]\(\/media\/\d+\)/);
+  await page.locator('.composer-upload-card input[aria-label="Image alt text"]').fill('Tiny test image');
+  await expect(textarea).toHaveValue(/!\[Tiny test image\]\(\/media\/\d+\)/);
+  await shot(page, info, '17-composer-upload');
+
+  await page.locator('form.composer input[name="title"]').first().fill('Browser upload evidence');
+  await page.locator('form.composer button[type="submit"]').first().click();
+  await page.waitForURL(/\/t\/\d+-/);
+  await visit(page, '/drafts');
+  await expect(page.locator('[data-drafts-list]')).toContainText('No saved drafts');
+});
+
+test('phase 3 branding preview and product-tour replay', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  await visit(page, '/admin/branding');
+  await page.locator('[data-brand-name]').fill('Lakeside Forum');
+  await page.locator('[data-brand-primary]').fill('#005fcc');
+  await page.locator('[data-brand-accent]').fill('#a33300');
+  await expect(page.locator('[data-brand-preview-name]')).toHaveText('Lakeside Forum');
+  await expect(page.locator('[data-brand-preview]')).toHaveCSS('--preview-accent', '#005fcc');
+  await shot(page, info, '18-branding-preview');
+
+  await visit(page, '/settings/account');
+  const replay = page.locator('[data-tour-replay]');
+  await expect(replay).toBeVisible();
+  await replay.click();
+  await expect(page.locator('.tour-popover')).toHaveAttribute('aria-modal', 'true');
+  await expect(page.locator('.tour-popover')).toContainText('Welcome');
+  await shot(page, info, '19-tour-replay');
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.tour-popover')).toHaveCount(0);
+  await expect(replay).toBeFocused();
 });

@@ -29,7 +29,7 @@ final class PreferenceSchema
      */
     public const VERSION = 2;
 
-    public const THREADS_PER_PAGE = [25, 50, 100];
+    public const THREADS_PER_PAGE = [20, 25, 50, 100];
     public const POSTS_PER_PAGE = [10, 20, 40];
 
     /**

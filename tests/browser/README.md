@@ -3,11 +3,11 @@
 Captures Gate A screenshots at a **desktop (1280×800)** and **mobile (390×844)**
 viewport by driving the real, server-rendered app in Chromium. This is the
 "browser capture at desktop/mobile widths" evidence item from
-`docs/PHASE_2_STATUS.md` (Gate A acceptance checklist).
+`docs/PHASE_3_STATUS.md` (Gate A evidence checklist).
 
-The app is JavaScript-free for every Gate A action, so these journeys log in and
-navigate via plain form posts — they double as proof the server-rendered
-POST→redirect paths work in a real browser, not just the in-process PHPUnit suite.
+The baseline navigation still uses server-rendered POST->redirect paths, while
+the Phase 3 journeys also exercise the enhanced JavaScript composer, drafts,
+uploads, branding preview, and product-tour replay flows.
 
 ## What it captures
 
@@ -29,6 +29,11 @@ Written to `docs/evidence/browser/<viewport>/<page>.png`:
 | 12 | Settings |
 | 13 | Search |
 | 14 | Private board, viewed by a member |
+| 15 | Reading preferences default selects |
+| 16 | Drafts view with a browser-local draft |
+| 17 | Composer upload tray with thumbnail/alt controls |
+| 18 | Branding live preview |
+| 19 | Product-tour replay dialog |
 
 ## Run it locally
 

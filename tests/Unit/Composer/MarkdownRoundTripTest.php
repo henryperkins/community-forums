@@ -39,6 +39,7 @@ final class MarkdownRoundTripTest extends TestCase
             'h1 clamped to h2' => ['# Top', '<h2>Top</h2>'],
             'h4 clamped to h3' => ['#### Deep', '<h3>Deep</h3>'],
             'spoiler' => ['||hidden||', '<span class="spoiler" tabindex="0">hidden</span>'],
+            'emoji shortcode' => ['Hello :smile:', 'Hello 😄'],
             'media image' => ['![cat](/media/3)', '<img src="/media/3" alt="cat" loading="lazy">'],
         ];
     }
@@ -106,5 +107,12 @@ final class MarkdownRoundTripTest extends TestCase
     {
         self::assertSame('', $this->md()->render(''));
         self::assertSame('', $this->md()->render("   \n  "));
+    }
+
+    public function test_emoji_shortcodes_do_not_change_code(): void
+    {
+        $html = $this->md()->render('`:smile:`');
+        self::assertStringContainsString('<code>:smile:</code>', $html);
+        self::assertStringNotContainsString('😄', $html);
     }
 }
