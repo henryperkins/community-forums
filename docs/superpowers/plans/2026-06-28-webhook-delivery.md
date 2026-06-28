@@ -512,7 +512,7 @@ git commit -m "$(printf 'feat(webhooks): add WebhookEvents catalogue\n\nCo-Autho
 
 **Interfaces:**
 - Consumes: `App\Support\Cidr::contains` (Task 3).
-- Produces: `App\Core\EgressBlockedException` (`final extends \RuntimeException`); `App\Security\EgressGuard::__construct(bool $allowHttp, list<string> $allowedCidrs, ?callable $resolver = null)` and `validate(string $url): string` (returns the literal IP to pin; throws `EgressBlockedException`). The injected `$resolver` is `callable(string $host): array<int,string>` (host → IPs); the default resolves real DNS.
+- Produces: `App\Core\EgressBlockedException` (`final extends \RuntimeException`); `App\Security\EgressGuard::__construct(bool $allowHttp, list<string> $allowedCidrs, ?callable $resolver = null)`, `validate(string $url): string` (full delivery-time check — resolves, classifies, returns the literal IP to pin; throws `EgressBlockedException`), and `validateStatic(string $url): void` (registration-time pre-check — structural always, plus the tier check for IP-literal hosts, **no DNS for hostnames**; throws `EgressBlockedException`). The injected `$resolver` is `callable(string $host): array<int,string>` (host → IPs); the default resolves real DNS.
 
 - [ ] **Step 1: Write the failing test.** Create `tests/Unit/Security/EgressGuardTest.php`:
 
@@ -582,6 +582,19 @@ final class EgressGuardTest extends TestCase
     {
         $this->expectException(EgressBlockedException::class);
         $this->guard([])->validate('https://nope.test/hook');
+    }
+
+    public function test_validate_static_rejects_literal_private_ip_but_allows_hostname_without_dns(): void
+    {
+        // A resolver that would FAIL the test if called — validateStatic must not resolve hostnames.
+        $guard = new EgressGuard(false, [], static function (): array {
+            throw new \RuntimeException('validateStatic must not perform DNS for hostnames');
+        });
+        $guard->validateStatic('https://example.test/hook'); // hostname → structural-only, no throw
+        self::assertTrue(true);
+
+        $this->expectException(EgressBlockedException::class);
+        $guard->validateStatic('https://10.0.0.1/hook'); // IP literal → tier-checked, blocked
     }
 }
 ```
@@ -666,8 +679,42 @@ final class EgressGuard
         };
     }
 
-    /** @throws EgressBlockedException */
+    /**
+     * Full delivery-time check: resolve, classify the whole address set, and
+     * return one validated IP to pin via CURLOPT_RESOLVE.
+     * @throws EgressBlockedException
+     */
     public function validate(string $url): string
+    {
+        [$scheme, $host, $port] = $this->parse($url);
+        $ips = filter_var($host, FILTER_VALIDATE_IP) !== false ? [$host] : ($this->resolver)($host);
+        $ips = array_values(array_filter($ips, static fn ($ip): bool => is_string($ip) && filter_var($ip, FILTER_VALIDATE_IP) !== false));
+        if ($ips === []) {
+            throw new EgressBlockedException('Host did not resolve.');
+        }
+        return $this->classify($ips, $scheme, $port);
+    }
+
+    /**
+     * Registration-time pre-check WITHOUT DNS. Always enforces structure
+     * (scheme/credentials); for an IP-literal host it also applies the full tier
+     * check (so `https://10.0.0.1/` is rejected at registration). A hostname
+     * passes structural checks here — its address tier is enforced at delivery.
+     * @throws EgressBlockedException
+     */
+    public function validateStatic(string $url): void
+    {
+        [$scheme, $host, $port] = $this->parse($url);
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            $this->classify([$host], $scheme, $port);
+        }
+    }
+
+    /**
+     * @return array{0:string,1:string,2:int} [scheme, host, port]
+     * @throws EgressBlockedException
+     */
+    private function parse(string $url): array
     {
         $parts = parse_url($url);
         if ($parts === false || !isset($parts['scheme'], $parts['host'])) {
@@ -682,13 +729,16 @@ final class EgressGuard
         }
         $host = trim((string) $parts['host'], '[]');
         $port = isset($parts['port']) ? (int) $parts['port'] : ($scheme === 'https' ? 443 : 80);
+        return [$scheme, $host, $port];
+    }
 
-        $ips = filter_var($host, FILTER_VALIDATE_IP) !== false ? [$host] : ($this->resolver)($host);
-        $ips = array_values(array_filter($ips, static fn ($ip): bool => is_string($ip) && filter_var($ip, FILTER_VALIDATE_IP) !== false));
-        if ($ips === []) {
-            throw new EgressBlockedException('Host did not resolve.');
-        }
-
+    /**
+     * Decide the tier across ALL addresses and return one to pin.
+     * @param array<int,string> $ips
+     * @throws EgressBlockedException
+     */
+    private function classify(array $ips, string $scheme, int $port): string
+    {
         $allAllowlisted = true;
         foreach ($ips as $ip) {
             if (!$this->inAllowlist($ip)) {
@@ -1387,7 +1437,8 @@ use App\Core\Database;
  * outbox (INSERT IGNORE enqueue + GET_LOCK single-drainer) and ADDS retry/
  * backoff/dead-letter. claim() joins webhooks to gate on is_active — the one
  * documented two-table read in this repo — so a paused/auto-disabled endpoint's
- * rows are never claimed and cannot starve active endpoints.
+ * rows are not claimed in subsequent batches. (Within a single batch, the worker
+ * itself skips an endpoint once its breaker trips — see WebhookDeliveryWorker.)
  */
 final class WebhookDeliveryRepository
 {
@@ -1517,7 +1568,7 @@ git commit -m "$(printf 'feat(webhooks): durable WebhookDeliveryRepository (clai
 
 **Interfaces:**
 - Consumes: `WebhookRepository`, `WebhookDeliveryRepository`, `SecretVault` (`store/rotate/revoke/usableSecrets`), `ModerationLogRepository`, `FeatureFlags`, `Config`, `PasswordHasher`, `WriteGate`, `WebhookEvents`.
-- Produces (all on `WebhookService`): `register(User,string $pw,string $name,string $url,array $events): array{id:int,secret:string}`, `rotateSecret(User,string $pw,int $id): string`, `update(User,int $id,string $name,string $url,array $events): void`, `setActive(User,int $id,bool): void`, `delete(User,int $id): void`, `dispatch(string $eventType,array $payload,?string $eventId=null): int`, `sendTestEvent(User,int $id): int`, `replay(User,int $id,int $deliveryId): void`, `list(): array`, `get(int $id): ?array`, `deliveriesFor(int $id,int $limit=50): array`. Dark `webhooks` → `dispatch` returns 0, write methods throw `WebhooksDisabledException`. `register`/`rotateSecret` additionally throw `ValidationException` if `service_secrets` is dark.
+- Produces (all on `WebhookService`): `register(User,string $pw,string $name,string $url,array $events): array{id:int,secret:string}`, `rotateSecret(User,string $pw,int $id): string`, `update(User,int $id,string $name,string $url,array $events): void`, `setActive(User,int $id,bool): void`, `delete(User,int $id): void`, `dispatch(string $eventType,array $payload,?string $eventId=null): int`, `sendTestEvent(User,int $id): int`, `replay(User,int $id,int $deliveryId): void`, `list(): array`, `get(int $id): ?array`, `deliveriesFor(int $id,int $limit=50): array`. Dark `webhooks` → `dispatch` returns 0; `register`/`rotateSecret`/`update`/`sendTestEvent` throw `WebhooksDisabledException`; **`setActive`/`delete`/`replay`/`list`/`get`/`deliveriesFor` remain available (retained control, decision #40 — operators must keep cleanup/pause/inspect when the feature is globally off)**. `register`/`rotateSecret` additionally throw `ValidationException` if `service_secrets` is dark.
 
 - [ ] **Step 1: Write the failing test.** Create `tests/Integration/Service/WebhookServiceTest.php`:
 
@@ -1537,6 +1588,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
+use App\Security\EgressGuard;
 use App\Security\PasswordHasher;
 use App\Security\SecretBox;
 use App\Repository\ServiceSecretRepository;
@@ -1569,6 +1621,7 @@ final class WebhookServiceTest extends TestCase
             $this->config,
             new PasswordHasher(),
             new WriteGate(),
+            new EgressGuard(false, []),
         );
     }
 
@@ -1652,6 +1705,7 @@ final class WebhookServiceTest extends TestCase
             $this->config,
             new PasswordHasher(),
             new WriteGate(),
+            new EgressGuard(false, []),
         );
         self::assertSame(0, $dark->dispatch('ping', ['x' => 1], 'occ'));
     }
@@ -1666,6 +1720,13 @@ final class WebhookServiceTest extends TestCase
         self::assertNotNull($row);
         self::assertStringNotContainsString($res['secret'], (string) $row['after_json']);
         self::assertStringNotContainsString('password123', (string) $row['after_json']);
+    }
+
+    public function test_register_rejects_a_literal_private_ip_at_registration(): void
+    {
+        // EgressGuard::validateStatic rejects an IP-literal private target without DNS.
+        $this->expectException(ValidationException::class);
+        $this->service()->register($this->admin(), 'password123', 'ci', 'https://10.0.0.1/hook', ['ping']);
     }
 
     private function vaultStub(): SecretVault
@@ -1712,11 +1773,13 @@ use App\Core\Config;
 use App\Core\Database;
 use App\Core\FeatureFlags;
 use App\Core\ValidationException;
+use App\Core\EgressBlockedException;
 use App\Core\WebhooksDisabledException;
 use App\Domain\User;
 use App\Repository\ModerationLogRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
+use App\Security\EgressGuard;
 use App\Security\PasswordHasher;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
@@ -1740,6 +1803,7 @@ final class WebhookService
         private Config $config,
         private PasswordHasher $hasher,
         private WriteGate $writeGate,
+        private EgressGuard $egress,
     ) {
     }
 
@@ -1829,8 +1893,9 @@ final class WebhookService
 
     public function setActive(User $admin, int $webhookId, bool $active): void
     {
+        // Retained-control op (decision #40): NO assertEnabled() — pausing/resuming
+        // an endpoint must stay available even when the webhooks flag is dark.
         $this->writeGate->assertCanWrite($admin);
-        $this->assertEnabled();
         $this->db->transaction(function () use ($webhookId, $active, $admin): void {
             $changed = $active
                 ? $this->webhooks->enable($webhookId)
@@ -1848,8 +1913,8 @@ final class WebhookService
 
     public function delete(User $admin, int $webhookId): void
     {
+        // Retained-control op: NO assertEnabled() — cleanup stays available when dark.
         $this->writeGate->assertCanWrite($admin);
-        $this->assertEnabled();
         $wh = $this->webhooks->findById($webhookId);
         if ($wh === null) {
             return;
@@ -1920,8 +1985,8 @@ final class WebhookService
 
     public function replay(User $admin, int $webhookId, int $deliveryId): void
     {
+        // Retained-control op: NO assertEnabled() — re-queue stays available when dark.
         $this->writeGate->assertCanWrite($admin);
-        $this->assertEnabled();
         $this->db->transaction(function () use ($webhookId, $deliveryId, $admin): void {
             if ($this->deliveries->requeue($deliveryId) === 1) {
                 $this->log->log([
@@ -2003,6 +2068,14 @@ final class WebhookService
         }
         if (strlen($url) > 512) {
             throw new ValidationException(['url' => 'URL is too long (max 512).']);
+        }
+        // Reject obviously-bad destinations at registration (no DNS for hostnames;
+        // the full resolve-then-pin check still runs at delivery). A literal
+        // private/blocked IP becomes a field error here, not a worker-time failure.
+        try {
+            $this->egress->validateStatic($url);
+        } catch (EgressBlockedException) {
+            throw new ValidationException(['url' => 'That URL is not an allowed destination.']);
         }
     }
 
@@ -2195,6 +2268,37 @@ final class WebhookDeliveryWorkerTest extends TestCase
         self::assertSame(['delivered' => 0, 'retrying' => 0, 'dead' => 0, 'skipped' => 0], $stats);
         self::assertCount(0, $fake->calls);
     }
+
+    public function test_dead_letters_at_the_row_max_attempts_snapshot_not_live_config(): void
+    {
+        // Enqueue a delivery whose snapshot is max_attempts=1, while live config is 6.
+        $admin = $this->userEntity($this->makeAdmin());
+        $ref = $this->vault()->store('webhook', 0, 'sig', 'topsecret', $admin);
+        $hid = $this->hooks->insert('ci', 'https://x.test/h', json_encode(['ping']) ?: '[]', $ref, $admin->id());
+        $did = $this->deliv->enqueue($hid, 'ping', 'snap', '{"event":"ping"}', 1);
+        $fail = new FakeWebhookTransport(static fn (): WebhookResponse => new WebhookResponse(500, 'HTTP 500'));
+        $stats = $this->worker($fail)->run();
+        self::assertSame(1, $stats['dead'], 'one failed attempt dead-letters when the row snapshot is 1');
+        self::assertSame('dead', $this->deliv->find($did)['status']);
+    }
+
+    public function test_breaker_skips_same_endpoints_remaining_rows_in_one_run(): void
+    {
+        // Two queued deliveries for one endpoint already at the breaker edge.
+        $admin = $this->userEntity($this->makeAdmin());
+        $ref = $this->vault()->store('webhook', 0, 'sig', 'topsecret', $admin);
+        $hid = $this->hooks->insert('ci', 'https://x.test/h', json_encode(['ping']) ?: '[]', $ref, $admin->id());
+        $this->deliv->enqueue($hid, 'ping', 'r1', '{"event":"ping"}', 6);
+        $this->deliv->enqueue($hid, 'ping', 'r2', '{"event":"ping"}', 6);
+        $this->db->run('UPDATE webhooks SET consecutive_failures = 14 WHERE id = ?', [$hid]);
+
+        $fail = new FakeWebhookTransport(static fn (): WebhookResponse => new WebhookResponse(503, 'HTTP 503'));
+        $stats = $this->worker($fail)->run();
+
+        self::assertCount(1, $fail->calls, 'only the first row is attempted; the breaker trips and the second is skipped');
+        self::assertSame(1, $stats['skipped']);
+        self::assertSame(0, (int) $this->hooks->findById($hid)['is_active'], 'endpoint auto-paused mid-run');
+    }
 }
 ```
 
@@ -2256,16 +2360,24 @@ final class WebhookDeliveryWorker
             return $stats;
         }
 
-        $maxAttempts = (int) $this->config->get('webhooks.max_attempts', 6);
         /** @var list<int> $backoff */
         $backoff = (array) $this->config->get('webhooks.backoff_seconds', [60, 300, 1500, 7200, 21600]);
         $threshold = (int) $this->config->get('webhooks.circuit_breaker_threshold', 15);
         $timeout = (int) $this->config->get('webhooks.timeout_seconds', 5);
 
+        // Endpoints whose breaker trips DURING this batch: skip their remaining
+        // already-claimed rows so one broken endpoint can't hog the whole run.
+        $disabledThisRun = [];
+
         try {
             foreach ($this->deliveries->claim($limit) as $row) {
                 $id = (int) $row['id'];
                 $webhookId = (int) $row['webhook_id'];
+
+                if (isset($disabledThisRun[$webhookId])) {
+                    $stats['skipped']++; // endpoint auto-paused earlier this run; leave queued
+                    continue;
+                }
 
                 try {
                     $secrets = $this->vault->usableSecrets((string) $row['secret_ref']);
@@ -2301,7 +2413,7 @@ final class WebhookDeliveryWorker
                 }
 
                 $attempt = (int) $row['attempt_count'] + 1;
-                $dead = $attempt >= $maxAttempts;
+                $dead = $attempt >= (int) $row['max_attempts']; // per-row snapshot, NOT live config
                 $next = null;
                 if (!$dead) {
                     $idx = min($attempt - 1, count($backoff) - 1);
@@ -2313,14 +2425,17 @@ final class WebhookDeliveryWorker
 
                 $newFailures = (int) $row['consecutive_failures'] + 1;
                 $this->webhooks->incrementConsecutiveFailures($webhookId);
-                if ($newFailures >= $threshold && $this->webhooks->disable($webhookId, 'Auto-paused after ' . $newFailures . ' consecutive delivery failures.') === 1) {
-                    $this->log->log([
-                        'actor_id' => null,
-                        'action' => 'webhook_auto_disabled',
-                        'target_type' => 'webhook',
-                        'target_id' => $webhookId,
-                        'after' => ['consecutive_failures' => $newFailures],
-                    ]);
+                if ($newFailures >= $threshold) {
+                    $disabledThisRun[$webhookId] = true; // skip this endpoint's remaining batch rows
+                    if ($this->webhooks->disable($webhookId, 'Auto-paused after ' . $newFailures . ' consecutive delivery failures.') === 1) {
+                        $this->log->log([
+                            'actor_id' => null,
+                            'action' => 'webhook_auto_disabled',
+                            'target_type' => 'webhook',
+                            'target_id' => $webhookId,
+                            'after' => ['consecutive_failures' => $newFailures],
+                        ]);
+                    }
                 }
 
                 $stats[$dead ? 'dead' : 'retrying']++;
@@ -2407,7 +2522,7 @@ git commit -m "$(printf 'feat(webhooks): delivery worker + worker:webhooks conso
 - Create: `tests/Integration/Admin/AdminWebhookTest.php`
 
 **Interfaces:**
-- Consumes: `WebhookService` (Task 10), `WebhookEvents` (Task 4), `SecretVault`/`ServiceSecretRepository` (existing; we add their deferred container bindings), `FeatureFlags`, controller base helpers (`requireAdmin(): User`, `view($tpl,$data,$status=200)`, `redirectWithFlash($to,$msg)`).
+- Consumes: `WebhookService` (Task 10), `WebhookEvents` (Task 4), `EgressGuard` (Task 5, injected into `WebhookService`), `RateLimitService` (existing; throttles `test`), `SecretVault`/`ServiceSecretRepository` (existing; we add their deferred container bindings), `FeatureFlags`, controller base helpers (`requireAdmin(): User`, `view($tpl,$data,$status=200)`, `redirectWithFlash($to,$msg)`).
 - Produces: routes `GET/POST /admin/webhooks`, `GET/POST /admin/webhooks/{id}`, `POST /admin/webhooks/{id}/{toggle,rotate,test,delete}`, `POST /admin/webhooks/{id}/deliveries/{deliveryId}/replay`; container binding `WebhookService::class`.
 
 - [ ] **Step 1: Write the failing test.** Create `tests/Integration/Admin/AdminWebhookTest.php`:
@@ -2494,6 +2609,20 @@ final class AdminWebhookTest extends TestCase
         $this->assertRedirectContains($this->post('/admin/webhooks/' . $id . '/delete', []), '/admin/webhooks');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM webhooks WHERE id = ?', [$id]));
     }
+
+    public function test_send_test_event_is_rate_limited(): void
+    {
+        // Policy webhook_test = [20, 600]. The 21st test-send in the window is 429.
+        $this->enable();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+        $this->register();
+        $id = (int) $this->db->fetchValue('SELECT id FROM webhooks WHERE name = ?', ['CI hook']);
+
+        for ($i = 0; $i < 20; $i++) {
+            $this->assertContains($this->post('/admin/webhooks/' . $id . '/test', [])->status(), [302, 303], 'within-limit test-send redirects');
+        }
+        $this->assertStatus(429, $this->post('/admin/webhooks/' . $id . '/test', []));
+    }
 }
 ```
 
@@ -2550,6 +2679,10 @@ In `buildContainer()`, right after the `ApiTokenService` binding (around line 53
             $config,
             $c->get(PasswordHasher::class),
             $c->get(WriteGate::class),
+            new EgressGuard(
+                (bool) $config->get('webhooks.allow_http', false),
+                (array) $config->get('webhooks.allowed_private_cidrs', []),
+            ),
         ));
 ```
 
@@ -2584,6 +2717,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Security\WebhookEvents;
+use App\Service\RateLimitService;
 use App\Service\WebhookService;
 
 final class AdminWebhookController extends Controller
@@ -2733,6 +2867,8 @@ final class AdminWebhookController extends Controller
     {
         $admin = $this->requireAdmin();
         $this->gate();
+        // Throttle the test-send so the button can't be used to fan out junk (429 on abuse).
+        $this->container->get(RateLimitService::class)->enforce('webhook_test', $request, $admin);
         $id = (int) ($params['id'] ?? 0);
         $this->service()->sendTestEvent($admin, $id);
         return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Test event queued. Run the webhook worker to deliver it.');
