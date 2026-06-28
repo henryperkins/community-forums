@@ -200,6 +200,13 @@ return [
         'mfa_login' => [5, 900],
         'mfa_settings' => [10, 900],
     ],
+
+    'secrets' => [
+        // B2 service-secret registry (SecretVault, built on SecretBox).
+        'rotation_grace_seconds' => 86400, // retired versions stay decryptable this long for rotation overlap
+        'max_secret_bytes' => 4096,        // plaintext ceiling (fits VARBINARY(4096) ciphertext)
+    ],
+
     // Trusted reverse-proxy CIDRs whose X-Forwarded-For we honour for client IP.
     'trusted_proxies' => array_values(array_filter(array_map('trim', explode(',', (string) Env::get('TRUSTED_PROXIES', ''))))),
 
