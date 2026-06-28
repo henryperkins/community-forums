@@ -9,6 +9,7 @@ use App\Mail\SendmailMailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
+use App\Repository\SettingRepository;
 use App\Worker\NotificationEmailWorker;
 use Tests\Support\TestCase;
 
@@ -27,6 +28,7 @@ final class NotificationEmailWorkerTest extends TestCase
             $this->users(),
             $mailer,
             $this->config,
+            new SettingRepository($this->db),
         );
     }
 
@@ -56,6 +58,21 @@ final class NotificationEmailWorkerTest extends TestCase
         $second = $this->worker($mailer)->run();
         self::assertSame(0, $second['sent']);
         self::assertSame(1, $mailer->count(), 'no duplicate delivery on worker re-run');
+    }
+
+    public function testInstantEmailUsesOperatorSiteName(): void
+    {
+        (new SettingRepository($this->db))->set('site_name', 'Lakeside Forum');
+        $this->queuedDelivery();
+        $mailer = new ArrayMailer();
+
+        $stats = $this->worker($mailer)->run();
+
+        self::assertSame(1, $stats['sent']);
+        $message = $mailer->to('r@example.test')[0];
+        self::assertSame('New activity on Lakeside Forum', $message['subject']);
+        self::assertStringContainsString('following on Lakeside Forum', $message['text']);
+        self::assertStringNotContainsString('RetroBoards', $message['subject'] . $message['text'] . (string) $message['html']);
     }
 
     public function testSuppressedAddressIsDequeuedWithoutSending(): void

@@ -7,8 +7,10 @@ namespace App\Service;
 use App\Core\Config;
 use App\Mail\MailException;
 use App\Mail\Mailer;
+use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Repository\VerificationRepository;
+use Throwable;
 
 /**
  * Registration email verification (PHASE_2_PLAN §3 Gate A: "registration
@@ -32,6 +34,7 @@ final class EmailVerificationService
         private BadgeService $badges,
         private Mailer $mailer,
         private Config $config,
+        private ?SettingRepository $settings = null,
     ) {
     }
 
@@ -101,7 +104,7 @@ final class EmailVerificationService
         $base = rtrim((string) $this->config->get('app.url', ''), '/');
         $link = $base . '/verify?token=' . $rawToken;
         $hours = max(1, (int) round($ttl / 3600));
-        $appName = (string) $this->config->get('app.name', 'RetroBoards');
+        $appName = $this->siteName();
 
         $subject = "Confirm your {$appName} email address";
         $text = "Welcome to {$appName}! Please confirm your email address.\n\n"
@@ -117,6 +120,19 @@ final class EmailVerificationService
             $this->mailer->send($to, $subject, $text, $html);
         } catch (MailException) {
             // Best-effort; resend is available from account settings.
+        }
+    }
+
+    private function siteName(): string
+    {
+        $fallback = (string) $this->config->get('app.name', 'RetroBoards');
+        if ($this->settings === null) {
+            return $fallback;
+        }
+        try {
+            return $this->settings->getString('site_name', $fallback);
+        } catch (Throwable) {
+            return $fallback;
         }
     }
 }

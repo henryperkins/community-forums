@@ -50,6 +50,18 @@ final class AppProductTourTest extends TestCase
         $this->assertSeeText($this->get('/'), 'data-tour="1"');
     }
 
+    public function test_settings_renders_replay_entry_point(): void
+    {
+        $user = $this->makeUser(['username' => 'replaylink']);
+        $this->actingAs($user);
+        $this->post('/onboarding/complete');
+
+        $settings = $this->get('/settings/account');
+        $this->assertStatus(200, $settings);
+        $this->assertSeeText($settings, 'data-tour-replay');
+        $this->assertSeeText($settings, 'Replay tour');
+    }
+
     public function test_guest_is_not_offered_the_tour(): void
     {
         $this->assertDontSeeText($this->get('/'), 'data-tour="1"');
@@ -70,6 +82,7 @@ final class AppProductTourTest extends TestCase
 
         $this->assertStatus(404, $this->post('/onboarding/complete'));
         $this->assertStatus(404, $this->post('/onboarding/replay'));
+        $this->assertDontSeeText($this->get('/settings/account'), 'data-tour-replay');
         // The flag being off must not have recorded completion.
         self::assertNull($this->users()->find((int) $user['id'])['onboarded_at']);
     }

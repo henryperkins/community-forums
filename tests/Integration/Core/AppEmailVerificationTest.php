@@ -6,6 +6,7 @@ namespace Tests\Integration\Core;
 
 use App\Mail\ArrayMailer;
 use App\Repository\BadgeRepository;
+use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Repository\VerificationRepository;
 use App\Service\BadgeService;
@@ -36,6 +37,7 @@ final class AppEmailVerificationTest extends TestCase
             new BadgeService($this->db, new BadgeRepository($this->db), new UserRepository($this->db)),
             $mailer,
             $this->config,
+            new SettingRepository($this->db),
         );
     }
 
@@ -63,6 +65,20 @@ final class AppEmailVerificationTest extends TestCase
         $token = $this->tokenFromEmail($mailer, 'ann@example.test');
         self::assertSame(hash('sha256', $token), $row['token_hash']);
         self::assertNull($this->db->fetchValue('SELECT email_verified_at FROM users WHERE id = ?', [(int) $user['id']]));
+    }
+
+    public function test_verification_email_uses_operator_site_name(): void
+    {
+        (new SettingRepository($this->db))->set('site_name', 'Lakeside Forum');
+        $user = $this->makeUser(['username' => 'brandedverify', 'email' => 'brandverify@example.test']);
+        $mailer = new ArrayMailer();
+
+        $this->verifyService($mailer)->issue((int) $user['id'], 'brandverify@example.test');
+
+        $message = $mailer->to('brandverify@example.test')[0];
+        self::assertSame('Confirm your Lakeside Forum email address', $message['subject']);
+        self::assertStringContainsString('Welcome to Lakeside Forum!', $message['text']);
+        self::assertStringNotContainsString('RetroBoards', $message['subject'] . $message['text'] . (string) $message['html']);
     }
 
     public function test_clicking_link_verifies_and_consumes_the_token(): void

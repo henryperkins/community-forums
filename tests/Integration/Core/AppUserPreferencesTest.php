@@ -179,7 +179,9 @@ final class AppUserPreferencesTest extends TestCase
         $appearance = $this->get('/settings/appearance');
         $this->assertStatus(200, $appearance);
         $this->assertSeeText($appearance, 'System (match device)'); // default theme option rendered
-        $this->assertStatus(200, $this->get('/settings/preferences'));
+        $reading = $this->get('/settings/preferences');
+        $this->assertStatus(200, $reading);
+        self::assertStringContainsString('<option value="20" selected>20</option>', $reading->body());
     }
 
     public function test_composing_preferences_are_stamped_on_the_page_body(): void

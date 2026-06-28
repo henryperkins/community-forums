@@ -24,4 +24,7 @@ $items['/settings/boards'] = 'Boards';
     <?php foreach ($items as $href => $label): ?>
         <a class="<?= $here === $href ? 'active' : '' ?>" href="<?= $e($href) ?>"><?= $e($label) ?></a>
     <?php endforeach; ?>
+    <?php if (!empty($features['product_tour'])): ?>
+        <button class="linkbtn subnav-action" type="button" data-tour-replay>Replay tour</button>
+    <?php endif; ?>
 </nav>

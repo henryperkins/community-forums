@@ -3,8 +3,8 @@
 $this->layout('layout');
 $this->section('title', 'Reading');
 $this->section('robots', 'noindex, nofollow');
-$tpp = (int) ($prefs['threads_per_page'] ?? 0);
-$ppp = (int) ($prefs['posts_per_page'] ?? 0);
+$tpp = (int) ($prefs['threads_per_page'] ?? 20);
+$ppp = (int) ($prefs['posts_per_page'] ?? 20);
 $sort = (string) ($prefs['thread_sort'] ?? 'last_post');
 $sig = !empty($prefs['show_signatures']);
 $av = !empty($prefs['show_avatars']);
@@ -20,6 +20,7 @@ $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
         <label class="field">
             <span>Threads per page</span>
             <select name="threads_per_page" class="input">
+                <option value="20"<?= $opt(20, $tpp) ?>>20</option>
                 <option value="25"<?= $opt(25, $tpp) ?>>25</option>
                 <option value="50"<?= $opt(50, $tpp) ?>>50</option>
                 <option value="100"<?= $opt(100, $tpp) ?>>100</option>

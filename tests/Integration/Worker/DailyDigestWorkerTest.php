@@ -7,6 +7,7 @@ namespace Tests\Integration\Worker;
 use App\Mail\ArrayMailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
+use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
 use App\Worker\DailyDigestWorker;
 use Tests\Support\TestCase;
@@ -25,6 +26,7 @@ final class DailyDigestWorkerTest extends TestCase
             new EmailSuppressionRepository($this->db),
             $mailer,
             $this->config,
+            new SettingRepository($this->db),
         );
     }
 
@@ -54,6 +56,25 @@ final class DailyDigestWorkerTest extends TestCase
         $again = $this->worker($mailer)->run('2026-06-26 09:45:00');
         self::assertSame(0, $again['sent'], 'digest is not duplicated the same day');
         self::assertCount(1, $mailer->to($recipient['email']));
+    }
+
+    public function testDigestBodyUsesOperatorSiteName(): void
+    {
+        (new SettingRepository($this->db))->set('site_name', 'Lakeside Forum');
+        $author = $this->makeUser();
+        $recipient = $this->makeDigestUser(9);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Branded digest', 'OP.');
+        $this->posting()->reply($this->userEntity($author), $thread['thread_id'], ['body' => 'Fresh reply.']);
+        (new SubscriptionRepository($this->db))->set((int) $recipient['id'], 'thread', $thread['thread_id'], true, true, 'daily');
+
+        $mailer = new ArrayMailer();
+        $stats = $this->worker($mailer)->run('2026-06-26 09:30:00');
+
+        self::assertSame(1, $stats['sent']);
+        $message = $mailer->to($recipient['email'])[0];
+        self::assertStringContainsString('Lakeside Forum daily digest', $message['text']);
+        self::assertStringNotContainsString('RetroBoards', $message['text']);
     }
 
     public function testNotDueOutsideTheDigestHour(): void
