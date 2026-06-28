@@ -148,9 +148,9 @@ only). Two distinct scopes let the tests prove **per-scope granularity** (a toke
 Layering follows the existing thin-controller → service → repository pattern.
 
 - **`App\Security\ApiPrincipal`** — immutable value object `{tokenId:int, name:string,
-  scopes:string[], createdBy:int, tokenHash:string}` + `hasScope(string): bool`. **Not** a
-  `User`; carries no role. `tokenHash` is the non-secret one-way `sha256` (not the
-  plaintext), used by `respond()` for rate-limit keying.
+  scopes:string[], createdBy:int, createdAt:string, tokenHash:string}` + `hasScope(string): bool`.
+  **Not** a `User`; carries no role. `tokenHash` is the non-secret one-way `sha256` (not the
+  plaintext), used by `respond()` for rate-limit keying; `createdAt` backs `/api/v1/me`.
 - **`App\Repository\ApiTokenRepository`** (`(private Database $db)`):
   - `insert(name, tokenHash, scopesJson, createdBy, ?expiresAt): int`
   - `findActiveByHash(string $hash): ?array` — `WHERE token_hash = ? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())`
@@ -158,11 +158,16 @@ Layering follows the existing thin-controller → service → repository pattern
   - `revoke(int $id): void` — set `revoked_at = UTC_TIMESTAMP()` (gated `WHERE revoked_at IS NULL`)
   - `list(): array` — for the admin UI; selects everything **except** `token_hash`, newest first
   - `findById(int): ?array`
-- **`App\Service\ApiTokenService`** `(Database, ApiTokenRepository, ModerationLogRepository, FeatureFlags, Config, PasswordHasher, UserRepository)`:
-  - `mint(User $admin, string $currentPassword, string $name, array $scopes, ?int $expiresInDays): array{token:string, id:int}` — **reauth first** (`PHASE_3_PLAN:538` "reauth for creation"): verify `$currentPassword` against the admin's stored hash via `PasswordHasher` (mirroring the account-security reauth used for MFA settings changes); a mismatch throws `ValidationException(['current_password'=>…])` and mints **nothing**. Then validate each scope via `ApiScopes::isValid` (else `ValidationException`); generate plaintext `'rbt_' . bin2hex(random_bytes(24))`; store `sha256` hash + scopes + optional `expires_at`; audit `api_token_minted` (scopes + name — **no token, no password**); return the plaintext **once**. Txn (insert + audit). MFA is **not** separately re-challenged for mint — the codebase reauths sensitive changes with the password, not a per-action MFA ceremony.
-  - `authenticate(string $bearer): ?ApiPrincipal` — strip the `Bearer ` prefix; `$hash = sha256(token)`; `findActiveByHash($hash)`; on hit `touchLastUsed` and return an `ApiPrincipal` carrying that `tokenHash`; else `null`.
-  - `revoke(User $admin, int $tokenId): void` — `revoke` + audit `api_token_revoked`. Txn. Idempotent.
+- **`App\Service\ApiTokenService`** `(Database, ApiTokenRepository, ModerationLogRepository, FeatureFlags, Config, PasswordHasher, UserRepository, WriteGate)`:
+  - `mint(User $admin, string $currentPassword, string $name, array $scopes, ?int $expiresInDays): array{token:string, id:int}` — in order: **(a) write gate** — `WriteGate::assertCanWrite($admin)` (state beats role: a suspended/banned admin with a stale session cannot mint, even though `requireAdmin` passed); **(b) flag gate** — throw `ApiTokensDisabledException` if `api_tokens` is dark (defense in depth — the admin UI is already 404 when dark); **(c) reauth** — verify `$currentPassword` via `PasswordHasher` (`PHASE_3_PLAN:538` "reauth for creation"); mismatch → `ValidationException(['current_password'=>…])`, mints **nothing**; **(d) validate** (see below). Then generate `'rbt_' . bin2hex(random_bytes(24))`, store `sha256` + scopes + `expires_at`, audit `api_token_minted` (name + scopes — **no token, no password**), return the plaintext **once**. Txn (insert + audit). MFA is not separately re-challenged (the codebase reauths sensitive changes with the password, not a per-action MFA ceremony).
+  - `authenticate(string $bearer): ?ApiPrincipal` — **return `null` immediately if `api_tokens` is dark** (service-level kill switch, so even a future non-controller caller cannot authenticate); else strip the `Bearer ` prefix, `$hash = sha256(token)`, `findActiveByHash($hash)`; on hit `touchLastUsed` and return an `ApiPrincipal` carrying `tokenHash` + `createdAt`; else `null`.
+  - `revoke(User $admin, int $tokenId): void` — `WriteGate::assertCanWrite($admin)`; `revoke` + audit `api_token_revoked`. Txn. Idempotent. Allowed when the flag is dark (cleanup).
+  - `auditScopeDenied(ApiPrincipal $p, string $scope): void` — writes an `api_token_scope_denied` `moderation_log` row (`target_id` = token id; attempted scope; **no secret**). Called by `respond()` on a 403.
   - `list(): array` — passthrough for the admin UI.
+
+  **Validation (`mint`):** `name` required, trimmed, **1–80 chars**; `scopes` a **non-empty** array of **distinct** values each in `ApiScopes` (empty / unknown / duplicate → `ValidationException`); `expiresInDays`, when given, an int in **1–365** (`null` = no expiry; out of range → `ValidationException`).
+
+  **Audit policy (matching "fully audited" / `:403` proportionately):** lifecycle (`api_token_minted`, `api_token_revoked`) and **scope denial by a valid token** (`api_token_scope_denied`) write `moderation_log` rows; routine **successful use** is recorded via `last_used_at` only (a `moderation_log` row per read would be noise). **Unknown-token 401s are not audited** (each guess is a new hash → unbounded → audit-flood/DoS) and **rate-limit 429s are not** (the limiter already records the throttle). This is the deliberate, bounded reading of "leaves an audit record" for this slice.
 - **`App\Controller\Api\ApiController`** (base, extends the existing `Controller`). Every
   failure from a **registered `/api/v1/*` GET endpoint** (flag / auth / scope / rate-limit)
   is emitted as JSON by this wrapper — the kernel is never reached for those.
@@ -178,13 +183,13 @@ Layering follows the existing thin-controller → service → repository pattern
        `ApiTokenService::authenticate`; `null` → `Response::json(['error'=>'unauthorized'], 401)`;
     3. **rate limit** — `enforceSubject('api', $req, $principal->tokenHash)` for the
        now-authenticated token (wrap the limiter's `HttpException(429)` → `Response::json(['error'=>'rate_limited'], 429)`);
-    4. run `$action($principal)`, catching `ApiForbiddenException` → `Response::json(['error'=>'forbidden','scope'=>…], 403)`.
+    4. run `$action($principal)`, catching `ApiForbiddenException` → `ApiTokenService::auditScopeDenied($principal, $deniedScope)` then `Response::json(['error'=>'forbidden','scope'=>…], 403)`.
   - `requireScope(ApiPrincipal $p, string $scope): void` — `$p->hasScope($scope)` else throw
     the small internal `App\Security\ApiForbiddenException($scope)` (caught by `respond`).
 
   Each `/api` action is then one line: `return $this->respond($req, fn (ApiPrincipal $p) => …)`.
 - **`App\Controller\Api\MeController`** — `GET /api/v1/me` → valid token, no scope → `{name, scopes, created_at}`.
-- **`App\Controller\Api\BoardsController`** — `GET /api/v1/boards` (`read:boards`) → public boards `[{id, slug, name, thread_count, post_count}]`; `GET /api/v1/boards/{id}/threads` (`read:threads`) → public board's threads `[{id, slug, title, reply_count}]` (404 JSON if the board isn't public).
+- **`App\Controller\Api\BoardsController`** — `GET /api/v1/boards` (`read:boards`) → the full public-board set `[{id, slug, name, thread_count, post_count}]` (inherently small/operator-bounded, no paging); `GET /api/v1/boards/{id}/threads` (`read:threads`) → the public board's **most recent** threads, **bounded**: default **20**, optional `?limit` clamped to **1–50** (no cursor paging in this slice — YAGNI), `[{id, slug, title, reply_count}]`; 404 JSON if the board isn't public. The `LIMIT` is int-clamped + concatenated (never bound — `EMULATE_PREPARES=false`).
 - **`App\Controller\AdminApiTokenController`** — `requireAdmin()` + normal session/CSRF:
   - `GET /admin/api-tokens` → list + mint form
   - `POST /admin/api-tokens` → **reauth (`current_password`) + mint**; on success flash the plaintext **once** ("copy now — it won't be shown again"); on `ValidationException` (bad reauth, or invalid scope/name) re-render 422 with `->errors` + old input (the typed name/scopes — **never** the password)
@@ -289,6 +294,21 @@ This slice is **UI-visible** (admin token management), so per DESIGN §13 it nee
 13. **Router-caveat (documented limitation):** `GET /api/v1/does-not-exist` → 404 and
     `POST /api/v1/me` (wrong method) → 405 are served by the kernel as **HTML**, not JSON
     — asserted so the limitation is pinned, not silently assumed.
+14. **Write gate (state beats role):** a **suspended** admin (active session) → `POST
+    /admin/api-tokens` and `.../revoke` are blocked by `WriteGate`, and no token is
+    minted/revoked — even though `requireAdmin` passes.
+15. **Service-level kill switch:** calling `ApiTokenService::authenticate()` **directly**
+    with a valid token while `api_tokens` is dark returns `null` (not just the controller
+    404) — a unit-style service test.
+16. **Validation:** mint with an **empty scope array** → 422; an **unknown scope** → 422;
+    a **blank** or **>80-char** name → 422; `expiresInDays` of `0` / `400` → 422; each
+    creates no token.
+17. **Scope-denial audit:** a valid token denied a scope (403) writes an
+    `api_token_scope_denied` `moderation_log` row (token id + attempted scope, no secret);
+    an unknown-token 401 and a 429 write **no** audit row.
+18. **Threads bound:** `/api/v1/boards/{id}/threads?limit=999` returns at most 50; the
+    default (no `?limit`) returns at most 20.
+19. **`/api/v1/me` `created_at`:** the response's `created_at` matches the token row.
 
 **`AppFeatureFlagTest`:** extend to assert `api_tokens` defaults dark.
 
@@ -317,7 +337,7 @@ the `api_tokens` "not built" notes); `ADMIN.md §10.1` DDL rewrite to match;
 | `ApiScopes` | the scope catalogue + validation | `isValid()` / `all()` | — (pure) |
 | `ApiPrincipal` | a non-human scoped identity | `hasScope()` | — (value object) |
 | `ApiTokenRepository` | single-table SQL for `api_tokens` | typed methods returning arrays | `Database` |
-| `ApiTokenService` | mint (with password reauth) / authenticate / revoke / list, audit, txns, scope validation | those four methods | `Database`, repo, `ModerationLogRepository`, `FeatureFlags`, `Config`, `PasswordHasher`, `UserRepository` |
+| `ApiTokenService` | mint (write-gate + flag-gate + password reauth + validation) / authenticate (flag kill switch) / revoke / scope-denied audit / list, txns | those methods | `Database`, repo, `ModerationLogRepository`, `FeatureFlags`, `Config`, `PasswordHasher`, `UserRepository`, `WriteGate` |
 | `Api\ApiController` (+ `Me`/`Boards`) | Bearer auth, scope enforcement, flag gate, rate limit, JSON | `/api/v1/*` GET routes | `ApiTokenService`, `RateLimitService` |
 | `AdminApiTokenController` | admin mint/list/revoke UI (session+CSRF) | `/admin/api-tokens` routes | `ApiTokenService` |
 
