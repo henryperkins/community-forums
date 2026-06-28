@@ -28,6 +28,12 @@
     ];
 
     function run() {
+        // Re-entry guard: a tour is already on screen (e.g. the auto-start tour
+        // for a first-run user) and the Replay button was clicked. Each run()
+        // appends its own popover and binds a private document keydown listener
+        // that only its own finish() can remove, so a second concurrent run()
+        // would stack a duplicate dialog and leak a listener. One tour at a time.
+        if (document.querySelector('.tour-popover')) { return; }
         var steps = STEPS.filter(function (s) { return document.querySelector(s.sel); });
         if (!steps.length) { return; }
 
