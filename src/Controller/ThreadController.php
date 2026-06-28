@@ -65,7 +65,13 @@ final class ThreadController extends Controller
 
         $total = $postRepo->countByThread((int) $thread['id']);
         $pages = max(1, (int) ceil($total / $perPage));
-        $page = min($pages, max(1, $request->int('page', 1)));
+        // When re-rendering for a failed inline edit and the caller didn't pin an
+        // explicit ?page, open the page that actually contains the edited post so
+        // its re-opened edit form (with the rejected text) is on screen.
+        $editPostId = (int) ($extra['edit_post_id'] ?? 0);
+        $page = $editPostId > 0 && $request->query('page') === null
+            ? min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage)))
+            : min($pages, max(1, $request->int('page', 1)));
 
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage);
 
@@ -157,6 +163,9 @@ final class ThreadController extends Controller
             'subscription' => $subscription,
             'reply_errors' => [],
             'reply_old' => [],
+            'edit_post_id' => 0,
+            'edit_old' => '',
+            'edit_error' => '',
         ], $extra));
     }
 

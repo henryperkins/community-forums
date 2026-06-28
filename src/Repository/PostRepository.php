@@ -98,6 +98,34 @@ final class PostRepository
     }
 
     /**
+     * 1-based page (at $perPage) on which a post appears in the public thread
+     * render order — created_at ASC, id ASC over visible posts, matching
+     * {@see listByThread}. Lets a failed inline edit re-render the page that
+     * actually contains the post. Returns 1 when the post is missing/hidden.
+     */
+    public function pageOfPost(int $threadId, int $postId, int $perPage): int
+    {
+        $perPage = max(1, $perPage);
+        $target = $this->db->fetch(
+            'SELECT created_at, id FROM posts WHERE id = ? AND thread_id = ? AND is_deleted = 0 AND is_pending = 0',
+            [$postId, $threadId],
+        );
+        if ($target === null) {
+            return 1;
+        }
+        // Rank = count of visible posts up to and including the target in render
+        // order; its page is ceil(rank / perPage). Native prepares (emulation off)
+        // forbid reusing a named placeholder, so created_at is bound twice.
+        $rank = (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM posts
+             WHERE thread_id = :tid AND is_deleted = 0 AND is_pending = 0
+               AND (created_at < :ca1 OR (created_at = :ca2 AND id <= :pid))',
+            ['tid' => $threadId, 'ca1' => (string) $target['created_at'], 'ca2' => (string) $target['created_at'], 'pid' => $postId],
+        );
+        return max(1, (int) ceil($rank / $perPage));
+    }
+
+    /**
      * Approval queue (P3-05): pending non-OP replies, oldest first, with author +
      * thread + board context. Optionally scoped to a set of board ids (NULL = all,
      * for admins). OP holds are surfaced via the pending-threads query instead.

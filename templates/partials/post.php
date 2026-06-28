@@ -94,14 +94,19 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
         <?php if ($owner || $canModerate): ?>
             <div class="post-actions">
                 <?php if ($owner): ?>
-                    <details class="post-edit">
+                    <?php // When an edit fails validation the controller re-renders the thread with
+                          // this post's edit form re-opened and the rejected text + error preserved
+                          // (edit_post_id / edit_old / edit_error), instead of dropping the typed edit. ?>
+                    <?php $editingThis = ($edit_post_id ?? 0) === (int) $p['id']; ?>
+                    <details class="post-edit"<?= $editingThis ? ' open' : '' ?>>
                         <summary class="linkbtn">Edit</summary>
+                        <?php if ($editingThis && ($edit_error ?? '') !== ''): ?><p class="field-error"><?= $e($edit_error) ?></p><?php endif; ?>
                         <?php // data-no-draft: the textarea is pre-filled with the current body, so a
                               // local draft can never be restored here; opting out avoids a misleading,
                               // unrecoverable "Post edit" draft that the next page load would discard. ?>
                         <form method="post" action="/posts/<?= (int) $p['id'] ?>/edit" class="composer" data-no-draft>
                             <?= $this->csrfField() ?>
-                            <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($p['body']) ?></textarea>
+                            <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($editingThis ? (string) ($edit_old ?? '') : $p['body']) ?></textarea>
                             <button class="btn btn-small" type="submit">Save changes</button>
                         </form>
                     </details>
