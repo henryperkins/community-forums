@@ -168,18 +168,26 @@ Prepared-statement SQL only, returns associative arrays. Methods:
 - `findSecretByRef(ref): ?array` — plain read.
 - `lockSecretByRef(ref): ?array` — `SELECT id, latest_version, status … FOR UPDATE` (rotate/revoke serialization).
 - `currentVersionRow(secretId): ?array` — the single `state='current'` row.
-- `usableVersionRows(secretId): array` — `state='current'` ∪ (`state='retired'` AND `retire_after >= UTC_TIMESTAMP()`), newest-version first.
+- `usableVersionRows(secretId): array` — `state='current'` ∪ (`state='retired'` AND `retire_after > UTC_TIMESTAMP()`), newest-version first. (Strictly `>`: a version whose grace deadline has *arrived* is no longer usable — see Grace boundary.)
 - `versionCount(secretId): int`.
 - `retireCurrentVersion(secretId, graceSeconds): void` — `state='retired'`, `retired_at=UTC_TIMESTAMP()`, `retire_after=DATE_ADD(UTC_TIMESTAMP(), INTERVAL <int> SECOND)` (grace int-cast + concatenated, never bound).
-- `retireAllVersions(secretId): void` — revoke path; `retire_after=UTC_TIMESTAMP()` on all non-destroyed versions (immediately prunable).
+- `retireAllVersions(secretId): void` — revoke path; `retire_after=UTC_TIMESTAMP()` on all non-destroyed versions. Combined with the `<=` prune boundary this is **immediately prunable** (a same-second `revoke(); prune()` destroys them) and immediately unusable (`> now` is false).
 - `markRevoked(secretId, ?actorId): void` — parent `status='revoked'`, `revoked_at`, `revoked_by`, `updated_at`.
 - `bumpLatestVersion(secretId, version): void` — parent `latest_version`, `updated_at`.
-- `pruneCandidates(limit): array` — `id, secret_id, version` of `state='retired'` AND `retire_after < UTC_TIMESTAMP()`, `LIMIT <int>` (int-cast + concatenated).
+- `pruneCandidates(limit): array` — `id, secret_id, version` of `state='retired'` AND `retire_after <= UTC_TIMESTAMP()`, `LIMIT <int>` (int-cast + concatenated).
 - `destroyVersion(versionId): int` — **idempotent**: `UPDATE … SET state='destroyed', destroyed_at=UTC_TIMESTAMP(), ciphertext='', nonce='', tag='' WHERE id=? AND state='retired'`; returns affected-row count.
 - `acquirePruneLock(): bool` / `releasePruneLock(): void` — `GET_LOCK('rb_secret_prune', 0)` / `RELEASE_LOCK(...)`, mirroring `EmailDeliveryRepository`'s drain lock.
 
 Time is UTC everywhere (`UTC_TIMESTAMP()` / `gmdate()`). `LIMIT` and `INTERVAL`
 quantities are clamped to int and concatenated, never bound (PDO `EMULATE_PREPARES=false`).
+
+**Grace boundary (the two operators are complementary, `DATETIME` is 1-second
+resolution).** "Usable" is `retire_after > now`; "prunable" is `retire_after <= now`.
+A retired version is therefore in exactly one of those sets at any instant — never
+both, never neither — so a version stops being usable the same second it becomes
+prunable. This makes `revoke()` (which sets `retire_after = now`) **immediately**
+prunable and immediately unusable, with no 1-second dead zone. (An earlier `>=` / `<`
+split left a same-second `revoke(); prune()` skipping the row.)
 
 ### `App\Service\SecretVault` (constructor `(Database, ServiceSecretRepository, SecretBox, ModerationLogRepository, FeatureFlags, Config)`)
 
@@ -290,10 +298,15 @@ A regression test asserts the flag defaults dark.
 
 ## 6. Wiring & config
 
-- `App::buildContainer()`: bind `ServiceSecretRepository` (takes the shared
-  `Database`), then `SecretVault` (closure pulling `Database` **first** plus its other
-  collaborators via `$c->get(...)`), following the `ThreadWorkflowService` /
-  `PostingService` binding template (service receives `Database`).
+- **Container binding is deferred to the first consumer sub-project** (providers/
+  webhooks). Nothing resolves `SecretVault`/`ServiceSecretRepository` from the
+  container in this increment — the `worker:secret-prune` console case and the tests
+  construct them directly with `new SecretVault(...)`. `App::buildContainer()` is
+  `private` with no test seam (no test resolves a service from the container), so a
+  binding added now would be **unexercised** wiring that could ship broken; we add it
+  when the first consumer's route + test resolves it. When that lands, follow the
+  `ThreadWorkflowService` / `PostingService` template (the service receives `Database`
+  first). This increment touches **no `App.php`**.
 - `config/config.php`: a `secrets` block —
   `'rotation_grace_seconds' => 86400` (24h) and `'max_secret_bytes' => 4096`.
 
@@ -324,8 +337,12 @@ commit):
    ciphertext nulling. A partial prune (e.g. ciphertext-only) must fail this test.
 5. `revoke` → `reveal`/`usableSecrets` throw `SecretRevokedException`; `metadata`
    shows `revoked`.
-6. **Redaction:** after store/rotate/revoke, assert the plaintext string appears in
-   **no** `moderation_log` `before`/`after` JSON, and in no exception message.
+6. **Redaction (audit):** after store/rotate/revoke, assert the plaintext string
+   appears in **no** `moderation_log` `before`/`after` JSON.
+6b. **Redaction (exception messages):** store a distinctive plaintext, `revoke()`, then
+   catch the `SecretRevokedException` from `reveal()` and assert its message does **not**
+   contain the plaintext. Guards the §4 "no exception message contains a secret value"
+   requirement directly (a future message that interpolated the value would fail).
 7. **Flag-dark kill switch:** with `service_secrets` off, `store`/`rotate` throw
    `SecretsDisabledException`; `reveal`/`revoke`/`prune` still operate on a
    previously-stored secret.
@@ -346,6 +363,16 @@ commit):
     audit row (count the `moderation_log` rows for that action before and after). Proves
     the `WHERE … state='retired'` + affected-row gating, so overlapping worker runs
     can't double-destroy or double-audit.
+14. **Revoke is immediately prunable:** `store()`, `revoke()`, then `prune()` in the
+    same run (no `retire_after` manipulation) destroys the revoked version (`prune`
+    returns ≥1; the version row is `state='destroyed'`). This fails under the old
+    `>=`/`<` boundary (same-second skip) and passes under `>`/`<=`.
+
+**Console verification (hermetic):** do **not** run `php bin/console worker:secret-prune`
+against a real DB — it loads the configured application database and mutates it
+(destroys versions + writes audit), so its output is non-deterministic. Verify the
+console glue with `php -l bin/console` (syntax) only; `prune()` behavior is proven
+hermetically by tests 4/13/14 on the isolated test DB.
 
 **`tests/Integration/Core/AppFeatureFlagTest`**: extend to assert `service_secrets`
 defaults dark (and per-flag override stays isolated).
