@@ -86,8 +86,20 @@ change the CSRF gate, `Session` resolution, or the request pipeline.
 
 ## 2. Data model — migration `0056_phase5_api_tokens.php`
 
-Additive, matching the `SCHEMA.md §3` target DDL exactly (no extra columns — tokens are
-identified in the UI by their required `name`, so no secret fragment is stored).
+Additive. Columns match the `SCHEMA.md §3` target DDL (no extra columns — tokens are
+identified in the UI by their required `name`, so no secret fragment is stored), but the
+migration **intentionally hardens and updates the authoritative target DDL**: it renames
+the unique key to the Phase 5 `uq_<table>_<col>` convention, adds a `created_by` FK, and
+adds two supporting indexes (every other Phase 5 table carries a `users` FK). The
+migration's `up()` becomes the new authoritative shape; **`SCHEMA.md §3` and `ADMIN.md
+§10.1` are rewritten to match** (and their "not built" notes cleared).
+
+**The migration also extends the `moderation_log.target_type` ENUM** — currently
+`ENUM('thread','post','user','board','category','setting','service_secret')` after
+`0055` — to add `'api_token'` (`ALTER TABLE moderation_log MODIFY target_type ENUM(…,'api_token')`),
+exactly as `0055` added `'service_secret'`. Without this the `api_token_minted` /
+`api_token_revoked` audit inserts fail with an invalid-enum error. `down()` reverts the
+enum (after deleting any `target_type='api_token'` rows) and drops `api_tokens`.
 
 | column | type | notes |
 |---|---|---|
@@ -109,8 +121,9 @@ DEFAULT CHARSET=utf8mb4`.
 admin who minted it (acceptable for this slice). A token outliving its creator is a
 Gate B service-principal concern (P5-14), out of scope here.
 
-`SCHEMA.md` is updated after the migration lands (shape row + §9 changelog + version
-bump); the `api_tokens` "not built" notes are cleared.
+Beyond the `SCHEMA.md §3` / `ADMIN.md §10.1` DDL rewrite noted above, the `SCHEMA.md`
+table index gets/updates its `api_tokens` row, the §9 changelog gains an entry, the doc
+version bumps, and the `api_tokens` "not built" notes are cleared.
 
 ---
 
@@ -135,8 +148,9 @@ only). Two distinct scopes let the tests prove **per-scope granularity** (a toke
 Layering follows the existing thin-controller → service → repository pattern.
 
 - **`App\Security\ApiPrincipal`** — immutable value object `{tokenId:int, name:string,
-  scopes:string[], createdBy:int}` + `hasScope(string): bool`. **Not** a `User`; carries
-  no role.
+  scopes:string[], createdBy:int, tokenHash:string}` + `hasScope(string): bool`. **Not** a
+  `User`; carries no role. `tokenHash` is the non-secret one-way `sha256` (not the
+  plaintext), used by `respond()` for rate-limit keying.
 - **`App\Repository\ApiTokenRepository`** (`(private Database $db)`):
   - `insert(name, tokenHash, scopesJson, createdBy, ?expiresAt): int`
   - `findActiveByHash(string $hash): ?array` — `WHERE token_hash = ? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())`
@@ -144,21 +158,26 @@ Layering follows the existing thin-controller → service → repository pattern
   - `revoke(int $id): void` — set `revoked_at = UTC_TIMESTAMP()` (gated `WHERE revoked_at IS NULL`)
   - `list(): array` — for the admin UI; selects everything **except** `token_hash`, newest first
   - `findById(int): ?array`
-- **`App\Service\ApiTokenService`** `(Database, ApiTokenRepository, ModerationLogRepository, FeatureFlags, Config)`:
-  - `mint(User $admin, string $name, array $scopes, ?int $expiresInDays): array{token:string, id:int}` — validate each scope via `ApiScopes::isValid` (else `ValidationException`); generate plaintext `'rbt_' . bin2hex(random_bytes(24))`; store `sha256` hash + scopes + optional `expires_at`; audit `api_token_minted` (scopes + name, **no token**); return the plaintext **once**. Txn (insert + audit).
-  - `authenticate(string $bearer): ?ApiPrincipal` — strip the `Bearer ` prefix; `sha256`; `findActiveByHash`; on hit `touchLastUsed` and return `ApiPrincipal`; else `null`.
+- **`App\Service\ApiTokenService`** `(Database, ApiTokenRepository, ModerationLogRepository, FeatureFlags, Config, PasswordHasher, UserRepository)`:
+  - `mint(User $admin, string $currentPassword, string $name, array $scopes, ?int $expiresInDays): array{token:string, id:int}` — **reauth first** (`PHASE_3_PLAN:538` "reauth for creation"): verify `$currentPassword` against the admin's stored hash via `PasswordHasher` (mirroring the account-security reauth used for MFA settings changes); a mismatch throws `ValidationException(['current_password'=>…])` and mints **nothing**. Then validate each scope via `ApiScopes::isValid` (else `ValidationException`); generate plaintext `'rbt_' . bin2hex(random_bytes(24))`; store `sha256` hash + scopes + optional `expires_at`; audit `api_token_minted` (scopes + name — **no token, no password**); return the plaintext **once**. Txn (insert + audit). MFA is **not** separately re-challenged for mint — the codebase reauths sensitive changes with the password, not a per-action MFA ceremony.
+  - `authenticate(string $bearer): ?ApiPrincipal` — strip the `Bearer ` prefix; `$hash = sha256(token)`; `findActiveByHash($hash)`; on hit `touchLastUsed` and return an `ApiPrincipal` carrying that `tokenHash`; else `null`.
   - `revoke(User $admin, int $tokenId): void` — `revoke` + audit `api_token_revoked`. Txn. Idempotent.
   - `list(): array` — passthrough for the admin UI.
-- **`App\Controller\Api\ApiController`** (base, extends the existing `Controller`). **All
-  `/api` error handling is contained here — the kernel is never involved**, so the kernel's
-  HTML error rendering (and the rest of the app) is untouched. A single wrapper runs each
-  action, in this order:
+- **`App\Controller\Api\ApiController`** (base, extends the existing `Controller`). Every
+  failure from a **registered `/api/v1/*` GET endpoint** (flag / auth / scope / rate-limit)
+  is emitted as JSON by this wrapper — the kernel is never reached for those.
+  **Caveat (the cost of the zero-kernel-change property):** an *unknown* `/api` path or a
+  *wrong method* is decided by the router inside `App::process()` **before** any controller
+  runs, so it returns the kernel's **HTML** 404/405, not JSON. A correct client hitting a
+  real endpoint with the right method always gets JSON; only malformed requests get HTML.
+  The deferred write-API increment (which already touches the kernel for the CSRF realm)
+  can add JSON 404/405 for `/api` then. A single wrapper runs each action, in this order:
   - `respond(Request $req, callable(ApiPrincipal): Response $action): Response` —
     1. **flag gate** — `api_tokens` dark → `Response::json(['error'=>'not_found'], 404)`;
     2. **authenticate** — read `Authorization` via `Request::header()`, strip `Bearer `,
        `ApiTokenService::authenticate`; `null` → `Response::json(['error'=>'unauthorized'], 401)`;
-    3. **rate limit** — `enforceSubject('api', $req, $tokenHash)` for the now-authenticated
-       token (wrap the limiter's `HttpException(429)` → `Response::json(['error'=>'rate_limited'], 429)`);
+    3. **rate limit** — `enforceSubject('api', $req, $principal->tokenHash)` for the
+       now-authenticated token (wrap the limiter's `HttpException(429)` → `Response::json(['error'=>'rate_limited'], 429)`);
     4. run `$action($principal)`, catching `ApiForbiddenException` → `Response::json(['error'=>'forbidden','scope'=>…], 403)`.
   - `requireScope(ApiPrincipal $p, string $scope): void` — `$p->hasScope($scope)` else throw
     the small internal `App\Security\ApiForbiddenException($scope)` (caught by `respond`).
@@ -168,10 +187,10 @@ Layering follows the existing thin-controller → service → repository pattern
 - **`App\Controller\Api\BoardsController`** — `GET /api/v1/boards` (`read:boards`) → public boards `[{id, slug, name, thread_count, post_count}]`; `GET /api/v1/boards/{id}/threads` (`read:threads`) → public board's threads `[{id, slug, title, reply_count}]` (404 JSON if the board isn't public).
 - **`App\Controller\AdminApiTokenController`** — `requireAdmin()` + normal session/CSRF:
   - `GET /admin/api-tokens` → list + mint form
-  - `POST /admin/api-tokens` → mint; flash the plaintext **once** ("copy now — it won't be shown again"); on `ValidationException` re-render 422 with old input
+  - `POST /admin/api-tokens` → **reauth (`current_password`) + mint**; on success flash the plaintext **once** ("copy now — it won't be shown again"); on `ValidationException` (bad reauth, or invalid scope/name) re-render 422 with `->errors` + old input (the typed name/scopes — **never** the password)
   - `POST /admin/api-tokens/{id}/revoke` → revoke
-  - All 404 when the flag is dark.
-- **Template:** `templates/admin/api_tokens.php` — token list (name, scopes, created, last-used, status), mint form (name + scope checkboxes + optional expiry days), and the one-time plaintext banner.
+  - All 404 (via `NotFoundException`, HTML) when the flag is dark.
+- **Template:** `templates/admin/api_tokens.php` — token list (name, scopes, created, last-used, status), mint form (name + scope checkboxes + optional expiry days + **`current_password` reauth field**), and the one-time plaintext banner.
 
 JSON responses use the existing `Response::json($data, $status)`.
 
@@ -193,16 +212,20 @@ flag-gate → `authenticate()` → `ApiPrincipal` → `requireScope('read:boards
 ## 6. Error handling
 
 Resolution order inside `ApiController::respond` is **flag → authenticate → per-token
-rate-limit → scope → action**; every `/api` failure is JSON emitted by `ApiController`
-itself (the kernel's HTML error path is never reached for `/api`). The admin pages, being
-ordinary browser routes, throw `NotFoundException` (HTML 404) when the flag is dark.
+rate-limit → scope → action**; every failure from a registered `/api/v1/*` GET endpoint is
+JSON emitted by `ApiController` itself. The admin pages, being ordinary browser routes,
+throw `NotFoundException` (HTML 404) when the flag is dark.
 
 - **401** — no/invalid/expired/revoked token (one undifferentiated response — no oracle).
 - **403** — valid token, missing scope.
-- **404** — `api_tokens` flag dark (the `/api` JSON 404 and admin HTML 404 both read as absent).
+- **404 (JSON)** — registered `/api` endpoint with the `api_tokens` flag dark. **404/405
+  (HTML)** — an *unknown* `/api` path or *wrong method*: the router decides this in
+  `App::process()` before the controller, so it falls through to the kernel's HTML error
+  page (accepted limitation of the zero-kernel-change slice; see §4 caveat).
 - **429** — per-token rate limit exceeded (only an *authenticated* token consumes the budget; the 192-bit token entropy, not the limiter, is what makes guessing infeasible).
-- **422** — admin mint with an invalid/empty scope or name → `ValidationException` caught
-  by the controller, form re-rendered with `->errors` + old input (anti-draft-loss).
+- **422** — admin mint with a **failed `current_password` reauth**, or an invalid/empty
+  scope or name → `ValidationException` caught by the controller, form re-rendered with
+  `->errors` + old input (the password is never echoed back — anti-draft-loss).
 - Every audit row is written **inside the same transaction** as its mutation (mint/revoke).
 - **`HTTP_AUTHORIZATION` portability:** some SAPIs strip the header; absent → 401. The spec
   notes the deploy must pass `Authorization` through (e.g. an Apache rewrite); no
@@ -251,19 +274,28 @@ This slice is **UI-visible** (admin token management), so per DESIGN §13 it nee
 5. **Immediate revoke:** mint → call succeeds → revoke → the next call → 401.
 6. **Expiry:** a token with `expires_at` in the past → 401.
 7. **Rate limit:** exceeding the `api` policy → 429.
-8. **Admin mint:** `POST /admin/api-tokens` → the response shows the plaintext **once**;
-   a reload of `/admin/api-tokens` does **not** show it again; only the hash is stored.
-9. **Audit + redaction:** `api_token_minted` / `api_token_revoked` rows exist in
-   `moderation_log`; the plaintext appears in **no** audit JSON.
-10. **Flag-dark:** with `api_tokens` off, `/api/v1/me`, `/api/v1/boards`, and
+8. **Admin mint (with reauth):** `POST /admin/api-tokens` carrying the correct
+   `current_password` → the response shows the plaintext **once**; a reload of
+   `/admin/api-tokens` does **not** show it again; only the hash is stored.
+9. **Reauth required:** `POST /admin/api-tokens` with a **wrong/empty `current_password`**
+   → 422, the form re-renders with the typed name/scopes preserved, and **no** token row is
+   created (assert the `api_tokens` count is unchanged).
+10. **Audit + enum + redaction:** `api_token_minted` / `api_token_revoked` rows exist in
+    `moderation_log` (proving `target_type='api_token'` is a valid enum value after `0056`);
+    neither the plaintext **nor the password** appears in any audit JSON.
+11. **Flag-dark:** with `api_tokens` off, `/api/v1/me`, `/api/v1/boards`, and
     `/admin/api-tokens` all → 404; flipping it on restores them.
-11. **Hash-only schema:** no plaintext/`token` column; `token_hash` is uniquely indexed.
+12. **Hash-only schema:** no plaintext/`token` column; `token_hash` is uniquely indexed.
+13. **Router-caveat (documented limitation):** `GET /api/v1/does-not-exist` → 404 and
+    `POST /api/v1/me` (wrong method) → 405 are served by the kernel as **HTML**, not JSON
+    — asserted so the limitation is pinned, not silently assumed.
 
 **`AppFeatureFlagTest`:** extend to assert `api_tokens` defaults dark.
 
 **Schema-shape test** — `tests/Integration/Core/AppApiTokensSchemaTest`: a fresh migrate
-applies `0056`; `api_tokens` has the documented columns/types; `token_hash` is
-`CHAR(64)` + uniquely indexed; no raw-token column.
+applies `0056`; `api_tokens` has the documented columns/types (FK + indexes); `token_hash`
+is `CHAR(64)` + uniquely indexed (`uq_api_token_hash`); no raw-token column; and
+`moderation_log.target_type` includes `'api_token'`.
 
 **Browser/no-JS (Playwright):** an admin opens `/admin/api-tokens`, mints a token with a
 no-JS form submit, sees the one-time plaintext banner, sees it in the list (by name), and
@@ -272,9 +304,9 @@ revokes it. Capture evidence artifacts.
 **Suite + upgrade rehearsal:** `./vendor/bin/phpunit` green; `verify:upgrade --force`
 rehearses `0056` additively on seeded data.
 
-**Docs:** `SCHEMA.md` (shape + §9 changelog + version bump, clear the `api_tokens` "not
-built" notes); `PHASE_5_STATUS.md` records this increment + the B2 ledger (sub-project 2
-landed).
+**Docs:** `SCHEMA.md` §3 DDL rewrite + table index + §9 changelog + version bump (clear
+the `api_tokens` "not built" notes); `ADMIN.md §10.1` DDL rewrite to match;
+`PHASE_5_STATUS.md` records this increment + the B2 ledger (sub-project 2 landed).
 
 ---
 
@@ -285,7 +317,7 @@ landed).
 | `ApiScopes` | the scope catalogue + validation | `isValid()` / `all()` | — (pure) |
 | `ApiPrincipal` | a non-human scoped identity | `hasScope()` | — (value object) |
 | `ApiTokenRepository` | single-table SQL for `api_tokens` | typed methods returning arrays | `Database` |
-| `ApiTokenService` | mint/authenticate/revoke/list, audit, txns, scope validation | those four methods | `Database`, repo, `ModerationLogRepository`, `FeatureFlags`, `Config` |
+| `ApiTokenService` | mint (with password reauth) / authenticate / revoke / list, audit, txns, scope validation | those four methods | `Database`, repo, `ModerationLogRepository`, `FeatureFlags`, `Config`, `PasswordHasher`, `UserRepository` |
 | `Api\ApiController` (+ `Me`/`Boards`) | Bearer auth, scope enforcement, flag gate, rate limit, JSON | `/api/v1/*` GET routes | `ApiTokenService`, `RateLimitService` |
 | `AdminApiTokenController` | admin mint/list/revoke UI (session+CSRF) | `/admin/api-tokens` routes | `ApiTokenService` |
 
