@@ -49,6 +49,7 @@ use App\Search\MysqlSearchService;
 use App\Search\SearchService;
 use App\Repository\BadgeRepository;
 use App\Repository\BlockRepository;
+use App\Repository\ApiTokenRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
@@ -93,6 +94,7 @@ use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AntiAbuseService;
+use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
@@ -518,6 +520,16 @@ final class App
         $c->bind(ThreadRepository::class, fn (Container $c) => new ThreadRepository($c->get(Database::class)));
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
+        $c->bind(ApiTokenRepository::class, fn (Container $c) => new ApiTokenRepository($c->get(Database::class)));
+        $c->bind(ApiTokenService::class, fn (Container $c) => new ApiTokenService(
+            $c->get(Database::class),
+            $c->get(ApiTokenRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(FeatureFlags::class),
+            $config,
+            $c->get(PasswordHasher::class),
+            $c->get(WriteGate::class),
+        ));
         $c->bind(BlockRepository::class, fn (Container $c) => new BlockRepository($c->get(Database::class)));
         $c->bind(BoardModeratorRepository::class, fn (Container $c) => new BoardModeratorRepository($c->get(Database::class)));
         $c->bind(BoardMemberRepository::class, fn (Container $c) => new BoardMemberRepository($c->get(Database::class)));
