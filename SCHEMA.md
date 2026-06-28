@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.16 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
+**Status:** v1.17 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -98,6 +98,8 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 78 | `user_totp_credentials` | Identity / auth | 5 | ADR 0004 B1 / PHASE_3_PLAN P3-12 carryover |
 | 79 | `user_recovery_codes` | Identity / auth | 5 | ADR 0004 B1 / PHASE_3_PLAN P3-12 carryover |
 | 80 | `mfa_login_challenges` | Identity / auth | 5 | ADR 0004 B1 / PHASE_3_PLAN P3-12 carryover |
+| 81 | `service_secrets` | Integrations / secrets | 5 | B2 service-secret registry design |
+| 82 | `service_secret_versions` | Integrations / secrets | 5 | B2 service-secret registry design |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -107,6 +109,11 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > additive, opt-in, and active only for accounts that enroll. They resolve ADR
 > 0004 conflict B1 before passkey enforcement; ordinary users are not required to
 > use MFA by default.
+>
+> Tables 81–82 are the **B2 encrypted service-secret registry** (migration `0055`):
+> additive and deploy-dark. They are consumed only through `SecretVault` while the
+> `service_secrets` flag controls write/rotation availability; provider/webhook
+> consumers are not wired yet.
 
 ---
 
@@ -394,7 +401,7 @@ CREATE TABLE moderation_log (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   actor_id    BIGINT UNSIGNED NULL,                         -- NULL = system/automated action (ADMIN §3.8/§10.2)
   action      VARCHAR(40)     NOT NULL,                     -- pin, lock, delete_post, ban, anon_reveal, ...
-  target_type ENUM('thread','post','user','board','category','setting') NOT NULL,
+  target_type ENUM('thread','post','user','board','category','setting','service_secret') NOT NULL,
   target_id   BIGINT UNSIGNED NOT NULL,
   reason      VARCHAR(255)    NULL,
   before_json JSON            NULL,                         -- ADMIN §10.2 (edit snapshot)
@@ -837,6 +844,59 @@ New tables — **identity / auth** (`0051`–`0054`, §8.2 #14/#15/#16 plus ADR 
 
 ---
 
+## 5B. B2 service-secret registry (migration 0055)
+
+Migration `0055` adds the reversible-secret vault seam used by future provider,
+webhook, and remote-app credentials. It also widens `moderation_log.target_type`
+with `service_secret` so every high-impact store/rotate/revoke/destroy mutation can
+write non-lossy audit in the same transaction.
+
+### `service_secrets` — reference / identity (holds no ciphertext)
+
+| column | type | notes |
+|---|---|---|
+| `id` | BIGINT UNSIGNED PK AUTO_INCREMENT | |
+| `secret_ref` | VARCHAR(64) | opaque handle, `svcsec_` + 32 hex (39 chars); UNIQUE; fits `client_secret_ref VARCHAR(190)` |
+| `owner_type` | VARCHAR(32) | informational: `provider` / `webhook` / `remote_app` / `generic`. The authoritative link is the consumer's own `_ref` column, not a back-pointer here. |
+| `owner_id` | BIGINT UNSIGNED NULL | informational owner row id when applicable |
+| `label` | VARCHAR(190) NOT NULL | human description; never the secret |
+| `status` | ENUM('active','revoked') NOT NULL DEFAULT 'active' | |
+| `latest_version` | INT UNSIGNED NOT NULL DEFAULT 0 | monotonic high-water mark of the newest version issued; **status-independent** (never decremented, unchanged by revoke). Next rotation version = `latest_version + 1`. This is **not** a live pointer — "which version is live" is the single row with `state='current'`, and reads gate on parent `status='active'` + that `state`, never on this column. |
+| `created_by` | BIGINT UNSIGNED NULL | FK `users(id)` ON DELETE SET NULL |
+| `revoked_by` | BIGINT UNSIGNED NULL | FK `users(id)` ON DELETE SET NULL |
+| `created_at` | DATETIME NOT NULL | UTC |
+| `updated_at` | DATETIME NOT NULL | UTC |
+| `revoked_at` | DATETIME NULL | |
+
+Indexes: `UNIQUE KEY uq_service_secret_ref (secret_ref)`, `KEY idx_service_secret_owner (owner_type, owner_id)`. `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`.
+
+### `service_secret_versions` — encrypted material (one row per version)
+
+| column | type | notes |
+|---|---|---|
+| `id` | BIGINT UNSIGNED PK AUTO_INCREMENT | |
+| `secret_id` | BIGINT UNSIGNED NOT NULL | FK `service_secrets(id)` ON DELETE CASCADE |
+| `version` | INT UNSIGNED NOT NULL | monotonic per secret |
+| `ciphertext` | VARBINARY(4096) NOT NULL | AES-256-GCM output; emptied (zero-length) on destroy |
+| `nonce` | VARBINARY(12) NOT NULL | per-encryption random nonce |
+| `tag` | VARBINARY(16) NOT NULL | GCM auth tag |
+| `cipher` | VARCHAR(32) NOT NULL DEFAULT 'aes-256-gcm' | forward-compat label |
+| `key_version` | INT UNSIGNED NOT NULL DEFAULT 1 | forward-compat; only v1 now |
+| `state` | ENUM('current','retired','destroyed') NOT NULL DEFAULT 'current' | |
+| `created_at` | DATETIME NOT NULL | UTC |
+| `retire_after` | DATETIME NULL | grace deadline; set when retired |
+| `retired_at` | DATETIME NULL | |
+| `destroyed_at` | DATETIME NULL | set when ciphertext emptied |
+
+Indexes: `UNIQUE KEY uq_service_secret_version (secret_id, version)`, `KEY idx_service_secret_prune (state, retire_after)`. `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`.
+
+Destroy semantics: prune keeps the version-history row for audit, sets
+`state='destroyed'`/`destroyed_at`, and overwrites `ciphertext`/`nonce`/`tag` with
+zero-length `VARBINARY` values so recoverable material and plaintext-length signal
+are removed.
+
+---
+
 ## 6. Phase map (suggested build cut)
 
 This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above, but its remaining tables (appeals, automation-rules, `drafts`, bookmark-folders, custom-profile-fields, and a durable webhook-delivery ledger) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
@@ -845,7 +905,7 @@ This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
 - **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` (durable delivery), `api_tokens`, plus appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
-- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #6/#7/#10/#11/#12/#17/#18/#19) stays in PHASE_5_PLAN until its workstream lands.
+- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`) is reconciled in **§5B**. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, API tokens, webhook delivery, first-party hook registry, service principals, verified profile links, richer custom fields — §8.2 #6/#7/#10/#11/#12/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
 
@@ -893,6 +953,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.17 | 2026-06-28 | Added the B2 encrypted service-secret registry (`0055`): `service_secrets` opaque references/status/latest-version metadata, `service_secret_versions` AES-256-GCM material with version/grace/destroy lifecycle, and `moderation_log.target_type='service_secret'` for non-lossy audit. |
 | v1.16 | 2026-06-28 | Added the Gate A TOTP/recovery prerequisite (`0054`): encrypted `user_totp_credentials`, hash-only `user_recovery_codes`, and one-time `mfa_login_challenges`; documented that B1 is resolved before passkey enforcement and ordinary users are not required to enroll. |
 | v1.15 | 2026-06-28 | **Phase 5 foundation (Milestone 1 schema reconciliation).** Documented additive deploy-dark migrations `0049`–`0053` in new **§5A**: registry/packages/releases/installs/permissions/history/advisories/local-blocks (§8.2 #1–5), capability registry + protected roles (4 seeded system anchors) + scoped assignments/audit + protected-owner authority (§8.2 #8/#9/#13), WebAuthn credentials/challenges (§8.2 #14), identity-provider registry + the `oauth_identities.provider` **ENUM→VARCHAR(64)** widen + `provider_config_id` linkage (§8.2 #15), and invitations/redemptions (§8.2 #16). Added table-index rows 55–77. Tables are inert (no app reads/writes; flags dark) and carry **no** Milestone-0 trust policy. |
 | v1.13 | 2026-06-28 | Reconciled Phase 4 Gate A migration `0048`: documented additive status/snooze/assignment, board tag/wiki toggles, group-DM interval columns/events, canonical `reputation_events`, tag tables, badge-rule/audit tables, summaries/related/wiki revision tables, reference metadata, and split/merge operation/redirect tables. Removed now-committed status/snooze items from §8 foreshadowing. |
