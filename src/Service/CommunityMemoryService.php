@@ -204,7 +204,7 @@ final class CommunityMemoryService
     public function summarySources(int $summaryId, ?User $viewer): array
     {
         $rows = $this->db->fetchAll(
-            'SELECT p.id, p.thread_id, p.body, p.created_at, p.is_deleted, p.is_pending,
+            'SELECT p.id, p.thread_id, p.body, p.created_at, p.is_deleted, p.is_pending, p.is_anonymous,
                     t.slug AS thread_slug, b.id AS board_id, b.visibility AS board_visibility,
                     u.username AS author_username, u.display_name AS author_display_name
              FROM thread_summary_sources ss
@@ -216,13 +216,24 @@ final class CommunityMemoryService
              ORDER BY p.id ASC',
             [$summaryId],
         );
-        return array_values(array_filter($rows, function (array $row) use ($viewer): bool {
+        $visible = array_values(array_filter($rows, function (array $row) use ($viewer): bool {
             if ((int) ($row['is_deleted'] ?? 0) === 1 || (int) ($row['is_pending'] ?? 0) === 1) {
                 return false;
             }
             $isMember = $viewer !== null && $this->members->isMember((int) $row['board_id'], $viewer->id());
             return $this->policy->canRead(['visibility' => $row['board_visibility']], $viewer, $isMember);
         }));
+
+        // Preserve the masked-anonymous invariant (mask_author): this source list
+        // renders to every thread viewer, not just curators, so a source post that
+        // was published anonymously must never expose its real author here.
+        return array_map(static function (array $row): array {
+            if ((int) ($row['is_anonymous'] ?? 0) === 1) {
+                $row['author_username'] = null;
+                $row['author_display_name'] = null;
+            }
+            return $row;
+        }, $visible);
     }
 
     /** @return array<int,array<string,mixed>> */

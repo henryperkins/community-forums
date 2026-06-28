@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 4 engineering closeout
 
-Suite green at **455 tests / 1627 assertions** after the Gate A blocker/high-gap fix pass and closeout hardening. Phase 4 is closed in-repo with explicit deferrals; see `PHASE_4_STATUS.md`, `docs/evidence/phase4-gate-a.md`, and `docs/adr/0003-phase-4-closeout-deferrals.md`.
+Suite green at **456 tests / 1635 assertions** after the Gate A blocker/high-gap fix pass and closeout hardening. Phase 4 is closed in-repo with explicit deferrals; see `PHASE_4_STATUS.md`, `docs/evidence/phase4-gate-a.md`, and `docs/adr/0003-phase-4-closeout-deferrals.md`.
 
 ### Fixed
 
@@ -19,6 +19,8 @@ Suite green at **455 tests / 1627 assertions** after the Gate A blocker/high-gap
 - Hidden tags are excluded from public tag pages, thread tag display, tag application, and tag-follow feed matching; admin tag routes are gated by the `tags` flag.
 - Tag merge moves thread associations and tag follows, records the old slug as an alias, and disables the source tag.
 - Topic summaries can be retired/restored and show source-post links through the read gate; wiki posts can revert to an attributed revision.
+- Summary source lists mask the author of anonymously-posted sources ("Anonymous"), preserving the masked-anonymous invariant on the public memory panel.
+- The wiki-revert control is shown to the full curator set (admins and board moderators, including owner-admins) alongside the other wiki tools, instead of only to non-owner admins.
 - Post delete/restore paths reverse/reapply reputation ledger events; `repair:reputation`, `repair:reputation-ledger`, and `reputation:reconcile` rebuild the ledger from canonical state.
 - Reputation ledger apply/reverse avoids `FOR UPDATE` gap-lock hot paths.
 - Phase 4 Gate A flags deploy dark by default.

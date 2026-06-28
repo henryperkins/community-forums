@@ -115,7 +115,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 <?php if (!empty($summary_sources)): ?>
                     <ul class="muted">
                         <?php foreach ($summary_sources as $src): ?>
-                            <li>Source <a href="/t/<?= (int) $src['thread_id'] ?>-<?= $e($src['thread_slug']) ?>#p<?= (int) $src['id'] ?>">#<?= (int) $src['id'] ?></a> by @<?= $e($src['author_username']) ?></li>
+                            <li>Source <a href="/t/<?= (int) $src['thread_id'] ?>-<?= $e($src['thread_slug']) ?>#p<?= (int) $src['id'] ?>">#<?= (int) $src['id'] ?></a> by <?= ($src['author_username'] ?? '') !== '' ? '@' . $e($src['author_username']) : 'Anonymous' ?></li>
                         <?php endforeach; ?>
                     </ul>
                 <?php endif; ?>

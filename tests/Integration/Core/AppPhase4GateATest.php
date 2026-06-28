@@ -497,4 +497,37 @@ final class AppPhase4GateATest extends TestCase
         $this->assertRedirect($this->post('/posts/' . $postId . '/wiki/revert', ['revision_id' => $originalRevisionId]));
         self::assertSame('Original body', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
     }
+
+    public function testSummarySourceMasksAnonymousAuthor(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'memoryanonadmin']);
+        $author = $this->makeUser(['username' => 'memoryanonauthor', 'display_name' => 'Anon Author Real']);
+        $board = $this->makeBoard($this->makeCategory(), ['allow_anonymous' => 1]);
+        $thread = $this->posting()->createThread($this->userEntity($author), [
+            'board_id' => (int) $board['id'],
+            'title' => 'Anon source topic',
+            'body' => 'Anon source body',
+            'is_anonymous' => '1',
+        ]);
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT is_anonymous FROM posts WHERE id = ?', [$postId]));
+
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/summary', [
+            'body' => 'Summary citing an anonymous post',
+            'source_post_ids' => (string) $postId,
+        ]));
+
+        // The summary source list renders to every viewer (not just curators), so an
+        // anonymously-posted source must show "Anonymous", never the real author.
+        $reader = $this->makeUser(['username' => 'memoryanonreader']);
+        $this->actingAs($reader);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'Summary citing an anonymous post');
+        $this->assertSeeText($page, 'Anonymous');
+        $this->assertDontSeeText($page, '@memoryanonauthor');
+        $this->assertDontSeeText($page, 'Anon Author Real');
+        $this->assertDontSeeText($page, '/u/memoryanonauthor');
+    }
 }

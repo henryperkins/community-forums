@@ -3,7 +3,7 @@
 **Status:** engineering closeout complete with explicit deferrals
 **Last updated:** 2026-06-28  
 **Branch:** `main`
-**Suite:** `./vendor/bin/phpunit` → 455 tests / 1627 assertions, green
+**Suite:** `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green
 
 ## Accepted Gate A Scope
 
@@ -35,7 +35,7 @@ The following are not shipped behavior:
 
 - Standalone index: `docs/evidence/phase4-gate-a.md`.
 - Deferral ADR: `docs/adr/0003-phase-4-closeout-deferrals.md`.
-- Full suite: `./vendor/bin/phpunit` → 455 tests / 1627 assertions.
+- Full suite: `./vendor/bin/phpunit` → 456 tests / 1635 assertions.
 - Focused Phase 4 regressions: `tests/Integration/Core/AppPhase4GateATest.php`.
 - Deploy-dark flag regression: `tests/Integration/Core/AppFeatureFlagTest.php`.
 - Markdown sanitizer regression: `tests/Unit/SanitizationTest.php`.
