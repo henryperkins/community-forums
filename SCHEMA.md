@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.17 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
+**Status:** v1.18 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -48,7 +48,7 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 28 | `board_members` | Admin | 2 | ADMIN §10.1 |
 | 29 | `plugins` | Admin / integrations | 3 | ADMIN §10.1 |
 | 30 | `webhooks` | Admin / integrations | 3 | ADMIN §10.1 |
-| 31 | `api_tokens` | Admin / integrations | 3 | ADMIN §10.1 |
+| 31 | `api_tokens` | Admin / integrations | 5 | ADMIN §10.1 |
 | 32 | `email_suppressions` | Email | 2 | ADMIN §10.1 |
 | 33 | `email_deliveries` | Email | 2–3 | ADMIN §10.1 |
 | 34 | `attachments` | Composer | 3 | COMPOSER §16.2 |
@@ -603,7 +603,10 @@ CREATE TABLE api_tokens (
   expires_at   DATETIME        NULL,
   revoked_at   DATETIME        NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_token_hash (token_hash)
+  UNIQUE KEY uq_api_token_hash (token_hash),
+  KEY idx_api_token_created_by (created_by),
+  KEY idx_api_token_active (revoked_at, expires_at),
+  CONSTRAINT fk_api_token_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Email suppression list (bounces, complaints, unsubscribes) — fan-out skips these
@@ -686,7 +689,7 @@ CREATE TABLE submission_idempotency (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-> **Phase-3 build note (reconciled 2026-06-28).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Still **not built** (Gate B / later): `plugins`, `webhooks`, `api_tokens`, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
+> **Phase-3 build note (reconciled 2026-06-28).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Still **not built** (Gate B / later): `plugins`, `webhooks`, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
 
 ---
 
@@ -953,6 +956,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.18 | 2026-06-28 | Added the B2 `api_tokens` table (`0056`): scoped, hash-only (`CHAR(64)`, `uq_api_token_hash`) admin/service Bearer tokens — `scopes` JSON, `created_by` FK (CASCADE), expiry + revocation timestamps — plus `moderation_log.target_type='api_token'` for lifecycle/scope-denial audit. Backs the read-only `/api/v1` slice (B2 sub-project 2). |
 | v1.17 | 2026-06-28 | Added the B2 encrypted service-secret registry (`0055`): `service_secrets` opaque references/status/latest-version metadata, `service_secret_versions` AES-256-GCM material with version/grace/destroy lifecycle, and `moderation_log.target_type='service_secret'` for non-lossy audit. |
 | v1.16 | 2026-06-28 | Added the Gate A TOTP/recovery prerequisite (`0054`): encrypted `user_totp_credentials`, hash-only `user_recovery_codes`, and one-time `mfa_login_challenges`; documented that B1 is resolved before passkey enforcement and ordinary users are not required to enroll. |
 | v1.15 | 2026-06-28 | **Phase 5 foundation (Milestone 1 schema reconciliation).** Documented additive deploy-dark migrations `0049`–`0053` in new **§5A**: registry/packages/releases/installs/permissions/history/advisories/local-blocks (§8.2 #1–5), capability registry + protected roles (4 seeded system anchors) + scoped assignments/audit + protected-owner authority (§8.2 #8/#9/#13), WebAuthn credentials/challenges (§8.2 #14), identity-provider registry + the `oauth_identities.provider` **ENUM→VARCHAR(64)** widen + `provider_config_id` linkage (§8.2 #15), and invitations/redemptions (§8.2 #16). Added table-index rows 55–77. Tables are inert (no app reads/writes; flags dark) and carry **no** Milestone-0 trust policy. |

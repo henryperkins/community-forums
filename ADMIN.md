@@ -665,7 +665,10 @@ CREATE TABLE api_tokens (
   expires_at  DATETIME        NULL,
   revoked_at  DATETIME        NULL,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_token_hash (token_hash)
+  UNIQUE KEY uq_api_token_hash (token_hash),
+  KEY idx_api_token_created_by (created_by),
+  KEY idx_api_token_active (revoked_at, expires_at),
+  CONSTRAINT fk_api_token_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Email suppression list (bounces, complaints, unsubscribes) — notification fan-out skips these
