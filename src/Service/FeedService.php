@@ -57,7 +57,7 @@ final class FeedService
             $clauses[] = "b.tags_enabled = 1 AND EXISTS (
                 SELECT 1
                 FROM thread_tags tt
-                JOIN tags tg ON tg.id = tt.tag_id AND tg.is_enabled = 1
+                JOIN tags tg ON tg.id = tt.tag_id AND tg.is_enabled = 1 AND tg.visibility = 'public'
                 WHERE tt.thread_id = t.id AND tt.tag_id IN ($tPlace)
             )";
             $followParams = array_merge($followParams, $followedTags);

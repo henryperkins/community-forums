@@ -193,6 +193,7 @@ return [
         'register' => [5, 3600],
         'post' => [30, 600],
         'dm' => [20, 600],
+        'dm_report' => [10, 600],
         'upload' => [40, 3600],
         'composer_preview' => [120, 600],
         'password_reset' => [5, 3600],

@@ -124,6 +124,18 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                             <button class="btn btn-small danger" type="submit">Remove post</button>
                         </form>
                     </details>
+                    <?php if (!empty($wiki_revisions)): ?>
+                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/revert" class="inline-form">
+                            <?= $this->csrfField() ?>
+                            <label class="sr-only" for="wiki-revision-<?= (int) $p['id'] ?>">Revision</label>
+                            <select id="wiki-revision-<?= (int) $p['id'] ?>" class="input input-small" name="revision_id">
+                                <?php foreach ($wiki_revisions as $rev): ?>
+                                    <option value="<?= (int) $rev['id'] ?>">#<?= (int) $rev['id'] ?> · @<?= $e($rev['editor_username']) ?> · <?= $e(human_datetime($rev['created_at'])) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button class="linkbtn muted" type="submit">Revert wiki</button>
+                        </form>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         <?php endif; ?>

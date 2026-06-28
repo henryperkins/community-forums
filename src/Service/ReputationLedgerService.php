@@ -29,26 +29,25 @@ final class ReputationLedgerService
         }
         $eventAt ??= gmdate('Y-m-d H:i:s');
         $this->db->transaction(function () use ($userId, $boardId, $sourceType, $sourceId, $logicalKey, $delta, $eventAt): void {
-            $existing = $this->db->fetch('SELECT * FROM reputation_events WHERE logical_key = ? FOR UPDATE', [$logicalKey]);
-            if ($existing === null) {
-                $this->db->run(
-                    'INSERT INTO reputation_events
-                        (user_id, board_id, source_type, source_id, logical_key, delta, applied_delta, event_at, created_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
-                    [$userId, $boardId, $sourceType, $sourceId, $logicalKey, $delta, $delta, $eventAt],
-                );
+            $inserted = $this->db->run(
+                'INSERT IGNORE INTO reputation_events
+                    (user_id, board_id, source_type, source_id, logical_key, delta, applied_delta, event_at, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+                [$userId, $boardId, $sourceType, $sourceId, $logicalKey, $delta, $delta, $eventAt],
+            )->rowCount();
+            if ($inserted === 1) {
                 $this->users->incrementReputation($userId, $delta);
                 return;
             }
-            if ($existing['reversed_at'] !== null) {
-                $this->db->run(
-                    'UPDATE reputation_events
-                     SET user_id = ?, board_id = ?, source_type = ?, source_id = ?,
-                         reversed_at = NULL, reversed_by = NULL, reversal_reason = NULL,
-                         delta = ?, applied_delta = ?, event_at = ?
-                     WHERE id = ?',
-                    [$userId, $boardId, $sourceType, $sourceId, $delta, $delta, $eventAt, (int) $existing['id']],
-                );
+            $restored = $this->db->run(
+                'UPDATE reputation_events
+                 SET user_id = ?, board_id = ?, source_type = ?, source_id = ?,
+                     reversed_at = NULL, reversed_by = NULL, reversal_reason = NULL,
+                     delta = ?, applied_delta = ?, event_at = ?
+                 WHERE logical_key = ? AND reversed_at IS NOT NULL',
+                [$userId, $boardId, $sourceType, $sourceId, $delta, $delta, $eventAt, $logicalKey],
+            )->rowCount();
+            if ($restored === 1) {
                 $this->users->incrementReputation($userId, $delta);
             }
         });
@@ -57,16 +56,19 @@ final class ReputationLedgerService
     public function reverse(string $logicalKey, ?int $actorId = null, ?string $reason = null): bool
     {
         return $this->db->transaction(function () use ($logicalKey, $actorId, $reason): bool {
-            $event = $this->db->fetch('SELECT * FROM reputation_events WHERE logical_key = ? FOR UPDATE', [$logicalKey]);
+            $event = $this->db->fetch('SELECT * FROM reputation_events WHERE logical_key = ? AND reversed_at IS NULL', [$logicalKey]);
             if ($event === null || $event['reversed_at'] !== null) {
                 return false;
             }
-            $this->db->run(
+            $updated = $this->db->run(
                 'UPDATE reputation_events
                  SET reversed_at = UTC_TIMESTAMP(), reversed_by = ?, reversal_reason = ?
-                 WHERE id = ?',
+                 WHERE id = ? AND reversed_at IS NULL',
                 [$actorId, $reason !== null ? mb_substr($reason, 0, 255) : null, (int) $event['id']],
-            );
+            )->rowCount();
+            if ($updated !== 1) {
+                return false;
+            }
             $this->users->incrementReputation((int) $event['user_id'], -1 * (int) $event['applied_delta']);
             return true;
         });

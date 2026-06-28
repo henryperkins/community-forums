@@ -189,6 +189,10 @@ final class ThreadWorkflowService
     {
         $isOp = (int) $thread['user_id'] === $actor->id();
         $isStaff = $this->canStaffAssign($actor, (int) $thread['board_id']);
+        $current = (string) ($thread['status'] ?? 'open');
+        if (in_array($current, ['decision_made', 'archived'], true) && !$isStaff) {
+            throw new ForbiddenException('Only staff can change a staff-set topic status.');
+        }
         if ($status === 'decision_made' || $status === 'archived') {
             if (!$isStaff) {
                 throw new ForbiddenException('Only staff can set that topic status.');

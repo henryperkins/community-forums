@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Repository\UserRepository;
 
 /**
  * Idempotent counter reconciliation / repair (PHASE_2_PLAN §2 "all denormalised
@@ -31,40 +32,24 @@ final class RepairService
     }
 
     /**
-     * users.reputation = Σ reactions received on the user's non-deleted posts,
-     * excluding self-reactions (COMMUNITY §2.1/§10). The solved-answer bonus is
-     * layered in by the community milestone via reputationSolvedBonus().
+     * users.reputation is now reconciled from the Phase 4 reputation ledger.
+     * The rebuild backfills canonical reaction and accepted-answer events, reverses
+     * stale rows, then makes users.reputation agree with active ledger deltas.
      */
     public function repairReputation(): int
     {
-        return $this->db->run(
-            "UPDATE users u SET reputation = (
-                SELECT COALESCE(COUNT(*), 0)
-                FROM reactions r
-                JOIN posts p ON p.id = r.post_id
-                WHERE p.user_id = u.id AND p.is_deleted = 0 AND r.user_id <> u.id
-             )",
-        )->rowCount();
+        $stats = (new ReputationLedgerService($this->db, new UserRepository($this->db)))
+            ->rebuildFromCanonical($this->solvedBonus);
+        return $stats['reconciled_users'];
     }
 
     /**
-     * Add the accepted-answer reputation bonus on top of the reaction-derived
-     * base (COMMUNITY §2.1). Must run AFTER repairReputation(), which sets the
-     * reaction base. A bonus accrues once per accepted answer whose author is not
-     * the thread OP (self-answers earn nothing — see SolvedAnswerService).
+     * Compatibility entry point for older runbooks/tests. Solved-answer bonuses
+     * are part of the ledger rebuild, so this is intentionally idempotent.
      */
     public function reputationSolvedBonus(): int
     {
-        return $this->db->run(
-            'UPDATE users u SET reputation = reputation + (
-                SELECT COALESCE(COUNT(*), 0) * :bonus
-                FROM threads t
-                JOIN posts p ON p.id = t.accepted_answer_post_id
-                WHERE p.user_id = u.id AND p.user_id <> t.user_id
-                  AND t.is_deleted = 0 AND p.is_deleted = 0
-             )',
-            ['bonus' => $this->solvedBonus],
-        )->rowCount();
+        return $this->repairReputation();
     }
 
     /**
@@ -146,8 +131,6 @@ final class RepairService
                 'board_counters' => $this->repairBoardCounters(),
                 'reputation' => $this->repairReputation(),
             ];
-            // Layer the solved-answer bonus onto the reaction-derived base.
-            $this->reputationSolvedBonus();
             return $out;
         });
     }

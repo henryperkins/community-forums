@@ -853,6 +853,8 @@ final class App
         $r->post('/t/{id}/assign', [ThreadWorkflowController::class, 'assign']);
         $r->post('/t/{id}/tags', [TagController::class, 'updateThread']);
         $r->post('/t/{id}/summary', [CommunityMemoryController::class, 'summary']);
+        $r->post('/t/{id}/summary/retire', [CommunityMemoryController::class, 'retireSummary']);
+        $r->post('/t/{id}/summary/restore', [CommunityMemoryController::class, 'republishSummary']);
         $r->post('/t/{id}/related', [CommunityMemoryController::class, 'related']);
 
         $r->get('/login', [AuthController::class, 'showLogin']);
@@ -920,6 +922,7 @@ final class App
         $r->get('/admin/tags', [TagController::class, 'admin']);
         $r->post('/admin/tags', [TagController::class, 'create']);
         $r->post('/admin/tags/{id}', [TagController::class, 'update']);
+        $r->post('/admin/tags/{id}/merge', [TagController::class, 'merge']);
 
         $r->post('/threads', [PostController::class, 'createThread']);
         $r->post('/t/{id}/reply', [PostController::class, 'reply']);
@@ -927,6 +930,7 @@ final class App
         $r->post('/posts/{id}/delete', [PostController::class, 'delete']);
         $r->post('/posts/{id}/wiki', [CommunityMemoryController::class, 'makeWiki']);
         $r->post('/posts/{id}/wiki/edit', [CommunityMemoryController::class, 'editWiki']);
+        $r->post('/posts/{id}/wiki/revert', [CommunityMemoryController::class, 'revertWiki']);
 
         // Engagement (P2-01/P2-02): reactions + stars.
         $r->post('/posts/{id}/react', [EngagementController::class, 'react']);

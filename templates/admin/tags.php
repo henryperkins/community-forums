@@ -35,9 +35,27 @@
                             <input class="input" type="text" name="name" maxlength="80" value="<?= $e($tag['name']) ?>" required>
                             <input class="input" type="text" name="slug" maxlength="64" value="<?= $e($tag['slug']) ?>" required>
                             <input class="input" type="text" name="description" maxlength="255" value="<?= $e($tag['description'] ?? '') ?>">
-                            <input type="hidden" name="enabled" value="1">
+                            <select class="input input-small" name="visibility">
+                                <option value="public"<?= ($tag['visibility'] ?? 'public') === 'public' ? ' selected' : '' ?>>Public</option>
+                                <option value="hidden"<?= ($tag['visibility'] ?? 'public') === 'hidden' ? ' selected' : '' ?>>Hidden</option>
+                            </select>
+                            <label class="checkline"><input type="checkbox" name="enabled" value="1" <?= (int) ($tag['is_enabled'] ?? 1) === 1 ? 'checked' : '' ?>> Enabled</label>
                             <button class="btn btn-small" type="submit">Save</button>
                         </form>
+                        <?php if ((int) ($tag['is_enabled'] ?? 1) === 1 && count($tags) > 1): ?>
+                            <form method="post" action="/admin/tags/<?= (int) $tag['id'] ?>/merge" class="inline-form">
+                                <?= $this->csrfField() ?>
+                                <label class="sr-only" for="merge-tag-<?= (int) $tag['id'] ?>">Merge into</label>
+                                <select id="merge-tag-<?= (int) $tag['id'] ?>" class="input input-small" name="target_id">
+                                    <?php foreach ($tags as $target): ?>
+                                        <?php if ((int) $target['id'] !== (int) $tag['id'] && (int) ($target['is_enabled'] ?? 1) === 1): ?>
+                                            <option value="<?= (int) $target['id'] ?>"><?= $e($target['name']) ?></option>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button class="linkbtn muted" type="submit">Merge</button>
+                            </form>
+                        <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>

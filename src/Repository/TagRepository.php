@@ -35,7 +35,15 @@ final class TagRepository
     public function allEnabled(): array
     {
         return $this->db->fetchAll(
-            'SELECT * FROM tags WHERE is_enabled = 1 ORDER BY name ASC, id ASC',
+            "SELECT * FROM tags WHERE is_enabled = 1 AND visibility = 'public' ORDER BY name ASC, id ASC",
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function allForAdmin(): array
+    {
+        return $this->db->fetchAll(
+            'SELECT * FROM tags ORDER BY is_enabled DESC, name ASC, id ASC',
         );
     }
 
@@ -48,8 +56,9 @@ final class TagRepository
         );
     }
 
-    public function update(int $id, string $slug, string $name, ?string $description, bool $enabled): void
+    public function update(int $id, string $slug, string $name, ?string $description, bool $enabled, string $visibility = 'public'): void
     {
+        $visibility = in_array($visibility, ['public', 'hidden'], true) ? $visibility : 'public';
         $current = $this->find($id);
         if ($current !== null && (string) $current['slug'] !== $slug) {
             $this->db->run(
@@ -58,19 +67,51 @@ final class TagRepository
             );
         }
         $this->db->run(
-            'UPDATE tags SET slug = ?, name = ?, description = ?, is_enabled = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?',
-            [$slug, $name, $description, $enabled ? 1 : 0, $id],
+            'UPDATE tags SET slug = ?, name = ?, description = ?, visibility = ?, is_enabled = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?',
+            [$slug, $name, $description, $visibility, $enabled ? 1 : 0, $id],
         );
+    }
+
+    public function mergeInto(int $sourceId, int $targetId): void
+    {
+        if ($sourceId === $targetId) {
+            return;
+        }
+        $source = $this->find($sourceId);
+        $target = $this->find($targetId);
+        if ($source === null || $target === null) {
+            return;
+        }
+
+        $this->db->transaction(function () use ($sourceId, $targetId, $source): void {
+            $this->db->run(
+                'INSERT IGNORE INTO thread_tags (thread_id, tag_id, added_by, created_at)
+                 SELECT thread_id, ?, added_by, created_at FROM thread_tags WHERE tag_id = ?',
+                [$targetId, $sourceId],
+            );
+            $this->db->run(
+                "INSERT IGNORE INTO follows (user_id, target_type, target_id, created_at)
+                 SELECT user_id, 'tag', ?, created_at FROM follows WHERE target_type = 'tag' AND target_id = ?",
+                [$targetId, $sourceId],
+            );
+            $this->db->run('DELETE FROM thread_tags WHERE tag_id = ?', [$sourceId]);
+            $this->db->run("DELETE FROM follows WHERE target_type = 'tag' AND target_id = ?", [$sourceId]);
+            $this->db->run(
+                'INSERT IGNORE INTO tag_aliases (alias_slug, tag_id, created_at) VALUES (?, ?, UTC_TIMESTAMP())',
+                [(string) $source['slug'], $targetId],
+            );
+            $this->db->run('UPDATE tags SET is_enabled = 0, updated_at = UTC_TIMESTAMP() WHERE id = ?', [$sourceId]);
+        });
     }
 
     /** @return array<int,array<string,mixed>> */
     public function forThread(int $threadId): array
     {
         return $this->db->fetchAll(
-            'SELECT t.*
+            "SELECT t.*
              FROM thread_tags tt JOIN tags t ON t.id = tt.tag_id
-             WHERE tt.thread_id = ? AND t.is_enabled = 1
-             ORDER BY t.name ASC',
+             WHERE tt.thread_id = ? AND t.is_enabled = 1 AND t.visibility = 'public'
+             ORDER BY t.name ASC",
             [$threadId],
         );
     }
@@ -82,7 +123,7 @@ final class TagRepository
         if ($tagIds !== []) {
             $place = implode(',', array_fill(0, count($tagIds), '?'));
             $rows = $this->db->fetchAll(
-                "SELECT id FROM tags WHERE is_enabled = 1 AND id IN ($place)",
+                "SELECT id FROM tags WHERE is_enabled = 1 AND visibility = 'public' AND id IN ($place)",
                 $tagIds,
             );
             $tagIds = array_map(static fn (array $row): int => (int) $row['id'], $rows);

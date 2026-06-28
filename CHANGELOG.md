@@ -2,9 +2,9 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
-## [Unreleased] — Phase 4 Gate A checkpoint
+## [Unreleased] — Phase 4 engineering closeout
 
-Suite green at **448 tests / 1572 assertions** after the Gate A blocker/high-gap fix pass. This is still a checkpoint, not a release candidate; see `PHASE_4_STATUS.md` and `docs/evidence/phase4-gate-a.md` for carryover and evidence.
+Suite green at **455 tests / 1627 assertions** after the Gate A blocker/high-gap fix pass and closeout hardening. Phase 4 is closed in-repo with explicit deferrals; see `PHASE_4_STATUS.md`, `docs/evidence/phase4-gate-a.md`, and `docs/adr/0003-phase-4-closeout-deferrals.md`.
 
 ### Fixed
 
@@ -14,13 +14,20 @@ Suite green at **448 tests / 1572 assertions** after the Gate A blocker/high-gap
 - Group-DM adds reject inactive accounts; personal mute no longer appears in shared group history; unread counts respect join boundaries.
 - Board `tags_enabled` and `wiki_enabled` are server-enforced; permitted members can apply approved tags.
 - Profile owners can remove followers.
-- Post delete/restore paths reverse/reapply reputation ledger events; `repair:reputation-ledger` / `reputation:reconcile` rebuilds the ledger from canonical state.
+- Topic authors cannot reopen or downgrade staff-set `decision_made` / `archived` statuses.
+- DM reporting is route-rate-limited separately from sending.
+- Hidden tags are excluded from public tag pages, thread tag display, tag application, and tag-follow feed matching; admin tag routes are gated by the `tags` flag.
+- Tag merge moves thread associations and tag follows, records the old slug as an alias, and disables the source tag.
+- Topic summaries can be retired/restored and show source-post links through the read gate; wiki posts can revert to an attributed revision.
+- Post delete/restore paths reverse/reapply reputation ledger events; `repair:reputation`, `repair:reputation-ledger`, and `reputation:reconcile` rebuild the ledger from canonical state.
+- Reputation ledger apply/reverse avoids `FOR UPDATE` gap-lock hot paths.
 - Phase 4 Gate A flags deploy dark by default.
 
 ### Schema / Docs
 
-- Reconciled migration `0048_phase4_gate_a.php` into `SCHEMA.md` v1.13.
-- Added `PHASE_4_STATUS.md` and `docs/evidence/phase4-gate-a.md`.
+- Reconciled migration `0048_phase4_gate_a.php` into `SCHEMA.md` v1.14.
+- Added the Phase 4 closeout carryover ledger in `docs/adr/0003-phase-4-closeout-deferrals.md`.
+- Updated `PHASE_4_STATUS.md`, `docs/evidence/phase4-gate-a.md`, and `README.md` for closeout.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 

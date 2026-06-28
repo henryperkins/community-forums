@@ -226,6 +226,7 @@ final class ConversationController extends Controller
     public function report(Request $request, array $params): Response
     {
         $user = $this->requireDms();
+        $this->container->get(RateLimitService::class)->enforce('dm_report', $request, $user);
         $messageId = (int) ($params['id'] ?? 0);
         $reasonCode = (string) $request->post('reason_code', '');
         $reasonCode = in_array($reasonCode, self::REASONS, true) ? $reasonCode : null;

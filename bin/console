@@ -112,8 +112,7 @@ try {
         case 'repair:reputation':
             $svc = new RepairService($database(), (int) $config->get('community.solved_bonus', 5));
             $svc->repairReputation();
-            $svc->reputationSolvedBonus();
-            $log('Reputation recomputed from reactions + solved bonuses.');
+            $log('Reputation ledger rebuilt and users.reputation reconciled.');
             break;
 
         case 'repair:reputation-ledger':
@@ -263,7 +262,7 @@ try {
             $log('  key:generate         Print a fresh APP_KEY');
             $log('  repair               Reconcile all denormalised counters + reputation');
             $log('  repair:counters      Reconcile post/thread/board counters');
-            $log('  repair:reputation    Recompute reputation from reactions + solved bonuses');
+            $log('  repair:reputation    Rebuild reputation_events and reconcile users.reputation');
             $log('  repair:reputation-ledger  Rebuild reputation_events and reconcile users.reputation');
             $log('  community:backfill-badges  Idempotently award auto badges (run on a cron for Anniversary)');
             $log('  verify:upgrade        Rehearse a Phase-1→Phase-2 upgrade on a scratch DB (destructive)');

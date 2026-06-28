@@ -35,7 +35,7 @@ final class TagController extends Controller
     {
         $this->requireTags();
         $tag = $this->container->get(TagRepository::class)->findBySlug((string) ($params['slug'] ?? ''));
-        if ($tag === null || (int) ($tag['is_enabled'] ?? 0) !== 1) {
+        if ($tag === null || (int) ($tag['is_enabled'] ?? 0) !== 1 || (string) ($tag['visibility'] ?? 'public') !== 'public') {
             throw new NotFoundException('Tag not found.');
         }
         $user = $this->currentUser();
@@ -72,7 +72,7 @@ final class TagController extends Controller
         }
         $user = $this->requireUser();
         $tag = $this->container->get(TagRepository::class)->findBySlug((string) ($params['slug'] ?? ''));
-        if ($tag === null) {
+        if ($tag === null || (int) ($tag['is_enabled'] ?? 0) !== 1 || (string) ($tag['visibility'] ?? 'public') !== 'public') {
             throw new NotFoundException('Tag not found.');
         }
         $following = $this->container->get(FollowService::class)->toggleTarget($user, 'tag', (int) $tag['id']);
@@ -81,14 +81,16 @@ final class TagController extends Controller
 
     public function admin(Request $request): Response
     {
+        $this->requireTags();
         $this->requireAdmin();
         return $this->view('admin/tags', [
-            'tags' => $this->container->get(TagRepository::class)->allEnabled(),
+            'tags' => $this->container->get(TagRepository::class)->allForAdmin(),
         ]);
     }
 
     public function create(Request $request): Response
     {
+        $this->requireTags();
         $admin = $this->requireAdmin();
         try {
             [$slug, $name, $description] = $this->validateTag($request);
@@ -104,6 +106,7 @@ final class TagController extends Controller
     /** @param array<string,string> $params */
     public function update(Request $request, array $params): Response
     {
+        $this->requireTags();
         $this->requireAdmin();
         $id = (int) ($params['id'] ?? 0);
         if ($this->container->get(TagRepository::class)->find($id) === null) {
@@ -111,14 +114,33 @@ final class TagController extends Controller
         }
         try {
             [$slug, $name, $description] = $this->validateTag($request);
-            $enabled = (string) $request->post('enabled', '1') === '1';
-            $this->container->get(TagRepository::class)->update($id, $slug, $name, $description, $enabled);
+            $enabled = $request->post('enabled') !== null;
+            $visibility = (string) $request->post('visibility', 'public');
+            $this->container->get(TagRepository::class)->update($id, $slug, $name, $description, $enabled, $visibility);
         } catch (ValidationException $e) {
             return $this->redirectWithFlash('/admin/tags', $e->first());
         } catch (\PDOException) {
             return $this->redirectWithFlash('/admin/tags', 'That tag slug is already in use.');
         }
         return $this->redirectWithFlash('/admin/tags', 'Tag updated.');
+    }
+
+    /** @param array<string,string> $params */
+    public function merge(Request $request, array $params): Response
+    {
+        $this->requireTags();
+        $this->requireAdmin();
+        $sourceId = (int) ($params['id'] ?? 0);
+        $targetId = (int) $request->post('target_id', 0);
+        if ($sourceId <= 0 || $targetId <= 0 || $sourceId === $targetId) {
+            return $this->redirectWithFlash('/admin/tags', 'Choose a different target tag.');
+        }
+        $repo = $this->container->get(TagRepository::class);
+        if ($repo->find($sourceId) === null || $repo->find($targetId) === null) {
+            throw new NotFoundException('Tag not found.');
+        }
+        $repo->mergeInto($sourceId, $targetId);
+        return $this->redirectWithFlash('/admin/tags', 'Tag merged.');
     }
 
     /** @param array<string,string> $params */
