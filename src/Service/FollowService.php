@@ -8,7 +8,9 @@ use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\BlockRepository;
+use App\Repository\BoardRepository;
 use App\Repository\FollowRepository;
+use App\Repository\TagRepository;
 use App\Repository\UserRepository;
 use App\Security\WriteGate;
 
@@ -23,6 +25,8 @@ final class FollowService
     public function __construct(
         private FollowRepository $follows,
         private UserRepository $users,
+        private BoardRepository $boards,
+        private TagRepository $tags,
         private BlockRepository $blocks,
         private WriteGate $writeGate,
         private NotificationService $notifications,
@@ -59,6 +63,14 @@ final class FollowService
         return false;
     }
 
+    public function removeFollower(User $actor, int $followerId): void
+    {
+        if ($this->users->find($followerId) === null) {
+            throw new NotFoundException('That member could not be found.');
+        }
+        $this->follows->removeFollower($actor->id(), $followerId);
+    }
+
     /** Toggle for the no-JS Follow button. @return bool resulting state */
     public function toggle(User $actor, int $targetId): bool
     {
@@ -66,5 +78,31 @@ final class FollowService
             return $this->unfollow($actor, $targetId);
         }
         return $this->follow($actor, $targetId);
+    }
+
+    /** Toggle a board/tag discovery follow. @return bool resulting state */
+    public function toggleTarget(User $actor, string $targetType, int $targetId): bool
+    {
+        $this->writeGate->assertCanWrite($actor);
+        if (!in_array($targetType, ['board', 'tag'], true)) {
+            throw new ValidationException(['follow' => 'Choose a valid follow target.']);
+        }
+        if ($targetType === 'board') {
+            $board = $this->boards->find($targetId);
+            if ($board === null) {
+                throw new NotFoundException('Board not found.');
+            }
+        } else {
+            $tag = $this->tags->find($targetId);
+            if ($tag === null || (int) ($tag['is_enabled'] ?? 0) !== 1) {
+                throw new NotFoundException('Tag not found.');
+            }
+        }
+        if ($this->follows->isFollowingTarget($actor->id(), $targetType, $targetId)) {
+            $this->follows->unfollowTarget($actor->id(), $targetType, $targetId);
+            return false;
+        }
+        $this->follows->followTarget($actor->id(), $targetType, $targetId);
+        return true;
     }
 }

@@ -9,6 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\UserRepository;
+use App\Service\ReputationLedgerService;
 use App\Service\TitleService;
 
 /**
@@ -25,7 +26,20 @@ final class LeaderboardController extends Controller
         }
 
         $size = (int) $this->config()->get('community.leaderboard_size', 50);
-        $rows = $this->container->get(UserRepository::class)->leaderboard($size);
+        $flags = $this->container->get(FeatureFlags::class);
+        $ledgerOn = $flags->enabled('reputation_ledger');
+        $window = (string) $request->query('window', 'all');
+        if (!in_array($window, ['week', 'month', 'all'], true)) {
+            $window = 'all';
+        }
+        $boardId = $request->query('board_id') !== null ? max(1, $request->int('board_id', 0)) : null;
+        if (!$ledgerOn) {
+            $window = 'all';
+            $boardId = null;
+        }
+        $rows = $window === 'all' && $boardId === null
+            ? $this->container->get(UserRepository::class)->leaderboard($size)
+            : $this->container->get(ReputationLedgerService::class)->leaderboard($window, $boardId, $size);
         $titles = $this->container->get(TitleService::class);
 
         $ranked = [];
@@ -42,6 +56,6 @@ final class LeaderboardController extends Controller
             ];
         }
 
-        return $this->view('leaderboard', ['ranked' => $ranked]);
+        return $this->view('leaderboard', ['ranked' => $ranked, 'window' => $window, 'board_id' => $boardId, 'ledger_on' => $ledgerOn]);
     }
 }

@@ -37,6 +37,8 @@ final class SolvedAnswerService
         private BadgeService $badges,
         private NotificationService $notifications,
         private WriteGate $writeGate,
+        private ThreadWorkflowService $workflow,
+        private ReputationLedgerService $reputation,
         private int $solvedBonus = 5,
     ) {
     }
@@ -67,13 +69,21 @@ final class SolvedAnswerService
         $this->db->transaction(function () use ($thread, $threadId, $postId, $previous, $opId, $answerAuthorId, $actor): void {
             // Moving the accepted answer: take the bonus back off the old author.
             if ($previous !== null) {
-                $this->adjustBonusFor($previous, $opId, -$this->solvedBonus);
+                $this->adjustBonusFor($previous, $opId, -$this->solvedBonus, $actor->id());
             }
             $this->threads->setAcceptedAnswer($threadId, $postId);
+            $this->workflow->syncSolvedStatus($actor, $threadId, true);
 
             $bonusApplies = $answerAuthorId !== $opId;
             if ($bonusApplies) {
-                $this->users->incrementReputation($answerAuthorId, $this->solvedBonus);
+                $this->reputation->apply(
+                    $answerAuthorId,
+                    (int) $thread['board_id'],
+                    'accepted_answer',
+                    $postId,
+                    'accepted_answer:' . $threadId,
+                    $this->solvedBonus,
+                );
                 // problem-solver / trusted-answerer derive from the now-updated count.
                 $this->badges->evaluateForUser($answerAuthorId);
                 $this->notifications->notifySolved($answerAuthorId, $actor->id(), $threadId, $postId);
@@ -104,8 +114,9 @@ final class SolvedAnswerService
         $opId = (int) $thread['user_id'];
 
         $this->db->transaction(function () use ($threadId, $previous, $opId, $actor): void {
-            $this->adjustBonusFor($previous, $opId, -$this->solvedBonus);
+            $this->adjustBonusFor($previous, $opId, -$this->solvedBonus, $actor->id());
             $this->threads->setAcceptedAnswer($threadId, null);
+            $this->workflow->syncSolvedStatus($actor, $threadId, false);
             // The Problem Solver badge is permanent — recognition isn't revoked.
             $this->log->log([
                 'actor_id' => $actor->id(),
@@ -119,14 +130,25 @@ final class SolvedAnswerService
     }
 
     /** Reputation only changed when the post still exists and wasn't a self-answer. */
-    private function adjustBonusFor(int $postId, int $opId, int $delta): void
+    private function adjustBonusFor(int $postId, int $opId, int $delta, ?int $actorId = null): void
     {
         $post = $this->posts->find($postId);
         if ($post === null) {
             return;
         }
         if ((int) $post['user_id'] !== $opId) {
-            $this->users->incrementReputation((int) $post['user_id'], $delta);
+            if ($delta < 0) {
+                $this->reputation->reverse('accepted_answer:' . (int) $post['thread_id'], $actorId, 'accepted_answer_changed');
+            } else {
+                $this->reputation->apply(
+                    (int) $post['user_id'],
+                    null,
+                    'accepted_answer',
+                    $postId,
+                    'accepted_answer:' . (int) $post['thread_id'],
+                    $delta,
+                );
+            }
         }
     }
 

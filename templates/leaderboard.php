@@ -5,6 +5,13 @@
         <h1>Top Contributors</h1>
         <p class="muted">Members ranked by appreciation received. Recognition only — it unlocks nothing.</p>
     </header>
+    <?php if (!empty($ledger_on)): ?>
+        <nav class="inbox-tabs" aria-label="Leaderboard windows">
+            <a class="inbox-tab<?= ($window ?? 'all') === 'week' ? ' is-active' : '' ?>" href="/leaderboard?window=week">Week</a>
+            <a class="inbox-tab<?= ($window ?? 'all') === 'month' ? ' is-active' : '' ?>" href="/leaderboard?window=month">Month</a>
+            <a class="inbox-tab<?= ($window ?? 'all') === 'all' ? ' is-active' : '' ?>" href="/leaderboard?window=all">All time</a>
+        </nav>
+    <?php endif; ?>
 
     <?php if (empty($ranked)): ?>
         <p class="muted empty">No ranked contributors yet.</p>

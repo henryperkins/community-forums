@@ -20,6 +20,12 @@ $this->section('title', $heading . ' · @' . $profile['username']);
                     <a class="person-name" href="/u/<?= $e($person['username']) ?>"><?= $e($pd) ?></a>
                     <span class="muted">@<?= $e($person['username']) ?></span>
                     <span class="muted person-rep"><?= (int) ($person['reputation'] ?? 0) ?> rep</span>
+                    <?php if (!empty($can_remove_followers)): ?>
+                        <form class="inline" method="post" action="/u/<?= $e($profile['username']) ?>/followers/<?= (int) $person['id'] ?>/remove">
+                            <?= $this->csrfField() ?>
+                            <button class="linkbtn danger" type="submit">Remove</button>
+                        </form>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>

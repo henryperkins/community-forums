@@ -8,6 +8,8 @@ use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\Autolink\AutolinkExtension;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
+use League\CommonMark\Extension\Table\TableExtension;
+use League\CommonMark\Extension\TaskList\TaskListExtension;
 use League\CommonMark\MarkdownConverter;
 use App\Support\Markdown\SpoilerExtension;
 
@@ -15,8 +17,7 @@ use App\Support\Markdown\SpoilerExtension;
  * Renders canonical Markdown (posts.body, bios) to the cached sanitised HTML
  * stored in posts.body_html. CommonMark is configured to ESCAPE any raw HTML
  * and to drop unsafe link schemes; the output then passes through the allowlist
- * HtmlSanitizer for defense in depth and to enforce the Phase 1 tag subset
- * (no images/tables; headings clamped to ##/###).
+ * HtmlSanitizer for defense in depth.
  */
 final class Markdown
 {
@@ -34,6 +35,8 @@ final class Markdown
         ]);
         $environment->addExtension(new CommonMarkCoreExtension());
         $environment->addExtension(new StrikethroughExtension());
+        $environment->addExtension(new TableExtension());
+        $environment->addExtension(new TaskListExtension());
         $environment->addExtension(new AutolinkExtension());
         $environment->addExtension(new SpoilerExtension());
 

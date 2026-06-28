@@ -18,9 +18,133 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         <h1>
             <?php if ((int) $thread['is_pinned'] === 1): ?><span class="badge">Pinned</span><?php endif; ?>
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
+            <?php if (($workflow_on ?? false) && !empty($thread['status']) && $thread['status'] !== 'open'): ?>
+                <span class="badge"><?= $e($status_labels[$thread['status']] ?? ucwords(str_replace('_', ' ', (string) $thread['status']))) ?></span>
+            <?php endif; ?>
             <?php if (($accepted_post_id ?? null) !== null): ?><span class="badge badge-solved">✓ Solved</span><?php endif; ?>
             <?= $e($thread['title']) ?>
         </h1>
+        <?php if ($workflow_on ?? false): ?>
+            <div class="workflow-bar">
+                <span class="muted">Status: <?= $e($status_labels[$thread['status'] ?? 'open'] ?? 'Open') ?></span>
+                <?php if (!empty($assignment)): ?>
+                    <span class="muted">Assigned to @<?= $e($assignment['assigned_username']) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($my_snooze)): ?>
+                    <span class="muted">Snoozed until <?= $e(human_datetime($my_snooze)) ?></span>
+                <?php endif; ?>
+            </div>
+
+            <?php if ($current_user !== null): ?>
+                <div class="workflow-actions">
+                    <?php if (!empty(array_filter($can_change_statuses ?? []))): ?>
+                        <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/status">
+                            <?= $this->csrfField() ?>
+                            <label class="sr-only" for="thread-status">Topic status</label>
+                            <select id="thread-status" class="input input-small" name="status">
+                                <?php foreach ($status_labels as $value => $label): ?>
+                                    <?php if (!empty($can_change_statuses[$value]) || $value === ($thread['status'] ?? 'open')): ?>
+                                        <option value="<?= $e($value) ?>"<?= $value === ($thread['status'] ?? 'open') ? ' selected' : '' ?>><?= $e($label) ?></option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </select>
+                            <input class="input input-small" type="text" name="reason" maxlength="255" placeholder="Reason">
+                            <button class="linkbtn" type="submit">Update status</button>
+                        </form>
+                    <?php endif; ?>
+
+                    <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/snooze">
+                        <?= $this->csrfField() ?>
+                        <label class="sr-only" for="thread-snooze">Snooze</label>
+                        <select id="thread-snooze" class="input input-small" name="until">
+                            <option value="">Clear snooze</option>
+                            <option value="later_today">Later today</option>
+                            <option value="tomorrow">Tomorrow</option>
+                            <option value="week">Next week</option>
+                        </select>
+                        <button class="linkbtn" type="submit">Snooze</button>
+                    </form>
+
+                    <?php if (!empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)): ?>
+                        <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/assign">
+                            <?= $this->csrfField() ?>
+                            <?php if (!empty($can_staff_assign)): ?>
+                                <label class="sr-only" for="thread-assignee">Assign to</label>
+                                <input id="thread-assignee" class="input input-small" type="text" name="assignee" maxlength="32" placeholder="username">
+                                <button class="linkbtn" type="submit">Assign</button>
+                            <?php elseif (!empty($can_self_assign)): ?>
+                                <input type="hidden" name="self" value="1">
+                                <button class="linkbtn" type="submit">Assign to me</button>
+                            <?php endif; ?>
+                            <?php if (!empty($assignment)): ?>
+                                <button class="linkbtn muted" type="submit" name="action" value="unassign">Unassign</button>
+                            <?php endif; ?>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+        <?php if (($tags_on ?? false) && !empty($thread_tags)): ?>
+            <div class="workflow-bar" aria-label="Topic tags">
+                <?php foreach ($thread_tags as $tag): ?>
+                    <a class="tag" href="/tags/<?= $e($tag['slug']) ?>"><?= $e($tag['name']) ?></a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        <?php if (($tags_on ?? false) && !empty($all_tags) && !empty($can_edit_tags)): ?>
+            <details class="workflow-actions">
+                <summary class="linkbtn">Edit tags</summary>
+                <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/tags">
+                    <?= $this->csrfField() ?>
+                    <?php $currentTagIds = array_flip(array_map(static fn ($tag) => (int) $tag['id'], $thread_tags ?? [])); ?>
+                    <?php foreach ($all_tags as $tag): ?>
+                        <label class="checkline">
+                            <input type="checkbox" name="tag_ids[]" value="<?= (int) $tag['id'] ?>" <?= isset($currentTagIds[(int) $tag['id']]) ? 'checked' : '' ?>>
+                            <?= $e($tag['name']) ?>
+                        </label>
+                    <?php endforeach; ?>
+                    <button class="btn btn-small" type="submit">Save tags</button>
+                </form>
+            </details>
+        <?php endif; ?>
+        <?php if (($memory_on ?? false) && !empty($summary)): ?>
+            <section class="memory-panel">
+                <h2>Summary</h2>
+                <div class="post-body"><?= $summary['body_html'] ?></div>
+                <p class="muted">Version <?= (int) $summary['version'] ?> by @<?= $e($summary['author_username']) ?></p>
+            </section>
+        <?php endif; ?>
+        <?php if (($memory_on ?? false) && !empty($related_threads)): ?>
+            <section class="memory-panel">
+                <h2>Related topics</h2>
+                <ul>
+                    <?php foreach ($related_threads as $related): ?>
+                        <li><a href="/t/<?= (int) $related['related_thread_id'] ?>-<?= $e($related['slug']) ?>"><?= $e($related['title']) ?></a>
+                            <?php if (!empty($related['reason'])): ?><span class="muted">— <?= $e($related['reason']) ?></span><?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </section>
+        <?php endif; ?>
+        <?php if (($memory_on ?? false) && !empty($can_curate_memory)): ?>
+            <details class="workflow-actions">
+                <summary class="linkbtn">Curate topic memory</summary>
+                <form class="composer" method="post" action="/t/<?= (int) $thread['id'] ?>/summary">
+                    <?= $this->csrfField() ?>
+                    <label for="summary-body">Summary</label>
+                    <textarea id="summary-body" class="composer-input" name="body" rows="4" maxlength="20000"></textarea>
+                    <label for="summary-sources">Source post IDs</label>
+                    <input id="summary-sources" class="input" type="text" name="source_post_ids" placeholder="1, 2, 3">
+                    <button class="btn btn-small" type="submit">Publish summary</button>
+                </form>
+                <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/related">
+                    <?= $this->csrfField() ?>
+                    <input class="input input-small" type="number" name="related_thread_id" min="1" placeholder="Thread ID" required>
+                    <input class="input" type="text" name="reason" maxlength="255" placeholder="Reason">
+                    <button class="btn btn-small" type="submit">Add related topic</button>
+                </form>
+            </details>
+        <?php endif; ?>
         <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
             <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept">
                 <?= $this->csrfField() ?>
@@ -80,6 +204,9 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
                     'can_mark_solved' => $can_mark_solved ?? false,
                     'can_reveal_anon' => $can_reveal_anon ?? false,
+                    'can_curate_memory' => $can_curate_memory ?? false,
+                    'can_curate_wiki' => $can_curate_wiki ?? false,
+                    'memory_on' => $memory_on ?? false,
                     'show_avatars' => $show_avatars ?? true,
                     'show_signatures' => $show_signatures ?? true,
                     'show_reactions' => $show_reactions ?? true,

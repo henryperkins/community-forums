@@ -45,6 +45,7 @@ final class PostingService
         private ?AntiAbuseService $antiAbuse = null,
         private ?IdempotencyRepository $idempotency = null,
         private ?AttachmentRepository $attachments = null,
+        private ?ReputationLedgerService $reputation = null,
     ) {
     }
 
@@ -368,9 +369,26 @@ final class PostingService
         // Reputation derives from reactions received; remove this post's
         // contribution (non-self reactions) so rep recomputes downward
         // (COMMUNITY §2.1, PHASE_2_PLAN §7.3).
-        $received = $this->receivedReactionCount((int) $post['id'], (int) $post['user_id']);
-        if ($received > 0) {
-            $this->users->incrementReputation((int) $post['user_id'], -$received);
+        $received = $this->receivedReactionEvents((int) $post['id'], (int) $post['user_id']);
+        if ($received !== []) {
+            if ($this->reputation !== null) {
+                $reversed = 0;
+                foreach ($received as $reaction) {
+                    if ($this->reputation->reverse(
+                        $this->reactionLogicalKey((int) $post['id'], (int) $reaction['user_id'], (string) $reaction['emoji']),
+                        (int) ($post['deleted_by'] ?? 0) ?: null,
+                        'post_deleted',
+                    )) {
+                        $reversed++;
+                    }
+                }
+                $missing = count($received) - $reversed;
+                if ($missing > 0) {
+                    $this->users->incrementReputation((int) $post['user_id'], -$missing);
+                }
+            } else {
+                $this->users->incrementReputation((int) $post['user_id'], -count($received));
+            }
         }
         // If this post was the thread's accepted answer, clear it and reverse the
         // solved bonus (author != OP). RepairService::reputationSolvedBonus and
@@ -380,7 +398,18 @@ final class PostingService
         if ($thread !== null && (int) ($thread['accepted_answer_post_id'] ?? 0) === (int) $post['id']) {
             $this->threads->setAcceptedAnswer((int) $post['thread_id'], null);
             if ((int) $post['user_id'] !== (int) $thread['user_id']) {
-                $this->users->incrementReputation((int) $post['user_id'], -(int) $this->config->get('community.solved_bonus', 5));
+                if ($this->reputation !== null) {
+                    $reversed = $this->reputation->reverse(
+                        'accepted_answer:' . (int) $post['thread_id'],
+                        (int) ($post['deleted_by'] ?? 0) ?: null,
+                        'accepted_answer_deleted',
+                    );
+                    if (!$reversed) {
+                        $this->users->incrementReputation((int) $post['user_id'], -(int) $this->config->get('community.solved_bonus', 5));
+                    }
+                } else {
+                    $this->users->incrementReputation((int) $post['user_id'], -(int) $this->config->get('community.solved_bonus', 5));
+                }
             }
         }
         $this->threads->recomputeLastPost((int) $post['thread_id']);
@@ -400,9 +429,23 @@ final class PostingService
         if ((int) $post['is_op'] === 0) {
             $this->threads->incrementReplyCount((int) $post['thread_id'], 1);
         }
-        $received = $this->receivedReactionCount((int) $post['id'], (int) $post['user_id']);
-        if ($received > 0) {
-            $this->users->incrementReputation((int) $post['user_id'], $received);
+        $received = $this->receivedReactionEvents((int) $post['id'], (int) $post['user_id']);
+        if ($received !== []) {
+            if ($this->reputation !== null) {
+                foreach ($received as $reaction) {
+                    $this->reputation->apply(
+                        (int) $post['user_id'],
+                        (int) $post['board_id'],
+                        'reaction',
+                        (int) $post['id'],
+                        $this->reactionLogicalKey((int) $post['id'], (int) $reaction['user_id'], (string) $reaction['emoji']),
+                        1,
+                        (string) $reaction['created_at'],
+                    );
+                }
+            } else {
+                $this->users->incrementReputation((int) $post['user_id'], count($received));
+            }
         }
         $this->threads->recomputeLastPost((int) $post['thread_id']);
         $this->boards->recomputeLastPost((int) $post['board_id']);
@@ -508,13 +551,18 @@ final class PostingService
         ) !== false;
     }
 
-    /** Reactions on a post from users other than the author (reputation contribution). */
-    private function receivedReactionCount(int $postId, int $authorId): int
+    /** @return array<int,array{user_id:int,emoji:string,created_at:string}> reactions contributing reputation */
+    private function receivedReactionEvents(int $postId, int $authorId): array
     {
-        return (int) $this->db->fetchValue(
-            'SELECT COUNT(*) FROM reactions WHERE post_id = ? AND user_id <> ?',
+        return $this->db->fetchAll(
+            'SELECT user_id, emoji, created_at FROM reactions WHERE post_id = ? AND user_id <> ?',
             [$postId, $authorId],
         );
+    }
+
+    private function reactionLogicalKey(int $postId, int $reactorId, string $emoji): string
+    {
+        return 'reaction:' . $postId . ':' . $reactorId . ':' . sha1($emoji);
     }
 
     /**

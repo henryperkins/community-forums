@@ -19,6 +19,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                 <span class="post-author"><?= $e($a['label']) ?></span>
             <?php endif; ?>
             <?php if ((int) $p['is_op'] === 1): ?><span class="badge">OP</span><?php endif; ?>
+            <?php if (!empty($p['is_wiki'])): ?><span class="badge">Wiki</span><?php endif; ?>
             <?php if ($a['is_staff']): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
             <?php if ($accepted): ?><span class="badge badge-solved" title="Accepted answer">✓ Accepted answer</span><?php endif; ?>
             <span class="post-time"><?= $e(human_datetime($p['created_at'])) ?></span>
@@ -121,6 +122,26 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                             <?= $this->csrfField() ?>
                             <input type="text" name="reason" class="input" placeholder="Reason (required)" maxlength="255" required>
                             <button class="btn btn-small danger" type="submit">Remove post</button>
+                        </form>
+                    </details>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($memory_on) && !empty($can_curate_wiki)): ?>
+            <div class="post-actions">
+                <?php if (empty($p['is_wiki'])): ?>
+                    <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki" class="inline">
+                        <?= $this->csrfField() ?>
+                        <button class="linkbtn" type="submit">Make wiki</button>
+                    </form>
+                <?php else: ?>
+                    <details class="post-edit">
+                        <summary class="linkbtn">Edit wiki</summary>
+                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/edit" class="composer" data-no-draft>
+                            <?= $this->csrfField() ?>
+                            <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($p['body']) ?></textarea>
+                            <input type="text" name="reason" class="input" maxlength="255" placeholder="Reason">
+                            <button class="btn btn-small" type="submit">Save wiki edit</button>
                         </form>
                     </details>
                 <?php endif; ?>

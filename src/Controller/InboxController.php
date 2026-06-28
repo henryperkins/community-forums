@@ -12,13 +12,29 @@ use App\Repository\SettingRepository;
 use App\Repository\ThreadUserRepository;
 
 /**
- * The personal Community Inbox (P2-01): server-backed Unread / Starred / Mine /
- * Active / Newest / Unanswered filters. Every query is read-gated by board
- * visibility so a filter never surfaces an inaccessible board or thread.
+ * The personal Community Inbox. Phase 4 extends the Phase 2 filters with
+ * deterministic For You, workflow status, assignment, watching, mentions,
+ * replies, and snooze views, all under the same board read gate.
  */
 final class InboxController extends Controller
 {
-    private const FILTERS = ['unread', 'starred', 'mine', 'active', 'newest', 'unanswered'];
+    private const FILTERS = [
+        'for_you',
+        'unread',
+        'mentions',
+        'replies',
+        'watching',
+        'needs_answer',
+        'assigned',
+        'decisions',
+        'solved',
+        'snoozed',
+        'starred',
+        'mine',
+        'active',
+        'newest',
+        'unanswered',
+    ];
 
     public function index(Request $request): Response
     {
@@ -26,7 +42,7 @@ final class InboxController extends Controller
             throw new NotFoundException('Not found.');
         }
         $user = $this->requireUser();
-        $filter = (string) $request->query('filter', 'unread');
+        $filter = (string) $request->query('filter', 'for_you');
         if (!in_array($filter, self::FILTERS, true)) {
             $filter = 'unread';
         }

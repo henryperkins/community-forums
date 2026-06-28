@@ -13,7 +13,7 @@ $verb = static function (array $n): string {
         'badge' => 'You earned a badge',
         'solved' => 'Your answer was accepted',
         'dm' => $actor . ' sent you a message',
-        'mod' => 'A moderator action affects you',
+        'mod' => ($n['conversation_id'] ?? null) !== null ? 'A direct-message report needs review' : 'A moderator action affects you',
         'announcement' => 'Announcement',
         default => 'Notification',
     };

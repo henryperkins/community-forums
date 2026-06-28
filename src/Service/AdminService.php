@@ -28,6 +28,7 @@ final class AdminService
 {
     private const VISIBILITIES = ['public', 'hidden', 'private'];
     private const ROLES = ['user', 'moderator', 'admin'];
+    private const ASSIGNMENT_MODES = ['off', 'self', 'staff'];
 
     /** Registration modes enforced by AuthController (P3-05). */
     public const REGISTRATION_MODES = ['open', 'closed'];
@@ -197,9 +198,9 @@ final class AdminService
     public function createBoard(User $admin, array $input): int
     {
         $this->assertAdmin($admin);
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval] = $this->validateBoard($input, null);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled] = $this->validateBoard($input, null);
 
-        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval): int {
+        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled): int {
             $id = $this->boards->create([
                 'category_id' => $categoryId,
                 'slug' => $slug,
@@ -209,13 +210,16 @@ final class AdminService
                 'post_min_role' => $role,
                 'allow_anonymous' => $allowAnon,
                 'require_approval' => $requireApproval,
+                'assignment_mode' => $assignmentMode,
+                'tags_enabled' => $tagsEnabled,
+                'wiki_enabled' => $wikiEnabled,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'create_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled],
             ]);
             return $id;
         });
@@ -229,12 +233,12 @@ final class AdminService
         if ($board === null) {
             throw new NotFoundException('Board not found.');
         }
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval] = $this->validateBoard($input, $board);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled] = $this->validateBoard($input, $board);
 
         $oldSlug = (string) $board['slug'];
         $slugChanged = $slug !== $oldSlug;
 
-        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $oldSlug, $slugChanged, $board): void {
+        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $oldSlug, $slugChanged, $board): void {
             if ($slugChanged) {
                 $this->boards->recordSlugChange($id, $oldSlug);
             }
@@ -247,14 +251,17 @@ final class AdminService
                 'post_min_role' => $role,
                 'allow_anonymous' => $allowAnon,
                 'require_approval' => $requireApproval,
+                'assignment_mode' => $assignmentMode,
+                'tags_enabled' => $tagsEnabled,
+                'wiki_enabled' => $wikiEnabled,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'update_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0), 'require_approval' => (int) ($board['require_approval'] ?? 0)],
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval],
+                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0), 'require_approval' => (int) ($board['require_approval'] ?? 0), 'assignment_mode' => $board['assignment_mode'] ?? 'off', 'tags_enabled' => (int) ($board['tags_enabled'] ?? 1), 'wiki_enabled' => (int) ($board['wiki_enabled'] ?? 0)],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled],
             ]);
         });
     }
@@ -431,7 +438,7 @@ final class AdminService
     /**
      * @param array<string,mixed> $input
      * @param array<string,mixed>|null $existing
-     * @return array{0:int,1:string,2:string,3:?string,4:string,5:string}
+     * @return array{0:int,1:string,2:string,3:?string,4:string,5:string,6:int,7:int,8:string,9:int,10:int}
      */
     private function validateBoard(array $input, ?array $existing): array
     {
@@ -467,6 +474,12 @@ final class AdminService
 
         $allowAnon = !empty($input['allow_anonymous']) ? 1 : 0;
         $requireApproval = !empty($input['require_approval']) ? 1 : 0;
+        $assignmentMode = (string) ($input['assignment_mode'] ?? ($existing['assignment_mode'] ?? 'off'));
+        if (!in_array($assignmentMode, self::ASSIGNMENT_MODES, true)) {
+            $assignmentMode = 'off';
+        }
+        $tagsEnabled = array_key_exists('tags_enabled', $input) ? (!empty($input['tags_enabled']) ? 1 : 0) : (int) ($existing['tags_enabled'] ?? 1);
+        $wikiEnabled = !empty($input['wiki_enabled']) ? 1 : 0;
 
         if ($errors !== []) {
             throw new ValidationException($errors, $input);
@@ -476,7 +489,7 @@ final class AdminService
         // unless it already belongs to the board being edited.
         $slug = $this->uniqueSlug($slug, $existing !== null ? (int) $existing['id'] : null);
 
-        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon, $requireApproval];
+        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled];
     }
 
     private function uniqueSlug(string $slug, ?int $boardId): string

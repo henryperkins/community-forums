@@ -50,6 +50,21 @@
         <?php $reqApproval = $old['require_approval'] ?? ($board['require_approval'] ?? 0); ?>
         <label class="checkline"><input type="checkbox" name="require_approval" value="1" <?= !empty($reqApproval) ? 'checked' : '' ?>> Require approval before posts appear <span class="muted">(new threads and replies are held for a moderator to release; admins and board moderators post without holds)</span></label>
 
+        <label class="field"><span>Assignment mode</span>
+            <?php $assignmentMode = $old['assignment_mode'] ?? ($board['assignment_mode'] ?? 'off'); ?>
+            <select name="assignment_mode" class="input">
+                <option value="off" <?= $assignmentMode === 'off' ? 'selected' : '' ?>>Off</option>
+                <option value="self" <?= $assignmentMode === 'self' ? 'selected' : '' ?>>Members can assign themselves</option>
+                <option value="staff" <?= $assignmentMode === 'staff' ? 'selected' : '' ?>>Staff can assign members</option>
+            </select>
+        </label>
+
+        <?php $tagsEnabled = $old['tags_enabled'] ?? ($board['tags_enabled'] ?? 1); ?>
+        <label class="checkline"><input type="checkbox" name="tags_enabled" value="1" <?= !empty($tagsEnabled) ? 'checked' : '' ?>> Allow approved tags on this board</label>
+
+        <?php $wikiEnabled = $old['wiki_enabled'] ?? ($board['wiki_enabled'] ?? 0); ?>
+        <label class="checkline"><input type="checkbox" name="wiki_enabled" value="1" <?= !empty($wikiEnabled) ? 'checked' : '' ?>> Allow wiki-style post editing</label>
+
         <div class="form-actions">
             <button class="btn" type="submit">Save board</button>
             <a class="linkbtn" href="/admin/structure">Cancel</a>

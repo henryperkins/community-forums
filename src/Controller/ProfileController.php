@@ -129,6 +129,7 @@ final class ProfileController extends Controller
             'profile' => $profile,
             'mode' => $mode,
             'people' => $list,
+            'can_remove_followers' => $isSelf && $mode === 'followers',
         ]);
     }
 

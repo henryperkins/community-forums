@@ -16,6 +16,13 @@ if (($board['visibility'] ?? 'public') !== 'public') {
             <?php if ($board['visibility'] !== 'public'): ?><span class="tag"><?= $e($board['visibility']) ?></span><?php endif; ?>
         </h1>
         <?php if (!empty($board['description'])): ?><p class="muted"><?= $e($board['description']) ?></p><?php endif; ?>
+        <?php if ($current_user !== null && !empty($expanded_feeds)): ?>
+            <form class="inline" method="post" action="/b/<?= (int) $board['id'] ?>/follow">
+                <?= $this->csrfField() ?>
+                <button class="linkbtn" type="submit"><?= !empty($is_following_board) ? 'Unfollow board' : 'Follow board' ?></button>
+                <span class="muted">Discovery feed only</span>
+            </form>
+        <?php endif; ?>
     </header>
 
     <?php if ($can_post): ?>

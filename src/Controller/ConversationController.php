@@ -38,7 +38,7 @@ final class ConversationController extends Controller
     {
         $user = $this->requireDms();
         $to = trim((string) $request->query('to', ''));
-        return $this->view('dm/new', ['to' => $to, 'errors' => [], 'body' => '']);
+        return $this->view('dm/new', ['to' => $to, 'title' => '', 'errors' => [], 'body' => '']);
     }
 
     public function create(Request $request): Response
@@ -47,16 +47,20 @@ final class ConversationController extends Controller
         $this->throttle($request, $user);
 
         $to = trim((string) $request->str('to'));
+        $title = trim((string) $request->str('title'));
         $body = (string) $request->post('body', '');
-        $recipient = $to !== '' ? $this->container->get(UserRepository::class)->findByUsername($to) : null;
-        if ($recipient === null) {
-            return $this->view('dm/new', ['to' => $to, 'errors' => ['to' => 'No member with that username.'], 'body' => $body], 422);
-        }
 
         try {
-            $result = $this->container->get(DirectMessageService::class)->start($user, (int) $recipient['id'], $body);
+            $recipientIds = $this->resolveRecipients($to);
+            if ($recipientIds === []) {
+                throw new ValidationException(['to' => 'Enter at least one username.']);
+            }
+            $service = $this->container->get(DirectMessageService::class);
+            $result = count($recipientIds) === 1 && $title === ''
+                ? $service->start($user, $recipientIds[0], $body)
+                : $service->startGroup($user, $recipientIds, $title, $body);
         } catch (ValidationException $e) {
-            return $this->view('dm/new', ['to' => $to, 'errors' => $e->errors, 'body' => $body], 422);
+            return $this->view('dm/new', ['to' => $to, 'title' => $title, 'errors' => $e->errors, 'body' => $body], 422);
         }
         return $this->redirect('/messages/' . $result['conversation_id']);
     }
@@ -80,28 +84,43 @@ final class ConversationController extends Controller
     private function renderConversation(Request $request, User $user, int $conversationId, array $extra = [], int $status = 200): Response
     {
         $convRepo = $this->container->get(ConversationRepository::class);
-        if (!$convRepo->isParticipant($conversationId, $user->id())) {
+        $membership = $convRepo->membership($conversationId, $user->id());
+        if ($membership === null) {
+            throw new NotFoundException('Conversation not found.');
+        }
+        $conversation = $convRepo->find($conversationId);
+        if ($conversation === null) {
             throw new NotFoundException('Conversation not found.');
         }
 
         $msgRepo = $this->container->get(DmMessageRepository::class);
         $perPage = 50;
-        $total = $msgRepo->countByConversation($conversationId);
+        $total = $msgRepo->countVisibleForUser($conversationId, $user->id());
         $pages = max(1, (int) ceil($total / $perPage));
         // Open on the newest page by default so the latest messages are visible;
         // an explicit ?page= still pages backwards through history.
         $page = min($pages, max(1, $request->int('page', $pages)));
-        $messages = $msgRepo->listByConversation($conversationId, $perPage, ($page - 1) * $perPage);
+        $messages = $msgRepo->listVisibleForUser($conversationId, $user->id(), $perPage, ($page - 1) * $perPage);
 
         // Viewing a conversation clears it: mark read up to the latest message,
         // not just the last one on the rendered page, so the unread badge clears
         // for conversations longer than one page.
-        $convRepo->markRead($conversationId, $user->id(), $msgRepo->latestId($conversationId));
+        if ($convRepo->isParticipant($conversationId, $user->id())) {
+            $convRepo->markRead($conversationId, $user->id(), $msgRepo->latestId($conversationId));
+        }
         $otherId = $convRepo->otherParticipant($conversationId, $user->id());
         $other = $otherId !== null ? $this->container->get(UserRepository::class)->find($otherId) : null;
+        $isGroup = (string) ($conversation['kind'] ?? 'direct') === 'group';
+        $isOwner = $isGroup && (int) ($conversation['owner_user_id'] ?? 0) === $user->id();
 
         return $this->view('dm/show', array_merge([
+            'conversation' => $conversation,
             'conversation_id' => $conversationId,
+            'is_group' => $isGroup,
+            'is_owner' => $isOwner,
+            'can_reply' => $convRepo->isParticipant($conversationId, $user->id()),
+            'participants' => $isGroup ? $convRepo->participants($conversationId) : [],
+            'events' => $isGroup ? $convRepo->events($conversationId, 20) : [],
             'messages' => $messages,
             'other' => $other,
             'page' => $page,
@@ -131,6 +150,70 @@ final class ConversationController extends Controller
         return $this->redirect('/messages/' . $conversationId);
     }
 
+    /** @param array<string,string> $params */
+    public function addMember(Request $request, array $params): Response
+    {
+        $user = $this->requireDms();
+        $conversationId = (int) ($params['id'] ?? 0);
+        return $this->runGroupAction(
+            fn () => $this->container->get(DirectMessageService::class)->addParticipant(
+                $user,
+                $conversationId,
+                $this->resolveSingleUser((string) $request->str('username')),
+            ),
+            $conversationId,
+            'Member added.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function removeMember(Request $request, array $params): Response
+    {
+        $user = $this->requireDms();
+        $conversationId = (int) ($params['id'] ?? 0);
+        $target = (int) $request->post('user_id', 0);
+        return $this->runGroupAction(
+            fn () => $this->container->get(DirectMessageService::class)->removeParticipant($user, $conversationId, $target),
+            $conversationId,
+            'Member removed.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function rename(Request $request, array $params): Response
+    {
+        $user = $this->requireDms();
+        $conversationId = (int) ($params['id'] ?? 0);
+        return $this->runGroupAction(
+            fn () => $this->container->get(DirectMessageService::class)->rename($user, $conversationId, (string) $request->str('title')),
+            $conversationId,
+            'Group renamed.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function mute(Request $request, array $params): Response
+    {
+        $user = $this->requireDms();
+        $conversationId = (int) ($params['id'] ?? 0);
+        $muted = (string) $request->post('muted', '1') === '1';
+        $this->container->get(DirectMessageService::class)->mute($user, $conversationId, $muted);
+        return $this->redirectWithFlash('/messages/' . $conversationId, $muted ? 'Conversation muted.' : 'Conversation unmuted.');
+    }
+
+    /** @param array<string,string> $params */
+    public function transfer(Request $request, array $params): Response
+    {
+        $user = $this->requireDms();
+        $conversationId = (int) ($params['id'] ?? 0);
+        $target = (int) $request->post('user_id', 0);
+        return $this->runGroupAction(
+            fn () => $this->container->get(DirectMessageService::class)->transferOwner($user, $conversationId, $target),
+            $conversationId,
+            'Ownership transferred.',
+        );
+    }
+
     /** @param array<string,string> $params message id */
     public function report(Request $request, array $params): Response
     {
@@ -158,5 +241,46 @@ final class ConversationController extends Controller
     private function throttle(Request $request, User $user): void
     {
         $this->container->get(RateLimitService::class)->enforce('dm', $request, $user);
+    }
+
+    /** @return list<int> */
+    private function resolveRecipients(string $raw): array
+    {
+        $ids = [];
+        foreach (preg_split('/[\s,]+/', $raw) ?: [] as $username) {
+            $username = ltrim(trim((string) $username), '@');
+            if ($username === '') {
+                continue;
+            }
+            $row = $this->container->get(UserRepository::class)->findByUsername($username);
+            if ($row === null) {
+                throw new ValidationException(['to' => 'No member found with the username "' . $username . '".']);
+            }
+            $ids[] = (int) $row['id'];
+        }
+        return array_values(array_unique($ids));
+    }
+
+    private function resolveSingleUser(string $username): int
+    {
+        $username = ltrim(trim($username), '@');
+        if ($username === '') {
+            throw new ValidationException(['username' => 'Enter a username.']);
+        }
+        $row = $this->container->get(UserRepository::class)->findByUsername($username);
+        if ($row === null) {
+            throw new ValidationException(['username' => 'No member found with that username.']);
+        }
+        return (int) $row['id'];
+    }
+
+    private function runGroupAction(callable $action, int $conversationId, string $success): Response
+    {
+        try {
+            $action();
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/messages/' . $conversationId, $e->first());
+        }
+        return $this->redirectWithFlash('/messages/' . $conversationId, $success);
     }
 }

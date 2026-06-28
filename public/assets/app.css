@@ -276,6 +276,23 @@ a:hover { text-decoration: underline; }
 .thread-head { margin-bottom: 16px; }
 .breadcrumb { margin: 0 0 4px; font-size: .9rem; }
 .mod-bar { display: flex; gap: 14px; margin-top: 8px; }
+.workflow-bar,
+.workflow-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    margin-top: 8px;
+}
+.workflow-actions .input-small { max-width: 180px; }
+.memory-panel {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+.memory-panel h2 { margin-top: 0; font-size: 1rem; }
 .post-stream { display: flex; flex-direction: column; gap: 14px; }
 .post {
     display: flex;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Core\FeatureFlags;
 use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
@@ -25,6 +26,19 @@ final class AppFeatureFlagTest extends TestCase
     private function setFlags(array $flags): void
     {
         (new SettingRepository($this->db))->set('features', $flags);
+    }
+
+    public function test_phase4_gate_a_flags_default_dark(): void
+    {
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        foreach (['topic_workflow', 'group_dms', 'tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory'] as $flag) {
+            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
+        }
+
+        $this->setFlags(['tags' => true]);
+        $overridden = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($overridden->enabled('tags'));
+        self::assertTrue($overridden->enabled('community'));
     }
 
     public function test_disabling_a_flag_takes_its_get_routes_offline_but_keeps_core_up(): void

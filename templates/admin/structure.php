@@ -75,7 +75,16 @@
                         <option value="private">Private (admins only)</option>
                     </select>
                 </label>
+                <label class="field"><span>Assignment mode</span>
+                    <select name="assignment_mode" class="input">
+                        <option value="off">Off</option>
+                        <option value="self">Members can assign themselves</option>
+                        <option value="staff">Staff can assign members</option>
+                    </select>
+                </label>
                 <label class="checkline"><input type="checkbox" name="allow_anonymous" value="1"> Allow anonymous posting</label>
+                <label class="checkline"><input type="checkbox" name="tags_enabled" value="1" checked> Allow approved tags</label>
+                <label class="checkline"><input type="checkbox" name="wiki_enabled" value="1"> Allow wiki-style post editing</label>
                 <button class="btn btn-small" type="submit">Add board</button>
             </form>
         </section>

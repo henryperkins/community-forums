@@ -16,7 +16,7 @@ use DOMText;
  * known-safe tag set. Everything else is dropped or unwrapped:
  *
  *  - Allowed: p, br, hr, strong, em, del, s, code, pre, blockquote, ul, ol, li,
- *    a (href only), h2, h3.
+ *    a (href only), h2, h3, safe table markup, and disabled task-list inputs.
  *  - Headings are clamped into [h2, h3] (h1→h2, h4–h6→h3) so a post can't
  *    impersonate page chrome (COMPOSER.md: only ## and ###).
  *  - Dangerous elements (script, style, iframe, img, table, form, svg, …) are
@@ -35,6 +35,9 @@ final class HtmlSanitizer
         'code' => true, 'pre' => true, 'blockquote' => true,
         'ul' => true, 'ol' => true, 'li' => true,
         'a' => true, 'h2' => true, 'h3' => true,
+        'table' => true, 'thead' => true, 'tbody' => true, 'tfoot' => true,
+        'tr' => true, 'td' => true, 'th' => true,
+        'input' => true,
         // P3-04: uploaded images, referenced from Markdown as /media/{id}.
         'img' => true, 'span' => true,
     ];
@@ -43,9 +46,8 @@ final class HtmlSanitizer
     private const DROP = [
         'script' => true, 'style' => true, 'iframe' => true, 'object' => true,
         'embed' => true, 'svg' => true, 'math' => true,
-        'table' => true, 'thead' => true, 'tbody' => true, 'tfoot' => true,
-        'tr' => true, 'td' => true, 'th' => true, 'caption' => true, 'colgroup' => true,
-        'col' => true, 'form' => true, 'input' => true, 'textarea' => true,
+        'caption' => true, 'colgroup' => true,
+        'col' => true, 'form' => true, 'textarea' => true,
         'button' => true, 'select' => true, 'option' => true, 'label' => true,
         'link' => true, 'meta' => true, 'base' => true, 'title' => true,
         'head' => true, 'body' => true, 'html' => true, 'audio' => true,
@@ -146,6 +148,24 @@ final class HtmlSanitizer
             $el->setAttribute('src', $src);
             $el->setAttribute('alt', mb_substr($alt, 0, 255));
             $el->setAttribute('loading', 'lazy');
+            return;
+        }
+
+        if ($tag === 'input') {
+            $type = strtolower((string) $el->getAttribute('type'));
+            $checked = $el->hasAttribute('checked');
+            foreach (iterator_to_array($el->attributes ?? []) as $attr) {
+                $el->removeAttribute($attr->nodeName);
+            }
+            if ($type !== 'checkbox') {
+                $el->parentNode?->removeChild($el);
+                return;
+            }
+            $el->setAttribute('type', 'checkbox');
+            $el->setAttribute('disabled', 'disabled');
+            if ($checked) {
+                $el->setAttribute('checked', 'checked');
+            }
             return;
         }
 

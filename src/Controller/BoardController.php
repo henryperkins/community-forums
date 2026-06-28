@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
+use App\Repository\FollowRepository;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
@@ -75,6 +76,10 @@ final class BoardController extends Controller
         $canPost = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)
             && $policy->canPost($board, $user, $isMember);
+        $expandedFeeds = $this->container->get(FeatureFlags::class)->enabled('expanded_feeds');
+        $isFollowingBoard = $user !== null
+            && $expandedFeeds
+            && $this->container->get(FollowRepository::class)->isFollowingTarget($user->id(), 'board', (int) $board['id']);
 
         return $this->view('board', [
             'board' => $board,
@@ -83,6 +88,8 @@ final class BoardController extends Controller
             'total' => $total,
             'per_page' => $perPage,
             'can_post' => $canPost,
+            'is_following_board' => $isFollowingBoard,
+            'expanded_feeds' => $expandedFeeds,
             'show_avatars' => $reading['show_avatars'],
         ]);
     }

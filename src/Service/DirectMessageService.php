@@ -30,6 +30,7 @@ use App\Support\Markdown;
 final class DirectMessageService
 {
     private const BODY_MAX = 5000;
+    private const TITLE_MAX = 120;
 
     public function __construct(
         private Database $db,
@@ -62,7 +63,41 @@ final class DirectMessageService
 
         return $this->db->transaction(function () use ($sender, $recipientId, $body): array {
             $conversationId = $this->conversations->findOrCreateBetween($sender->id(), $recipientId);
-            $messageId = $this->deliver($sender, $conversationId, $recipientId, $body);
+            $messageId = $this->deliver($sender, $conversationId, $body);
+            return ['conversation_id' => $conversationId, 'message_id' => $messageId];
+        });
+    }
+
+    /**
+     * Start a bounded group conversation and send its first message.
+     *
+     * @param list<int> $recipientIds
+     * @return array{conversation_id:int, message_id:int}
+     */
+    public function startGroup(User $sender, array $recipientIds, string $title, string $body): array
+    {
+        $this->writeGate->assertCanWrite($sender);
+        $recipientIds = array_values(array_unique(array_filter(array_map('intval', $recipientIds), fn (int $id): bool => $id > 0 && $id !== $sender->id())));
+        $cap = max(3, (int) $this->config->get('dm.group_participant_cap', 12));
+        if (count($recipientIds) + 1 > $cap) {
+            throw new ValidationException(['to' => 'That group has too many participants.']);
+        }
+        if ($recipientIds === []) {
+            throw new ValidationException(['to' => 'Add at least one other member.']);
+        }
+        $title = $this->validateTitle($title, $recipientIds);
+        foreach ($recipientIds as $recipientId) {
+            $recipient = $this->users->find($recipientId);
+            if ($recipient === null) {
+                throw new ValidationException(['to' => 'One of those members could not be found.']);
+            }
+            $this->assertCanContact($sender, $recipient, newConversation: true);
+        }
+        $body = $this->validateBody($body);
+
+        return $this->db->transaction(function () use ($sender, $recipientIds, $title, $body): array {
+            $conversationId = $this->conversations->createGroup($sender->id(), $title, $recipientIds, 0);
+            $messageId = $this->deliver($sender, $conversationId, $body);
             return ['conversation_id' => $conversationId, 'message_id' => $messageId];
         });
     }
@@ -74,19 +109,87 @@ final class DirectMessageService
         if (!$this->conversations->isParticipant($conversationId, $sender->id())) {
             throw new NotFoundException('Conversation not found.');
         }
-        $otherId = $this->conversations->otherParticipant($conversationId, $sender->id());
-        if ($otherId === null) {
+        $conversation = $this->conversations->find($conversationId);
+        if ($conversation === null) {
             throw new NotFoundException('Conversation not found.');
         }
-        $other = $this->users->find($otherId);
-        if ($other !== null) {
-            // Re-check block/allow-DMs at send time, but not the new-user gate
-            // (they are already in an established conversation).
-            $this->assertCanContact($sender, $other, newConversation: false);
+        foreach ($this->conversations->activeParticipantIds($conversationId) as $participantId) {
+            if ($participantId === $sender->id()) {
+                continue;
+            }
+            $participant = $this->users->find($participantId);
+            if ($participant !== null && (string) ($conversation['kind'] ?? 'direct') === 'direct') {
+                // Preserve Phase 2 direct-DM semantics at send time. Groups do
+                // not get silently rewritten by later block changes; members can
+                // mute/leave/report instead.
+                $this->assertCanContact($sender, $participant, newConversation: false);
+            }
         }
         $body = $this->validateBody($body);
 
-        return $this->db->transaction(fn (): int => $this->deliver($sender, $conversationId, $otherId, $body));
+        return $this->db->transaction(fn (): int => $this->deliver($sender, $conversationId, $body));
+    }
+
+    public function addParticipant(User $actor, int $conversationId, int $userId): void
+    {
+        $this->writeGate->assertCanWrite($actor);
+        $conversation = $this->groupForOwnerAction($actor, $conversationId);
+        $recipient = $this->users->find($userId);
+        if ($recipient === null) {
+            throw new NotFoundException('That person could not be found.');
+        }
+        $this->assertCanContact($actor, $recipient, newConversation: true);
+        $cap = max(3, (int) $this->config->get('dm.group_participant_cap', 12));
+        if ($this->conversations->activeCount($conversationId) + 1 > $cap) {
+            throw new ValidationException(['member' => 'That group has too many participants.']);
+        }
+        $boundary = $this->messages->latestId((int) $conversation['id']);
+        $this->conversations->addParticipant($conversationId, $actor->id(), $userId, $boundary);
+    }
+
+    public function removeParticipant(User $actor, int $conversationId, int $userId): void
+    {
+        $this->writeGate->assertCanWrite($actor);
+        if ($actor->id() !== $userId) {
+            $this->groupForOwnerAction($actor, $conversationId);
+        } elseif (!$this->conversations->isParticipant($conversationId, $actor->id())) {
+            throw new NotFoundException('Conversation not found.');
+        }
+        $conversation = $this->conversations->find($conversationId);
+        if ($conversation === null || (string) ($conversation['kind'] ?? 'direct') !== 'group') {
+            throw new NotFoundException('Conversation not found.');
+        }
+        if ((int) ($conversation['owner_user_id'] ?? 0) === $userId && $this->conversations->activeCount($conversationId) > 1) {
+            throw new ValidationException(['member' => 'Transfer ownership before the owner leaves.']);
+        }
+        $this->conversations->removeParticipant($conversationId, $actor->id(), $userId);
+    }
+
+    public function rename(User $actor, int $conversationId, string $title): void
+    {
+        $this->writeGate->assertCanWrite($actor);
+        $conversation = $this->groupForOwnerAction($actor, $conversationId);
+        $ids = $this->conversations->activeParticipantIds($conversationId);
+        $this->conversations->renameGroup($conversationId, $actor->id(), $this->validateTitle($title, $ids));
+    }
+
+    public function mute(User $actor, int $conversationId, bool $muted): void
+    {
+        $this->writeGate->assertCanWrite($actor);
+        if (!$this->conversations->isParticipant($conversationId, $actor->id())) {
+            throw new NotFoundException('Conversation not found.');
+        }
+        $this->conversations->setMute($conversationId, $actor->id(), $muted);
+    }
+
+    public function transferOwner(User $actor, int $conversationId, int $newOwnerId): void
+    {
+        $this->writeGate->assertCanWrite($actor);
+        $this->groupForOwnerAction($actor, $conversationId);
+        if (!$this->conversations->isParticipant($conversationId, $newOwnerId)) {
+            throw new ValidationException(['member' => 'Choose a current group member.']);
+        }
+        $this->conversations->transferOwner($conversationId, $actor->id(), $newOwnerId);
     }
 
     /**
@@ -100,7 +203,14 @@ final class DirectMessageService
         if ($message === null) {
             throw new NotFoundException('Message not found.');
         }
-        if (!$this->conversations->isParticipant((int) $message['conversation_id'], $reporter->id())) {
+        $membership = $this->conversations->membership((int) $message['conversation_id'], $reporter->id());
+        $joinedAfter = $membership !== null ? (int) ($membership['joined_after_message_id'] ?? 0) : PHP_INT_MAX;
+        $leftAt = $membership['left_at'] ?? null;
+        $createdAt = strtotime((string) ($message['created_at'] ?? '') . ' UTC');
+        $leftTs = $leftAt !== null ? strtotime((string) $leftAt . ' UTC') : false;
+        if ($membership === null
+            || (int) $message['id'] <= $joinedAfter
+            || ($leftTs !== false && $createdAt !== false && $createdAt > $leftTs)) {
             // Don't reveal a conversation the reporter isn't part of.
             throw new NotFoundException('Message not found.');
         }
@@ -117,10 +227,11 @@ final class DirectMessageService
              VALUES (?, ?, ?, ?, \'open\', UTC_TIMESTAMP())',
             [$reporter->id(), $messageId, $reasonCode ?: null, $reason !== '' ? $reason : null],
         );
+        $this->notifications->notifyDmReport($reporter->id(), (int) $message['conversation_id']);
     }
 
     /** Insert the message, advance conversation + read marker, notify the recipient. */
-    private function deliver(User $sender, int $conversationId, int $recipientId, string $body): int
+    private function deliver(User $sender, int $conversationId, string $body): int
     {
         $now = gmdate('Y-m-d H:i:s');
         $messageId = $this->messages->create($conversationId, $sender->id(), $body, $this->markdown->render($body));
@@ -133,7 +244,11 @@ final class DirectMessageService
         }
         $this->conversations->touch($conversationId, $now);
         $this->conversations->markRead($conversationId, $sender->id(), $messageId); // sender has "read" their own
-        $this->notifications->notifyDm($sender->id(), $recipientId, $conversationId);
+        foreach ($this->conversations->notificationParticipantIds($conversationId) as $recipientId) {
+            if ($recipientId !== $sender->id()) {
+                $this->notifications->notifyDm($sender->id(), $recipientId, $conversationId);
+            }
+        }
         return $messageId;
     }
 
@@ -146,6 +261,14 @@ final class DirectMessageService
         }
         if ($this->blocks->blockedEitherWay($sender->id(), $recipientId)) {
             throw new ForbiddenException('You cannot message this person.');
+        }
+        $status = (string) ($recipient['status'] ?? 'active');
+        $suspendedUntil = $recipient['suspended_until'] ?? null;
+        $suspendedUntilTs = is_string($suspendedUntil) && $suspendedUntil !== ''
+            ? strtotime($suspendedUntil . ' UTC')
+            : false;
+        if ($status === 'banned' || $status === 'suspended' || ($suspendedUntilTs !== false && $suspendedUntilTs > time())) {
+            throw new ForbiddenException('This person cannot receive direct messages.');
         }
         $allow = (string) ($recipient['allow_dms'] ?? 'members');
         if ($allow === 'none' && !$sender->isAdmin()) {
@@ -185,5 +308,41 @@ final class DirectMessageService
             throw new ValidationException(['body' => 'Your message is too long.']);
         }
         return $body;
+    }
+
+    /** @param list<int> $participantIds */
+    private function validateTitle(string $title, array $participantIds): string
+    {
+        $title = trim($title);
+        if ($title === '') {
+            $names = [];
+            foreach (array_slice($participantIds, 0, 3) as $id) {
+                $row = $this->users->find((int) $id);
+                if ($row !== null) {
+                    $names[] = ($row['display_name'] ?? '') !== '' ? (string) $row['display_name'] : (string) $row['username'];
+                }
+            }
+            $title = $names !== [] ? implode(', ', $names) : 'Group conversation';
+        }
+        if (mb_strlen($title) > self::TITLE_MAX) {
+            throw new ValidationException(['title' => 'Group title is too long.']);
+        }
+        return $title;
+    }
+
+    /** @return array<string,mixed> */
+    private function groupForOwnerAction(User $actor, int $conversationId): array
+    {
+        $conversation = $this->conversations->find($conversationId);
+        if ($conversation === null || (string) ($conversation['kind'] ?? 'direct') !== 'group') {
+            throw new NotFoundException('Conversation not found.');
+        }
+        if ((int) ($conversation['owner_user_id'] ?? 0) !== $actor->id()) {
+            throw new ForbiddenException('Only the group owner can do that.');
+        }
+        if (!$this->conversations->isParticipant($conversationId, $actor->id())) {
+            throw new NotFoundException('Conversation not found.');
+        }
+        return $conversation;
     }
 }

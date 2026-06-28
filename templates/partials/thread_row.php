@@ -14,6 +14,9 @@ $showBoard = ($show_board ?? false) && !empty($t['board_slug']);
             <?php if ($starred): ?><span class="star-marker" title="Starred">★</span><?php endif; ?>
             <?php if ((int) $t['is_pinned'] === 1): ?><span class="badge">Pinned</span><?php endif; ?>
             <?php if ((int) $t['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
+            <?php if (!empty($t['status']) && $t['status'] !== 'open'): ?>
+                <span class="badge"><?= $e(ucwords(str_replace('_', ' ', (string) $t['status']))) ?></span>
+            <?php endif; ?>
             <?= $e($t['title']) ?>
         </a>
         <span class="thread-meta">
@@ -21,6 +24,15 @@ $showBoard = ($show_board ?? false) && !empty($t['board_slug']);
             by <?= $e($a['label']) ?>
             · <?= (int) $t['reply_count'] ?> <?= (int) $t['reply_count'] === 1 ? 'reply' : 'replies' ?>
             · <?= $e(human_datetime(($t['last_post_at'] ?? null) ?: $t['created_at'])) ?>
+            <?php if (!empty($t['assigned_username'])): ?>
+                · assigned to @<?= $e($t['assigned_username']) ?>
+            <?php endif; ?>
+            <?php if (!empty($t['for_you_reason'])): ?>
+                · <?= $e($t['for_you_reason']) ?>
+            <?php endif; ?>
+            <?php if (!empty($t['snoozed_until'])): ?>
+                · snoozed until <?= $e(human_datetime($t['snoozed_until'])) ?>
+            <?php endif; ?>
         </span>
     </div>
 </li>

@@ -67,12 +67,18 @@ final class ReportRepository
         if ($isAdmin) {
             return $this->db->fetchAll(
                 "SELECT r.*, rep.username AS reporter_username,
-                        p.body AS post_body, p.thread_id, t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug
+                        p.body AS post_body, p.thread_id, t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug,
+                        dm.body AS dm_body, dm.body_html AS dm_body_html, dm.conversation_id AS dm_conversation_id,
+                        dm_sender.username AS dm_sender_username, dm_sender.display_name AS dm_sender_display_name,
+                        c.kind AS dm_conversation_kind, c.title AS dm_conversation_title
                  FROM reports r
                  JOIN users rep ON rep.id = r.reporter_id
                  LEFT JOIN posts p ON p.id = r.post_id
                  LEFT JOIN threads t ON t.id = p.thread_id
                  LEFT JOIN boards b ON b.id = t.board_id
+                 LEFT JOIN dm_messages dm ON dm.id = r.dm_message_id
+                 LEFT JOIN users dm_sender ON dm_sender.id = dm.user_id
+                 LEFT JOIN conversations c ON c.id = dm.conversation_id
                  WHERE r.status IN ('open','triaged')
                  ORDER BY r.created_at ASC LIMIT " . $limit,
             );

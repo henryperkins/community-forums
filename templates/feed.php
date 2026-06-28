@@ -2,12 +2,18 @@
 <?php $this->layout('layout'); $this->section('title', 'Following'); ?>
 <div class="feed">
     <header class="board-header">
-        <h1>Following</h1>
-        <p class="muted">Recent activity from people you follow.</p>
+        <h1><?= ($feed_view ?? 'following') === 'latest' ? 'Latest' : 'Following' ?></h1>
+        <p class="muted"><?= ($feed_view ?? 'following') === 'latest' ? 'Recent visible community activity.' : (!empty($expanded_feeds) ? 'Recent activity from people, boards, and tags you follow.' : 'Recent activity from people you follow.') ?></p>
     </header>
+    <nav class="inbox-tabs" aria-label="Feed views">
+        <a class="inbox-tab<?= ($feed_view ?? 'following') === 'following' ? ' is-active' : '' ?>" href="/feed?view=following">Following</a>
+        <?php if (!empty($expanded_feeds)): ?>
+            <a class="inbox-tab<?= ($feed_view ?? 'following') === 'latest' ? ' is-active' : '' ?>" href="/feed?view=latest">Latest</a>
+        <?php endif; ?>
+    </nav>
 
     <?php if (empty($items)): ?>
-        <p class="muted empty">Nothing here yet. <a href="/leaderboard">Find people to follow</a> on the leaderboard, or visit a member's profile.</p>
+        <p class="muted empty"><?= !empty($expanded_feeds) ? 'Nothing here yet. Follow people, boards, or tags to shape this feed.' : 'Nothing here yet. Follow people to shape this feed.' ?></p>
     <?php else: ?>
         <ul class="feed-list">
             <?php foreach ($items as $it): ?>
@@ -26,8 +32,9 @@
         </ul>
 
         <nav class="pager">
-            <?php if ($page > 1): ?><a class="btn btn-small" href="/feed?page=<?= $page - 1 ?>">← Newer</a><?php endif; ?>
-            <?php if (!empty($has_more)): ?><a class="btn btn-small" href="/feed?page=<?= $page + 1 ?>">Older →</a><?php endif; ?>
+            <?php $viewParam = 'view=' . rawurlencode($feed_view ?? 'following') . '&'; ?>
+            <?php if ($page > 1): ?><a class="btn btn-small" href="/feed?<?= $viewParam ?>page=<?= $page - 1 ?>">← Newer</a><?php endif; ?>
+            <?php if (!empty($has_more)): ?><a class="btn btn-small" href="/feed?<?= $viewParam ?>page=<?= $page + 1 ?>">Older →</a><?php endif; ?>
         </nav>
     <?php endif; ?>
 </div>

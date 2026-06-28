@@ -11,6 +11,7 @@ use App\Controller\AuthController;
 use App\Controller\BlockController;
 use App\Controller\BrandingController;
 use App\Controller\ComposerController;
+use App\Controller\CommunityMemoryController;
 use App\Controller\BoardController;
 use App\Controller\ConversationController;
 use App\Controller\DraftController;
@@ -36,8 +37,10 @@ use App\Controller\SettingsController;
 use App\Controller\SetupController;
 use App\Controller\SolvedController;
 use App\Controller\SubscriptionController;
+use App\Controller\TagController;
 use App\Controller\UserModerationController;
 use App\Controller\ThreadController;
+use App\Controller\ThreadWorkflowController;
 use App\Controller\UnsubscribeController;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
@@ -66,7 +69,9 @@ use App\Repository\ReportRepository;
 use App\Repository\SessionRepository;
 use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
+use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\ThreadAssignmentRepository;
 use App\Repository\ThreadUserRepository;
 use App\Repository\UserBoardPrefRepository;
 use App\Repository\UserPreferenceRepository;
@@ -90,6 +95,7 @@ use App\Service\AuthService;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeService;
+use App\Service\CommunityMemoryService;
 use App\Service\DirectMessageService;
 use App\Service\FeedService;
 use App\Service\FollowService;
@@ -103,8 +109,10 @@ use App\Service\RateLimitService;
 use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
+use App\Service\ReputationLedgerService;
 use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
+use App\Service\ThreadWorkflowService;
 use App\Service\UserModerationService;
 use App\Service\SetupService;
 use App\Support\HtmlSanitizer;
@@ -516,7 +524,9 @@ final class App
         $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));
         $c->bind(DmMessageRepository::class, fn (Container $c) => new DmMessageRepository($c->get(Database::class)));
         $c->bind(ReportRepository::class, fn (Container $c) => new ReportRepository($c->get(Database::class)));
+        $c->bind(ThreadAssignmentRepository::class, fn (Container $c) => new ThreadAssignmentRepository($c->get(Database::class)));
         $c->bind(FollowRepository::class, fn (Container $c) => new FollowRepository($c->get(Database::class)));
+        $c->bind(TagRepository::class, fn (Container $c) => new TagRepository($c->get(Database::class)));
         $c->bind(BadgeRepository::class, fn (Container $c) => new BadgeRepository($c->get(Database::class)));
         $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
@@ -626,6 +636,11 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(WriteGate::class),
             $c->get(NotificationService::class),
+            $c->get(ReputationLedgerService::class),
+        ));
+        $c->bind(ReputationLedgerService::class, fn (Container $c) => new ReputationLedgerService(
+            $c->get(Database::class),
+            $c->get(UserRepository::class),
         ));
 
         // Community identity (P2-09).
@@ -645,6 +660,8 @@ final class App
         $c->bind(FollowService::class, fn (Container $c) => new FollowService(
             $c->get(FollowRepository::class),
             $c->get(UserRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(TagRepository::class),
             $c->get(BlockRepository::class),
             $c->get(WriteGate::class),
             $c->get(NotificationService::class),
@@ -665,7 +682,29 @@ final class App
             $c->get(BadgeService::class),
             $c->get(NotificationService::class),
             $c->get(WriteGate::class),
+            $c->get(ThreadWorkflowService::class),
+            $c->get(ReputationLedgerService::class),
             (int) $config->get('community.solved_bonus', 5),
+        ));
+        $c->bind(ThreadWorkflowService::class, fn (Container $c) => new ThreadWorkflowService(
+            $c->get(Database::class),
+            $c->get(ThreadRepository::class),
+            $c->get(ThreadAssignmentRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
+        ));
+        $c->bind(CommunityMemoryService::class, fn (Container $c) => new CommunityMemoryService(
+            $c->get(Database::class),
+            $c->get(ThreadRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(WriteGate::class),
+            $c->get(Markdown::class),
         ));
 
         // Session + CSRF.
@@ -732,6 +771,7 @@ final class App
             $c->get(FeatureFlags::class)->enabled('anti_abuse') ? $c->get(AntiAbuseService::class) : null,
             $c->get(IdempotencyRepository::class),
             $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
+            $c->get(ReputationLedgerService::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -791,6 +831,9 @@ final class App
         // Community identity (P2-09): follows, feed, leaderboard, solved answers.
         $r->get('/feed', [FeedController::class, 'index']);
         $r->get('/leaderboard', [LeaderboardController::class, 'index']);
+        $r->get('/tags', [TagController::class, 'index']);
+        $r->get('/tags/{slug}', [TagController::class, 'show']);
+        $r->post('/tags/{slug}/follow', [TagController::class, 'follow']);
 
         // Image uploads + authorization-gated delivery (P3-04).
         $r->post('/upload', [MediaController::class, 'upload']);
@@ -800,9 +843,17 @@ final class App
         $r->post('/composer/preview', [ComposerController::class, 'preview']);
         $r->get('/drafts', [DraftController::class, 'index']);
         $r->post('/u/{username}/follow', [FollowController::class, 'toggle']);
+        $r->post('/u/{username}/followers/{id}/remove', [FollowController::class, 'removeFollower']);
+        $r->post('/b/{id}/follow', [FollowController::class, 'toggleBoard']);
         $r->post('/u/{username}/block', [BlockController::class, 'toggle']);
         $r->post('/posts/{id}/accept', [SolvedController::class, 'accept']);
         $r->post('/t/{id}/unaccept', [SolvedController::class, 'unaccept']);
+        $r->post('/t/{id}/status', [ThreadWorkflowController::class, 'status']);
+        $r->post('/t/{id}/snooze', [ThreadWorkflowController::class, 'snooze']);
+        $r->post('/t/{id}/assign', [ThreadWorkflowController::class, 'assign']);
+        $r->post('/t/{id}/tags', [TagController::class, 'updateThread']);
+        $r->post('/t/{id}/summary', [CommunityMemoryController::class, 'summary']);
+        $r->post('/t/{id}/related', [CommunityMemoryController::class, 'related']);
 
         $r->get('/login', [AuthController::class, 'showLogin']);
         $r->post('/login', [AuthController::class, 'login']);
@@ -866,11 +917,16 @@ final class App
         $r->get('/brand.css', [BrandingController::class, 'css']);
         $r->get('/admin/branding', [BrandingController::class, 'form']);
         $r->post('/admin/branding', [BrandingController::class, 'update']);
+        $r->get('/admin/tags', [TagController::class, 'admin']);
+        $r->post('/admin/tags', [TagController::class, 'create']);
+        $r->post('/admin/tags/{id}', [TagController::class, 'update']);
 
         $r->post('/threads', [PostController::class, 'createThread']);
         $r->post('/t/{id}/reply', [PostController::class, 'reply']);
         $r->post('/posts/{id}/edit', [PostController::class, 'edit']);
         $r->post('/posts/{id}/delete', [PostController::class, 'delete']);
+        $r->post('/posts/{id}/wiki', [CommunityMemoryController::class, 'makeWiki']);
+        $r->post('/posts/{id}/wiki/edit', [CommunityMemoryController::class, 'editWiki']);
 
         // Engagement (P2-01/P2-02): reactions + stars.
         $r->post('/posts/{id}/react', [EngagementController::class, 'react']);
@@ -896,6 +952,11 @@ final class App
         $r->post('/messages', [ConversationController::class, 'create']);
         $r->get('/messages/{id}', [ConversationController::class, 'show']);
         $r->post('/messages/{id}', [ConversationController::class, 'reply']);
+        $r->post('/messages/{id}/members', [ConversationController::class, 'addMember']);
+        $r->post('/messages/{id}/members/remove', [ConversationController::class, 'removeMember']);
+        $r->post('/messages/{id}/rename', [ConversationController::class, 'rename']);
+        $r->post('/messages/{id}/mute', [ConversationController::class, 'mute']);
+        $r->post('/messages/{id}/transfer', [ConversationController::class, 'transfer']);
         $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);

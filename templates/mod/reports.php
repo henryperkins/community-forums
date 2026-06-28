@@ -23,7 +23,13 @@
                         </p>
                         <blockquote class="report-excerpt"><?= $e(mb_strimwidth((string) ($r['post_body'] ?? ''), 0, 240, '…')) ?></blockquote>
                     <?php else: ?>
-                        <p class="report-target"><em>Reported direct message #<?= (int) $r['dm_message_id'] ?></em></p>
+                        <?php
+                            $dmSender = ($r['dm_sender_display_name'] ?? '') !== '' ? $r['dm_sender_display_name'] : ($r['dm_sender_username'] ?? 'unknown');
+                            $dmHandle = $r['dm_sender_username'] ?? 'unknown';
+                            $dmTitle = ($r['dm_conversation_title'] ?? '') !== '' ? $r['dm_conversation_title'] : (($r['dm_conversation_kind'] ?? '') === 'group' ? 'Group conversation' : 'Direct message');
+                        ?>
+                        <p class="report-target"><em><?= $e($dmTitle) ?> · message #<?= (int) $r['dm_message_id'] ?> from <?= $e($dmSender) ?> (@<?= $e($dmHandle) ?>)</em></p>
+                        <blockquote class="report-excerpt"><?= $e(mb_strimwidth((string) ($r['dm_body'] ?? ''), 0, 240, '…')) ?></blockquote>
                     <?php endif; ?>
                     <?php if (($r['reason'] ?? '') !== ''): ?><p class="muted">“<?= $e($r['reason']) ?>”</p><?php endif; ?>
                     <div class="report-actions">
