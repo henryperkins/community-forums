@@ -66,6 +66,11 @@ final class FeatureFlags
         'provider_registry' => false, // generic OIDC + provider registry expansion (P5-12)
         'invitations' => false,       // invitation lifecycle / invite-based registration (P5-13)
 
+        // ── Phase 5 Gate A — B2 trusted-extension foundation (deploy-dark) ─
+        // Encrypted service-secret registry (SecretVault). Doubles as a write
+        // kill switch: dark blocks store/rotate; reveal/revoke/prune still work.
+        'service_secrets' => false,   // reversible secret vault for providers/webhooks (B2 sub-project 1)
+
         // ── Phase 5 Gate B (reserved; dark until Gate A is accepted) ───────
         'server_extensions' => false, // sandboxed isolated server-extension runtime (P5-05/06)
         'governance' => false,        // operator groups, approvals, access review (P5-10)
