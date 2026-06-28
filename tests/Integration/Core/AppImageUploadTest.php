@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -75,6 +76,23 @@ final class AppImageUploadTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM attachments'));
     }
 
+    public function test_polyglot_image_is_reencoded_before_serving(): void
+    {
+        $user = $this->makeUser(['username' => 'polyglot']);
+        $this->actingAs($user);
+
+        $payload = $this->pngBytes(12, 12) . "<?php echo 'owned'; ?><script>alert(1)</script>";
+        $res = $this->postFile('/upload', 'image', $this->fakeUpload($payload, 'polyglot.png', 'image/png'));
+        $this->assertStatus(200, $res);
+        $json = json_decode($res->body(), true);
+        self::assertTrue($json['ok']);
+
+        $img = $this->get('/media/' . (int) $json['id']);
+        $this->assertStatus(200, $img);
+        self::assertStringNotContainsString('<?php', $img->body());
+        self::assertStringNotContainsString('<script', $img->body());
+    }
+
     public function test_oversized_dimensions_rejected(): void
     {
         $user = $this->makeUser(['username' => 'bigpic']);
@@ -93,6 +111,25 @@ final class AppImageUploadTest extends TestCase
         $res = $this->postFile('/upload', 'image', $this->fakeUpload($this->pngBytes()));
         self::assertNotSame(200, $res->status());
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM attachments'));
+    }
+
+    public function test_upload_flag_pauses_new_uploads_but_existing_media_still_reads(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'pausedmedia']);
+        $user = $this->makeUser(['username' => 'pauseduploader']);
+        $this->actingAs($user);
+
+        $json = json_decode($this->postFile('/upload', 'image', $this->fakeUpload($this->pngBytes()))->body(), true);
+        $mediaId = (int) $json['id'];
+        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'pic', 'body' => "![](/media/{$mediaId})"]);
+
+        (new SettingRepository($this->db))->set('features', ['uploads' => false]);
+        $blocked = $this->postFile('/upload', 'image', $this->fakeUpload($this->pngBytes()));
+        $this->assertStatus(403, $blocked);
+
+        $this->logoutClient();
+        $this->assertStatus(200, $this->get('/media/' . $mediaId));
     }
 
     public function test_held_post_media_is_never_publicly_cacheable(): void

@@ -41,10 +41,12 @@ final class BrandingController extends Controller
 
         $css = ':root{';
         if (self::isHex($primary)) {
-            $css .= '--accent:' . $primary . ';--brand-primary:' . $primary . ';';
+            $contrast = self::contrastToken($primary) ?? '#ffffff';
+            $css .= '--accent:' . $primary . ';--brand-primary:' . $primary . ';--accent-contrast:' . $contrast . ';';
         }
         if (self::isHex($accent)) {
-            $css .= '--accent-2:' . $accent . ';';
+            $contrast = self::contrastToken($accent) ?? '#ffffff';
+            $css .= '--accent-2:' . $accent . ';--brand-accent:' . $accent . ';--brand-accent-contrast:' . $contrast . ';';
         }
         $css .= '}';
 
@@ -80,6 +82,7 @@ final class BrandingController extends Controller
             foreach (['brand_color_primary', 'brand_color_accent', 'brand_logo_path', 'brand_favicon_path', 'brand_theme_default'] as $key) {
                 $settings->set($key, '');
             }
+            $this->bustBrandCache($settings);
             $this->audit($admin->id(), 'reset');
             return $this->redirectWithFlash('/admin/branding', 'Branding was reset to the safe defaults.');
         }
@@ -96,6 +99,12 @@ final class BrandingController extends Controller
         }
         if ($accent !== '' && !self::isHex($accent)) {
             $errors['color_accent'] = 'Use a 6-digit hex colour like #7c3aed.';
+        }
+        if ($primary !== '' && self::isHex($primary) && self::contrastToken($primary) === null) {
+            $errors['color_primary'] = 'Choose a primary colour that supports readable button text.';
+        }
+        if ($accent !== '' && self::isHex($accent) && self::contrastToken($accent) === null) {
+            $errors['color_accent'] = 'Choose an accent colour with enough contrast for UI indicators.';
         }
         $themeDefault = $request->str('theme_default');
         if (!in_array($themeDefault, ['system', 'light', 'dark'], true)) {
@@ -115,12 +124,13 @@ final class BrandingController extends Controller
         }
 
         $settings->set('site_name', $name);
-        $settings->set('brand_color_primary', self::isHex($primary) ? $primary : '');
-        $settings->set('brand_color_accent', self::isHex($accent) ? $accent : '');
+        $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
+        $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
         $settings->set('brand_theme_default', $themeDefault);
 
         $this->storeAsset($admin->id(), $request->file('logo'), 'brand_logo', 'brand_logo_path');
         $this->storeAsset($admin->id(), $request->file('favicon'), 'brand_favicon', 'brand_favicon_path');
+        $this->bustBrandCache($settings);
 
         $this->audit($admin->id(), 'update');
         return $this->redirectWithFlash('/admin/branding', 'Branding updated.');
@@ -151,6 +161,11 @@ final class BrandingController extends Controller
         ]);
     }
 
+    private function bustBrandCache(SettingRepository $settings): void
+    {
+        $settings->set('brand_version', bin2hex(random_bytes(8)));
+    }
+
     private function requireBrandingEnabled(): void
     {
         if (!$this->container->get(FeatureFlags::class)->enabled('branding')) {
@@ -161,5 +176,38 @@ final class BrandingController extends Controller
     private static function isHex(string $v): bool
     {
         return preg_match('/^#[0-9a-fA-F]{6}$/', $v) === 1;
+    }
+
+    private static function contrastToken(string $hex): ?string
+    {
+        $white = self::contrastRatio($hex, '#ffffff');
+        $dark = self::contrastRatio($hex, '#0f1218');
+        if ($white >= 4.5 || $dark >= 4.5) {
+            return $white >= $dark ? '#ffffff' : '#0f1218';
+        }
+        return null;
+    }
+
+    private static function contrastRatio(string $a, string $b): float
+    {
+        $l1 = self::luminance($a);
+        $l2 = self::luminance($b);
+        $lighter = max($l1, $l2);
+        $darker = min($l1, $l2);
+        return ($lighter + 0.05) / ($darker + 0.05);
+    }
+
+    private static function luminance(string $hex): float
+    {
+        $hex = ltrim($hex, '#');
+        $parts = [
+            hexdec(substr($hex, 0, 2)) / 255,
+            hexdec(substr($hex, 2, 2)) / 255,
+            hexdec(substr($hex, 4, 2)) / 255,
+        ];
+        $linear = array_map(static function (float $v): float {
+            return $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4;
+        }, $parts);
+        return 0.2126 * $linear[0] + 0.7152 * $linear[1] + 0.0722 * $linear[2];
     }
 }

@@ -249,4 +249,21 @@ final class AppPasswordResetTest extends TestCase
         ));
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM verifications'));
     }
+
+    public function test_http_forgot_uses_central_password_reset_limiter(): void
+    {
+        $this->config = new \App\Core\Config(array_replace_recursive($this->config->all(), [
+            'rate_limits' => ['password_reset' => [1, 3600]],
+        ]));
+        $this->app = new \App\Core\App($this->config, $this->db, $this->rateLimiter);
+        $this->makeUser(['username' => 'limitreset', 'email' => 'limitreset@example.test']);
+
+        $this->get('/forgot');
+        $first = $this->post('/forgot', ['email' => 'limitreset@example.test']);
+        $this->assertStatus(200, $first);
+
+        $blocked = $this->post('/forgot', ['email' => 'limitreset@example.test']);
+        $this->assertStatus(429, $blocked);
+        $this->assertSeeText($blocked, 'Too many requests');
+    }
 }

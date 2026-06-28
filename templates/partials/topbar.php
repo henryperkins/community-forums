@@ -15,6 +15,9 @@
                 <?php if (!empty($features['dms'])): ?>
                     <a class="topbar-link" href="/messages">Messages</a>
                 <?php endif; ?>
+                <?php if (!empty($features['drafts'])): ?>
+                    <a class="topbar-link" href="/drafts">Drafts</a>
+                <?php endif; ?>
                 <?php if (!empty($features['community'])): ?>
                     <a class="topbar-link" href="/feed">Following</a>
                     <a class="topbar-link" href="/leaderboard">Top</a>

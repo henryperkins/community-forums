@@ -14,7 +14,7 @@ final class SendmailMailer implements Mailer
 {
     public function __construct(
         private string $fromEmail,
-        private string $fromName = 'RetroBoards',
+        private string $fromName = '',
     ) {
     }
 
@@ -31,13 +31,13 @@ final class SendmailMailer implements Mailer
 
         $boundary = 'rb-' . bin2hex(random_bytes(8));
         $messageId = '<' . bin2hex(random_bytes(12)) . '@' . $this->domain() . '>';
-        $from = $this->fromName !== '' ? sprintf('%s <%s>', $this->fromName, $this->fromEmail) : $this->fromEmail;
+        $fromName = $this->encodeName($this->fromName);
+        $from = $fromName !== '' ? sprintf('%s <%s>', $fromName, $this->fromEmail) : $this->fromEmail;
 
         $headers = [
             'From: ' . $from,
             'MIME-Version: 1.0',
             'Message-ID: ' . $messageId,
-            'X-Mailer: RetroBoards',
         ];
 
         if ($htmlBody !== null && $htmlBody !== '') {
@@ -58,6 +58,25 @@ final class SendmailMailer implements Mailer
             throw new MailException('mail() rejected the message for ' . $to);
         }
         return $messageId;
+    }
+
+    /**
+     * Make an operator-supplied display name safe for the From header. The name
+     * now derives from the free-text site_name, so strip CR/LF (header-injection
+     * defence) and RFC 2047-encode it whenever it contains non-ASCII or RFC 5322
+     * special characters (commas, dots, angle brackets, …) that would otherwise
+     * produce a malformed From line and break delivery.
+     */
+    private function encodeName(string $name): string
+    {
+        $name = trim((string) preg_replace('/[\r\n]+/', ' ', $name));
+        if ($name === '') {
+            return '';
+        }
+        if (preg_match('/[^\x20-\x7e]/', $name) || preg_match('/[(),:;<>@\\\\".\[\]]/', $name)) {
+            return '=?UTF-8?B?' . base64_encode($name) . '?=';
+        }
+        return $name;
     }
 
     private function domain(): string

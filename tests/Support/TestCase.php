@@ -85,16 +85,42 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * POST with custom server variables, used for trusted-proxy and client-IP
+     * rate-limit coverage.
+     *
+     * @param array<string,mixed> $body
+     * @param array<string,string> $server
+     */
+    protected function postWithServer(string $path, array $body, array $server, bool $withToken = true): Response
+    {
+        if ($withToken && !array_key_exists('_token', $body)) {
+            $body['_token'] = $this->csrfToken();
+        }
+        return $this->requestWithServer('POST', $path, $body, [], $server);
+    }
+
+    /**
      * @param array<string,mixed> $body
      * @param array<string,mixed> $query
      * @param array<string,mixed> $files
      */
     protected function request(string $method, string $path, array $body, array $query, array $files = []): Response
     {
-        $request = new Request($method, $path, $query, $body, $this->cookies, [
+        return $this->requestWithServer($method, $path, $body, $query, [], $files);
+    }
+
+    /**
+     * @param array<string,mixed> $body
+     * @param array<string,mixed> $query
+     * @param array<string,string> $server
+     * @param array<string,mixed> $files
+     */
+    protected function requestWithServer(string $method, string $path, array $body, array $query, array $server = [], array $files = []): Response
+    {
+        $request = new Request($method, $path, $query, $body, $this->cookies, array_merge([
             'REMOTE_ADDR' => '127.0.0.1',
             'HTTP_USER_AGENT' => 'phpunit',
-        ], $files);
+        ], $server), $files);
 
         $response = $this->app->handle($request);
         $this->applyCookies($response);

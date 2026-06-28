@@ -94,12 +94,33 @@ final class AuthControllerTest extends TestCase
         $this->makeUser(['email' => 'target@example.test', 'password' => 'password123']);
         $this->get('/login');
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $this->post('/login', ['email' => 'target@example.test', 'password' => 'wrong']);
         }
         $blocked = $this->post('/login', ['email' => 'target@example.test', 'password' => 'wrong']);
         $this->assertStatus(429, $blocked);
         $this->assertSeeText($blocked, 'Too many attempts');
+    }
+
+    public function test_login_limiter_uses_trusted_forwarded_client_ip(): void
+    {
+        $this->config = new \App\Core\Config(array_replace_recursive($this->config->all(), [
+            'trusted_proxies' => ['10.0.0.0/8'],
+            'rate_limits' => ['login' => [1, 900]],
+        ]));
+        $this->app = new \App\Core\App($this->config, $this->db, $this->rateLimiter);
+        $this->makeUser(['email' => 'proxy@example.test', 'password' => 'password123']);
+        $this->get('/login');
+
+        $serverA = ['REMOTE_ADDR' => '10.0.0.5', 'HTTP_X_FORWARDED_FOR' => '198.51.100.10'];
+        $serverB = ['REMOTE_ADDR' => '10.0.0.5', 'HTTP_X_FORWARDED_FOR' => '198.51.100.11'];
+        $this->postWithServer('/login', ['email' => 'proxy@example.test', 'password' => 'wrong'], $serverA);
+
+        $blocked = $this->postWithServer('/login', ['email' => 'proxy@example.test', 'password' => 'wrong'], $serverA);
+        $this->assertStatus(429, $blocked);
+
+        $otherClient = $this->postWithServer('/login', ['email' => 'proxy@example.test', 'password' => 'wrong'], $serverB);
+        $this->assertStatus(422, $otherClient);
     }
 
     public function test_registration_is_rate_limited(): void

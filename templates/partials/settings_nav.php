@@ -8,8 +8,11 @@ $items = [
     '/settings/appearance' => 'Appearance',
     '/settings/preferences' => 'Reading',
     '/settings/composing' => 'Composing',
-    '/settings/notifications' => 'Notifications',
 ];
+if (!empty($features['drafts'])) {
+    $items['/drafts'] = 'Drafts';
+}
+$items['/settings/notifications'] = 'Notifications';
 if (!empty($features['oauth'])) {
     $items['/settings/connections'] = 'Connections';
 }

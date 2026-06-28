@@ -13,8 +13,8 @@ use App\Domain\User;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
 use App\Repository\UserRepository;
-use App\Security\RateLimiter;
 use App\Service\DirectMessageService;
+use App\Service\RateLimitService;
 
 /**
  * Direct-message UI (P2-07): conversation list, a single conversation (marks
@@ -24,8 +24,6 @@ use App\Service\DirectMessageService;
  */
 final class ConversationController extends Controller
 {
-    private const SEND_MAX = 20;
-    private const SEND_WINDOW = 60;
     private const REASONS = ['spam', 'harassment', 'off_topic', 'nsfw', 'illegal', 'other'];
 
     public function index(Request $request): Response
@@ -46,7 +44,7 @@ final class ConversationController extends Controller
     public function create(Request $request): Response
     {
         $user = $this->requireDms();
-        $this->throttle($user);
+        $this->throttle($request, $user);
 
         $to = trim((string) $request->str('to'));
         $body = (string) $request->post('body', '');
@@ -104,7 +102,7 @@ final class ConversationController extends Controller
     public function reply(Request $request, array $params): Response
     {
         $user = $this->requireDms();
-        $this->throttle($user);
+        $this->throttle($request, $user);
         $conversationId = (int) ($params['id'] ?? 0);
 
         try {
@@ -139,13 +137,8 @@ final class ConversationController extends Controller
         return $this->requireUser();
     }
 
-    private function throttle(User $user): void
+    private function throttle(Request $request, User $user): void
     {
-        $limiter = $this->container->get(RateLimiter::class);
-        $key = 'dm-send:' . $user->id();
-        if ($limiter->tooManyAttempts($key, self::SEND_MAX)) {
-            throw new \App\Core\HttpException(429, 'You are sending messages too quickly. Please slow down.');
-        }
-        $limiter->hit($key, self::SEND_WINDOW);
+        $this->container->get(RateLimitService::class)->enforce('dm', $request, $user);
     }
 }

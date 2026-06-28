@@ -52,7 +52,7 @@ return [
         // fails closed (in-app notifications still deliver).
         'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
         'from' => Env::get('MAIL_FROM', ''),
-        'from_name' => Env::get('MAIL_FROM_NAME', 'RetroBoards'),
+        'from_name' => Env::get('MAIL_FROM_NAME', ''),
     ],
 
     'paths' => [
