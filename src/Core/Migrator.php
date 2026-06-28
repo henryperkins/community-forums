@@ -107,6 +107,42 @@ final class Migrator
                 PRIMARY KEY (name)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
         );
+        $this->normalizeLedgerColumns();
+    }
+
+    private function normalizeLedgerColumns(): void
+    {
+        $columns = $this->schemaMigrationColumns();
+        if (isset($columns['name'])) {
+            if (isset($columns['version'])) {
+                $this->pdo->exec(
+                    "UPDATE schema_migrations
+                        SET name = version
+                      WHERE (name IS NULL OR name = '')
+                        AND version IS NOT NULL
+                        AND version <> ''"
+                );
+            }
+            return;
+        }
+
+        if (isset($columns['version'])) {
+            $this->pdo->exec('ALTER TABLE schema_migrations CHANGE COLUMN version name VARCHAR(255) NOT NULL');
+        }
+    }
+
+    /** @return array<string,true> */
+    private function schemaMigrationColumns(): array
+    {
+        $rows = $this->pdo->query('SHOW COLUMNS FROM schema_migrations')->fetchAll(PDO::FETCH_ASSOC);
+        $columns = [];
+        foreach ($rows as $row) {
+            $field = (string) ($row['Field'] ?? '');
+            if ($field !== '') {
+                $columns[$field] = true;
+            }
+        }
+        return $columns;
     }
 
     /** @return list<string> */

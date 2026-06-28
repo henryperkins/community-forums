@@ -50,6 +50,8 @@ npm run evidence       # prepare.sh resets+seeds retroboards_e2e, then runs Play
 touching `retroboards` dev or `retroboards_test`), migrates it, and seeds a small
 community (`seed.php`). Playwright then boots `php -S` against that DB and captures
 the screenshots. Override the database or port with `DB_DATABASE` / `E2E_PORT`.
+For a differently named local DB container/client, keep the normal app DB env and
+set `DB_RESET_CONTAINER`, `DB_ROOT_PASSWORD`, and `DB_MYSQL_CLIENT`.
 
 ## CI
 

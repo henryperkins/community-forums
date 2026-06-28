@@ -1,6 +1,6 @@
 # Phase 4 Status
 
-**Status:** engineering closeout complete with explicit deferrals
+**Status:** engineering closeout complete with explicit deferrals; product-owner accepted as the Phase 5 entry baseline on 2026-06-28
 **Last updated:** 2026-06-28  
 **Branch:** `main`
 **Suite:** `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green
@@ -23,13 +23,16 @@ advanced-community slice:
 ## Explicit Deferrals
 
 `docs/adr/0003-phase-4-closeout-deferrals.md` is the Phase 4 carryover ledger.
+The 2026-06-28 Phase 5 release-train instruction accepts these deferrals as
+explicit carryovers, not shipped behavior.
 The following are not shipped behavior:
 
 - Custom badge rule engine / preview / backfill / revoke UI.
 - Board/thread/post reference cards and persisted `content_references` rendering.
 - Moderator split/merge services and redirect flows.
 - Gate B rich-expression and automation surfaces: previews/embeds, expanded non-image files, polls, custom emoji, slash-command/GIF insertion, automated since-last-read context, profile-media/signature/board-folder polish, and saved feed organization.
-- Production browser/a11y/load/SEO/rollback artifacts beyond the local automated suite.
+- Production rollout/a11y/load/SEO artifacts beyond the local automated suite,
+  Playwright browser capture, and backup/restore rehearsal.
 
 ## Evidence Index
 
@@ -39,6 +42,10 @@ The following are not shipped behavior:
 - Focused Phase 4 regressions: `tests/Integration/Core/AppPhase4GateATest.php`.
 - Deploy-dark flag regression: `tests/Integration/Core/AppFeatureFlagTest.php`.
 - Markdown sanitizer regression: `tests/Unit/SanitizationTest.php`.
+- Browser evidence: `cd tests/browser && npm run evidence` → 10 Playwright tests
+  across desktop/mobile, refreshing `docs/evidence/browser/{desktop,mobile}`.
+- Backup/restore evidence: `tests/backup/rehearse.sh` →
+  `docs/evidence/backup-restore/rehearsal.log`, current result 53 tables / 83 rows.
 - Adjacent regression sweeps covered by full suite: `AppFollowFeedTest`, `AppLeaderboardTest`, `AppReactionTest`, `AppBadgeSolvedTest`, `AppDirectMessageTest`, `AppPostingTest`, `AppModeratorScopeTest`, `AppModerationTest`.
 
 ## Operating Notes

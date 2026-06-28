@@ -2,9 +2,9 @@
 -- 1. Build + seed source DB (retroboards_backup_src)
    seeded.
 -- 2. Snapshot source
-   34 tables, 76 rows.
+   53 tables, 83 rows.
 -- 3. Back up with mariadb-dump
-   wrote /tmp/tmp.9LzsjDWfvL/retroboards-backup.sql (49197 bytes).
+   wrote /tmp/tmp.3mW5tVlAoH/retroboards-backup.sql (74673 bytes).
 -- 4. Restore into a fresh DB (retroboards_backup_dst)
    restored.
 -- 5. Snapshot restore + diff vs source
@@ -18,4 +18,4 @@
    PASS: home returned 200 and rendered restored content.
 
 == REHEARSAL PASSED ==
-Backup: 49197 bytes · 34 tables · 76 rows · restore verified byte-for-byte by row count + CHECKSUM TABLE, schema intact, app boots.
+Backup: 74673 bytes · 53 tables · 83 rows · restore verified byte-for-byte by row count + CHECKSUM TABLE, schema intact, app boots.

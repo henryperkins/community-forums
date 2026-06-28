@@ -12,8 +12,10 @@
 #   7. reconcile counters/reputation         (`repair`, runbook step 4)
 #   8. boot the app on the restored DB        (home page serves seeded content)
 #
-# Uses the local rb-mariadb dev container (no host MySQL client needed) and the
-# dedicated retroboards_backup_{src,dst} databases — never dev/test/prod data.
+# Uses the local rb-mariadb dev container by default (no host MySQL client needed)
+# and the dedicated retroboards_backup_{src,dst} databases — never dev/test/prod
+# data. Override DB_CONTAINER / DB_ROOT_PASSWORD / DB_MYSQL_CLIENT /
+# DB_MYSQLDUMP_CLIENT when a checkout uses a differently named local DB container.
 #
 #   tests/backup/rehearse.sh                 # human run
 #   tests/backup/rehearse.sh | tee docs/evidence/backup-restore/rehearsal.log
@@ -21,7 +23,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/../.."   # repo root
 
-CONTAINER=rb-mariadb
+CONTAINER="${DB_CONTAINER:-rb-mariadb}"
+ROOT_USER="${DB_ROOT_USER:-root}"
+ROOT_PASSWORD="${DB_ROOT_PASSWORD:-rootpw}"
+DB_USER="${DB_USERNAME:-retro}"
+MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
+MYSQLDUMP_CLIENT="${DB_MYSQLDUMP_CLIENT:-mariadb-dump}"
 SRC=retroboards_backup_src
 DST=retroboards_backup_dst
 PORT=8021
@@ -29,8 +36,8 @@ DUMP="$(mktemp -d)/retroboards-backup.sql"
 
 # rootpw is the fixed local rb-mariadb dev-container password (see project README);
 # this script only touches throwaway rehearsal databases — never a production credential.
-myq()   { docker exec -i "$CONTAINER" mariadb     -uroot -prootpw "$@" 2>/dev/null; }
-mydump(){ docker exec    "$CONTAINER" mariadb-dump -uroot -prootpw "$@" 2>/dev/null; }
+myq()   { docker exec -i "$CONTAINER" "$MYSQL_CLIENT"     "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+mydump(){ docker exec    "$CONTAINER" "$MYSQLDUMP_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
 
 snapshot() {  # snapshot <db> <outfile>  →  "table count checksum" per base table, sorted
   local db="$1" out="$2" tables union cklist
@@ -54,7 +61,7 @@ echo "== Backup → restore rehearsal (PHASE_2_RUNBOOK §7) =="
 echo "-- 1. Build + seed source DB ($SRC)"
 myq -e "DROP DATABASE IF EXISTS \`$SRC\`;
         CREATE DATABASE \`$SRC\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        GRANT ALL PRIVILEGES ON \`$SRC\`.* TO 'retro'@'%'; FLUSH PRIVILEGES;"
+        GRANT ALL PRIVILEGES ON \`$SRC\`.* TO '$DB_USER'@'%'; FLUSH PRIVILEGES;"
 DB_DATABASE="$SRC" php bin/console migrate >/dev/null
 DB_DATABASE="$SRC" php tests/browser/seed.php >/dev/null
 echo "   seeded."
@@ -73,7 +80,7 @@ echo "   wrote $DUMP ($DUMP_BYTES bytes)."
 echo "-- 4. Restore into a fresh DB ($DST)"
 myq -e "DROP DATABASE IF EXISTS \`$DST\`;
         CREATE DATABASE \`$DST\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        GRANT ALL PRIVILEGES ON \`$DST\`.* TO 'retro'@'%'; FLUSH PRIVILEGES;"
+        GRANT ALL PRIVILEGES ON \`$DST\`.* TO '$DB_USER'@'%'; FLUSH PRIVILEGES;"
 myq "$DST" < "$DUMP"
 echo "   restored."
 

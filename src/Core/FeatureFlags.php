@@ -52,6 +52,25 @@ final class FeatureFlags
         'reputation_ledger' => false, // idempotent reputation events + windowed ranks
         'badge_rules' => false,       // custom badge rules/backfill/revoke history
         'community_memory' => false,  // summaries, related topics, wiki revisions
+
+        // ── Phase 5 Gate A (deploy-dark; foundation only, no behavior yet) ─
+        // These gate availability of the Phase 5 ecosystem/identity/governance
+        // subsystems. They stay OFF until each workstream has its Milestone-0
+        // trust approvals and acceptance evidence (PHASE_5_PLAN §2/§13). The
+        // foundation migrations (0049–0053) are additive and inert; nothing
+        // reads them while these flags are dark.
+        'package_registry' => false,  // signed registry, package catalogue/install/update (P5-01/02/04)
+        'package_themes' => false,    // declarative theme packages + preview/safe-mode (P5-03)
+        'capabilities' => false,      // DB-backed roles/capability resolver, scoped grants (P5-08/09)
+        'passkeys' => false,          // WebAuthn registration/sign-in/step-up (P5-11)
+        'provider_registry' => false, // generic OIDC + provider registry expansion (P5-12)
+        'invitations' => false,       // invitation lifecycle / invite-based registration (P5-13)
+
+        // ── Phase 5 Gate B (reserved; dark until Gate A is accepted) ───────
+        'server_extensions' => false, // sandboxed isolated server-extension runtime (P5-05/06)
+        'governance' => false,        // operator groups, approvals, access review (P5-10)
+        'service_principals' => false,// remote-app service identities (P5-14)
+        'verified_links' => false,    // verified profile links + richer fields (P5-15)
     ];
 
     /** @var array<string,bool>|null */

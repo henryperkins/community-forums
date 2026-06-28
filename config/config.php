@@ -197,6 +197,8 @@ return [
         'upload' => [40, 3600],
         'composer_preview' => [120, 600],
         'password_reset' => [5, 3600],
+        'mfa_login' => [5, 900],
+        'mfa_settings' => [10, 900],
     ],
     // Trusted reverse-proxy CIDRs whose X-Forwarded-For we honour for client IP.
     'trusted_proxies' => array_values(array_filter(array_map('trim', explode(',', (string) Env::get('TRUSTED_PROXIES', ''))))),

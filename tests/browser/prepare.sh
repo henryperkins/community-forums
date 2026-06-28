@@ -9,18 +9,23 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."   # repo root
 
 DB="${DB_DATABASE:-retroboards_e2e}"
+RESET_CONTAINER="${DB_RESET_CONTAINER:-rb-mariadb}"
+ROOT_USER="${DB_ROOT_USER:-root}"
+ROOT_PASSWORD="${DB_ROOT_PASSWORD:-rootpw}"
+DB_USER="${DB_USERNAME:-retro}"
+MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
 
-if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx 'rb-mariadb'; then
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$RESET_CONTAINER"; then
   # rootpw is the fixed local rb-mariadb dev-container password (see project README);
   # it only resets a throwaway local database and is never a production credential.
-  echo "==> Resetting database '$DB' (rb-mariadb container)"
-  docker exec rb-mariadb mariadb -uroot -prootpw -e \
+  echo "==> Resetting database '$DB' ($RESET_CONTAINER container)"
+  docker exec "$RESET_CONTAINER" "$MYSQL_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" -e \
     "DROP DATABASE IF EXISTS \`$DB\`;
      CREATE DATABASE \`$DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-     GRANT ALL PRIVILEGES ON \`$DB\`.* TO 'retro'@'%';
+     GRANT ALL PRIVILEGES ON \`$DB\`.* TO '$DB_USER'@'%';
      FLUSH PRIVILEGES;"
 else
-  echo "==> No rb-mariadb container; assuming database '$DB' already exists (CI service)."
+  echo "==> No $RESET_CONTAINER container; assuming database '$DB' already exists (CI service)."
 fi
 
 echo "==> Migrating"

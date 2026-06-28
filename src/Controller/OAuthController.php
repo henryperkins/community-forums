@@ -11,6 +11,7 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\OAuthIdentityRepository;
 use App\Service\AccountService;
+use App\Service\MfaService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\OAuthService;
 use Throwable;
@@ -159,6 +160,19 @@ final class OAuthController extends Controller
     {
         switch ($outcome['action']) {
             case 'login':
+                if ($this->container->get(MfaService::class)->enabledForUser($outcome['user']->id())) {
+                    $token = $this->container->get(MfaService::class)
+                        ->beginLoginChallenge($outcome['user'], $this->request(), '/');
+                    $response = $this->view('auth/mfa', [
+                        'token' => $token,
+                        'next' => '/',
+                        'errors' => [],
+                    ]);
+                    break;
+                }
+                $this->session()->login($outcome['user']);
+                $response = $this->redirectWithFlash('/', 'Signed in with ' . ucfirst($provider) . '.');
+                break;
             case 'created':
                 $this->session()->login($outcome['user']);
                 $response = $this->redirectWithFlash('/', $outcome['action'] === 'created'

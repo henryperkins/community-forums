@@ -3,7 +3,7 @@
 $here = $request_path ?? '';
 $items = [
     '/settings/account' => 'Profile',
-    '/settings/security' => 'Password',
+    '/settings/security' => 'Security',
     '/settings/privacy' => 'Privacy',
     '/settings/appearance' => 'Appearance',
     '/settings/preferences' => 'Reading',
