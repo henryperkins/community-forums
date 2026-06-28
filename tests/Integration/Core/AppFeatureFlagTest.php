@@ -41,6 +41,31 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue($overridden->enabled('community'));
     }
 
+    public function test_phase5_foundation_flags_default_dark(): void
+    {
+        // The Phase 5 ecosystem/identity/governance subsystems deploy dark until
+        // their Milestone-0 trust approvals + acceptance evidence land
+        // (PHASE_5_PLAN §2/§13). The 0049–0053 foundation migrations are additive
+        // and inert; no behavior may turn on merely because the tables exist.
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        $phase5 = [
+            // Gate A
+            'package_registry', 'package_themes', 'capabilities', 'passkeys',
+            'provider_registry', 'invitations',
+            // Gate B (reserved)
+            'server_extensions', 'governance', 'service_principals', 'verified_links',
+        ];
+        foreach ($phase5 as $flag) {
+            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
+        }
+
+        // The override seam still works per-flag without affecting its neighbours.
+        $this->setFlags(['capabilities' => true]);
+        $overridden = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($overridden->enabled('capabilities'));
+        self::assertFalse($overridden->enabled('passkeys'), 'enabling one Phase 5 flag must not enable others');
+    }
+
     public function test_group_dms_flag_gates_group_creation_and_management(): void
     {
         // group_dms defaults dark; the legacy `dms` flag defaults on. Group DMs

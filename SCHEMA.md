@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.14 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
+**Status:** v1.15 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -72,8 +72,33 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 52 | `content_references` | Composer / Knowledge | 4 | PHASE_4_PLAN §8 |
 | 53 | `thread_operations` | Moderation / Knowledge | 4 | PHASE_4_PLAN §8 |
 | 54 | `thread_redirects` | Moderation / Knowledge | 4 | PHASE_4_PLAN §8 |
+| 55 | `package_registries` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #1 |
+| 56 | `registry_trust_keys` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #1 |
+| 57 | `package_publishers` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #2 |
+| 58 | `packages` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #2 |
+| 59 | `package_releases` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #2 |
+| 60 | `installed_packages` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #2/#3 |
+| 61 | `installed_package_permissions` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #4 |
+| 62 | `package_history` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #3 |
+| 63 | `package_advisories` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #5 |
+| 64 | `local_package_blocks` | Ecosystem | 5 | PHASE_5_PLAN §3 (local emergency control) |
+| 65 | `capabilities` | Governance | 5 | PHASE_5_PLAN §8.2 #8 |
+| 66 | `roles` | Governance | 5 | PHASE_5_PLAN §8.2 #8 |
+| 67 | `role_capabilities` | Governance | 5 | PHASE_5_PLAN §8.2 #8 |
+| 68 | `role_assignments` | Governance | 5 | PHASE_5_PLAN §8.2 #9 |
+| 69 | `role_assignment_history` | Governance | 5 | PHASE_5_PLAN §8.2 #9/#20 |
+| 70 | `protected_owners` | Governance | 5 | PHASE_5_PLAN §8.2 #13 |
+| 71 | `owner_transfer_history` | Governance | 5 | PHASE_5_PLAN §8.2 #13 |
+| 72 | `webauthn_credentials` | Identity | 5 | PHASE_5_PLAN §8.2 #14 |
+| 73 | `webauthn_challenges` | Identity | 5 | PHASE_5_PLAN §8.2 #14 |
+| 74 | `identity_providers` | Identity | 5 | PHASE_5_PLAN §8.2 #15 |
+| 75 | `provider_aliases` | Identity | 5 | PHASE_5_PLAN §8.2 #15 |
+| 76 | `invitations` | Identity | 5 | PHASE_5_PLAN §8.2 #16 |
+| 77 | `invitation_redemptions` | Identity | 5 | PHASE_5_PLAN §8.2 #16 |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
+>
+> Tables 55–77 are the **Phase 5 foundation** (migrations `0049`–`0053`): additive, **deploy-dark**, and **inert** — created so no Gate A feature depends on an undocumented shape (Milestone 1), but read/written by no application code until each subsystem's flag is enabled after its Milestone-0 trust approvals (see §5A and `PHASE_5_STATUS.md`).
 
 ---
 
@@ -750,6 +775,57 @@ Gate A closeout note (2026-06-28): `custom badge rules`, `content_references` re
 
 ---
 
+## 5A. Phase 5 foundation — ecosystem, identity & governance (deploy-dark)
+
+Migrations `0049`–`0053` (additive; one reversible conversion). This is the
+**schema-reconciliation** slice of Phase 5 Milestone 1: the data shape exists so no
+Gate A feature depends on an undocumented table/column, but it is **inert** — every
+Phase 5 flag defaults dark (`FeatureFlags::DEFAULTS`) and no application code reads
+or writes these tables yet. Per `PHASE_5_PLAN` §2/§7, the registry trust roots,
+signing-key custody, WebAuthn RP ID, OIDC provider choice, isolation profile,
+numeric budgets, and permission taxonomy are **owner-approved Milestone-0 policy**
+and are deliberately **not** encoded here; private trust-root/signing keys never live
+in the application DB (§8.2 #1). "Inert schema is not evidence" of a shipped feature
+(DESIGN §13) — see `PHASE_5_STATUS.md` and `docs/adr/0004-phase-5-entry-and-carryover.md`.
+
+Modified existing table:
+
+- `oauth_identities.provider` **converted `ENUM('google','apple','github')` → `VARCHAR(64)`** (migration `0052`, §8.2 #15) so new providers arrive by configuration, not a schema ALTER. Existing rows keep their exact string values and the `uq_provider_identity (provider, provider_user_id)` unique key is retained. Added `provider_config_id BIGINT UNSIGNED NULL` + `idx_oauth_provider_config` + FK → `identity_providers(id)` ON DELETE SET NULL as inert registry linkage (uniqueness still derives from the provider string until the Milestone-5 repoint). This is the documented exception to "strictly additive" (§3 def-of-done; reversible in `down()` while the feature is dark).
+
+New tables — **ecosystem / packages** (`0049`, §8.2 #1–5):
+
+- `package_registries(id, source_id, display_name, base_url, is_enabled, last_snapshot_digest, last_snapshot_at, snapshot_expires_at, created_at, updated_at)` with unique `source_id`; canonical, globally-namespaced registry sources with snapshot freshness/expiry.
+- `registry_trust_keys(id, registry_id, key_id, algorithm, public_key, status, valid_from, valid_until, revoked_at, revoked_reason, created_at)` with unique `(registry_id, key_id)` and registry FK; **PUBLIC** signing-key material only, with rotation/revocation.
+- `package_publishers(id, publisher_uid, display_name, verified_at, status, created_at, updated_at)` with unique `publisher_uid`.
+- `packages(id, package_uid, registry_id, publisher_id, name, type, trust_class, advisory_status, latest_release_id, created_at, updated_at)` with unique `package_uid`, registry/publisher FKs; registry identity, trust class never implied by installability. `latest_release_id` is a denormalised pointer (no FK — avoids a cycle with releases).
+- `package_releases(id, package_id, version, digest, source_url, license, core_min, core_max, manifest_json, dependency_json, signature, signed_key_id, review_status, channel, advisory_status, published_at, created_at)` with unique `(package_id, version)`, digest index, package FK; **immutable** releases, review bound to an exact digest.
+- `installed_packages(id, package_id, release_id, digest, source_registry_id, publisher_id, trust_class, review_status, state, health, compat_min, compat_max, installed_by, installed_at, updated_at)` with unique `package_id` and FKs; local install state kept **separate** from registry metadata so a registry rollback never rewrites an installed digest.
+- `installed_package_permissions(id, installed_package_id, kind, permission_key, risk_class, declared, granted, granted_at, granted_by)` with unique `(installed_package_id, kind, permission_key)` and FKs; declared = manifest ceiling, granted = actual authority (preserved until re-consent).
+- `package_history(id, package_id, installed_package_id, event, actor_id, prior_version, new_version, prior_digest, new_digest, permission_snapshot_json, approval_ref, failure_stage, detail, created_at)` with package/actor FKs; `installed_package_id` carries **no** FK so history survives uninstall.
+- `package_advisories(id, advisory_uid, registry_id, package_id, affected_version_range, affected_digest, severity, action, summary, signed_evidence, issued_at, acknowledged_at, acknowledged_by, created_at)` with unique `advisory_uid` and FKs; caches the signed advisory the install relied on.
+- `local_package_blocks(id, digest, package_uid, reason, created_by, created_at)` with digest/package indexes; registry-independent local emergency blocklist.
+
+New tables — **governance / least-privilege** (`0050`, §8.2 #8/#9/#13):
+
+- `capabilities(id, capability_key, namespace, scope_type, risk_class, is_delegable, is_protected, source, source_version, description, retired_at, created_at)` with unique `capability_key`; the catalogue is **seeded empty** (taxonomy is Milestone-0 owner policy, shipped with the resolver).
+- `roles(id, role_key, name, kind, is_protected, role_rank, version, description, created_by, created_at, updated_at)` with unique `role_key`; **seeds 4 protected system roles** `system.guest|user|moderator|admin` with `role_rank` 0/10/20/30 (maps the `boards.post_min_role` floor). (`role_rank`, not `rank` — reserved in MySQL 8.)
+- `role_capabilities(role_id, capability_id, created_at)` PK `(role_id, capability_id)`, FKs to roles/capabilities.
+- `role_assignments(id, subject_type, subject_id, role_id, scope_type, scope_id, grantor_id, reason, approval_ref, starts_at, ends_at, revoked_at, revoked_by, assignment_version, created_at)` with subject/role/scope/expiry indexes and role/grantor/revoker FKs; `subject_id`/`scope_id` are polymorphic (no FK); resolver enforces `ends_at` directly (expiry never waits on a cleanup job).
+- `role_assignment_history(id, assignment_id, event, actor_id, subject_type, subject_id, role_id, scope_type, scope_id, before_json, after_json, reason, created_at)` — immutable before/after audit.
+- `protected_owners(id, user_id, is_active, recovery_status, designated_by, designated_at, created_at)` with unique `user_id` and FKs; makes the protected-owner set explicit so the last-active-owner invariant is enforceable transactionally.
+- `owner_transfer_history(id, from_user_id, to_user_id, actor_id, reason, created_at)` with FKs.
+
+New tables — **identity / auth** (`0051`–`0053`, §8.2 #14/#15/#16):
+
+- `webauthn_credentials(id, user_id, credential_id, public_key, sign_count, aaguid, transports, is_discoverable, is_backup_eligible, is_backed_up, nickname, created_at, last_used_at, revoked_at)` with unique `credential_id` (VARBINARY) and user FK; **PUBLIC** credential material only — private keys never reach the server.
+- `webauthn_challenges(id, user_id, session_token_hash, purpose, challenge, created_at, expires_at, consumed_at)` with user FK; one-time, short-lived, purpose/session-bound; `user_id` NULL = usernameless/discoverable login.
+- `identity_providers(id, provider_key, display_name, protocol, type, issuer, discovery_url, jwks_uri, jwks_cache_json, jwks_cached_at, client_id, client_secret_ref, claim_map_json, is_enabled, health_status, health_checked_at, created_at, updated_at)` with unique `provider_key`; **seeds google/apple/github** as dark `builtin` rows. `client_secret_ref` is a reference into the encrypted secret service — **never plaintext**.
+- `provider_aliases(id, alias, provider_key, created_at)` with unique `alias`; maps historical provider strings to canonical keys so the enum→registry migration never duplicates/orphans an identity. Seeds google/apple/github.
+- `invitations(id, token_hash, created_by, email, domain, onboarding_role_id, onboarding_board_id, max_uses, used_count, expires_at, revoked_at, revoked_by, created_at)` with unique `token_hash` (sha256 — **no raw token column**) and creator/revoker/role/board FKs; an invitation is onboarding evidence, not authority (`onboarding_role_id` is non-privileged only, enforced in code).
+- `invitation_redemptions(id, invitation_id, user_id, ip, redeemed_at)` with FKs; `ip` packed via `inet_pton` (project convention). Redemption is atomic and cannot exceed `max_uses`.
+
+---
+
 ## 6. Phase map (suggested build cut)
 
 This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `api_tokens`, and `email_deliveries` have DDL above, but its remaining tables (TOTP/recovery, appeals, automation-rules, `drafts`, bookmark-folders, custom-profile-fields, and a durable webhook-delivery ledger) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
@@ -758,7 +834,7 @@ This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
 - **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` (durable delivery), `api_tokens`, plus the TOTP/recovery, appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here).
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
-- **Phase 5 (ecosystem, identity & governance):** signed-package/manifest, custom roles/capabilities, passkey credentials, generic-OIDC provider config, invitations, service principals, and verified-link tables. DDL in PHASE_5_PLAN.
+- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #6/#7/#10/#11/#12/#17/#18/#19) stays in PHASE_5_PLAN until its workstream lands.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
 
@@ -806,7 +882,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
-| v1.14 | 2026-06-28 | Phase 4 closeout reconciliation: recorded schema-only deferrals for badge rules, content reference cards, and split/merge services in ADR 0003; noted implemented app behavior for summary retire/restore/source display, wiki revert, and tag merge/visibility. No DDL change. |
+| v1.15 | 2026-06-28 | **Phase 5 foundation (Milestone 1 schema reconciliation).** Documented additive deploy-dark migrations `0049`–`0053` in new **§5A**: registry/packages/releases/installs/permissions/history/advisories/local-blocks (§8.2 #1–5), capability registry + protected roles (4 seeded system anchors) + scoped assignments/audit + protected-owner authority (§8.2 #8/#9/#13), WebAuthn credentials/challenges (§8.2 #14), identity-provider registry + the `oauth_identities.provider` **ENUM→VARCHAR(64)** widen + `provider_config_id` linkage (§8.2 #15), and invitations/redemptions (§8.2 #16). Added table-index rows 55–77. Tables are inert (no app reads/writes; flags dark) and carry **no** Milestone-0 trust policy. |
 | v1.13 | 2026-06-28 | Reconciled Phase 4 Gate A migration `0048`: documented additive status/snooze/assignment, board tag/wiki toggles, group-DM interval columns/events, canonical `reputation_events`, tag tables, badge-rule/audit tables, summaries/related/wiki revision tables, reference metadata, and split/merge operation/redirect tables. Removed now-committed status/snooze items from §8 foreshadowing. |
 | v1.12 | 2026-06-26 | Gave the Phase-2 **admin announcements/broadcast** feature a schema home (§7 #13): added `'announcement'` to `notifications.type` (now 11 values) for the in-app broadcast/system notice; documented the banner in `settings` (`site_announcement`), the pinned announcement as a pinned thread, and the broadcast email via `email_deliveries.kind='system'` — no new table. Noted the `categories` default-collapsed flag as a Phase-3 cheap flag (§8); de-referenced the not-yet-created `2026-06-20-auth-design.md` (sessions DDL is consolidated in §1). |
 | v1.11 | 2026-06-26 | Foreshadowed a **post-submission idempotency** column in §8 (COMPOSER §9.2/§14.3 uses a short-lived/transient dedupe; no column committed in v1). Doc-only; no table shape change. |
