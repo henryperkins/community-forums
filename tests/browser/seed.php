@@ -84,6 +84,7 @@ $db->transaction(function () use ($settings, $categories, $boards, $mods, $membe
     $settings->set('site_name', 'RetroBoards');
     $settings->set('registration_mode', 'open');
     $settings->set('installed_at', gmdate('Y-m-d H:i:s'));
+    $settings->set('features', ['api_tokens' => true]); // surface the B2 API-token admin page for evidence
 
     // Accounts.
     $adminId = $makeUser('admin', 'Site Admin', 'admin');

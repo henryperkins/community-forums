@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Controller\AccountController;
+use App\Controller\AdminApiTokenController;
 use App\Controller\AdminController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
 use App\Controller\Api\MeController as ApiMeController;
@@ -1006,6 +1007,9 @@ final class App
         $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
+        $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
+        $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
+        $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
         $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
