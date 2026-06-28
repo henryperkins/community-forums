@@ -61,6 +61,7 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\FollowRepository;
 use App\Repository\IdempotencyRepository;
+use App\Repository\MfaRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\OAuthIdentityRepository;
 use App\Repository\PostRepository;
@@ -85,7 +86,9 @@ use App\Security\FileRateLimiter;
 use App\Security\PasswordHasher;
 use App\Security\RateLimiter;
 use App\Security\SecurityHeaders;
+use App\Security\SecretBox;
 use App\Security\Session;
+use App\Security\Totp;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
@@ -100,6 +103,7 @@ use App\Service\DirectMessageService;
 use App\Service\FeedService;
 use App\Service\FollowService;
 use App\Service\ModerationService;
+use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
 use App\Service\OAuth\ProviderRegistry;
@@ -498,6 +502,8 @@ final class App
         $c->bind(HtmlSanitizer::class, fn () => new HtmlSanitizer());
         $c->bind(Markdown::class, fn (Container $c) => new Markdown($c->get(HtmlSanitizer::class)));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
+        $c->bind(SecretBox::class, fn () => new SecretBox((string) $config->get('app.key', '')));
+        $c->bind(Totp::class, fn () => new Totp());
         $c->bind(WriteGate::class, fn () => new WriteGate());
         $c->bind(BoardPolicy::class, fn () => new BoardPolicy());
         $c->bind(View::class, fn () => new View((string) $config->get('paths.templates')));
@@ -535,6 +541,7 @@ final class App
         $c->bind(VerificationRepository::class, fn (Container $c) => new VerificationRepository($c->get(Database::class)));
         $c->bind(IdempotencyRepository::class, fn (Container $c) => new IdempotencyRepository($c->get(Database::class)));
         $c->bind(AttachmentRepository::class, fn (Container $c) => new AttachmentRepository($c->get(Database::class)));
+        $c->bind(MfaRepository::class, fn (Container $c) => new MfaRepository($c->get(Database::class)));
 
         // Phase 3 anti-abuse + rate limiting (P3-05).
         $c->bind(ClientIdentifier::class, fn () => new ClientIdentifier((array) $config->get('trusted_proxies', [])));
@@ -745,6 +752,16 @@ final class App
             $config,
             $c->get(UserPreferenceRepository::class),
         ));
+        $c->bind(MfaService::class, fn (Container $c) => new MfaService(
+            $c->get(MfaRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(PasswordHasher::class),
+            $c->get(SecretBox::class),
+            $c->get(Totp::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+            $config,
+        ));
         $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
             $c->get(UserPreferenceRepository::class),
             (int) $config->get('pagination.threads_per_page', 20),
@@ -859,6 +876,7 @@ final class App
 
         $r->get('/login', [AuthController::class, 'showLogin']);
         $r->post('/login', [AuthController::class, 'login']);
+        $r->post('/login/mfa', [AuthController::class, 'completeMfa']);
         $r->get('/register', [AuthController::class, 'showRegister']);
         $r->post('/register', [AuthController::class, 'register']);
         $r->post('/logout', [AuthController::class, 'logout']);
@@ -891,6 +909,10 @@ final class App
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
         $r->get('/settings/security', [AccountController::class, 'securityForm']);
         $r->post('/settings/security', [AccountController::class, 'updateSecurity']);
+        $r->post('/settings/security/totp/enroll', [AccountController::class, 'startTotpEnrollment']);
+        $r->post('/settings/security/totp/confirm', [AccountController::class, 'confirmTotpEnrollment']);
+        $r->post('/settings/security/totp/recovery/rotate', [AccountController::class, 'rotateRecoveryCodes']);
+        $r->post('/settings/security/totp/disable', [AccountController::class, 'disableTotp']);
 
         // Member controls (P2-10): privacy, preferences, notifications, sessions, blocks, boards.
         $r->get('/settings/privacy', [SettingsController::class, 'privacyForm']);

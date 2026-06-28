@@ -12,6 +12,7 @@ use App\Repository\SettingRepository;
 use App\Security\RateLimiter;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
+use App\Service\MfaService;
 use App\Service\PasswordResetService;
 use App\Service\RateLimitService;
 
@@ -72,9 +73,51 @@ final class AuthController extends Controller
         }
 
         $limiter->clearSubject('login', $request, $subject);
+
+        $mfa = $this->container->get(MfaService::class);
+        if ($mfa->enabledForUser($user->id())) {
+            $token = $mfa->beginLoginChallenge($user, $request, $this->safeNext((string) $request->input('next', '')));
+            return $this->view('auth/mfa', [
+                'token' => $token,
+                'next' => $this->safeNext((string) $request->input('next', '')),
+                'errors' => [],
+            ]);
+        }
+
         $this->session()->login($user);
 
         return $this->redirect($this->safeNext((string) $request->input('next', '')));
+    }
+
+    /** @param array<string,string> $params */
+    public function completeMfa(Request $request, array $params): Response
+    {
+        if ($this->currentUser() !== null) {
+            return $this->redirect('/');
+        }
+
+        $token = (string) $request->post('mfa_token', '');
+        $limiter = $this->container->get(RateLimitService::class);
+        try {
+            $limiter->enforceSubject('mfa_login', $request, hash('sha256', $token));
+            $result = $this->container->get(MfaService::class)->completeLoginChallenge($token, (string) $request->post('code', ''));
+        } catch (HttpException) {
+            return $this->view('auth/mfa', [
+                'token' => $token,
+                'next' => $this->safeNext((string) $request->post('next', '')),
+                'errors' => ['code' => 'Too many attempts. Please sign in again in a few minutes.'],
+            ], 429);
+        } catch (ValidationException $e) {
+            return $this->view('auth/mfa', [
+                'token' => $token,
+                'next' => $this->safeNext((string) $request->post('next', '')),
+                'errors' => $e->errors,
+            ], 422);
+        }
+
+        $limiter->clearSubject('mfa_login', $request, hash('sha256', $token));
+        $this->session()->login($result['user']);
+        return $this->redirect($this->safeNext($result['next']));
     }
 
     /** @param array<string,string> $params */

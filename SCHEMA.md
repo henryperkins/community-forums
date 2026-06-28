@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.15 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
+**Status:** v1.16 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -95,10 +95,18 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 75 | `provider_aliases` | Identity | 5 | PHASE_5_PLAN §8.2 #15 |
 | 76 | `invitations` | Identity | 5 | PHASE_5_PLAN §8.2 #16 |
 | 77 | `invitation_redemptions` | Identity | 5 | PHASE_5_PLAN §8.2 #16 |
+| 78 | `user_totp_credentials` | Identity / auth | 5 | ADR 0004 B1 / PHASE_3_PLAN P3-12 carryover |
+| 79 | `user_recovery_codes` | Identity / auth | 5 | ADR 0004 B1 / PHASE_3_PLAN P3-12 carryover |
+| 80 | `mfa_login_challenges` | Identity / auth | 5 | ADR 0004 B1 / PHASE_3_PLAN P3-12 carryover |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
 > Tables 55–77 are the **Phase 5 foundation** (migrations `0049`–`0053`): additive, **deploy-dark**, and **inert** — created so no Gate A feature depends on an undocumented shape (Milestone 1), but read/written by no application code until each subsystem's flag is enabled after its Milestone-0 trust approvals (see §5A and `PHASE_5_STATUS.md`).
+>
+> Tables 78–80 are the **Gate A TOTP/recovery prerequisite** (migration `0054`):
+> additive, opt-in, and active only for accounts that enroll. They resolve ADR
+> 0004 conflict B1 before passkey enforcement; ordinary users are not required to
+> use MFA by default.
 
 ---
 
@@ -671,7 +679,7 @@ CREATE TABLE submission_idempotency (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-> **Phase-3 build note (reconciled 2026-06-27).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. Still **not built** (Gate B / later): `plugins`, `webhooks`, `api_tokens`, and the TOTP/recovery, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
+> **Phase-3 build note (reconciled 2026-06-28).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Still **not built** (Gate B / later): `plugins`, `webhooks`, `api_tokens`, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
 
 ---
 
@@ -815,7 +823,7 @@ New tables — **governance / least-privilege** (`0050`, §8.2 #8/#9/#13):
 - `protected_owners(id, user_id, is_active, recovery_status, designated_by, designated_at, created_at)` with unique `user_id` and FKs; makes the protected-owner set explicit so the last-active-owner invariant is enforceable transactionally.
 - `owner_transfer_history(id, from_user_id, to_user_id, actor_id, reason, created_at)` with FKs.
 
-New tables — **identity / auth** (`0051`–`0053`, §8.2 #14/#15/#16):
+New tables — **identity / auth** (`0051`–`0054`, §8.2 #14/#15/#16 plus ADR 0004 B1):
 
 - `webauthn_credentials(id, user_id, credential_id, public_key, sign_count, aaguid, transports, is_discoverable, is_backup_eligible, is_backed_up, nickname, created_at, last_used_at, revoked_at)` with unique `credential_id` (VARBINARY) and user FK; **PUBLIC** credential material only — private keys never reach the server.
 - `webauthn_challenges(id, user_id, session_token_hash, purpose, challenge, created_at, expires_at, consumed_at)` with user FK; one-time, short-lived, purpose/session-bound; `user_id` NULL = usernameless/discoverable login.
@@ -823,16 +831,19 @@ New tables — **identity / auth** (`0051`–`0053`, §8.2 #14/#15/#16):
 - `provider_aliases(id, alias, provider_key, created_at)` with unique `alias`; maps historical provider strings to canonical keys so the enum→registry migration never duplicates/orphans an identity. Seeds google/apple/github.
 - `invitations(id, token_hash, created_by, email, domain, onboarding_role_id, onboarding_board_id, max_uses, used_count, expires_at, revoked_at, revoked_by, created_at)` with unique `token_hash` (sha256 — **no raw token column**) and creator/revoker/role/board FKs; an invitation is onboarding evidence, not authority (`onboarding_role_id` is non-privileged only, enforced in code).
 - `invitation_redemptions(id, invitation_id, user_id, ip, redeemed_at)` with FKs; `ip` packed via `inet_pton` (project convention). Redemption is atomic and cannot exceed `max_uses`.
+- `user_totp_credentials(id, user_id, secret_ciphertext, secret_nonce, secret_tag, algorithm, digits, period_seconds, enabled_at, verified_at, disabled_at, last_used_step, created_at, updated_at)` with unique `user_id`; TOTP secrets are AES-256-GCM encrypted with the application key, never stored plaintext, and `last_used_step` prevents replay.
+- `user_recovery_codes(id, user_id, batch_id, code_hash, used_at, created_at)` with unique `code_hash`; raw recovery codes are shown once and stored only as HMAC hashes.
+- `mfa_login_challenges(id, user_id, token_hash, next_path, ip, user_agent, created_at, expires_at, consumed_at)` with unique hash-only token storage; challenges are one-time, short-lived, and consumed before session creation.
 
 ---
 
 ## 6. Phase map (suggested build cut)
 
-This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `api_tokens`, and `email_deliveries` have DDL above, but its remaining tables (TOTP/recovery, appeals, automation-rules, `drafts`, bookmark-folders, custom-profile-fields, and a durable webhook-delivery ledger) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
+This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above, but its remaining tables (appeals, automation-rules, `drafts`, bookmark-folders, custom-profile-fields, and a durable webhook-delivery ledger) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
 
 - **Phase 1 (MVP backend):** `users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`. → See **[PHASE_1_MIGRATIONS.md](PHASE_1_MIGRATIONS.md)** for the exact Phase‑1 column cut, migration order (`0001`–`0010`), and which columns are held back to Phases 2–3.
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
-- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` (durable delivery), `api_tokens`, plus the TOTP/recovery, appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here).
+- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` (durable delivery), `api_tokens`, plus appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
 - **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #6/#7/#10/#11/#12/#17/#18/#19) stays in PHASE_5_PLAN until its workstream lands.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
@@ -882,6 +893,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.16 | 2026-06-28 | Added the Gate A TOTP/recovery prerequisite (`0054`): encrypted `user_totp_credentials`, hash-only `user_recovery_codes`, and one-time `mfa_login_challenges`; documented that B1 is resolved before passkey enforcement and ordinary users are not required to enroll. |
 | v1.15 | 2026-06-28 | **Phase 5 foundation (Milestone 1 schema reconciliation).** Documented additive deploy-dark migrations `0049`–`0053` in new **§5A**: registry/packages/releases/installs/permissions/history/advisories/local-blocks (§8.2 #1–5), capability registry + protected roles (4 seeded system anchors) + scoped assignments/audit + protected-owner authority (§8.2 #8/#9/#13), WebAuthn credentials/challenges (§8.2 #14), identity-provider registry + the `oauth_identities.provider` **ENUM→VARCHAR(64)** widen + `provider_config_id` linkage (§8.2 #15), and invitations/redemptions (§8.2 #16). Added table-index rows 55–77. Tables are inert (no app reads/writes; flags dark) and carry **no** Milestone-0 trust policy. |
 | v1.13 | 2026-06-28 | Reconciled Phase 4 Gate A migration `0048`: documented additive status/snooze/assignment, board tag/wiki toggles, group-DM interval columns/events, canonical `reputation_events`, tag tables, badge-rule/audit tables, summaries/related/wiki revision tables, reference metadata, and split/merge operation/redirect tables. Removed now-committed status/snooze items from §8 foreshadowing. |
 | v1.12 | 2026-06-26 | Gave the Phase-2 **admin announcements/broadcast** feature a schema home (§7 #13): added `'announcement'` to `notifications.type` (now 11 values) for the in-app broadcast/system notice; documented the banner in `settings` (`site_announcement`), the pinned announcement as a pinned thread, and the broadcast email via `email_deliveries.kind='system'` — no new table. Noted the `categories` default-collapsed flag as a Phase-3 cheap flag (§8); de-referenced the not-yet-created `2026-06-20-auth-design.md` (sessions DDL is consolidated in §1). |

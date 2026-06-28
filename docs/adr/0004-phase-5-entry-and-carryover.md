@@ -1,13 +1,12 @@
 # ADR 0004: Phase 5 entry gate, carryover ledger, and Milestone-0 decision register
 
 **Date:** 2026-06-28
-**Status:** **Draft for product-owner approval.** This is the Milestone-0 entry
-record required by `PHASE_5_PLAN.md` §2/§7. It does **not** itself approve
-anything — it inventories what must be decided/accepted before Phase 5 *feature*
-implementation may begin, and records the recommended defaults. The additive,
-deploy-dark foundation schema (`database/migrations/0049`–`0053`, `SCHEMA.md` §5A)
-is allowed to land ahead of these approvals **because it is inert** (no behavior,
-all flags dark) and encodes none of the trust decisions below.
+**Status:** **Accepted as the Phase 5 Milestone-0 decision record.** The
+product-owner instruction dated 2026-06-28 approves the defaults below as locked
+decisions for the Gate A + Gate B release train unless a later owner scope-change
+record explicitly overrides an item. The additive, deploy-dark foundation schema
+(`database/migrations/0049`–`0053`, `SCHEMA.md` §5A) landed inert; `0054` adds the
+approved TOTP/recovery prerequisite before passkey enforcement.
 
 ## Context
 
@@ -25,13 +24,12 @@ rather than implied by code.
 
 | Entry-gate item (§2) | State | Note |
 |---|---|---|
-| Phase 4 Gate A/B product-owner acceptance recorded | **OPEN** | `PHASE_4_STATUS.md` records *engineering* closeout only; no product-owner acceptance is on file. `docs/evidence/phase4-gate-a.md` lists missing production a11y/SEO/load/backup/rollback artifacts. |
-| Every incomplete Phase 4 item has an explicit deferral | **MET** | `docs/adr/0003-phase-4-closeout-deferrals.md` records owner/destination/risk for each. |
+| Phase 4 Gate A/B product-owner acceptance recorded | **MET** | Product-owner instruction accepts the Phase 4 engineering closeout as the entry baseline for Phase 5, with the evidence caveats in `PHASE_4_STATUS.md` preserved. |
+| Every incomplete Phase 4 item has an explicit deferral | **MET** | `docs/adr/0003-phase-4-closeout-deferrals.md` records owner/destination/risk for each and is accepted as the carryover ledger. |
 | Deployed DB reconciled against `SCHEMA.md` | **MET (for Phase 1–4)** | `SCHEMA.md` v1.14 reconciled migration `0048`; this increment adds §5A for `0049`–`0053`. |
 
-**Recommendation:** record product-owner acceptance of the engineering-closed
-Phase 4 Gate A slice **and** acceptance of the ADR 0003 deferrals as Phase 5
-carryovers (Part B). Until that is on file, the §2 gate is not formally cleared.
+**Decision:** Phase 4 entry is accepted for Phase 5 with ADR 0003 deferrals kept
+as explicit carryovers, not silently reclassified as shipped behavior.
 
 ---
 
@@ -60,52 +58,51 @@ earlier work as Phase 5 scope without an explicit decision.
 
 | # | Conflict | Evidence | Impact | Recommended resolution |
 |---|---|---|---|---|
-| **B1** | **No TOTP / recovery-code subsystem exists.** | Repo audit: no TOTP/recovery-code/MFA second-factor subsystem in `src/`, `database/`, or `templates/` (the only `authenticator` reference is the unrelated WebAuthn AAGUID comment in migration `0051`). Auth today is password + OAuth only. | P5-11 passkeys list "**Accepted Phase 3 TOTP/recovery**" as a dependency; def-of-done requires passkey loss to fall back to "TOTP/recovery-code" and privileged MFA to be "passkey-**or-TOTP**." That fallback has nothing to fall back to. | Decide at M0: either (a) build the Phase-3-carryover TOTP/recovery-code subsystem **before** passkey enforcement, or (b) scope Gate A passkey recovery to email-verification + operator support only and record the TOTP dependency as deferred. Do **not** enforce privileged MFA until a real second factor exists. |
-| **B2** | **No in-process plugin runtime, webhooks, or API tokens exist.** | Repo audit: no `plugins`/`webhooks`/`api_tokens` tables or runtime code. `docs/adr/0002` routed "internal hooks/plugins, webhooks, admin API tokens" to the "Phase 5 ecosystem foundation." | §2 entry gate requires "the Phase 3 first-party/vetted extension runtime is accepted." P5-04 remote apps map onto "**accepted webhooks/API scopes**" that were never built. The public ecosystem would be built on an absent foundation. | Decide at M0: treat the Phase-3 trusted hook/webhook/API-token runtime as **explicit Phase 5 Gate A prerequisite work** (own workstream + acceptance), not an assumed foundation. Sequence it before P5-04/P5-05. The `0049` package tables already model installs/permissions; the runtime + webhook/API-scope layer is still to build. |
-| B3 | Encrypted secret service for provider/package secrets. | `identity_providers.client_secret_ref` and package secrets assume "the accepted encrypted secret service" (decision #35). Confirm it exists/with what guarantees. | Provider/OIDC config and remote-app credentials cannot store plaintext. | Confirm the secret-store seam at M1 before any provider/remote-app code writes a secret. |
+| **B1** | **RESOLVED — TOTP / recovery-code subsystem exists.** | Migration `0054`, `MfaService`, `Totp`, account/login templates, and `AppMfaTest` implement opt-in TOTP, hash-only recovery codes, one-time login challenges, replay protection, rotation, disable, and audit. | P5-11 passkeys can now depend on a real fallback. Ordinary users are still not required to enroll by default. | Build passkey registration/enforcement only after this fallback remains green in full-suite and browser/no-JS evidence. |
+| **B2** | **No trusted extension runtime, webhooks, or API tokens exist.** | Repo audit: no migrated `plugins`/`webhooks`/`api_tokens` tables or runtime code. `SCHEMA.md` contains target DDL only. `docs/adr/0002` routed "internal hooks/plugins, webhooks, admin API tokens" to the "Phase 5 ecosystem foundation." | §2 entry gate requires "the Phase 3 first-party/vetted extension runtime is accepted." P5-04 remote apps map onto "**accepted webhooks/API scopes**" that were never built. The public ecosystem would be built on an absent foundation. | **Accepted M0 decision:** treat the trusted hook/webhook/API-token/secret layer as explicit Phase 5 Gate A prerequisite work, not an assumed foundation. Sequence it before P5-04/P5-05. No public untrusted PHP execution in Gate A. |
+| B3 | Encrypted secret service for provider/package secrets. | `SecretBox` now encrypts TOTP secrets, but `identity_providers.client_secret_ref` and remote-app/package secrets still need a registry of service-secret references and rotation/revocation state. | Provider/OIDC config and remote-app credentials cannot store plaintext. | Include service-secret storage, rotation, revocation, audit, and redaction in B2 before any provider/remote-app code writes a secret. |
 
 ---
 
-## Part C — Milestone-0 decision register (PENDING OWNER APPROVAL)
+## Part C — Milestone-0 decision register (APPROVED)
 
 Each row is a decision `PHASE_5_PLAN` §2/§7 requires before the relevant
 workstream's flag may be enabled. None are encoded in the foundation schema.
 
 | # | Decision (plan ref) | Recommended default | Status |
 |---|---|---|---|
-| D1 | **Package trust classes & types** (§5 #4) | Adopt the six classes already modelled in `packages.trust_class`: `first_party` & `vetted` (in-process, Phase 3 path), `reviewed_declarative` & `reviewed_remote` (no local code), `isolated_server` (Gate B sandbox), `local_dev` (explicit dev mode). No trust implied by installability. | PENDING |
-| D2 | **Registry trust roots & signing-key custody** (§7, §8.2 #1) | One first-party registry to start. Offline Ed25519 signing root; private key held by the operator **out-of-band** (never in the app DB — only `registry_trust_keys.public_key`). Snapshot freshness/expiry default **24h**; key-rotation via signed transition; local blocklist (`local_package_blocks`) independent of registry availability. | PENDING |
-| D3 | **Advisory authority & emergency-disable policy** (§7) | Advisories may `warn` → `block_new` → `force_disable` → `revoke`; force-disable requires the approved emergency policy; every action audited; a registry-independent local control always works (safe mode, decision #15). | PENDING |
-| D4 | **Permission taxonomy, high-risk data classes, non-delegable list, consent vocabulary** (§7) | Draft the **core** capability catalogue from the existing route/permission matrix (engineering can produce a proposal). Non-delegable protected set = site ownership, trust-root management, break-glass recovery, signature override, audit integrity (decision #22). `capabilities` stays **empty** until this is approved; the resolver seeds it on approval. | PENDING |
-| D5 | **Isolation profile & host support matrix; unsupported-host result** (§7) | Gate B. Dedicated OS identity + read-only package image + denied-by-default network + CPU/mem/wall-time/process/output/storage quotas via the host's process controls (cgroups/namespaces). Unsupported host → `server_extensions` stays unavailable; declarative themes + remote apps + core forum remain usable (decision #11). | PENDING (Gate B) |
-| D6 | **Canonical HTTPS origin + WebAuthn RP ID; domain-change/DR policy** (§7, §5 #28) | RP ID = the registrable domain of the operator's canonical `APP_URL`; a single approved HTTPS origin. Domain/RP-ID change is a runbook migration, not a branding toggle. | PENDING |
-| D7 | **Privileged-auth & passkey recovery policy** (§5 #31, depends on **B1**) | Gate A: passkeys **augment** password/OAuth; no global password removal; recovery via verified email + operator support (+ TOTP/recovery codes **once B1 is resolved**). Privileged MFA enforcement only after enrollment + recovery grace, and only once a real second factor exists. | PENDING |
-| D8 | **Generic OIDC + first additional provider** (§7, §5 #32/#33) | Generic OIDC (discovery/JWKS, issuer-pinned, PKCE, nonce/state/audience validation) as the primary seam. First additional provider = a generic-OIDC configuration chosen by the owner (e.g. Microsoft Entra or GitLab) — **not** a provider-specific account-resolution fork. Email never a silent merge key. | PENDING |
-| D9 | **Invitation defaults** (§5 #36) | Admin-created; single-use; 7-day expiry; optional email/domain binding; rate-limited; **no privileged-role grant via token**. Member-created invitations only under an approved registration policy. | PENDING |
-| D10 | **Verified-link verification methods** (§5 #38) | DNS `TXT` challenge and HTTPS `/.well-known` challenge; SSRF-safe fetcher; recheck/expiry; "control verified," never endorsement. | PENDING (Gate B) |
-| D11 | **Numeric budgets** (§11.3) | Engineering to draft starting p50/p95/p99 + size/staleness budgets for registry fetch/verify, install/update, resolver latency, WebAuthn ceremonies, OIDC/JWKS, invitation redemption, audit throughput, and per-row DB growth, measured on a production-like fixture. | PENDING |
-| D12 | **Feature-flag set & staged-rollout order** (§13.1) | Flags landed dark this increment (`package_registry`, `package_themes`, `capabilities`, `passkeys`, `provider_registry`, `invitations`, + Gate B reserves). Enablement order per §13.1: schema/dark → resolver shadow → staff catalogue → themes → declarative/remote → role editor → resolver switch → passkeys → OIDC → invitations → (Gate A accept) → sandbox/publisher/governance. | **Flags MET; order PENDING** |
+| D1 | **Package trust classes & types** (§5 #4) | Adopt the six classes already modelled in `packages.trust_class`: `first_party` & `vetted` (trusted foundation only), `reviewed_declarative` & `reviewed_remote` (no local code), `isolated_server` (Gate B sandbox), `local_dev` (explicit dev mode). No trust implied by installability. | APPROVED |
+| D2 | **Registry trust roots & signing-key custody** (§7, §8.2 #1) | One first-party registry to start. Offline Ed25519 signing root; private key held by the operator **out-of-band** (never in the app DB — only `registry_trust_keys.public_key`). Snapshot freshness/expiry default **24h**; key-rotation via signed transition; local blocklist (`local_package_blocks`) independent of registry availability. | APPROVED |
+| D3 | **Advisory authority & emergency-disable policy** (§7) | Advisories may `warn` → `block_new` → `force_disable` → `revoke`; force-disable requires the approved emergency policy; every action audited; a registry-independent local control always works (safe mode, decision #15). | APPROVED |
+| D4 | **Permission taxonomy, high-risk data classes, non-delegable list, consent vocabulary** (§7) | Seed the core capability catalogue from the existing route/permission matrix. Non-delegable protected set = site ownership, trust-root management, break-glass recovery, signature override, audit integrity (decision #22). Namespaced extension capabilities are subordinate to approved core capabilities. | APPROVED |
+| D5 | **Isolation profile & host support matrix; unsupported-host result** (§7) | Gate B. Dedicated OS identity + read-only package image + denied-by-default network + CPU/mem/wall-time/process/output/storage quotas via the host's process controls (cgroups/namespaces). Unsupported host → `server_extensions` stays unavailable; declarative themes + remote apps + core forum remain usable (decision #11). | APPROVED (Gate B) |
+| D6 | **Canonical HTTPS origin + WebAuthn RP ID; domain-change/DR policy** (§7, §5 #28) | RP ID = the registrable domain of the operator's canonical `APP_URL`; a single approved HTTPS origin. Domain/RP-ID change is a runbook migration, not a branding toggle. | APPROVED |
+| D7 | **Privileged-auth & passkey recovery policy** (§5 #31) | Gate A: passkeys **augment** password/OAuth; no global password removal; recovery via verified email + operator support + TOTP/recovery codes. Privileged MFA enforcement only after enrollment + recovery grace, and only once full fallback evidence is stable. | APPROVED |
+| D8 | **Generic OIDC + first additional provider** (§7, §5 #32/#33) | Generic OIDC (discovery/JWKS, issuer-pinned, PKCE, nonce/state/audience validation) as the primary seam. First additional provider = one owner-approved generic-OIDC configuration — **not** a provider-specific account-resolution fork. Email never a silent merge key. | APPROVED |
+| D9 | **Invitation defaults** (§5 #36) | Admin-created; single-use; 7-day expiry; optional email/domain binding; rate-limited; **no privileged-role grant via token**. Member-created invitations only under an approved registration policy. | APPROVED |
+| D10 | **Verified-link verification methods** (§5 #38) | DNS `TXT` challenge and HTTPS `/.well-known` challenge; SSRF-safe fetcher; recheck/expiry; "control verified," never endorsement. | APPROVED (Gate B) |
+| D11 | **Numeric budgets** (§11.3) | Starting budgets are approved as release gates, to be measured on production-like fixtures before enablement: registry snapshot freshness 24h; registry fetch p95 2s; signature verification p95 250ms/package; install/update p95 10s for declarative packages; resolver p95 5ms; WebAuthn/TOTP ceremony p95 2s server time excluding authenticator UX; OIDC discovery/JWKS p95 2s cached and 5s cold; invitation redemption p95 500ms; webhook delivery timeout 5s; sandbox execution wall-time default 2s; no high-impact audit write may be skipped silently. | APPROVED |
+| D12 | **Feature-flag set & staged-rollout order** (§13.1) | Flags landed dark (`package_registry`, `package_themes`, `capabilities`, `passkeys`, `provider_registry`, `invitations`, + Gate B reserves). Enablement order: schema/dark → TOTP/recovery → trusted hook/webhook/API-token/secret foundation → resolver shadow → staff catalogue → themes → declarative/remote → role editor → resolver switch → passkeys → OIDC → invitations → Gate A accept → sandbox/publisher/governance/service principals/verified links → Gate B accept. | APPROVED |
 
 ---
 
 ## Decision
 
 1. The foundation schema (`0049`–`0053`) lands as additive, deploy-dark, inert
-   tables (`SCHEMA.md` §5A). This is the only Phase 5 code permitted before the
-   register above is approved, and it changes no behavior.
-2. Phase 5 *feature* implementation for each workstream is blocked until its
-   Part C decisions are approved and its Part B dependencies are resolved or
-   explicitly deferred.
-3. **B1 (no TOTP/recovery)** and **B2 (no plugin/webhook/API runtime)** are
-   recorded as blocking conflicts: passkey recovery/privileged-MFA and the
-   remote-app/ecosystem workstreams must not assume an accepted foundation that
-   does not exist.
+   tables (`SCHEMA.md` §5A).
+2. TOTP/recovery (`0054`) is approved and built before passkey enforcement.
+3. **B2 (no trusted hook/webhook/API-token/secret layer)** is a Gate A
+   prerequisite, not an assumed foundation. Remote-app/ecosystem workstreams must
+   not proceed until it exists and has evidence.
+4. Gate B work remains committed unless a later product-owner scope-change record
+   explicitly defers an item with owner, rationale, risk, and destination.
 
 ## Consequences
 
-- Approving this ADR (with chosen defaults or overrides) clears the §2 entry gate
-  and unlocks Milestone-2 onward per the staged order.
-- Leaving it in draft keeps Phase 5 at "foundation only": the tables exist and are
-  shape-tested, but no subsystem may be enabled.
+- This ADR clears the Milestone-0 decision gate, but it does **not** accept Gate A
+  or Gate B behavior by itself.
+- Phase 5 is no longer "foundation only" after `0054`; it is still not Gate A
+  accepted until the trusted-extension prerequisite and every Gate A workstream
+  have release evidence.
 - The capability catalogue is intentionally unseeded so the permission taxonomy is
   a deliberate, reviewed artifact rather than an accident of migration order.
