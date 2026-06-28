@@ -51,7 +51,7 @@ final class AppFeatureFlagTest extends TestCase
         $phase5 = [
             // Gate A
             'package_registry', 'package_themes', 'capabilities', 'passkeys',
-            'provider_registry', 'invitations', 'service_secrets',
+            'provider_registry', 'invitations', 'service_secrets', 'api_tokens',
             // Gate B (reserved)
             'server_extensions', 'governance', 'service_principals', 'verified_links',
         ];
@@ -59,6 +59,7 @@ final class AppFeatureFlagTest extends TestCase
             self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
         }
         self::assertArrayHasKey('service_secrets', $flags->all(), 'service_secrets must be a declared flag, not an unknown-key false');
+        self::assertArrayHasKey('api_tokens', $flags->all(), 'api_tokens must be a declared flag');
 
         // The override seam still works per-flag without affecting its neighbours.
         $this->setFlags(['capabilities' => true]);

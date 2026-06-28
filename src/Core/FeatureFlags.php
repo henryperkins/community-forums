@@ -70,6 +70,7 @@ final class FeatureFlags
         // Encrypted service-secret registry (SecretVault). Doubles as a write
         // kill switch: dark blocks store/rotate; reveal/revoke/prune still work.
         'service_secrets' => false,   // reversible secret vault for providers/webhooks (B2 sub-project 1)
+        'api_tokens' => false,        // admin/service Bearer API tokens + read-only /api/v1 (B2 sub-project 2)
 
         // ── Phase 5 Gate B (reserved; dark until Gate A is accepted) ───────
         'server_extensions' => false, // sandboxed isolated server-extension runtime (P5-05/06)
