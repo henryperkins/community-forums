@@ -716,7 +716,11 @@ final class ApiTokenService
         if (!$this->flags->enabled('api_tokens')) {
             return null;
         }
-        $token = trim((string) preg_replace('/^Bearer\s+/i', '', trim($bearer)));
+        // Require the "Bearer " scheme — a raw token without it must NOT authenticate.
+        if (!preg_match('/^Bearer\s+(\S.*)$/i', trim($bearer), $m)) {
+            return null;
+        }
+        $token = trim($m[1]);
         if ($token === '') {
             return null;
         }
@@ -860,15 +864,16 @@ final class ApiReadEndpointsTest extends TestCase
         return $svc->mint($admin, 'password123', 'ci', $scopes, $days)['token'];
     }
 
-    private function apiGet(string $path, ?string $token): Response
+    /** @param array<string,mixed> $query */
+    private function apiGet(string $path, ?string $token, array $query = []): Response
     {
         $server = $token === null ? [] : ['HTTP_AUTHORIZATION' => 'Bearer ' . $token];
-        return $this->requestWithServer('GET', $path, [], [], $server);
+        return $this->requestWithServer('GET', $path, [], $query, $server);
     }
 
     public function test_me_requires_a_valid_token(): void
     {
-        $token = $this->mintToken([]);
+        $token = $this->mintToken(['read:boards']); // /me ignores scopes, but mint needs >= 1
         $ok = $this->apiGet('/api/v1/me', $token);
         self::assertSame(200, $ok->status());
         $body = json_decode($ok->body(), true);
@@ -877,6 +882,9 @@ final class ApiReadEndpointsTest extends TestCase
 
         self::assertSame(401, $this->apiGet('/api/v1/me', null)->status());
         self::assertSame(401, $this->apiGet('/api/v1/me', 'garbage')->status());
+
+        // A raw token WITHOUT the "Bearer " scheme must be rejected.
+        self::assertSame(401, $this->requestWithServer('GET', '/api/v1/me', [], [], ['HTTP_AUTHORIZATION' => $token])->status());
     }
 
     public function test_boards_scope_gating_and_public_only(): void
@@ -912,23 +920,25 @@ final class ApiReadEndpointsTest extends TestCase
         self::assertSame(200, $def->status());
         self::assertLessThanOrEqual(20, count(json_decode($def->body(), true)['threads']));
 
-        // ?limit=999 is clamped to 50.
-        $big = $this->apiGet('/api/v1/boards/' . $board['id'] . '/threads?limit=999', $token);
+        // limit=999 is clamped to 50 (query passed separately — requestWithServer does not parse '?').
+        $big = $this->apiGet('/api/v1/boards/' . $board['id'] . '/threads', $token, ['limit' => '999']);
         self::assertLessThanOrEqual(50, count(json_decode($big->body(), true)['threads']));
     }
 
     public function test_revoke_and_expiry_and_flag_dark(): void
     {
-        $token = $this->mintToken([]);
+        $token = $this->mintToken(['read:boards']);
         self::assertSame(200, $this->apiGet('/api/v1/me', $token)->status());
 
-        // Revoke via DB (the row), then 401.
+        // Immediate revoke → 401.
         $this->db->run('UPDATE api_tokens SET revoked_at = UTC_TIMESTAMP() WHERE token_hash = ?', [hash('sha256', $token)]);
         self::assertSame(401, $this->apiGet('/api/v1/me', $token)->status());
 
-        // Flag dark → 404 (endpoint disappears).
+        // Flag dark → 404 for everyone. Mint a valid token WHILE the flag is on, then go
+        // dark and reuse it (mintToken() itself re-enables the flag, so it must run first).
+        $valid = $this->mintToken(['read:boards']);
         (new SettingRepository($this->db))->set('features', ['api_tokens' => false]);
-        self::assertSame(404, $this->apiGet('/api/v1/me', $this->mintToken([]))->status());
+        self::assertSame(404, $this->apiGet('/api/v1/me', $valid)->status());
     }
 
     public function test_scope_denial_is_audited_but_401_is_not(): void
@@ -950,14 +960,14 @@ final class ApiReadEndpointsTest extends TestCase
     public function test_router_caveat_unknown_path_is_html_not_json(): void
     {
         // The zero-kernel-change limitation: an unknown /api path is a kernel HTML 404.
-        $r = $this->apiGet('/api/v1/does-not-exist', $this->mintToken([]));
+        $r = $this->apiGet('/api/v1/does-not-exist', $this->mintToken(['read:boards']));
         self::assertSame(404, $r->status());
         self::assertStringNotContainsString('application/json', (string) $r->getHeader('content-type'));
     }
 
     public function test_rate_limit_returns_429_after_policy_max(): void
     {
-        $token = $this->mintToken([]);
+        $token = $this->mintToken(['read:boards']);
         self::assertSame(200, $this->apiGet('/api/v1/me', $token)->status());
         for ($i = 0; $i < 119; $i++) {
             $this->apiGet('/api/v1/me', $token);
@@ -1188,12 +1198,12 @@ final class AdminApiTokenTest extends TestCase
         $res = $this->post('/admin/api-tokens', [
             'name' => 'CI', 'scopes' => ['read:boards'], 'current_password' => 'password123', 'expires_in_days' => '',
         ]);
-        $this->assertRedirect($res, '/admin/api-tokens');
+        // The plaintext is shown ONCE, directly in the mint response (200, not a redirect —
+        // the token must never travel through the cookie-backed Flash).
+        $this->assertStatus(200, $res);
+        self::assertStringContainsString('rbt_', $res->body());
 
-        // The one-time plaintext is shown on the next GET (flash) ...
-        $page = $this->get('/admin/api-tokens');
-        self::assertStringContainsString('rbt_', $page->body());
-        // ... and not on a subsequent reload.
+        // A later GET does not show it again (nothing persisted it — no cookie, no DB plaintext).
         self::assertStringNotContainsString('rbt_', $this->get('/admin/api-tokens')->body());
 
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM api_tokens'));
@@ -1273,6 +1283,7 @@ final class AdminApiTokenController extends Controller
             'scopes_catalogue' => ApiScopes::all(),
             'errors' => [],
             'old' => [],
+            'new_token' => null,
         ]);
     }
 
@@ -1291,16 +1302,24 @@ final class AdminApiTokenController extends Controller
                 (array) $request->post('scopes', []),
                 $days === '' ? null : (int) $days,
             );
-            return $this->redirectWithFlash(
-                '/admin/api-tokens',
-                'API token created. Copy it now — it will not be shown again: ' . $result['token'],
-            );
+            // One-time plaintext: render DIRECTLY (not via the cookie-backed Flash, which
+            // would leak the token into a Set-Cookie header). A later GET has no new_token,
+            // so the secret is shown exactly once. A reload re-POSTs (mints again) — an
+            // accepted minor wart; the alternative (cookie flash) leaks the secret.
+            return $this->view('admin/api_tokens', [
+                'tokens' => $service->list(),
+                'scopes_catalogue' => ApiScopes::all(),
+                'errors' => [],
+                'old' => [],
+                'new_token' => $result['token'],
+            ]);
         } catch (ValidationException $e) {
             return $this->view('admin/api_tokens', [
                 'tokens' => $service->list(),
                 'scopes_catalogue' => ApiScopes::all(),
                 'errors' => $e->errors,
                 'old' => $e->old + ['name' => $request->str('name')],
+                'new_token' => null,
             ], 422);
         }
     }
@@ -1319,9 +1338,19 @@ final class AdminApiTokenController extends Controller
 - [ ] **Step 4: Create the template.** `templates/admin/api_tokens.php`:
 
 ```php
-<?php $this->layout('layout'); ?>
-<?php $this->section('content'); ?>
+<?php /** @var \App\Core\View $this */ ?>
+<?php
+$this->layout('layout');
+$this->section('title', 'API tokens');
+?>
 <h1>API tokens</h1>
+
+<?php if (!empty($new_token)): ?>
+    <div class="flash" role="status">
+        <strong>Copy this token now — it will not be shown again:</strong>
+        <code><?= $e($new_token) ?></code>
+    </div>
+<?php endif; ?>
 
 <form method="post" action="/admin/api-tokens" class="stacked">
     <?= $this->csrfField() ?>
@@ -1373,10 +1402,9 @@ final class AdminApiTokenController extends Controller
     <?php endforeach; ?>
     </tbody>
 </table>
-<?php $this->endSection(); ?>
 ```
 
-(Verify the template helper names against an existing admin template — `$this->layout()`, `$this->section()`/`$this->endSection()`, `$this->csrfField()`, and the `$e` escaper closure are all used in `templates/admin/branding.php`. Match its exact section open/close calls.)
+(Template API confirmed against `templates/admin/branding.php` + `src/Core/View.php`: a leaf calls `$this->layout('layout')` + `$this->section('title', …)` and then **echoes its body directly** — the body is captured by `View::renderTemplate` and passed to the layout as `$content`. There is **no** `section('content')`/`endSection()` here; the capture API is `start()`/`stop()`, which this page does not need. `$this->csrfField()` and the `$e` escaper closure are both real.)
 
 - [ ] **Step 5: Register the admin routes.** In `src/Core/App.php` add the import:
 
