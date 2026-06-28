@@ -230,10 +230,13 @@
             updateDiscard();
         });
         form.addEventListener('submit', function () {
-            // Do not clear here: the browser has not confirmed that the POST
-            // succeeded yet. Keeping the draft prevents network/validation loss;
-            // explicit discard and the Drafts page handle cleanup.
-            try { if (ta.value) { localStorage.setItem(key, ta.value); } } catch (e) {}
+            // Clear on submit so a successful post does not leave the just-sent
+            // body in the composer after the redirect-back (which would invite a
+            // duplicate post under a freshly minted idempotency_key). Validation
+            // failures re-render the composer with the server-side reply_old/old
+            // values, so the draft is not lost on the error path.
+            try { localStorage.removeItem(key); } catch (e) {}
+            updateDiscard();
         });
     }
 
@@ -333,7 +336,9 @@
         return true;
     }
     function markdownAlt(alt) {
-        return (alt || '').replace(/[\r\n]+/g, ' ').replace(/]/g, '\\]');
+        // Escape backslash and both brackets in one pass (so inserted escapes
+        // are not re-processed) to keep the ![alt](url) image syntax intact.
+        return (alt || '').replace(/[\r\n]+/g, ' ').replace(/[\\\[\]]/g, '\\$&');
     }
     function imageMarkdown(url, alt) {
         return '![' + markdownAlt(alt) + '](' + url + ')';

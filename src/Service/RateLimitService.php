@@ -91,8 +91,10 @@ final class RateLimitService
 
     private function key(string $policy, Request $request, ?User $user, ?string $subject): string
     {
-        $ip = $this->clientId->ipFor($request);
-        $who = $user !== null ? 'u' . $user->id() . ':ip' . $ip : 'ip' . $ip;
+        // Signed-in callers are keyed by account alone so a per-account throttle
+        // holds across IPs (matches this service's contract); anonymous callers
+        // fall back to the trusted-proxy-aware client IP.
+        $who = $user !== null ? 'u' . $user->id() : 'ip' . $this->clientId->ipFor($request);
         $subject = trim((string) $subject);
         if ($subject !== '') {
             $who .= ':s' . hash('sha256', strtolower($subject));

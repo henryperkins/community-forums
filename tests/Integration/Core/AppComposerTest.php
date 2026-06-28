@@ -82,7 +82,7 @@ final class AppComposerTest extends TestCase
         $recipient = $this->makeUser(['username' => 'surfacerecipient']);
         $thread = $this->makeThread($board, $author, 'Surface thread', 'Opening body.');
         $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [(int) $thread['thread_id']]);
-        $convId = (new ConversationRepository($this->db))->between((int) $author['id'], (int) $recipient['id']);
+        $convId = (new ConversationRepository($this->db))->findOrCreateBetween((int) $author['id'], (int) $recipient['id']);
         (new DmMessageRepository($this->db))->create($convId, (int) $recipient['id'], 'hello', '<p>hello</p>');
 
         $this->actingAs($author);
@@ -92,7 +92,7 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('action="/threads"', $boardPage->body());
         self::assertStringContainsString('class="composer-input"', $boardPage->body());
 
-        $threadPage = $this->get('/t/' . (int) $thread['thread_id']);
+        $threadPage = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $threadPage);
         self::assertStringContainsString('action="/t/' . (int) $thread['thread_id'] . '/reply"', $threadPage->body());
         self::assertStringContainsString('action="/posts/' . $postId . '/edit"', $threadPage->body());
@@ -117,7 +117,7 @@ final class AppComposerTest extends TestCase
         $thread = $this->makeThread($board, $user, 'Fallback thread', 'Fallback body.');
         $this->actingAs($user);
 
-        $page = $this->get('/t/' . (int) $thread['thread_id']);
+        $page = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $page);
         self::assertStringContainsString('<textarea name="body"', $page->body());
         self::assertStringNotContainsString('/assets/composer.js', $page->body());
