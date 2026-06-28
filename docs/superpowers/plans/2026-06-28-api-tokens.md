@@ -487,6 +487,29 @@ final class ApiTokenServiceTest extends TestCase
         self::assertNull($svc->authenticate('Bearer ' . $res2['token']), 'expired token must not authenticate');
     }
 
+    public function test_revoke_is_idempotent_and_audits_only_real_changes(): void
+    {
+        $svc = $this->service();
+        $admin = $this->admin();
+        $res = $svc->mint($admin, 'password123', 'ci', ['read:boards'], null);
+
+        $revokedRows = fn (int $id): int => (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE action = 'api_token_revoked' AND target_id = ?",
+            [$id],
+        );
+
+        $svc->revoke($admin, $res['id']);
+        self::assertSame(1, $revokedRows($res['id']), 'a real revoke writes exactly one audit row');
+
+        // Already revoked -> repo affects 0 rows -> no second audit row (idempotent).
+        $svc->revoke($admin, $res['id']);
+        self::assertSame(1, $revokedRows($res['id']), 'a no-op revoke forges no audit row');
+
+        // Unknown id -> nothing changes, nothing audited.
+        $svc->revoke($admin, 999999);
+        self::assertSame(0, $revokedRows(999999), 'revoking an unknown id forges no audit row');
+    }
+
     public function test_flag_dark_kill_switch_on_authenticate(): void
     {
         $res = $this->service(true)->mint($this->admin(), 'password123', 'ci', ['read:boards'], null);
@@ -517,6 +540,7 @@ final class ApiTokenServiceTest extends TestCase
     {
         return [
             'empty scopes' => [[], 'ci', null],
+            'duplicate scopes' => [['read:boards', 'read:boards'], 'ci', null],
             'unknown scope' => [['write:all'], 'ci', null],
             'blank name' => [['read:boards'], '   ', null],
             'long name' => [['read:boards'], str_repeat('x', 81), null],
@@ -595,9 +619,13 @@ final class ApiTokenRepository
         $this->db->run('UPDATE api_tokens SET last_used_at = UTC_TIMESTAMP() WHERE id = ?', [$id]);
     }
 
-    public function revoke(int $id): void
+    /** @return int rows affected — 0 when the id is unknown or already revoked */
+    public function revoke(int $id): int
     {
-        $this->db->run('UPDATE api_tokens SET revoked_at = UTC_TIMESTAMP() WHERE id = ? AND revoked_at IS NULL', [$id]);
+        return $this->db->run(
+            'UPDATE api_tokens SET revoked_at = UTC_TIMESTAMP() WHERE id = ? AND revoked_at IS NULL',
+            [$id],
+        )->rowCount();
     }
 
     /** @return array<int,array<string,mixed>> admin listing; excludes token_hash */
@@ -679,9 +707,12 @@ final class ApiTokenService
             if (!is_string($scope) || !ApiScopes::isValid($scope)) {
                 throw new ValidationException(['scopes' => 'Unknown scope.']);
             }
-            $clean[$scope] = true;
+            if (in_array($scope, $clean, true)) {
+                // Spec: distinct scopes — a duplicate is a client error, not silently deduped.
+                throw new ValidationException(['scopes' => 'Duplicate scope.']);
+            }
+            $clean[] = $scope;
         }
-        $clean = array_keys($clean);
         if ($clean === []) {
             throw new ValidationException(['scopes' => 'Select at least one scope.']);
         }
@@ -745,7 +776,11 @@ final class ApiTokenService
     {
         $this->writeGate->assertCanWrite($admin);
         $this->db->transaction(function () use ($admin, $tokenId): void {
-            $this->tokens->revoke($tokenId);
+            // Audit only a real state change: a no-op revoke (unknown id, or one already
+            // revoked) must NOT forge an `api_token_revoked` row. Idempotent either way.
+            if ($this->tokens->revoke($tokenId) !== 1) {
+                return;
+            }
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'api_token_revoked',
@@ -1164,8 +1199,8 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 **Files:**
 - Create: `src/Controller/AdminApiTokenController.php`, `templates/admin/api_tokens.php`
-- Modify: `src/Core/App.php` (`buildRouter()` — admin routes + import)
-- Test: `tests/Integration/Api/AdminApiTokenTest.php`; browser evidence under `tests/browser/`
+- Modify: `src/Core/App.php` (`buildRouter()` — admin routes + import); `templates/admin/dashboard.php` (flag-gated discovery link)
+- Test: `tests/Integration/Api/AdminApiTokenTest.php`; browser evidence under `tests/browser/` (incl. `tests/browser/seed.php` — enable the `api_tokens` flag so the dark-by-default page is reachable)
 
 **Interfaces:**
 - Consumes: `ApiTokenService`; `ApiScopes::all()`; base `Controller` helpers (`requireAdmin`, `view`, `redirectWithFlash`); `Request::str/post`; `NotFoundException`.
@@ -1425,7 +1460,10 @@ and in `buildRouter()` (with the other `/admin/*` routes):
 Run: `vendor/bin/phpunit tests/Integration/Api/AdminApiTokenTest.php`
 Expected: PASS.
 
-- [ ] **Step 7: Add the admin link + Playwright evidence.** Add an "API tokens" link to the admin nav (mirror how `templates/admin/structure.php` / the admin sidebar links to other admin pages — gated so it only shows when an admin is signed in). Then capture browser evidence: extend the Playwright evidence flow (`tests/browser/`, run `npm run evidence`) with a step that signs in as an admin, opens `/admin/api-tokens`, submits the mint form **without JS** (plain form submit), asserts the one-time `rbt_` banner appears, then revokes the token. Save the screenshot(s) under `docs/evidence/browser/`.
+- [ ] **Step 7: Flag-gated discovery link + enable the flag for evidence + Playwright capture.**
+  1. **Discovery link.** Add a flag-gated "API tokens" link to the dashboard subnav in `templates/admin/dashboard.php` — inside the existing `<nav class="subnav">`, mirroring the sibling `<a href="/admin/structure">…</a>`, wrapped in `<?php if (!empty($features['api_tokens'])): ?> … <?php endif; ?>`. (`$features` is a shared view global — confirmed `App::shareViewGlobals()` → `View::share(['features' => …])` — so **no controller change is needed**. Gating on the flag keeps the link from ever pointing at a dark-flag 404. Note: this codebase does **not** nav-link every admin subpage — `/admin/branding` has no nav entry at all — so a single gated dashboard entry is the discovery surface; the new page carries its own subnav back to Dashboard.)
+  2. **Enable the flag in the evidence DB.** The `api_tokens` flag defaults **dark**, so `/admin/api-tokens` 404s on a freshly-seeded evidence DB (and the gated link stays hidden) — see the dark-flag test at Task 6 Step 1. In `tests/browser/seed.php`, inside the settings block of the seed transaction (next to `registration_mode`), add `$settings->set('features', ['api_tokens' => true]);`.
+  3. **Capture browser evidence.** Extend the Playwright evidence flow (`tests/browser/`, run `npm run evidence`) with a step that signs in as the seeded admin, navigates to `/admin/api-tokens`, submits the mint form **without JS** (plain form submit), asserts the one-time `rbt_` banner appears, then revokes the token. Save the screenshot(s) under `docs/evidence/browser/`.
 
 Run: `cd tests/browser && npm run evidence`
 Expected: the new admin-api-token screenshots are produced; the flow passes.
@@ -1433,7 +1471,7 @@ Expected: the new admin-api-token screenshots are produced; the flow passes.
 - [ ] **Step 8: Commit.**
 
 ```bash
-git add src/Controller/AdminApiTokenController.php templates/admin/api_tokens.php src/Core/App.php tests/Integration/Api/AdminApiTokenTest.php tests/browser docs/evidence
+git add src/Controller/AdminApiTokenController.php templates/admin/api_tokens.php templates/admin/dashboard.php src/Core/App.php tests/Integration/Api/AdminApiTokenTest.php tests/browser docs/evidence
 git commit -m "Admin API-token management UI + Playwright evidence (B2)
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"

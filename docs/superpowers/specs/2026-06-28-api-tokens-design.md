@@ -155,13 +155,13 @@ Layering follows the existing thin-controller → service → repository pattern
   - `insert(name, tokenHash, scopesJson, createdBy, ?expiresAt): int`
   - `findActiveByHash(string $hash): ?array` — `WHERE token_hash = ? AND revoked_at IS NULL AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())`
   - `touchLastUsed(int $id): void`
-  - `revoke(int $id): void` — set `revoked_at = UTC_TIMESTAMP()` (gated `WHERE revoked_at IS NULL`)
+  - `revoke(int $id): int` — set `revoked_at = UTC_TIMESTAMP()` (gated `WHERE revoked_at IS NULL`); returns **rows affected** (0 when the id is unknown or already revoked)
   - `list(): array` — for the admin UI; selects everything **except** `token_hash`, newest first
   - `findById(int): ?array`
 - **`App\Service\ApiTokenService`** `(Database, ApiTokenRepository, ModerationLogRepository, FeatureFlags, Config, PasswordHasher, UserRepository, WriteGate)`:
   - `mint(User $admin, string $currentPassword, string $name, array $scopes, ?int $expiresInDays): array{token:string, id:int}` — in order: **(a) write gate** — `WriteGate::assertCanWrite($admin)` (state beats role: a suspended/banned admin with a stale session cannot mint, even though `requireAdmin` passed); **(b) flag gate** — throw `ApiTokensDisabledException` if `api_tokens` is dark (defense in depth — the admin UI is already 404 when dark); **(c) reauth** — verify `$currentPassword` via `PasswordHasher` (`PHASE_3_PLAN:538` "reauth for creation"); mismatch → `ValidationException(['current_password'=>…])`, mints **nothing**; **(d) validate** (see below). Then generate `'rbt_' . bin2hex(random_bytes(24))`, store `sha256` + scopes + `expires_at`, audit `api_token_minted` (name + scopes — **no token, no password**), return the plaintext **once**. Txn (insert + audit). MFA is not separately re-challenged (the codebase reauths sensitive changes with the password, not a per-action MFA ceremony).
   - `authenticate(string $bearer): ?ApiPrincipal` — **return `null` immediately if `api_tokens` is dark** (service-level kill switch, so even a future non-controller caller cannot authenticate); else strip the `Bearer ` prefix, `$hash = sha256(token)`, `findActiveByHash($hash)`; on hit `touchLastUsed` and return an `ApiPrincipal` carrying `tokenHash` + `createdAt`; else `null`.
-  - `revoke(User $admin, int $tokenId): void` — `WriteGate::assertCanWrite($admin)`; `revoke` + audit `api_token_revoked`. Txn. Idempotent. Allowed when the flag is dark (cleanup).
+  - `revoke(User $admin, int $tokenId): void` — `WriteGate::assertCanWrite($admin)`; `revoke` + audit `api_token_revoked` **only when the repo reports a real state change** (rows-affected = 1); a no-op revoke of an unknown / already-revoked id forges **no** audit row. Txn. Idempotent. Allowed when the flag is dark (cleanup).
   - `auditScopeDenied(ApiPrincipal $p, string $scope): void` — writes an `api_token_scope_denied` `moderation_log` row (`target_id` = token id; attempted scope; **no secret**). Called by `respond()` on a 403.
   - `list(): array` — passthrough for the admin UI.
 
