@@ -62,11 +62,13 @@ final class SanitizationTest extends TestCase
         self::assertStringNotContainsString('<img', $html);
     }
 
-    public function test_tables_are_not_rendered(): void
+    public function test_tables_render_without_unsafe_attributes(): void
     {
-        $html = $this->markdown->render("| a | b |\n|---|---|\n| 1 | 2 |");
-        self::assertStringNotContainsString('<table', $html);
-        self::assertStringNotContainsString('<td', $html);
+        $html = $this->markdown->render("| a | b |\n|---|---|\n| 1 | <script>alert(1)</script> |");
+        self::assertStringContainsString('<table>', $html);
+        self::assertStringContainsString('<td>1</td>', $html);
+        self::assertStringNotContainsString('<script', $html);
+        self::assertStringNotContainsString('style=', $html);
     }
 
     public function test_headings_are_clamped_to_h2_and_h3(): void

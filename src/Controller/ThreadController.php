@@ -13,12 +13,15 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\SubscriptionRepository;
+use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Service\PreferenceService;
+use App\Service\CommunityMemoryService;
 use App\Service\ReactionService;
+use App\Service\ThreadWorkflowService;
 use App\Support\Markdown;
 
 /**
@@ -136,6 +139,68 @@ final class ThreadController extends Controller
                 ->effectiveForThread($user->id(), (int) $thread['id'], (int) $thread['board_id']);
         }
 
+        // Phase 4 topic workflow: canonical status, personal snooze, and
+        // optional board assignment are separate from pin/lock/solved chips.
+        $workflowOn = (bool) $this->container->get(FeatureFlags::class)->enabled('topic_workflow');
+        $statusLabels = ThreadWorkflowService::STATUSES;
+        $statusHistory = [];
+        $assignment = null;
+        $canSelfAssign = false;
+        $canStaffAssign = false;
+        $canChangeStatuses = [];
+        $mySnooze = null;
+        if ($workflowOn) {
+            $workflow = $this->container->get(ThreadWorkflowService::class);
+            $statusHistory = $this->container->get(ThreadRepository::class)->statusHistory((int) $thread['id'], 5);
+            $assignment = $workflow->currentAssignment((int) $thread['id']);
+            if ($user !== null) {
+                $canSelfAssign = $workflow->canSelfAssign($user, $thread);
+                $canStaffAssign = $workflow->canStaffAssignThread($user, $thread);
+                foreach (array_keys($statusLabels) as $status) {
+                    $canChangeStatuses[$status] = $workflow->canChangeStatus($user, $thread, $status);
+                }
+                $myState = $this->container->get(ThreadUserRepository::class)->find($user->id(), (int) $thread['id']);
+                $mySnooze = $myState['snoozed_until'] ?? null;
+            }
+        }
+
+        $tagsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('tags');
+        $threadTags = [];
+        $allTags = [];
+        $canEditTags = false;
+        if ($tagsOn && (int) ($thread['board_tags_enabled'] ?? 1) === 1) {
+            $tagRepo = $this->container->get(TagRepository::class);
+            $threadTags = $tagRepo->forThread((int) $thread['id']);
+            if ($user !== null && $this->container->get(WriteGate::class)->canWrite($user)) {
+                $canEditTags = $user->isAdmin()
+                    || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
+                    || $this->container->get(BoardPolicy::class)->canPost(
+                        ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                        $user,
+                        $isMember,
+                    );
+            }
+            if ($canEditTags) {
+                $allTags = $tagRepo->allEnabled();
+            }
+        }
+
+        $memoryOn = (bool) $this->container->get(FeatureFlags::class)->enabled('community_memory');
+        $summary = null;
+        $related = [];
+        $canCurateMemory = false;
+        $canCurateWiki = false;
+        if ($memoryOn) {
+            $memory = $this->container->get(CommunityMemoryService::class);
+            $summary = $memory->publishedSummary((int) $thread['id']);
+            $related = $memory->relatedForViewer((int) $thread['id'], $user);
+            $canCurateMemory = $user !== null && (
+                $user->isAdmin()
+                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
+            );
+            $canCurateWiki = $canCurateMemory && (int) ($thread['board_wiki_enabled'] ?? 0) === 1;
+        }
+
         return $this->view('thread', array_merge([
             'thread' => $thread,
             'posts' => $posts,
@@ -161,6 +226,23 @@ final class ThreadController extends Controller
             'can_reveal_anon' => $canRevealAnon,
             'notifications_on' => $notificationsOn,
             'subscription' => $subscription,
+            'workflow_on' => $workflowOn,
+            'status_labels' => $statusLabels,
+            'status_history' => $statusHistory,
+            'assignment' => $assignment,
+            'can_self_assign' => $canSelfAssign,
+            'can_staff_assign' => $canStaffAssign,
+            'can_change_statuses' => $canChangeStatuses,
+            'my_snooze' => $mySnooze,
+            'tags_on' => $tagsOn,
+            'thread_tags' => $threadTags,
+            'all_tags' => $allTags,
+            'can_edit_tags' => $canEditTags,
+            'memory_on' => $memoryOn,
+            'summary' => $summary,
+            'related_threads' => $related,
+            'can_curate_memory' => $canCurateMemory,
+            'can_curate_wiki' => $canCurateWiki,
             'reply_errors' => [],
             'reply_old' => [],
             'edit_post_id' => 0,

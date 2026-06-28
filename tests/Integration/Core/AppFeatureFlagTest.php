@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Core\FeatureFlags;
 use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
@@ -25,6 +26,60 @@ final class AppFeatureFlagTest extends TestCase
     private function setFlags(array $flags): void
     {
         (new SettingRepository($this->db))->set('features', $flags);
+    }
+
+    public function test_phase4_gate_a_flags_default_dark(): void
+    {
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        foreach (['topic_workflow', 'group_dms', 'tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory'] as $flag) {
+            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
+        }
+
+        $this->setFlags(['tags' => true]);
+        $overridden = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($overridden->enabled('tags'));
+        self::assertTrue($overridden->enabled('community'));
+    }
+
+    public function test_group_dms_flag_gates_group_creation_and_management(): void
+    {
+        // group_dms defaults dark; the legacy `dms` flag defaults on. Group DMs
+        // must NOT ship live just because dms is on (PR #17 regression guard).
+        $owner = $this->makeUser(['username' => 'gdmowner']);
+        $this->makeUser(['username' => 'gdmbob']);
+        $this->makeUser(['username' => 'gdmcarol']);
+        // Give the owner a post so they clear the new-account DM anti-spam throttle.
+        $this->makeThread($this->makeBoard($this->makeCategory()), $owner, 'Hi', 'establishing a post.');
+        $this->actingAs($owner);
+
+        // A 1:1 direct message still works while group_dms is dark.
+        $direct = $this->post('/messages', ['to' => 'gdmbob', 'body' => 'hello there']);
+        self::assertLessThan(400, $direct->status(), '1:1 DM must stay available while group_dms is dark');
+
+        // A group create (extra recipient + title) is refused server-side and
+        // creates no group conversation.
+        $this->assertStatus(422, $this->post('/messages', ['to' => 'gdmbob, gdmcarol', 'title' => 'Room', 'body' => 'hi all']));
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue("SELECT COUNT(*) FROM conversations WHERE kind = 'group'"),
+            'no group conversation may be created while group_dms is dark',
+        );
+
+        // Group-management routes 404 (the flag gate fires before any lookup).
+        $this->assertStatus(404, $this->post('/messages/1/members', ['username' => 'gdmcarol']));
+        $this->assertStatus(404, $this->post('/messages/1/members/remove', ['user_id' => 1]));
+        $this->assertStatus(404, $this->post('/messages/1/rename', ['title' => 'x']));
+        $this->assertStatus(404, $this->post('/messages/1/transfer', ['user_id' => 1]));
+
+        // Enabling the flag lets a group be created.
+        $this->setFlags(['group_dms' => true]);
+        $ok = $this->post('/messages', ['to' => 'gdmbob, gdmcarol', 'title' => 'Room', 'body' => 'hi again']);
+        self::assertLessThan(400, $ok->status(), 'group creation should succeed once group_dms is on');
+        self::assertSame(
+            1,
+            (int) $this->db->fetchValue("SELECT COUNT(*) FROM conversations WHERE kind = 'group'"),
+            'enabling group_dms permits group creation',
+        );
     }
 
     public function test_disabling_a_flag_takes_its_get_routes_offline_but_keeps_core_up(): void

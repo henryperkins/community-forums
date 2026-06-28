@@ -36,6 +36,7 @@ final class ReactionService
         private BoardPolicy $policy,
         private WriteGate $writeGate,
         private ?NotificationService $notifications = null,
+        private ?ReputationLedgerService $reputation = null,
     ) {
     }
 
@@ -73,7 +74,16 @@ final class ReactionService
             $state = $this->reactions->toggle($postId, $user->id(), $emoji);
             if (!$isSelf) {
                 // Self-reactions never affect reputation (COMMUNITY §2.1).
-                $this->users->incrementReputation($authorId, $state === 'added' ? 1 : -1);
+                $key = 'reaction:' . $postId . ':' . $user->id() . ':' . sha1($emoji);
+                if ($this->reputation !== null) {
+                    if ($state === 'added') {
+                        $this->reputation->apply($authorId, (int) $post['board_id'], 'reaction', $postId, $key, 1);
+                    } else {
+                        $this->reputation->reverse($key, $user->id(), 'reaction_removed');
+                    }
+                } else {
+                    $this->users->incrementReputation($authorId, $state === 'added' ? 1 : -1);
+                }
                 // Notify the author once per (recipient, actor, post) on add.
                 if ($state === 'added' && $this->notifications !== null) {
                     $this->notifications->notifyReaction($user->id(), $post);

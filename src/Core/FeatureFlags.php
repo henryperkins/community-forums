@@ -11,10 +11,10 @@ use App\Repository\SettingRepository;
  * §6 / §13 staged release).
  *
  * Each subsystem is gated so it can be enabled independently and rolled back
- * without a data change. Code defaults are ON so a fresh install is fully
- * functional and the test suite exercises every path; an operator running a
- * "deploy dark" staged rollout disables flags via the `features` setting
- * (a JSON object of flag => bool), which overrides the defaults per flag.
+ * without a data change. Phase 2/3 defaults are ON so a fresh install is fully
+ * functional; Phase 4 Gate A defaults are OFF for the planned deploy-dark
+ * rollout until each workstream has acceptance evidence. The `features` setting
+ * (a JSON object of flag => bool) overrides defaults per flag.
  *
  * Note: a Phase 3 flag only gates feature *availability*. The conservative
  * staged-rollout posture (e.g. anti-abuse "observe" mode) lives in config, not
@@ -43,6 +43,15 @@ final class FeatureFlags
         'branding' => true,          // operator branding: name/logo/favicon/colors (P3-07)
         'seo' => true,               // public metadata, sitemap, robots (P3-10)
         'product_tour' => true,      // new-user onboarding tour (P3-11)
+
+        // ── Phase 4 Gate A ───────────────────────────────────────────────
+        'topic_workflow' => false,    // canonical status, history, snooze, assignment
+        'group_dms' => false,         // group conversation creation/invites
+        'tags' => false,              // curated tag catalogue + thread tagging
+        'expanded_feeds' => false,    // board/tag follows, Following + Latest feeds
+        'reputation_ledger' => false, // idempotent reputation events + windowed ranks
+        'badge_rules' => false,       // custom badge rules/backfill/revoke history
+        'community_memory' => false,  // summaries, related topics, wiki revisions
     ];
 
     /** @var array<string,bool>|null */

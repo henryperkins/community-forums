@@ -60,13 +60,13 @@ final class BoardRepository
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int} $data
      */
     public function create(array $data): int
     {
         return $this->db->insert(
-            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, created_at)
-             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, UTC_TIMESTAMP())',
+            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, assignment_mode, tags_enabled, wiki_enabled, created_at)
+             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, :assignment_mode, :tags_enabled, :wiki_enabled, UTC_TIMESTAMP())',
             [
                 'category_id' => $data['category_id'],
                 'slug' => $data['slug'],
@@ -77,19 +77,23 @@ final class BoardRepository
                 'visibility' => $data['visibility'] ?? 'public',
                 'allow_anonymous' => !empty($data['allow_anonymous']) ? 1 : 0,
                 'require_approval' => !empty($data['require_approval']) ? 1 : 0,
+                'assignment_mode' => $data['assignment_mode'] ?? 'off',
+                'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
+                'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
             ],
         );
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int} $data
      */
     public function update(int $id, array $data): void
     {
         $this->db->run(
             'UPDATE boards SET category_id = :category_id, slug = :slug, name = :name, description = :description,
                 visibility = :visibility, post_min_role = :post_min_role, allow_anonymous = :allow_anonymous,
-                require_approval = :require_approval WHERE id = :id',
+                require_approval = :require_approval, assignment_mode = :assignment_mode,
+                tags_enabled = :tags_enabled, wiki_enabled = :wiki_enabled WHERE id = :id',
             [
                 'category_id' => $data['category_id'],
                 'slug' => $data['slug'],
@@ -99,6 +103,9 @@ final class BoardRepository
                 'post_min_role' => $data['post_min_role'],
                 'allow_anonymous' => !empty($data['allow_anonymous']) ? 1 : 0,
                 'require_approval' => !empty($data['require_approval']) ? 1 : 0,
+                'assignment_mode' => $data['assignment_mode'] ?? 'off',
+                'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
+                'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
                 'id' => $id,
             ],
         );

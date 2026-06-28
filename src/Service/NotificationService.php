@@ -171,6 +171,25 @@ final class NotificationService
         ]);
     }
 
+    /** A DM report is actionable only for admins and links to the reports queue. */
+    public function notifyDmReport(int $reporterId, int $conversationId): void
+    {
+        if (!$this->flags->enabled('notifications')) {
+            return;
+        }
+        foreach ($this->users->adminIds() as $adminId) {
+            if ($adminId === $reporterId) {
+                continue;
+            }
+            $this->notifs->create([
+                'user_id' => $adminId,
+                'type' => 'mod',
+                'actor_id' => $reporterId,
+                'conversation_id' => $conversationId,
+            ]);
+        }
+    }
+
     /** A reaction notifies the post author once (in-app only), unless self or blocked. */
     public function notifyReaction(int $actorId, array $post): void
     {

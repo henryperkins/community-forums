@@ -2,6 +2,26 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] — Phase 4 Gate A checkpoint
+
+Suite green at **448 tests / 1572 assertions** after the Gate A blocker/high-gap fix pass. This is still a checkpoint, not a release candidate; see `PHASE_4_STATUS.md` and `docs/evidence/phase4-gate-a.md` for carryover and evidence.
+
+### Fixed
+
+- Windowed/board leaderboards no longer crash on `user_preferences.namespace`.
+- Advanced Markdown sanitizer tests now assert the intended safe table rendering.
+- Group-DM reports include the reported message context in the admin report queue and notify admins.
+- Group-DM adds reject inactive accounts; personal mute no longer appears in shared group history; unread counts respect join boundaries.
+- Board `tags_enabled` and `wiki_enabled` are server-enforced; permitted members can apply approved tags.
+- Profile owners can remove followers.
+- Post delete/restore paths reverse/reapply reputation ledger events; `repair:reputation-ledger` / `reputation:reconcile` rebuilds the ledger from canonical state.
+- Phase 4 Gate A flags deploy dark by default.
+
+### Schema / Docs
+
+- Reconciled migration `0048_phase4_gate_a.php` into `SCHEMA.md` v1.13.
+- Added `PHASE_4_STATUS.md` and `docs/evidence/phase4-gate-a.md`.
+
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
 Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **405 tests / 1390 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.

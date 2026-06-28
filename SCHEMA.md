@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.11 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-26
+**Status:** v1.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -56,6 +56,22 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 36 | `badges` | Community | 2 (P1 of community) | COMMUNITY §11 |
 | 37 | `user_badges` | Community | 2 (P1 of community) | COMMUNITY §11 |
 | 38 | `reputation_events` | Community | 4 | COMMUNITY §11 |
+| 39 | `thread_status_history` | Workflow | 4 | PHASE_4_PLAN §8 |
+| 40 | `thread_assignments` | Workflow | 4 | PHASE_4_PLAN §8 |
+| 41 | `thread_assignment_history` | Workflow | 4 | PHASE_4_PLAN §8 |
+| 42 | `conversation_events` | DMs | 4 | PHASE_4_PLAN §8 |
+| 43 | `tags` | Community | 4 | PHASE_4_PLAN §8 |
+| 44 | `tag_aliases` | Community | 4 | PHASE_4_PLAN §8 |
+| 45 | `thread_tags` | Community | 4 | PHASE_4_PLAN §8 |
+| 46 | `badge_rules` | Community | 4 | PHASE_4_PLAN §8 |
+| 47 | `badge_award_history` | Community | 4 | PHASE_4_PLAN §8 |
+| 48 | `thread_summaries` | Knowledge | 4 | PHASE_4_PLAN §8 |
+| 49 | `thread_summary_sources` | Knowledge | 4 | PHASE_4_PLAN §8 |
+| 50 | `related_threads` | Knowledge | 4 | PHASE_4_PLAN §8 |
+| 51 | `post_revisions` | Knowledge | 4 | PHASE_4_PLAN §8 |
+| 52 | `content_references` | Composer / Knowledge | 4 | PHASE_4_PLAN §8 |
+| 53 | `thread_operations` | Moderation / Knowledge | 4 | PHASE_4_PLAN §8 |
+| 54 | `thread_redirects` | Moderation / Knowledge | 4 | PHASE_4_PLAN §8 |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 
@@ -656,6 +672,9 @@ CREATE TABLE badges (
   description VARCHAR(255) NOT NULL,
   icon        VARCHAR(64)  NULL,
   kind        ENUM('auto','manual') NOT NULL DEFAULT 'auto',
+  is_enabled  TINYINT(1) NOT NULL DEFAULT 1,                 -- Phase 4 Gate A
+  display_order INT NOT NULL DEFAULT 0,                      -- Phase 4 Gate A
+  rule_version INT UNSIGNED NULL,                            -- Phase 4 Gate A custom-rule revision
   PRIMARY KEY (id),
   UNIQUE KEY uq_badge_slug (slug)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -671,22 +690,63 @@ CREATE TABLE user_badges (
   CONSTRAINT fk_ub_badge FOREIGN KEY (badge_id) REFERENCES badges(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Optional reputation ledger (audit + time-windowed leaderboards). users.reputation is the canonical counter.
--- NOTE: Phase 4 PREVIEW ONLY — not canonical. The committed DDL is owned by PHASE_4_PLAN §8.2 (#12), which adds a
--- logical-event/idempotency key, event time, and board attribution this sketch lacks. Do not build from this block;
--- it is kept here for context only, consistent with §6/§7 (Phases 4–7 DDL lives in each phase plan until accepted).
+-- Reputation ledger (audit + time-windowed leaderboards). Built by migration 0048.
+-- users.reputation is reconciled from active (non-reversed) applied_delta rows.
 CREATE TABLE reputation_events (
-  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id     BIGINT UNSIGNED NOT NULL,
-  delta       INT NOT NULL,
-  reason      ENUM('reaction','solved','adjust') NOT NULL,
-  source_type ENUM('post','thread') NULL,
-  source_id   BIGINT UNSIGNED NULL,
-  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id         BIGINT UNSIGNED NOT NULL,
+  board_id        BIGINT UNSIGNED NULL,
+  source_type     VARCHAR(32)     NOT NULL,                 -- reaction | accepted_answer | future correction source
+  source_id       BIGINT UNSIGNED NULL,
+  logical_key     VARCHAR(120)    NOT NULL,                 -- durable idempotency key
+  delta           INT             NOT NULL,
+  applied_delta   INT             NOT NULL,
+  event_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  reversed_at     DATETIME        NULL,
+  reversed_by     BIGINT UNSIGNED NULL,
+  reversal_reason VARCHAR(255)    NULL,
+  created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  KEY idx_repev_user (user_id, created_at)
+  UNIQUE KEY uq_reputation_logical (logical_key),
+  KEY idx_rep_user_time (user_id, event_at),
+  KEY idx_rep_board_time (board_id, event_at),
+  CONSTRAINT fk_rep_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_rep_board FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE SET NULL,
+  CONSTRAINT fk_rep_reversed_by FOREIGN KEY (reversed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
+
+### Phase 4 Gate A reconciliation (migration 0048)
+
+Additive columns folded into existing tables:
+
+- `threads.status ENUM('open','needs_answer','solved','decision_made','archived') NOT NULL DEFAULT 'open'`, `status_changed_at DATETIME NULL`, `status_changed_by BIGINT UNSIGNED NULL`, index `idx_threads_status`, FK `status_changed_by → users.id`.
+- `posts.is_wiki TINYINT(1) NOT NULL DEFAULT 0`, index `idx_posts_wiki (thread_id, is_wiki)`.
+- `thread_user.snoozed_until DATETIME NULL`, `inbox_note VARCHAR(120) NULL`, index `idx_tu_snooze (user_id, snoozed_until)`.
+- `boards.assignment_mode ENUM('off','self','staff') NOT NULL DEFAULT 'off'`, `tags_enabled TINYINT(1) NOT NULL DEFAULT 1`, `wiki_enabled TINYINT(1) NOT NULL DEFAULT 0`.
+- `conversations.kind ENUM('direct','group') NOT NULL DEFAULT 'direct'`, `title VARCHAR(120) NULL`, `owner_user_id BIGINT UNSIGNED NULL`, `created_by BIGINT UNSIGNED NULL`, index `idx_conversations_kind`, FKs to `users`.
+- `conversation_participants.role ENUM('owner','member') NOT NULL DEFAULT 'member'`, `joined_after_message_id BIGINT UNSIGNED NOT NULL DEFAULT 0`, `joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`, `left_at DATETIME NULL`, `removed_by BIGINT UNSIGNED NULL`, `notification_mode ENUM('normal','muted') NOT NULL DEFAULT 'normal'`, index `idx_cp_active_user`, FK `removed_by → users.id`.
+
+New tables:
+
+- `thread_status_history(id, thread_id, actor_id, previous_status, new_status, reason, created_at)` with thread/actor indexes and FKs; initial rows are backfilled during migration.
+- `thread_assignments(thread_id, assigned_user_id, assigned_by, assigned_at)` with primary key `thread_id`, assignee index, and FKs to `threads`/`users`.
+- `thread_assignment_history(id, thread_id, previous_user_id, assigned_user_id, actor_id, action, reason, created_at)` with thread/actor indexes and FKs to `threads`/`users`.
+- `conversation_events(id, conversation_id, actor_id, event_type, subject_user_id, body, created_at)` with conversation index and FKs to `conversations`/`users`.
+- `tags(id, slug, name, description, visibility, is_enabled, created_by, created_at, updated_at)` with unique `slug`, enabled/name index, and creator FK.
+- `tag_aliases(alias_slug, tag_id, created_at)` with primary key `alias_slug` and FK to `tags`.
+- `thread_tags(thread_id, tag_id, added_by, created_at)` with primary key `(thread_id, tag_id)`, tag index, and FKs to `threads`/`tags`/`users`.
+- `badge_rules(id, badge_id, rule_type, threshold, board_id, repeatable, is_enabled, version, created_by, created_at, updated_at)` with badge index and FKs to `badges`/`boards`/`users`.
+- `badge_award_history(id, user_id, badge_id, badge_rule_id, achievement_key, action, actor_id, reason, created_at)` with unique `(user_id, badge_id, achievement_key, action)`, user index, and FKs.
+- `thread_summaries(id, thread_id, kind, status, body, body_html, version, author_id, reviewer_id, published_at, retired_at, created_at, updated_at)` with `(thread_id, status, version)` index and FKs.
+- `thread_summary_sources(summary_id, post_id)` with primary key `(summary_id, post_id)` and FKs to `thread_summaries`/`posts`.
+- `related_threads(id, source_thread_id, related_thread_id, relation_type, source, score, reason, status, curator_id, created_at)` with unique related-pair key, target index, and FKs.
+- `post_revisions(id, post_id, editor_id, body, body_html, reason, created_at)` with `(post_id, id)` index and FKs.
+- `content_references(id, source_type, source_id, target_type, target_id, token, resolved_at, unavailable, created_at)` with source and target indexes; app logic resolves/authorizes targets.
+- `thread_operations(id, operation_type, actor_id, source_thread_id, destination_thread_id, status, dry_run_plan, before_snapshot, after_snapshot, failure_reason, created_at, applied_at)` with source index and FKs.
+- `thread_redirects(old_thread_id, canonical_thread_id, operation_id, created_at)` with primary key `old_thread_id`, canonical index, and FKs.
+
+Gate A implementation note (2026-06-28): `custom badge rules`, `content_references` reference-card rendering, and split/merge operations remain schema-only unless explicitly completed or re-scoped in `PHASE_4_STATUS.md`.
 
 ---
 
@@ -697,7 +757,7 @@ This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_
 - **Phase 1 (MVP backend):** `users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`. → See **[PHASE_1_MIGRATIONS.md](PHASE_1_MIGRATIONS.md)** for the exact Phase‑1 column cut, migration order (`0001`–`0010`), and which columns are held back to Phases 2–3.
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
 - **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` (durable delivery), `api_tokens`, plus the TOTP/recovery, appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here).
-- **Phase 4 (advanced community & content):** `reputation_events` + time-windowed-leaderboard support, custom-badge rule tables, group-conversation extensions, a tag catalogue, and the foreshadowed `threads.topic_status` / `thread_user.snoozed_until` / `thread_user.assigned_to` columns (§8). DDL in PHASE_4_PLAN.
+- **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
 - **Phase 5 (ecosystem, identity & governance):** signed-package/manifest, custom roles/capabilities, passkey credentials, generic-OIDC provider config, invitations, service principals, and verified-link tables. DDL in PHASE_5_PLAN.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
@@ -737,8 +797,6 @@ Where the docs genuinely disagreed, this file picks one answer. Each is reversib
 
 Mentioned in the docs as future schema, deliberately **not** added here until specced:
 
-- **`threads.topic_status`** — an `ENUM` for the Community-Inbox status chips (Solved · Needs Answer · Decision Made · …), DESIGN §6.18. Values not yet enumerated.
-- **`thread_user.snoozed_until` / `thread_user.assigned_to`** — inbox triage (snooze, assignment), DESIGN §6.18.
 - **`categories` default-collapsed flag** — ADMIN §4.1 describes an admin-set default-collapsed flag; no column specced. If built, add it as a cheap `categories.is_collapsed_default TINYINT(1)` in the Phase 3 admin-polish pass. (Per-user collapse state is separate — it lives in `user_preferences`.)
 - **`drafts`** table — server-side draft sync is P2; v1 drafts are `localStorage` only (COMPOSER §16.2).
 - **`post_mentions`** lookup table — optional, to speed "who was mentioned" queries (COMPOSER §16.2).
@@ -748,6 +806,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.13 | 2026-06-28 | Reconciled Phase 4 Gate A migration `0048`: documented additive status/snooze/assignment, board tag/wiki toggles, group-DM interval columns/events, canonical `reputation_events`, tag tables, badge-rule/audit tables, summaries/related/wiki revision tables, reference metadata, and split/merge operation/redirect tables. Removed now-committed status/snooze items from §8 foreshadowing. |
 | v1.12 | 2026-06-26 | Gave the Phase-2 **admin announcements/broadcast** feature a schema home (§7 #13): added `'announcement'` to `notifications.type` (now 11 values) for the in-app broadcast/system notice; documented the banner in `settings` (`site_announcement`), the pinned announcement as a pinned thread, and the broadcast email via `email_deliveries.kind='system'` — no new table. Noted the `categories` default-collapsed flag as a Phase-3 cheap flag (§8); de-referenced the not-yet-created `2026-06-20-auth-design.md` (sessions DDL is consolidated in §1). |
 | v1.11 | 2026-06-26 | Foreshadowed a **post-submission idempotency** column in §8 (COMPOSER §9.2/§14.3 uses a short-lived/transient dedupe; no column committed in v1). Doc-only; no table shape change. |
 | v1.10 | 2026-06-26 | Added `oauth_identities.avatar_url` (`VARCHAR(512) NULL`) as the **Phase-2** cache for OAuth avatar-import, giving `users.avatar_source` a writer (§7 #12); inline-tagged `users.avatar_source` → Phase 2 and `users.avatar_path` → Phase 3 build phases. Companion phase-plan edits (no SCHEMA shape change beyond `avatar_url`): `sessions.ip` added to the Phase-2 build (PHASE_2_PLAN P2-08 / §7.1 grp 4), avatar uploads + `users.avatar_path` given a Phase-3 owner (PHASE_3_PLAN P3-12), and the 90-day IP-retention purge job assigned to PHASE_3_PLAN P3-05 — resolving review findings 1/2/4/5. |

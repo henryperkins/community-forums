@@ -114,6 +114,9 @@ final class NotificationController extends Controller
             $me = $this->currentUser();
             return $me !== null ? '/u/' . $me->username() : '/notifications';
         }
+        if ($n['type'] === 'mod' && $n['conversation_id'] !== null) {
+            return '/mod/reports';
+        }
 
         if ($n['thread_id'] === null) {
             return null;

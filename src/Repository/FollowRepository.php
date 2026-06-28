@@ -30,6 +30,21 @@ final class FollowRepository
         )->rowCount() === 1;
     }
 
+    public function followTarget(int $userId, string $targetType, int $targetId): bool
+    {
+        if (!in_array($targetType, ['user', 'board', 'tag'], true)) {
+            return false;
+        }
+        if ($targetType === 'user') {
+            return $this->follow($userId, $targetId);
+        }
+        return $this->db->run(
+            'INSERT IGNORE INTO follows (user_id, target_type, target_id, created_at)
+             VALUES (?, ?, ?, UTC_TIMESTAMP())',
+            [$userId, $targetType, $targetId],
+        )->rowCount() === 1;
+    }
+
     public function unfollow(int $userId, int $targetId): void
     {
         $this->db->run(
@@ -38,11 +53,42 @@ final class FollowRepository
         );
     }
 
+    public function removeFollower(int $targetId, int $followerId): void
+    {
+        $this->db->run(
+            "DELETE FROM follows WHERE user_id = ? AND target_type = 'user' AND target_id = ?",
+            [$followerId, $targetId],
+        );
+    }
+
+    public function unfollowTarget(int $userId, string $targetType, int $targetId): void
+    {
+        if ($targetType === 'user') {
+            $this->unfollow($userId, $targetId);
+            return;
+        }
+        $this->db->run(
+            'DELETE FROM follows WHERE user_id = ? AND target_type = ? AND target_id = ?',
+            [$userId, $targetType, $targetId],
+        );
+    }
+
     public function isFollowing(int $userId, int $targetId): bool
     {
         return $this->db->fetchValue(
             "SELECT 1 FROM follows WHERE user_id = ? AND target_type = 'user' AND target_id = ? LIMIT 1",
             [$userId, $targetId],
+        ) !== false;
+    }
+
+    public function isFollowingTarget(int $userId, string $targetType, int $targetId): bool
+    {
+        if ($targetType === 'user') {
+            return $this->isFollowing($userId, $targetId);
+        }
+        return $this->db->fetchValue(
+            'SELECT 1 FROM follows WHERE user_id = ? AND target_type = ? AND target_id = ? LIMIT 1',
+            [$userId, $targetType, $targetId],
         ) !== false;
     }
 
@@ -69,6 +115,26 @@ final class FollowRepository
     {
         $rows = $this->db->fetchAll(
             "SELECT target_id FROM follows WHERE user_id = ? AND target_type = 'user'",
+            [$userId],
+        );
+        return array_map(static fn (array $r): int => (int) $r['target_id'], $rows);
+    }
+
+    /** @return list<int> */
+    public function followingBoardIds(int $userId): array
+    {
+        $rows = $this->db->fetchAll(
+            "SELECT target_id FROM follows WHERE user_id = ? AND target_type = 'board'",
+            [$userId],
+        );
+        return array_map(static fn (array $r): int => (int) $r['target_id'], $rows);
+    }
+
+    /** @return list<int> */
+    public function followingTagIds(int $userId): array
+    {
+        $rows = $this->db->fetchAll(
+            "SELECT target_id FROM follows WHERE user_id = ? AND target_type = 'tag'",
             [$userId],
         );
         return array_map(static fn (array $r): int => (int) $r['target_id'], $rows);

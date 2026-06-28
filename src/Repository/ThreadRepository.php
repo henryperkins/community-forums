@@ -68,7 +68,8 @@ final class ThreadRepository
         return $this->db->fetch(
             'SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
                     b.post_min_role AS board_post_min_role, b.allow_anonymous AS board_allow_anonymous,
-                    b.require_approval AS board_require_approval,
+                    b.require_approval AS board_require_approval, b.assignment_mode AS board_assignment_mode,
+                    b.tags_enabled AS board_tags_enabled, b.wiki_enabled AS board_wiki_enabled,
                     b.id AS board_id, au.username AS author_username, au.display_name AS author_display_name
              FROM threads t
              JOIN boards b ON b.id = t.board_id
@@ -192,6 +193,38 @@ final class ThreadRepository
     public function setAcceptedAnswer(int $id, ?int $postId): void
     {
         $this->db->run('UPDATE threads SET accepted_answer_post_id = ? WHERE id = ?', [$postId, $id]);
+    }
+
+    public function setStatus(int $id, string $status, ?int $actorId): void
+    {
+        $this->db->run(
+            'UPDATE threads SET status = ?, status_changed_at = UTC_TIMESTAMP(), status_changed_by = ? WHERE id = ?',
+            [$status, $actorId, $id],
+        );
+    }
+
+    public function addStatusHistory(int $id, ?int $actorId, ?string $previous, string $status, ?string $reason): void
+    {
+        $this->db->run(
+            'INSERT INTO thread_status_history (thread_id, actor_id, previous_status, new_status, reason, created_at)
+             VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+            [$id, $actorId, $previous, $status, $reason],
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> newest first */
+    public function statusHistory(int $id, int $limit = 20): array
+    {
+        $limit = max(1, min(100, $limit));
+        return $this->db->fetchAll(
+            'SELECT h.*, u.username AS actor_username, u.display_name AS actor_display_name
+             FROM thread_status_history h
+             LEFT JOIN users u ON u.id = h.actor_id
+             WHERE h.thread_id = ?
+             ORDER BY h.created_at DESC, h.id DESC
+             LIMIT ' . $limit,
+            [$id],
+        );
     }
 
     public function setPinned(int $id, bool $pinned): void

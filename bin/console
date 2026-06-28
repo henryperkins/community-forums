@@ -18,6 +18,7 @@ use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Service\BadgeService;
 use App\Service\RepairService;
+use App\Service\ReputationLedgerService;
 use App\Repository\AttachmentRepository;
 use App\Repository\ModerationLogRepository;
 use App\Service\AttachmentService;
@@ -113,6 +114,17 @@ try {
             $svc->repairReputation();
             $svc->reputationSolvedBonus();
             $log('Reputation recomputed from reactions + solved bonuses.');
+            break;
+
+        case 'repair:reputation-ledger':
+        case 'reputation:reconcile':
+            $db = $database();
+            $stats = (new ReputationLedgerService($db, new UserRepository($db)))
+                ->rebuildFromCanonical((int) $config->get('community.solved_bonus', 5));
+            foreach ($stats as $name => $rows) {
+                $log(sprintf('  %-28s %d', $name . ':', $rows));
+            }
+            $log('Reputation ledger rebuilt and users.reputation reconciled.');
             break;
 
         case 'community:backfill-badges':
@@ -252,6 +264,7 @@ try {
             $log('  repair               Reconcile all denormalised counters + reputation');
             $log('  repair:counters      Reconcile post/thread/board counters');
             $log('  repair:reputation    Recompute reputation from reactions + solved bonuses');
+            $log('  repair:reputation-ledger  Rebuild reputation_events and reconcile users.reputation');
             $log('  community:backfill-badges  Idempotently award auto badges (run on a cron for Anniversary)');
             $log('  verify:upgrade        Rehearse a Phase-1→Phase-2 upgrade on a scratch DB (destructive)');
             $log('  engagement:cutover [UTC]  Set the unread cutover timestamp');
