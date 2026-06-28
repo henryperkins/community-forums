@@ -1337,7 +1337,7 @@ git commit -m "$(printf 'feat(webhooks): WebhookRepository (endpoint CRUD + brea
 - Create: `tests/Integration/Repository/WebhookDeliveryRepositoryTest.php`
 
 **Interfaces:**
-- Produces (all on `WebhookDeliveryRepository`): `enqueue(webhookId,eventType,eventId,payloadJson,maxAttempts): int` (`INSERT IGNORE` on the 3-col unique key; 0 on dup), `claim(limit): array` (joins `webhooks`, gates `is_active=1`, backoff-aware; rows include `url`, `secret_ref`, `consecutive_failures`), `markDelivered(id,httpStatus): void`, `recordFailure(id,?httpStatus,error,?nextAttemptAt,bool dead): void`, `requeue(id): int` (only `status='dead'`), `listForWebhook(webhookId,limit): array`, `find(id): ?array`, `acquireDrainLock(): bool`/`releaseDrainLock(): void` (`GET_LOCK('rb_webhook_outbox',0)`), `statusCounts(): array`.
+- Produces (all on `WebhookDeliveryRepository`): `enqueue(webhookId,eventType,eventId,payloadJson,maxAttempts): int` (`INSERT IGNORE` on the 3-col unique key; 0 on dup), `claim(limit): array` (joins `webhooks`, gates `is_active=1`, backoff-aware; rows include `url`, `secret_ref`, `consecutive_failures`), `markDelivered(id,httpStatus): void`, `recordFailure(id,?httpStatus,error,?nextAttemptAt,bool dead): void`, `requeue(webhookId,deliveryId): int` (scoped to the owning webhook; only `status='dead'`; clears stale last-attempt metadata), `listForWebhook(webhookId,limit): array`, `find(id): ?array`, `acquireDrainLock(): bool`/`releaseDrainLock(): void` (`GET_LOCK('rb_webhook_outbox',0)`), `statusCounts(): array`.
 - Consumes: `WebhookRepository` (to create the parent endpoint in tests), the `webhook_deliveries` table (Task 2).
 
 - [ ] **Step 1: Write the failing test.** Create `tests/Integration/Repository/WebhookDeliveryRepositoryTest.php`:
@@ -1401,17 +1401,28 @@ final class WebhookDeliveryRepositoryTest extends TestCase
     public function test_transitions_and_requeue(): void
     {
         $h = $this->hook();
+
+        // mark-delivered after a prior failure clears the stale error text.
         $a = $this->deliv->enqueue($h, 'ping', 'a', '{}', 6);
+        $this->deliv->recordFailure($a, 500, 'boom', '2030-01-01 00:00:00', false);
         $this->deliv->markDelivered($a, 200);
         self::assertSame('delivered', $this->deliv->find($a)['status']);
+        self::assertNull($this->deliv->find($a)['error'], 'markDelivered clears the prior error');
 
         $b = $this->deliv->enqueue($h, 'ping', 'b', '{}', 6);
         $this->deliv->recordFailure($b, 500, 'boom', null, true);
         self::assertSame('dead', $this->deliv->find($b)['status']);
-        self::assertSame(1, $this->deliv->requeue($b), 'a dead row can be replayed');
-        self::assertSame('queued', $this->deliv->find($b)['status']);
-        self::assertSame(0, (int) $this->deliv->find($b)['attempt_count'], 'replay resets attempts');
-        self::assertSame(0, $this->deliv->requeue($a), 'a delivered row cannot be requeued');
+
+        // Replay is scoped to the OWNING webhook: a wrong parent id is a no-op.
+        self::assertSame(0, $this->deliv->requeue($h + 1, $b), 'cannot replay a delivery via another webhook id');
+        self::assertSame('dead', $this->deliv->find($b)['status'], 'wrong-parent replay left it dead');
+
+        self::assertSame(1, $this->deliv->requeue($h, $b), 'the owning webhook replays its dead row');
+        $row = $this->deliv->find($b);
+        self::assertSame('queued', $row['status']);
+        self::assertSame(0, (int) $row['attempt_count'], 'replay resets attempts');
+        self::assertNull($row['response_status'], 'replay clears stale response_status');
+        self::assertSame(0, $this->deliv->requeue($h, $a), 'a delivered row cannot be requeued');
     }
 }
 ```
@@ -1476,10 +1487,12 @@ final class WebhookDeliveryRepository
 
     public function markDelivered(int $id, int $httpStatus): void
     {
+        // Clear any prior-attempt error so a row that failed-then-succeeded
+        // doesn't show stale failure text in the delivery log.
         $this->db->run(
             "UPDATE webhook_deliveries
              SET status = 'delivered', delivered_at = UTC_TIMESTAMP(), last_attempt_at = UTC_TIMESTAMP(),
-                 attempt_count = attempt_count + 1, response_status = ?
+                 attempt_count = attempt_count + 1, response_status = ?, error = NULL
              WHERE id = ?",
             [$httpStatus, $id],
         );
@@ -1496,14 +1509,20 @@ final class WebhookDeliveryRepository
         );
     }
 
-    /** @return int 1 when a dead row was re-queued (idempotent audit), else 0 */
-    public function requeue(int $id): int
+    /**
+     * Re-queue a dead delivery — scoped to its OWNING webhook so a crafted
+     * /admin/webhooks/A/deliveries/B/replay can't requeue B when it belongs to
+     * another webhook. Also wipes stale last-attempt metadata for a clean retry.
+     * @return int 1 when a dead row of $webhookId was re-queued (idempotent), else 0
+     */
+    public function requeue(int $webhookId, int $deliveryId): int
     {
         return $this->db->run(
             "UPDATE webhook_deliveries
-             SET status = 'queued', attempt_count = 0, next_attempt_at = NULL, error = NULL
-             WHERE id = ? AND status = 'dead'",
-            [$id],
+             SET status = 'queued', attempt_count = 0, next_attempt_at = NULL,
+                 error = NULL, response_status = NULL, last_attempt_at = NULL
+             WHERE id = ? AND webhook_id = ? AND status = 'dead'",
+            [$deliveryId, $webhookId],
         )->rowCount();
     }
 
@@ -1847,7 +1866,7 @@ final class WebhookService
     {
         $this->writeGate->assertCanWrite($admin);
         $this->assertEnabled();
-        $this->assertSecretStoreEnabled();
+        $this->assertSecretStoreEnabled('current_password'); // rotate form only renders current_password errors
         if (!$this->hasher->verify($currentPassword, $admin->passwordHash())) {
             throw new ValidationException(['current_password' => 'Your current password is incorrect.']);
         }
@@ -1988,7 +2007,8 @@ final class WebhookService
         // Retained-control op: NO assertEnabled() — re-queue stays available when dark.
         $this->writeGate->assertCanWrite($admin);
         $this->db->transaction(function () use ($webhookId, $deliveryId, $admin): void {
-            if ($this->deliveries->requeue($deliveryId) === 1) {
+            // Scope by BOTH ids so a delivery can only be replayed via its owning webhook.
+            if ($this->deliveries->requeue($webhookId, $deliveryId) === 1) {
                 $this->log->log([
                     'actor_id' => $admin->id(),
                     'action' => 'webhook_delivery_replayed',
@@ -2039,10 +2059,11 @@ final class WebhookService
         }
     }
 
-    private function assertSecretStoreEnabled(): void
+    /** @param string $field the form field to surface the error on (register: name; rotate: current_password) */
+    private function assertSecretStoreEnabled(string $field = 'name'): void
     {
         if (!$this->flags->enabled('service_secrets')) {
-            throw new ValidationException(['name' => 'Enable the service-secret store (service_secrets) before creating webhooks.']);
+            throw new ValidationException([$field => 'Enable the service-secret store (service_secrets) first.']);
         }
     }
 
@@ -2574,7 +2595,8 @@ final class AdminWebhookTest extends TestCase
             'name' => 'KeepMe', 'url' => 'https://example.test/hook', 'events' => ['ping'], 'current_password' => 'WRONG',
         ]);
         $this->assertStatus(422, $res);
-        self::assertStringContainsString('KeepMe', $res->body());
+        self::assertStringContainsString('KeepMe', $res->body(), 'the typed name is preserved');
+        self::assertStringContainsString('value="ping" checked', $res->body(), 'the chosen event stays checked');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM webhooks'));
     }
 
@@ -2776,7 +2798,7 @@ final class AdminWebhookController extends Controller
                 'webhooks' => $service->list(),
                 'events_catalogue' => WebhookEvents::all(),
                 'errors' => $e->errors,
-                'old' => $e->old + ['name' => $request->str('name'), 'url' => $request->str('url')],
+                'old' => $e->old + ['name' => $request->str('name'), 'url' => $request->str('url'), 'events' => (array) $request->post('events', [])],
                 'new_secret' => null,
             ], 422);
         }
@@ -2821,7 +2843,7 @@ final class AdminWebhookController extends Controller
                 'deliveries' => $this->service()->deliveriesFor($id),
                 'events_catalogue' => WebhookEvents::all(),
                 'errors' => $e->errors,
-                'old' => $e->old + ['name' => $request->str('name'), 'url' => $request->str('url')],
+                'old' => $e->old + ['name' => $request->str('name'), 'url' => $request->str('url'), 'events' => (array) $request->post('events', [])],
                 'new_secret' => null,
             ], 422);
         }
@@ -2940,8 +2962,9 @@ $this->section('title', 'Webhooks');
 
             <fieldset>
                 <legend>Events</legend>
+                <?php $selectedEvents = (array) ($old['events'] ?? []); ?>
                 <?php foreach ($events_catalogue as $event => $desc): ?>
-                    <label><input type="checkbox" name="events[]" value="<?= $e($event) ?>"> <?= $e($event) ?> — <?= $e($desc) ?></label>
+                    <label><input type="checkbox" name="events[]" value="<?= $e($event) ?>" <?= in_array($event, $selectedEvents, true) ? 'checked' : '' ?>> <?= $e($event) ?> — <?= $e($desc) ?></label>
                 <?php endforeach; ?>
             </fieldset>
             <?php if (!empty($errors['events'])): ?><p class="field-error"><?= $e($errors['events']) ?></p><?php endif; ?>
@@ -2983,7 +3006,7 @@ Create `templates/admin/webhook_detail.php`:
 $this->layout('layout');
 $this->section('title', 'Webhook: ' . $webhook['name']);
 $id = (int) $webhook['id'];
-$selected = json_decode((string) $webhook['events'], true) ?: [];
+$selected = isset($old['events']) ? (array) $old['events'] : (json_decode((string) $webhook['events'], true) ?: []);
 ?>
 <div class="admin">
     <header class="admin-head">
@@ -3123,16 +3146,14 @@ git commit -m "$(printf 'feat(webhooks): admin UI + container/route wiring (+Sec
     command: `DB_DATABASE=${database} SESSION_SECURE=false MAIL_DRIVER=array APP_URL=${baseURL} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 php -S 127.0.0.1:${PORT} -t public public/index.php`,
 ```
 
-- [ ] **Step 3: Write the spec.** Add to `tests/browser/gate-a.spec.ts` (mirror the api-token test; use Node's `http` for a loopback receiver and `child_process` to drain the worker). At the top of the file ensure these imports exist:
+- [ ] **Step 3: Write the spec.** Reuse the file's EXISTING helpers — `shot(page, info, name)` (writes to the absolute `EVIDENCE_DIR = path.resolve(__dirname,'..','..','docs/evidence/browser')`), `login(page, email)`, and `visit(page, url)` — so screenshots land in the repo-root evidence dir (NOT `tests/browser/docs/...`). `test`, `expect`, and `path` are already imported at the top of the file; only ADD these two imports:
 
 ```ts
-import { test, expect } from '@playwright/test';
 import { execSync } from 'node:child_process';
 import http from 'node:http';
-import path from 'node:path';
 ```
 
-Then add the test (inside the existing `test.describe` or at top level, after the api-token test):
+Then add the test at top level (after the api-token test):
 
 ```ts
 test('admin webhooks: register shows the secret once, test event delivers', async ({ page }, info) => {
@@ -3141,12 +3162,11 @@ test('admin webhooks: register shows the secret once, test event delivers', asyn
   let received = false;
   const server = http.createServer((req, res) => { received = true; res.statusCode = 200; res.end('ok'); });
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()));
-  const port = (server.address() as import('node:net').AddressInfo).port;
-  const hookUrl = `http://127.0.0.1:${port}/hook`;
+  const hookUrl = `http://127.0.0.1:${(server.address() as import('node:net').AddressInfo).port}/hook`;
 
   try {
-    await login(page, 'admin@retro.test'); // existing helper in this spec file
-    await page.goto('/admin');
+    await login(page, 'admin@retro.test'); // existing helper (seeded admin / password123)
+    await visit(page, '/admin');
     await page.getByRole('link', { name: 'Webhooks' }).click();
 
     await page.fill('input[name="name"]', `Evidence webhook (${info.project.name})`);
@@ -3156,7 +3176,7 @@ test('admin webhooks: register shows the secret once, test event delivers', asyn
     await page.getByRole('button', { name: 'Register endpoint' }).click();
 
     await expect(page.getByText(/will not be shown again/)).toBeVisible();
-    await page.screenshot({ path: `docs/evidence/browser/${info.project.name}/22-admin-webhook-registered.png`, fullPage: true });
+    await shot(page, info, '22-admin-webhook-registered'); // existing helper -> EVIDENCE_DIR
 
     await page.getByRole('link', { name: 'Manage' }).first().click();
     await page.getByRole('button', { name: 'Send test event' }).click();
@@ -3171,14 +3191,14 @@ test('admin webhooks: register shows the secret once, test event delivers', asyn
 
     await page.reload();
     await expect(page.getByText('delivered')).toBeVisible();
-    await page.screenshot({ path: `docs/evidence/browser/${info.project.name}/23-admin-webhook-delivery-log.png`, fullPage: true });
+    await shot(page, info, '23-admin-webhook-delivery-log');
   } finally {
     await new Promise<void>((r) => server.close(() => r()));
   }
 });
 ```
 
-> FALLBACK (if the loopback receiver/worker shell-out proves flaky in the harness): drop the `execSync`/`received`/reload block and capture `23-admin-webhook-delivery-log.png` showing the `queued` test delivery row instead. The register + show-once screenshot is the primary evidence either way. Note any reduction with a one-line comment in the spec (no silent caps).
+> FALLBACK (if the loopback receiver/worker shell-out proves flaky in the harness): drop the `execSync`/`received`/reload block and `shot(page, info, '23-admin-webhook-delivery-log')` on the `queued` test delivery row instead. The register + show-once screenshot is the primary evidence either way. Note any reduction with a one-line comment in the spec (no silent caps).
 
 - [ ] **Step 4: Run it to verify it passes**
 
