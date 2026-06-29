@@ -105,6 +105,7 @@ use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
+use App\Service\AnnouncementService;
 use App\Service\AntiAbuseService;
 use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
@@ -676,6 +677,13 @@ final class App
             $c->get(UserRepository::class),
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
+        ));
+        $c->bind(AnnouncementService::class, fn (Container $c) => new AnnouncementService(
+            $c->get(Database::class),
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(NotificationRepository::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(
             $c->get(Database::class),
