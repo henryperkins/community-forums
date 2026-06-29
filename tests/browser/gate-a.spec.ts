@@ -373,3 +373,34 @@ test('admin per-user record: badges + title', async ({ page }, info) => {
   await page.waitForURL(/\/admin\/users\/\d+$/);
   await expect(page.locator('form.stacked[action$="/title"] input[name="title"]')).toHaveValue('');
 });
+
+test('admin can reorder and archive boards', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  await visit(page, '/admin/structure');
+  await shot(page, info, '20-structure-before');
+
+  // Move #feedback up one slot via the server-rendered button (no-JS path).
+  const feedbackRow = page.locator('li.admin-board-row[data-board-id]', { hasText: 'Feedback' });
+  await feedbackRow.getByRole('button', { name: /Move Feedback up/i }).click();
+  await expect(page).toHaveURL(/\/admin\/structure/);
+  await shot(page, info, '21-structure-after-move');
+
+  // Archive #feedback, then confirm the board page is read-only.
+  await page.locator('li.admin-board-row', { hasText: 'Feedback' })
+    .getByRole('button', { name: 'Archive' }).click();
+  await expect(page).toHaveURL(/\/admin\/structure/);
+
+  await visit(page, '/c/feedback');
+  await expect(page.locator('[data-archived-banner]')).toBeVisible();
+  await expect(page.locator('details.composer-details')).toHaveCount(0);
+  await shot(page, info, '22-board-archived-readonly');
+
+  // Unarchive restores the composer affordance.
+  await visit(page, '/admin/structure');
+  await page.locator('li.admin-board-row', { hasText: 'Feedback' })
+    .getByRole('button', { name: 'Unarchive' }).click();
+  await visit(page, '/c/feedback');
+  await expect(page.locator('details.composer-details')).toBeVisible();
+  await shot(page, info, '23-board-unarchived');
+});
