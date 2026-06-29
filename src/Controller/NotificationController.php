@@ -118,6 +118,11 @@ final class NotificationController extends Controller
             return '/mod/reports';
         }
 
+        // An announcement has no thread/post; it points at the site banner ('/').
+        if ($n['type'] === 'announcement') {
+            return '/';
+        }
+
         if ($n['thread_id'] === null) {
             return null;
         }

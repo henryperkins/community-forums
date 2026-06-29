@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Controller\AccountController;
+use App\Controller\AdminAnnouncementController;
 use App\Controller\AdminApiTokenController;
 use App\Controller\AdminController;
 use App\Controller\AdminUserController;
@@ -1107,6 +1108,8 @@ final class App
         $r->post('/admin/webhooks/{id}/test', [AdminWebhookController::class, 'test']);
         $r->post('/admin/webhooks/{id}/delete', [AdminWebhookController::class, 'delete']);
         $r->post('/admin/webhooks/{id}/deliveries/{deliveryId}/replay', [AdminWebhookController::class, 'replay']);
+        $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
+        $r->post('/admin/announcements', [AdminAnnouncementController::class, 'save']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
         $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
