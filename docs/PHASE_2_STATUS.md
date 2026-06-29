@@ -379,7 +379,7 @@ recompute counters, rebuild search indexes, and restore from backup.
 - [x] Saved/board preferences and session/device controls pass.
 - [~] Approved export/delete behaviour — **formally re-scoped to Phase 3** (retention/anonymisation policy not yet approved; USER §3.5). Recorded below.
 - [x] Presence passes; mobile/keyboard/accessibility CSS in place. [x] Browser evidence — see Gate A.
-- [~] Email delivery visibility/test/recovery tools — `statusCounts` + worker stats + suppression recovery present; a dedicated admin delivery dashboard is **re-scoped to Phase 3**.
+- [x] Email delivery visibility/test/recovery tools — `statusCounts` + worker stats + suppression recovery present; the dedicated admin delivery dashboard (`/admin/email`: delivery log + status/kind/email filters, queue status cards, test-send, suppression add/remove with the §7.6 subscription cascade, From/config banner, CSV export) was originally **re-scoped to Phase 3** but was **pulled back into the Phase 2 closeout on 2026-06-29** rather than left deferred (see `docs/adr/0005-phase2-operator-surface-closeout.md`). Still deferred: the email-broadcast announcement channel, the `NotificationEmailWorker` `kind='system'` render path, and the §7.5 SPF/DKIM domain-status / sending-blocked gate (only `Mailer::isConfigured()` From-presence is enforced today).
 - [x] All Gate B deferrals recorded here rather than silently omitted.
 - [ ] **Full Phase 2 evidence index + product-owner closeout recorded** — pending sign-off.
 
