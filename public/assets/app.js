@@ -148,4 +148,26 @@
         brandForm.addEventListener('change', updateBrandPreview);
         updateBrandPreview();
     }
+
+    // Site announcement banner (ADMIN §7.4): a dismissible operator notice. With
+    // JS off the server-rendered banner simply stays visible; this only remembers
+    // a per-version dismissal in localStorage and hides the bar on later loads.
+    var announcement = document.querySelector('[data-announcement]');
+    if (announcement && announcement.getAttribute('data-dismissible') === '1') {
+        var annVersion = announcement.getAttribute('data-announcement-version') || '0';
+        var annKey = 'rb-announcement-dismissed';
+        var annDismissed = null;
+        try { annDismissed = window.localStorage.getItem(annKey); } catch (e) { annDismissed = null; }
+        if (annDismissed === annVersion) {
+            announcement.hidden = true;
+        } else {
+            var annBtn = announcement.querySelector('[data-announcement-dismiss]');
+            if (annBtn) {
+                annBtn.addEventListener('click', function () {
+                    announcement.hidden = true;
+                    try { window.localStorage.setItem(annKey, annVersion); } catch (e) { /* ignore */ }
+                });
+            }
+        }
+    }
 })();

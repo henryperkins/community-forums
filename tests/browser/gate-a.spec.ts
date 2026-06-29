@@ -404,3 +404,34 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
   await expect(page.locator('details.composer-details')).toBeVisible();
   await shot(page, info, '23-board-unarchived');
 });
+
+test('site announcement banner: publish, render, dismiss, and persist', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  // Publish a dismissible banner through the real admin form (a no-JS POST).
+  await visit(page, '/admin/announcements');
+  await page.fill('textarea[name="message"]', 'Scheduled maintenance at 02:00 UTC.');
+  await page.check('input[name="dismissible"]');
+  await page.click('button[type="submit"]');
+  await page.waitForURL((u) => u.pathname === '/admin/announcements');
+
+  // It renders in the global shell at this viewport.
+  await visit(page, '/');
+  const banner = page.locator('[data-announcement]');
+  await expect(banner).toBeVisible();
+  await expect(banner).toContainText('Scheduled maintenance at 02:00 UTC.');
+  await shot(page, info, '20-announcement-banner');
+
+  // PE dismissal hides it and records the version in localStorage…
+  await page.locator('[data-announcement-dismiss]').click();
+  await expect(banner).toBeHidden();
+
+  // …and the dismissal persists across navigation.
+  await visit(page, '/c/general');
+  await expect(page.locator('[data-announcement]')).toBeHidden();
+  await shot(page, info, '21-announcement-dismissed');
+
+  // Clean up so the banner does not bleed into later evidence runs.
+  await visit(page, '/admin/announcements');
+  await page.locator('form.inline button[type="submit"]').click();
+});
