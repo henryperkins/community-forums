@@ -53,6 +53,19 @@ final class FeatureFlags
         'reputation_ledger' => false, // idempotent reputation events + windowed ranks
         'badge_rules' => false,       // custom badge rules/backfill/revoke history
         'community_memory' => false,  // summaries, related topics, wiki revisions
+        'content_references' => false,// persisted board/thread/post references + read-gated cards
+
+        // ── Phase 4 carryover completion (deploy-dark, independently reversible)
+        'link_previews' => false,      // allowlisted server-fetched URL metadata + purge/refresh
+        'expanded_files' => false,     // PDF/text-family uploads behind scanner/quarantine gates
+        'polls' => false,              // one poll per thread, no-JS vote/result flows
+        'custom_emoji' => false,       // operator-managed static PNG/WebP shortcode assets
+        'slash_giphy' => false,        // PE slash inserts + client-side GIPHY picker config
+        'split_merge' => false,        // moderator split/merge dry-run/apply/repair operations
+        'profile_media' => false,      // avatar upload/signature moderation surfaces
+        'board_folders' => false,      // private personal board folders
+        'saved_feeds' => false,        // private saved feed filters/digest composition
+        'automated_context' => false,  // since-last-read context + suggested related topics
 
         // ── Phase 5 Gate A (deploy-dark foundation/workstreams) ─────────────
         // These gate availability of the Phase 5 ecosystem/identity/governance

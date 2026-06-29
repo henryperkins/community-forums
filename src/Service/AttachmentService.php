@@ -25,6 +25,16 @@ use finfo;
  */
 final class AttachmentService
 {
+    /** @var array<string,string> */
+    private const FILE_EXT_MIME = [
+        'pdf' => 'application/pdf',
+        'txt' => 'text/plain',
+        'md' => 'text/markdown',
+        'markdown' => 'text/markdown',
+        'csv' => 'text/csv',
+        'json' => 'application/json',
+    ];
+
     /**
      * @param list<string> $allowedMime
      */
@@ -115,6 +125,50 @@ final class AttachmentService
         return $this->repo->find($id) ?? [];
     }
 
+    /**
+     * Validate, sniff, and store an expanded non-image attachment. These files are
+     * always download-only and start scan-pending; callers must mark them clean
+     * through the scanner/quarantine path before delivery is allowed.
+     *
+     * @param array{name:string,type:string,tmp_name:string,error:int,size:int} $file
+     * @return array<string,mixed>
+     */
+    public function storeFileUpload(int $userId, array $file, string $purpose = 'post'): array
+    {
+        if ((int) $file['size'] > $this->maxBytes) {
+            throw new ValidationException(['file' => 'That file is too large.']);
+        }
+        $bytes = @file_get_contents($file['tmp_name']);
+        if ($bytes === false || $bytes === '') {
+            throw new ValidationException(['file' => 'The upload could not be read.']);
+        }
+        if (strlen($bytes) > $this->maxBytes) {
+            throw new ValidationException(['file' => 'That file is too large.']);
+        }
+
+        [$ext, $mime, $downloadName] = $this->sniffDownloadFile((string) $file['name'], $bytes);
+        $sha = hash('sha256', $bytes);
+        $key = $this->makeKey($ext);
+        $this->writeFile($key, $bytes);
+
+        $id = $this->repo->create([
+            'user_id' => $userId,
+            'purpose' => $purpose,
+            'kind' => 'file',
+            'status' => 'temp',
+            'storage_key' => $key,
+            'sha256' => $sha,
+            'mime' => $mime,
+            'size_bytes' => strlen($bytes),
+            'width' => null,
+            'height' => null,
+            'visibility' => 'private',
+            'scan_status' => 'pending',
+            'download_name' => $downloadName,
+        ]);
+        return $this->repo->find($id) ?? [];
+    }
+
     /** Absolute path to an attachment's bytes (for authorization-gated delivery). */
     public function pathFor(array $attachment): string
     {
@@ -194,6 +248,52 @@ final class AttachmentService
     private function makeKey(string $ext): string
     {
         return gmdate('Y/m') . '/' . bin2hex(random_bytes(16)) . '.' . $ext;
+    }
+
+    /** @return array{0:string,1:string,2:string} */
+    private function sniffDownloadFile(string $clientName, string $bytes): array
+    {
+        $downloadName = $this->cleanDownloadName($clientName);
+        $ext = strtolower((string) pathinfo($downloadName, PATHINFO_EXTENSION));
+        if (!isset(self::FILE_EXT_MIME[$ext])) {
+            throw new ValidationException(['file' => 'Only PDF, plain text, Markdown, CSV, and JSON files are allowed.']);
+        }
+
+        $finfoMime = (new finfo(FILEINFO_MIME_TYPE))->buffer($bytes) ?: '';
+        if ($ext === 'pdf') {
+            if (!str_starts_with($bytes, '%PDF-')) {
+                throw new ValidationException(['file' => 'That file is not a valid PDF.']);
+            }
+            return ['pdf', 'application/pdf', $downloadName];
+        }
+
+        if (str_contains($bytes, "\0")) {
+            throw new ValidationException(['file' => 'That text file contains binary data.']);
+        }
+        if (!str_starts_with($finfoMime, 'text/') && !in_array($finfoMime, ['application/json', 'application/octet-stream'], true)) {
+            throw new ValidationException(['file' => 'That file does not look like a supported text document.']);
+        }
+
+        if ($ext === 'json') {
+            json_decode($bytes, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new ValidationException(['file' => 'That file is not valid JSON.']);
+            }
+            return ['json', 'application/json', $downloadName];
+        }
+
+        return [$ext, self::FILE_EXT_MIME[$ext], $downloadName];
+    }
+
+    private function cleanDownloadName(string $name): string
+    {
+        $base = basename(str_replace('\\', '/', $name));
+        $base = preg_replace('/[\x00-\x1F\x7F]+/', '', $base) ?? '';
+        $base = trim($base);
+        if ($base === '') {
+            $base = 'attachment.txt';
+        }
+        return mb_substr($base, 0, 120);
     }
 
     private function writeFile(string $key, string $bytes): void

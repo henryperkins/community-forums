@@ -5,6 +5,11 @@
 **Branch:** `main`
 **Suite:** `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green
 
+> 2026-06-29 in-flight note: branch `phase4-carryover-completion` partially
+> implements several ADR 0003 carryovers behind dark flags, but it does not
+> complete all carryovers or replace this accepted-with-deferrals baseline.
+> See `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
+
 ## Accepted Gate A Scope
 
 Phase 4 now has a reconciled additive schema

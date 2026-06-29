@@ -38,12 +38,18 @@ final class ReactionService
         private WriteGate $writeGate,
         private ?NotificationService $notifications = null,
         private ?ReputationLedgerService $reputation = null,
+        private ?CustomEmojiService $customEmoji = null,
     ) {
     }
 
     public function isAllowed(string $emoji): bool
     {
-        return in_array($emoji, self::ALLOWED, true);
+        if (in_array($emoji, self::ALLOWED, true)) {
+            return true;
+        }
+        return $this->customEmoji !== null
+            && preg_match('/^:[a-z0-9_+-]{2,40}:$/', $emoji) === 1
+            && $this->customEmoji->isReactionAllowed($emoji);
     }
 
     /**

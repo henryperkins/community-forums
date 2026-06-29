@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.20 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-29
+**Status:** v1.21 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-29
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -101,6 +101,15 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 81 | `service_secrets` | Integrations / secrets | 5 | B2 service-secret registry design |
 | 82 | `service_secret_versions` | Integrations / secrets | 5 | B2 service-secret registry design |
 | 83 | `webhook_deliveries` | Integrations / webhooks | 5 | B2 webhook delivery design |
+| 84 | `link_previews` | Composer / previews | 4 | ADR 0003 carryover / migration 0058 |
+| 85 | `polls` | Composer / engagement | 4 | ADR 0003 carryover / migration 0058 |
+| 86 | `poll_options` | Composer / engagement | 4 | ADR 0003 carryover / migration 0058 |
+| 87 | `poll_votes` | Composer / engagement | 4 | ADR 0003 carryover / migration 0058 |
+| 88 | `custom_emoji` | Composer / reactions | 4 | ADR 0003 carryover / migration 0058 |
+| 89 | `board_folders` | Accounts / boards | 4 | ADR 0003 carryover / migration 0058 |
+| 90 | `board_folder_boards` | Accounts / boards | 4 | ADR 0003 carryover / migration 0058 |
+| 91 | `saved_feed_filters` | Accounts / feeds | 4 | ADR 0003 carryover / migration 0058 |
+| 92 | `since_last_read_context` | Reading context | 4 | ADR 0003 carryover / migration 0058 |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -125,6 +134,11 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > deploy-dark producer/listener seam behind `first_party_hooks`. Its first
 > listener maps public-board domain events into the existing webhook delivery
 > ledger; `ping` remains an admin test event.
+>
+> Tables 84–92 and the reconciled `attachments`/`users`/`reactions` deltas are
+> the **Phase 4 carryover foundation** (migration `0058`): additive, feature-flag
+> dark shapes for previews, expanded files, polls, custom emoji, personal board
+> organization, saved feeds, profile moderation, and since-last-read context.
 
 ---
 
@@ -163,10 +177,16 @@ CREATE TABLE users (
   last_daily_digest_at DATETIME        NULL,                 -- DESIGN §8.3 (digest watermark: never duplicate/empty); added in Phase 2
   created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_seen_at         DATETIME        NULL,                 -- presence heartbeat (DESIGN §6.15)
+  signature_removed_at DATETIME        NULL,                 -- Phase 4 carryover profile moderation (migration 0058)
+  signature_removed_by BIGINT UNSIGNED NULL,                 -- FK users(id) ON DELETE SET NULL
+  avatar_removed_at    DATETIME        NULL,                 -- Phase 4 carryover profile moderation (migration 0058)
+  avatar_removed_by    BIGINT UNSIGNED NULL,                 -- FK users(id) ON DELETE SET NULL
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_username (username),
   UNIQUE KEY uq_users_email (email),
-  KEY idx_users_last_seen (last_seen_at)
+  KEY idx_users_last_seen (last_seen_at),
+  KEY idx_users_signature_removed_by (signature_removed_by),
+  KEY idx_users_avatar_removed_by (avatar_removed_by)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- SESSIONS ------------------------------------------------------------
@@ -299,7 +319,7 @@ CREATE TABLE reactions (
   id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   post_id    BIGINT UNSIGNED NOT NULL,
   user_id    BIGINT UNSIGNED NOT NULL,
-  emoji      VARCHAR(16)     NOT NULL,
+  emoji      VARCHAR(48)     NOT NULL,                      -- widened by migration 0058 for custom emoji shortcodes
   created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_reaction (post_id, user_id, emoji),         -- one per (user, post, emoji)
@@ -701,6 +721,11 @@ CREATE TABLE attachments (
   height         INT UNSIGNED    NULL,
   alt            VARCHAR(255)    NULL,
   visibility     ENUM('public','private') NOT NULL DEFAULT 'public', -- derived from parent at finalize
+  scan_status    ENUM('pending','clean','quarantined','failed','skipped') NOT NULL DEFAULT 'clean', -- migration 0058 expanded-file gate
+  scan_checked_at DATETIME       NULL,
+  quarantined_at DATETIME        NULL,
+  quarantine_reason VARCHAR(255) NULL,
+  download_name  VARCHAR(255)    NULL,
   created_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   finalized_at   DATETIME        NULL,
   deleted_at     DATETIME        NULL,
@@ -710,6 +735,7 @@ CREATE TABLE attachments (
   KEY idx_attach_post (post_id),
   KEY idx_attach_dm (dm_message_id),
   KEY idx_attach_sweep (status, created_at),
+  KEY idx_attach_scan (scan_status, created_at),
   CONSTRAINT fk_attach_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -830,6 +856,33 @@ New tables:
 - `thread_redirects(old_thread_id, canonical_thread_id, operation_id, created_at)` with primary key `old_thread_id`, canonical index, and FKs.
 
 Gate A closeout note (2026-06-28): `custom badge rules`, `content_references` reference-card rendering, and split/merge operations remain schema-only and are explicitly deferred in `docs/adr/0003-phase-4-closeout-deferrals.md`. Summary retire/restore/source display, wiki revert, and tag merge/visibility behavior are implemented in application code.
+
+---
+
+## 4A. Phase 4 carryover foundation (migration 0058)
+
+Migration `0058` adds the ADR 0003 carryover shapes that were still missing from
+the consolidated schema after Phase 4 Gate A. These tables are additive and
+feature-flag dark by default; behavior must still be proved by service/controller
+tests before un-darkening.
+
+Modified existing tables:
+
+- `attachments` adds `scan_status`, `scan_checked_at`, `quarantined_at`, `quarantine_reason`, `download_name`, and `idx_attach_scan` for expanded file scanner/quarantine handling. File bytes are download-only and must pass the clean-scan gate before public delivery.
+- `reactions.emoji` widens to `VARCHAR(48)` so custom emoji shortcodes fit without truncating built-in emoji values.
+- `users` adds `signature_removed_at/by` and `avatar_removed_at/by` audit columns for profile moderation.
+
+New tables:
+
+- `link_previews(id, source_type, source_id, url, url_hash, final_url, status, title, description, image_url, site_name, http_status, metadata, error, fetched_at, purged_at, created_at, updated_at)` with unique `(source_type, source_id, url_hash)`, status queue index, and source lookup index.
+- `polls(id, thread_id, question, mode, status, results_policy, created_by, closes_at, closed_at, created_at, updated_at)` with unique `thread_id`, status index, and thread/creator FKs.
+- `poll_options(id, poll_id, body, position, created_at)` with poll-position index and poll FK.
+- `poll_votes(id, poll_id, option_id, user_id, created_at)` with unique `(poll_id, option_id, user_id)` and poll/option/user FKs.
+- `custom_emoji(id, shortcode, name, image_path, mime, is_enabled, allow_reactions, created_by, created_at, updated_at)` with unique shortcode, enabled/reaction index, and creator FK.
+- `board_folders(id, user_id, name, position, created_at, updated_at)` with unique `(user_id, name)`, user-position index, and user FK.
+- `board_folder_boards(folder_id, board_id, position, created_at)` with primary key `(folder_id, board_id)`, board lookup index, and folder/board FKs.
+- `saved_feed_filters(id, user_id, name, filter_json, digest_enabled, position, created_at, updated_at)` with unique `(user_id, name)`, user-position index, and user FK.
+- `since_last_read_context(id, user_id, thread_id, from_post_id, to_post_id, post_count, context_text, generated_at, expires_at)` with unique window key, thread-generation index, and user/thread/post FKs.
 
 ---
 
@@ -996,6 +1049,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.21 | 2026-06-29 | Added Phase 4 carryover migration `0058`: `link_previews`, expanded-file scanner/quarantine columns on `attachments`, polls, `custom_emoji`, personal `board_folders`/`saved_feed_filters`, since-last-read context, profile-moderation audit columns on `users`, and widened `reactions.emoji`. |
 | v1.20 | 2026-06-29 | Documented B2 SP4 as code-only schema-neutral work: `first_party_hooks` gates first-party domain producers that enqueue public-board events through the existing webhook ledger; no plugin manifests, lifecycle tables, sandbox, service principals, or third-party PHP execution are added. |
 | v1.19 | 2026-06-28 | Added B2 webhook delivery (`0057`): reconciled `webhooks` to use `secret_ref` (`svcsec_*`, no plaintext secret), added `webhook_deliveries` with retry/backoff/dead-letter and `(webhook_id,event_type,event_id)` idempotency, and widened `moderation_log.target_type` with `'webhook'`. |
 | v1.18 | 2026-06-28 | Added the B2 `api_tokens` table (`0056`): scoped, hash-only (`CHAR(64)`, `uq_api_token_hash`) admin/service Bearer tokens — `scopes` JSON, `created_by` FK (CASCADE), expiry + revocation timestamps — plus `moderation_log.target_type='api_token'` for lifecycle/scope-denial audit. Backs the read-only `/api/v1` slice (B2 sub-project 2). |

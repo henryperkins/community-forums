@@ -150,6 +150,24 @@ test('private board access for a member', async ({ page }, info) => {
   await shot(page, info, '14-private-board-member');
 });
 
+test('phase 4 poll vote works through the server-rendered thread flow', async ({ page }, info) => {
+  const voter = info.project.name === 'mobile' ? 'carol@retro.test' : 'bob@retro.test';
+  await login(page, voter);
+
+  await visit(page, '/c/general');
+  await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
+  await page.waitForURL(/\/t\//);
+  await expect(page.getByText('Which shortcut do you reach for first?')).toBeVisible();
+
+  const option = page.locator('form[action^="/polls/"] input[name="option_ids[]"]').first();
+  await option.check();
+  await page.getByRole('button', { name: 'Vote' }).click();
+
+  await expect(page.locator('.poll-panel .link-list')).toBeVisible();
+  await expect(page.locator('.poll-panel')).toContainText(/\d+ vote/);
+  await shot(page, info, '25-poll-voted');
+});
+
 test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
 

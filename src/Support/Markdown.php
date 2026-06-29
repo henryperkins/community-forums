@@ -12,6 +12,7 @@ use League\CommonMark\Extension\Table\TableExtension;
 use League\CommonMark\Extension\TaskList\TaskListExtension;
 use League\CommonMark\MarkdownConverter;
 use App\Support\Markdown\SpoilerExtension;
+use App\Service\CustomEmojiService;
 
 /**
  * Renders canonical Markdown (posts.body, bios) to the cached sanitised HTML
@@ -23,7 +24,7 @@ final class Markdown
 {
     private MarkdownConverter $converter;
 
-    public function __construct(private HtmlSanitizer $sanitizer)
+    public function __construct(private HtmlSanitizer $sanitizer, private ?CustomEmojiService $customEmoji = null)
     {
         $environment = new Environment([
             'html_input' => 'escape',
@@ -96,6 +97,7 @@ final class Markdown
             }
         };
         $walker($doc);
+        $this->customEmoji?->renderInto($doc);
 
         $out = $doc->saveHTML();
         if (!is_string($out)) {
