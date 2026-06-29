@@ -41,6 +41,27 @@ final class NotificationRepository
     }
 
     /**
+     * Site-wide announcement broadcast (ADMIN §7.4; SCHEMA §7 #13). One set-based
+     * INSERT creates a type='announcement' notification for every active member
+     * except the actor. The row carries no body — it signals "see the site
+     * banner"; notifications.php renders the 'Announcement' label and the click
+     * target resolves to '/'. EMULATE_PREPARES=false: the actor id is bound under
+     * two distinct names so no placeholder is reused.
+     *
+     * @return int the number of recipients notified
+     */
+    public function broadcastAnnouncement(int $actorId): int
+    {
+        return $this->db->run(
+            "INSERT INTO notifications (user_id, type, actor_id, is_read, created_at)
+             SELECT u.id, 'announcement', :actor, 0, UTC_TIMESTAMP()
+             FROM users u
+             WHERE u.status = 'active' AND u.id <> :exclude",
+            ['actor' => $actorId, 'exclude' => $actorId],
+        )->rowCount();
+    }
+
+    /**
      * Idempotent reaction notification: at most one unread 'reaction' row per
      * (recipient, actor, post) so repeated react/unreact toggles don't spam.
      */
