@@ -34,6 +34,10 @@ Written to `docs/evidence/browser/<viewport>/<page>.png`:
 | 17 | Composer upload tray with thumbnail/alt controls |
 | 18 | Branding live preview |
 | 19 | Product-tour replay dialog |
+| 20 | Admin API token minted with show-once token |
+| 21 | Admin API token revoked |
+| 22 | Admin webhook registered with show-once signing secret |
+| 23 | Admin webhook delivery log after `topic.created` worker delivery |
 
 ## Run it locally
 

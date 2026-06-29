@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, and the first three B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery) landed deploy-dark.** Package, capability, passkey, provider, invitation, sandbox, governance, first-party hook-registry, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
-**Last updated:** 2026-06-28
-**Branch:** `b2-webhook-delivery`
-**Suite:** `./vendor/bin/phpunit` → **568 tests / 2035 assertions, green**. Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile. Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), and the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`).
+**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, and all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
+**Last updated:** 2026-06-29
+**Branch:** `main`
+**Suite:** `./vendor/bin/phpunit` → **579 tests / 2190 assertions, green**. Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile. Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), and the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`).
 
 ## What this increment is (and is not)
 
@@ -11,12 +11,14 @@ The first slice was the **safe foundation** for Phase 5: additive, reversible,
 **inert** schema and deploy-dark flags so later workstreams have a documented
 shape to build on (`PHASE_5_PLAN` §7 Milestone 1). This increment also resolves
 the explicit B1 blocker by adding opt-in TOTP/recovery-code behavior before any
-passkey enforcement, and lands the first three B2 sub-projects: encrypted
-service-secret storage/rotation/revocation/prune as a tested seam for later
-provider/webhook consumers, admin-minted, hash-only, scope-gated read-only API
-tokens over a `/api/v1` surface, and a deploy-dark outbound webhook delivery
-engine with operator admin UI, HMAC signing, durable retry/backoff/dead-letter
-ledger, SSRF egress controls, a `worker:webhooks` drainer, and a `ping` test path.
+passkey enforcement, and lands all four B2 sub-projects: encrypted service-secret
+storage/rotation/revocation/prune as a tested seam for later provider/webhook
+consumers, admin-minted, hash-only, scope-gated read-only API tokens over a
+`/api/v1` surface, a deploy-dark outbound webhook delivery engine with operator
+admin UI, HMAC signing, durable retry/backoff/dead-letter ledger, SSRF egress
+controls, a `worker:webhooks` drainer, and a code-only first-party hook registry
+that routes catalogued public-board domain events into the existing webhook
+dispatch path.
 
 > "Inert schema is not evidence" (DESIGN §13). The `0049`–`0053` foundation
 > remains inert and every Phase 5 flag is dark by default. Migration `0054`
@@ -26,25 +28,28 @@ ledger, SSRF egress controls, a `worker:webhooks` drainer, and a `ping` test pat
 > (API tokens) is deploy-dark behind `api_tokens`: the `/api/v1` read surface and
 > admin UI exist and are tested, but the flag is off by default.
 > Migration `0057` (webhook delivery) is deploy-dark behind `webhooks`: the engine,
-> admin UI, queue, worker, and test-event path exist and are tested, but real
-> domain-event producer wiring is deferred to B2 sub-project 4.
+> admin UI, queue, worker, and test-event path exist and are tested. The B2 SP4
+> hook registry adds no migration; it is code-only behind `first_party_hooks`,
+> keeps `ping` admin-test-only, and currently emits only IDs/state payloads for
+> public-board domain content until endpoint-level data-class permissions exist.
 
 ## Landed in this increment
 
 - **Deploy-dark feature flags** (`src/Core/FeatureFlags.php`): Gate A —
   `package_registry`, `package_themes`, `capabilities`, `passkeys`,
-  `provider_registry`, `invitations`, `service_secrets`; Gate B reserves —
-  `server_extensions`, `governance`, `service_principals`, `verified_links`.
-  All default `false`; `service_secrets` also acts as the B2 write/rotate kill
-  switch while reveal/revoke/prune remain available.
+  `provider_registry`, `invitations`, `service_secrets`, `api_tokens`,
+  `webhooks`, `first_party_hooks`; Gate B reserves — `server_extensions`,
+  `governance`, `service_principals`, `verified_links`. All default `false`;
+  `service_secrets` also acts as the B2 write/rotate kill switch while reveal/
+  revoke/prune remain available.
 - **Additive foundation migrations** `0049`–`0053` (`SCHEMA.md` §5A documents every shape):
   - `0049` registry/packages/releases/installs/permissions/history/advisories/local-blocks (§8.2 #1–5).
   - `0050` capability registry, 4 protected system-role anchors, role-capability map, scoped/temporary assignments + audit, protected-owner authority (§8.2 #8/#9/#13). Capability catalogue **seeded empty** (taxonomy pending approval).
   - `0051` WebAuthn credentials + one-time challenges (§8.2 #14) — public credential material only.
   - `0052` identity-provider registry + the `oauth_identities.provider` **ENUM→VARCHAR(64)** widen + nullable `provider_config_id` linkage; seeds google/apple/github as dark builtin rows + aliases (§8.2 #15).
   - `0053` invitations + redemptions — hash-only tokens, non-privileged onboarding only (§8.2 #16).
-- **`SCHEMA.md` v1.19**: §5A for foundation schema, §5B for the B2
-  service-secret registry, §3 `api_tokens` (0056) + `webhooks`/`webhook_deliveries` (0057), table-index rows 55–83, and §9 changelog entries.
+- **`SCHEMA.md` v1.20**: §5A for foundation schema, §5B for the B2
+  service-secret registry, §3 `api_tokens` (0056) + `webhooks`/`webhook_deliveries` (0057), the B2 hook-registry schema note, table-index rows 55–83, and §9 changelog entries.
 - **Regression tests**:
   - `tests/Integration/Core/AppFeatureFlagTest.php::test_phase5_foundation_flags_default_dark` — all Phase 5 flags deploy dark; per-flag override is isolated.
   - `tests/Integration/Core/AppPhase5FoundationSchemaTest.php` — clean-install applies `0049`–`0053`; tables/columns match the documented shape; the provider widen preserves legacy values; tokens are hash-only; system roles are protected anchors; capability catalogue is empty.
@@ -86,12 +91,25 @@ ledger, SSRF egress controls, a `worker:webhooks` drainer, and a `ping` test pat
   queued idempotently with retry/backoff/dead-letter and circuit-breaker pause,
   outbound HTTP is SSRF-guarded and resolve-then-pinned, and the admin UI can
   register/rotate/pause/test/delete/replay while the feature remains dark by
-  default. Real domain-event wiring is deferred to B2 sub-project 4.
+  default.
+- **B2 first-party hook registry + domain producers — sub-project 4 landed**
+  (`src/Hook/FirstPartyHookRegistry.php`, `src/Hook/HookEvent.php`,
+  `src/Core/App.php`, `src/Service/*` producers): a code-only, in-process
+  first-party hook registry behind `first_party_hooks`, with outbound webhooks
+  registered as the first listener for the existing webhook event catalogue.
+  Producer hooks emit after successful core mutations, fail open on listener
+  errors, disable a failing listener for the current registry lifetime, and use
+  deterministic event IDs plus IDs/state-only payloads. Public-board topic,
+  reply, edit, delete, solved, report, member, ban, and anti-abuse auto-action
+  events are wired; `ping` remains admin-test-only. Private/hidden board content
+  and DM reports are suppressed until endpoint-level data-class permissions
+  exist. No public plugin loading, sandbox, plugin lifecycle schema, or
+  third-party PHP execution is included.
 - **B2 decomposition recorded** (design:
   `docs/superpowers/specs/2026-06-28-service-secret-registry-design.md`): 1)
   service-secret registry — landed, 2) API tokens + scopes — landed, 3) webhook
-  delivery — landed, 4) first-party hook registry. No public/untrusted PHP execution is included in
-  these Gate A sub-projects.
+  delivery — landed, 4) first-party hook registry + producer wiring — landed.
+  No public/untrusted PHP execution is included in these Gate A sub-projects.
 
 ## Product-owner approvals recorded
 
@@ -108,16 +126,16 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   account-security behavior and is covered by focused unit/integration tests.
   Passkey enforcement may build on it; ordinary users are still not required to
   enroll by default.
-- **B2 — PARTIAL, decomposed.** Sub-projects 1–3 have landed deploy-dark — the
-  service-secret registry (behind `service_secrets`), the read-only API-token
-  slice (behind `api_tokens`), and the webhook delivery engine (behind
-  `webhooks`); sub-project 4 (first-party hook registry and real producer wiring)
-  remains Gate A prerequisite work. No plugin runtime or
-  public/untrusted PHP execution exists.
-- **B3 — STORAGE LAYER LANDED, NOT CONSUMED.** `SecretBox` provides
-  app-key-backed AES-256-GCM and `SecretVault` now provides the broader
+- **B2 — RESOLVED in this increment, decomposed.** Sub-projects 1–4 have landed
+  deploy-dark — the service-secret registry (behind `service_secrets`), the
+  read-only API-token slice (behind `api_tokens`), the webhook delivery engine
+  (behind `webhooks`), and the first-party hook registry/domain producers
+  (behind `first_party_hooks`). No plugin runtime or public/untrusted PHP
+  execution exists.
+- **B3 — STORAGE LAYER LANDED, PROVIDER CONSUMERS DEFERRED.** `SecretBox`
+  provides app-key-backed AES-256-GCM and `SecretVault` now provides the broader
   service-secret registry for webhook/provider/remote-app credentials. Webhook
-  delivery now consumes it; provider and remote-app consumers remain deferred.
+  delivery consumes it; provider and remote-app consumers remain deferred.
 
 ## Requirement-ledger snapshot (`PHASE_5_PLAN` §11.1)
 
@@ -127,25 +145,26 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   green; browser/no-JS evidence is still needed before any Gate A acceptance
   package.
 - **Service-secret registry:** R3 storage/service implementation + focused release
-  evidence. It has no consumer surface yet, so it is not R4/R5 product behavior.
+  evidence. Webhook endpoints consume `svcsec_*` references; provider and
+  remote-app consumers remain deferred.
 - **API tokens (read-only slice):** R3 implementation + focused release evidence —
   PHPUnit across flag/schema/service/endpoints/admin, plus desktop + mobile browser
   evidence of the admin mint → show-once → revoke flow. Deploy-dark behind
   `api_tokens`; no write surface yet.
-- **Webhook delivery (engine + admin UI):** R3 implementation + focused release
-  evidence — PHPUnit across flag/schema/security/transport/repository/service/
-  worker/admin plus desktop + mobile browser evidence of register → show-once →
-  test event → worker delivery log. Deploy-dark behind `webhooks`; real domain
-  event producer wiring is deferred to the first-party hook registry (B2 SP4).
+- **Webhook delivery + first-party producers:** R3 implementation + focused
+  release evidence — PHPUnit across flag/schema/security/transport/repository/
+  service/worker/admin, hook registry, and domain producers, plus desktop +
+  mobile browser evidence of register → show-once → public topic creation →
+  worker delivery log for `topic.created`. Deploy-dark behind `webhooks` and
+  `first_party_hooks`.
 - **All other Phase 5 subsystems (registry, themes, capabilities/roles, passkeys,
-  providers, invitations, first-party hook registry,
-  sandbox, governance, service principals, verified links):** R0/R1 — pending
-  implementation and workstream-specific evidence.
+  providers, invitations, sandbox, governance, service principals, verified
+  links):** R0/R1 — pending implementation and workstream-specific evidence.
 
 ## Evidence index (this increment)
 
 - Migrations: `database/migrations/0049_phase5_registry_packages.php` … `0057_phase5_webhooks.php`.
-- Schema doc: `SCHEMA.md` §5A/§5B + §3 `api_tokens`/`webhooks`/`webhook_deliveries` + §9 changelog (v1.19).
+- Schema doc: `SCHEMA.md` §5A/§5B + §3 `api_tokens`/`webhooks`/`webhook_deliveries` + B2 hook-registry note + §9 changelog (v1.20).
 - Flag-dark regression: `tests/Integration/Core/AppFeatureFlagTest.php`.
 - Schema-shape + secret/separation-invariant regression: `tests/Integration/Core/AppPhase5FoundationSchemaTest.php`.
 - Service-secret schema regression: `tests/Integration/Core/AppServiceSecretsSchemaTest.php`.
@@ -153,9 +172,10 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
 - API-token regression (B2 sub-project 2): `tests/Integration/Core/AppApiTokensSchemaTest.php`, `tests/Unit/Security/ApiScopesTest.php`, `tests/Integration/Service/ApiTokenServiceTest.php`, `tests/Integration/Api/ApiReadEndpointsTest.php`, `tests/Integration/Api/AdminApiTokenTest.php`.
 - API-token browser evidence: `docs/evidence/browser/{desktop,mobile}/20-admin-api-token-minted.png` + `21-admin-api-token-revoked.png` (admin mint → show-once → revoke via no-JS form posts).
 - Webhook regression (B2 sub-project 3): `tests/Integration/Core/AppWebhooksSchemaTest.php`, `tests/Unit/Support/CidrTest.php`, `tests/Unit/Security/WebhookEventsTest.php`, `tests/Unit/Security/EgressGuardTest.php`, `tests/Unit/Service/WebhookSignerTest.php`, `tests/Unit/Service/WebhookTransportTest.php`, `tests/Integration/Repository/WebhookRepositoryTest.php`, `tests/Integration/Repository/WebhookDeliveryRepositoryTest.php`, `tests/Integration/Service/WebhookServiceTest.php`, `tests/Integration/Worker/WebhookDeliveryWorkerTest.php`, `tests/Integration/Admin/AdminWebhookTest.php`.
-- Webhook browser evidence: `docs/evidence/browser/{desktop,mobile}/22-admin-webhook-registered.png` + `23-admin-webhook-delivery-log.png` (admin register → show-once signing secret → test event → worker delivery log).
-- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all 57 migrations on every PHPUnit run; full suite **568 tests / 2035 assertions green**.
-- **Browser evidence:** `npm run evidence` → **14/14 Playwright checks green** on desktop + mobile; includes admin API-token and webhook no-JS journeys.
+- First-party hook/domain producer regression (B2 sub-project 4): `tests/Unit/Hook/FirstPartyHookRegistryTest.php`, `tests/Integration/Service/DomainWebhookProducerTest.php`.
+- Webhook browser evidence: `docs/evidence/browser/{desktop,mobile}/22-admin-webhook-registered.png` + `23-admin-webhook-delivery-log.png` (admin register → show-once signing secret → create public topic → worker delivery log with `topic.created`).
+- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all 57 migrations on every PHPUnit run; full suite **579 tests / 2190 assertions green**.
+- **Browser evidence:** `npm run evidence` → **14/14 Playwright checks green** on desktop + mobile; includes admin API-token and domain webhook no-JS journeys.
 - **Worker smoke:** `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 MAIL_DRIVER=array php bin/console worker:webhooks` → `delivered=0 retrying=0 dead=0 skipped=0`.
 - **Populated-upgrade rehearsal:** `APP_ENV=testing DB_DATABASE=retroboards_upgrade_verify php bin/console verify:upgrade --force` → **PASS 17/17** (`0049`–`0057` applied on seeded Phase-1 data; `oauth_identities` ENUM→VARCHAR widen included; 90 Phase-1 columns intact; zero data loss).
 - **Legacy ledger probe:** scratch `schema_migrations(version, applied_at)` normalized to `schema_migrations(name, applied_at)` and `Migrator::status()` reported `0001_users` as applied (`status-ok columns=name,applied_at`).
@@ -167,17 +187,13 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
 Per `PHASE_5_PLAN` §13.1 staged order — each behind its dark flag, with shadow/
 parity and adversarial evidence before enablement:
 
-1. **Finish trusted extension foundation** (ADR 0004 B2): first-party hook
-   registry and real producer wiring on top of the landed service-secret,
-   API-token, and webhook-delivery slices. This is a Gate A prerequisite for
-   public remote packages and must not expose untrusted PHP.
-2. **Capability resolver in shadow mode** (P5-08): seed the approved catalogue +
+1. **Capability resolver in shadow mode** (P5-08): seed the approved catalogue +
    map system roles, run the new resolver beside the accepted one, archive a
    parity corpus — no enforcement switch until parity is clean.
-3. **Registry + signed declarative themes** (P5-01/03): signature/digest/staleness
+2. **Registry + signed declarative themes** (P5-01/03): signature/digest/staleness
    verification, isolated theme preview, safe mode.
-4. **Passkeys** (P5-11) on top of the TOTP/recovery fallback.
-5. **Generic OIDC + provider migration** (P5-12) and **invitations** (P5-13).
+3. **Passkeys** (P5-11) on top of the TOTP/recovery fallback.
+4. **Generic OIDC + provider migration** (P5-12) and **invitations** (P5-13).
 
 ## Operating note
 

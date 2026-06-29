@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.19 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
+**Status:** v1.20 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-29
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -113,13 +113,18 @@ Those source docs remain the narrative source of truth for *why* each field exis
 >
 > Tables 81–82 are the **B2 encrypted service-secret registry** (migration `0055`):
 > additive and deploy-dark. They are consumed only through `SecretVault` while the
-> `service_secrets` flag controls write/rotation availability; provider/webhook
-> consumers are not wired yet.
+> `service_secrets` flag controls write/rotation availability. Webhook endpoint
+> config consumes it; provider and remote-app consumers remain deferred.
 >
 > Table 83 and the reconciled `webhooks` shape are the **B2 webhook delivery
 > engine** (migration `0057`): deploy-dark behind `webhooks`, with endpoint
 > signing secrets stored as SecretVault references and a durable retry/dead-letter
 > ledger.
+>
+> The **B2 first-party hook registry** adds no schema: it is a code-only,
+> deploy-dark producer/listener seam behind `first_party_hooks`. Its first
+> listener maps public-board domain events into the existing webhook delivery
+> ledger; `ping` remains an admin test event.
 
 ---
 
@@ -943,7 +948,7 @@ This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
 - **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built deploy-dark by `0057`), `api_tokens`, plus appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
-- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), and webhook delivery slice (`0057`) are reconciled here. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, first-party hook registry, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#12/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
+- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), webhook delivery slice (`0057`), and code-only first-party hook registry are reconciled here. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#12/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
 
@@ -991,6 +996,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.20 | 2026-06-29 | Documented B2 SP4 as code-only schema-neutral work: `first_party_hooks` gates first-party domain producers that enqueue public-board events through the existing webhook ledger; no plugin manifests, lifecycle tables, sandbox, service principals, or third-party PHP execution are added. |
 | v1.19 | 2026-06-28 | Added B2 webhook delivery (`0057`): reconciled `webhooks` to use `secret_ref` (`svcsec_*`, no plaintext secret), added `webhook_deliveries` with retry/backoff/dead-letter and `(webhook_id,event_type,event_id)` idempotency, and widened `moderation_log.target_type` with `'webhook'`. |
 | v1.18 | 2026-06-28 | Added the B2 `api_tokens` table (`0056`): scoped, hash-only (`CHAR(64)`, `uq_api_token_hash`) admin/service Bearer tokens — `scopes` JSON, `created_by` FK (CASCADE), expiry + revocation timestamps — plus `moderation_log.target_type='api_token'` for lifecycle/scope-denial audit. Backs the read-only `/api/v1` slice (B2 sub-project 2). |
 | v1.17 | 2026-06-28 | Added the B2 encrypted service-secret registry (`0055`): `service_secrets` opaque references/status/latest-version metadata, `service_secret_versions` AES-256-GCM material with version/grace/destroy lifecycle, and `moderation_log.target_type='service_secret'` for non-lossy audit. |

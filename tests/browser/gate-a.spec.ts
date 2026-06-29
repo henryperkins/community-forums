@@ -244,17 +244,28 @@ test('admin API tokens: mint shows the secret once, then revoke', async ({ page 
   await shot(page, info, '21-admin-api-token-revoked');
 });
 
-test('admin webhooks: register shows the secret once, test event delivers', async ({ page }, info) => {
+test('admin webhooks: register shows the secret once, domain event delivers', async ({ page }, info) => {
   let received = false;
+  let receivedEvent = '';
   let markReceived: (() => void) | null = null;
   const receivedPromise = new Promise<void>((resolve) => {
     markReceived = resolve;
   });
   const server = http.createServer((req, res) => {
-    received = true;
-    markReceived?.();
-    res.statusCode = 200;
-    res.end('ok');
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+    req.on('end', () => {
+      received = true;
+      try {
+        const payload = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        receivedEvent = payload.event;
+      } catch {
+        receivedEvent = '';
+      }
+      markReceived?.();
+      res.statusCode = 200;
+      res.end('ok');
+    });
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
   const address = server.address();
@@ -273,16 +284,23 @@ test('admin webhooks: register shows the secret once, test event delivers', asyn
     const webhookName = `Evidence webhook (${info.project.name}-${Date.now()})`;
     await page.fill('input[name="name"]', webhookName);
     await page.fill('input[name="url"]', hookUrl);
-    await page.check('input[name="events[]"][value="ping"]');
+    await page.check('input[name="events[]"][value="topic.created"]');
     await page.fill('input[name="current_password"]', 'password123');
     await page.getByRole('button', { name: 'Register endpoint' }).click();
 
     await expect(page.getByText(/will not be shown again/)).toBeVisible();
     await shot(page, info, '22-admin-webhook-registered');
 
+    const topicTitle = `Webhook domain evidence ${Date.now()}`;
+    await openNewTopicComposer(page);
+    await page.locator('form.composer input[name="title"]').first().fill(topicTitle);
+    await page.locator('form.composer textarea.composer-input').first().fill('Webhook domain delivery body should stay out of the payload.');
+    await page.locator('form.composer button[type="submit"]').first().click();
+    await page.waitForURL(/\/t\//);
+
+    await visit(page, '/admin/webhooks');
     await page.locator('table tbody tr', { hasText: webhookName }).getByRole('link', { name: 'Manage' }).click();
     await page.waitForURL(/\/admin\/webhooks\/\d+$/);
-    await page.getByRole('button', { name: 'Send test event' }).click();
 
     const repoRoot = path.resolve(__dirname, '..', '..');
     const deliverySeen = Promise.race([
@@ -305,10 +323,16 @@ test('admin webhooks: register shows the secret once, test event delivers', asyn
     expect(stdout).toContain('Webhook delivery: delivered=');
     expect(stdout).not.toContain('delivered=0');
     expect(received).toBe(true);
+    expect(receivedEvent).toBe('topic.created');
 
     await page.reload();
-    await expect(page.getByText('delivered')).toBeVisible();
-    await expect(page.getByText('200')).toBeVisible();
+    const deliveryRow = page
+      .locator('table.audit tbody tr')
+      .filter({ has: page.getByRole('cell', { name: 'topic.created', exact: true }) })
+      .first();
+    await expect(deliveryRow).toBeVisible();
+    await expect(deliveryRow).toContainText('delivered');
+    await expect(deliveryRow).toContainText('200');
     await shot(page, info, '23-admin-webhook-delivery-log');
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));

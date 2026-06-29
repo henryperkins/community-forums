@@ -27,6 +27,14 @@ final class WebhookEvents
         return isset(self::EVENTS[$event]);
     }
 
+    /** @return array<string,string> non-test events produced by domain hooks */
+    public static function domainEvents(): array
+    {
+        $events = self::EVENTS;
+        unset($events['ping']);
+        return $events;
+    }
+
     /** @return array<string,string> */
     public static function all(): array
     {

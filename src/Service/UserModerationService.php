@@ -9,6 +9,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
@@ -30,6 +31,7 @@ final class UserModerationService
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
         private BoardModeratorRepository $boardMods,
+        private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
 
@@ -85,15 +87,21 @@ final class UserModerationService
         $reason = $this->requireReason($reason);
         $subject = $this->requireGovernable($actor, $subjectId);
 
-        $this->db->transaction(function () use ($actor, $subject, $reason): void {
+        $banId = $this->db->transaction(function () use ($actor, $subject, $reason): int {
             $this->users->setStatus((int) $subject['id'], 'banned', null);
-            $this->db->run(
+            $banId = $this->db->insert(
                 "INSERT INTO bans (user_id, scope, type, reason, created_by, created_at, expires_at)
                  VALUES (?, 'site', 'full', ?, ?, UTC_TIMESTAMP(), NULL)",
                 [(int) $subject['id'], $reason, $actor->id()],
             );
             $this->audit($actor, 'ban', (int) $subject['id'], $reason);
+            return $banId;
         });
+        $this->hooks?->emit('member.banned', [
+            'user_id' => (int) $subject['id'],
+            'ban_id' => $banId,
+            'actor_id' => $actor->id(),
+        ], 'user:' . (int) $subject['id'] . ':banned:' . $banId);
     }
 
     public function lift(User $actor, int $subjectId): void

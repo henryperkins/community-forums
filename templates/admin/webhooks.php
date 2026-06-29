@@ -20,7 +20,11 @@ $this->section('title', 'Webhooks');
         </div>
     <?php endif; ?>
 
-    <p class="muted">Only the <code>ping</code> test event fires in this release. Domain events activate when event sources land in B2 sub-project 4.</p>
+    <?php if (empty($features['first_party_hooks'])): ?>
+        <p class="muted">Domain events are inactive while <code>first_party_hooks</code> is off. The <code>ping</code> test event remains available.</p>
+    <?php else: ?>
+        <p class="muted">Domain events are active for public-board content. The <code>ping</code> test event remains admin-only.</p>
+    <?php endif; ?>
 
     <section class="card">
         <h2>Register an endpoint</h2>

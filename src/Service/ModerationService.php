@@ -9,6 +9,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\ModerationLogRepository;
@@ -37,6 +38,7 @@ final class ModerationService
         private BoardModeratorRepository $boardMods,
         private BoardRepository $boards,
         private UserRepository $users,
+        private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
 
@@ -105,9 +107,9 @@ final class ModerationService
         }
         $this->assertCanModerate($mod, (int) $post['board_id']);
 
-        $this->db->transaction(function () use ($mod, $post, $postId, $reason): void {
+        $deleted = $this->db->transaction(function () use ($mod, $post, $postId, $reason): bool {
             if ($this->posts->softDelete($postId, $mod->id()) === 0) {
-                return; // already deleted concurrently — nothing to adjust or audit
+                return false; // already deleted concurrently — nothing to adjust or audit
             }
             $this->posting->applyDeletionCounters($post);
             $this->log->log([
@@ -119,7 +121,15 @@ final class ModerationService
                 'before' => ['is_deleted' => 0],
                 'after' => ['is_deleted' => 1, 'deleted_by' => $mod->id()],
             ]);
+            return true;
         });
+
+        if ($deleted) {
+            $deletedPost = $this->posts->findWithContext($postId);
+            if ($deletedPost !== null) {
+                $this->emitPostDeleted($deletedPost);
+            }
+        }
 
         return $post;
     }
@@ -266,5 +276,26 @@ final class ModerationService
         if (!$mod->isAdmin() && !$this->boardMods->isModerator($boardId, $mod->id())) {
             throw new ForbiddenException('You do not moderate this board.');
         }
+    }
+
+    /** @param array<string,mixed> $post */
+    private function emitPostDeleted(array $post): void
+    {
+        if ((string) ($post['board_visibility'] ?? 'public') !== 'public' || (int) ($post['is_pending'] ?? 0) === 1) {
+            return;
+        }
+        $deletedAt = (string) ($post['deleted_at'] ?? '');
+        if ($deletedAt === '') {
+            return;
+        }
+        $postId = (int) $post['id'];
+        $this->hooks?->emit('post.deleted', [
+            'post_id' => $postId,
+            'thread_id' => (int) $post['thread_id'],
+            'board_id' => (int) $post['board_id'],
+            'author_id' => (int) $post['user_id'],
+            'deleted_by_id' => (int) ($post['deleted_by'] ?? 0),
+            'is_op' => (int) ($post['is_op'] ?? 0) === 1,
+        ], 'post:' . $postId . ':deleted:' . $deletedAt);
     }
 }

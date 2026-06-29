@@ -109,11 +109,12 @@ final class ReportRepository
         );
     }
 
-    public function setStatus(int $id, string $status, int $modId): void
+    public function setStatus(int $id, string $status, int $modId): int
     {
-        $this->db->run(
-            'UPDATE reports SET status = ?, handled_by = ?, resolved_at = UTC_TIMESTAMP() WHERE id = ?',
+        return $this->db->run(
+            "UPDATE reports SET status = ?, handled_by = ?, resolved_at = UTC_TIMESTAMP()
+             WHERE id = ? AND status IN ('open','triaged')",
             [$status, $modId, $id],
-        );
+        )->rowCount();
     }
 }

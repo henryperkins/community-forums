@@ -11,6 +11,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\AttachmentRepository;
 use App\Repository\BoardRepository;
 use App\Repository\IdempotencyRepository;
@@ -46,6 +47,7 @@ final class PostingService
         private ?IdempotencyRepository $idempotency = null,
         private ?AttachmentRepository $attachments = null,
         private ?ReputationLedgerService $reputation = null,
+        private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
 
@@ -116,7 +118,7 @@ final class PostingService
         $anon = !empty($input['is_anonymous']) && (int) ($board['allow_anonymous'] ?? 0) === 1;
 
         try {
-            return $this->db->transaction(function () use ($user, $board, $boardId, $title, $body, $anon, $pending, $decision, $idemKey, $input): array {
+            $result = $this->db->transaction(function () use ($user, $board, $boardId, $title, $body, $anon, $pending, $decision, $idemKey, $input): array {
                 $now = gmdate('Y-m-d H:i:s');
                 $slug = Str::slug($title, 180);
                 $threadId = $this->threads->create($boardId, $user->id(), $title, $slug, $pending);
@@ -164,8 +166,12 @@ final class PostingService
                     $this->antiAbuse->audit($decision, 'thread', $threadId);
                 }
 
-                return ['thread_id' => $threadId, 'slug' => $slug, 'pending' => $pending];
+                return ['thread_id' => $threadId, 'slug' => $slug, 'pending' => $pending, 'post_id' => $postId];
             });
+            if (empty($result['pending']) && (string) ($board['visibility'] ?? 'public') === 'public') {
+                $this->emitTopicCreated((int) $result['thread_id'], (int) $result['post_id'], $boardId, $user->id());
+            }
+            return $result;
         } catch (DuplicateSubmissionException) {
             $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
             // Only replay when the stored result is actually a thread — a token
@@ -227,7 +233,7 @@ final class PostingService
         $anon = !empty($input['is_anonymous']) && (int) ($thread['board_allow_anonymous'] ?? 0) === 1;
 
         try {
-            return $this->db->transaction(function () use ($user, $thread, $threadId, $body, $anon, $pending, $decision, $idemKey, $input): int {
+            $postId = $this->db->transaction(function () use ($user, $thread, $threadId, $body, $anon, $pending, $decision, $idemKey, $input): int {
                 $now = gmdate('Y-m-d H:i:s');
                 $postId = $this->posts->create([
                     'thread_id' => $threadId,
@@ -270,6 +276,10 @@ final class PostingService
 
                 return $postId;
             });
+            if (!$pending && (string) ($thread['board_visibility'] ?? 'public') === 'public') {
+                $this->emitReplyCreated($postId, $threadId, (int) $thread['board_id'], $user->id());
+            }
+            return $postId;
         } catch (DuplicateSubmissionException) {
             $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
             if ($prior !== null && $prior['result_type'] === 'post') {
@@ -294,6 +304,7 @@ final class PostingService
 
         $body = (string) ($input['body'] ?? '');
         $this->validate(null, $body, $input, requireTitle: false);
+        $changed = $body !== (string) $post['body'];
 
         // Only NEW @mentions introduced by the edit are notified; existing ones
         // are not resent (PHASE_2_PLAN §8 "Mention edit").
@@ -321,6 +332,13 @@ final class PostingService
             }
         });
 
+        if ($changed) {
+            $updated = $this->posts->findWithContext($postId);
+            if ($updated !== null) {
+                $this->emitPostEdited($updated);
+            }
+        }
+
         return $post;
     }
 
@@ -342,13 +360,22 @@ final class PostingService
             throw new ForbiddenException('You can only delete your own posts.');
         }
 
-        $this->db->transaction(function () use ($post, $postId, $user): void {
+        $deleted = $this->db->transaction(function () use ($post, $postId, $user): bool {
             // Only adjust counters if this call actually performed the delete
             // (guards against a concurrent/duplicate delete double-decrementing).
             if ($this->posts->softDelete($postId, $user->id()) > 0) {
                 $this->applyDeletionCounters($post);
+                return true;
             }
+            return false;
         });
+
+        if ($deleted) {
+            $deletedPost = $this->posts->findWithContext($postId);
+            if ($deletedPost !== null) {
+                $this->emitPostDeleted($deletedPost);
+            }
+        }
 
         return $post;
     }
@@ -458,7 +485,7 @@ final class PostingService
      */
     public function approvePendingThread(int $threadId): bool
     {
-        return $this->db->transaction(function () use ($threadId): bool {
+        $approved = $this->db->transaction(function () use ($threadId): bool {
             $thread = $this->threads->find($threadId);
             if ($thread === null || (int) $thread['is_pending'] !== 1 || (int) $thread['is_deleted'] === 1) {
                 return false;
@@ -482,6 +509,14 @@ final class PostingService
             }
             return true;
         });
+        if ($approved) {
+            $thread = $this->threads->findWithBoard($threadId);
+            $op = $this->db->fetch('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1 LIMIT 1', [$threadId]);
+            if ($thread !== null && $op !== null && (string) ($thread['board_visibility'] ?? 'public') === 'public') {
+                $this->emitTopicCreated($threadId, (int) $op['id'], (int) $thread['board_id'], (int) $thread['user_id']);
+            }
+        }
+        return $approved;
     }
 
     /**
@@ -490,7 +525,7 @@ final class PostingService
      */
     public function approvePendingPost(int $postId): bool
     {
-        return $this->db->transaction(function () use ($postId): bool {
+        $approved = $this->db->transaction(function () use ($postId): bool {
             $post = $this->posts->findWithContext($postId);
             if ($post === null || (int) $post['is_pending'] !== 1 || (int) $post['is_deleted'] === 1) {
                 return false;
@@ -510,6 +545,13 @@ final class PostingService
             }
             return true;
         });
+        if ($approved) {
+            $post = $this->posts->findWithContext($postId);
+            if ($post !== null && (string) ($post['board_visibility'] ?? 'public') === 'public') {
+                $this->emitReplyCreated($postId, (int) $post['thread_id'], (int) $post['board_id'], (int) $post['user_id']);
+            }
+        }
+        return $approved;
     }
 
     /** Reject a held thread: soft-delete it + its OP (no counters were applied). */
@@ -549,6 +591,76 @@ final class PostingService
             'SELECT 1 FROM board_members WHERE board_id = ? AND user_id = ? LIMIT 1',
             [$boardId, $userId],
         ) !== false;
+    }
+
+    private function emitTopicCreated(int $threadId, int $postId, int $boardId, int $authorId): void
+    {
+        $this->hooks?->emit('topic.created', [
+            'thread_id' => $threadId,
+            'post_id' => $postId,
+            'board_id' => $boardId,
+            'author_id' => $authorId,
+        ], 'thread:' . $threadId . ':created');
+    }
+
+    private function emitReplyCreated(int $postId, int $threadId, int $boardId, int $authorId): void
+    {
+        $this->hooks?->emit('reply.created', [
+            'post_id' => $postId,
+            'thread_id' => $threadId,
+            'board_id' => $boardId,
+            'author_id' => $authorId,
+        ], 'post:' . $postId . ':created');
+    }
+
+    /** @param array<string,mixed> $post */
+    private function emitPostEdited(array $post): void
+    {
+        if (!$this->isPublicBoardPost($post) || (int) ($post['is_deleted'] ?? 0) === 1) {
+            return;
+        }
+        $editedAt = (string) ($post['edited_at'] ?? '');
+        if ($editedAt === '') {
+            return;
+        }
+        $hash = substr(hash('sha256', (string) ($post['body'] ?? '')), 0, 12);
+        $postId = (int) $post['id'];
+        $this->hooks?->emit('post.edited', [
+            'post_id' => $postId,
+            'thread_id' => (int) $post['thread_id'],
+            'board_id' => (int) $post['board_id'],
+            'author_id' => (int) $post['user_id'],
+            'edited_by_id' => (int) ($post['edited_by'] ?? 0),
+            'is_op' => (int) ($post['is_op'] ?? 0) === 1,
+        ], 'post:' . $postId . ':edited:' . $editedAt . ':' . $hash);
+    }
+
+    /** @param array<string,mixed> $post */
+    private function emitPostDeleted(array $post): void
+    {
+        if (!$this->isPublicBoardPost($post)) {
+            return;
+        }
+        $deletedAt = (string) ($post['deleted_at'] ?? '');
+        if ($deletedAt === '') {
+            return;
+        }
+        $postId = (int) $post['id'];
+        $this->hooks?->emit('post.deleted', [
+            'post_id' => $postId,
+            'thread_id' => (int) $post['thread_id'],
+            'board_id' => (int) $post['board_id'],
+            'author_id' => (int) $post['user_id'],
+            'deleted_by_id' => (int) ($post['deleted_by'] ?? 0),
+            'is_op' => (int) ($post['is_op'] ?? 0) === 1,
+        ], 'post:' . $postId . ':deleted:' . $deletedAt);
+    }
+
+    /** @param array<string,mixed> $post */
+    private function isPublicBoardPost(array $post): bool
+    {
+        return (string) ($post['board_visibility'] ?? 'public') === 'public'
+            && (int) ($post['is_pending'] ?? 0) === 0;
     }
 
     /** @return array<int,array{user_id:int,emoji:string,created_at:string}> reactions contributing reputation */
