@@ -6,6 +6,7 @@ declare(strict_types=1);
 use App\Core\Config;
 use App\Core\Database;
 use App\Core\Env;
+use App\Core\FeatureFlags;
 use App\Core\Migrator;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
@@ -14,11 +15,14 @@ use App\Repository\BadgeRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
+use App\Repository\ServiceSecretRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Security\SecretBox;
 use App\Service\BadgeService;
 use App\Service\RepairService;
 use App\Service\ReputationLedgerService;
+use App\Service\SecretVault;
 use App\Repository\AttachmentRepository;
 use App\Repository\ModerationLogRepository;
 use App\Service\AttachmentService;
@@ -250,6 +254,23 @@ try {
             $log("Unread cutover set to $when UTC.");
             break;
 
+        case 'worker:secret-prune':
+            // Destroy retired service-secret versions whose grace window has
+            // lapsed (B2). Ciphertext/nonce/tag are emptied; the row is kept
+            // for audit (state=destroyed). Behind the rb_secret_prune lock.
+            $db = $database();
+            $vault = new SecretVault(
+                $db,
+                new ServiceSecretRepository($db),
+                new SecretBox((string) $config->get('app.key', '')),
+                new ModerationLogRepository($db),
+                new FeatureFlags(new SettingRepository($db)),
+                $config,
+            );
+            $destroyed = $vault->prune(isset($argv[2]) ? (int) $argv[2] : 100);
+            $log(sprintf('Service-secret prune: destroyed=%d', $destroyed));
+            break;
+
         case 'help':
         default:
             $log('RetroBoards console');
@@ -271,6 +292,7 @@ try {
             $log('  worker:digest         Send due daily digests');
             $log('  worker:purge-ips [days]  Anonymise sessions.ip/posts.ip older than N days (default 90)');
             $log('  worker:attachments    Sweep orphaned/deleted-parent upload files');
+            $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             break;
     }
 } catch (Throwable $e) {

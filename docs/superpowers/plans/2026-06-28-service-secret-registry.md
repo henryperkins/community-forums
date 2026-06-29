@@ -313,8 +313,13 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - Modify: `config/config.php` (add a `secrets` block after `rate_limits`)
 - Create: `src/Repository/ServiceSecretRepository.php` (store/read methods now; more added in Tasks 4–5)
 - Create: `src/Service/SecretVault.php` (`store` + `reveal` now)
-- Modify: `src/Core/App.php` (add two `use` imports + two container bindings)
 - Create: `tests/Integration/Service/SecretVaultTest.php`
+
+> **No `App.php` / container binding in this increment.** Nothing resolves `SecretVault`
+> from the container yet (the console case and tests construct it directly), and
+> `App::buildContainer()` is `private` with no test seam — a binding added now would be
+> unexercised wiring. The binding is **deferred to the first consumer sub-project**
+> (webhooks/providers), which will resolve it through a real route + test.
 
 **Interfaces:**
 - Consumes: `service_secrets`/`service_secret_versions` tables (Task 2); `service_secrets` flag (Task 1); `App\Security\SecretBox::encrypt(string): array{ciphertext,nonce,tag}` / `decrypt(string,string,string): string`; `App\Repository\ModerationLogRepository::log(array): int`; `App\Core\Database::transaction(callable)`, `insert/run/fetch/fetchValue`; `App\Core\Config::get(string, mixed)`; `App\Core\FeatureFlags::enabled(string): bool`; `App\Domain\User::id(): int`.
@@ -645,41 +650,19 @@ final class SecretVault
 }
 ```
 
-- [ ] **Step 7: Wire into the container.** In `src/Core/App.php`: add the imports near the other `use App\Repository\…;` / `use App\Service\…;` lines:
-
-```php
-use App\Repository\ServiceSecretRepository;
-use App\Service\SecretVault;
-```
-
-Add the repository binding after the `MfaRepository` binding (line 544):
-
-```php
-        $c->bind(ServiceSecretRepository::class, fn (Container $c) => new ServiceSecretRepository($c->get(Database::class)));
-```
-
-Add the service binding after the `MfaService` binding (after line 764):
-
-```php
-        $c->bind(SecretVault::class, fn (Container $c) => new SecretVault(
-            $c->get(Database::class),
-            $c->get(ServiceSecretRepository::class),
-            $c->get(SecretBox::class),
-            $c->get(ModerationLogRepository::class),
-            $c->get(FeatureFlags::class),
-            $config,
-        ));
-```
-
-- [ ] **Step 8: Run the test to verify it passes.**
+- [ ] **Step 7: Run the test to verify it passes.**
 
 Run: `vendor/bin/phpunit tests/Integration/Service/SecretVaultTest.php`
 Expected: PASS (7 tests).
 
-- [ ] **Step 9: Commit.**
+> No container binding in this increment (see the note under **Files**). The console
+> command (Task 5) and these tests construct `SecretVault` directly; the binding is
+> deferred to the first consumer sub-project.
+
+- [ ] **Step 8: Commit.**
 
 ```bash
-git add src/Core/SecretNotFoundException.php src/Core/SecretRevokedException.php src/Core/SecretsDisabledException.php config/config.php src/Repository/ServiceSecretRepository.php src/Service/SecretVault.php src/Core/App.php tests/Integration/Service/SecretVaultTest.php
+git add src/Core/SecretNotFoundException.php src/Core/SecretRevokedException.php src/Core/SecretsDisabledException.php config/config.php src/Repository/ServiceSecretRepository.php src/Service/SecretVault.php tests/Integration/Service/SecretVaultTest.php
 git commit -m "SecretVault store/reveal over SecretBox with dark kill switch (B2)
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
@@ -793,7 +776,7 @@ Expected: FAIL — `Call to undefined method App\Service\SecretVault::rotate()`.
         return $this->db->fetchAll(
             "SELECT * FROM service_secret_versions
              WHERE secret_id = ?
-               AND (state = 'current' OR (state = 'retired' AND retire_after IS NOT NULL AND retire_after >= UTC_TIMESTAMP()))
+               AND (state = 'current' OR (state = 'retired' AND retire_after IS NOT NULL AND retire_after > UTC_TIMESTAMP()))
              ORDER BY version DESC",
             [$secretId],
         );
@@ -1012,6 +995,34 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
             self::assertStringNotContainsString('PLAINTEXT-BBB-7c1', $blob);
         }
     }
+
+    public function test_no_plaintext_leaks_into_exception_messages(): void
+    {
+        $v = $this->vault();
+        $ref = $v->store('generic', null, 'l', 'SECRET-IN-MSG-EEE');
+        $v->revoke($ref);
+        try {
+            $v->reveal($ref);
+            self::fail('expected SecretRevokedException');
+        } catch (SecretRevokedException $e) {
+            self::assertStringNotContainsString('SECRET-IN-MSG-EEE', $e->getMessage());
+        }
+    }
+
+    public function test_revoke_makes_versions_immediately_prunable(): void
+    {
+        // No retire_after manipulation: revoke alone must make versions prunable in
+        // the same run. Fails under the old >=/< boundary (same-second skip).
+        $v = $this->vault();
+        $ref = $v->store('generic', null, 'rev', 'doomed-secret');
+        $v->revoke($ref);
+        self::assertSame(1, $v->prune(100));
+        $id = (int) $this->db->fetchValue('SELECT id FROM service_secrets WHERE secret_ref = ?', [$ref]);
+        self::assertSame(
+            'destroyed',
+            (string) $this->db->fetchValue("SELECT state FROM service_secret_versions WHERE secret_id = ? AND version = 1", [$id]),
+        );
+    }
 ```
 
 - [ ] **Step 2: Run them to verify they fail.**
@@ -1032,7 +1043,8 @@ Expected: FAIL — `Call to undefined method App\Service\SecretVault::revoke()`.
 
     public function retireAllVersions(int $secretId): void
     {
-        // Make every non-destroyed version immediately prunable.
+        // Make every non-destroyed version immediately prunable: retire_after = now,
+        // and pruneCandidates uses retire_after <= now, so a same-second prune destroys them.
         $this->db->run(
             "UPDATE service_secret_versions
              SET state = 'retired',
@@ -1049,7 +1061,7 @@ Expected: FAIL — `Call to undefined method App\Service\SecretVault::revoke()`.
         $limit = max(1, $limit);
         return $this->db->fetchAll(
             "SELECT id, secret_id, version FROM service_secret_versions
-             WHERE state = 'retired' AND retire_after IS NOT NULL AND retire_after < UTC_TIMESTAMP()
+             WHERE state = 'retired' AND retire_after IS NOT NULL AND retire_after <= UTC_TIMESTAMP()
              ORDER BY id LIMIT " . $limit,
         );
     }
@@ -1138,7 +1150,7 @@ Expected: FAIL — `Call to undefined method App\Service\SecretVault::revoke()`.
 - [ ] **Step 5: Run the test file to verify it passes.**
 
 Run: `vendor/bin/phpunit tests/Integration/Service/SecretVaultTest.php`
-Expected: PASS (15 tests).
+Expected: PASS (17 tests).
 
 - [ ] **Step 6: Add the console command.** In `bin/console`, add to the `use` block (after line 24):
 
@@ -1176,10 +1188,16 @@ Add a help line after the `worker:attachments` help line (~line 273):
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
 ```
 
-- [ ] **Step 7: Smoke-test the console command.**
+- [ ] **Step 7: Syntax-check the console command (hermetic).**
 
-Run: `php bin/console worker:secret-prune`
-Expected: prints `Service-secret prune: destroyed=0` (no expired versions on the dev DB) and exits 0.
+Run: `php -l bin/console`
+Expected: `No syntax errors detected in bin/console`.
+
+> Do **not** run `php bin/console worker:secret-prune` as a verification step — it loads
+> the configured application DB and `prune()` mutates it (destroys versions + writes
+> audit rows), so the result is non-hermetic and non-repeatable. `prune()` behavior is
+> proven by `SecretVaultTest` (tests 4/13/14) against the isolated test DB; the console
+> case is thin glue over the same `new SecretVault(...)` signature those tests exercise.
 
 - [ ] **Step 8: Commit.**
 
@@ -1202,7 +1220,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: Run the full suite.**
 
 Run: `./vendor/bin/phpunit`
-Expected: PASS (all green; the prior 468 plus the new `SecretVaultTest` (15) + `AppServiceSecretsSchemaTest` (4) + the extended flag assertion). Record the exact totals from the output.
+Expected: PASS (all green; the prior 468 plus the new `SecretVaultTest` (17) + `AppServiceSecretsSchemaTest` (4) + the extended flag assertion). Record the exact totals from the output.
 
 - [ ] **Step 2: Rehearse the populated upgrade.**
 
@@ -1231,8 +1249,9 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - §3 Transactional ownership contract → honored by service-owned `Database::transaction` (Task 3 `store`, reentrant); documented in spec; no consumer in this increment.
 - §4 error handling → Task 3 (exceptions, oversize→`ValidationException`, audit-in-txn); GCM mismatch is `SecretBox`'s existing throw.
 - §5 flag/kill switch → Task 1 (dark default) + Task 3 (`assertEnabled`) + Task 5 (revoke works dark).
-- §6 wiring/config → Task 3 (container + `secrets` config).
-- §7 evidence: 13 vault behaviors → Tasks 3–5 test methods; flag-dark → Task 1; schema-shape → Task 2; full suite + verify:upgrade → Tasks 2 & 6; docs → Tasks 2 & 6.
+- §6 config → Task 3 (`secrets` config block). **Container binding deferred** to the first consumer sub-project (no `App.php` change here — `buildContainer` is private/untestable and nothing resolves the vault yet).
+- §3 grace boundary (`usableVersionRows` `> now` / `pruneCandidates` `<= now`, complementary) → Tasks 4 & 5; revoke-immediately-prunable → Task 5 test 16.
+- §7 evidence: 15 vault behaviors → Tasks 3–5 test methods (incl. exception-message redaction + revoke-immediate-prune); flag-dark → Task 1; schema-shape → Task 2; full suite + verify:upgrade → Tasks 2 & 6; docs → Tasks 2 & 6.
 
 **Placeholder scan:** none — every code step shows complete code; every run step shows the command + expected output.
 

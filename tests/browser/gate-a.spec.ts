@@ -202,3 +202,40 @@ test('phase 3 branding preview and product-tour replay', async ({ page }, info) 
   await expect(page.locator('.tour-popover')).toHaveCount(0);
   await expect(replay).toBeFocused();
 });
+
+test('admin API tokens: mint shows the secret once, then revoke', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  // The flag-gated discovery link appears on the admin dashboard (seed enables api_tokens).
+  await visit(page, '/admin');
+  await page.getByRole('link', { name: 'API tokens' }).click();
+  await page.waitForURL(/\/admin\/api-tokens$/);
+  await expect(page.getByRole('heading', { name: 'API tokens' })).toBeVisible();
+
+  // Unique per viewport project: desktop + mobile share one seeded DB, so a fixed
+  // name would collide once the first project leaves its row behind.
+  const tokenName = `Evidence CI token (${info.project.name})`;
+
+  // Mint via the no-JS form post: name + a scope + password reauth.
+  await page.fill('input[name="name"]', tokenName);
+  await page.check('input[name="scopes[]"][value="read:boards"]');
+  await page.fill('input[name="current_password"]', 'password123');
+  await page.getByRole('button', { name: 'Create token' }).click();
+
+  // The one-time plaintext is shown exactly once, directly in the response (never via Flash).
+  await expect(page.getByText(/will not be shown again/)).toBeVisible();
+  await expect(page.locator('code').filter({ hasText: /^rbt_/ })).toBeVisible();
+  await shot(page, info, '20-admin-api-token-minted');
+
+  // The token is listed active; revoke it via the row form (PRG redirect back to the list).
+  const row = page.locator('table tbody tr', { hasText: tokenName });
+  await expect(row).toContainText('active');
+  const revokeBtn = row.getByRole('button', { name: 'Revoke' });
+  await revokeBtn.scrollIntoViewIfNeeded();
+  // force: the button is confirmed visible/enabled/correctly-placed (see 20-*.png); on the
+  // tall mobile page Playwright's hit-test transiently reports the mint-form card as the top
+  // element. The toContainText('revoked') assertion below still proves the revoke fired.
+  await revokeBtn.click({ force: true });
+  await expect(page.locator('table tbody tr', { hasText: tokenName })).toContainText('revoked');
+  await shot(page, info, '21-admin-api-token-revoked');
+});

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Controller\AccountController;
+use App\Controller\AdminApiTokenController;
 use App\Controller\AdminController;
+use App\Controller\Api\BoardsController as ApiBoardsController;
+use App\Controller\Api\MeController as ApiMeController;
 use App\Controller\ApprovalController;
 use App\Controller\AuthController;
 use App\Controller\BlockController;
@@ -49,6 +52,7 @@ use App\Search\MysqlSearchService;
 use App\Search\SearchService;
 use App\Repository\BadgeRepository;
 use App\Repository\BlockRepository;
+use App\Repository\ApiTokenRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
@@ -93,6 +97,7 @@ use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
 use App\Service\AntiAbuseService;
+use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
@@ -518,6 +523,16 @@ final class App
         $c->bind(ThreadRepository::class, fn (Container $c) => new ThreadRepository($c->get(Database::class)));
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
+        $c->bind(ApiTokenRepository::class, fn (Container $c) => new ApiTokenRepository($c->get(Database::class)));
+        $c->bind(ApiTokenService::class, fn (Container $c) => new ApiTokenService(
+            $c->get(Database::class),
+            $c->get(ApiTokenRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(FeatureFlags::class),
+            $config,
+            $c->get(PasswordHasher::class),
+            $c->get(WriteGate::class),
+        ));
         $c->bind(BlockRepository::class, fn (Container $c) => new BlockRepository($c->get(Database::class)));
         $c->bind(BoardModeratorRepository::class, fn (Container $c) => new BoardModeratorRepository($c->get(Database::class)));
         $c->bind(BoardMemberRepository::class, fn (Container $c) => new BoardMemberRepository($c->get(Database::class)));
@@ -838,6 +853,12 @@ final class App
         $r->get('/search', [SearchController::class, 'index']);
         $r->get('/presence', [PresenceController::class, 'index']);
 
+        // Read-only Bearer API (B2 sub-project 2); GET-only so the CSRF/HTML
+        // kernel is bypassed — ApiController self-authenticates and emits JSON.
+        $r->get('/api/v1/me', [ApiMeController::class, 'show']);
+        $r->get('/api/v1/boards', [ApiBoardsController::class, 'index']);
+        $r->get('/api/v1/boards/{id}/threads', [ApiBoardsController::class, 'threads']);
+
         $r->get('/c/{slug}', [BoardController::class, 'show']);
         $r->get('/t/{id}-{slug}', [ThreadController::class, 'show']);
         $r->get('/t/{id}', [ThreadController::class, 'show']);
@@ -986,6 +1007,9 @@ final class App
         $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
+        $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
+        $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
+        $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
         $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
