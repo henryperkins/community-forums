@@ -8,6 +8,7 @@ use App\Controller\AccountController;
 use App\Controller\AdminAnnouncementController;
 use App\Controller\AdminApiTokenController;
 use App\Controller\AdminController;
+use App\Controller\AdminEmailController;
 use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
@@ -111,6 +112,7 @@ use App\Service\AntiAbuseService;
 use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
 use App\Service\AuthService;
+use App\Service\EmailOpsService;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeService;
@@ -694,6 +696,16 @@ final class App
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
         ));
+        $c->bind(EmailOpsService::class, fn (Container $c) => new EmailOpsService(
+            $c->get(Database::class),
+            $c->get(EmailDeliveryRepository::class),
+            $c->get(EmailSuppressionRepository::class),
+            $c->get(SubscriptionRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(Mailer::class),
+        ));
         $c->bind(AnnouncementService::class, fn (Container $c) => new AnnouncementService(
             $c->get(Database::class),
             $c->get(SettingRepository::class),
@@ -1108,6 +1120,11 @@ final class App
         $r->post('/admin/webhooks/{id}/test', [AdminWebhookController::class, 'test']);
         $r->post('/admin/webhooks/{id}/delete', [AdminWebhookController::class, 'delete']);
         $r->post('/admin/webhooks/{id}/deliveries/{deliveryId}/replay', [AdminWebhookController::class, 'replay']);
+        $r->get('/admin/email', [AdminEmailController::class, 'index']);
+        $r->get('/admin/email/export', [AdminEmailController::class, 'export']);
+        $r->post('/admin/email/test', [AdminEmailController::class, 'test']);
+        $r->post('/admin/email/suppressions', [AdminEmailController::class, 'suppress']);
+        $r->post('/admin/email/suppressions/remove', [AdminEmailController::class, 'unsuppress']);
         $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
         $r->post('/admin/announcements', [AdminAnnouncementController::class, 'save']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);

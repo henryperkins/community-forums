@@ -121,4 +121,19 @@ final class SubscriptionRepository
             [$userId],
         );
     }
+
+    /**
+     * Suppression cascade (ADMIN §7.6): turn the email channel OFF on every
+     * subscription a user owns when their address is suppressed. Returns rows changed.
+     */
+    public function disableEmailForUser(int $userId): int
+    {
+        return $this->db->run('UPDATE subscriptions SET email_enabled = 0 WHERE user_id = ?', [$userId])->rowCount();
+    }
+
+    /** Re-enable the email channel on a user's subscriptions when they are un-suppressed. */
+    public function enableEmailForUser(int $userId): int
+    {
+        return $this->db->run('UPDATE subscriptions SET email_enabled = 1 WHERE user_id = ?', [$userId])->rowCount();
+    }
 }

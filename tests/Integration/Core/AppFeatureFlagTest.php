@@ -225,4 +225,24 @@ final class AppFeatureFlagTest extends TestCase
         // The home page still serves while the flag is off.
         $this->assertStatus(200, $this->get('/'));
     }
+
+    public function test_email_flag_gates_admin_email_routes(): void
+    {
+        // The email-ops dashboard is gated by the `email` flag (declared, default ON).
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertArrayHasKey('email', $flags->all(), 'email must be a declared flag, not an unknown-key false');
+
+        $this->actingAs($this->makeAdmin(['username' => 'flagemailadmin']));
+
+        // Flag on (default): the dashboard is reachable.
+        self::assertNotSame(404, $this->get('/admin/email')->status());
+
+        // Flag off: every route 404s (the gate fires right after requireAdmin).
+        $this->setFlags(['email' => false]);
+        $this->assertStatus(404, $this->get('/admin/email'));
+        $this->assertStatus(404, $this->get('/admin/email/export'));
+        $this->assertStatus(404, $this->post('/admin/email/test', []));
+        $this->assertStatus(404, $this->post('/admin/email/suppressions', ['email' => 'x@example.test']));
+        $this->assertStatus(404, $this->post('/admin/email/suppressions/remove', ['email' => 'x@example.test']));
+    }
 }
