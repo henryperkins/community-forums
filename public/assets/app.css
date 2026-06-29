@@ -131,6 +131,8 @@ a:hover { text-decoration: underline; }
     border-radius: var(--radius);
     padding: 18px;
     margin-bottom: 18px;
+    max-width: 100%;
+    overflow-x: auto;
 }
 .tag {
     font-size: .68rem;
@@ -161,6 +163,7 @@ a:hover { text-decoration: underline; }
     border-radius: var(--radius);
     margin-bottom: 16px;
 }
+.flash code { overflow-wrap: anywhere; }
 
 /* Buttons & forms */
 .btn {
@@ -202,7 +205,20 @@ a:hover { text-decoration: underline; }
 .field { display: block; margin-bottom: 14px; }
 .field > span { display: block; font-weight: 600; margin-bottom: 5px; font-size: .9rem; }
 .field-error { color: var(--danger); font-size: .85rem; margin: 4px 0; }
-.stacked .field, .stacked label { margin-bottom: 14px; }
+.stacked .field, .stacked label { display: block; margin-bottom: 14px; }
+.stacked input[type="email"],
+.stacked input[type="number"],
+.stacked input[type="password"],
+.stacked input[type="search"],
+.stacked input[type="text"],
+.stacked input[type="url"],
+.stacked select,
+.stacked textarea {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 4px;
+}
 .field-group { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 16px; }
 .field-group legend { font-weight: 600; padding: 0 6px; }
 .inline-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -364,8 +380,8 @@ a:hover { text-decoration: underline; }
 .admin-board-list { list-style: none; padding: 0; margin: 12px 0 0; }
 .admin-board-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
 .admin-board-actions { display: flex; gap: 12px; align-items: center; }
-.audit { width: 100%; border-collapse: collapse; font-size: .88rem; }
-.audit th, .audit td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.audit { width: 100%; border-collapse: collapse; font-size: .88rem; table-layout: fixed; }
+.audit th, .audit td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; overflow-wrap: anywhere; }
 .audit code { background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
 
 /* Responsive: one column ≤ 860px */

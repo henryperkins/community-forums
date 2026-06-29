@@ -7,6 +7,7 @@ namespace App\Core;
 use App\Controller\AccountController;
 use App\Controller\AdminApiTokenController;
 use App\Controller\AdminController;
+use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
 use App\Controller\Api\MeController as ApiMeController;
 use App\Controller\ApprovalController;
@@ -72,6 +73,7 @@ use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
 use App\Repository\SessionRepository;
+use App\Repository\ServiceSecretRepository;
 use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\TagRepository;
@@ -83,9 +85,12 @@ use App\Repository\UserPreferenceRepository;
 use App\Repository\UsernameHistoryRepository;
 use App\Repository\VerificationRepository;
 use App\Repository\UserRepository;
+use App\Repository\WebhookDeliveryRepository;
+use App\Repository\WebhookRepository;
 use App\Security\BoardPolicy;
 use App\Security\ClientIdentifier;
 use App\Security\Csrf;
+use App\Security\EgressGuard;
 use App\Security\FileRateLimiter;
 use App\Security\PasswordHasher;
 use App\Security\RateLimiter;
@@ -119,11 +124,15 @@ use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
 use App\Service\ReputationLedgerService;
+use App\Service\SecretVault;
 use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
 use App\Service\ThreadWorkflowService;
 use App\Service\UserModerationService;
 use App\Service\SetupService;
+use App\Service\Webhook\CurlWebhookTransport;
+use App\Service\Webhook\WebhookTransport;
+use App\Service\WebhookService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
 use Throwable;
@@ -532,6 +541,39 @@ final class App
             $config,
             $c->get(PasswordHasher::class),
             $c->get(WriteGate::class),
+        ));
+        $c->bind(ServiceSecretRepository::class, fn (Container $c) => new ServiceSecretRepository($c->get(Database::class)));
+        $c->bind(SecretVault::class, fn (Container $c) => new SecretVault(
+            $c->get(Database::class),
+            $c->get(ServiceSecretRepository::class),
+            $c->get(SecretBox::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(FeatureFlags::class),
+            $config,
+        ));
+        $c->bind(WebhookRepository::class, fn (Container $c) => new WebhookRepository($c->get(Database::class)));
+        $c->bind(WebhookDeliveryRepository::class, fn (Container $c) => new WebhookDeliveryRepository($c->get(Database::class)));
+        $c->bind(WebhookTransport::class, fn () => new CurlWebhookTransport(
+            new EgressGuard(
+                (bool) $config->get('webhooks.allow_http', false),
+                (array) $config->get('webhooks.allowed_private_cidrs', []),
+            ),
+            (int) $config->get('webhooks.max_response_bytes', 65536),
+        ));
+        $c->bind(WebhookService::class, fn (Container $c) => new WebhookService(
+            $c->get(Database::class),
+            $c->get(WebhookRepository::class),
+            $c->get(WebhookDeliveryRepository::class),
+            $c->get(SecretVault::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(FeatureFlags::class),
+            $config,
+            $c->get(PasswordHasher::class),
+            $c->get(WriteGate::class),
+            new EgressGuard(
+                (bool) $config->get('webhooks.allow_http', false),
+                (array) $config->get('webhooks.allowed_private_cidrs', []),
+            ),
         ));
         $c->bind(BlockRepository::class, fn (Container $c) => new BlockRepository($c->get(Database::class)));
         $c->bind(BoardModeratorRepository::class, fn (Container $c) => new BoardModeratorRepository($c->get(Database::class)));
@@ -1010,6 +1052,15 @@ final class App
         $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
         $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
         $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
+        $r->get('/admin/webhooks', [AdminWebhookController::class, 'index']);
+        $r->post('/admin/webhooks', [AdminWebhookController::class, 'create']);
+        $r->get('/admin/webhooks/{id}', [AdminWebhookController::class, 'show']);
+        $r->post('/admin/webhooks/{id}', [AdminWebhookController::class, 'update']);
+        $r->post('/admin/webhooks/{id}/toggle', [AdminWebhookController::class, 'toggle']);
+        $r->post('/admin/webhooks/{id}/rotate', [AdminWebhookController::class, 'rotate']);
+        $r->post('/admin/webhooks/{id}/test', [AdminWebhookController::class, 'test']);
+        $r->post('/admin/webhooks/{id}/delete', [AdminWebhookController::class, 'delete']);
+        $r->post('/admin/webhooks/{id}/deliveries/{deliveryId}/replay', [AdminWebhookController::class, 'replay']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
         $r->post('/admin/settings', [AdminController::class, 'updateSettings']);

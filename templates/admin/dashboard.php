@@ -10,6 +10,7 @@
         <a class="active" href="/admin">Dashboard</a>
         <a href="/admin/structure">Boards &amp; categories</a>
         <?php if (!empty($features['api_tokens'])): ?><a href="/admin/api-tokens">API tokens</a><?php endif; ?>
+        <?php if (!empty($features['webhooks'])): ?><a href="/admin/webhooks">Webhooks</a><?php endif; ?>
     </nav>
 
     <section class="card">
