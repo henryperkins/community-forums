@@ -40,8 +40,12 @@ final class AppExpandedFilesTest extends TestCase
 
         $pending = $this->get('/media/' . $id . '/download');
         $this->assertStatus(404, $pending);
+        $inlinePending = $this->get('/media/' . $id);
+        $this->assertStatus(404, $inlinePending);
 
         (new AttachmentRepository($this->db))->markScanClean($id);
+        $inlineClean = $this->get('/media/' . $id);
+        $this->assertStatus(404, $inlineClean);
         $download = $this->get('/media/' . $id . '/download');
 
         $this->assertStatus(200, $download);
@@ -49,6 +53,31 @@ final class AppExpandedFilesTest extends TestCase
         self::assertStringContainsString('attachment; filename="notes.md"', (string) $download->getHeader('content-disposition'));
         self::assertSame('nosniff', $download->getHeader('x-content-type-options'));
         self::assertSame("# Notes\n", $download->body());
+    }
+
+    public function test_pending_file_link_in_post_does_not_finalize_file_as_public_media(): void
+    {
+        $this->setFlags(['uploads' => true, 'expanded_files' => true]);
+        $cat = $this->makeCategory('File Post');
+        $board = $this->makeBoard($cat, ['slug' => 'file-post']);
+        $user = $this->makeUser(['username' => 'fileposter']);
+        $this->actingAs($user);
+
+        $upload = $this->postFile('/upload/file', 'file', $this->fakeUpload("pending\n", 'pending.txt', 'text/plain'));
+        $this->assertStatus(200, $upload);
+        $id = (int) json_decode($upload->body(), true)['id'];
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Pending file link',
+            'body' => '[pending file](/media/' . $id . '/download)',
+        ]));
+
+        $att = (new AttachmentRepository($this->db))->find($id);
+        self::assertSame('temp', $att['status']);
+        self::assertSame('pending', $att['scan_status']);
+        $this->assertStatus(404, $this->get('/media/' . $id));
+        $this->assertStatus(404, $this->get('/media/' . $id . '/download'));
     }
 
     public function test_binary_spoofed_text_file_is_rejected(): void

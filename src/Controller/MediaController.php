@@ -102,7 +102,7 @@ final class MediaController extends Controller
     {
         $id = (int) ($params['id'] ?? 0);
         $att = $this->container->get(AttachmentRepository::class)->find($id);
-        if ($att === null || $att['status'] === 'deleted') {
+        if ($att === null || $att['status'] === 'deleted' || (string) ($att['kind'] ?? 'image') !== 'image') {
             throw new NotFoundException('Media not found.');
         }
         // Cacheability is decided by the LIVE authorization result, not the stored

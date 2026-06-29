@@ -131,7 +131,7 @@ final class CustomEmojiService
     private function replaceTextNode(\DOMDocument $doc, \DOMText $node, array $map): void
     {
         $text = $node->nodeValue;
-        if (preg_match_all('/:[a-z0-9_+-]{2,40}:/', $text, $matches, PREG_OFFSET_CAPTURE) !== 1) {
+        if (preg_match_all('/:[a-z0-9_+-]{2,40}:/', $text, $matches, PREG_OFFSET_CAPTURE) === false || $matches[0] === []) {
             return;
         }
         $parent = $node->parentNode;

@@ -8,6 +8,7 @@ use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\ValidationException;
 use App\Service\PersonalOrganizationService;
 
 final class PersonalOrganizationController extends Controller
@@ -15,7 +16,11 @@ final class PersonalOrganizationController extends Controller
     public function createFolder(Request $request, array $params): Response
     {
         $this->requireFlag('board_folders');
-        $this->container->get(PersonalOrganizationService::class)->createFolder($this->requireUser(), $request->str('name'));
+        try {
+            $this->container->get(PersonalOrganizationService::class)->createFolder($this->requireUser(), $request->str('name'));
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/settings/boards', $e->first());
+        }
         return $this->redirectWithFlash('/settings/boards', 'Folder saved.');
     }
 
@@ -33,7 +38,11 @@ final class PersonalOrganizationController extends Controller
     public function createSavedFeed(Request $request, array $params): Response
     {
         $this->requireFlag('saved_feeds');
-        $this->container->get(PersonalOrganizationService::class)->createSavedFeed($this->requireUser(), $request->allInput());
+        try {
+            $this->container->get(PersonalOrganizationService::class)->createSavedFeed($this->requireUser(), $request->allInput());
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/settings/boards', $e->first());
+        }
         return $this->redirectWithFlash('/settings/boards', 'Saved feed created.');
     }
 

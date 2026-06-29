@@ -50,8 +50,11 @@ final class AttachmentRepository
     }
 
     /**
-     * Bind a set of the owner's temp uploads to a post + visibility. Only the
-     * owner's still-temp rows are affected (idempotent finalize). Returns count.
+     * Bind a set of the owner's temp uploads to a post + visibility. Image
+     * uploads are finalized immediately; expanded file uploads must already be
+     * scanner-clean so a pending/quarantined file link cannot publish raw bytes.
+     * Only the owner's still-temp rows are affected (idempotent finalize).
+     * Returns count.
      *
      * @param list<int> $ids
      */
@@ -65,7 +68,8 @@ final class AttachmentRepository
         return $this->db->run(
             "UPDATE attachments
                 SET status = 'finalized', post_id = :pid, visibility = :vis, finalized_at = UTC_TIMESTAMP()
-              WHERE id IN ($in) AND user_id = :uid AND status = 'temp'",
+              WHERE id IN ($in) AND user_id = :uid AND status = 'temp'
+                AND (kind = 'image' OR (kind = 'file' AND scan_status = 'clean'))",
             ['pid' => $postId, 'vis' => $visibility, 'uid' => $ownerId],
         )->rowCount();
     }

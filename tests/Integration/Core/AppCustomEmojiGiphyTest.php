@@ -66,6 +66,38 @@ final class AppCustomEmojiGiphyTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM reactions WHERE emoji = ':party:'"));
     }
 
+    public function test_custom_emoji_replaces_multiple_shortcodes_in_one_text_node(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['custom_emoji' => true]);
+        $admin = $this->makeAdmin(['username' => 'emoji_multi_admin']);
+        $this->actingAs($admin);
+
+        foreach (['party' => 'Party', 'wave' => 'Wave'] as $shortcode => $name) {
+            $this->assertRedirect($this->post('/admin/custom-emoji', [
+                'shortcode' => $shortcode,
+                'name' => $name,
+                'image_path' => '/emoji/' . $shortcode . '.webp',
+                'mime' => 'image/webp',
+            ]));
+        }
+
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'emoji-multi']);
+        $author = $this->makeUser(['username' => 'emoji_multi_author']);
+        $this->actingAs($author);
+
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Emoji multi topic',
+            'body' => 'Hello :party: and :wave:',
+        ]));
+
+        $page = $this->get('/t/' . (int) $this->db->fetchValue("SELECT id FROM threads WHERE slug = 'emoji-multi-topic'") . '-emoji-multi-topic');
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('alt=":party:"', $page->body());
+        self::assertStringContainsString('alt=":wave:"', $page->body());
+    }
+
     public function test_giphy_config_is_public_key_only_when_slash_giphy_enabled(): void
     {
         $this->assertStatus(404, $this->get('/composer/giphy-config'));

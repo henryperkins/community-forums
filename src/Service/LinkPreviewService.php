@@ -148,7 +148,7 @@ final class LinkPreviewService
         return $stats;
     }
 
-    public function validateFetchUrl(string $url): void
+    public function validateFetchUrl(string $url): string
     {
         $parts = parse_url($url);
         if ($parts === false || !isset($parts['scheme'], $parts['host'])) {
@@ -168,7 +168,7 @@ final class LinkPreviewService
         if ($this->isNeverFetchedLocalUrl($url)) {
             throw new EgressBlockedException('Private RetroBoards URLs are not fetched for previews.');
         }
-        $this->egress->validate($url);
+        return $this->egress->validate($url);
     }
 
     /** @return array<int,array<string,mixed>> */
@@ -235,7 +235,7 @@ final class LinkPreviewService
     /** @return list<string> */
     private function extractUrls(string $body): array
     {
-        if (preg_match_all('~https?://[^\s<>"\')\]]+~i', $body, $m) !== 1) {
+        if (preg_match_all('~https?://[^\s<>"\')\]]+~i', $body, $m) === false) {
             return [];
         }
         $urls = [];
@@ -359,30 +359,56 @@ final class LinkPreviewService
     private function fetchHtml(string $url): array
     {
         $maxBytes = (int) $this->config->get('link_previews.max_bytes', 262144);
-        $timeout = (int) $this->config->get('link_previews.timeout_seconds', 4);
+        $timeout = max(1, (int) $this->config->get('link_previews.timeout_seconds', 4));
         $current = $url;
         for ($redirects = 0; $redirects <= 3; $redirects++) {
-            $this->validateFetchUrl($current);
+            $ip = $this->validateFetchUrl($current);
+            $resolve = $this->curlResolve($current, $ip);
+            $headers = '';
+            $body = '';
+            $bytes = 0;
+            $tooLarge = false;
             $ch = curl_init($current);
             curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HEADER => true,
+                CURLOPT_RETURNTRANSFER => false,
+                CURLOPT_HEADER => false,
                 CURLOPT_FOLLOWLOCATION => false,
+                CURLOPT_CONNECTTIMEOUT => $timeout,
                 CURLOPT_TIMEOUT => $timeout,
                 CURLOPT_USERAGENT => 'RetroBoardsLinkPreview/1.0',
                 CURLOPT_HTTPHEADER => ['Accept: text/html,application/xhtml+xml'],
+                CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
+                CURLOPT_REDIR_PROTOCOLS => 0,
+                CURLOPT_RESOLVE => [$resolve],
+                CURLOPT_HEADERFUNCTION => function ($ch, string $chunk) use (&$headers): int {
+                    $headers .= $chunk;
+                    return strlen($chunk);
+                },
+                CURLOPT_WRITEFUNCTION => function ($ch, string $chunk) use (&$body, &$bytes, &$tooLarge, $maxBytes): int {
+                    $len = strlen($chunk);
+                    if ($bytes + $len > $maxBytes) {
+                        $remaining = max(0, $maxBytes - $bytes);
+                        if ($remaining > 0) {
+                            $body .= substr($chunk, 0, $remaining);
+                        }
+                        $bytes += $len;
+                        $tooLarge = true;
+                        return -1;
+                    }
+                    $body .= $chunk;
+                    $bytes += $len;
+                    return $len;
+                },
             ]);
-            $raw = curl_exec($ch);
-            if ($raw === false) {
+            $ok = curl_exec($ch);
+            if ($tooLarge) {
+                throw new \RuntimeException('Preview response exceeded maximum size.');
+            }
+            if ($ok === false) {
                 $error = curl_error($ch);
-                curl_close($ch);
                 throw new \RuntimeException($error);
             }
             $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-            $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            curl_close($ch);
-            $headers = substr((string) $raw, 0, $headerSize);
-            $body = substr((string) $raw, $headerSize, $maxBytes);
             if (in_array($status, [301, 302, 303, 307, 308], true)
                 && preg_match('/^Location:\s*(.+)$/im', $headers, $m) === 1) {
                 $current = $this->resolveRedirect($current, trim($m[1]));
@@ -391,6 +417,15 @@ final class LinkPreviewService
             return [$current, $status, $body];
         }
         throw new EgressBlockedException('Preview redirect limit exceeded.');
+    }
+
+    private function curlResolve(string $url, string $ip): string
+    {
+        $parts = parse_url($url);
+        $scheme = strtolower((string) ($parts['scheme'] ?? 'https'));
+        $host = trim((string) ($parts['host'] ?? ''), '[]');
+        $port = isset($parts['port']) ? (int) $parts['port'] : ($scheme === 'https' ? 443 : 80);
+        return $host . ':' . $port . ':' . $ip;
     }
 
     private function resolveRedirect(string $base, string $location): string

@@ -59,4 +59,27 @@ final class AppBoardFoldersSavedFeedsTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM board_folders WHERE user_id = ?', [(int) $other['id']]));
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM saved_feed_filters WHERE user_id = ?', [(int) $other['id']]));
     }
+
+    public function test_invalid_personal_organization_names_do_not_hit_the_500_handler(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['board_folders' => true, 'saved_feeds' => true]);
+        $user = $this->makeUser(['username' => 'orginvalid']);
+        $board = $this->makeBoard($this->makeCategory('Org Invalid'), ['slug' => 'org-invalid']);
+        $this->actingAs($user);
+
+        $this->assertRedirect($this->post('/settings/board-folders', ['name' => '']), '/settings/boards');
+        $this->assertStatus(200, $this->get('/settings/boards'));
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM board_folders WHERE user_id = ?', [(int) $user['id']]));
+
+        $tooLong = str_repeat('x', 81);
+        $this->assertRedirect($this->post('/settings/saved-feeds', [
+            'name' => $tooLong,
+            'board_id' => (int) $board['id'],
+        ]), '/settings/boards');
+        $page = $this->get('/settings/boards');
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'Name must be 1 to 80 characters.');
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM saved_feed_filters WHERE user_id = ?', [(int) $user['id']]));
+    }
 }
