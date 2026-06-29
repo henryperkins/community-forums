@@ -14,6 +14,23 @@ ROOT_USER="${DB_ROOT_USER:-root}"
 ROOT_PASSWORD="${DB_ROOT_PASSWORD:-rootpw}"
 DB_USER="${DB_USERNAME:-retro}"
 MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
+RATE_LIMIT_PATH="${RATELIMIT_PATH:-$PWD/storage/ratelimit-e2e}"
+
+if [[ "$RATE_LIMIT_PATH" != /* ]]; then
+  RATE_LIMIT_PATH="$PWD/$RATE_LIMIT_PATH"
+fi
+
+case "$RATE_LIMIT_PATH" in
+  "$PWD"/storage/ratelimit-e2e*)
+    echo "==> Resetting browser-evidence rate-limit store"
+    rm -rf "$RATE_LIMIT_PATH"
+    mkdir -p "$RATE_LIMIT_PATH"
+    ;;
+  *)
+    echo "==> Using rate-limit store '$RATE_LIMIT_PATH' (not clearing outside storage/ratelimit-e2e)"
+    mkdir -p "$RATE_LIMIT_PATH"
+    ;;
+esac
 
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$RESET_CONTAINER"; then
   # rootpw is the fixed local rb-mariadb dev-container password (see project README);
