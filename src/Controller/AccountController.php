@@ -57,9 +57,13 @@ final class AccountController extends Controller
             $this->container->get(AccountService::class)->updateProfile($user, $request->allInput());
         } catch (ValidationException $e) {
             $row = $this->container->get(UserRepository::class)->find($user->id()) ?? [];
+            $old = $e->old;
+            if (!array_key_exists('avatar_path', $old)) {
+                $old['avatar_path'] = $row['avatar_path'] ?? '';
+            }
             return $this->view('account/settings', [
                 'errors' => $e->errors,
-                'old' => $e->old,
+                'old' => $old,
                 'email' => $row['email'] ?? '',
                 'email_verified' => ($row['email_verified_at'] ?? null) !== null,
                 'profile_media' => $this->container->get(FeatureFlags::class)->enabled('profile_media'),

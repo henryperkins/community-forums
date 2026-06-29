@@ -285,7 +285,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             <ul class="link-list">
                 <?php foreach (($since_last_read_context['items'] ?? []) as $item): ?>
                     <li>
-                        <a href="#p<?= (int) $item['post_id'] ?>">#<?= (int) $item['post_id'] ?></a>
+                        <a href="<?= $e($item['url'] ?? ('#p' . (int) $item['post_id'])) ?>">#<?= (int) $item['post_id'] ?></a>
                         <strong>@<?= $e($item['author']) ?></strong>
                         <span class="muted"><?= $e($item['excerpt']) ?></span>
                     </li>

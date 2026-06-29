@@ -98,7 +98,9 @@ final class ThreadController extends Controller
         // Engagement: grouped reaction counts for the visible posts, the
         // viewer's own reactions, the star state, and advancing the read
         // position to the newest post shown on this page (P2-01/P2-02).
-        $engagement = (bool) ($this->container->get(FeatureFlags::class)->enabled('engagement'));
+        $featureFlags = $this->container->get(FeatureFlags::class);
+        $engagement = (bool) $featureFlags->enabled('engagement');
+        $automatedContext = (bool) $featureFlags->enabled('automated_context');
         $postIds = array_map(static fn (array $p): int => (int) $p['id'], $posts);
         $reactionRepo = $this->container->get(ReactionRepository::class);
         $reactionCounts = $engagement ? $reactionRepo->countsForPosts($postIds) : [];
@@ -108,28 +110,43 @@ final class ThreadController extends Controller
         $linkPreviewCards = [];
         $sinceLastReadContext = null;
         $allowedEmoji = ReactionService::ALLOWED;
-        if ($this->container->get(FeatureFlags::class)->enabled('custom_emoji')) {
+        if ($featureFlags->enabled('custom_emoji')) {
             $allowedEmoji = array_merge($allowedEmoji, $this->container->get(CustomEmojiService::class)->reactionShortcodes());
         }
 
-        if ($this->container->get(FeatureFlags::class)->enabled('content_references')) {
+        if ($featureFlags->enabled('content_references')) {
             $referenceCards = $this->container->get(ContentReferenceService::class)->cardsForSources('post', $postIds, $user);
         }
-        if ($this->container->get(FeatureFlags::class)->enabled('link_previews')) {
+        if ($featureFlags->enabled('link_previews')) {
             $linkPreviewCards = $this->container->get(LinkPreviewService::class)->cardsForSources('post', $postIds);
         }
-        if ($user !== null && $this->container->get(FeatureFlags::class)->enabled('automated_context')) {
+        if ($user !== null && $automatedContext) {
             $sinceLastReadContext = $this->container->get(SinceLastReadContextService::class)
                 ->forThread($user->id(), (int) $thread['id']);
         }
 
-        if ($engagement && $user !== null) {
-            $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
+        if ($user !== null) {
             $tuRepo = $this->container->get(ThreadUserRepository::class);
-            $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
-            if ($postIds !== []) {
+            if ($engagement) {
+                $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
+                $isStarred = $tuRepo->isStarred($user->id(), (int) $thread['id']);
+            }
+            if (($engagement || $automatedContext) && $postIds !== []) {
                 $tuRepo->markRead($user->id(), (int) $thread['id'], max($postIds));
             }
+        }
+
+        if ($sinceLastReadContext !== null) {
+            $threadUrl = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug'];
+            foreach ($sinceLastReadContext['items'] as &$item) {
+                $targetPage = $postRepo->pageOfPost((int) $thread['id'], (int) $item['post_id'], $perPage);
+                if ($targetPage === $page) {
+                    $item['url'] = '#p' . (int) $item['post_id'];
+                    continue;
+                }
+                $item['url'] = $threadUrl . ($targetPage > 1 ? '?page=' . $targetPage : '') . '#p' . (int) $item['post_id'];
+            }
+            unset($item);
         }
 
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
@@ -208,7 +225,7 @@ final class ThreadController extends Controller
             }
         }
 
-        $memoryOn = (bool) $this->container->get(FeatureFlags::class)->enabled('community_memory');
+        $memoryOn = (bool) $featureFlags->enabled('community_memory');
         $summary = null;
         $summarySources = [];
         $summaryReferenceCards = [];
@@ -222,7 +239,7 @@ final class ThreadController extends Controller
             $summary = $memory->publishedSummary((int) $thread['id']);
             if ($summary !== null) {
                 $summarySources = $memory->summarySources((int) $summary['id'], $user);
-                if ($this->container->get(FeatureFlags::class)->enabled('content_references')) {
+                if ($featureFlags->enabled('content_references')) {
                     $summaryReferenceCards = $this->container->get(ContentReferenceService::class)
                         ->cardsForSources('summary', [(int) $summary['id']], $user)[(int) $summary['id']] ?? [];
                 }

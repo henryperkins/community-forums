@@ -84,4 +84,25 @@ final class AppProfileMediaTest extends TestCase
         self::assertSame((int) $admin['id'], (int) $row['signature_removed_by']);
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'clear_signature'"));
     }
+
+    public function test_account_validation_error_preserves_existing_avatar_preview(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['profile_media' => true]);
+        $user = $this->makeUser(['username' => 'avatarvalidation']);
+        $this->db->run(
+            'UPDATE users SET avatar_path = ?, avatar_source = ? WHERE id = ?',
+            ['/media/321', 'upload', (int) $user['id']],
+        );
+
+        $this->actingAs($user);
+        $res = $this->post('/settings/account', [
+            'display_name' => 'Avatar Validation',
+            'signature' => "one\ntwo\nthree\nfour",
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('src="/media/321"', $res->body());
+        self::assertStringContainsString('Remove avatar', $res->body());
+    }
 }
