@@ -7,6 +7,7 @@ namespace App\Core;
 use App\Controller\AccountController;
 use App\Controller\AdminApiTokenController;
 use App\Controller\AdminController;
+use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
 use App\Controller\Api\MeController as ApiMeController;
@@ -735,6 +736,8 @@ final class App
             (int) $config->get('community.badge_trusted_answerer_solved', 10),
             (int) $config->get('community.badge_appreciated_rep', 100),
             (int) $config->get('community.badge_well_liked_rep', 1000),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(FollowService::class, fn (Container $c) => new FollowService(
             $c->get(FollowRepository::class),
@@ -1097,6 +1100,14 @@ final class App
         $r->post('/admin/boards/{id}/moderators/remove', [AdminController::class, 'unassignModerator']);
         $r->post('/admin/boards/{id}/members', [AdminController::class, 'addMember']);
         $r->post('/admin/boards/{id}/members/remove', [AdminController::class, 'removeMember']);
+
+        // Per-user admin record (ADMIN §5.1/§5.2): directory + record screen,
+        // manual badges + cosmetic title. Static before generic.
+        $r->get('/admin/users', [AdminUserController::class, 'index']);
+        $r->get('/admin/users/{id}', [AdminUserController::class, 'show']);
+        $r->post('/admin/users/{id}/title', [AdminUserController::class, 'setTitle']);
+        $r->post('/admin/users/{id}/badges/grant', [AdminUserController::class, 'grantBadge']);
+        $r->post('/admin/users/{id}/badges/revoke', [AdminUserController::class, 'revokeBadge']);
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);
