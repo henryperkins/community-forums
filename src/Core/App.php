@@ -735,6 +735,7 @@ final class App
             (int) $config->get('community.badge_trusted_answerer_solved', 10),
             (int) $config->get('community.badge_appreciated_rep', 100),
             (int) $config->get('community.badge_well_liked_rep', 1000),
+            $c->get(ModerationLogRepository::class),
         ));
         $c->bind(FollowService::class, fn (Container $c) => new FollowService(
             $c->get(FollowRepository::class),

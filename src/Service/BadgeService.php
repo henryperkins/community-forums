@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\BadgeRepository;
+use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
 
 /**
@@ -33,6 +34,7 @@ final class BadgeService
         private int $trustedAnswererSolved = 10,
         private int $appreciatedRep = 100,
         private int $wellLikedRep = 1000,
+        private ?ModerationLogRepository $log = null,
     ) {
     }
 
@@ -106,26 +108,47 @@ final class BadgeService
         return $awarded;
     }
 
-    /** Admin manual grant of a `kind=manual` badge (COMMUNITY §6). */
-    public function grantManual(User $admin, int $userId, string $slug): void
+    /** Admin manual grant of a `kind=manual` badge (COMMUNITY §6, ADMIN §5.2). */
+    public function grantManual(User $admin, int $userId, string $slug, ?string $reason = null): void
     {
         $badge = $this->badges->findBySlug($slug);
         if ($badge === null || $badge['kind'] !== 'manual') {
             throw new ValidationException(['slug' => 'That badge cannot be granted manually.']);
         }
-        if ($this->badges->awardBySlug($userId, $slug, $admin->id())) {
-            $this->notifications?->notifyBadge($userId);
-        }
+        $this->db->transaction(function () use ($admin, $userId, $slug, $reason): void {
+            if ($this->badges->awardBySlug($userId, $slug, $admin->id())) {
+                $this->audit($admin->id(), 'badge.grant', $userId, $reason);
+                $this->notifications?->notifyBadge($userId);
+            }
+        });
     }
 
-    /** Moderator lever: clear a manually-granted badge (COMMUNITY §10). */
-    public function revokeManual(int $userId, string $slug): bool
+    /** Moderator lever: clear a manually-granted badge (COMMUNITY §10). Silent (no notification). */
+    public function revokeManual(User|int $actor, int $userId, string $slug, ?string $reason = null): bool
     {
         $badge = $this->badges->findBySlug($slug);
         if ($badge === null || $badge['kind'] !== 'manual') {
-            return false;
+            throw new ValidationException(['slug' => 'That badge cannot be revoked manually.']);
         }
-        return $this->badges->revokeBySlug($userId, $slug);
+        $actorId = $actor instanceof User ? $actor->id() : $actor;
+        return $this->db->transaction(function () use ($actorId, $userId, $slug, $reason): bool {
+            if ($this->badges->revokeBySlug($userId, $slug)) {
+                $this->audit($actorId, 'badge.revoke', $userId, $reason);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private function audit(?int $actorId, string $action, int $userId, ?string $reason): void
+    {
+        $this->log?->log([
+            'actor_id' => $actorId,
+            'action' => $action,
+            'target_type' => 'user',
+            'target_id' => $userId,
+            'reason' => $reason,
+        ]);
     }
 
     private function threadCount(int $userId): int
