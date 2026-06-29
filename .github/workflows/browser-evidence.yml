@@ -41,6 +41,13 @@ jobs:
       DB_PASSWORD: root
       WEBHOOK_ALLOW_HTTP: 'true'
       WEBHOOK_ALLOWED_PRIVATE_CIDRS: '127.0.0.1/32,::1/128'
+      # Throwaway encryption key for the ephemeral evidence DB only. Without it,
+      # SecretBox refuses to encrypt and the admin-webhooks register flow (the one
+      # browser-evidence path that stores a reversibly-encrypted secret) 500s.
+      # This is NOT a secret — the DB is torn down each run; the obvious sequential
+      # hex makes that explicit. The job env propagates to the PHP server Playwright
+      # boots, so the in-process app sees it.
+      APP_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
 
     steps:
       - uses: actions/checkout@v4
