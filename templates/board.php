@@ -25,7 +25,9 @@ if (($board['visibility'] ?? 'public') !== 'public') {
         <?php endif; ?>
     </header>
 
-    <?php if ($can_post): ?>
+    <?php if ((int) ($board['is_archived'] ?? 0) === 1): ?>
+        <div class="joinbar joinbar-archived" data-archived-banner>This board is retired and read-only. You can still read and search its topics, but new topics and replies are closed.</div>
+    <?php elseif ($can_post): ?>
         <details class="composer-details">
             <summary class="btn">New Topic</summary>
             <?= $this->partial('partials/new_thread_form', ['board' => $board, 'errors' => [], 'old' => []]) ?>

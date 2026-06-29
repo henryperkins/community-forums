@@ -135,4 +135,20 @@ final class AppAdminArchiveTest extends TestCase
         $this->expectException(\App\Core\ForbiddenException::class);
         $svc->makeWiki($this->userEntity($this->admin), $opId);
     }
+
+    public function test_archived_board_page_is_readable_with_banner_and_no_new_topic(): void
+    {
+        $author = $this->makeUser(['username' => 'arcreader']);
+        $board = $this->makeBoard($this->categoryId, ['slug' => 'arcread', 'name' => 'ArcRead']);
+        $this->makeThread($board, $author, 'Still readable topic');
+        $this->boards()->setArchived((int) $board['id'], true);
+
+        $this->actingAs($author);
+        $res = $this->get('/c/arcread');
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'Still readable topic');   // content preserved + readable
+        $this->assertSeeText($res, 'retired and read-only');  // banner copy
+        $this->assertDontSeeText($res, 'New Topic');          // affordance suppressed
+    }
 }
