@@ -9,6 +9,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
@@ -39,6 +40,7 @@ final class SolvedAnswerService
         private WriteGate $writeGate,
         private ThreadWorkflowService $workflow,
         private ReputationLedgerService $reputation,
+        private ?FirstPartyHookRegistry $hooks = null,
         private int $solvedBonus = 5,
     ) {
     }
@@ -66,7 +68,7 @@ final class SolvedAnswerService
         $opId = (int) $thread['user_id'];
         $answerAuthorId = (int) $post['user_id'];
 
-        $this->db->transaction(function () use ($thread, $threadId, $postId, $previous, $opId, $answerAuthorId, $actor): void {
+        $auditId = $this->db->transaction(function () use ($thread, $threadId, $postId, $previous, $opId, $answerAuthorId, $actor): int {
             // Moving the accepted answer: take the bonus back off the old author.
             if ($previous !== null) {
                 $this->adjustBonusFor($previous, $opId, -$this->solvedBonus, $actor->id());
@@ -89,7 +91,7 @@ final class SolvedAnswerService
                 $this->notifications->notifySolved($answerAuthorId, $actor->id(), $threadId, $postId);
             }
 
-            $this->log->log([
+            return $this->log->log([
                 'actor_id' => $actor->id(),
                 'action' => 'thread.solved',
                 'target_type' => 'thread',
@@ -98,6 +100,16 @@ final class SolvedAnswerService
                 'after' => ['accepted_answer_post_id' => $postId],
             ]);
         });
+        if ($this->isPublicAcceptedAnswer($threadId, $postId)) {
+            $this->hooks?->emit('thread.solved', [
+                'thread_id' => $threadId,
+                'post_id' => $postId,
+                'board_id' => (int) $thread['board_id'],
+                'actor_id' => $actor->id(),
+                'answer_author_id' => $answerAuthorId,
+                'audit_id' => $auditId,
+            ], 'thread:' . $threadId . ':solved:' . $postId . ':' . $auditId);
+        }
     }
 
     /** Clear the accepted answer of $threadId. */
@@ -171,5 +183,24 @@ final class SolvedAnswerService
         if (!$isOp && !$isMod) {
             throw new ForbiddenException('Only the topic author or a moderator can accept an answer.');
         }
+    }
+
+    private function isPublicAcceptedAnswer(int $threadId, int $postId): bool
+    {
+        $row = $this->db->fetch(
+            "SELECT b.visibility, t.is_pending AS thread_pending, t.is_deleted AS thread_deleted,
+                    p.is_pending AS post_pending, p.is_deleted AS post_deleted
+             FROM threads t
+             JOIN boards b ON b.id = t.board_id
+             JOIN posts p ON p.id = ?
+             WHERE t.id = ? AND p.thread_id = t.id",
+            [$postId, $threadId],
+        );
+        return $row !== null
+            && (string) $row['visibility'] === 'public'
+            && (int) $row['thread_pending'] === 0
+            && (int) $row['thread_deleted'] === 0
+            && (int) $row['post_pending'] === 0
+            && (int) $row['post_deleted'] === 0;
     }
 }

@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Config;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
 
@@ -24,6 +25,7 @@ final class AuthService
         private UserRepository $users,
         private PasswordHasher $hasher,
         private Config $config,
+        private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
 
@@ -82,6 +84,13 @@ final class AuthService
         $user = $this->users->findEntity($id);
         if ($user === null) {
             throw new \RuntimeException('Failed to load newly created user.');
+        }
+        if ($role === 'user') {
+            $this->hooks?->emit('member.registered', [
+                'user_id' => $user->id(),
+                'oauth' => false,
+                'email_verified' => false,
+            ], 'user:' . $user->id() . ':registered');
         }
         return $user;
     }

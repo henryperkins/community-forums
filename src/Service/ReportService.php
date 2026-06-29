@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\PostRepository;
@@ -33,6 +34,7 @@ final class ReportService
         private NotificationRepository $notifs,
         private UserRepository $users,
         private WriteGate $writeGate,
+        private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
 
@@ -49,13 +51,24 @@ final class ReportService
             throw new NotFoundException('Post not found.');
         }
 
-        $this->db->transaction(function () use ($reporter, $post, $postId, $reasonCode, $reason, $notifyReporter): void {
+        $reportId = $this->db->transaction(function () use ($reporter, $post, $postId, $reasonCode, $reason, $notifyReporter): int {
             $reportId = $this->reports->createPostReport($reporter->id(), $postId, $reasonCode, trim($reason), $notifyReporter);
             if ($reportId === 0) {
-                return; // dedupe: an open report already exists
+                return 0; // dedupe: an open report already exists
             }
             $this->notifyStaff((int) $post['board_id'], (int) $post['thread_id'], $postId, $reporter->id());
+            return $reportId;
         });
+        if ($reportId > 0 && (string) ($post['board_visibility'] ?? 'public') === 'public') {
+            $this->hooks?->emit('report.created', [
+                'report_id' => $reportId,
+                'post_id' => $postId,
+                'thread_id' => (int) $post['thread_id'],
+                'board_id' => (int) $post['board_id'],
+                'reporter_id' => $reporter->id(),
+                'status' => 'open',
+            ], 'report:' . $reportId . ':created');
+        }
     }
 
     public function canHandle(User $user, array $report): bool
@@ -86,8 +99,10 @@ final class ReportService
     private function finish(User $mod, int $reportId, string $status): void
     {
         $report = $this->requireHandleable($mod, $reportId);
-        $this->db->transaction(function () use ($report, $mod, $status): void {
-            $this->reports->setStatus((int) $report['id'], $status, $mod->id());
+        $changed = $this->db->transaction(function () use ($report, $mod, $status): bool {
+            if ($this->reports->setStatus((int) $report['id'], $status, $mod->id()) === 0) {
+                return false;
+            }
             // Reporter outcome-notification (opt-in).
             if ((int) ($report['notify_reporter'] ?? 0) === 1 && $report['post_id'] !== null) {
                 $threadId = $this->db->fetchValue('SELECT thread_id FROM posts WHERE id = ?', [(int) $report['post_id']]);
@@ -99,7 +114,11 @@ final class ReportService
                     'post_id' => (int) $report['post_id'],
                 ]);
             }
+            return true;
         });
+        if ($changed) {
+            $this->emitReportFinished($report, $status, $mod->id());
+        }
     }
 
     /** @return array<string,mixed> */
@@ -132,5 +151,27 @@ final class ReportService
                 'actor_id' => $reporterId, 'thread_id' => $threadId, 'post_id' => $postId,
             ]);
         }
+    }
+
+    /** @param array<string,mixed> $report */
+    private function emitReportFinished(array $report, string $status, int $handledById): void
+    {
+        if ($report['post_id'] === null) {
+            return;
+        }
+        $post = $this->posts->findWithContext((int) $report['post_id']);
+        if ($post === null || (string) ($post['board_visibility'] ?? 'public') !== 'public') {
+            return;
+        }
+        $reportId = (int) $report['id'];
+        $this->hooks?->emit('report.resolved', [
+            'report_id' => $reportId,
+            'post_id' => (int) $report['post_id'],
+            'thread_id' => (int) $post['thread_id'],
+            'board_id' => (int) $post['board_id'],
+            'reporter_id' => (int) $report['reporter_id'],
+            'handled_by_id' => $handledById,
+            'status' => $status,
+        ], 'report:' . $reportId . ':' . $status);
     }
 }

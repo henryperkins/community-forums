@@ -46,6 +46,8 @@ use App\Controller\UserModerationController;
 use App\Controller\ThreadController;
 use App\Controller\ThreadWorkflowController;
 use App\Controller\UnsubscribeController;
+use App\Hook\FirstPartyHookRegistry;
+use App\Hook\HookEvent;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
@@ -98,6 +100,7 @@ use App\Security\SecurityHeaders;
 use App\Security\SecretBox;
 use App\Security\Session;
 use App\Security\Totp;
+use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
@@ -616,6 +619,7 @@ final class App
             $c->get(SettingRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(\App\Service\Spam\SpamScorer::class),
+            $c->get(FirstPartyHookRegistry::class),
         ));
 
         // Image uploads (P3-04).
@@ -632,6 +636,15 @@ final class App
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
+        $c->bind(FirstPartyHookRegistry::class, function (Container $c): FirstPartyHookRegistry {
+            $registry = new FirstPartyHookRegistry($c->get(FeatureFlags::class));
+            foreach (WebhookEvents::domainEvents() as $event => $_description) {
+                $registry->on($event, 'webhooks.' . $event, function (HookEvent $hookEvent) use ($c): void {
+                    $c->get(WebhookService::class)->dispatch($hookEvent->name, $hookEvent->data, $hookEvent->id);
+                });
+            }
+            return $registry;
+        });
         $c->bind(RepairService::class, fn (Container $c) => new RepairService(
             $c->get(Database::class),
             (int) $config->get('community.solved_bonus', 5),
@@ -669,6 +682,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(BoardModeratorRepository::class),
+            $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(ReportService::class, fn (Container $c) => new ReportService(
             $c->get(Database::class),
@@ -679,6 +693,7 @@ final class App
             $c->get(NotificationRepository::class),
             $c->get(UserRepository::class),
             $c->get(WriteGate::class),
+            $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
             $c->get(Database::class),
@@ -748,6 +763,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(ThreadWorkflowService::class),
             $c->get(ReputationLedgerService::class),
+            $c->get(FirstPartyHookRegistry::class),
             (int) $config->get('community.solved_bonus', 5),
         ));
         $c->bind(ThreadWorkflowService::class, fn (Container $c) => new ThreadWorkflowService(
@@ -784,6 +800,7 @@ final class App
             $c->get(UserRepository::class),
             $c->get(PasswordHasher::class),
             $config,
+            $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(PasswordResetService::class, fn (Container $c) => new PasswordResetService(
             $c->get(UserRepository::class),
@@ -830,6 +847,7 @@ final class App
             $c->get(OAuthIdentityRepository::class),
             $c->get(UserRepository::class),
             $c->get(SettingRepository::class),
+            $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(PostingService::class, fn (Container $c) => new PostingService(
             $c->get(Database::class),
@@ -846,6 +864,7 @@ final class App
             $c->get(IdempotencyRepository::class),
             $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
             $c->get(ReputationLedgerService::class),
+            $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -857,6 +876,7 @@ final class App
             $c->get(BoardModeratorRepository::class),
             $c->get(BoardRepository::class),
             $c->get(UserRepository::class),
+            $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),

@@ -53,12 +53,12 @@ final class FeatureFlags
         'badge_rules' => false,       // custom badge rules/backfill/revoke history
         'community_memory' => false,  // summaries, related topics, wiki revisions
 
-        // ── Phase 5 Gate A (deploy-dark; foundation only, no behavior yet) ─
+        // ── Phase 5 Gate A (deploy-dark foundation/workstreams) ─────────────
         // These gate availability of the Phase 5 ecosystem/identity/governance
         // subsystems. They stay OFF until each workstream has its Milestone-0
         // trust approvals and acceptance evidence (PHASE_5_PLAN §2/§13). The
-        // foundation migrations (0049–0053) are additive and inert; nothing
-        // reads them while these flags are dark.
+        // foundation migrations (0049–0053) are additive and inert; B2 behavior
+        // remains unavailable while its service flags are dark.
         'package_registry' => false,  // signed registry, package catalogue/install/update (P5-01/02/04)
         'package_themes' => false,    // declarative theme packages + preview/safe-mode (P5-03)
         'capabilities' => false,      // DB-backed roles/capability resolver, scoped grants (P5-08/09)
@@ -72,6 +72,7 @@ final class FeatureFlags
         'service_secrets' => false,   // reversible secret vault for providers/webhooks (B2 sub-project 1)
         'api_tokens' => false,        // admin/service Bearer API tokens + read-only /api/v1 (B2 sub-project 2)
         'webhooks' => false,          // outbound webhook delivery engine + admin UI (B2 sub-project 3)
+        'first_party_hooks' => false, // code-only first-party hooks + domain webhook producers (B2 sub-project 4)
 
         // ── Phase 5 Gate B (reserved; dark until Gate A is accepted) ───────
         'server_extensions' => false, // sandboxed isolated server-extension runtime (P5-05/06)

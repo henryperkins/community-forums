@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Database;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\OAuthIdentityRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
@@ -38,6 +39,7 @@ final class OAuthService
         private OAuthIdentityRepository $identities,
         private UserRepository $users,
         private SettingRepository $settings,
+        private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
 
@@ -145,7 +147,8 @@ final class OAuthService
 
     private function createFromIdentity(NormalizedIdentity $id): User
     {
-        return $this->db->transaction(function () use ($id): User {
+        $emailVerified = $id->email !== null && $id->emailVerified;
+        $user = $this->db->transaction(function () use ($id, $emailVerified): User {
             $username = $this->generateUsername($id->displayName ?? $this->localPart($id->email) ?? 'user');
             // Only a provider-VERIFIED email may occupy the globally-unique
             // users.email slot. An unverified provider email (e.g. GitHub can
@@ -153,7 +156,6 @@ final class OAuthService
             // address and deny them registration, so it is parked on a synthetic
             // placeholder; the real address still rides on the oauth_identities
             // row and can be promoted once verified.
-            $emailVerified = $id->email !== null && $id->emailVerified;
             $email = $emailVerified ? $id->email : ($username . '@' . $id->provider . '.oauth.invalid');
 
             $userId = $this->users->create([
@@ -175,6 +177,12 @@ final class OAuthService
             }
             return $user;
         });
+        $this->hooks?->emit('member.registered', [
+            'user_id' => $user->id(),
+            'oauth' => true,
+            'email_verified' => $emailVerified,
+        ], 'user:' . $user->id() . ':registered');
+        return $user;
     }
 
     /** Suggest a unique, valid handle from a display name / email local-part. */

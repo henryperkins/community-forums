@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Config;
 use App\Core\Database;
 use App\Domain\User;
+use App\Hook\FirstPartyHookRegistry;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Service\Spam\NullSpamScorer;
@@ -38,6 +39,7 @@ final class AntiAbuseService
         private SettingRepository $settings,
         private ModerationLogRepository $log,
         private SpamScorer $spamScorer = new NullSpamScorer(),
+        private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
 
@@ -139,12 +141,12 @@ final class AntiAbuseService
      * Called after the content is created (flag/hold/observe) or rejected
      * (block, target_id 0). Only writes when a rule actually fired.
      */
-    public function audit(AntiAbuseDecision $decision, string $targetType, int $targetId): void
+    public function audit(AntiAbuseDecision $decision, string $targetType, int $targetId): ?int
     {
         if (!$decision->triggered()) {
-            return;
+            return null;
         }
-        $this->log->log([
+        $logId = $this->log->log([
             'actor_id' => null, // system actor
             'action' => 'auto_' . $decision->action, // auto_allow|auto_flag|auto_hold|auto_block
             'target_type' => $targetType,
@@ -158,6 +160,17 @@ final class AntiAbuseService
                 'effective' => $decision->action,
             ],
         ]);
+        if (in_array($decision->action, ['flag', 'hold', 'block'], true)) {
+            $this->hooks?->emit('moderation.auto_action', [
+                'moderation_log_id' => $logId,
+                'target_type' => $targetType,
+                'target_id' => $targetId,
+                'action' => $decision->action,
+                'natural' => $decision->natural,
+                'mode' => $decision->mode,
+            ], 'moderation:' . $logId . ':auto_action');
+        }
+        return $logId;
     }
 
     /** Current enforcement mode: a `settings` override wins over config. */
