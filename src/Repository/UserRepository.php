@@ -323,4 +323,33 @@ final class UserRepository
              LIMIT " . $limit,
         );
     }
+
+    /**
+     * Admin user directory (ADMIN §5.1): newest first, optional substring search
+     * over username / display name / email. LIMIT/OFFSET are clamped + inlined
+     * (EMULATE_PREPARES=false forbids binding them); search placeholders are
+     * distinct (no placeholder is reused).
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function directory(string $q = '', int $limit = 50, int $offset = 0): array
+    {
+        $limit = max(1, min(200, $limit));
+        $offset = max(0, $offset);
+        $q = trim($q);
+        if ($q === '') {
+            return $this->db->fetchAll(
+                'SELECT id, username, display_name, email, role, status, reputation, created_at
+                 FROM users ORDER BY id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
+            );
+        }
+        $like = '%' . $q . '%';
+        return $this->db->fetchAll(
+            'SELECT id, username, display_name, email, role, status, reputation, created_at
+             FROM users
+             WHERE username LIKE :q1 OR display_name LIKE :q2 OR email LIKE :q3
+             ORDER BY id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
+            ['q1' => $like, 'q2' => $like, 'q3' => $like],
+        );
+    }
 }
