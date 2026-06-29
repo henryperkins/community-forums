@@ -195,4 +195,34 @@ final class AppFeatureFlagTest extends TestCase
         $this->setFlags(['oauth' => false]);
         $this->assertStatus(404, $this->get('/settings/connections'));
     }
+
+    public function test_announcements_flag_and_rate_limit_are_declared(): void
+    {
+        // The announcements subsystem is a Phase-2 surface: declared + default ON.
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertArrayHasKey('announcements', $flags->all(), 'announcements must be a declared flag, not an unknown-key false');
+        self::assertTrue($flags->enabled('announcements'), 'announcements defaults on (Phase-2 convention)');
+
+        // The broadcast cap needs a real policy (RateLimitService no-ops on unknown names).
+        $limits = (array) $this->config->get('rate_limits', []);
+        self::assertArrayHasKey('announce', $limits);
+        self::assertCount(2, (array) $limits['announce']);
+    }
+
+    public function test_announcements_flag_takes_admin_routes_dark(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'annflagroutes']);
+        $this->actingAs($admin);
+
+        // Reachable while the flag is on (default).
+        self::assertNotSame(404, $this->get('/admin/announcements')->status());
+
+        // 404 once the flag is off — the GET form and the POST both go dark.
+        $this->setFlags(['announcements' => false]);
+        $this->assertStatus(404, $this->get('/admin/announcements'));
+        $this->assertStatus(404, $this->post('/admin/announcements', ['message' => 'Hidden']));
+
+        // The home page still serves while the flag is off.
+        $this->assertStatus(200, $this->get('/'));
+    }
 }

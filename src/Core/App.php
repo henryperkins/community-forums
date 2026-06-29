@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Controller\AccountController;
+use App\Controller\AdminAnnouncementController;
 use App\Controller\AdminApiTokenController;
 use App\Controller\AdminController;
 use App\Controller\AdminUserController;
@@ -105,6 +106,7 @@ use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AdminService;
+use App\Service\AnnouncementService;
 use App\Service\AntiAbuseService;
 use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
@@ -391,6 +393,20 @@ final class App
             $needsTour = false;
         }
 
+        // Site announcement banner (ADMIN §7.4; SCHEMA §7 #13): a defensive read
+        // so the global shell can show an operator notice. Its own try/catch keeps
+        // a missing or garbled settings row from 500ing the shell (it renders
+        // pre-setup and against an un-migrated DB).
+        $siteAnnouncement = null;
+        try {
+            $value = $container->get(SettingRepository::class)->get('site_announcement', null);
+            if (is_array($value) && !empty($value['active'])) {
+                $siteAnnouncement = $value;
+            }
+        } catch (Throwable) {
+            $siteAnnouncement = null;
+        }
+
         $container->get(View::class)->share([
             'site_name' => $siteName,
             'app_name' => $appName,
@@ -406,6 +422,7 @@ final class App
             'branding' => $branding,
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
+            'site_announcement' => $siteAnnouncement,
         ]);
     }
 
@@ -676,6 +693,13 @@ final class App
             $c->get(UserRepository::class),
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
+        ));
+        $c->bind(AnnouncementService::class, fn (Container $c) => new AnnouncementService(
+            $c->get(Database::class),
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(NotificationRepository::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(
             $c->get(Database::class),
@@ -1084,6 +1108,8 @@ final class App
         $r->post('/admin/webhooks/{id}/test', [AdminWebhookController::class, 'test']);
         $r->post('/admin/webhooks/{id}/delete', [AdminWebhookController::class, 'delete']);
         $r->post('/admin/webhooks/{id}/deliveries/{deliveryId}/replay', [AdminWebhookController::class, 'replay']);
+        $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
+        $r->post('/admin/announcements', [AdminAnnouncementController::class, 'save']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
         $r->post('/admin/settings', [AdminController::class, 'updateSettings']);

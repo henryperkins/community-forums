@@ -50,7 +50,7 @@ $db->transaction(function () use ($db): void {
 $users = new UserRepository($db);
 $settings = new SettingRepository($db);
 if ($users->adminCount() > 0) {
-    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true, 'first_party_hooks' => true]); // B2 admin pages + domain webhook evidence
+    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true, 'first_party_hooks' => true, 'announcements' => true]); // B2 admin pages + domain webhook evidence + announcements
     fwrite(STDOUT, "Already seeded (admin exists); nothing to do.\n");
     exit(0);
 }
@@ -91,7 +91,7 @@ $db->transaction(function () use ($settings, $categories, $boards, $mods, $membe
     $settings->set('site_name', 'RetroBoards');
     $settings->set('registration_mode', 'open');
     $settings->set('installed_at', gmdate('Y-m-d H:i:s'));
-    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true, 'first_party_hooks' => true]); // B2 admin pages + domain webhook evidence
+    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true, 'first_party_hooks' => true, 'announcements' => true]); // B2 admin pages + domain webhook evidence + announcements
 
     // Accounts.
     $adminId = $makeUser('admin', 'Site Admin', 'admin');

@@ -12,6 +12,7 @@
         <a href="/admin/users">Users</a>
         <?php if (!empty($features['api_tokens'])): ?><a href="/admin/api-tokens">API tokens</a><?php endif; ?>
         <?php if (!empty($features['webhooks'])): ?><a href="/admin/webhooks">Webhooks</a><?php endif; ?>
+        <?php if (!empty($features['announcements'])): ?><a href="/admin/announcements">Announcements</a><?php endif; ?>
     </nav>
 
     <section class="card">
