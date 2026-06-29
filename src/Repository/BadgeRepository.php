@@ -76,4 +76,37 @@ final class BadgeRepository
             [$userId],
         );
     }
+
+    /**
+     * Manual badges available for admin grant (ADMIN §5.2): enabled, manual-kind,
+     * in display order then name.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function manualCatalogue(): array
+    {
+        return $this->db->fetchAll(
+            "SELECT id, slug, name, description, icon
+             FROM badges
+             WHERE kind = 'manual' AND is_enabled = 1
+             ORDER BY display_order ASC, name ASC",
+        );
+    }
+
+    /**
+     * Manual badges $userId currently holds, so the record screen can render a
+     * revoke control per held manual badge. Earliest first.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function manualHeldByUser(int $userId): array
+    {
+        return $this->db->fetchAll(
+            "SELECT b.slug, b.name, b.icon, ub.awarded_at
+             FROM user_badges ub JOIN badges b ON b.id = ub.badge_id
+             WHERE ub.user_id = ? AND b.kind = 'manual'
+             ORDER BY ub.awarded_at ASC, b.id ASC",
+            [$userId],
+        );
+    }
 }
