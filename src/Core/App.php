@@ -111,6 +111,7 @@ use App\Service\AntiAbuseService;
 use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
 use App\Service\AuthService;
+use App\Service\EmailOpsService;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeService;
@@ -692,6 +693,16 @@ final class App
             $c->get(BlockRepository::class),
             $c->get(UserRepository::class),
             $c->get(FeatureFlags::class),
+            $c->get(Mailer::class),
+        ));
+        $c->bind(EmailOpsService::class, fn (Container $c) => new EmailOpsService(
+            $c->get(Database::class),
+            $c->get(EmailDeliveryRepository::class),
+            $c->get(EmailSuppressionRepository::class),
+            $c->get(SubscriptionRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
             $c->get(Mailer::class),
         ));
         $c->bind(AnnouncementService::class, fn (Container $c) => new AnnouncementService(
