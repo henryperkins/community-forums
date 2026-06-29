@@ -87,4 +87,52 @@ final class AppAdminArchiveTest extends TestCase
         $reply = $this->post('/t/' . $thread['thread_id'] . '/reply', ['body' => 'Posting works again.']);
         $this->assertRedirectContains($reply, '/t/' . $thread['thread_id']);
     }
+
+    public function test_thread_status_change_is_blocked_on_archived_board(): void
+    {
+        $author = $this->makeUser(['username' => 'wfauthor']);
+        $board = $this->makeBoard($this->categoryId, ['slug' => 'wfboard', 'name' => 'WFBoard']);
+        $thread = $this->makeThread($board, $author, 'Workflow topic');
+        $this->boards()->setArchived((int) $board['id'], true);
+
+        $svc = new \App\Service\ThreadWorkflowService(
+            $this->db,
+            new \App\Repository\ThreadRepository($this->db),
+            new \App\Repository\ThreadAssignmentRepository($this->db),
+            new \App\Repository\UserRepository($this->db),
+            new \App\Repository\BoardModeratorRepository($this->db),
+            new \App\Repository\BoardMemberRepository($this->db),
+            new \App\Repository\ModerationLogRepository($this->db),
+            new \App\Security\WriteGate(),
+        );
+
+        $this->expectException(\App\Core\ForbiddenException::class);
+        $svc->setStatus($this->userEntity($author), $thread['thread_id'], 'solved');
+    }
+
+    public function test_wiki_make_is_blocked_on_archived_board(): void
+    {
+        $author = $this->makeUser(['username' => 'wikiauthor']);
+        $board = $this->makeBoard($this->categoryId, ['slug' => 'wikiboard', 'name' => 'WikiBoard']);
+        $thread = $this->makeThread($board, $author, 'Wiki candidate');
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        // Enable wiki on the board so the archive guard — not the wiki-disabled
+        // check — is the sole reason makeWiki is rejected (genuine RED->GREEN).
+        $this->db->run('UPDATE boards SET wiki_enabled = 1 WHERE id = ?', [(int) $board['id']]);
+        $this->boards()->setArchived((int) $board['id'], true);
+
+        $svc = new \App\Service\CommunityMemoryService(
+            $this->db,
+            new \App\Repository\ThreadRepository($this->db),
+            new \App\Repository\PostRepository($this->db),
+            new \App\Repository\BoardModeratorRepository($this->db),
+            new \App\Repository\BoardMemberRepository($this->db),
+            new \App\Security\BoardPolicy(),
+            new \App\Security\WriteGate(),
+            new \App\Support\Markdown(new \App\Support\HtmlSanitizer()),
+        );
+
+        $this->expectException(\App\Core\ForbiddenException::class);
+        $svc->makeWiki($this->userEntity($this->admin), $opId);
+    }
 }

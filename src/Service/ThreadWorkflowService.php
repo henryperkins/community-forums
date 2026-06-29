@@ -47,6 +47,9 @@ final class ThreadWorkflowService
             throw new ValidationException(['status' => 'Choose a valid topic status.']);
         }
         $thread = $this->threadOrFail($threadId);
+        if ((int) ($thread['board_is_archived'] ?? 0) === 1) {
+            throw new ForbiddenException('This board is archived and is read-only.');
+        }
         $this->authorizeStatus($actor, $thread, $status);
 
         $previous = (string) ($thread['status'] ?? 'open');

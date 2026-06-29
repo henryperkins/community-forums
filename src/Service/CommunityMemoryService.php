@@ -295,6 +295,9 @@ final class CommunityMemoryService
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
+        if ((int) ($thread['board_is_archived'] ?? 0) === 1) {
+            throw new ForbiddenException('This board is archived and is read-only.');
+        }
         if ((int) ($thread['board_wiki_enabled'] ?? 0) !== 1) {
             throw new ForbiddenException('Wiki editing is disabled for this board.');
         }
