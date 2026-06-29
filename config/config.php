@@ -201,6 +201,7 @@ return [
         'mfa_settings' => [10, 900],
         'api' => [120, 60],
         'webhook_test' => [20, 600],
+        'email_test' => [20, 600],
         'announce' => [5, 3600],   // admin announcement publishes per admin (ADMIN §7.4)
     ],
 
