@@ -343,10 +343,12 @@ test('admin per-user record: badges + title', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin/users');
-  await expect(page.getByRole('link', { name: 'bob' })).toBeVisible();
+  // exact:true — the directory row link is exactly "bob"; a substring match would
+  // ALSO hit the presence sidebar's "Bob Brooks" (/u/bob) link (strict-mode violation).
+  await expect(page.getByRole('link', { name: 'bob', exact: true })).toBeVisible();
   await shot(page, info, '14-admin-users');
 
-  await page.getByRole('link', { name: 'bob' }).click();
+  await page.getByRole('link', { name: 'bob', exact: true }).click();
   await page.waitForURL(/\/admin\/users\/\d+$/);
   await expect(page.getByRole('heading', { name: /bob/ })).toBeVisible();
 
