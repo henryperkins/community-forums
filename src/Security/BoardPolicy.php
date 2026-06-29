@@ -45,14 +45,29 @@ final class BoardPolicy
     }
 
     /**
-     * Whether $user may create a thread or reply in $board: they must be able
-     * to read it AND meet the board's minimum posting role. Roles are
-     * cumulative (admin ⊇ moderator ⊇ user), matching User::isModerator/isAdmin.
+     * An archived board is retired: read + list stay open, but every write path
+     * is closed (PHASE_2_PLAN §7.1, ADMIN §4.4). Reversible via unarchive.
+     *
+     * @param array<string,mixed> $board
+     */
+    public function isArchived(array $board): bool
+    {
+        return (int) ($board['is_archived'] ?? 0) === 1;
+    }
+
+    /**
+     * Whether $user may create a thread or reply in $board: the board must not be
+     * archived, they must be able to read it, AND they must meet the board's
+     * minimum posting role. Roles are cumulative (admin ⊇ moderator ⊇ user),
+     * matching User::isModerator/isAdmin.
      *
      * @param array<string,mixed> $board
      */
     public function canPost(array $board, User $user, bool $isMember): bool
     {
+        if ($this->isArchived($board)) {
+            return false;
+        }
         if (!$this->canRead($board, $user, $isMember)) {
             return false;
         }
