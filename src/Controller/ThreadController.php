@@ -20,6 +20,10 @@ use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Service\PreferenceService;
 use App\Service\CommunityMemoryService;
+use App\Service\ContentReferenceService;
+use App\Service\CustomEmojiService;
+use App\Service\LinkPreviewService;
+use App\Service\PollService;
 use App\Service\ReactionService;
 use App\Service\ThreadWorkflowService;
 use App\Support\Markdown;
@@ -99,6 +103,19 @@ final class ThreadController extends Controller
         $reactionCounts = $engagement ? $reactionRepo->countsForPosts($postIds) : [];
         $myReactions = [];
         $isStarred = false;
+        $referenceCards = [];
+        $linkPreviewCards = [];
+        $allowedEmoji = ReactionService::ALLOWED;
+        if ($this->container->get(FeatureFlags::class)->enabled('custom_emoji')) {
+            $allowedEmoji = array_merge($allowedEmoji, $this->container->get(CustomEmojiService::class)->reactionShortcodes());
+        }
+
+        if ($this->container->get(FeatureFlags::class)->enabled('content_references')) {
+            $referenceCards = $this->container->get(ContentReferenceService::class)->cardsForSources('post', $postIds, $user);
+        }
+        if ($this->container->get(FeatureFlags::class)->enabled('link_previews')) {
+            $linkPreviewCards = $this->container->get(LinkPreviewService::class)->cardsForSources('post', $postIds);
+        }
 
         if ($engagement && $user !== null) {
             $myReactions = $reactionRepo->userReactionsForPosts($user->id(), $postIds);
@@ -215,6 +232,18 @@ final class ThreadController extends Controller
             }
         }
 
+        $pollsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('polls');
+        $poll = null;
+        $canCreatePoll = false;
+        if ($pollsOn) {
+            $pollService = $this->container->get(PollService::class);
+            $poll = $pollService->forThread((int) $thread['id'], $user);
+            $canCreatePoll = $poll === null
+                && $user !== null
+                && $this->container->get(WriteGate::class)->canWrite($user)
+                && $pollService->canManageThread($user, $thread);
+        }
+
         return $this->view('thread', array_merge([
             'thread' => $thread,
             'posts' => $posts,
@@ -232,7 +261,9 @@ final class ThreadController extends Controller
             'show_reactions' => $reading['show_reactions'],
             'reaction_counts' => $reactionCounts,
             'my_reactions' => $myReactions,
-            'allowed_emoji' => ReactionService::ALLOWED,
+            'allowed_emoji' => $allowedEmoji,
+            'reference_cards' => $referenceCards,
+            'link_preview_cards' => $linkPreviewCards,
             'is_starred' => $isStarred,
             'community' => $community,
             'accepted_post_id' => $acceptedPostId,
@@ -260,6 +291,9 @@ final class ThreadController extends Controller
             'can_curate_memory' => $canCurateMemory,
             'can_curate_wiki' => $canCurateWiki,
             'wiki_revisions_by_post' => $wikiRevisions,
+            'polls_on' => $pollsOn,
+            'poll' => $poll,
+            'can_create_poll' => $canCreatePoll,
             'reply_errors' => [],
             'reply_old' => [],
             'edit_post_id' => 0,

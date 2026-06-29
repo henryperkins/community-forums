@@ -22,8 +22,8 @@ final class AttachmentRepository
     public function create(array $data): int
     {
         return $this->db->insert(
-            'INSERT INTO attachments (user_id, purpose, kind, status, storage_key, sha256, mime, size_bytes, width, height, alt, visibility, created_at)
-             VALUES (:user_id, :purpose, :kind, :status, :storage_key, :sha256, :mime, :size, :w, :h, :alt, :visibility, UTC_TIMESTAMP())',
+            'INSERT INTO attachments (user_id, purpose, kind, status, storage_key, sha256, mime, size_bytes, width, height, alt, visibility, scan_status, download_name, created_at)
+             VALUES (:user_id, :purpose, :kind, :status, :storage_key, :sha256, :mime, :size, :w, :h, :alt, :visibility, :scan_status, :download_name, UTC_TIMESTAMP())',
             [
                 'user_id' => (int) $data['user_id'],
                 'purpose' => (string) ($data['purpose'] ?? 'post'),
@@ -37,6 +37,8 @@ final class AttachmentRepository
                 'h' => $data['height'] ?? null,
                 'alt' => $data['alt'] ?? null,
                 'visibility' => (string) ($data['visibility'] ?? 'public'),
+                'scan_status' => (string) ($data['scan_status'] ?? 'clean'),
+                'download_name' => $data['download_name'] ?? null,
             ],
         );
     }
@@ -118,6 +120,49 @@ final class AttachmentRepository
     public function markDeleted(int $id): void
     {
         $this->db->run("UPDATE attachments SET status = 'deleted', deleted_at = UTC_TIMESTAMP() WHERE id = ?", [$id]);
+    }
+
+    public function markScanClean(int $id): void
+    {
+        $this->db->run(
+            "UPDATE attachments
+             SET scan_status = 'clean', scan_checked_at = UTC_TIMESTAMP(), quarantined_at = NULL, quarantine_reason = NULL
+             WHERE id = ? AND status <> 'deleted'",
+            [$id],
+        );
+    }
+
+    public function quarantine(int $id, string $reason): void
+    {
+        $this->db->run(
+            "UPDATE attachments
+             SET scan_status = 'quarantined', scan_checked_at = UTC_TIMESTAMP(), quarantined_at = UTC_TIMESTAMP(), quarantine_reason = ?
+             WHERE id = ? AND status <> 'deleted'",
+            [mb_substr(trim($reason), 0, 255), $id],
+        );
+    }
+
+    public function failPendingOlderThan(string $cutoff, int $limit = 500): int
+    {
+        $limit = max(1, $limit);
+        return $this->db->run(
+            "UPDATE attachments
+             SET scan_status = 'failed', scan_checked_at = UTC_TIMESTAMP(), quarantine_reason = 'scan_timeout'
+             WHERE kind = 'file' AND scan_status = 'pending' AND created_at < ?
+             ORDER BY id ASC LIMIT " . $limit,
+            [$cutoff],
+        )->rowCount();
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function pendingScans(int $limit = 500): array
+    {
+        $limit = max(1, $limit);
+        return $this->db->fetchAll(
+            "SELECT * FROM attachments
+             WHERE kind = 'file' AND status <> 'deleted' AND scan_status = 'pending'
+             ORDER BY created_at ASC, id ASC LIMIT " . $limit,
+        );
     }
 
     /**

@@ -22,6 +22,7 @@ use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\EgressGuard;
 use App\Security\SecretBox;
+use App\Service\LinkPreviewService;
 use App\Service\Webhook\CurlWebhookTransport;
 use App\Service\BadgeService;
 use App\Service\RepairService;
@@ -30,6 +31,7 @@ use App\Service\SecretVault;
 use App\Repository\AttachmentRepository;
 use App\Repository\ModerationLogRepository;
 use App\Service\AttachmentService;
+use App\Service\AttachmentScanService;
 use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
 use App\Worker\WebhookDeliveryWorker;
@@ -251,6 +253,33 @@ try {
             $log(sprintf('Attachment sweep: temp=%d deleted_parent=%d', $stats['temp'], $stats['deleted_parent']));
             break;
 
+        case 'worker:attachment-scans':
+            // Scanner cleanup gate for expanded files: pending non-image files
+            // remain undownloadable until an external scanner marks them clean.
+            // This command fails stale pending rows closed so operators can recover
+            // from scanner outages without serving unscanned bytes.
+            $db = $database();
+            $minutes = isset($argv[2]) ? (int) $argv[2] : 30;
+            $stats = (new AttachmentScanService(new AttachmentRepository($db)))->cleanupStalePending($minutes);
+            $log(sprintf('Attachment scan cleanup: failed=%d pending=%d', $stats['failed'], $stats['pending']));
+            break;
+
+        case 'worker:previews':
+            $db = $database();
+            $svc = new LinkPreviewService(
+                $db,
+                new PostRepository($db),
+                new SettingRepository($db),
+                $config,
+                new EgressGuard(
+                    (bool) $config->get('link_previews.allow_http', false),
+                    (array) $config->get('link_previews.allowed_private_cidrs', []),
+                ),
+            );
+            $stats = $svc->fetchQueued((int) ($argv[2] ?? 25));
+            $log(sprintf('Link previews: fetched=%d blocked=%d failed=%d skipped=%d', $stats['fetched'], $stats['blocked'], $stats['failed'], $stats['skipped']));
+            break;
+
         case 'engagement:cutover':
             // Record the Phase 2 unread cutover timestamp. Content before this
             // moment starts read; later activity uses lazy thread_user rows.
@@ -327,6 +356,8 @@ try {
             $log('  worker:digest         Send due daily digests');
             $log('  worker:purge-ips [days]  Anonymise sessions.ip/posts.ip older than N days (default 90)');
             $log('  worker:attachments    Sweep orphaned/deleted-parent upload files');
+            $log('  worker:attachment-scans [minutes]  Fail stale expanded-file scans closed');
+            $log('  worker:previews [limit]  Fetch queued allowlisted link-preview metadata');
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
             break;

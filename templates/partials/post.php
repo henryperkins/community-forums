@@ -38,6 +38,28 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                 <p><?= $e($p['body']) ?></p>
             <?php endif; ?>
         </div>
+        <?php if (!empty($reference_cards)): ?>
+            <div class="reference-cards" aria-label="Referenced content">
+                <?php foreach ($reference_cards as $card): ?>
+                    <a class="reference-card" href="<?= $e($card['url']) ?>">
+                        <span class="badge badge-muted"><?= $e($card['type']) ?></span>
+                        <strong><?= $e($card['title']) ?></strong>
+                        <?php if (($card['meta'] ?? '') !== ''): ?><span class="muted"><?= $e($card['meta']) ?></span><?php endif; ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($link_preview_cards)): ?>
+            <div class="reference-cards" aria-label="Link previews">
+                <?php foreach ($link_preview_cards as $card): ?>
+                    <a class="reference-card" href="<?= $e($card['url']) ?>" rel="nofollow ugc noopener">
+                        <?php if (($card['site_name'] ?? '') !== ''): ?><span class="badge badge-muted"><?= $e($card['site_name']) ?></span><?php endif; ?>
+                        <strong><?= $e($card['title']) ?></strong>
+                        <?php if (($card['description'] ?? '') !== ''): ?><span class="muted"><?= $e($card['description']) ?></span><?php endif; ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
         <?php
         // Author signature (P3-01): shown only when the reader keeps signatures on
         // and the author has one. Never shown for an anonymous post — the byline is

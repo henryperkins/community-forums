@@ -48,6 +48,8 @@ final class PostingService
         private ?AttachmentRepository $attachments = null,
         private ?ReputationLedgerService $reputation = null,
         private ?FirstPartyHookRegistry $hooks = null,
+        private ?ContentReferenceService $contentReferences = null,
+        private ?LinkPreviewService $linkPreviews = null,
     ) {
     }
 
@@ -143,6 +145,8 @@ final class PostingService
                 }
 
                 $this->finalizeAttachments($user->id(), $postId, $body, (string) ($board['visibility'] ?? 'public'));
+                $this->contentReferences?->capture('post', $postId, $body);
+                $this->linkPreviews?->queueFromBody('post', $postId, $body);
 
                 // A held thread does not yet touch board counters, last-post, the
                 // author's post_count, or notification fan-out — those run only when a
@@ -253,6 +257,8 @@ final class PostingService
                 }
 
                 $this->finalizeAttachments($user->id(), $postId, $body, (string) ($thread['board_visibility'] ?? 'public'));
+                $this->contentReferences?->capture('post', $postId, $body);
+                $this->linkPreviews?->queueFromBody('post', $postId, $body);
 
                 // A held reply defers reply-count, last-post, board activity, the
                 // author's post_count, and fan-out until a moderator releases it.
@@ -327,6 +333,8 @@ final class PostingService
             // still links /media/{id}. finalizeForPost is owner/temp-scoped, so
             // re-finalizing already-bound images is a harmless no-op.
             $this->finalizeAttachments($user->id(), $postId, $body, (string) ($post['board_visibility'] ?? 'public'));
+            $this->contentReferences?->capture('post', $postId, $body);
+            $this->linkPreviews?->queueFromBody('post', $postId, $body);
             if ($this->notifications !== null && $added !== []) {
                 $threadCtx = [
                     'id' => (int) $post['thread_id'],
@@ -508,6 +516,7 @@ final class PostingService
 
             $this->threads->setPending($threadId, false);
             $this->posts->setPending((int) $op['id'], false);
+            $this->linkPreviews?->queueFromBody('post', (int) $op['id'], (string) $op['body']);
             $this->threads->updateLastPost($threadId, (int) $op['id'], (int) $thread['user_id'], $now);
             $this->boards->onThreadCreated((int) $thread['board_id'], $threadId, $now);
             $this->users->incrementPostCount((int) $thread['user_id'], 1);
@@ -543,6 +552,7 @@ final class PostingService
             $now = gmdate('Y-m-d H:i:s');
 
             $this->posts->setPending($postId, false);
+            $this->linkPreviews?->queueFromBody('post', $postId, (string) $post['body']);
             $this->threads->incrementReplyCount($threadId, 1);
             $this->threads->updateLastPost($threadId, $postId, (int) $post['user_id'], $now);
             $this->boards->onReplyCreated((int) $post['board_id'], $now);
