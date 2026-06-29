@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
@@ -95,6 +96,18 @@ final class AdminUserController extends Controller
         return $this->redirectWithFlash('/admin/users/' . $id, 'Badge revoked.');
     }
 
+    /** @param array<string,string> $params */
+    public function removeSignature(Request $request, array $params): Response
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('profile_media')) {
+            throw new NotFoundException('User not found.');
+        }
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        $this->container->get(UserModerationService::class)->clearSignature($admin, $id);
+        return $this->redirectWithFlash('/admin/users/' . $id, 'Signature removed.');
+    }
+
     /** Render the per-user admin record (ADMIN §5.2). */
     private function record(int $id, ?ValidationException $error = null, int $status = 200): Response
     {
@@ -112,6 +125,7 @@ final class AdminUserController extends Controller
             'catalogue' => $badges->manualCatalogue(),
             'errors' => $error?->errors ?? [],
             'old' => $error?->old ?? [],
+            'profile_media' => $this->container->get(FeatureFlags::class)->enabled('profile_media'),
         ], $status);
     }
 

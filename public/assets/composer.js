@@ -372,6 +372,12 @@
         ta.selectionStart = ta.selectionEnd = s + text.length;
         ta.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    function replaceRange(ta, start, end, text) {
+        ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
+        ta.selectionStart = ta.selectionEnd = start + text.length;
+        ta.focus();
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     function replaceOnce(ta, from, to) {
         var idx = ta.value.indexOf(from);
         if (idx < 0) { return false; }
@@ -570,6 +576,222 @@
         });
     }
 
+    // ---- Slash inserts + GIPHY picker (Phase 4 carryover) ----------------
+    var slashConfigPromise = null;
+    function loadSlashConfig() {
+        if (slashConfigPromise !== null) { return slashConfigPromise; }
+        slashConfigPromise = fetch('/composer/giphy-config', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        }).then(function (r) {
+            return r.ok ? r.json() : null;
+        }).then(function (j) {
+            return j && j.ok && j.enabled ? j : null;
+        }).catch(function () {
+            return null;
+        });
+        return slashConfigPromise;
+    }
+    function allowedInsert(config, key) {
+        return config && Array.isArray(config.allowed_inserts) && config.allowed_inserts.indexOf(key) !== -1;
+    }
+    var SLASH_SNIPPETS = {
+        table: {
+            label: 'table',
+            terms: ['table'],
+            body: '| Heading | Heading |\n|---|---|\n| Cell | Cell |'
+        },
+        task_list: {
+            label: 'task list',
+            terms: ['task', 'tasks', 'todo'],
+            body: '- [ ] Task'
+        },
+        poll: {
+            label: 'poll outline',
+            terms: ['poll', 'vote'],
+            body: 'Poll: Question?\n- Option A\n- Option B'
+        },
+        custom_emoji: {
+            label: 'custom emoji shortcode',
+            terms: ['emoji', 'custom emoji'],
+            body: ':shortcode:'
+        }
+    };
+    function slashState(ta) {
+        if (ta.selectionStart !== ta.selectionEnd) { return null; }
+        var pos = ta.selectionStart;
+        var lineStart = ta.value.lastIndexOf('\n', pos - 1) + 1;
+        var prefix = ta.value.slice(lineStart, pos);
+        var match = prefix.match(/(^|\s)\/([A-Za-z0-9_ -]*)$/);
+        if (!match) { return null; }
+        var query = (match[2] || '').toLowerCase().trim();
+        return {
+            start: pos - (match[2] || '').length - 1,
+            end: pos,
+            query: query
+        };
+    }
+    function slashQueryMatches(query, command) {
+        if (query === '') { return true; }
+        for (var i = 0; i < command.terms.length; i++) {
+            if (command.terms[i].indexOf(query) === 0 || query.indexOf(command.terms[i] + ' ') === 0) {
+                return true;
+            }
+        }
+        return command.label.indexOf(query) !== -1;
+    }
+    function slashCommands(config, query) {
+        var commands = [];
+        Object.keys(SLASH_SNIPPETS).forEach(function (key) {
+            if (!allowedInsert(config, key)) { return; }
+            var snippet = SLASH_SNIPPETS[key];
+            var command = {
+                key: key,
+                type: 'snippet',
+                label: snippet.label,
+                terms: snippet.terms,
+                body: snippet.body
+            };
+            if (slashQueryMatches(query, command)) { commands.push(command); }
+        });
+        if (allowedInsert(config, 'giphy') && config.public_key) {
+            var giphy = { key: 'giphy', type: 'giphy', label: 'GIPHY', terms: ['gif', 'giphy'] };
+            if (slashQueryMatches(query, giphy)) { commands.push(giphy); }
+        }
+        return commands;
+    }
+    function giphySearchTerm(query) {
+        return query.replace(/^(gif|giphy)\s*/i, '').trim();
+    }
+    function giphyResultUrl(item) {
+        return item && item.images && item.images.original && item.images.original.url
+            ? item.images.original.url
+            : '';
+    }
+    function wireSlashMenu(form, ta) {
+        var menu = document.createElement('div');
+        menu.className = 'composer-slash-menu';
+        menu.setAttribute('aria-label', 'Composer insert commands');
+        menu.hidden = true;
+        ta.parentNode.insertBefore(menu, ta.nextSibling);
+
+        var config = null;
+        var ready = false;
+        var activeState = null;
+
+        function hide() {
+            activeState = null;
+            menu.hidden = true;
+            menu.innerHTML = '';
+        }
+        function renderButtons(commands) {
+            menu.innerHTML = '';
+            commands.forEach(function (command) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'composer-slash-command';
+                b.textContent = command.type === 'giphy' ? 'Search GIPHY' : 'Insert ' + command.label;
+                b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+                b.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var state = activeState || slashState(ta);
+                    if (!state) { hide(); return; }
+                    if (command.type === 'giphy') {
+                        searchGiphy(state, giphySearchTerm(state.query));
+                        return;
+                    }
+                    replaceRange(ta, state.start, state.end, command.body);
+                    hide();
+                });
+                menu.appendChild(b);
+            });
+            menu.hidden = false;
+        }
+        function render() {
+            if (!ready || config === null) { return; }
+            var state = slashState(ta);
+            if (!state) { hide(); return; }
+            activeState = state;
+            var commands = slashCommands(config, state.query);
+            if (commands.length === 0) { hide(); return; }
+            renderButtons(commands);
+        }
+        function searchGiphy(state, term) {
+            if (!term) {
+                menu.innerHTML = '<p class="muted">Type a search after /gif.</p>';
+                menu.hidden = false;
+                return;
+            }
+            menu.innerHTML = '<p class="muted">Searching GIPHY...</p>';
+            menu.hidden = false;
+            var url = 'https://api.giphy.com/v1/gifs/search'
+                + '?api_key=' + encodeURIComponent(config.public_key)
+                + '&q=' + encodeURIComponent(term)
+                + '&rating=' + encodeURIComponent(config.rating || 'pg')
+                + '&limit=6';
+            fetch(url).then(function (r) {
+                return r.ok ? r.json() : null;
+            }).then(function (j) {
+                var items = j && Array.isArray(j.data) ? j.data : [];
+                menu.innerHTML = '';
+                if (items.length === 0) {
+                    menu.innerHTML = '<p class="muted">No GIFs found.</p>';
+                    return;
+                }
+                items.forEach(function (item) {
+                    var mediaUrl = giphyResultUrl(item);
+                    if (!mediaUrl) { return; }
+                    var title = (item.title || 'GIF').trim() || 'GIF';
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'composer-slash-gif';
+                    b.setAttribute('aria-label', 'Insert GIF ' + title);
+                    var imgUrl = item.images && item.images.fixed_height_small && item.images.fixed_height_small.url
+                        ? item.images.fixed_height_small.url
+                        : mediaUrl;
+                    var img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.alt = '';
+                    var span = document.createElement('span');
+                    span.textContent = title;
+                    b.appendChild(img);
+                    b.appendChild(span);
+                    b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+                    b.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        replaceRange(ta, state.start, state.end, imageMarkdown(mediaUrl, title));
+                        hide();
+                    });
+                    menu.appendChild(b);
+                });
+                if (!menu.childNodes.length) {
+                    menu.innerHTML = '<p class="muted">No GIFs found.</p>';
+                }
+            }).catch(function () {
+                menu.innerHTML = '<p class="muted">GIPHY search is unavailable.</p>';
+            });
+        }
+
+        loadSlashConfig().then(function (j) {
+            config = j;
+            ready = true;
+            render();
+        });
+        ta.addEventListener('input', render);
+        ta.addEventListener('keyup', render);
+        ta.addEventListener('click', render);
+        ta.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !menu.hidden) {
+                e.preventDefault();
+                hide();
+            }
+        });
+        document.addEventListener('click', function (e) {
+            if (e.target === ta || menu.contains(e.target)) { return; }
+            hide();
+        });
+    }
+
     // ---- Enter-to-send + smart list continuation (P3-01) ------------------
     // Continue or end a Markdown list when Enter is pressed inside one. Returns
     // true when it handled the key (so the caller suppresses the default newline).
@@ -639,6 +861,7 @@
         // leave a misleading, unrecoverable draft that the next load discards.
         if (draftsEnabled() && !form.hasAttribute('data-no-draft')) { wireDrafts(form, ta); }
         wireUploads(form, ta);
+        wireSlashMenu(form, ta);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

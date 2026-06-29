@@ -64,6 +64,10 @@ final class AccountService
         if (mb_strlen($signature) > 500) {
             $errors['signature'] = 'Signature is too long (max 500).';
         }
+        $signatureLines = $signature === '' ? [] : preg_split('/\R/u', $signature);
+        if (is_array($signatureLines) && count($signatureLines) > 3) {
+            $errors['signature'] = 'Signature is too tall (max 3 lines).';
+        }
 
         if ($errors !== []) {
             throw new ValidationException($errors, $input);

@@ -25,6 +25,7 @@ use App\Service\CustomEmojiService;
 use App\Service\LinkPreviewService;
 use App\Service\PollService;
 use App\Service\ReactionService;
+use App\Service\SinceLastReadContextService;
 use App\Service\ThreadWorkflowService;
 use App\Support\Markdown;
 
@@ -105,6 +106,7 @@ final class ThreadController extends Controller
         $isStarred = false;
         $referenceCards = [];
         $linkPreviewCards = [];
+        $sinceLastReadContext = null;
         $allowedEmoji = ReactionService::ALLOWED;
         if ($this->container->get(FeatureFlags::class)->enabled('custom_emoji')) {
             $allowedEmoji = array_merge($allowedEmoji, $this->container->get(CustomEmojiService::class)->reactionShortcodes());
@@ -115,6 +117,10 @@ final class ThreadController extends Controller
         }
         if ($this->container->get(FeatureFlags::class)->enabled('link_previews')) {
             $linkPreviewCards = $this->container->get(LinkPreviewService::class)->cardsForSources('post', $postIds);
+        }
+        if ($user !== null && $this->container->get(FeatureFlags::class)->enabled('automated_context')) {
+            $sinceLastReadContext = $this->container->get(SinceLastReadContextService::class)
+                ->forThread($user->id(), (int) $thread['id']);
         }
 
         if ($engagement && $user !== null) {
@@ -205,6 +211,7 @@ final class ThreadController extends Controller
         $memoryOn = (bool) $this->container->get(FeatureFlags::class)->enabled('community_memory');
         $summary = null;
         $summarySources = [];
+        $summaryReferenceCards = [];
         $summaryHistory = [];
         $related = [];
         $canCurateMemory = false;
@@ -215,6 +222,10 @@ final class ThreadController extends Controller
             $summary = $memory->publishedSummary((int) $thread['id']);
             if ($summary !== null) {
                 $summarySources = $memory->summarySources((int) $summary['id'], $user);
+                if ($this->container->get(FeatureFlags::class)->enabled('content_references')) {
+                    $summaryReferenceCards = $this->container->get(ContentReferenceService::class)
+                        ->cardsForSources('summary', [(int) $summary['id']], $user)[(int) $summary['id']] ?? [];
+                }
             }
             $summaryHistory = $memory->summaries((int) $thread['id']);
             $related = $memory->relatedForViewer((int) $thread['id'], $user);
@@ -264,6 +275,7 @@ final class ThreadController extends Controller
             'allowed_emoji' => $allowedEmoji,
             'reference_cards' => $referenceCards,
             'link_preview_cards' => $linkPreviewCards,
+            'since_last_read_context' => $sinceLastReadContext,
             'is_starred' => $isStarred,
             'community' => $community,
             'accepted_post_id' => $acceptedPostId,
@@ -286,6 +298,7 @@ final class ThreadController extends Controller
             'memory_on' => $memoryOn,
             'summary' => $summary,
             'summary_sources' => $summarySources,
+            'summary_reference_cards' => $summaryReferenceCards,
             'summary_history' => $summaryHistory,
             'related_threads' => $related,
             'can_curate_memory' => $canCurateMemory,

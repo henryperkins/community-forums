@@ -235,6 +235,61 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await expect(page.locator('[data-drafts-list]')).toContainText('No saved drafts');
 });
 
+test('phase 4 slash menu inserts approved snippets and GIPHY media', async ({ page }, info) => {
+  await page.route('https://api.giphy.com/v1/gifs/search**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            title: 'Evidence cat',
+            images: {
+              fixed_height_small: { url: 'https://media4.giphy.com/media/cat/100.gif' },
+              original: { url: 'https://media4.giphy.com/media/cat/giphy.gif' },
+            },
+          },
+        ],
+      }),
+    });
+  });
+  await page.route('https://media4.giphy.com/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(PNG_1X1, 'base64'),
+    });
+  });
+
+  await login(page, 'bob@retro.test');
+  await openNewTopicComposer(page);
+
+  const form = page.locator('form.composer').first();
+  const textarea = form.locator('textarea.composer-input');
+
+  await textarea.fill('/');
+  await expect(page.getByRole('button', { name: 'Insert table' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Insert task list' })).toBeVisible();
+  await shot(page, info, '26-slash-menu');
+
+  await page.getByRole('button', { name: 'Insert table' }).click();
+  await expect(textarea).toHaveValue(/\| Heading \| Heading \|/);
+  await expect(page.getByRole('button', { name: 'Insert table' })).toHaveCount(0);
+
+  await textarea.fill('/gif cat');
+  await page.getByRole('button', { name: 'Search GIPHY' }).click();
+  await expect(page.getByRole('button', { name: 'Insert GIF Evidence cat' })).toBeVisible();
+  await page.getByRole('button', { name: 'Insert GIF Evidence cat' }).click();
+  await expect(textarea).toHaveValue('![Evidence cat](https://media4.giphy.com/media/cat/giphy.gif)');
+  await shot(page, info, '27-giphy-inserted');
+
+  const topicTitle = `Slash GIPHY evidence ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(topicTitle);
+  await form.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.locator('.post-body img[src="https://media4.giphy.com/media/cat/giphy.gif"]')).toBeVisible();
+});
+
 test('phase 3 branding preview and product-tour replay', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 

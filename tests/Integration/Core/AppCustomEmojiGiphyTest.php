@@ -116,4 +116,19 @@ final class AppCustomEmojiGiphyTest extends TestCase
         self::assertSame('Powered by GIPHY', $json['attribution']);
         self::assertFalse($json['server_proxy']);
     }
+
+    public function test_giphy_csp_sources_are_added_only_when_slash_giphy_is_configured(): void
+    {
+        $dark = (string) $this->get('/')->getHeader('content-security-policy');
+        self::assertStringNotContainsString('api.giphy.com', $dark);
+        self::assertStringNotContainsString('*.giphy.com', $dark);
+
+        $settings = new SettingRepository($this->db);
+        $settings->set('features', ['slash_giphy' => true]);
+        $settings->set('giphy_public_key', 'public-test-key');
+
+        $enabled = (string) $this->get('/')->getHeader('content-security-policy');
+        self::assertStringContainsString("connect-src 'self' https://api.giphy.com", $enabled);
+        self::assertStringContainsString("img-src 'self' data: https://*.giphy.com", $enabled);
+    }
 }

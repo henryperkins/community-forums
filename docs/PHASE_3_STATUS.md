@@ -1,6 +1,6 @@
 # Phase 3 status and closeout ledger
 
-**Reconciled:** 2026-06-28
+**Reconciled:** 2026-06-29
 
 **Engineering state:** Gate A implementation and in-repo evidence are complete for the
 current RetroBoards codebase.
@@ -23,6 +23,14 @@ engineering status and evidence; it is not a product-owner sign-off.
   thumbnail/alt text, branding live preview, and tour replay.
 - Gate B work that is not in this codebase is explicitly deferred in
   [ADR 0002](adr/0002-phase-3-gate-b-deferrals.md).
+- Later release-train work has resolved several original Gate B deferrals without
+  reopening Phase 3: restricted non-image attachments, TOTP/recovery, read-only
+  API tokens, webhook delivery, first-party hook producers, avatar upload/removal,
+  safe signature moderation, board folders, and saved feed filters now have
+  deploy-dark implementation evidence in their destination slices. Open Phase 3
+  carryovers remain appeals, server-side draft sync, advanced theming, account
+  deactivation/reactivation/export/delete, bookmark folders, custom profile
+  fields, and the public/plugin runtime.
 
 ## Evidence Index
 
@@ -45,7 +53,7 @@ engineering status and evidence; it is not a product-owner sign-off.
 | P3-01 | Preferences and settings IA | Gate A complete | `PreferenceSchemaTest`, `AppUserPreferencesTest`, browser screenshot `15-reading-preferences` |
 | P3-02 | Composer engine and shared core | Gate A complete | `MarkdownRoundTripTest`, `AppComposerTest`, browser composer journey |
 | P3-03 | Drafts and submission resilience | Gate A complete for local drafts | Browser journey covers autosave, reload restore, Drafts view, discard, and success-clear. Server-side draft sync is Gate B deferred. |
-| P3-04 | Media and attachment safety | Gate A complete for images | `AppImageUploadTest`, private/DM media tests, disk-pressure guard, browser upload evidence. Non-image files are deferred. |
+| P3-04 | Media and attachment safety | Gate A complete for images; non-image carryover implemented later | `AppImageUploadTest`, private/DM media tests, disk-pressure guard, browser upload evidence. Restricted PDF/text-family uploads are now implemented behind the Phase 4 `expanded_files` flag and still need final browser/runbook evidence. |
 | P3-05 | Rate limits, anti-abuse, IP purge | Gate A complete | Rate-limit, content-approval, audit, spam seam, and IP retention tests |
 | P3-06 | Appeals and moderator-scope extensions | Deferred | See ADR 0002 |
 | P3-07 | Branding and themes | Gate A complete for core branding | Branding settings/live preview/contrast/cache busting and branded emails are covered. Retro skin/custom CSS/logo variants are deferred. |
@@ -53,22 +61,27 @@ engineering status and evidence; it is not a product-owner sign-off.
 | P3-09 | Accessibility and interaction quality | Gate A engineering complete | Keyboard toolbar, `aria-pressed`, reduced motion, touch targets, tour focus trap/Escape/restore, mobile browser evidence. Formal AT audit remains a release sign-off artifact. |
 | P3-10 | SEO and public discovery | Gate A complete | `AppSeoVisibilityTest`, sitemap/robots/canonical/noindex behavior |
 | P3-11 | Onboarding and learnability | Gate A complete | `AppProductTourTest`, replay button, browser tour replay evidence |
-| P3-12 | Account security and polish | Deferred | See ADR 0002 |
-| P3-13 | Internal extensions, webhooks, API | Deferred | See ADR 0002 |
+| P3-12 | Account security and polish | Partially resolved in later slices | TOTP/recovery is implemented as the Phase 5 Gate A identity fallback. Avatar upload/removal and signature hardening are implemented behind `profile_media`. Deactivation/reactivation/export/delete, bookmark folders, and custom profile fields remain open. |
+| P3-13 | Internal extensions, webhooks, API | Trusted prerequisites resolved; public runtime deferred | Read-only API tokens, webhook delivery, service secrets, and first-party hook producers are deploy-dark Phase 5 prerequisites. Public/untrusted plugin execution remains deferred until the Gate B sandbox. |
 | P3-14 | Operations, release, closeout | Engineering complete | Evidence index, browser harness, backup/restore rehearsal, feature flags, and deferral ADR are present. Product-owner acceptance remains external. |
 
 ## Gate B Deferrals
 
-The following are not implemented in Phase 3 and must not be treated as accepted
-because adjacent scaffolding exists:
+The following remain open after the 2026-06-29 carryover reconciliation and must
+not be treated as accepted because adjacent scaffolding exists:
 
 - appeals workflow;
 - server-side draft sync;
-- restricted non-image attachments;
 - retro skin, guarded custom CSS, and logo variants;
-- TOTP/recovery/reauth/security notifications;
-- account deactivation, avatar upload/Gravatar, bookmark folders, custom profile fields;
-- internal hook/plugin system, webhooks, and admin API tokens.
+- account deactivation/reactivation, self-serve export/delete, bookmark folders,
+  and custom profile fields;
+- public/untrusted plugin runtime and sandboxed server extensions.
+
+Later destination slices have resolved the following original Phase 3 deferrals
+without making them Phase 3 work again: restricted non-image attachments
+(`expanded_files`), TOTP/recovery (`0054`), avatar upload/removal and signature
+hardening (`profile_media`), board folders/saved feeds, read-only API tokens,
+webhook delivery, service secrets, and first-party hook producers.
 
 The owner, rationale, risk, and destination for each item are recorded in
 [ADR 0002](adr/0002-phase-3-gate-b-deferrals.md).

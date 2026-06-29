@@ -46,6 +46,7 @@ harness grows. The current branch also captures:
 - `20-structure-before`, `21-structure-after-move`, `22-board-archived-readonly`, `23-board-unarchived`
 - `22-admin-email-dashboard`, `23-admin-email-suppressed`, `24-admin-email-test-sent`
 - `25-poll-voted` (Phase 4 carryover poll no-JS vote/result flow)
+- `26-slash-menu`, `27-giphy-inserted` (Phase 4 carryover slash menu and direct GIPHY insertion)
 
 ## Run it locally
 

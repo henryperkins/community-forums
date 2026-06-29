@@ -25,4 +25,6 @@ evidence`, or download the `gate-a-browser-evidence` artifact from the
 
 The current carryover branch also includes `25-poll-voted`, which proves the
 deploy-dark poll UI through the real server-rendered vote POST/redirect/result
-flow on desktop and mobile.
+flow on desktop and mobile, plus `26-slash-menu` and `27-giphy-inserted`, which
+prove the deploy-dark slash insertion menu and direct GIPHY media insert path on
+desktop and mobile.

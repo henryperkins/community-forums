@@ -29,4 +29,5 @@
             <?php endforeach; ?>
         </ol>
     <?php endif; ?>
+    <p class="lb-note">Esteem recognises contribution — it grants no powers, badges, or privileges, and never appears on your inbox. A member may keep themselves off this ledger at any time.</p>
 </div>

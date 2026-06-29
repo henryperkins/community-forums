@@ -90,7 +90,8 @@ final class AppTest extends TestCase
         $this->assertStatus(200, $threadPage);
         $this->assertSeeText($threadPage, '<strong>world</strong>');
         // Guest sees the join-bar, not a writable composer.
-        $this->assertSeeText($threadPage, 'log in</a> to reply');
+        $this->assertSeeText($threadPage, "You're browsing as a guest");
+        $this->assertSeeText($threadPage, 'Log in</a>');
         $this->assertDontSeeText($threadPage, 'name="body"');
     }
 
