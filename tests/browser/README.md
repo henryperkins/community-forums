@@ -39,6 +39,14 @@ Written to `docs/evidence/browser/<viewport>/<page>.png`:
 | 22 | Admin webhook registered with show-once signing secret |
 | 23 | Admin webhook delivery log after `topic.created` worker delivery |
 
+Additional evidence journeys append or reuse later numeric prefixes as the
+harness grows. The current branch also captures:
+
+- `20-announcement-banner`, `21-announcement-dismissed`
+- `20-structure-before`, `21-structure-after-move`, `22-board-archived-readonly`, `23-board-unarchived`
+- `22-admin-email-dashboard`, `23-admin-email-suppressed`, `24-admin-email-test-sent`
+- `25-poll-voted` (Phase 4 carryover poll no-JS vote/result flow)
+
 ## Run it locally
 
 Prerequisites: PHP 8 + the `rb-mariadb` dev container (see the repo root README),

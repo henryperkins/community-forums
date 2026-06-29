@@ -50,7 +50,14 @@ $db->transaction(function () use ($db): void {
 $users = new UserRepository($db);
 $settings = new SettingRepository($db);
 if ($users->adminCount() > 0) {
-    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true, 'first_party_hooks' => true, 'announcements' => true]); // B2 admin pages + domain webhook evidence + announcements
+    $settings->set('features', [
+        'api_tokens' => true,
+        'webhooks' => true,
+        'service_secrets' => true,
+        'first_party_hooks' => true,
+        'announcements' => true,
+        'polls' => true,
+    ]);
     fwrite(STDOUT, "Already seeded (admin exists); nothing to do.\n");
     exit(0);
 }
@@ -86,12 +93,19 @@ $makeUser = static function (string $username, string $display, string $role) us
     return $id;
 };
 
-$db->transaction(function () use ($settings, $categories, $boards, $mods, $members, $posting, $users, $makeUser): void {
+$db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $members, $posting, $users, $makeUser): void {
     // Site settings — past the first-run setup gate.
     $settings->set('site_name', 'RetroBoards');
     $settings->set('registration_mode', 'open');
     $settings->set('installed_at', gmdate('Y-m-d H:i:s'));
-    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true, 'first_party_hooks' => true, 'announcements' => true]); // B2 admin pages + domain webhook evidence + announcements
+    $settings->set('features', [
+        'api_tokens' => true,
+        'webhooks' => true,
+        'service_secrets' => true,
+        'first_party_hooks' => true,
+        'announcements' => true,
+        'polls' => true,
+    ]); // B2 admin pages + domain webhook evidence + announcements + carryover poll UI
 
     // Accounts.
     $adminId = $makeUser('admin', 'Site Admin', 'admin');
@@ -139,6 +153,19 @@ $db->transaction(function () use ($settings, $categories, $boards, $mods, $membe
     ]);
     $posting->reply($users->findEntity($bobId), $tipsThread['thread_id'], ['body' => 'Mine is jumping straight to the inbox.']);
     $posting->reply($users->findEntity($carolId), $tipsThread['thread_id'], ['body' => 'I just use the sidebar, honestly.']);
+    $pollId = $db->insert(
+        "INSERT INTO polls (thread_id, question, mode, status, results_policy, created_by, created_at)
+         VALUES (?, ?, 'single', 'open', 'after_vote_or_close', ?, UTC_TIMESTAMP())",
+        [$tipsThread['thread_id'], 'Which shortcut do you reach for first?', $aliceId],
+    );
+    $db->run(
+        'INSERT INTO poll_options (poll_id, body, position, created_at) VALUES (?, ?, 0, UTC_TIMESTAMP())',
+        [$pollId, 'Ctrl+K'],
+    );
+    $db->run(
+        'INSERT INTO poll_options (poll_id, body, position, created_at) VALUES (?, ?, 1, UTC_TIMESTAMP())',
+        [$pollId, 'Jump to inbox'],
+    );
 
     $posting->createThread($users->findEntity($bobId), [
         'board_id' => $general, 'title' => 'Mobile layout looks great',

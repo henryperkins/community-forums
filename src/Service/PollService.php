@@ -32,6 +32,7 @@ final class PollService
     {
         $this->writeGate->assertCanWrite($actor);
         $thread = $this->threadOrFail($threadId);
+        $this->assertCanRead($actor, $thread);
         if (!$this->canManageThread($actor, $thread)) {
             throw new ForbiddenException('You cannot add a poll to this thread.');
         }
@@ -114,6 +115,7 @@ final class PollService
         $this->writeGate->assertCanWrite($actor);
         $poll = $this->pollOrFail($pollId);
         $thread = $this->threadOrFail((int) $poll['thread_id']);
+        $this->assertCanRead($actor, $thread);
         if (!$this->canManageThread($actor, $thread)) {
             throw new ForbiddenException('You cannot close this poll.');
         }
