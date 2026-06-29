@@ -85,30 +85,34 @@ final class BoardRepository
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,position?:int} $data
      */
     public function update(int $id, array $data): void
     {
-        $this->db->run(
-            'UPDATE boards SET category_id = :category_id, slug = :slug, name = :name, description = :description,
+        $sql = 'UPDATE boards SET category_id = :category_id, slug = :slug, name = :name, description = :description,
                 visibility = :visibility, post_min_role = :post_min_role, allow_anonymous = :allow_anonymous,
                 require_approval = :require_approval, assignment_mode = :assignment_mode,
-                tags_enabled = :tags_enabled, wiki_enabled = :wiki_enabled WHERE id = :id',
-            [
-                'category_id' => $data['category_id'],
-                'slug' => $data['slug'],
-                'name' => $data['name'],
-                'description' => $data['description'],
-                'visibility' => $data['visibility'],
-                'post_min_role' => $data['post_min_role'],
-                'allow_anonymous' => !empty($data['allow_anonymous']) ? 1 : 0,
-                'require_approval' => !empty($data['require_approval']) ? 1 : 0,
-                'assignment_mode' => $data['assignment_mode'] ?? 'off',
-                'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
-                'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
-                'id' => $id,
-            ],
-        );
+                tags_enabled = :tags_enabled, wiki_enabled = :wiki_enabled';
+        $params = [
+            'category_id' => $data['category_id'],
+            'slug' => $data['slug'],
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'visibility' => $data['visibility'],
+            'post_min_role' => $data['post_min_role'],
+            'allow_anonymous' => !empty($data['allow_anonymous']) ? 1 : 0,
+            'require_approval' => !empty($data['require_approval']) ? 1 : 0,
+            'assignment_mode' => $data['assignment_mode'] ?? 'off',
+            'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
+            'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
+        ];
+        if (array_key_exists('position', $data)) {
+            $sql .= ', position = :position';
+            $params['position'] = (int) $data['position'];
+        }
+        $sql .= ' WHERE id = :id';
+        $params['id'] = $id;
+        $this->db->run($sql, $params);
     }
 
     public function recordSlugChange(int $boardId, string $oldSlug): void
@@ -135,6 +139,31 @@ final class BoardRepository
             'SELECT COALESCE(MAX(position), -1) + 1 FROM boards WHERE category_id = ?',
             [$categoryId],
         );
+    }
+
+    /**
+     * Dense renumber to 0..n-1 within one category, in the submitted order. The
+     * category_id guard makes a stray id from another category a no-op rather
+     * than a cross-category move.
+     *
+     * @param array<int,int> $orderedIds
+     */
+    public function setPositions(int $categoryId, array $orderedIds): void
+    {
+        $pos = 0;
+        foreach ($orderedIds as $id) {
+            $this->db->run(
+                'UPDATE boards SET position = ? WHERE id = ? AND category_id = ?',
+                [$pos, (int) $id, $categoryId],
+            );
+            $pos++;
+        }
+    }
+
+    /** Flip the archive (retired/read-only) flag. Counters are untouched. */
+    public function setArchived(int $id, bool $on): void
+    {
+        $this->db->run('UPDATE boards SET is_archived = ? WHERE id = ?', [$on ? 1 : 0, $id]);
     }
 
     /** Counter bump when a new thread (and its OP) is created. */
