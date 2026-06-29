@@ -88,6 +88,9 @@ final class ThreadWorkflowService
     {
         $this->writeGate->assertCanWrite($actor);
         $thread = $this->threadOrFail($threadId);
+        if ((int) ($thread['board_is_archived'] ?? 0) === 1) {
+            throw new ForbiddenException('This board is archived and is read-only.');
+        }
         $assignee = $this->users->find($assigneeId);
         if ($assignee === null) {
             throw new NotFoundException('Assignee not found.');
@@ -121,6 +124,9 @@ final class ThreadWorkflowService
     {
         $this->writeGate->assertCanWrite($actor);
         $thread = $this->threadOrFail($threadId);
+        if ((int) ($thread['board_is_archived'] ?? 0) === 1) {
+            throw new ForbiddenException('This board is archived and is read-only.');
+        }
         $current = $this->assignments->current($threadId);
         if ($current === null) {
             return;

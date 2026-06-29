@@ -11,7 +11,6 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\BoardMemberRepository;
-use App\Repository\BoardModeratorRepository;
 use App\Repository\FollowRepository;
 use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
@@ -159,14 +158,22 @@ final class TagController extends Controller
 
         $this->container->get(WriteGate::class)->assertCanWrite($user);
         $boardId = (int) $thread['board_id'];
+        // An archived board is frozen for everyone — no admin/moderator carve-out.
+        if ((int) ($thread['board_is_archived'] ?? 0) === 1) {
+            throw new ForbiddenException('This board is archived and is read-only.');
+        }
+        // Posting rights are the single tagging gate (archive-aware via canPost):
+        // no role carve-out, so admins/moderators are bound by the same rules.
         $isMember = $this->container->get(BoardMemberRepository::class)->isMember($boardId, $user->id());
-        $canTag = $user->isAdmin()
-            || $this->container->get(BoardModeratorRepository::class)->isModerator($boardId, $user->id())
-            || $this->container->get(BoardPolicy::class)->canPost(
-                ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
-                $user,
-                $isMember,
-            );
+        $canTag = $this->container->get(BoardPolicy::class)->canPost(
+            [
+                'visibility' => $thread['board_visibility'],
+                'post_min_role' => $thread['board_post_min_role'] ?? 'user',
+                'is_archived' => $thread['board_is_archived'] ?? 0,
+            ],
+            $user,
+            $isMember,
+        );
         if (!$canTag) {
             throw new ForbiddenException('You cannot tag this thread.');
         }

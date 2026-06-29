@@ -51,6 +51,7 @@ final class SolvedAnswerService
         $this->writeGate->assertCanWrite($actor);
         $thread = $this->requireThread($threadId);
         $this->authorize($actor, $thread);
+        $this->assertNotArchived($thread);
 
         $post = $this->posts->find($postId);
         if ($post === null || (int) $post['is_deleted'] === 1 || (int) $post['thread_id'] !== $threadId) {
@@ -118,6 +119,7 @@ final class SolvedAnswerService
         $this->writeGate->assertCanWrite($actor);
         $thread = $this->requireThread($threadId);
         $this->authorize($actor, $thread);
+        $this->assertNotArchived($thread);
 
         $previous = $thread['accepted_answer_post_id'] !== null ? (int) $thread['accepted_answer_post_id'] : null;
         if ($previous === null) {
@@ -167,11 +169,25 @@ final class SolvedAnswerService
     /** @return array<string,mixed> */
     private function requireThread(int $threadId): array
     {
-        $thread = $this->threads->find($threadId);
+        // findWithBoard so callers can see board_is_archived for the freeze guard.
+        $thread = $this->threads->findWithBoard($threadId);
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
         return $thread;
+    }
+
+    /**
+     * An archived board is frozen for everyone (no carve-out): accepting/clearing
+     * an answer moves reputation, so it is closed until the board is unarchived.
+     * Note this guards the re-mark of an already-solved thread, which would
+     * otherwise slip past the status-change guard. @param array<string,mixed> $thread
+     */
+    private function assertNotArchived(array $thread): void
+    {
+        if ((int) ($thread['board_is_archived'] ?? 0) === 1) {
+            throw new ForbiddenException('This board is archived and is read-only.');
+        }
     }
 
     /** @param array<string,mixed> $thread */

@@ -56,7 +56,8 @@ final class PostRepository
     {
         return $this->db->fetch(
             'SELECT p.*, t.is_locked AS thread_locked, t.is_deleted AS thread_deleted, t.slug AS thread_slug,
-                    t.board_id AS board_id, b.slug AS board_slug, b.visibility AS board_visibility
+                    t.board_id AS board_id, b.slug AS board_slug, b.visibility AS board_visibility,
+                    b.is_archived AS board_is_archived
              FROM posts p
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
