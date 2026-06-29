@@ -103,4 +103,65 @@ final class EmailDeliveryRepository
     {
         return $this->db->fetch('SELECT * FROM email_deliveries WHERE id = ?', [$id]);
     }
+
+    /**
+     * Filtered, paginated delivery log for the admin dashboard. LIMIT/OFFSET are
+     * clamped + concatenated (never bound: EMULATE_PREPARES=false); filters bind.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function recent(int $limit, int $offset, ?string $status = null, ?string $kind = null, ?string $email = null): array
+    {
+        $limit = max(1, min(10000, $limit));
+        $offset = max(0, $offset);
+        $where = [];
+        $params = [];
+        if ($status !== null && $status !== '') {
+            $where[] = 'status = :status';
+            $params['status'] = $status;
+        }
+        if ($kind !== null && $kind !== '') {
+            $where[] = 'kind = :kind';
+            $params['kind'] = $kind;
+        }
+        if ($email !== null && $email !== '') {
+            $where[] = 'email LIKE :email';
+            $params['email'] = '%' . $email . '%';
+        }
+        $clause = $where === [] ? '' : ' WHERE ' . implode(' AND ', $where);
+        return $this->db->fetchAll(
+            'SELECT id, user_id, email, kind, subject, status, error, message_id, created_at, sent_at
+             FROM email_deliveries' . $clause . ' ORDER BY id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
+            $params,
+        );
+    }
+
+    public function count(?string $status = null, ?string $kind = null, ?string $email = null): int
+    {
+        $where = [];
+        $params = [];
+        if ($status !== null && $status !== '') {
+            $where[] = 'status = :status';
+            $params['status'] = $status;
+        }
+        if ($kind !== null && $kind !== '') {
+            $where[] = 'kind = :kind';
+            $params['kind'] = $kind;
+        }
+        if ($email !== null && $email !== '') {
+            $where[] = 'email LIKE :email';
+            $params['email'] = '%' . $email . '%';
+        }
+        $clause = $where === [] ? '' : ' WHERE ' . implode(' AND ', $where);
+        return (int) $this->db->fetchValue('SELECT COUNT(*) FROM email_deliveries' . $clause, $params);
+    }
+
+    /** Re-queue a failed send for the worker. Returns rows affected (0 if not failed). */
+    public function requeue(int $id): int
+    {
+        return $this->db->run(
+            "UPDATE email_deliveries SET status = 'queued', error = NULL WHERE id = ? AND status = 'failed'",
+            [$id],
+        )->rowCount();
+    }
 }

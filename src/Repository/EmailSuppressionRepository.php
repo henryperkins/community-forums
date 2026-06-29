@@ -36,4 +36,37 @@ final class EmailSuppressionRepository
     {
         $this->db->run('DELETE FROM email_suppressions WHERE email = ?', [strtolower($email)]);
     }
+
+    /**
+     * Suppression list for the admin dashboard. LIMIT/OFFSET clamped + concatenated.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function list(int $limit, int $offset, ?string $reason = null): array
+    {
+        $limit = max(1, min(10000, $limit));
+        $offset = max(0, $offset);
+        $where = '';
+        $params = [];
+        if ($reason !== null && $reason !== '') {
+            $where = ' WHERE reason = :reason';
+            $params['reason'] = $reason;
+        }
+        return $this->db->fetchAll(
+            'SELECT email, reason, created_at FROM email_suppressions' . $where
+            . ' ORDER BY created_at DESC, email ASC LIMIT ' . $limit . ' OFFSET ' . $offset,
+            $params,
+        );
+    }
+
+    public function count(?string $reason = null): int
+    {
+        $where = '';
+        $params = [];
+        if ($reason !== null && $reason !== '') {
+            $where = ' WHERE reason = :reason';
+            $params['reason'] = $reason;
+        }
+        return (int) $this->db->fetchValue('SELECT COUNT(*) FROM email_suppressions' . $where, $params);
+    }
 }
