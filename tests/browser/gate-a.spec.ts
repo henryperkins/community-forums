@@ -435,3 +435,36 @@ test('site announcement banner: publish, render, dismiss, and persist', async ({
   await visit(page, '/admin/announcements');
   await page.getByRole('button', { name: 'Clear banner' }).click();
 });
+
+test('admin email delivery: dashboard, suppress/remove, and a test-send', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  // The email link appears on the admin dashboard subnav (email flag defaults on).
+  await visit(page, '/admin');
+  await page.getByRole('link', { name: 'Email' }).click();
+  await page.waitForURL(/\/admin\/email$/);
+  await expect(page.getByRole('heading', { name: 'Email delivery' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Queue status' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Delivery log' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Suppressed addresses' })).toBeVisible();
+  await shot(page, info, '22-admin-email-dashboard');
+
+  // Suppress a unique address (desktop + mobile share one DB), confirm it lists, then remove it.
+  const target = `evidence-${info.project.name}-${Date.now()}@example.test`;
+  await page.fill('form[action="/admin/email/suppressions"] input[name="email"]', target);
+  await page.locator('form[action="/admin/email/suppressions"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/email$/);
+  const row = page.locator('table tbody tr', { hasText: target });
+  await expect(row).toBeVisible();
+  await shot(page, info, '23-admin-email-suppressed');
+
+  await row.getByRole('button', { name: 'Remove' }).click({ force: true });
+  await page.waitForURL(/\/admin\/email$/);
+  await expect(page.locator('table tbody tr', { hasText: target })).toHaveCount(0);
+
+  // Test-send (transport is the configured ArrayMailer in evidence runs) → flash confirmation.
+  await page.locator('form[action="/admin/email/test"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/email$/);
+  await expect(page.locator('.flash')).toContainText(/Test email sent/);
+  await shot(page, info, '24-admin-email-test-sent');
+});
