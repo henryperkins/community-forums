@@ -338,3 +338,38 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 });
+
+test('admin per-user record: badges + title', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  await visit(page, '/admin/users');
+  await expect(page.getByRole('link', { name: 'bob' })).toBeVisible();
+  await shot(page, info, '14-admin-users');
+
+  await page.getByRole('link', { name: 'bob' }).click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  await expect(page.getByRole('heading', { name: /bob/ })).toBeVisible();
+
+  // Grant a manual badge (no-JS form post).
+  await page.locator('form[action$="/badges/grant"] select[name="slug"]').selectOption('staff');
+  await page.locator('form[action$="/badges/grant"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  // Scope to the held-badges list: a bare getByText('Staff') would also match the
+  // (non-visible) <option> in the grant <select>, which precedes it in the DOM.
+  await expect(page.locator('ul.link-list').getByText('Staff')).toBeVisible();
+  await shot(page, info, '15-admin-user-record');
+
+  // Revoke it.
+  await page.locator('form[action$="/badges/revoke"] button[type="submit"]').first().click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+
+  // Set then clear a cosmetic title.
+  await page.locator('form.stacked[action$="/title"] input[name="title"]').fill('Community Hero');
+  await page.locator('form.stacked[action$="/title"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  await expect(page.locator('form.stacked[action$="/title"] input[name="title"]')).toHaveValue('Community Hero');
+
+  await page.locator('form.inline-form[action$="/title"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  await expect(page.locator('form.stacked[action$="/title"] input[name="title"]')).toHaveValue('');
+});
