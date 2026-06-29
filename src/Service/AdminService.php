@@ -238,7 +238,14 @@ final class AdminService
         $oldSlug = (string) $board['slug'];
         $slugChanged = $slug !== $oldSlug;
 
-        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $oldSlug, $slugChanged, $board): void {
+        // Reassigning a board to a different category must append it at the
+        // destination, not carry its old (now-colliding) position over.
+        $position = (int) $board['position'];
+        if ($categoryId !== (int) $board['category_id']) {
+            $position = $this->boards->nextPosition($categoryId);
+        }
+
+        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $oldSlug, $slugChanged, $position, $board): void {
             if ($slugChanged) {
                 $this->boards->recordSlugChange($id, $oldSlug);
             }
@@ -254,6 +261,7 @@ final class AdminService
                 'assignment_mode' => $assignmentMode,
                 'tags_enabled' => $tagsEnabled,
                 'wiki_enabled' => $wikiEnabled,
+                'position' => $position,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
@@ -287,6 +295,165 @@ final class AdminService
                 'before' => ['name' => $board['name'], 'slug' => $board['slug']],
             ]);
         });
+    }
+
+    // ---- Structure ordering + archive (Phase 2) ---------------------------
+
+    /**
+     * Replace category ordering with the submitted permutation. The submitted
+     * id-set must EQUAL the current set (no adds, drops, foreign, or duplicate
+     * ids), then we dense-renumber 0..n-1 inside one transaction and audit.
+     *
+     * @param array<int,mixed> $orderedIds
+     */
+    public function reorderCategories(User $admin, array $orderedIds): void
+    {
+        $this->assertAdmin($admin);
+        $current = array_map(static fn (array $c): int => (int) $c['id'], $this->categories->all());
+        $ordered = $this->normalizeIdSet($orderedIds, $current, 'order');
+
+        $this->db->transaction(function () use ($admin, $ordered, $current): void {
+            $this->categories->setPositions($ordered);
+            $this->log->log([
+                'actor_id' => $admin->id(),
+                'action' => 'reorder_categories',
+                'target_type' => 'category',
+                'target_id' => 0,
+                'before' => ['order' => $current],
+                'after' => ['order' => $ordered],
+            ]);
+        });
+    }
+
+    /**
+     * Replace one category's board ordering with the submitted permutation
+     * (same id-set rule as reorderCategories), scoped + audited.
+     *
+     * @param array<int,mixed> $orderedIds
+     */
+    public function reorderBoards(User $admin, int $categoryId, array $orderedIds): void
+    {
+        $this->assertAdmin($admin);
+        if ($this->categories->find($categoryId) === null) {
+            throw new NotFoundException('Category not found.');
+        }
+        $current = array_map(static fn (array $b): int => (int) $b['id'], $this->boards->byCategory($categoryId));
+        $ordered = $this->normalizeIdSet($orderedIds, $current, 'order');
+
+        $this->db->transaction(function () use ($admin, $categoryId, $ordered, $current): void {
+            $this->boards->setPositions($categoryId, $ordered);
+            $this->log->log([
+                'actor_id' => $admin->id(),
+                'action' => 'reorder_boards',
+                'target_type' => 'board',
+                'target_id' => 0,
+                'before' => ['category_id' => $categoryId, 'order' => $current],
+                'after' => ['category_id' => $categoryId, 'order' => $ordered],
+            ]);
+        });
+    }
+
+    /** Nudge a category up/down by one slot (funnels through reorderCategories). */
+    public function moveCategory(User $admin, int $id, string $dir): void
+    {
+        $this->assertAdmin($admin);
+        $ids = array_map(static fn (array $c): int => (int) $c['id'], $this->categories->all());
+        $reordered = $this->swap($ids, $id, $dir);
+        if ($reordered === null) {
+            return; // boundary (top-up / bottom-down) or unknown id: safe no-op
+        }
+        $this->reorderCategories($admin, $reordered);
+    }
+
+    /** Nudge a board up/down by one slot within its category. */
+    public function moveBoard(User $admin, int $id, string $dir): void
+    {
+        $this->assertAdmin($admin);
+        $board = $this->boards->find($id);
+        if ($board === null) {
+            throw new NotFoundException('Board not found.');
+        }
+        $categoryId = (int) $board['category_id'];
+        $ids = array_map(static fn (array $b): int => (int) $b['id'], $this->boards->byCategory($categoryId));
+        $reordered = $this->swap($ids, $id, $dir);
+        if ($reordered === null) {
+            return;
+        }
+        $this->reorderBoards($admin, $categoryId, $reordered);
+    }
+
+    /** Retire a board: it becomes absolute read-only (reversible). */
+    public function archiveBoard(User $admin, int $id): void
+    {
+        $this->setArchivedState($admin, $id, true);
+    }
+
+    /** Restore a retired board: writes re-enabled. */
+    public function unarchiveBoard(User $admin, int $id): void
+    {
+        $this->setArchivedState($admin, $id, false);
+    }
+
+    private function setArchivedState(User $admin, int $id, bool $on): void
+    {
+        $this->assertAdmin($admin);
+        $board = $this->boards->find($id);
+        if ($board === null) {
+            throw new NotFoundException('Board not found.');
+        }
+        $this->db->transaction(function () use ($admin, $id, $on, $board): void {
+            $this->boards->setArchived($id, $on);
+            $this->log->log([
+                'actor_id' => $admin->id(),
+                'action' => $on ? 'archive_board' : 'unarchive_board',
+                'target_type' => 'board',
+                'target_id' => $id,
+                'before' => ['is_archived' => (int) ($board['is_archived'] ?? 0)],
+                'after' => ['is_archived' => $on ? 1 : 0],
+            ]);
+        });
+    }
+
+    /**
+     * Swap $id with its up/down neighbour. Returns the new full ordering, or null
+     * when the move is a boundary no-op or the id is not present.
+     *
+     * @param array<int,int> $ids
+     * @return array<int,int>|null
+     */
+    private function swap(array $ids, int $id, string $dir): ?array
+    {
+        $idx = array_search($id, $ids, true);
+        if ($idx === false) {
+            return null;
+        }
+        $target = $dir === 'up' ? $idx - 1 : $idx + 1;
+        if ($target < 0 || $target >= count($ids)) {
+            return null;
+        }
+        [$ids[$idx], $ids[$target]] = [$ids[$target], $ids[$idx]];
+        return $ids;
+    }
+
+    /**
+     * Validate that $submitted is a permutation of $current (no adds, drops,
+     * foreign ids, or duplicates) and return it as a clean int list.
+     *
+     * @param array<int,mixed> $submitted
+     * @param array<int,int> $current
+     * @return array<int,int>
+     */
+    private function normalizeIdSet(array $submitted, array $current, string $field): array
+    {
+        $ids = array_values(array_map('intval', $submitted));
+        $sortedSubmitted = $ids;
+        sort($sortedSubmitted);
+        $sortedCurrent = $current;
+        sort($sortedCurrent);
+        if ($sortedSubmitted !== $sortedCurrent || count($ids) !== count(array_unique($ids))) {
+            throw new ValidationException([$field => 'The submitted order must contain exactly the existing items.']);
+        }
+        return $ids;
     }
 
     // ---- Board roster: moderators + members (P2-08) -----------------------

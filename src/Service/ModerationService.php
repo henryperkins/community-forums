@@ -106,6 +106,7 @@ final class ModerationService
             throw new NotFoundException('Post not found.');
         }
         $this->assertCanModerate($mod, (int) $post['board_id']);
+        $this->assertNotArchived((int) $post['board_id']);
 
         $deleted = $this->db->transaction(function () use ($mod, $post, $postId, $reason): bool {
             if ($this->posts->softDelete($postId, $mod->id()) === 0) {
@@ -142,6 +143,7 @@ final class ModerationService
             throw new NotFoundException('Post not found.');
         }
         $this->assertCanModerate($mod, (int) $post['board_id']);
+        $this->assertNotArchived((int) $post['board_id']);
         if ((int) $post['is_deleted'] === 0) {
             return $post; // already visible
         }
@@ -188,6 +190,11 @@ final class ModerationService
         }
         $this->assertCanModerate($mod, $srcBoardId);
         $this->assertCanModerate($mod, $destBoardId);
+        // A move mutates BOTH boards (counters + last-post caches), so an archived
+        // board on either end is read-only: moving content out of a frozen source,
+        // or into a frozen destination, are both writes that stay closed.
+        $this->assertNotArchived($srcBoardId);
+        $this->assertNotArchived($destBoardId);
 
         $this->db->transaction(function () use ($mod, $threadId, $thread, $srcBoardId, $destBoardId): void {
             $postCount = (int) $this->db->fetchValue(
@@ -227,6 +234,7 @@ final class ModerationService
             throw new NotFoundException('Thread not found.');
         }
         $this->assertCanModerate($mod, (int) $thread['board_id']);
+        $this->assertNotArchived((int) $thread['board_id']);
         return $thread;
     }
 
@@ -275,6 +283,18 @@ final class ModerationService
         $this->writeGate->assertCanWrite($mod);
         if (!$mod->isAdmin() && !$this->boardMods->isModerator($boardId, $mod->id())) {
             throw new ForbiddenException('You do not moderate this board.');
+        }
+    }
+
+    /**
+     * An archived board is frozen for everyone — moderators and admins included.
+     * They unarchive first to clean up; there is no role carve-out (ADMIN §4.4).
+     */
+    private function assertNotArchived(int $boardId): void
+    {
+        $board = $this->boards->find($boardId);
+        if ($board !== null && (int) ($board['is_archived'] ?? 0) === 1) {
+            throw new ForbiddenException('This board is archived and is read-only.');
         }
     }
 

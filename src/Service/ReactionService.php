@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
@@ -65,6 +66,11 @@ final class ReactionService
         $isMember = $this->users->isBoardMember((int) $post['board_id'], $user->id());
         if (!$this->policy->canRead(['visibility' => $post['board_visibility']], $user, $isMember)) {
             throw new NotFoundException('Post not found.');
+        }
+        // Archived boards are frozen for everyone: reacting mutates reactions +
+        // reputation, so it is closed until the board is unarchived.
+        if ($this->policy->isArchived(['is_archived' => $post['board_is_archived'] ?? 0])) {
+            throw new ForbiddenException('This board is archived and is read-only.');
         }
 
         $authorId = (int) $post['user_id'];

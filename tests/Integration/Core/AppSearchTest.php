@@ -132,4 +132,19 @@ final class AppSearchTest extends TestCase
         $this->assertStatus(200, $r);
         $this->assertSeeText($r, 'Hyperloop velocity tests');
     }
+
+    public function testArchivedBoardContentStaysSearchable(): void
+    {
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $this->makeThread($board, $author, 'Stegosaurus retrospective', 'Public thread before archive.');
+        $this->boards()->setArchived((int) $board['id'], true); // archive AFTER seeding
+
+        $results = $this->service()->search('Stegosaurus', null, 20);
+        self::assertContains(
+            'Stegosaurus retrospective',
+            array_column($results, 'title'),
+            'archived boards remain searchable — read-only is not hidden',
+        );
+    }
 }

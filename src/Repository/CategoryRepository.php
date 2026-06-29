@@ -52,4 +52,20 @@ final class CategoryRepository
     {
         return (int) $this->db->fetchValue('SELECT COALESCE(MAX(position), -1) + 1 FROM categories');
     }
+
+    /**
+     * Dense renumber to 0..n-1 in the submitted order. Caller wraps this in a
+     * transaction; categories.position has no unique key, so no offset dance is
+     * needed. Ids are clamped to int (EMULATE_PREPARES=false).
+     *
+     * @param array<int,int> $orderedIds
+     */
+    public function setPositions(array $orderedIds): void
+    {
+        $pos = 0;
+        foreach ($orderedIds as $id) {
+            $this->db->run('UPDATE categories SET position = ? WHERE id = ?', [$pos, (int) $id]);
+            $pos++;
+        }
+    }
 }
