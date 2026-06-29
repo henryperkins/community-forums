@@ -1219,7 +1219,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .fab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 860px) {
-    .nav-toggle { display: inline-flex; }
+    .has-js .nav-toggle { display: inline-flex; }
     .fab { display: inline-flex; }
 
     /* Off-canvas drawer — JS only. */

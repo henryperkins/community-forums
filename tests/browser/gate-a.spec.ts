@@ -69,6 +69,20 @@ async function dropTinyPng(page: Page): Promise<void> {
   await page.locator('form.composer textarea.composer-input').first().dispatchEvent('drop', { dataTransfer });
 }
 
+async function expectOneTimeSecret(page: Page, context: string): Promise<void> {
+  const secret = page.getByText(/will not be shown again/);
+  if (await secret.isVisible({ timeout: 10_000 }).catch(() => false)) {
+    return;
+  }
+
+  const errors = (await page.locator('.field-error').allTextContents())
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .join(' | ');
+  const body = (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 1000);
+  throw new Error(`${context} did not show the one-time secret. URL=${page.url()} errors=${errors || 'none'} body=${body}`);
+}
+
 test('public pages render and capture', async ({ page }, info) => {
   await visit(page, '/');
   await expect(page.locator('a[href^="/c/"]').first()).toBeVisible();
@@ -134,6 +148,26 @@ test('private board access for a member', async ({ page }, info) => {
   await visit(page, '/c/staff-room');
   await expect(page.getByText('Staff Room').first()).toBeVisible();
   await shot(page, info, '14-private-board-member');
+});
+
+test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
+
+  const context = await browser.newContext({
+    baseURL,
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+    javaScriptEnabled: false,
+  });
+  const page = await context.newPage();
+  try {
+    await visit(page, '/');
+    await expect(page.locator('.nav-toggle')).toBeHidden();
+    await expect(page.locator('#sidebar-nav')).toBeVisible();
+  } finally {
+    await context.close();
+  }
 });
 
 test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ page }, info) => {
@@ -288,7 +322,7 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
     await page.fill('input[name="current_password"]', 'password123');
     await page.getByRole('button', { name: 'Register endpoint' }).click();
 
-    await expect(page.getByText(/will not be shown again/)).toBeVisible();
+    await expectOneTimeSecret(page, 'Webhook registration');
     await shot(page, info, '22-admin-webhook-registered');
 
     const topicTitle = `Webhook domain evidence ${Date.now()}`;
@@ -315,7 +349,7 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
         ...process.env,
         DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e',
         WEBHOOK_ALLOW_HTTP: 'true',
-        WEBHOOK_ALLOWED_PRIVATE_CIDRS: '127.0.0.1/32',
+        WEBHOOK_ALLOWED_PRIVATE_CIDRS: '127.0.0.1/32,::1/128',
         MAIL_DRIVER: 'array',
       },
     });
