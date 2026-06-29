@@ -18,12 +18,13 @@
     <?php else: ?>
         <ol class="leaderboard-list">
             <?php foreach ($ranked as $r): ?>
-                <li class="leaderboard-row">
-                    <span class="lb-rank">#<?= (int) $r['rank'] ?></span>
-                    <?= $this->partial('partials/monogram', ['name' => $r['display_name'], 'username' => $r['username']]) ?>
+                <?php $rank = (int) $r['rank']; $roman = [1 => 'I', 2 => 'II', 3 => 'III'][$rank] ?? (string) $rank; $top = $rank <= 3; ?>
+                <li class="leaderboard-row<?= $top ? ' lb-top' : '' ?>">
+                    <span class="lb-rank<?= $top ? ' lb-rank-roman' : '' ?>"><?= $e($roman) ?></span>
+                    <?= $this->partial('partials/monogram', ['name' => $r['display_name'], 'username' => $r['username'], 'gilt' => $top]) ?>
                     <a class="lb-name" href="/u/<?= $e($r['username']) ?>"><?= $e($r['display_name']) ?></a>
                     <span class="badge badge-title"><?= $e($r['title']) ?></span>
-                    <span class="lb-rep"><?= (int) $r['reputation'] ?> rep</span>
+                    <span class="lb-rep"><span class="star-marker" aria-hidden="true">★</span><?= number_format((int) $r['reputation']) ?></span>
                 </li>
             <?php endforeach; ?>
         </ol>

@@ -36,7 +36,7 @@ $desc = $this->block('description', $brand['name'] . ' — a community forum.');
     <link rel="stylesheet" href="/assets/app.css">
     <?php if (!empty($brand['has_custom_colors'])): ?><link rel="stylesheet" href="/brand.css?v=<?= $e($brand['version'] ?: '1') ?>"><?php endif; ?>
 </head>
-<body class="variant-<?= $e($variant) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>"<?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
+<body class="variant-<?= $e($variant) ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>"<?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>
 <?= $this->partial('partials/topbar') ?>
 <?php if (is_array($site_announcement ?? null) && !empty($site_announcement['active'])): ?>
@@ -44,6 +44,7 @@ $desc = $this->block('description', $brand['name'] . ' — a community forum.');
 <?php endif; ?>
 <?php if ($variant === 'app'): ?>
     <div class="app-shell">
+        <div class="nav-scrim" data-nav-scrim hidden></div>
         <?= $this->partial('partials/sidebar') ?>
         <main class="main" id="main">
             <?= $this->partial('partials/flash') ?>

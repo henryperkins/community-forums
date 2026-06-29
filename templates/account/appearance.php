@@ -19,8 +19,8 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
             <span>Theme</span>
             <select name="theme" class="input">
                 <option value="system"<?= $sel('system', $theme) ?>>System (match device)</option>
-                <option value="light"<?= $sel('light', $theme) ?>>Light</option>
-                <option value="dark"<?= $sel('dark', $theme) ?>>Dark</option>
+                <option value="light"<?= $sel('light', $theme) ?>>Imladris — Parchment (day)</option>
+                <option value="dark"<?= $sel('dark', $theme) ?>>Imladris — Twilight (night)</option>
             </select>
         </label>
         <label class="field">

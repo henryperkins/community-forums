@@ -1,26 +1,111 @@
-/* RetroBoards — Phase 1 theme. Single tokenised theme rendered from CSS
-   variables (DESIGN §9). No inline styles/scripts anywhere, so the strict CSP
-   (no 'unsafe-inline') is satisfied. */
+/* RetroBoards — "Imladris" theme (Rivendell register). Single tokenised theme
+   rendered from CSS variables (DESIGN §9). No inline styles/scripts anywhere,
+   so the strict CSP (no 'unsafe-inline') is satisfied. Fonts are system-serif
+   fallback stacks (no webfont binaries / no Google-Fonts CDN — CSP-clean).
+
+   The default :root is the parchment "day" register; [data-theme="dark"] is the
+   "twilight" register. The legacy semantic tokens (--surface*, --border, --text*,
+   --accent*, --danger) are re-pointed at Imladris values so all existing rules
+   recolour automatically; new --imladris primitives + scales drive the bespoke
+   surfaces. */
 
 :root {
-    --surface: #ffffff;
-    --surface-2: #f6f7f9;
-    --surface-3: #eef0f3;
-    --border: #d9dde3;
-    --text: #1c2330;
-    --text-muted: #5b6573;
-    --accent: #2f6feb;
-    --accent-contrast: #ffffff;
-    /* Secondary brand accent: highlight/indicator colour (active tabs, unread
-       markers). Defaults to the primary --accent, so it only diverges once an
-       operator sets a distinct brand accent in /brand.css. */
-    --accent-2: var(--accent);
-    --danger: #c0392b;
-    --radius: 8px;
-    --maxw: 1200px;
-    --sidebar-w: 250px;
-    --topbar-h: 56px;
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* ── Imladris primitives ─────────────────────────────────────────────── */
+    --parchment-50: #FAF6EC;  --parchment-100: #F5EFE1;
+    --parchment-200: #ECE4D2; --parchment-300: #DED2B8;
+    --mist-100: #EEF1ED;      --mist-200: #DCE3DD;
+    --ink-900: #1B231D; --ink-700: #313B33; --ink-500: #515C52;
+    --ink-400: #5C685D; --ink-300: #94A095;
+    --green-900: #1C2E24; --green-800: #24402F; --green-700: #2E4A3A;
+    --green-600: #3A5C49; --green-500: #4E7459; --green-400: #6E9479;
+    --green-200: #BCD0BF; --green-100: #DCE8DD; --green-050: #EDF3ED;
+    --river-900: #1E3040; --river-700: #2C4D63; --river-500: #3F6E89;
+    --river-400: #5E8CA6; --river-200: #BAD2DF; --river-100: #DCE9F0;
+    --gold-700: #9A7530; --gold-600: #B08A3A; --gold-500: #C29A44;
+    --gold-400: #D2B062; --gold-200: #EAD9A8; --gold-100: #F4EBCF;
+    --twilight-900: #161D24; --twilight-800: #1E2730; --twilight-700: #283440;
+    --leaf: #4E7459; --amber: #B7842F; --rust: #9C4A33; --slate: #3F6E89;
+
+    /* ── Semantic surfaces / ink / lines ─────────────────────────────────── */
+    --surface-page: var(--parchment-100);
+    --surface-raised: var(--parchment-50);
+    --surface-sunken: var(--parchment-200);
+    --surface-cool: var(--mist-100);
+    --surface-inverse: var(--twilight-800);
+    --border-hair: var(--parchment-300);
+    --border-soft: var(--mist-200);
+    --border-strong: var(--ink-300);
+    --rule-gold: var(--gold-500);
+
+    /* ── Brand (evergreen) + accent (mallorn gold) ───────────────────────── */
+    --brand: var(--green-700);
+    --brand-hover: var(--green-800);
+    --brand-press: var(--green-900);
+    --brand-subtle: var(--green-050);
+    --gold: var(--gold-500);
+    --gold-soft: var(--gold-100);
+    --gold-ink: #7E5F22;                  /* darker gold for small text/markers on parchment (AA) */
+    --on-brand-subtle: var(--green-800);  /* ink for chips/badges/active rows on the brand-subtle wash */
+
+    /* ── Status ledger (carried by colour AND a word; never colour alone) ── */
+    --success: var(--leaf);   --surface-done: var(--green-050);
+    --on-done: var(--green-800);
+    --warning: var(--amber);  --surface-review: var(--gold-100);
+    --on-review: #7E5F22;
+    --pending: var(--ink-400); --surface-pending: var(--parchment-200);
+    --on-pending: var(--ink-500);
+    --info: var(--river-500);  --surface-info: var(--river-100);
+    --on-info: var(--river-700);
+    --star: var(--gold-600);
+    --artifact-link: var(--river-500);
+    --presence: var(--leaf);
+
+    /* ── Legacy semantic tokens, re-pointed at Imladris ──────────────────── */
+    --surface: var(--parchment-50);     /* raised: cards, topbar, inputs   */
+    --surface-2: var(--parchment-100);  /* page background                 */
+    --surface-3: var(--parchment-200);  /* sunken: pills, code, joinbar    */
+    --border: var(--parchment-300);     /* hairline                        */
+    --text: var(--ink-900);
+    --text-muted: var(--ink-500);
+    --text-strong: var(--ink-900);
+    --text-body: var(--ink-700);
+    --text-faint: var(--ink-400);
+    --text-inverse: var(--parchment-50);
+    --accent: var(--green-700);         /* primary brand: links, buttons   */
+    --accent-contrast: var(--parchment-50);
+    --accent-2: var(--gold-500);        /* indicator: active, unread, gold */
+    --danger: var(--rust);
+
+    /* ── Typography (system-serif fallback for the Imladris families) ────── */
+    --font-display: "Cormorant Garamond", "Hoefler Text", Garamond, Georgia, "Times New Roman", serif;
+    --font-label: "Marcellus", "Optima", "Palatino Linotype", Palatino, "Cormorant Garamond", serif;
+    --font-body: "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+    --font: var(--font-body);
+    --weight-regular: 400; --weight-medium: 500; --weight-semibold: 600; --weight-bold: 700;
+    --tracking-caps: 0.16em; --tracking-wide: 0.04em;
+
+    /* ── Radii / spacing / shadows / motion ──────────────────────────────── */
+    --radius-sm: 4px; --radius-md: 7px; --radius-lg: 12px; --radius-xl: 20px; --radius-pill: 999px;
+    --radius: var(--radius-md);
+    --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
+    --space-5: 1.5rem; --space-6: 2rem; --space-8: 3rem; --space-12: 7rem;
+    --shadow-xs: 0 1px 2px rgba(27,35,29,.06);
+    --shadow-sm: 0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05);
+    --shadow-md: 0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05);
+    --shadow-lg: 0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06);
+    --shadow-xl: 0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08);
+    --shadow-inset: inset 0 1px 2px rgba(27,35,29,.07);
+    --gilt: inset 0 0 0 1px rgba(194,154,68,.38);
+    --ease-calm: cubic-bezier(.22,.61,.36,1);
+    --dur-fast: 140ms; --dur-base: 240ms; --dur-slow: 420ms;
+    --focus-ring: rgba(194,154,68,.7);
+
+    /* ── Layout ──────────────────────────────────────────────────────────── */
+    --maxw: 1280px;
+    --sidebar-w: 272px;
+    --list-w: 410px;
+    --topbar-h: 62px;
 }
 
 * { box-sizing: border-box; }
@@ -30,13 +115,53 @@ html { -webkit-text-size-adjust: 100%; }
 body {
     margin: 0;
     font-family: var(--font);
+    font-size: 1.0625rem;       /* book-like reading base for the serif body */
     color: var(--text);
     background: var(--surface-2);
-    line-height: 1.5;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+/* ── Imladris typography ───────────────────────────────────────────────────
+   Display serif for headings; lapidary roman-cap labels (Marcellus fallback);
+   serif body. Headlines balance; prose reads pretty. */
+h1, h2, h3, h4, .page-title, .display {
+    font-family: var(--font-display);
+    font-weight: var(--weight-medium);
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    text-wrap: balance;
+}
+h1, .page-title { font-size: 2.25rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.375rem; }
+.eyebrow {
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    font-size: .72rem;
+    color: var(--text-muted);
+}
+
+/* Links: evergreen text with a translucent-gold underline that warms on hover. */
+a {
+    color: var(--accent);
+    text-decoration: none;
+    text-underline-offset: 2px;
+    text-decoration-color: color-mix(in srgb, var(--gold-500) 45%, transparent);
+}
+a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
+
+/* Warm, candlelit scrollbars (Imladris). */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+    background: var(--parchment-300);
+    border-radius: var(--radius-pill);
+    border: 3px solid var(--parchment-100);
+}
+* { scrollbar-color: var(--parchment-300) var(--parchment-100); }
 
 .skip-link {
     position: absolute;
@@ -153,12 +278,12 @@ a:hover { text-decoration: underline; }
     vertical-align: middle;
 }
 .badge-muted { background: var(--surface-3); color: var(--text-muted); }
-.badge-staff { background: #6b4ee6; }
+.badge-staff { background: var(--brand-subtle); color: var(--green-800); border: 1px solid var(--green-200); }
 
 .flash {
-    background: #e7f3ec;
-    border: 1px solid #b6dcc4;
-    color: #1d6b3c;
+    background: var(--surface-done);
+    border: 1px solid var(--green-200);
+    color: var(--on-done);
     padding: 10px 14px;
     border-radius: var(--radius);
     margin-bottom: 16px;
@@ -170,17 +295,41 @@ a:hover { text-decoration: underline; }
     display: inline-block;
     background: var(--accent);
     color: var(--accent-contrast);
-    border: none;
-    border-radius: 6px;
-    padding: 9px 16px;
-    font-size: .95rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 9px 17px;
+    font-family: var(--font-label);
+    font-size: .9rem;
+    letter-spacing: .03em;
     cursor: pointer;
     text-align: center;
+    box-shadow: var(--shadow-xs);
+    transition: background var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
 }
-.btn:hover { text-decoration: none; filter: brightness(1.05); }
-.btn-small { padding: 6px 12px; font-size: .85rem; }
+.btn:hover { text-decoration: none; background: var(--brand-hover); }
+.btn:active { transform: translateY(0.5px) scale(.995); }
+.btn-small { padding: 6px 13px; font-size: .82rem; }
 .btn.danger, .danger { color: var(--danger); }
 .btn.danger { background: var(--danger); color: #fff; }
+.btn.danger:hover { background: color-mix(in srgb, var(--danger) 82%, #000); }
+/* Secondary (parchment outline) + ghost (quiet wash) — referenced by templates,
+   previously undefined so they fell back to the primary fill. */
+.btn-secondary {
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1.5px solid var(--border-soft);
+    box-shadow: none;
+}
+.btn-secondary:hover { background: var(--surface-sunken); border-color: var(--border-strong); }
+.btn-ghost {
+    background: transparent;
+    color: var(--text-body);
+    border: 1.5px solid transparent;
+    box-shadow: none;
+}
+.btn-ghost:hover { background: var(--surface-sunken); }
+.btn-accent { background: var(--gold-500); color: var(--ink-900); }
+.btn-accent:hover { background: var(--gold-600); }
 .linkbtn {
     background: none;
     border: none;
@@ -234,7 +383,7 @@ a:hover { text-decoration: underline; }
 .error-card { text-align: center; }
 .error-card h1 { font-size: 3rem; margin: 0 0 8px; }
 .code-list { columns: 2; margin: 0; padding-left: 20px; }
-.code-list code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.code-list code { font-family: var(--font-mono); }
 
 /* Monogram avatars */
 .monogram {
@@ -244,17 +393,28 @@ a:hover { text-decoration: underline; }
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    color: #fff;
-    font-weight: 700;
-    font-size: .85rem;
+    font-family: var(--font-label);
+    color: var(--green-800);
+    background: var(--green-100);
+    font-weight: var(--weight-medium);
+    font-size: .8rem;
+    letter-spacing: .02em;
     flex: 0 0 auto;
 }
-.topbar .monogram { width: 28px; height: 28px; font-size: .75rem; }
-.mono-0 { background: #d6455d; } .mono-1 { background: #2f6feb; }
-.mono-2 { background: #18a06b; } .mono-3 { background: #b8730f; }
-.mono-4 { background: #8a4fd1; } .mono-5 { background: #0f8aa0; }
-.mono-6 { background: #c0392b; } .mono-7 { background: #4760d6; }
-.mono-8 { background: #2c8a3d; } .mono-9 { background: #a13d8f; }
+.monogram-gilt { box-shadow: var(--gilt); }   /* "precious" avatars (OP, accepted, profile) */
+.topbar .monogram { width: 28px; height: 28px; font-size: .72rem; }
+/* Parchment-toned monogram swatches: a tinted ground + legible dark ink,
+   rotating through green / river / gold / mist (no neon, per the register). */
+.mono-0 { background: var(--green-100);     color: var(--green-800); }
+.mono-1 { background: var(--river-100);     color: var(--river-700); }
+.mono-2 { background: var(--gold-100);      color: var(--gold-700); }
+.mono-3 { background: var(--mist-200);      color: var(--ink-700); }
+.mono-4 { background: var(--green-200);     color: var(--green-900); }
+.mono-5 { background: var(--river-200);     color: var(--river-900); }
+.mono-6 { background: var(--gold-200);      color: var(--gold-700); }
+.mono-7 { background: var(--parchment-200); color: var(--ink-700); }
+.mono-8 { background: var(--green-050);     color: var(--green-700); }
+.mono-9 { background: var(--river-100);     color: var(--river-700); }
 
 /* Board index */
 .cat-block { margin-bottom: 26px; }
@@ -332,8 +492,9 @@ a:hover { text-decoration: underline; }
     padding: 10px 12px;
     border-radius: 6px;
     overflow-x: auto;
+    font-family: var(--font-mono);
 }
-.post-body code { background: var(--surface-3); padding: 1px 5px; border-radius: 4px; }
+.post-body code { background: var(--surface-3); padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); }
 .post-body pre code { background: none; padding: 0; }
 .post-body blockquote {
     margin: 8px 0;
@@ -361,7 +522,7 @@ a:hover { text-decoration: underline; }
     background: var(--surface);
     color: var(--text);
 }
-.page.current { background: var(--accent); color: #fff; border-color: var(--accent); }
+.page.current { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
 
 /* Profile */
 .profile-head { display: flex; gap: 16px; align-items: center; }
@@ -403,10 +564,10 @@ a:hover { text-decoration: underline; }
     background: var(--surface); color: var(--text); cursor: pointer;
 }
 .reaction:hover { background: var(--surface-3); }
-.reaction-on { border-color: var(--accent); background: #eaf1fe; color: var(--accent); }
+.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
 .reaction-static { cursor: default; }
-.reaction-n { font-variant-numeric: tabular-nums; color: var(--text-muted); }
-.reaction-on .reaction-n { color: var(--accent); }
+.reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.reaction-on .reaction-n { color: var(--gold-700); }
 .reaction-add { position: relative; display: inline-block; }
 .reaction-add > summary { list-style: none; }
 .reaction-add > summary::-webkit-details-marker { display: none; }
@@ -415,18 +576,19 @@ a:hover { text-decoration: underline; }
     position: absolute; z-index: 20; margin-top: 4px; padding: 6px;
     display: flex; gap: 4px; flex-wrap: wrap; max-width: 220px;
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-    box-shadow: 0 6px 24px rgba(0,0,0,.12);
+    box-shadow: var(--shadow-lg);
 }
 .reaction-form { margin: 0; }
 
 .star-btn { font-size: .9rem; }
-.star-on { color: #d99100; }
-.star-marker { color: #d99100; margin-right: 4px; }
+.star-on { color: var(--star); }
+.star-marker { color: var(--star); margin-right: 4px; }
 
 .thread-unread .thread-title { font-weight: 700; }
 .unread-dot {
     display: inline-block; width: 8px; height: 8px; border-radius: 50%;
     background: var(--accent-2); margin-right: 6px; flex: 0 0 auto;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-2) 22%, transparent);
 }
 .thread-board { color: var(--text-muted); }
 
@@ -444,7 +606,7 @@ a:hover { text-decoration: underline; }
 }
 .notif-list { list-style: none; padding: 0; margin: 12px 0 0; }
 .notif-row { border-top: 1px solid var(--border); }
-.notif-row.notif-unread { background: #eaf1fe; }
+.notif-row.notif-unread { background: var(--brand-subtle); box-shadow: inset 3px 0 0 var(--accent-2); }
 .notif-open { margin: 0; }
 .notif-link { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 10px 12px; cursor: pointer; font: inherit; color: var(--text); }
 .notif-link:hover { background: var(--surface-3); }
@@ -464,16 +626,21 @@ a:hover { text-decoration: underline; }
 .profile-stats dd { margin: 0; font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .profile-web a { word-break: break-all; }
 .badge-title { background: var(--surface-3); color: var(--text); }
-.pill-online { background: #e6f6ec; color: #1a7f4b; }
-.btn-on { border-color: var(--accent); background: #eaf1fe; color: var(--accent); }
+.pill-online { background: var(--surface-done); color: var(--on-done); }
+.btn-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
 
 /* Badges */
 .profile-badges { margin: 16px 0; }
 .badge-row { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 8px 0 0; }
 .badge-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font-size: .85rem; }
 .badge-icon { font-size: 1rem; }
-.badge-solved { background: #e6f6ec; color: #1a7f4b; border-color: #bce3cd; }
-.post-accepted { border-left: 3px solid #1a7f4b; }
+.badge-solved { background: var(--surface-done); color: var(--on-done); border-color: var(--green-200); }
+.post-accepted {
+    border: 1px solid var(--green-200);
+    border-left: 3px solid var(--success);
+    background: var(--surface-done);
+    box-shadow: var(--shadow-sm);
+}
 .solved-action { margin-top: 6px; }
 
 /* Following feed */
@@ -508,10 +675,10 @@ a:hover { text-decoration: underline; }
 /* Presence widget */
 .presence-widget { margin: 16px 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .presence-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: 0 0 8px; }
-.presence-count { background: #e6f6ec; color: #1a7f4b; border-radius: 999px; padding: 0 6px; font-size: .75rem; }
+.presence-count { background: var(--surface-done); color: var(--on-done); border-radius: 999px; padding: 0 6px; font-size: .75rem; }
 .presence-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .presence-list a { display: inline-flex; align-items: center; gap: 6px; }
-.presence-list .dot { width: 8px; height: 8px; border-radius: 50%; background: #1a7f4b; flex: 0 0 auto; }
+.presence-list .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--presence); flex: 0 0 auto; }
 
 /* ── Accessibility + mobile polish (P2-11) ── */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
@@ -542,28 +709,90 @@ a:hover { text-decoration: underline; }
    "system" when the device prefers dark. All driven by CSS variables; no
    inline styles (the strict CSP forbids them). */
 
+/* Imladris "twilight" night register. Gold is the actionable colour on dark
+   (links/buttons), parchment is the ink, evergreen the quiet brand. */
 [data-theme="dark"] {
-    --surface: #161a22;
-    --surface-2: #0f1218;
-    --surface-3: #1d222c;
-    --border: #2b313c;
-    --text: #e6e9ef;
-    --text-muted: #9aa4b2;
-    --accent: #6ea8fe;
-    --accent-contrast: #0f1218;
-    --danger: #ff6b5e;
+    --surface: var(--twilight-700);
+    --surface-2: var(--twilight-900);
+    --surface-3: var(--twilight-800);
+    --border: #36434f;
+    --text: #ECE4D2;
+    --text-muted: #AEB8B4;
+    --text-strong: var(--parchment-50);
+    --text-body: #D7DCD2;
+    --text-faint: var(--ink-300);
+    --text-inverse: var(--ink-900);
+    --on-brand-subtle: #BCD0BF;
+    --gold-ink: var(--gold-400);
+    --accent: var(--gold-400);
+    --accent-contrast: var(--twilight-900);
+    --accent-2: var(--gold-500);
+    --danger: #DB8C73;
+    --surface-page: var(--twilight-900);
+    --surface-raised: var(--twilight-800);
+    --surface-sunken: var(--twilight-700);
+    --surface-inverse: var(--parchment-100);
+    --border-hair: #36434f;
+    --border-soft: #2C3742;
+    --border-strong: #51606C;
+    --brand: var(--green-500);
+    --brand-hover: var(--green-400);
+    --brand-subtle: rgba(78,116,89,.20);
+    --gold-soft: rgba(194,154,68,.16);
+    --rule-gold: var(--gold-400);
+    --success: var(--green-400);
+    --surface-done: rgba(78,116,89,.20); --on-done: #BCD0BF;
+    --warning: var(--gold-400);
+    --surface-review: rgba(194,154,68,.16); --on-review: #DCC68A;
+    --pending: var(--ink-300);
+    --surface-pending: var(--twilight-700); --on-pending: #AEB8B4;
+    --info: var(--river-400);
+    --surface-info: rgba(63,110,137,.20); --on-info: var(--river-200);
+    --star: var(--gold-400);
+    --presence: var(--green-400);
+    --focus-ring: rgba(210,176,98,.75);
 }
 @media (prefers-color-scheme: dark) {
     [data-theme="system"] {
-        --surface: #161a22;
-        --surface-2: #0f1218;
-        --surface-3: #1d222c;
-        --border: #2b313c;
-        --text: #e6e9ef;
-        --text-muted: #9aa4b2;
-        --accent: #6ea8fe;
-        --accent-contrast: #0f1218;
-        --danger: #ff6b5e;
+        --surface: var(--twilight-700);
+        --surface-2: var(--twilight-900);
+        --surface-3: var(--twilight-800);
+        --border: #36434f;
+        --text: #ECE4D2;
+        --text-muted: #AEB8B4;
+        --text-strong: var(--parchment-50);
+        --text-body: #D7DCD2;
+        --text-faint: var(--ink-300);
+        --text-inverse: var(--ink-900);
+        --on-brand-subtle: #BCD0BF;
+        --gold-ink: var(--gold-400);
+        --accent: var(--gold-400);
+        --accent-contrast: var(--twilight-900);
+        --accent-2: var(--gold-500);
+        --danger: #DB8C73;
+        --surface-page: var(--twilight-900);
+        --surface-raised: var(--twilight-800);
+        --surface-sunken: var(--twilight-700);
+        --surface-inverse: var(--parchment-100);
+        --border-hair: #36434f;
+        --border-soft: #2C3742;
+        --border-strong: #51606C;
+        --brand: var(--green-500);
+        --brand-hover: var(--green-400);
+        --brand-subtle: rgba(78,116,89,.20);
+        --gold-soft: rgba(194,154,68,.16);
+        --rule-gold: var(--gold-400);
+        --success: var(--green-400);
+        --surface-done: rgba(78,116,89,.20); --on-done: #BCD0BF;
+        --warning: var(--gold-400);
+        --surface-review: rgba(194,154,68,.16); --on-review: #DCC68A;
+        --pending: var(--ink-300);
+        --surface-pending: var(--twilight-700); --on-pending: #AEB8B4;
+        --info: var(--river-400);
+        --surface-info: rgba(63,110,137,.20); --on-info: var(--river-200);
+        --star: var(--gold-400);
+        --presence: var(--green-400);
+        --focus-ring: rgba(210,176,98,.75);
     }
 }
 
@@ -689,7 +918,7 @@ a:hover { text-decoration: underline; }
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-xl);
     padding: 16px;
     z-index: 1000;
 }
@@ -720,3 +949,330 @@ a:hover { text-decoration: underline; }
     cursor: pointer;
 }
 .site-announcement[hidden] { display: none; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris — Phase 1: shell chrome (topbar, sidebar rail, brand mark).
+   Appended so same-specificity rules override earlier ones by source order.
+   No inline styles (CSP-safe); SVG marks use presentation attributes only.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Top bar — parchment at ~90% with a candlelit blur. */
+.topbar {
+    background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-hair);
+}
+.topbar-inner { gap: 18px; }
+.brand {
+    display: inline-flex; align-items: center; gap: 11px;
+    font-family: var(--font-display); font-weight: var(--weight-medium);
+    font-size: 1.4rem; color: var(--text-strong); letter-spacing: .005em;
+}
+.brand:hover { text-decoration: none; }
+.brand-star { width: 26px; height: 26px; color: var(--brand); flex: 0 0 auto; }
+.brand-name { line-height: 1; }
+.brand-logo { display: block; }
+
+.topbar-link {
+    color: var(--text-muted); font-family: var(--font-label);
+    letter-spacing: .03em; font-size: .85rem;
+}
+.topbar-link:hover { color: var(--brand); text-decoration: none; }
+
+.topbar-search { flex: 1; display: flex; justify-content: center; }
+.topbar-search .input {
+    min-width: 0; width: 100%; max-width: 420px;
+    border-radius: var(--radius-pill); background: var(--surface-page);
+    border: 1px solid var(--border-hair); padding: 8px 15px;
+    box-shadow: var(--shadow-inset);
+}
+.topbar-search .input:focus { border-color: var(--gold-400); }
+
+.bell { position: relative; display: inline-flex; align-items: center; color: var(--text-muted); }
+.bell:hover { color: var(--brand); }
+.bell-ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.bell-count { background: var(--accent-2); color: var(--ink-900); }
+
+.topbar-user { display: inline-flex; align-items: center; gap: 9px; color: var(--text-strong); }
+.topbar-user:hover { text-decoration: none; }
+.topbar-name { font-family: var(--font-body); font-weight: var(--weight-medium); font-size: .95rem; }
+
+.pill { font-family: var(--font-label); letter-spacing: .04em; text-transform: uppercase; font-size: .72rem; }
+
+/* Sidebar rail — parchment-sunken ground, gold-ruled active rows. */
+.sidebar {
+    border-right: 1px solid var(--border-hair);
+    background: var(--surface-sunken);
+    padding: 14px 11px;
+    display: flex; flex-direction: column; gap: 2px;
+}
+.sidebar-home {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--font-body); font-weight: var(--weight-medium);
+    color: var(--text-body); padding: 7px 11px; border-radius: var(--radius-sm);
+}
+.sidebar-home:hover { background: var(--surface-page); text-decoration: none; }
+
+.rail-filters-nav { margin: 0; }
+.rail-filters { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.rail-filter {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 11px; border-radius: var(--radius-sm);
+    color: var(--text-body); font-family: var(--font-body); font-size: .95rem;
+}
+.rail-filter:hover { background: var(--surface-page); text-decoration: none; }
+.rail-ic {
+    width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.75;
+    stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; color: var(--text-faint);
+}
+
+/* Active rail row: brand-subtle wash + an inset gold rule (the Imladris marker). */
+.sidebar a.active,
+.sidebar-home.active,
+.rail-filter.active {
+    background: var(--brand-subtle);
+    box-shadow: inset 3px 0 0 var(--accent-2);
+    color: var(--on-brand-subtle);
+    font-weight: var(--weight-semibold);
+}
+.sidebar-home.active .rail-ic,
+.rail-filter.active .rail-ic { color: var(--brand); }
+
+.nav-cat { margin-top: 14px; }
+.nav-cat-name {
+    font-family: var(--font-label); font-size: .7rem; text-transform: uppercase;
+    letter-spacing: var(--tracking-caps); color: var(--gold-ink); padding: 0 11px 5px;
+}
+.nav-boards a { display: flex; align-items: center; gap: 8px; padding: 6px 11px; border-radius: var(--radius-sm); color: var(--text-body); }
+.nav-boards a:hover { background: var(--surface-page); text-decoration: none; }
+.hash { color: var(--gold-ink); font-weight: var(--weight-medium); width: 11px; text-align: center; display: inline-block; }
+
+.presence-title { font-family: var(--font-label); letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--text-muted); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris — Phase 2: thread list, conversation & composer.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Chips (status / role) — lapidary Marcellus pills. */
+.badge, .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-label); font-size: .62rem; letter-spacing: .1em;
+    text-transform: uppercase; line-height: 1;
+    padding: 3px 9px; border-radius: var(--radius-pill);
+    background: var(--brand-subtle); color: var(--on-brand-subtle);
+    border: 1px solid var(--green-200); vertical-align: middle;
+}
+.chip-solved  { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
+.chip-needs   { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
+.chip-pinned  { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
+.chip-locked,
+.badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
+.badge-staff  { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
+.badge-solved { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
+.tag {
+    font-family: var(--font-label); font-size: .6rem; letter-spacing: .08em;
+    text-transform: uppercase; background: var(--surface-sunken); color: var(--text-muted);
+    border-radius: var(--radius-pill); padding: 2px 8px; margin-left: 6px;
+}
+
+/* Board header + index cards. */
+.board-header { margin-bottom: 14px; border-bottom: 1px solid var(--border-hair); padding-bottom: 14px; }
+.board-header h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.board-header h1 .hash { color: var(--gold-ink); font-size: 1.6rem; width: auto; }
+.cat-title { font-family: var(--font-label); color: var(--gold-ink); letter-spacing: var(--tracking-caps); }
+.board-row { border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); transition: box-shadow var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm); }
+.board-row:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.board-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.15rem; }
+.board-stats { font-family: var(--font-mono); }
+
+/* Thread list — parchment cards with a status left-rule (::before, so hover
+   shadows never clobber the rule). */
+.thread-list { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.thread-row {
+    position: relative;
+    display: flex; gap: 13px; align-items: flex-start;
+    padding: 14px 16px; border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg); background: var(--surface-raised);
+    box-shadow: var(--shadow-xs); overflow: hidden;
+    transition: box-shadow var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
+}
+.thread-row::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent;
+}
+.thread-row:hover { box-shadow: var(--shadow-md); border-color: var(--green-200); transform: translateY(-1px); }
+.thread-pinned::before              { background: var(--gold-400); }
+.thread-status-solved::before       { background: var(--leaf); }
+.thread-status-needs_answer::before { background: var(--amber); }
+.thread-unread { border-color: var(--green-200); }
+.thread-row-main { min-width: 0; flex: 1; }
+.thread-row-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.thread-row-chips:empty { display: none; }
+.thread-title {
+    display: block; font-family: var(--font-display); font-weight: var(--weight-medium);
+    font-size: 1.2rem; line-height: 1.2; color: var(--text-strong); letter-spacing: -0.01em;
+}
+.thread-title:hover { text-decoration: none; color: var(--brand); }
+.thread-unread .thread-title { font-weight: var(--weight-semibold); }
+.thread-meta { font-family: var(--font-label); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint); margin-top: 6px; display: block; }
+.thread-board, .thread-board .hash { color: var(--gold-ink); }
+
+/* Thread page header + post stream. */
+.thread-head { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-hair); }
+.breadcrumb { font-family: var(--font-mono); font-size: .8rem; color: var(--text-faint); margin: 0 0 8px; }
+.post {
+    display: flex; gap: 13px; background: var(--surface-raised);
+    border: 1px solid var(--border-hair); border-radius: var(--radius-lg); padding: 16px 18px;
+    box-shadow: var(--shadow-xs);
+}
+.post-author { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.05rem; color: var(--text-strong); }
+.post-time, .post-edited { font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
+.post-body { font-size: 1.0625rem; line-height: 1.62; color: var(--text-body); }
+.post-body blockquote { border-left: 2px solid var(--rule-gold); color: var(--text-strong); font-style: italic; }
+.post-signature { border-top: 1px dashed var(--border-hair); font-family: var(--font-body); }
+
+/* Composer card + serif inputs with a gold focus ring. */
+.composer-input, textarea.input {
+    font-family: var(--font-body);
+    border-radius: var(--radius-md); border: 1.5px solid var(--border-soft);
+    background: var(--surface-raised); box-shadow: var(--shadow-inset);
+}
+.composer-input:focus,
+.input:focus, textarea:focus, select:focus {
+    border-color: var(--gold-400);
+    outline: 2px solid var(--accent); outline-offset: 1px;  /* high-contrast (>=3:1) focus ring */
+    box-shadow: 0 0 0 3px var(--focus-ring);                /* gold halo, decorative reinforcement */
+}
+.composer-label { font-family: var(--font-label); letter-spacing: .03em; color: var(--text-muted); }
+
+/* Guest join-bar — the open hall. */
+.joinbar { background: var(--brand-subtle); border: 1px solid var(--green-200); border-radius: var(--radius-lg); color: var(--text-body); }
+.joinbar-archived { background: var(--surface-sunken); border-color: var(--border-hair); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris — Phase 3: the true 3-pane Community Inbox (sidebar + list + reading).
+   The reading pane is a progressive enhancement — without JS each topic opens as
+   its own page (the thread-title links stay real).
+   ══════════════════════════════════════════════════════════════════════════ */
+body[data-route="inbox"] .app-shell { max-width: none; }
+body[data-route="inbox"] .main { padding: 0; }
+.inbox-shell {
+    display: grid;
+    grid-template-columns: minmax(320px, var(--list-w)) 1fr;
+    height: calc(100vh - var(--topbar-h));
+    min-height: 520px;
+}
+.inbox-list {
+    border-right: 1px solid var(--border-hair);
+    background: var(--surface-page);
+    padding: 18px 18px 28px;
+    overflow-y: auto;
+}
+.inbox-list-head { border-bottom: none; padding-bottom: 0; margin-bottom: 6px; }
+.inbox-list-head .eyebrow { margin: 0 0 4px; }
+.inbox-list-head h1 { font-size: 1.85rem; margin: 0; }
+.inbox-list .thread-list { margin-top: 12px; gap: 8px; }
+
+/* Filter tabs become horizontally-scrollable Marcellus pills in the narrow list. */
+.inbox-tabs { display: flex; gap: 6px; margin: 12px 0 4px; }
+.inbox-list .inbox-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; border-bottom: 1px solid var(--border-hair); }
+.inbox-tab {
+    flex: none; white-space: nowrap; border-radius: var(--radius-pill);
+    padding: 6px 13px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
+    color: var(--text-muted); border: 1px solid transparent;
+}
+.inbox-tab:hover { background: var(--surface-sunken); text-decoration: none; }
+.inbox-tab.is-active { background: var(--brand); color: var(--parchment-50); font-weight: var(--weight-medium); border-color: var(--brand); }
+
+.inbox-reading { background: var(--surface-raised); padding: 24px 30px 44px; overflow-y: auto; min-width: 0; }
+.inbox-reading[aria-busy="true"] { opacity: .55; }
+.inbox-reading .thread-view, .inbox-reading .board-view { max-width: 760px; }
+.thread-row.is-active { border-color: var(--green-200); box-shadow: var(--shadow-sm); background: var(--brand-subtle); }
+.thread-row.is-active::before { background: var(--leaf); }
+.inbox-empty { text-align: center; padding: 72px 24px; max-width: 46ch; margin: 0 auto; }
+.inbox-empty-star { width: 56px; height: 56px; color: var(--green-400); opacity: .6; }
+.inbox-empty-title { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.5rem; color: var(--text-strong); margin: 14px 0 6px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris — Phase 4: mobile (off-canvas drawer, FAB, touch targets).
+   The drawer is JS-only (scoped to .has-js); without JS the rail stacks above
+   the content so navigation is never trapped.
+   ══════════════════════════════════════════════════════════════════════════ */
+.nav-toggle {
+    display: none; align-items: center; justify-content: center;
+    width: 44px; height: 44px; margin-right: 2px;
+    background: transparent; border: 1.5px solid transparent; border-radius: var(--radius-md);
+    color: var(--text-body); cursor: pointer;
+}
+.nav-toggle-ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error pages → no dead control */
+
+/* Floating "new topic" affordance (mobile, board context). */
+.fab {
+    display: none; position: fixed; right: 18px; bottom: 22px; z-index: 45;
+    width: 56px; height: 56px; border-radius: 50%;
+    align-items: center; justify-content: center;
+    background: var(--brand); color: var(--accent-contrast);
+    box-shadow: var(--shadow-lg), var(--gilt);
+}
+.fab:hover { background: var(--brand-hover); text-decoration: none; }
+.fab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 860px) {
+    .has-js .nav-toggle { display: inline-flex; }
+    .fab { display: inline-flex; }
+
+    /* Off-canvas drawer — JS only. */
+    .has-js .app-shell { display: block; }
+    .has-js .sidebar {
+        position: fixed; top: var(--topbar-h); bottom: 0; left: 0;
+        width: 322px; max-width: 86vw; z-index: 60;
+        transform: translateX(-100%);
+        transition: transform var(--dur-base) var(--ease-calm);
+        box-shadow: var(--shadow-xl); overflow-y: auto;
+    }
+    .has-js body.nav-open .sidebar { transform: none; }
+    .has-js .main { width: 100%; }
+    .nav-scrim:not([hidden]) {
+        position: fixed; inset: 0; top: var(--topbar-h);
+        background: rgba(22, 29, 36, .5); z-index: 55;
+    }
+
+    /* Inbox collapses to one column; topics open as their own page. */
+    body[data-route="inbox"] .main { padding: 0; }
+    .inbox-shell { grid-template-columns: 1fr; height: auto; min-height: 0; }
+    .inbox-list { border-right: none; height: auto; }
+    .inbox-reading { display: none; }
+
+    /* Comfortable touch targets + room for the FAB. */
+    .rail-filter, .nav-boards a, .sidebar-home, .inbox-tab { min-height: 44px; }
+    .main { padding: 16px 14px 88px; }
+    .thread-title { font-size: 1.1rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris — Phase 5: leaderboard, profile, workflow bars (canvas-referenced
+   surfaces; everything else inherits the tokens + typography).
+   ══════════════════════════════════════════════════════════════════════════ */
+.leaderboard-list { list-style: none; padding: 0; margin: 18px 0; }
+.leaderboard-row { display: flex; align-items: center; gap: 14px; padding: 12px 4px; border-top: 1px solid var(--border-hair); }
+.lb-rank { font-family: var(--font-mono); color: var(--text-faint); min-width: 2.2em; text-align: center; }
+.lb-rank-roman { font-family: var(--font-display); font-size: 1.6rem; font-weight: var(--weight-medium); color: var(--gold-ink); }
+.lb-top {
+    border: 1px solid var(--green-200); border-top: 1px solid var(--green-200);
+    border-radius: var(--radius-lg); background: var(--surface-raised);
+    box-shadow: var(--shadow-xs); padding: 14px 16px; margin-bottom: 8px;
+}
+.lb-top .monogram { width: 44px; height: 44px; font-size: .95rem; }
+.lb-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.1rem; }
+.lb-top .lb-name { font-size: 1.25rem; }
+.lb-rep { margin-left: auto; font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.1rem; color: var(--text-strong); display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.lb-rep .star-marker { color: var(--star); margin: 0; }
+
+/* Workflow / mod action bars — keep them on one calm line. */
+.workflow-bar, .workflow-actions, .mod-bar { align-items: center; }
+.workflow-bar .linkbtn, .mod-bar .linkbtn { font-family: var(--font-label); letter-spacing: .02em; }
+
+/* Profile — gilded avatar; display-serif stats. */
+.profile-head .monogram { box-shadow: var(--gilt); }
+.profile-stats dd { font-family: var(--font-display); }
