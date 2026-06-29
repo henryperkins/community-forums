@@ -208,6 +208,86 @@ final class AdminController extends Controller
         );
     }
 
+    // ---- Structure ordering + archive (Phase 2) ---------------------------
+
+    /** @param array<string,string> $params */
+    public function moveCategory(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->moveCategory($admin, $id, (string) $request->post('dir', '')),
+            '/admin/structure',
+            'Order updated.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function moveBoard(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->moveBoard($admin, $id, (string) $request->post('dir', '')),
+            '/admin/structure',
+            'Order updated.',
+        );
+    }
+
+    /**
+     * Bulk reorder target for the optional JS drag enhancement. On a bad id-set
+     * it re-renders the structure page at 422 (no redirect) so the AJAX caller
+     * sees the failure and the no-JS up/down buttons stay the working path.
+     *
+     * @param array<string,string> $params
+     */
+    public function reorder(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $scope = (string) $request->post('scope', '');
+        $rawIds = $request->post('ids', []);
+        $ids = is_array($rawIds) ? array_map('intval', $rawIds) : [];
+
+        try {
+            if ($scope === 'category') {
+                $this->container->get(AdminService::class)->reorderCategories($admin, $ids);
+            } else {
+                $this->container->get(AdminService::class)->reorderBoards($admin, (int) $request->post('category_id', 0), $ids);
+            }
+        } catch (ValidationException $e) {
+            return $this->view('admin/structure', [
+                'categories' => $this->container->get(CategoryRepository::class)->all(),
+                'boards_by_category' => $this->boardsByCategory(),
+                'reorder_error' => $e->first(),
+            ], 422);
+        }
+        return $this->redirectWithFlash('/admin/structure', 'Order updated.');
+    }
+
+    /** @param array<string,string> $params */
+    public function archiveBoard(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->archiveBoard($admin, $id),
+            '/admin/structure',
+            'Board archived — it is now read-only.',
+        );
+    }
+
+    /** @param array<string,string> $params */
+    public function unarchiveBoard(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(AdminService::class)->unarchiveBoard($admin, $id),
+            '/admin/structure',
+            'Board restored — posting re-enabled.',
+        );
+    }
+
     /**
      * Render the board edit screen with its moderator + member rosters. Shared by
      * the GET form and the POST 422 re-render so both always show the rosters.

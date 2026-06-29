@@ -127,4 +127,69 @@ final class AppAdminStructureReorderTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'archive_board' AND target_type = 'board'"));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'unarchive_board' AND target_type = 'board'"));
     }
+
+    public function test_move_board_up_swaps_rendered_order_and_audits(): void
+    {
+        $this->actingAs($this->admin);
+        $b1 = $this->makeBoard($this->categoryId, ['slug' => 'alpha', 'name' => 'AlphaBoard']); // pos 0
+        $b2 = $this->makeBoard($this->categoryId, ['slug' => 'beta', 'name' => 'BetaBoard']);   // pos 1
+        $this->get('/admin/structure');
+
+        $res = $this->post('/admin/boards/' . $b2['id'] . '/move', ['dir' => 'up']);
+        $this->assertRedirectContains($res, '/admin/structure');
+
+        self::assertSame(0, (int) $this->boards()->find((int) $b2['id'])['position']);
+        self::assertSame(1, (int) $this->boards()->find((int) $b1['id'])['position']);
+
+        $body = $this->get('/admin/structure')->body();
+        self::assertLessThan(strpos($body, 'AlphaBoard'), strpos($body, 'BetaBoard'), 'Beta now renders before Alpha');
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'reorder_boards'"));
+    }
+
+    public function test_move_top_board_up_is_safe_noop_over_http(): void
+    {
+        $this->actingAs($this->admin);
+        $b1 = $this->makeBoard($this->categoryId, ['slug' => 'top', 'name' => 'TopBoard']);
+        $b2 = $this->makeBoard($this->categoryId, ['slug' => 'bot', 'name' => 'BotBoard']);
+        $this->get('/admin/structure');
+
+        $res = $this->post('/admin/boards/' . $b1['id'] . '/move', ['dir' => 'up']);
+        $this->assertRedirectContains($res, '/admin/structure');
+        self::assertSame(0, (int) $this->boards()->find((int) $b1['id'])['position']);
+        self::assertSame(1, (int) $this->boards()->find((int) $b2['id'])['position']);
+    }
+
+    public function test_bulk_reorder_with_foreign_id_is_422_and_order_unchanged(): void
+    {
+        $this->actingAs($this->admin);
+        $b1 = $this->makeBoard($this->categoryId, ['slug' => 'one', 'name' => 'OneBoard']);
+        $b2 = $this->makeBoard($this->categoryId, ['slug' => 'two', 'name' => 'TwoBoard']);
+        $this->get('/admin/structure');
+
+        $res = $this->post('/admin/structure/reorder', [
+            'scope' => 'board',
+            'category_id' => $this->categoryId,
+            'ids' => [(int) $b2['id'], 999999],
+        ]);
+        $this->assertStatus(422, $res);
+        self::assertSame(0, (int) $this->boards()->find((int) $b1['id'])['position']);
+        self::assertSame(1, (int) $this->boards()->find((int) $b2['id'])['position']);
+    }
+
+    public function test_structure_mutations_require_admin(): void
+    {
+        $b = $this->makeBoard($this->categoryId, ['slug' => 'guard', 'name' => 'GuardBoard']);
+
+        $this->actingAs($this->user);
+        $this->get('/');
+        $this->assertStatus(403, $this->post('/admin/boards/' . $b['id'] . '/move', ['dir' => 'up']));
+        $this->assertStatus(403, $this->post('/admin/boards/' . $b['id'] . '/archive'));
+
+        $this->logoutClient();
+        $this->get('/');
+        $this->assertRedirectContains(
+            $this->post('/admin/structure/reorder', ['scope' => 'category', 'ids' => [(int) $this->categoryId]]),
+            '/login',
+        );
+    }
 }

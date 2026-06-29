@@ -1095,6 +1095,15 @@ final class App
         $r->post('/admin/boards/{id}', [AdminController::class, 'updateBoard']);
         $r->post('/admin/boards/{id}/delete', [AdminController::class, 'deleteBoard']);
 
+        // Structure ordering + archive (Phase 2). Static reorder before any
+        // generic /admin/structure/{...}; {id} compiles to \d+ so the /move,
+        // /archive, /unarchive suffixes never collide with /admin/boards/{id}.
+        $r->post('/admin/categories/{id}/move', [AdminController::class, 'moveCategory']);
+        $r->post('/admin/boards/{id}/move', [AdminController::class, 'moveBoard']);
+        $r->post('/admin/structure/reorder', [AdminController::class, 'reorder']);
+        $r->post('/admin/boards/{id}/archive', [AdminController::class, 'archiveBoard']);
+        $r->post('/admin/boards/{id}/unarchive', [AdminController::class, 'unarchiveBoard']);
+
         // Board roster management (P2-08): assign/remove scoped moderators + members.
         $r->post('/admin/boards/{id}/moderators', [AdminController::class, 'assignModerator']);
         $r->post('/admin/boards/{id}/moderators/remove', [AdminController::class, 'unassignModerator']);
