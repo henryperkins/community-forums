@@ -392,6 +392,20 @@ final class App
             $needsTour = false;
         }
 
+        // Site announcement banner (ADMIN §7.4; SCHEMA §7 #13): a defensive read
+        // so the global shell can show an operator notice. Its own try/catch keeps
+        // a missing or garbled settings row from 500ing the shell (it renders
+        // pre-setup and against an un-migrated DB).
+        $siteAnnouncement = null;
+        try {
+            $value = $container->get(SettingRepository::class)->get('site_announcement', null);
+            if (is_array($value) && !empty($value['active'])) {
+                $siteAnnouncement = $value;
+            }
+        } catch (Throwable) {
+            $siteAnnouncement = null;
+        }
+
         $container->get(View::class)->share([
             'site_name' => $siteName,
             'app_name' => $appName,
@@ -407,6 +421,7 @@ final class App
             'branding' => $branding,
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
+            'site_announcement' => $siteAnnouncement,
         ]);
     }
 
