@@ -1,5 +1,8 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
+import { execFile } from 'node:child_process';
+import http from 'node:http';
 import path from 'node:path';
+import { promisify } from 'node:util';
 
 /**
  * Gate A browser evidence: drive the real, server-rendered app in Chromium at
@@ -14,6 +17,7 @@ import path from 'node:path';
  */
 
 const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const execFileAsync = promisify(execFile);
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
 
@@ -214,7 +218,7 @@ test('admin API tokens: mint shows the secret once, then revoke', async ({ page 
 
   // Unique per viewport project: desktop + mobile share one seeded DB, so a fixed
   // name would collide once the first project leaves its row behind.
-  const tokenName = `Evidence CI token (${info.project.name})`;
+  const tokenName = `Evidence CI token (${info.project.name}-${Date.now()})`;
 
   // Mint via the no-JS form post: name + a scope + password reauth.
   await page.fill('input[name="name"]', tokenName);
@@ -238,4 +242,75 @@ test('admin API tokens: mint shows the secret once, then revoke', async ({ page 
   await revokeBtn.click({ force: true });
   await expect(page.locator('table tbody tr', { hasText: tokenName })).toContainText('revoked');
   await shot(page, info, '21-admin-api-token-revoked');
+});
+
+test('admin webhooks: register shows the secret once, test event delivers', async ({ page }, info) => {
+  let received = false;
+  let markReceived: (() => void) | null = null;
+  const receivedPromise = new Promise<void>((resolve) => {
+    markReceived = resolve;
+  });
+  const server = http.createServer((req, res) => {
+    received = true;
+    markReceived?.();
+    res.statusCode = 200;
+    res.end('ok');
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+  const address = server.address();
+  if (typeof address === 'string' || address === null) {
+    throw new Error('expected TCP server address');
+  }
+  const hookUrl = `http://127.0.0.1:${address.port}/hook`;
+
+  try {
+    await login(page, 'admin@retro.test');
+    await visit(page, '/admin');
+    await expect(page.getByRole('link', { name: 'Webhooks' })).toHaveAttribute('href', '/admin/webhooks');
+    await visit(page, '/admin/webhooks');
+    await expect(page.getByRole('heading', { name: 'Webhooks' })).toBeVisible();
+
+    const webhookName = `Evidence webhook (${info.project.name}-${Date.now()})`;
+    await page.fill('input[name="name"]', webhookName);
+    await page.fill('input[name="url"]', hookUrl);
+    await page.check('input[name="events[]"][value="ping"]');
+    await page.fill('input[name="current_password"]', 'password123');
+    await page.getByRole('button', { name: 'Register endpoint' }).click();
+
+    await expect(page.getByText(/will not be shown again/)).toBeVisible();
+    await shot(page, info, '22-admin-webhook-registered');
+
+    await page.locator('table tbody tr', { hasText: webhookName }).getByRole('link', { name: 'Manage' }).click();
+    await page.waitForURL(/\/admin\/webhooks\/\d+$/);
+    await page.getByRole('button', { name: 'Send test event' }).click();
+
+    const repoRoot = path.resolve(__dirname, '..', '..');
+    const deliverySeen = Promise.race([
+      receivedPromise,
+      new Promise<void>((_, reject) => {
+        setTimeout(() => reject(new Error('webhook receiver did not receive a POST')), 10_000);
+      }),
+    ]);
+    const worker = execFileAsync('php', ['bin/console', 'worker:webhooks'], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e',
+        WEBHOOK_ALLOW_HTTP: 'true',
+        WEBHOOK_ALLOWED_PRIVATE_CIDRS: '127.0.0.1/32',
+        MAIL_DRIVER: 'array',
+      },
+    });
+    const [{ stdout }] = await Promise.all([worker, deliverySeen]);
+    expect(stdout).toContain('Webhook delivery: delivered=');
+    expect(stdout).not.toContain('delivered=0');
+    expect(received).toBe(true);
+
+    await page.reload();
+    await expect(page.getByText('delivered')).toBeVisible();
+    await expect(page.getByText('200')).toBeVisible();
+    await shot(page, info, '23-admin-webhook-delivery-log');
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
 });

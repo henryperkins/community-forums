@@ -200,12 +200,24 @@ return [
         'mfa_login' => [5, 900],
         'mfa_settings' => [10, 900],
         'api' => [120, 60],
+        'webhook_test' => [20, 600],
     ],
 
     'secrets' => [
         // B2 service-secret registry (SecretVault, built on SecretBox).
         'rotation_grace_seconds' => 86400, // retired versions stay decryptable this long for rotation overlap
         'max_secret_bytes' => 4096,        // plaintext ceiling (fits VARBINARY(4096) ciphertext)
+    ],
+
+    'webhooks' => [
+        'timeout_seconds' => 5,
+        'max_attempts' => 6,
+        'backoff_seconds' => [60, 300, 1500, 7200, 21600],
+        'circuit_breaker_threshold' => 15,
+        'max_response_bytes' => 65536,
+        'allow_http' => Env::bool('WEBHOOK_ALLOW_HTTP', false),
+        'allowed_private_cidrs' => array_values(array_filter(array_map('trim',
+            explode(',', (string) Env::get('WEBHOOK_ALLOWED_PRIVATE_CIDRS', ''))))),
     ],
 
     // Trusted reverse-proxy CIDRs whose X-Forwarded-For we honour for client IP.

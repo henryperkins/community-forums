@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.18 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
+**Status:** v1.19 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -100,6 +100,7 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 80 | `mfa_login_challenges` | Identity / auth | 5 | ADR 0004 B1 / PHASE_3_PLAN P3-12 carryover |
 | 81 | `service_secrets` | Integrations / secrets | 5 | B2 service-secret registry design |
 | 82 | `service_secret_versions` | Integrations / secrets | 5 | B2 service-secret registry design |
+| 83 | `webhook_deliveries` | Integrations / webhooks | 5 | B2 webhook delivery design |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -114,6 +115,11 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > additive and deploy-dark. They are consumed only through `SecretVault` while the
 > `service_secrets` flag controls write/rotation availability; provider/webhook
 > consumers are not wired yet.
+>
+> Table 83 and the reconciled `webhooks` shape are the **B2 webhook delivery
+> engine** (migration `0057`): deploy-dark behind `webhooks`, with endpoint
+> signing secrets stored as SecretVault references and a durable retry/dead-letter
+> ledger.
 
 ---
 
@@ -580,15 +586,44 @@ CREATE TABLE plugins (
 
 -- Outbound webhooks (HMAC-signed; Slack/Discord/Zapier)
 CREATE TABLE webhooks (
-  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  url         VARCHAR(512)    NOT NULL,
-  events      JSON            NOT NULL,                     -- list of event names to deliver
-  secret      VARCHAR(128)    NULL,                         -- HMAC signing key
-  is_active   TINYINT(1)      NOT NULL DEFAULT 1,
-  created_by  BIGINT UNSIGNED NOT NULL,
-  created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_status INT             NULL,                         -- last delivery HTTP status
-  PRIMARY KEY (id)
+  id                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name                 VARCHAR(80)     NOT NULL,
+  url                  VARCHAR(512)    NOT NULL,
+  events               JSON            NOT NULL,            -- subscribed event names
+  secret_ref           VARCHAR(64)     NOT NULL,            -- svcsec_* SecretVault reference, not plaintext
+  is_active            TINYINT(1)      NOT NULL DEFAULT 1,
+  consecutive_failures INT UNSIGNED    NOT NULL DEFAULT 0,
+  disabled_at          DATETIME        NULL,
+  disabled_reason      VARCHAR(190)    NULL,
+  last_status          INT             NULL,                -- last delivery HTTP status
+  last_delivered_at    DATETIME        NULL,
+  created_by           BIGINT UNSIGNED NOT NULL,
+  created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_webhook_active (is_active),
+  CONSTRAINT fk_webhook_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE webhook_deliveries (
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  webhook_id      BIGINT UNSIGNED NOT NULL,
+  event_type      VARCHAR(80)     NOT NULL,
+  event_id        VARCHAR(64)     NOT NULL,                 -- per-occurrence idempotency id
+  payload         MEDIUMTEXT      NOT NULL,                 -- JSON request body
+  status          ENUM('queued','delivered','dead') NOT NULL DEFAULT 'queued',
+  attempt_count   INT UNSIGNED    NOT NULL DEFAULT 0,
+  max_attempts    INT UNSIGNED    NOT NULL,
+  next_attempt_at DATETIME        NULL,
+  last_attempt_at DATETIME        NULL,
+  response_status INT             NULL,
+  error           VARCHAR(255)    NULL,
+  created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  delivered_at    DATETIME        NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_delivery_idem (webhook_id, event_type, event_id),
+  KEY idx_delivery_claim (status, next_attempt_at),
+  CONSTRAINT fk_delivery_webhook FOREIGN KEY (webhook_id) REFERENCES webhooks(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Scoped admin API tokens
@@ -689,7 +724,7 @@ CREATE TABLE submission_idempotency (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-> **Phase-3 build note (reconciled 2026-06-28).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Still **not built** (Gate B / later): `plugins`, `webhooks`, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
+> **Phase-3 build note (reconciled 2026-06-28).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Webhook delivery is built deploy-dark by migration `0057`. Still **not built** (Gate B / later): `plugins`, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
 
 ---
 
@@ -902,13 +937,13 @@ are removed.
 
 ## 6. Phase map (suggested build cut)
 
-This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above, but its remaining tables (appeals, automation-rules, `drafts`, bookmark-folders, custom-profile-fields, and a durable webhook-delivery ledger) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
+This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above, but its remaining tables (appeals, automation-rules, `drafts`, bookmark-folders, and custom-profile-fields) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
 
 - **Phase 1 (MVP backend):** `users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`. → See **[PHASE_1_MIGRATIONS.md](PHASE_1_MIGRATIONS.md)** for the exact Phase‑1 column cut, migration order (`0001`–`0010`), and which columns are held back to Phases 2–3.
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
-- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` (durable delivery), `api_tokens`, plus appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
+- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built deploy-dark by `0057`), `api_tokens`, plus appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
-- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`) is reconciled in **§5B**. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, API tokens, webhook delivery, first-party hook registry, service principals, verified profile links, richer custom fields — §8.2 #6/#7/#10/#11/#12/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
+- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), and webhook delivery slice (`0057`) are reconciled here. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, first-party hook registry, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#12/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
 
@@ -956,6 +991,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.19 | 2026-06-28 | Added B2 webhook delivery (`0057`): reconciled `webhooks` to use `secret_ref` (`svcsec_*`, no plaintext secret), added `webhook_deliveries` with retry/backoff/dead-letter and `(webhook_id,event_type,event_id)` idempotency, and widened `moderation_log.target_type` with `'webhook'`. |
 | v1.18 | 2026-06-28 | Added the B2 `api_tokens` table (`0056`): scoped, hash-only (`CHAR(64)`, `uq_api_token_hash`) admin/service Bearer tokens — `scopes` JSON, `created_by` FK (CASCADE), expiry + revocation timestamps — plus `moderation_log.target_type='api_token'` for lifecycle/scope-denial audit. Backs the read-only `/api/v1` slice (B2 sub-project 2). |
 | v1.17 | 2026-06-28 | Added the B2 encrypted service-secret registry (`0055`): `service_secrets` opaque references/status/latest-version metadata, `service_secret_versions` AES-256-GCM material with version/grace/destroy lifecycle, and `moderation_log.target_type='service_secret'` for non-lossy audit. |
 | v1.16 | 2026-06-28 | Added the Gate A TOTP/recovery prerequisite (`0054`): encrypted `user_totp_credentials`, hash-only `user_recovery_codes`, and one-time `mfa_login_challenges`; documented that B1 is resolved before passkey enforcement and ordinary users are not required to enroll. |

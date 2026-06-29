@@ -41,14 +41,21 @@ Env::load($root . '/.env');
 $config = Config::fromFile($root . '/config/config.php');
 $db = new Database($config->get('db'));
 
+$db->transaction(function () use ($db): void {
+    $db->run("DELETE FROM webhooks WHERE name LIKE 'Evidence webhook (%'");
+    $db->run("DELETE FROM service_secrets WHERE owner_type = 'webhook' AND label LIKE 'Webhook signing secret: Evidence webhook (%'");
+    $db->run("DELETE FROM api_tokens WHERE name LIKE 'Evidence CI token (%'");
+});
+
 $users = new UserRepository($db);
+$settings = new SettingRepository($db);
 if ($users->adminCount() > 0) {
+    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true]); // B2 admin pages for evidence
     fwrite(STDOUT, "Already seeded (admin exists); nothing to do.\n");
     exit(0);
 }
 
 $hasher = new PasswordHasher();
-$settings = new SettingRepository($db);
 $categories = new CategoryRepository($db);
 $boards = new BoardRepository($db);
 $mods = new BoardModeratorRepository($db);
@@ -84,7 +91,7 @@ $db->transaction(function () use ($settings, $categories, $boards, $mods, $membe
     $settings->set('site_name', 'RetroBoards');
     $settings->set('registration_mode', 'open');
     $settings->set('installed_at', gmdate('Y-m-d H:i:s'));
-    $settings->set('features', ['api_tokens' => true]); // surface the B2 API-token admin page for evidence
+    $settings->set('features', ['api_tokens' => true, 'webhooks' => true, 'service_secrets' => true]); // B2 admin pages for evidence
 
     // Accounts.
     $adminId = $makeUser('admin', 'Site Admin', 'admin');

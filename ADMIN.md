@@ -1,6 +1,6 @@
 # RetroBoards — Admin & Moderation Design
 
-**Status:** v0.12 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-26
+**Status:** v0.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
 **Companion to [DESIGN.md](DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; `Done (mockup)` / `Planned` / `Live` status; InnoDB / `utf8mb4`).
 
 ## Scope
@@ -494,6 +494,7 @@ Server-side plugins run with app privileges, so v1 is **conservative**:
 ### 8.6 Webhooks & admin API
 
 - **Outbound webhooks:** fire on chosen events to a URL with **HMAC-signed** payloads and retries. This is the low-effort path for Slack/Discord/Zapier/n8n without writing a plugin.
+- **Signing secrets:** webhook secrets are stored as SecretVault references (`secret_ref`, `svcsec_*`), shown once at creation/rotation, and never stored in plaintext.
 - **Admin/REST API:** a minimal, **token-authenticated** API (scoped tokens, audited) for automation — read stats, manage content/users. Tokens are managed in the Console (§9).
 
 ### 8.7 First-party integration targets
@@ -642,15 +643,44 @@ CREATE TABLE plugins (
 
 -- Outbound webhooks
 CREATE TABLE webhooks (
-  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  url         VARCHAR(512)    NOT NULL,
-  events      JSON            NOT NULL,             -- list of event names to deliver
-  secret      VARCHAR(128)    NULL,                 -- HMAC signing key
-  is_active   TINYINT(1)      NOT NULL DEFAULT 1,
-  created_by  BIGINT UNSIGNED NOT NULL,
-  created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_status INT             NULL,                 -- last delivery HTTP status
-  PRIMARY KEY (id)
+  id                   BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name                 VARCHAR(80)     NOT NULL,
+  url                  VARCHAR(512)    NOT NULL,
+  events               JSON            NOT NULL,    -- list of event names to deliver
+  secret_ref           VARCHAR(64)     NOT NULL,    -- svcsec_* SecretVault reference, not plaintext
+  is_active            TINYINT(1)      NOT NULL DEFAULT 1,
+  consecutive_failures INT UNSIGNED    NOT NULL DEFAULT 0,
+  disabled_at          DATETIME        NULL,
+  disabled_reason      VARCHAR(190)    NULL,
+  last_status          INT             NULL,        -- last delivery HTTP status
+  last_delivered_at    DATETIME        NULL,
+  created_by           BIGINT UNSIGNED NOT NULL,
+  created_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_webhook_active (is_active),
+  CONSTRAINT fk_webhook_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE webhook_deliveries (
+  id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  webhook_id      BIGINT UNSIGNED NOT NULL,
+  event_type      VARCHAR(80)     NOT NULL,
+  event_id        VARCHAR(64)     NOT NULL,
+  payload         MEDIUMTEXT      NOT NULL,
+  status          ENUM('queued','delivered','dead') NOT NULL DEFAULT 'queued',
+  attempt_count   INT UNSIGNED    NOT NULL DEFAULT 0,
+  max_attempts    INT UNSIGNED    NOT NULL,
+  next_attempt_at DATETIME        NULL,
+  last_attempt_at DATETIME        NULL,
+  response_status INT             NULL,
+  error           VARCHAR(255)    NULL,
+  created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  delivered_at    DATETIME        NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_delivery_idem (webhook_id, event_type, event_id),
+  KEY idx_delivery_claim (status, next_attempt_at),
+  CONSTRAINT fk_delivery_webhook FOREIGN KEY (webhook_id) REFERENCES webhooks(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Scoped admin API tokens
@@ -742,6 +772,7 @@ Mapped onto DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" bu
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.13 | 2026-06-28 | Reconciled outbound webhook storage with the B2 delivery implementation: `webhooks.secret` is replaced by `secret_ref` (`svcsec_*` SecretVault reference), added the durable `webhook_deliveries` ledger, and documented show-once signing secrets. |
 | v0.12 | 2026-06-26 | Consistency pass: aligned the §2.4 SUSPENDED resolver branch (`GUEST_READONLY_PLUS_SELF` → **`GUEST_READONLY`**) and the §2.5 worked example ("read-only+self" → "read-only") to the already-decided read-only (no self-write) behaviour in §11 + PHASE_1_PLAN; corrected §8.8 v1 scope to the internal hook system + email only, noting outbound webhooks, spam integration, and hook-system GA land in **Phase 3** (DECISIONS §4 #10; v1 = Phases 1–2); added `posts.ip VARBINARY(16) NULL` to the §10.2 additions (90-day retention, Admin-only audited; built Phase 2 — DECISIONS §4 #5, SCHEMA reconciliation #10). **Resolved (suspend scope) [Henry]:** set §3.4 Suspend scope to **Board/Site** to match §2.2 — Admins suspend site-wide (global `users.status`/`suspended_until`); a moderator suspends within their assigned board(s) as a time-limited board read-only state (`bans` `scope='board'`/`type='post'`/`expires_at`), enforced via the board-level gate, not the global account flag. |
 | v0.11 | 2026-06-26 | **Status-truth pass (nothing is built yet):** rewrote the §11 Phase 1 bullet from "is live" to planned and relabeled its test-file list as **target** evidence (none exists); relabeled the §9 "Live Phase 1 subset" as planned; reworded the v0.5/v0.6/v0.7 entries below from "Shipped/now live" to "Specified (design only — not built)". No scope changes. |
 | v0.10 | 2026-06-26 | Consistency pass: corrected the §3.5 lifecycle-diagram appeal annotation `(P2)` → `(P3)` (the v0.9 pass relabeled the §3.7 header but missed the diagram; Appeals is P3 priority / Phase 3 delivery — DECISIONS §4 #6); mapped §11's "Later (P2)" items to **delivery Phases 5–7** (public plugin ecosystem & custom roles → Phase 5, multi-community → Phase 7) and noted DESIGN §13 subdivides into Phases 3–7; set §12 row 10 (webhooks/API) to its decided value (Phase 3); added **P3** to the header conventions legend; bumped the stale header (was v0.8, behind its own v0.9 row). |
