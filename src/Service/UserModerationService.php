@@ -119,6 +119,42 @@ final class UserModerationService
         });
     }
 
+    /**
+     * Admin cosmetic-title override (COMMUNITY §8, ADMIN §5.2). Trims and strips
+     * control characters; an empty result clears the override (NULL → derived
+     * ladder). Caps at 64 chars (users.title VARCHAR(64)). Routes through
+     * assertAdmin so a suspended admin is blocked (state beats role). Audits
+     * set_title / clear_title with the before/after value.
+     */
+    public function setTitle(User $actor, int $subjectId, ?string $title): void
+    {
+        $this->assertAdmin($actor);
+        $subject = $this->requireSubject($subjectId);
+
+        $stripped = preg_replace('/[\x00-\x1F\x7F]+/', '', $title ?? '') ?? '';
+        $clean = trim($stripped);
+        if (mb_strlen($clean) > 64) {
+            throw new ValidationException(
+                ['title' => 'Title must be 64 characters or fewer.'],
+                ['title' => (string) $title],
+            );
+        }
+        $newTitle = $clean === '' ? null : $clean;
+        $before = isset($subject['title']) && $subject['title'] !== null ? (string) $subject['title'] : null;
+
+        $this->db->transaction(function () use ($actor, $subjectId, $newTitle, $before): void {
+            $this->users->setTitle($subjectId, $newTitle);
+            $this->log->log([
+                'actor_id' => $actor->id(),
+                'action' => $newTitle !== null ? 'set_title' : 'clear_title',
+                'target_type' => 'user',
+                'target_id' => $subjectId,
+                'before' => $before,
+                'after' => $newTitle,
+            ]);
+        });
+    }
+
     // ---- guards -----------------------------------------------------------
 
     private function assertStaff(User $actor): void
