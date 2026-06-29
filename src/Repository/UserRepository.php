@@ -247,6 +247,36 @@ final class UserRepository
         $this->db->run('UPDATE users SET avatar_source = ? WHERE id = ?', [$source, $id]);
     }
 
+    public function setAvatar(int $id, ?string $path, string $source, ?int $removedBy = null): void
+    {
+        if ($removedBy !== null) {
+            $this->db->run(
+                'UPDATE users
+                 SET avatar_path = ?, avatar_source = ?, avatar_removed_at = UTC_TIMESTAMP(), avatar_removed_by = ?
+                 WHERE id = ?',
+                [$path, $source, $removedBy, $id],
+            );
+            return;
+        }
+
+        $this->db->run(
+            'UPDATE users
+             SET avatar_path = ?, avatar_source = ?, avatar_removed_at = NULL, avatar_removed_by = NULL
+             WHERE id = ?',
+            [$path, $source, $id],
+        );
+    }
+
+    public function clearSignature(int $id, int $removedBy): void
+    {
+        $this->db->run(
+            'UPDATE users
+             SET signature = NULL, signature_removed_at = UTC_TIMESTAMP(), signature_removed_by = ?
+             WHERE id = ?',
+            [$removedBy, $id],
+        );
+    }
+
     /** Presence heartbeat (P2-11) — bumped at most once per heartbeat window by the caller. */
     public function updateLastSeen(int $id): void
     {

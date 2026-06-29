@@ -14,6 +14,29 @@
         </div>
     <?php endif; ?>
 
+    <?php if (!empty($profile_media)): ?>
+        <section class="card">
+            <h2>Avatar</h2>
+            <?php if (!empty($old['avatar_path'])): ?>
+                <p><img class="monogram avatar-img" src="<?= $e($old['avatar_path']) ?>" alt="" width="64" height="64"></p>
+            <?php endif; ?>
+            <form method="post" action="/settings/avatar" enctype="multipart/form-data" class="stacked">
+                <?= $this->csrfField() ?>
+                <label class="field">
+                    <span>Upload avatar</span>
+                    <input type="file" name="avatar" class="input" accept="image/png,image/jpeg,image/gif,image/webp" required>
+                </label>
+                <button class="btn" type="submit">Upload avatar</button>
+            </form>
+            <?php if (!empty($old['avatar_path'])): ?>
+                <form method="post" action="/settings/avatar/remove" class="inline-form">
+                    <?= $this->csrfField() ?>
+                    <button class="linkbtn muted" type="submit">Remove avatar</button>
+                </form>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
+
     <form method="post" action="/settings/account" class="stacked card">
         <?= $this->csrfField() ?>
         <label class="field">
@@ -46,7 +69,7 @@
             <?php if (!empty($errors['bio'])): ?><span class="field-error"><?= $e($errors['bio']) ?></span><?php endif; ?>
         </label>
         <label class="field">
-            <span>Signature <span class="muted">(shown under your posts)</span></span>
+            <span>Signature <span class="muted">(shown under your posts, max 3 lines)</span></span>
             <textarea name="signature" rows="3" class="composer-input" maxlength="500"><?= $e($old['signature'] ?? '') ?></textarea>
             <?php if (!empty($errors['signature'])): ?><span class="field-error"><?= $e($errors['signature']) ?></span><?php endif; ?>
         </label>

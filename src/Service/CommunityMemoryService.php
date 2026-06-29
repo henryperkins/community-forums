@@ -28,6 +28,7 @@ final class CommunityMemoryService
         private BoardPolicy $policy,
         private WriteGate $writeGate,
         private Markdown $markdown,
+        private ?ContentReferenceService $contentReferences = null,
     ) {
     }
 
@@ -64,6 +65,7 @@ final class CommunityMemoryService
                     );
                 }
             }
+            $this->contentReferences?->capture('summary', $id, $body);
         });
     }
 

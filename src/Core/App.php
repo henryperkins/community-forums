@@ -140,12 +140,14 @@ use App\Service\PostingService;
 use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
 use App\Service\PreferenceService;
+use App\Service\ProfileMediaService;
 use App\Service\RateLimitService;
 use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
 use App\Service\ReputationLedgerService;
 use App\Service\SecretVault;
+use App\Service\SinceLastReadContextService;
 use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
 use App\Service\ThreadWorkflowService;
@@ -204,7 +206,11 @@ final class App
 
         $response = $this->process($container, $request);
 
-        SecurityHeaders::apply($response, (bool) $this->config->get('security.hsts', true));
+        SecurityHeaders::apply(
+            $response,
+            (bool) $this->config->get('security.hsts', true),
+            $this->allowGiphyCsp($container),
+        );
         $session->commit($response);
         $flash->commit($response);
 
@@ -288,6 +294,22 @@ final class App
             }
         } catch (Throwable) {
             // Presence is non-essential; swallow errors (e.g. pre-migration DB).
+        }
+    }
+
+    private function allowGiphyCsp(Container $container): bool
+    {
+        try {
+            if (!$container->get(FeatureFlags::class)->enabled('slash_giphy')) {
+                return false;
+            }
+            $key = $container->get(SettingRepository::class)->getString(
+                'giphy_public_key',
+                (string) $this->config->get('giphy.public_key', ''),
+            );
+            return $key !== '';
+        } catch (Throwable) {
+            return false;
         }
     }
 
@@ -549,7 +571,9 @@ final class App
         }
 
         // Support + security primitives.
-        $c->bind(HtmlSanitizer::class, fn () => new HtmlSanitizer());
+        $c->bind(HtmlSanitizer::class, fn (Container $c) => new HtmlSanitizer(
+            allowGiphyImages: $this->allowGiphyCsp($c),
+        ));
         $c->bind(Markdown::class, fn (Container $c) => new Markdown(
             $c->get(HtmlSanitizer::class),
             $c->get(FeatureFlags::class)->enabled('custom_emoji') ? $c->get(CustomEmojiService::class) : null,
@@ -675,6 +699,15 @@ final class App
             $c->get(BoardMemberRepository::class),
             $c->get(BoardPolicy::class),
         ));
+        $c->bind(SinceLastReadContextService::class, fn (Container $c) => new SinceLastReadContextService(
+            $c->get(Database::class),
+        ));
+        $c->bind(ProfileMediaService::class, fn (Container $c) => new ProfileMediaService(
+            $c->get(AttachmentService::class),
+            $c->get(AttachmentRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(WriteGate::class),
+        ));
 
         // Phase 3 anti-abuse + rate limiting (P3-05).
         $c->bind(ClientIdentifier::class, fn () => new ClientIdentifier((array) $config->get('trusted_proxies', [])));
@@ -796,6 +829,7 @@ final class App
             $c->get(NotificationService::class),
             $config,
             $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
+            $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
         ));
         $c->bind(ReactionService::class, fn (Container $c) => new ReactionService(
             $c->get(Database::class),
@@ -885,6 +919,7 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(WriteGate::class),
             $c->get(Markdown::class),
+            $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
         ));
 
         // Session + CSRF.
@@ -1098,6 +1133,8 @@ final class App
         $r->get('/settings', [AccountController::class, 'index']);
         $r->get('/settings/account', [AccountController::class, 'accountForm']);
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
+        $r->post('/settings/avatar', [AccountController::class, 'uploadAvatar']);
+        $r->post('/settings/avatar/remove', [AccountController::class, 'removeAvatar']);
         $r->get('/settings/security', [AccountController::class, 'securityForm']);
         $r->post('/settings/security', [AccountController::class, 'updateSecurity']);
         $r->post('/settings/security/totp/enroll', [AccountController::class, 'startTotpEnrollment']);
@@ -1242,6 +1279,7 @@ final class App
         $r->get('/admin/users', [AdminUserController::class, 'index']);
         $r->get('/admin/users/{id}', [AdminUserController::class, 'show']);
         $r->post('/admin/users/{id}/title', [AdminUserController::class, 'setTitle']);
+        $r->post('/admin/users/{id}/signature/remove', [AdminUserController::class, 'removeSignature']);
         $r->post('/admin/users/{id}/badges/grant', [AdminUserController::class, 'grantBadge']);
         $r->post('/admin/users/{id}/badges/revoke', [AdminUserController::class, 'revokeBadge']);
 

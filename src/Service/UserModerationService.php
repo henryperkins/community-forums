@@ -155,6 +155,25 @@ final class UserModerationService
         });
     }
 
+    public function clearSignature(User $actor, int $subjectId): void
+    {
+        $this->assertAdmin($actor);
+        $subject = $this->requireSubject($subjectId);
+        $before = isset($subject['signature']) && $subject['signature'] !== null ? (string) $subject['signature'] : null;
+
+        $this->db->transaction(function () use ($actor, $subjectId, $before): void {
+            $this->users->clearSignature($subjectId, $actor->id());
+            $this->log->log([
+                'actor_id' => $actor->id(),
+                'action' => 'clear_signature',
+                'target_type' => 'user',
+                'target_id' => $subjectId,
+                'before' => $before,
+                'after' => null,
+            ]);
+        });
+    }
+
     // ---- guards -----------------------------------------------------------
 
     private function assertStaff(User $actor): void

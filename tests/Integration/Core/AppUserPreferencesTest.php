@@ -178,7 +178,8 @@ final class AppUserPreferencesTest extends TestCase
         $this->actingAs($user);
         $appearance = $this->get('/settings/appearance');
         $this->assertStatus(200, $appearance);
-        $this->assertSeeText($appearance, 'System (match device)'); // default theme option rendered
+        $this->assertSeeText($appearance, 'choice-card-title">System</span>'); // default theme option rendered
+        $this->assertSeeText($appearance, 'choice-card-desc">Match your device.</span>');
         $reading = $this->get('/settings/preferences');
         $this->assertStatus(200, $reading);
         self::assertStringContainsString('<option value="20" selected>20</option>', $reading->body());

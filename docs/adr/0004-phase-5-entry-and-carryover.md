@@ -8,6 +8,12 @@ record explicitly overrides an item. The additive, deploy-dark foundation schema
 (`database/migrations/0049`–`0053`, `SCHEMA.md` §5A) landed inert; `0054` adds the
 approved TOTP/recovery prerequisite before passkey enforcement.
 
+**2026-06-29 reconciliation:** Phase 5 B2 trusted prerequisites have since
+landed deploy-dark: service secrets (`0055`), read-only API tokens (`0056`),
+webhook delivery (`0057`), and code-only first-party hook producers
+(`first_party_hooks`). Public/untrusted PHP execution remains disabled until the
+Gate B sandbox runtime exists and is adversarially verified.
+
 ## Context
 
 `PHASE_5_PLAN.md` is a release train for the public ecosystem, passkeys, generic
@@ -59,8 +65,8 @@ earlier work as Phase 5 scope without an explicit decision.
 | # | Conflict | Evidence | Impact | Recommended resolution |
 |---|---|---|---|---|
 | **B1** | **RESOLVED — TOTP / recovery-code subsystem exists.** | Migration `0054`, `MfaService`, `Totp`, account/login templates, and `AppMfaTest` implement opt-in TOTP, hash-only recovery codes, one-time login challenges, replay protection, rotation, disable, and audit. | P5-11 passkeys can now depend on a real fallback. Ordinary users are still not required to enroll by default. | Build passkey registration/enforcement only after this fallback remains green in full-suite and browser/no-JS evidence. |
-| **B2** | **No trusted extension runtime, webhooks, or API tokens exist.** | Repo audit: no migrated `plugins`/`webhooks`/`api_tokens` tables or runtime code. `SCHEMA.md` contains target DDL only. `docs/adr/0002` routed "internal hooks/plugins, webhooks, admin API tokens" to the "Phase 5 ecosystem foundation." | §2 entry gate requires "the Phase 3 first-party/vetted extension runtime is accepted." P5-04 remote apps map onto "**accepted webhooks/API scopes**" that were never built. The public ecosystem would be built on an absent foundation. | **Accepted M0 decision:** treat the trusted hook/webhook/API-token/secret layer as explicit Phase 5 Gate A prerequisite work, not an assumed foundation. Sequence it before P5-04/P5-05. No public untrusted PHP execution in Gate A. |
-| B3 | Encrypted secret service for provider/package secrets. | `SecretBox` now encrypts TOTP secrets, but `identity_providers.client_secret_ref` and remote-app/package secrets still need a registry of service-secret references and rotation/revocation state. | Provider/OIDC config and remote-app credentials cannot store plaintext. | Include service-secret storage, rotation, revocation, audit, and redaction in B2 before any provider/remote-app code writes a secret. |
+| **B2** | **RESOLVED as trusted prerequisites; public plugin runtime still deferred.** | Service secrets (`0055`), read-only API tokens (`0056`), webhook delivery (`0057`), and code-only first-party hook producers (`first_party_hooks`) now exist behind dark flags with focused evidence. | P5-04/P5-05 no longer depend on absent token/webhook/hook primitives, but no public/untrusted PHP runtime exists. | Continue with Gate A declarative/remote work only after capability and registry evidence. Keep public untrusted PHP disabled until Gate B sandbox acceptance. |
+| B3 | **Storage layer landed; provider/package consumers deferred.** | `SecretVault` provides service-secret references, rotation, revocation, prune, audit, and redaction; webhooks consume `svcsec_*` references. | Provider/OIDC config and remote-app credentials still need consumer wiring before they can store secrets. | Use `SecretVault` for later provider/remote-app consumers; never store plaintext service credentials. |
 
 ---
 

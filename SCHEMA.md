@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.21 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-29
+**Status:** v1.22 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-29
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -855,7 +855,14 @@ New tables:
 - `thread_operations(id, operation_type, actor_id, source_thread_id, destination_thread_id, status, dry_run_plan, before_snapshot, after_snapshot, failure_reason, created_at, applied_at)` with source index and FKs.
 - `thread_redirects(old_thread_id, canonical_thread_id, operation_id, created_at)` with primary key `old_thread_id`, canonical index, and FKs.
 
-Gate A closeout note (2026-06-28): `custom badge rules`, `content_references` reference-card rendering, and split/merge operations remain schema-only and are explicitly deferred in `docs/adr/0003-phase-4-closeout-deferrals.md`. Summary retire/restore/source display, wiki revert, and tag merge/visibility behavior are implemented in application code.
+Gate A closeout note (reconciled 2026-06-29): split/merge operations remain
+schema-only and are explicitly deferred in
+`docs/adr/0003-phase-4-closeout-deferrals.md`. `custom badge rules` and
+`content_references` now have deploy-dark carryover implementation evidence, but
+remain behind flags until the release evidence in
+`docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md` is complete. Summary
+retire/restore/source display, wiki revert, and tag merge/visibility behavior
+are implemented in application code.
 
 ---
 
@@ -883,6 +890,13 @@ New tables:
 - `board_folder_boards(folder_id, board_id, position, created_at)` with primary key `(folder_id, board_id)`, board lookup index, and folder/board FKs.
 - `saved_feed_filters(id, user_id, name, filter_json, digest_enabled, position, created_at, updated_at)` with unique `(user_id, name)`, user-position index, and user FK.
 - `since_last_read_context(id, user_id, thread_id, from_post_id, to_post_id, post_count, context_text, generated_at, expires_at)` with unique window key, thread-generation index, and user/thread/post FKs.
+
+Carryover implementation note (2026-06-29): the `0058` shapes are no longer all
+inert. Link previews, expanded files, polls, custom emoji, board folders, saved
+feed filters, since-last-read context, related-topic refresh, profile media, and
+the existing `0048` content-reference and badge-rule shapes have deploy-dark
+service/controller/worker evidence. Split/merge, appeals, account deactivation,
+bookmark folders, and custom profile fields remain open carryovers.
 
 ---
 
@@ -1049,6 +1063,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.22 | 2026-06-29 | Reconciled Phase 4 carryover behavior notes after deploy-dark implementation evidence for content references, automated context, related-topic refresh, profile media/signature hardening, and the earlier `0058` carryover slices; no schema shape change. |
 | v1.21 | 2026-06-29 | Added Phase 4 carryover migration `0058`: `link_previews`, expanded-file scanner/quarantine columns on `attachments`, polls, `custom_emoji`, personal `board_folders`/`saved_feed_filters`, since-last-read context, profile-moderation audit columns on `users`, and widened `reactions.emoji`. |
 | v1.20 | 2026-06-29 | Documented B2 SP4 as code-only schema-neutral work: `first_party_hooks` gates first-party domain producers that enqueue public-board events through the existing webhook ledger; no plugin manifests, lifecycle tables, sandbox, service principals, or third-party PHP execution are added. |
 | v1.19 | 2026-06-28 | Added B2 webhook delivery (`0057`): reconciled `webhooks` to use `secret_ref` (`svcsec_*`, no plaintext secret), added `webhook_deliveries` with retry/backoff/dead-letter and `(webhook_id,event_type,event_id)` idempotency, and widened `moderation_log.target_type` with `'webhook'`. |

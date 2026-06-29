@@ -87,6 +87,18 @@ $this->section('title', $title);
                             <p><?= $e($m['body']) ?></p>
                         <?php endif; ?>
                     </div>
+                    <?php $messageReferenceCards = ($reference_cards ?? [])[(int) $m['id']] ?? []; ?>
+                    <?php if (!empty($messageReferenceCards)): ?>
+                        <div class="reference-cards" aria-label="Referenced content">
+                            <?php foreach ($messageReferenceCards as $card): ?>
+                                <a class="reference-card" href="<?= $e($card['url']) ?>">
+                                    <span class="badge badge-muted"><?= $e($card['type']) ?></span>
+                                    <strong><?= $e($card['title']) ?></strong>
+                                    <?php if (($card['meta'] ?? '') !== ''): ?><span class="muted"><?= $e($card['meta']) ?></span><?php endif; ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                     <?php if (!$mine): ?>
                         <details class="dm-report">
                             <summary class="linkbtn danger">Report</summary>

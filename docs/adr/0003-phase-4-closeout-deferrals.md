@@ -6,6 +6,12 @@
 destinations but must not mark these items as shipped without implementation
 evidence.
 
+**2026-06-29 reconciliation:** branch `phase3-4-closeout-completion` implements
+several carryovers behind dark flags and records evidence in
+`docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`. This ADR remains
+the historical Phase 4 closeout deferral record; remaining rows below still need
+explicit acceptance evidence before broad rollout.
+
 ## Context
 
 `PHASE_4_PLAN.md` allows Phase 4 to close only when accepted items have evidence
@@ -21,17 +27,18 @@ behavior.
 
 ## Decision
 
-The following items are deferred out of Phase 4 and must be re-accepted in their
-destination phase before any UI, route, worker, or operator promise exposes them.
+The following items were deferred out of Phase 4 and must be re-accepted with
+destination-slice evidence before broad rollout or operator promises depend on
+them.
 
 | Item | Owner | Destination | Rationale | Risk / control |
 |---|---|---|---|---|
-| Custom badge rule engine, preview, backfill, revoke UI | Product + Engineering | Phase 5 Milestone 0 carryover ledger | The `badge_rules` and `badge_award_history` tables exist, but rule activation needs population preview, repeatability policy, notification behavior, and rollback UX. | Keep `badge_rules` deploy-dark and expose no rule-management UI. Fixed badges remain the accepted behavior. |
-| Board/thread/post reference cards and persisted `content_references` resolution | Product + Engineering | Phase 5 content-polish carryover, or Phase 6 search/projection work if automated | The metadata table exists, but parser/rendering/read-gate fallback work is not built. | Plain Markdown links remain canonical; inaccessible references are not enriched. |
+| Custom badge rule engine, preview, backfill, revoke UI | Product + Engineering | Phase 5 Milestone 0 carryover ledger | **Implemented in carryover branch:** preview, enable/disable, backfill, revoke, and history exist for the constrained rule vocabulary. | Keep `badge_rules` deploy-dark until operator browser evidence and rollback rehearsal are attached. |
+| Board/thread/post/DM/summary reference cards and persisted `content_references` resolution | Product + Engineering | Phase 5 content-polish carryover, or Phase 6 search/projection work if automated | **Implemented in carryover branch:** post, DM-message, and summary references are captured and rendered through read-gated cards. | Keep `content_references` deploy-dark until browser/no-JS and inaccessible-target evidence are attached. |
 | Moderator split/merge services and redirects | Product + Engineering + Moderation | Phase 5 moderator-operations carryover | Operation/redirect tables exist, but safe post moves require locks, counter/read-state repair, redirect behavior, notification/reputation invariants, and rollback rehearsal. | Expose no split/merge routes; moderators retain existing pin/lock/delete/restore tools. |
-| Link previews, embeds, expanded non-image attachments, polls, custom emoji, slash-command/GIF insertion | Product + Security + Engineering | Phase 5/6 by separate scoped adoption record | These require SSRF controls, scanners/quarantine, vote concurrency, media moderation, provider privacy, and accessibility evidence beyond Gate A. | No preview fetchers, poll tables, emoji upload UI, or provider calls are enabled. |
-| Automated since-last-read context and scheduled related-topic refresh | Product + Engineering | Phase 6/7 knowledge automation decision | Gate A ships manual summaries and curated related topics only. Automated context needs provenance, review metrics, source range policy, and disable/replay controls. | Computed context remains absent; canonical summaries are always human-published. |
-| Avatar uploads, safe signatures, personal board groups/folders, saved feed filters/digest composition | Product + Engineering | Phase 5 profile/organization carryover unless Phase 7 offline/import work absorbs it | These are profile and organization polish, not required for the accepted Gate A community workflow. | Existing monograms/OAuth avatar cache and current notification digest behavior remain the only exposed surfaces. |
+| Link previews, embeds, expanded non-image attachments, polls, custom emoji, slash-command/GIF insertion | Product + Security + Engineering | Phase 5/6 by separate scoped adoption record | **Partially implemented in carryover branch:** link previews, expanded files, polls, custom emoji, and slash/GIPHY insertion exist behind dark flags. | Keep flags dark until browser/a11y/crawler/load/privacy/runbook evidence is attached. |
+| Automated since-last-read context and scheduled related-topic refresh | Product + Engineering | Phase 6/7 knowledge automation decision | **Implemented in carryover branch:** since-last-read context uses local read/post state, and `worker:related-topics` creates deterministic tag-related public-thread links. | Keep `automated_context` dark until browser/no-JS, worker-smoke, replay/disable, and stale-link policy evidence is attached. |
+| Avatar uploads, safe signatures, personal board groups/folders, saved feed filters/digest composition | Product + Engineering | Phase 5 profile/organization carryover unless Phase 7 offline/import work absorbs it | **Partially implemented in carryover branch:** avatar upload/removal, signature height cap, moderator signature removal, board folders, and saved feed filters exist. Account deactivation/export/delete, bookmark folders, custom profile fields, and digest composition remain open. | Keep shipped portions dark until browser/a11y/moderation runbook evidence is attached. |
 | Production browser, accessibility, load, SEO, backup/rollback evidence beyond local automated coverage | Engineering + Release | Release-operations evidence before broad deployment | The local repo now has full PHPUnit evidence and targeted regressions, but no new production-like Playwright/a11y/load artifacts for Phase 4. | Do not call broad production rollout complete until those artifacts are attached to release operations. |
 
 ## Consequences

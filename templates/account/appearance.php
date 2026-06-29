@@ -15,21 +15,31 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
 
     <form method="post" action="/settings/appearance" class="stacked card">
         <?= $this->csrfField() ?>
-        <label class="field">
+        <div class="field">
             <span>Theme</span>
-            <select name="theme" class="input">
-                <option value="system"<?= $sel('system', $theme) ?>>System (match device)</option>
-                <option value="light"<?= $sel('light', $theme) ?>>Imladris — Parchment (day)</option>
-                <option value="dark"<?= $sel('dark', $theme) ?>>Imladris — Twilight (night)</option>
-            </select>
-        </label>
-        <label class="field">
+            <div class="choice-cards">
+                <label class="choice-card"><input type="radio" name="theme" value="light"<?= $theme === 'light' ? ' checked' : '' ?>>
+                    <span class="theme-swatch swatch-parchment"><span class="sw-bg"></span><span class="sw-card"></span><span class="sw-accent"></span></span>
+                    <span class="choice-card-title">Parchment</span><span class="choice-card-desc">Warm paper — daylight register.</span></label>
+                <label class="choice-card"><input type="radio" name="theme" value="dark"<?= $theme === 'dark' ? ' checked' : '' ?>>
+                    <span class="theme-swatch swatch-twilight"><span class="sw-bg"></span><span class="sw-card"></span><span class="sw-accent"></span></span>
+                    <span class="choice-card-title">Twilight</span><span class="choice-card-desc">Evergreen night register.</span></label>
+                <label class="choice-card"><input type="radio" name="theme" value="system"<?= $theme === 'system' ? ' checked' : '' ?>>
+                    <span class="theme-swatch swatch-system"><span class="sw-bg"></span><span class="sw-card"></span><span class="sw-accent"></span></span>
+                    <span class="choice-card-title">System</span><span class="choice-card-desc">Match your device.</span></label>
+            </div>
+        </div>
+        <div class="field">
             <span>Density</span>
-            <select name="density" class="input">
-                <option value="comfortable"<?= $sel('comfortable', $density) ?>>Comfortable</option>
-                <option value="compact"<?= $sel('compact', $density) ?>>Compact</option>
-            </select>
-        </label>
+            <div class="choice-cards">
+                <label class="choice-card"><input type="radio" name="density" value="comfortable"<?= $density === 'comfortable' ? ' checked' : '' ?>>
+                    <span class="density-prev"><span></span><span></span><span></span></span>
+                    <span class="choice-card-title">Comfortable</span><span class="choice-card-desc">A card per topic — for reading.</span></label>
+                <label class="choice-card"><input type="radio" name="density" value="compact"<?= $density === 'compact' ? ' checked' : '' ?>>
+                    <span class="density-prev is-compact"><span></span><span></span><span></span><span></span></span>
+                    <span class="choice-card-title">Compact</span><span class="choice-card-desc">One line per topic — for triage.</span></label>
+            </div>
+        </div>
         <label class="field">
             <span>Font size</span>
             <select name="font_size" class="input">
@@ -38,7 +48,7 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
                 <option value="large"<?= $sel('large', $font) ?>>Large</option>
             </select>
         </label>
-        <label class="checkline"><input type="checkbox" name="reduced_motion" value="1"<?= $motion ? ' checked' : '' ?>> Reduce motion and animations</label>
+        <label class="switchline"><input class="switch" type="checkbox" name="reduced_motion" value="1"<?= $motion ? ' checked' : '' ?>><span class="switch-text">Reduce motion and animations</span></label>
         <button class="btn" type="submit">Save appearance</button>
     </form>
 

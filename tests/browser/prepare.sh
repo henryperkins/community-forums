@@ -45,8 +45,12 @@ else
   echo "==> No $RESET_CONTAINER container; assuming database '$DB' already exists (CI service)."
 fi
 
-echo "==> Migrating"
-DB_DATABASE="$DB" php bin/console migrate
+echo "==> Rebuilding schema"
+# Browser evidence must start from the same deterministic content every run.
+# The spec mutates data (new threads, announcements, email state, etc.), so a
+# plain migrate-on-top leaves older evidence artifacts on page 1 and breaks the
+# fixture assumptions. Rebuild the dedicated evidence DB each time instead.
+DB_DATABASE="$DB" php bin/console migrate:fresh
 
 echo "==> Seeding"
 DB_DATABASE="$DB" php tests/browser/seed.php

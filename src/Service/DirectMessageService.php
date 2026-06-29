@@ -43,6 +43,7 @@ final class DirectMessageService
         private NotificationService $notifications,
         private Config $config,
         private ?AttachmentRepository $attachments = null,
+        private ?ContentReferenceService $contentReferences = null,
     ) {
     }
 
@@ -242,6 +243,7 @@ final class DirectMessageService
                 $this->attachments->finalizeForDm($sender->id(), $messageId, $ids);
             }
         }
+        $this->contentReferences?->capture('dm_message', $messageId, $body);
         $this->conversations->touch($conversationId, $now);
         $this->conversations->markRead($conversationId, $sender->id(), $messageId); // sender has "read" their own
         foreach ($this->conversations->notificationParticipantIds($conversationId) as $recipientId) {

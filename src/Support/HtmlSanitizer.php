@@ -28,6 +28,10 @@ use DOMText;
  */
 final class HtmlSanitizer
 {
+    public function __construct(private bool $allowGiphyImages = false)
+    {
+    }
+
     /** @var array<string,true> */
     private const ALLOWED = [
         'p' => true, 'br' => true, 'hr' => true,
@@ -199,14 +203,28 @@ final class HtmlSanitizer
         return in_array('spoiler', preg_split('/\s+/', trim($class)) ?: [], true);
     }
 
-    /** Only same-origin media or operator-managed static emoji assets are valid image srcs. */
+    /** Only same-origin media, operator emoji, or GIPHY media assets are valid image srcs. */
     private function safeImageSrc(string $src): ?string
     {
         $src = trim($src);
         if (preg_match('~^/media/\d+(?:\?[^\s"\'<>]*)?$~', $src) === 1) {
             return $src;
         }
-        return preg_match('~^/emoji/[A-Za-z0-9_.-]+\.(?:png|webp)$~', $src) === 1 ? $src : null;
+        if (preg_match('~^/emoji/[A-Za-z0-9_.-]+\.(?:png|webp)$~', $src) === 1) {
+            return $src;
+        }
+        if (!$this->allowGiphyImages || preg_match('/[\x00-\x1F\x7F"\'<>]/', $src) === 1) {
+            return null;
+        }
+        $scheme = parse_url($src, PHP_URL_SCHEME);
+        $host = parse_url($src, PHP_URL_HOST);
+        $path = parse_url($src, PHP_URL_PATH);
+        if (is_string($scheme) && strtolower($scheme) === 'https'
+            && is_string($host) && str_ends_with(strtolower($host), '.giphy.com')
+            && is_string($path) && $path !== '') {
+            return $src;
+        }
+        return null;
     }
 
     private function safeHref(string $href): ?string

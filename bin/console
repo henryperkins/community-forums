@@ -38,6 +38,7 @@ use App\Worker\WebhookDeliveryWorker;
 use App\Worker\IpRetentionPurger;
 use App\Worker\NotificationEmailWorker;
 use App\Worker\OrphanAttachmentCleaner;
+use App\Worker\RelatedTopicRefreshWorker;
 
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
@@ -280,6 +281,16 @@ try {
             $log(sprintf('Link previews: fetched=%d blocked=%d failed=%d skipped=%d', $stats['fetched'], $stats['blocked'], $stats['failed'], $stats['skipped']));
             break;
 
+        case 'worker:related-topics':
+            $db = $database();
+            $worker = new RelatedTopicRefreshWorker(
+                $db,
+                new FeatureFlags(new SettingRepository($db)),
+            );
+            $stats = $worker->run((int) ($argv[2] ?? 250));
+            $log(sprintf('Related-topic refresh: linked=%d skipped=%d', $stats['linked'], $stats['skipped']));
+            break;
+
         case 'engagement:cutover':
             // Record the Phase 2 unread cutover timestamp. Content before this
             // moment starts read; later activity uses lazy thread_user rows.
@@ -358,6 +369,7 @@ try {
             $log('  worker:attachments    Sweep orphaned/deleted-parent upload files');
             $log('  worker:attachment-scans [minutes]  Fail stale expanded-file scans closed');
             $log('  worker:previews [limit]  Fetch queued allowlisted link-preview metadata');
+            $log('  worker:related-topics [limit]  Refresh deterministic tag-related topic links');
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
             break;

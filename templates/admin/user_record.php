@@ -44,6 +44,21 @@ $display = ($subject['display_name'] ?? '') !== '' ? $subject['display_name'] : 
         </form>
     </section>
 
+    <?php if (!empty($profile_media)): ?>
+        <section class="card">
+            <h2>Profile media</h2>
+            <?php if (!empty($subject['signature'])): ?>
+                <p class="muted">Current signature: <?= nl2br($e($subject['signature'])) ?></p>
+                <form method="post" action="/admin/users/<?= (int) $subject['id'] ?>/signature/remove" class="inline-form">
+                    <?= $this->csrfField() ?>
+                    <button class="btn btn-small danger" type="submit">Remove signature</button>
+                </form>
+            <?php else: ?>
+                <p class="muted">No signature set.</p>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
+
     <section class="card">
         <h2>Badges</h2>
         <h3>Grant a manual badge</h3>

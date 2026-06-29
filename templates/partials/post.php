@@ -9,7 +9,7 @@ $isAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
 $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? null, $p['author_role'] ?? 'user', $isAnon);
 ?>
 <?php $accepted = $accepted ?? false; ?>
-<div class="post<?= $accepted ? ' post-accepted' : '' ?>" id="p<?= (int) $p['id'] ?>">
+<div class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?>" id="p<?= (int) $p['id'] ?>">
     <?php if ($show_avatars ?? true): ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?><?php endif; ?>
     <div class="post-main">
         <div class="post-head">

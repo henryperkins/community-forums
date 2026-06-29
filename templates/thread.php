@@ -14,7 +14,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
 ?>
 <article class="thread">
     <header class="thread-head">
-        <p class="breadcrumb"><a href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
+        <p class="breadcrumb"><a class="breadcrumb-back" href="/c/<?= $e($thread['board_slug']) ?>"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
         <h1>
             <?php if ((int) $thread['is_pinned'] === 1): ?><span class="badge">Pinned</span><?php endif; ?>
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
@@ -24,6 +24,16 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             <?php if (($accepted_post_id ?? null) !== null): ?><span class="badge badge-solved">✓ Solved</span><?php endif; ?>
             <?= $e($thread['title']) ?>
         </h1>
+        <?php
+        // "Opened by" byline — derive OP anonymity from the OP post on this page so an
+        // anonymous opener is never deanonymised; omit the opener name if the OP isn't loaded here.
+        $opAnon = null;
+        foreach (($posts ?? []) as $opPost) {
+            if ((int) ($opPost['is_op'] ?? 0) === 1) { $opAnon = (int) ($opPost['is_anonymous'] ?? 0) === 1; break; }
+        }
+        $byReplies = (int) ($thread['reply_count'] ?? 0);
+        ?>
+        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?></p>
         <?php if ($workflow_on ?? false): ?>
             <div class="workflow-bar">
                 <span class="muted">Status: <?= $e($status_labels[$thread['status'] ?? 'open'] ?? 'Open') ?></span>
@@ -118,6 +128,17 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                             <li>Source <a href="/t/<?= (int) $src['thread_id'] ?>-<?= $e($src['thread_slug']) ?>#p<?= (int) $src['id'] ?>">#<?= (int) $src['id'] ?></a> by <?= ($src['author_username'] ?? '') !== '' ? '@' . $e($src['author_username']) : 'Anonymous' ?></li>
                         <?php endforeach; ?>
                     </ul>
+                <?php endif; ?>
+                <?php if (!empty($summary_reference_cards)): ?>
+                    <div class="reference-cards" aria-label="Referenced content">
+                        <?php foreach ($summary_reference_cards as $card): ?>
+                            <a class="reference-card" href="<?= $e($card['url']) ?>">
+                                <span class="badge badge-muted"><?= $e($card['type']) ?></span>
+                                <strong><?= $e($card['title']) ?></strong>
+                                <?php if (($card['meta'] ?? '') !== ''): ?><span class="muted"><?= $e($card['meta']) ?></span><?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
                 <?php if (!empty($can_curate_memory)): ?>
                     <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/retire">
@@ -257,6 +278,22 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         <?php endif; ?>
     </header>
 
+    <?php if (!empty($since_last_read_context)): ?>
+        <section class="memory-panel since-last-read">
+            <h2>Since you last read</h2>
+            <p class="muted"><?= (int) $since_last_read_context['post_count'] ?> new post<?= (int) $since_last_read_context['post_count'] === 1 ? '' : 's' ?></p>
+            <ul class="link-list">
+                <?php foreach (($since_last_read_context['items'] ?? []) as $item): ?>
+                    <li>
+                        <a href="<?= $e($item['url'] ?? ('#p' . (int) $item['post_id'])) ?>">#<?= (int) $item['post_id'] ?></a>
+                        <strong>@<?= $e($item['author']) ?></strong>
+                        <span class="muted"><?= $e($item['excerpt']) ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+    <?php endif; ?>
+
     <?php if (empty($posts)): ?>
         <p class="muted empty">This thread has no visible posts.</p>
     <?php else: ?>
@@ -300,7 +337,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
     <?php elseif ($can_reply): ?>
         <?= $this->partial('partials/composer', ['thread' => $thread, 'reply_errors' => $reply_errors, 'reply_old' => $reply_old]) ?>
     <?php elseif ($current_user === null): ?>
-        <div class="joinbar">You're browsing as a guest — <a href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">log in</a> to reply.</div>
+        <div class="joinbar"><span>You're browsing as a guest — log in to add your reply.</span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
     <?php elseif ($current_user !== null && !$current_user->isActive()): ?>
         <div class="joinbar">Your account cannot post right now.</div>
     <?php elseif ($current_user !== null): ?>

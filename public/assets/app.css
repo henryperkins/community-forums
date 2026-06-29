@@ -278,7 +278,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     vertical-align: middle;
 }
 .badge-muted { background: var(--surface-3); color: var(--text-muted); }
-.badge-staff { background: var(--brand-subtle); color: var(--green-800); border: 1px solid var(--green-200); }
+.badge-staff { background: var(--gold-100); color: var(--gold-700); border: 1px solid var(--gold-200); }
 
 .flash {
     background: var(--surface-done);
@@ -402,6 +402,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     flex: 0 0 auto;
 }
 .monogram-gilt { box-shadow: var(--gilt); }   /* "precious" avatars (OP, accepted, profile) */
+.monogram.avatar-img { object-fit: cover; background: var(--surface); }
 .topbar .monogram { width: 28px; height: 28px; font-size: .72rem; }
 /* Parchment-toned monogram swatches: a tinted ground + legible dark ink,
    rotating through green / river / gold / mist (no neon, per the register). */
@@ -634,7 +635,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .badge-row { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 8px 0 0; }
 .badge-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font-size: .85rem; }
 .badge-icon { font-size: 1rem; }
-.badge-solved { background: var(--surface-done); color: var(--on-done); border-color: var(--green-200); }
+.badge-solved { background: var(--surface-raised); color: var(--on-done); border-color: var(--green-200); }
 .post-accepted {
     border: 1px solid var(--green-200);
     border-left: 3px solid var(--success);
@@ -894,6 +895,28 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-upload-card progress { width: 100%; }
 .composer-upload-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .composer-discard { margin-left: 6px; }
+.composer-slash-menu {
+    display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface-2); padding: 8px;
+}
+.composer-slash-menu[hidden] { display: none; }
+.composer-slash-command,
+.composer-slash-gif {
+    font: inherit; color: var(--text); cursor: pointer;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); padding: 5px 9px;
+}
+.composer-slash-command:hover,
+.composer-slash-gif:hover { background: var(--surface-3); }
+.composer-slash-gif {
+    display: grid; grid-template-columns: 56px minmax(0, 1fr);
+    align-items: center; gap: 8px; text-align: left;
+}
+.composer-slash-gif img {
+    width: 56px; height: 56px; object-fit: cover;
+    border-radius: 6px; border: 1px solid var(--border);
+}
 
 /* Uploaded media (P3-04). */
 .post-media { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
@@ -1065,11 +1088,17 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 .chip-solved  { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
 .chip-needs   { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
-.chip-pinned  { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
+/* Pinned groups with Locked as a neutral marker (§10); the gold pinned cue is the
+   card left-rule (.thread-pinned::before), not the chip. */
+.chip-pinned,
 .chip-locked,
 .badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
-.badge-staff  { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
-.badge-solved { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
+/* Archived = the ghost of the set: faded, transparent, dashed (§10). */
+.chip-archived { color: var(--ink-400); background: transparent; border-style: dashed; border-color: var(--border-strong); }
+/* Staff = gold so it never reads as the green OP badge (§10). */
+.badge-staff  { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
+/* Accepted answer = outlined on the card surface, distinct from the filled Solved chip (§10). */
+.badge-solved { color: var(--on-done);   background: var(--surface-raised); border-color: var(--green-200); }
 .tag {
     font-family: var(--font-label); font-size: .6rem; letter-spacing: .08em;
     text-transform: uppercase; background: var(--surface-sunken); color: var(--text-muted);
@@ -1257,7 +1286,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .leaderboard-list { list-style: none; padding: 0; margin: 18px 0; }
 .leaderboard-row { display: flex; align-items: center; gap: 14px; padding: 12px 4px; border-top: 1px solid var(--border-hair); }
 .lb-rank { font-family: var(--font-mono); color: var(--text-faint); min-width: 2.2em; text-align: center; }
-.lb-rank-roman { font-family: var(--font-display); font-size: 1.6rem; font-weight: var(--weight-medium); color: var(--gold-ink); }
+.lb-rank-roman { font-family: var(--font-display); font-size: 1.6rem; font-weight: var(--weight-medium); color: var(--gold-600); }
 .lb-top {
     border: 1px solid var(--green-200); border-top: 1px solid var(--green-200);
     border-radius: var(--radius-lg); background: var(--surface-raised);
@@ -1276,3 +1305,159 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 /* Profile — gilded avatar; display-serif stats. */
 .profile-head .monogram { box-shadow: var(--gilt); }
 .profile-stats dd { font-family: var(--font-display); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris — Engineering-Handoff fidelity pass.
+   Visual-only; hooks existing markup/tokens. Strict CSP (classes, no inline).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* — Top bar: identity presence dot + gear icon (§5.3) — */
+.topbar-avatar { position: relative; display: inline-flex; }
+.topbar-avatar .presence-dot {
+    position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px;
+    border-radius: 50%; background: var(--presence);
+    box-shadow: 0 0 0 2px var(--surface-raised);
+}
+.topbar-ic {
+    width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8;
+    stroke-linecap: round; stroke-linejoin: round; display: block;
+}
+
+/* — Compact "Watch" density: one scannable line per topic, status on the left rule (§4) — */
+[data-density="compact"] .thread-list { gap: 0; }
+[data-density="compact"] .thread-row {
+    flex-direction: row; align-items: center; gap: 10px;
+    border: 0; border-bottom: 1px solid var(--border-hair); border-radius: 0;
+    box-shadow: none; background: transparent; padding: 9px 16px;
+}
+[data-density="compact"] .thread-row:hover { box-shadow: none; transform: none; background: var(--surface-raised); }
+[data-density="compact"] .thread-row .monogram { width: 26px; height: 26px; font-size: .68rem; }
+[data-density="compact"] .thread-row-main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+[data-density="compact"] .thread-title { order: 1; flex: 1; min-width: 0; font-size: 1rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-density="compact"] .thread-row-chips { order: 2; flex: 0 0 auto; margin-bottom: 0; }
+[data-density="compact"] .thread-meta { order: 3; flex: 0 0 auto; margin-top: 0; white-space: nowrap; }
+[data-density="compact"] .thread-unread::before { background: var(--gold-400); }
+[data-density="compact"] .thread-star { align-self: center; }
+
+/* — Inbox row: starred marker pinned to the card's trailing edge (§4) — */
+.thread-star { margin-left: auto; align-self: flex-start; flex: 0 0 auto; padding-left: 8px; font-size: 1rem; line-height: 1; color: var(--accent-2); }
+
+/* — Guest join-bar: a flex card with a primary Log in button (§5.3) — */
+.joinbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.joinbar > span { min-width: 0; }
+.joinbar .btn { flex: 0 0 auto; }
+
+/* — Conversation: precious (OP / accepted) avatars + composer card + byline + star pill (§5.1) — */
+.post-op .monogram, .post-accepted .monogram { box-shadow: var(--gilt); width: 44px; height: 44px; font-size: .95rem; }
+#reply.composer {
+    background: var(--surface-raised); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-inset); padding: 14px 16px; margin-top: 18px;
+}
+.thread-byline { font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; color: var(--text-muted); margin: 4px 0 0; }
+.star-btn {
+    font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
+    background: var(--surface-raised); color: var(--text-body);
+    border: 1.5px solid var(--border-soft); border-radius: var(--radius-md); padding: 6px 13px;
+}
+.star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
+.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
+
+/* — Thread breadcrumb reads as a back control (the figure's back chevron, §6) — */
+.breadcrumb-back-ic { width: 13px; height: 13px; vertical-align: -1px; margin-right: 3px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* — Member profile: the twilight identity cover (§5.4) — */
+.profile-cover {
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 24px; align-items: start;
+    background: var(--surface-inverse); color: var(--text-inverse);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+    padding: 26px 28px 22px; margin: 6px 0 20px;
+}
+.profile-cover-star { position: absolute; top: -30px; right: -24px; width: 196px; height: 196px; color: var(--gold-500); opacity: .12; pointer-events: none; }
+.profile-avatar { position: relative; display: inline-flex; }
+.profile-avatar .monogram { width: 84px; height: 84px; font-size: 1.9rem; box-shadow: var(--gilt); }
+.profile-avatar .presence-dot { position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--presence); box-shadow: 0 0 0 3px var(--surface-inverse); }
+.profile-cover .profile-id { min-width: 0; }
+.profile-name { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-family: var(--font-display); font-weight: var(--weight-medium); color: var(--text-inverse); font-size: 2rem; line-height: 1.05; }
+.profile-tier { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; color: var(--gold-700); background: var(--gold-100); border: 1px solid var(--gold-200); border-radius: var(--radius-pill); padding: 3px 10px; }
+.profile-handle { font-family: var(--font-mono); font-size: .82rem; color: var(--mist-200); margin: 7px 0 0; }
+.profile-meta { font-family: var(--font-label); letter-spacing: .02em; font-size: .76rem; color: var(--mist-200); margin: 4px 0 0; opacity: .85; }
+.profile-cover .profile-web { margin: 4px 0 0; }
+.profile-cover .profile-web a { color: var(--gold-400); }
+.profile-cover .profile-stats { display: flex; flex-wrap: wrap; gap: 22px; margin: 16px 0 0; }
+.profile-cover .profile-stats dt { color: var(--mist-200); font-size: .72rem; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; }
+.profile-cover .profile-stats dt a { color: var(--mist-200); }
+.profile-cover .profile-stats dd { color: var(--text-inverse); font-family: var(--font-display); font-size: 1.35rem; font-weight: var(--weight-medium); margin: 2px 0 0; }
+.profile-aside { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.profile-rep { text-align: right; }
+.profile-rep-value { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 2.4rem; line-height: 1; color: var(--text-inverse); font-variant-numeric: tabular-nums; }
+.profile-rep-value .star-marker { color: var(--gold-400); margin: 0; font-size: 1.6rem; }
+.profile-rep-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .12em; font-size: .64rem; color: var(--mist-200); margin-top: 5px; }
+.profile-cover .profile-actions { margin: 0; justify-content: flex-end; }
+.profile-cover .profile-actions .linkbtn { color: var(--mist-200); }
+.profile-badges__label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-wide); font-size: .7rem; color: var(--text-faint); margin: 0 0 8px; }
+.badge-chip.is-locked { background: transparent; border: 1px dashed var(--border-strong); color: var(--text-muted); }
+
+/* — Leaderboard: footnote card + headline top-3 reputation (§5.5) — */
+.lb-top .lb-rep { font-size: 1.5rem; }
+[data-theme="dark"] .lb-rank-roman { color: var(--gold-400); }
+.lb-note {
+    margin-top: 22px; padding: 14px 18px; background: var(--brand-subtle);
+    border-left: 3px solid var(--rule-gold); border-radius: var(--radius-md);
+    font-family: var(--font-body); font-style: italic; color: var(--text-muted);
+    line-height: 1.55; max-width: 64ch;
+}
+
+/* — Settings: theme/density choice cards, switches, left-rail subnav (§5.6) — */
+.choice-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 4px 0 6px; }
+.choice-card { position: relative; display: block; border: 1.5px solid var(--border-soft); border-radius: var(--radius-lg); background: var(--surface-raised); padding: 12px 14px; cursor: pointer; transition: border-color var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm); }
+.choice-card:hover { border-color: var(--border-strong); }
+.choice-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.choice-card:has(input:checked) { border-color: var(--accent); background: var(--brand-subtle); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice-card:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.choice-card-title { display: block; font-family: var(--font-label); letter-spacing: .04em; font-size: .82rem; color: var(--text-strong); }
+.choice-card-desc { display: block; font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+.theme-swatch { display: flex; height: 30px; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border-hair); margin-bottom: 9px; }
+.theme-swatch span { flex: 1; }
+.theme-swatch .sw-accent { flex: 0 0 8px; }
+.swatch-parchment .sw-bg { background: var(--parchment-100); } .swatch-parchment .sw-card { background: var(--parchment-50); } .swatch-parchment .sw-accent { background: var(--green-700); }
+.swatch-twilight .sw-bg { background: var(--twilight-900); } .swatch-twilight .sw-card { background: var(--twilight-700); } .swatch-twilight .sw-accent { background: var(--green-500); }
+.swatch-system .sw-bg { background: var(--parchment-100); } .swatch-system .sw-card { background: var(--twilight-800); } .swatch-system .sw-accent { background: var(--gold-500); }
+.density-prev { display: flex; flex-direction: column; gap: 4px; margin-bottom: 9px; }
+.density-prev span { height: 8px; border-radius: 3px; background: var(--surface-sunken); }
+.density-prev.is-compact span { height: 4px; }
+.switchline { display: flex; align-items: flex-start; gap: 11px; padding: 8px 0; cursor: pointer; }
+.switch {
+    appearance: none; -webkit-appearance: none; flex: 0 0 auto; position: relative;
+    width: 38px; height: 22px; margin-top: 1px; border-radius: var(--radius-pill);
+    background: var(--surface-sunken); border: 1px solid var(--border-strong); cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm);
+}
+.switch::before {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--parchment-50); box-shadow: var(--shadow-xs);
+    transition: transform var(--dur-fast) var(--ease-calm);
+}
+.switch:checked { background: var(--accent); border-color: var(--accent); }
+.switch:checked::before { transform: translateX(16px); background: var(--accent-contrast); }
+.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch-text { font-size: .95rem; line-height: 1.4; }
+@media (min-width: 720px) {
+    .settings { display: grid; grid-template-columns: 188px minmax(0, 1fr); gap: 2px 30px; align-items: start; }
+    .settings > * { grid-column: 2; min-width: 0; }
+    .settings > .subnav {
+        grid-column: 1; grid-row: 1 / span 60; align-self: start; position: sticky; top: 16px;
+        flex-direction: column; flex-wrap: nowrap; gap: 2px; margin: 0; border-bottom: 0;
+    }
+    .settings > .subnav a { border-radius: var(--radius-sm); }
+    .settings > .subnav a.active { border-bottom: 0; box-shadow: inset 3px 0 0 var(--accent-2); background: var(--brand-subtle); color: var(--on-brand-subtle); }
+}
+
+/* — Profile cover: stack on mobile — */
+@media (max-width: 860px) {
+    .profile-cover { grid-template-columns: auto minmax(0, 1fr); padding: 20px 18px; }
+    .profile-avatar .monogram { width: 64px; height: 64px; font-size: 1.5rem; }
+    .profile-aside { grid-column: 1 / -1; align-items: flex-start; margin-top: 12px; }
+    .profile-rep { text-align: left; }
+    .profile-cover .profile-actions { justify-content: flex-start; }
+}

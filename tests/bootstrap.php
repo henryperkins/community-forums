@@ -6,6 +6,7 @@ use App\Core\Config;
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Migrator;
+use App\Security\PasswordHasher;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -21,7 +22,36 @@ $dbConfig['database'] = Env::get('DB_TEST_DATABASE', 'retroboards_test');
 $database = new Database($dbConfig);
 $pdo = $database->pdo();
 
-(new Migrator($pdo, $config->get('paths.migrations')))->fresh();
+// Rebuilding the schema (drop + replay every migration) costs ~14s and dominates
+// short runs. Only pay it when the migration files actually changed; otherwise
+// the existing schema is reused and per-test transaction rollback keeps data
+// clean. Force a rebuild with RB_TEST_FRESH=1 (also recovers from an interrupted
+// run that left committed rows behind).
+$migrationsPath = $config->get('paths.migrations');
+$migrator = new Migrator($pdo, $migrationsPath);
+
+$fingerprintSource = '';
+foreach (glob($migrationsPath . '/*.php') ?: [] as $migrationFile) {
+    $fingerprintSource .= basename($migrationFile) . ':' . filemtime($migrationFile) . "\n";
+}
+$fingerprint = md5($fingerprintSource);
+$stampFile = sys_get_temp_dir() . '/rb-test-schema-' . md5((string) $dbConfig['database']) . '.fingerprint';
+
+$schemaIsCurrent = getenv('RB_TEST_FRESH') !== '1'
+    && is_file($stampFile)
+    && trim((string) file_get_contents($stampFile)) === $fingerprint
+    && $migrator->isSynced();
+
+if (!$schemaIsCurrent) {
+    $migrator->fresh();
+    file_put_contents($stampFile, $fingerprint);
+}
+
+// Argon2id at PHP's secure defaults is ~300ms per hash by design — across the
+// suite's many makeUser()/login flows that alone is minutes. Tests don't assert
+// hash strength, so drop the cost to near-zero. Production never calls this and
+// keeps the secure defaults (DESIGN §11).
+PasswordHasher::setDefaultOptions(['memory_cost' => 8, 'time_cost' => 1, 'threads' => 1]);
 
 // Point the rate-limit store at a throwaway directory (most tests inject an
 // in-memory limiter anyway).

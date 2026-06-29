@@ -49,6 +49,49 @@ $db->transaction(function () use ($db): void {
 
 $users = new UserRepository($db);
 $settings = new SettingRepository($db);
+$ensureShortcutPoll = static function () use ($db, $users): bool {
+    $thread = $db->fetch(
+        "SELECT t.id
+           FROM threads t
+           JOIN boards b ON b.id = t.board_id
+          WHERE b.slug = 'general' AND t.title = ?
+          LIMIT 1",
+        ['Share your favourite keyboard shortcuts'],
+    );
+    $alice = $users->findByUsername('alice');
+    if ($thread === null || $alice === null) {
+        return false;
+    }
+
+    $pollId = $db->fetchValue(
+        'SELECT id FROM polls WHERE thread_id = ? LIMIT 1',
+        [(int) $thread['id']],
+    );
+    if ($pollId === false) {
+        $pollId = $db->insert(
+            "INSERT INTO polls (thread_id, question, mode, status, results_policy, created_by, created_at)
+             VALUES (?, ?, 'single', 'open', 'after_vote_or_close', ?, UTC_TIMESTAMP())",
+            [(int) $thread['id'], 'Which shortcut do you reach for first?', (int) $alice['id']],
+        );
+    }
+    $pollId = (int) $pollId;
+
+    foreach ([0 => 'Ctrl+K', 1 => 'Jump to inbox'] as $position => $body) {
+        $exists = $db->fetchValue(
+            'SELECT 1 FROM poll_options WHERE poll_id = ? AND body = ? LIMIT 1',
+            [$pollId, $body],
+        );
+        if ($exists === false) {
+            $db->run(
+                'INSERT INTO poll_options (poll_id, body, position, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP())',
+                [$pollId, $body, $position],
+            );
+        }
+    }
+    $db->run('DELETE FROM poll_votes WHERE poll_id = ?', [$pollId]);
+
+    return true;
+};
 if ($users->adminCount() > 0) {
     $settings->set('features', [
         'api_tokens' => true,
@@ -57,8 +100,14 @@ if ($users->adminCount() > 0) {
         'first_party_hooks' => true,
         'announcements' => true,
         'polls' => true,
+        'slash_giphy' => true,
     ]);
-    fwrite(STDOUT, "Already seeded (admin exists); nothing to do.\n");
+    $settings->set('giphy_public_key', 'browser-evidence-key');
+    $settings->set('giphy_rating', 'pg');
+    $pollReady = $ensureShortcutPoll();
+    fwrite(STDOUT, $pollReady
+        ? "Already seeded (admin exists); refreshed feature flags and poll fixture.\n"
+        : "Already seeded (admin exists); refreshed feature flags.\n");
     exit(0);
 }
 
@@ -105,7 +154,10 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
         'first_party_hooks' => true,
         'announcements' => true,
         'polls' => true,
+        'slash_giphy' => true,
     ]); // B2 admin pages + domain webhook evidence + announcements + carryover poll UI
+    $settings->set('giphy_public_key', 'browser-evidence-key');
+    $settings->set('giphy_rating', 'pg');
 
     // Accounts.
     $adminId = $makeUser('admin', 'Site Admin', 'admin');

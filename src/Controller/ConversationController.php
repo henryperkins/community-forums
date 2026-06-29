@@ -13,6 +13,7 @@ use App\Domain\User;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
 use App\Repository\UserRepository;
+use App\Service\ContentReferenceService;
 use App\Service\DirectMessageService;
 use App\Service\RateLimitService;
 
@@ -109,6 +110,12 @@ final class ConversationController extends Controller
         // an explicit ?page= still pages backwards through history.
         $page = min($pages, max(1, $request->int('page', $pages)));
         $messages = $msgRepo->listVisibleForUser($conversationId, $user->id(), $perPage, ($page - 1) * $perPage);
+        $messageIds = array_map(static fn (array $message): int => (int) $message['id'], $messages);
+        $referenceCards = [];
+        if ($this->container->get(FeatureFlags::class)->enabled('content_references')) {
+            $referenceCards = $this->container->get(ContentReferenceService::class)
+                ->cardsForSources('dm_message', $messageIds, $user);
+        }
 
         // Viewing a conversation clears it: mark read up to the latest message,
         // not just the last one on the rendered page, so the unread badge clears
@@ -130,6 +137,7 @@ final class ConversationController extends Controller
             'participants' => $isGroup ? $convRepo->participants($conversationId) : [],
             'events' => $isGroup ? $convRepo->events($conversationId, 20) : [],
             'messages' => $messages,
+            'reference_cards' => $referenceCards,
             'other' => $other,
             'page' => $page,
             'pages' => $pages,

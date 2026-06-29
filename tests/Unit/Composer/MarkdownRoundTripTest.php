@@ -76,7 +76,8 @@ final class MarkdownRoundTripTest extends TestCase
     public function test_dangerous_input_is_neutralised(string $markdown): void
     {
         $html = $this->md()->render($markdown);
-        // The only permitted image src is same-origin /media/.
+        // The only permitted image srcs are same-origin media/emoji assets and
+        // the explicit GIPHY media host carve-out used by the slash picker.
         self::assertStringNotContainsString('evil.example', $html);
 
         // Parse the RENDERED output as a browser would: escaped raw HTML becomes
@@ -107,6 +108,18 @@ final class MarkdownRoundTripTest extends TestCase
     {
         self::assertSame('', $this->md()->render(''));
         self::assertSame('', $this->md()->render("   \n  "));
+    }
+
+    public function test_giphy_images_are_only_allowed_when_picker_media_is_enabled(): void
+    {
+        $markdown = '![cat](https://media4.giphy.com/media/cat/giphy.gif)';
+        self::assertStringNotContainsString('<img', $this->md()->render($markdown));
+
+        $html = (new Markdown(new HtmlSanitizer(allowGiphyImages: true)))->render($markdown);
+        self::assertStringContainsString(
+            '<img src="https://media4.giphy.com/media/cat/giphy.gif" alt="cat" loading="lazy">',
+            $html,
+        );
     }
 
     public function test_emoji_shortcodes_do_not_change_code(): void

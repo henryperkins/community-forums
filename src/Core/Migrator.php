@@ -86,6 +86,17 @@ final class Migrator
         return $this->migrate($log);
     }
 
+    /**
+     * True when the schema_migrations ledger exactly matches the migration files
+     * on disk (same names, nothing pending, nothing orphaned). Lets the test
+     * harness skip a full drop+remigrate when the schema is already current.
+     */
+    public function isSynced(): bool
+    {
+        $this->ensureTable();
+        return array_keys($this->files()) === $this->appliedNames();
+    }
+
     /** @return array<string,bool> name => applied */
     public function status(): array
     {

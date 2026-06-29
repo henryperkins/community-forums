@@ -23,11 +23,10 @@ if ($status !== 'open') { $rowClasses .= ' thread-status-' . $statusSlug; }
             <?php if ($pinned): ?><span class="chip chip-pinned">Pinned</span><?php endif; ?>
             <?php if ($status === 'solved'): ?><span class="chip chip-solved">Solved</span>
             <?php elseif ($status === 'needs_answer'): ?><span class="chip chip-needs">Needs answer</span>
-            <?php elseif ($status !== 'open'): ?><span class="chip"><?= $e(ucwords(str_replace('_', ' ', $status))) ?></span><?php endif; ?>
+            <?php elseif ($status !== 'open'): ?><span class="chip chip-<?= $e($statusSlug) ?>"><?= $e(ucwords(str_replace('_', ' ', $status))) ?></span><?php endif; ?>
             <?php if ($locked): ?><span class="chip chip-locked">Locked</span><?php endif; ?>
         </div>
         <a class="thread-title" href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?>">
-            <?php if ($starred): ?><span class="star-marker" title="Starred">★</span><?php endif; ?>
             <?= $e($t['title']) ?>
         </a>
         <span class="thread-meta">
@@ -46,4 +45,5 @@ if ($status !== 'open') { $rowClasses .= ' thread-status-' . $statusSlug; }
             <?php endif; ?>
         </span>
     </div>
+    <?php if ($starred): ?><span class="thread-star" title="Starred" aria-label="Starred">★</span><?php endif; ?>
 </li>

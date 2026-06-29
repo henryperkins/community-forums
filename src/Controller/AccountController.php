@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
+use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\UserRepository;
 use App\Service\AccountService;
 use App\Service\MfaService;
+use App\Service\ProfileMediaService;
 
 /**
  * Self-serve account settings: profile basics (display name, bio, location) and
@@ -38,9 +41,11 @@ final class AccountController extends Controller
                 'website' => $row['website'] ?? '',
                 'pronouns' => $row['pronouns'] ?? '',
                 'signature' => $row['signature'] ?? '',
+                'avatar_path' => $row['avatar_path'] ?? '',
             ],
             'email' => $row['email'] ?? '',
             'email_verified' => ($row['email_verified_at'] ?? null) !== null,
+            'profile_media' => $this->container->get(FeatureFlags::class)->enabled('profile_media'),
         ]);
     }
 
@@ -52,14 +57,38 @@ final class AccountController extends Controller
             $this->container->get(AccountService::class)->updateProfile($user, $request->allInput());
         } catch (ValidationException $e) {
             $row = $this->container->get(UserRepository::class)->find($user->id()) ?? [];
+            $old = $e->old;
+            if (!array_key_exists('avatar_path', $old)) {
+                $old['avatar_path'] = $row['avatar_path'] ?? '';
+            }
             return $this->view('account/settings', [
                 'errors' => $e->errors,
-                'old' => $e->old,
+                'old' => $old,
                 'email' => $row['email'] ?? '',
                 'email_verified' => ($row['email_verified_at'] ?? null) !== null,
+                'profile_media' => $this->container->get(FeatureFlags::class)->enabled('profile_media'),
             ], 422);
         }
         return $this->redirectWithFlash('/settings/account', 'Your profile has been updated.');
+    }
+
+    public function uploadAvatar(Request $request, array $params): Response
+    {
+        $this->requireProfileMedia();
+        $user = $this->requireUser();
+        try {
+            $this->container->get(ProfileMediaService::class)->uploadAvatar($user, $request->file('avatar'));
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/settings/account', $e->first());
+        }
+        return $this->redirectWithFlash('/settings/account', 'Avatar updated.');
+    }
+
+    public function removeAvatar(Request $request, array $params): Response
+    {
+        $this->requireProfileMedia();
+        $this->container->get(ProfileMediaService::class)->removeAvatar($this->requireUser());
+        return $this->redirectWithFlash('/settings/account', 'Avatar removed.');
     }
 
     /** @param array<string,string> $params */
@@ -154,5 +183,12 @@ final class AccountController extends Controller
             'totp_setup' => null,
             'new_recovery_codes' => [],
         ], $data), $status);
+    }
+
+    private function requireProfileMedia(): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('profile_media')) {
+            throw new NotFoundException('Not found.');
+        }
     }
 }

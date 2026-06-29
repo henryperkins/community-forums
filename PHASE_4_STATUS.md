@@ -1,14 +1,15 @@
 # Phase 4 Status
 
 **Status:** engineering closeout complete with explicit deferrals; product-owner accepted as the Phase 5 entry baseline on 2026-06-28
-**Last updated:** 2026-06-28  
-**Branch:** `main`
-**Suite:** `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green
+**Last updated:** 2026-06-29
+**Branch:** accepted baseline on `main`; carryover progress on `phase3-4-closeout-completion`
+**Suite:** accepted baseline `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green. Current carryover branch `./vendor/bin/phpunit` → 720 tests / 2744 assertions, green
 
-> 2026-06-29 in-flight note: branch `phase4-carryover-completion` partially
-> implements several ADR 0003 carryovers behind dark flags, but it does not
-> complete all carryovers or replace this accepted-with-deferrals baseline.
-> See `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
+> 2026-06-29 carryover note: branch `phase3-4-closeout-completion` implements
+> additional ADR 0003 carryovers behind dark flags, but it does not complete all
+> carryovers or replace this accepted-with-deferrals baseline. See
+> `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md` and
+> `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
 
 ## Accepted Gate A Scope
 
@@ -30,25 +31,41 @@ advanced-community slice:
 `docs/adr/0003-phase-4-closeout-deferrals.md` is the Phase 4 carryover ledger.
 The 2026-06-28 Phase 5 release-train instruction accepts these deferrals as
 explicit carryovers, not shipped behavior.
-The following are not shipped behavior:
 
-- Custom badge rule engine / preview / backfill / revoke UI.
-- Board/thread/post reference cards and persisted `content_references` rendering.
+The following remain incomplete or not accepted for broad rollout:
+
+- Moderation appeals.
 - Moderator split/merge services and redirect flows.
-- Gate B rich-expression and automation surfaces: previews/embeds, expanded non-image files, polls, custom emoji, slash-command/GIF insertion, automated since-last-read context, profile-media/signature/board-folder polish, and saved feed organization.
+- Account deactivation/reactivation, self-serve export/delete, bookmark folders,
+  and limited custom profile fields.
 - Production rollout/a11y/load/SEO artifacts beyond the local automated suite,
   Playwright browser capture, and backup/restore rehearsal.
+
+The 2026-06-29 carryover branch has deploy-dark implementation evidence for
+badge rules, post/DM/summary content references, link previews, expanded files,
+polls, custom emoji, slash/GIPHY insertion, board folders, saved feed filters,
+deterministic since-last-read context, scheduled related-topic refresh, avatar
+upload/removal, and signature hardening. These remain behind flags until the
+missing browser/a11y/upgrade/worker/runbook evidence is attached.
 
 ## Evidence Index
 
 - Standalone index: `docs/evidence/phase4-gate-a.md`.
 - Deferral ADR: `docs/adr/0003-phase-4-closeout-deferrals.md`.
+- Carryover ledger: `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
+- Current carryover stopping point: `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
 - Full suite: `./vendor/bin/phpunit` → 456 tests / 1635 assertions.
+- Current carryover branch full suite: `./vendor/bin/phpunit` → 720 tests / 2744 assertions.
+- Current carryover focused suite: `AppContentReferenceTest`, `AppAutomatedContextTest`, `AppProfileMediaTest`, `RelatedTopicRefreshWorkerTest` → 13 tests / 72 assertions.
+- Slash/GIPHY focused suite: `AppCustomEmojiGiphyTest` → 5 tests / 26 assertions.
 - Focused Phase 4 regressions: `tests/Integration/Core/AppPhase4GateATest.php`.
 - Deploy-dark flag regression: `tests/Integration/Core/AppFeatureFlagTest.php`.
 - Markdown sanitizer regression: `tests/Unit/SanitizationTest.php`.
-- Browser evidence: `cd tests/browser && npm run evidence` → 10 Playwright tests
-  across desktop/mobile, refreshing `docs/evidence/browser/{desktop,mobile}`.
+- Browser evidence: `cd tests/browser && npm run evidence` → 27 passed / 1
+  skipped across 28 Playwright tests, refreshing
+  `docs/evidence/browser/{desktop,mobile}`.
+- Slash/GIPHY browser evidence: focused desktop + mobile `slash menu` Playwright
+  runs generated `26-slash-menu` and `27-giphy-inserted`.
 - Backup/restore evidence: `tests/backup/rehearse.sh` →
   `docs/evidence/backup-restore/rehearsal.log`, current result 53 tables / 83 rows.
 - Adjacent regression sweeps covered by full suite: `AppFollowFeedTest`, `AppLeaderboardTest`, `AppReactionTest`, `AppBadgeSolvedTest`, `AppDirectMessageTest`, `AppPostingTest`, `AppModeratorScopeTest`, `AppModerationTest`.

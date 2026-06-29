@@ -14,13 +14,9 @@ use App\Core\Response;
  */
 final class SecurityHeaders
 {
-    private const CSP = "default-src 'self'; base-uri 'self'; form-action 'self'; "
-        . "frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; "
-        . "script-src 'self'; style-src 'self'";
-
-    public static function apply(Response $response, bool $hsts): Response
+    public static function apply(Response $response, bool $hsts, bool $allowGiphy = false): Response
     {
-        $response->header('Content-Security-Policy', self::CSP);
+        $response->header('Content-Security-Policy', self::csp($allowGiphy));
         $response->header('X-Content-Type-Options', 'nosniff');
         $response->header('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->header('X-Frame-Options', 'DENY');
@@ -29,5 +25,19 @@ final class SecurityHeaders
             $response->header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
         return $response;
+    }
+
+    private static function csp(bool $allowGiphy): string
+    {
+        $img = "img-src 'self' data:";
+        $connect = "connect-src 'self'";
+        if ($allowGiphy) {
+            $img .= ' https://*.giphy.com';
+            $connect .= ' https://api.giphy.com';
+        }
+
+        return "default-src 'self'; base-uri 'self'; form-action 'self'; "
+            . "frame-ancestors 'none'; " . $img . "; object-src 'none'; "
+            . "script-src 'self'; style-src 'self'; " . $connect;
     }
 }
