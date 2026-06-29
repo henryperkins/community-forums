@@ -1,7 +1,10 @@
 <?php /** @var \App\Core\View $this */ ?>
 <header class="topbar">
     <div class="topbar-inner">
-        <a class="brand" href="/"><?php if (!empty($branding['logo_path'])): ?><img class="brand-logo" src="<?= $e($branding['logo_path']) ?>" alt="<?= $e($site_name) ?>" height="28"><?php else: ?><?= $e($site_name) ?><?php endif; ?></a>
+        <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar-nav">
+            <svg class="nav-toggle-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <a class="brand" href="/"><?php if (!empty($branding['logo_path'])): ?><img class="brand-logo" src="<?= $e($branding['logo_path']) ?>" alt="<?= $e($site_name) ?>" height="28"><?php else: ?><svg class="brand-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg><span class="brand-name"><?= $e($site_name) ?></span><?php endif; ?></a>
         <?php if (!empty($features['search'])): ?>
             <form class="topbar-search" method="get" action="/search" role="search">
                 <input class="input input-small" type="search" name="q" placeholder="Search…" aria-label="Search">
@@ -9,22 +12,12 @@
         <?php endif; ?>
         <div class="topbar-right">
             <?php if ($current_user !== null): ?>
-                <?php if (!empty($features['engagement'])): ?>
-                    <a class="topbar-link" href="/inbox">Inbox</a>
-                <?php endif; ?>
-                <?php if (!empty($features['dms'])): ?>
-                    <a class="topbar-link" href="/messages">Messages</a>
-                <?php endif; ?>
-                <?php if (!empty($features['drafts'])): ?>
-                    <a class="topbar-link" href="/drafts">Drafts</a>
-                <?php endif; ?>
-                <?php if (!empty($features['community'])): ?>
-                    <a class="topbar-link" href="/feed">Following</a>
-                    <a class="topbar-link" href="/leaderboard">Top</a>
-                <?php endif; ?>
+                <?php /* Primary nav (Inbox/Messages/Drafts/Following/Top) lives in the
+                          sidebar rail in the Imladris layout; the topbar keeps search,
+                          the bell, and identity. */ ?>
                 <?php if (!empty($features['notifications'])): ?>
                     <a class="topbar-link bell" href="/notifications" data-bell title="Notifications">
-                        <span aria-hidden="true">🔔</span>
+                        <svg class="bell-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                         <span class="bell-count" data-bell-count hidden>0</span>
                         <span class="sr-only">Notifications</span>
                     </a>

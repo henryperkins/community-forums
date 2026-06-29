@@ -31,3 +31,6 @@ Thumbs.db
 .vscode/
 /storage/media/*
 !/storage/media/.gitkeep
+
+# transient browser-evidence scratch
+.playwright-mcp/

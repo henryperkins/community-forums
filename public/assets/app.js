@@ -3,6 +3,10 @@
 (function () {
     'use strict';
 
+    // Signal that JS is active so CSS can enable JS-only affordances (e.g. the
+    // off-canvas nav drawer) without ever trapping no-JS users behind them.
+    document.documentElement.classList.add('has-js');
+
     // Auto-grow composer textareas as you type.
     function autosize(el) {
         el.style.height = 'auto';
@@ -168,6 +172,108 @@
                     try { window.localStorage.setItem(annKey, annVersion); } catch (e) { /* ignore */ }
                 });
             }
+        }
+    }
+
+    // Community Inbox — load a topic into the reading pane (enhancement only; with
+    // JS off, the thread-title links open each topic as its own page). Short-fetch
+    // the thread HTML, lift its #main content into the reading pane, and keep the
+    // URL shareable via ?t=<id> + history. Reactions/edit forms inside keep working
+    // because their handlers are delegated on document.
+    var inbox = document.querySelector('[data-inbox]');
+    if (inbox && window.fetch && window.history && window.DOMParser) {
+        var reading = inbox.querySelector('[data-inbox-reading]');
+        var inboxList = inbox.querySelector('[data-inbox-list]');
+        var emptyHtml = reading.innerHTML;                 // the server-rendered placeholder
+        try { history.replaceState({}, '', window.location.href); } catch (e) { /* ignore */ }
+        var idOf = function (href) { var m = href && href.match(/\/t\/(\d+)/); return m ? m[1] : null; };
+        var markActive = function (href) {
+            var rows = inboxList.querySelectorAll('.thread-row');
+            for (var i = 0; i < rows.length; i++) {
+                var a = rows[i].querySelector('a.thread-title');
+                rows[i].classList.toggle('is-active', !!a && a.getAttribute('href') === href);
+            }
+        };
+        var showEmpty = function () { reading.innerHTML = emptyHtml; reading.scrollTop = 0; markActive(''); };
+        var loadThread = function (href, push, focus) {
+            reading.setAttribute('aria-busy', 'true');
+            fetch(href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                .then(function (r) {
+                    if (r.redirected) { window.location.href = r.url; return null; }  // e.g. session expired → /login
+                    return r.ok ? r.text() : null;
+                })
+                .then(function (html) {
+                    if (html === null) { return; }
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+                    var main = doc.querySelector('#main');
+                    if (!main || !main.querySelector('.thread-view, .post-stream, .thread-head')) {
+                        window.location.href = href; return;     // not a topic page → real navigation
+                    }
+                    reading.innerHTML = main.innerHTML;
+                    reading.removeAttribute('aria-busy');
+                    reading.scrollTop = 0;
+                    markActive(href);
+                    if (push) {
+                        var id = idOf(href);
+                        var url = new URL(window.location.href);
+                        if (id) { url.searchParams.set('t', id); }
+                        history.pushState({ href: href }, '', url.toString());
+                    }
+                    if (focus) {                                  // move focus, don't announce the whole thread
+                        var h = reading.querySelector('h1, h2, .thread-head');
+                        if (h) { h.setAttribute('tabindex', '-1'); h.focus(); }
+                        else { reading.focus(); }
+                    }
+                }).catch(function () { window.location.href = href; });
+        };
+        var rowSelector = function (id) {
+            return 'a.thread-title[href^="/t/' + id + '-"], a.thread-title[href="/t/' + id + '"]';
+        };
+        inboxList.addEventListener('click', function (e) {
+            var a = e.target.closest ? e.target.closest('a.thread-title') : null;
+            if (!a || !inboxList.contains(a)) { return; }
+            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+            e.preventDefault();
+            loadThread(a.getAttribute('href'), true, true);
+        });
+        window.addEventListener('popstate', function () {
+            var id = new URL(window.location.href).searchParams.get('t');
+            if (!id) { showEmpty(); return; }              // Back to the bare /inbox restores the placeholder
+            var a = inboxList.querySelector(rowSelector(id));
+            if (a) { loadThread(a.getAttribute('href'), false, false); } else { showEmpty(); }
+        });
+        var initId = new URL(window.location.href).searchParams.get('t');
+        if (initId) {
+            var initA = inboxList.querySelector(rowSelector(initId));
+            if (initA) { loadThread(initA.getAttribute('href'), false, false); }
+        }
+    }
+
+    // Mobile navigation drawer (Phase 4): the sidebar rail slides in over a scrim
+    // on small screens. Without JS the rail simply stacks above the content (the
+    // server-rendered nav stays reachable); this only adds the off-canvas toggle.
+    var navToggle = document.querySelector('[data-nav-toggle]');
+    var navScrim = document.querySelector('[data-nav-scrim]');
+    if (navToggle) {
+        var setNav = function (open) {
+            document.body.classList.toggle('nav-open', open);
+            navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            navToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+            if (navScrim) { navScrim.hidden = !open; }
+        };
+        navToggle.addEventListener('click', function () {
+            setNav(!document.body.classList.contains('nav-open'));
+        });
+        if (navScrim) { navScrim.addEventListener('click', function () { setNav(false); }); }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && document.body.classList.contains('nav-open')) { setNav(false); }
+        });
+        // Closing the drawer after following a rail link keeps the next page clean.
+        var sidebar = document.querySelector('[data-sidebar]');
+        if (sidebar) {
+            sidebar.addEventListener('click', function (e) {
+                if (e.target.closest && e.target.closest('a')) { setNav(false); }
+            });
         }
     }
 })();
