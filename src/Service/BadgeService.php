@@ -10,6 +10,7 @@ use App\Domain\User;
 use App\Repository\BadgeRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
+use App\Security\WriteGate;
 
 /**
  * Badge awarding (COMMUNITY §6, P2-09). Auto badges award on their triggering
@@ -35,6 +36,7 @@ final class BadgeService
         private int $appreciatedRep = 100,
         private int $wellLikedRep = 1000,
         private ?ModerationLogRepository $log = null,
+        private ?WriteGate $writeGate = null,
     ) {
     }
 
@@ -111,6 +113,7 @@ final class BadgeService
     /** Admin manual grant of a `kind=manual` badge (COMMUNITY §6, ADMIN §5.2). */
     public function grantManual(User $admin, int $userId, string $slug, ?string $reason = null): void
     {
+        $this->writeGate?->assertCanWrite($admin);
         $badge = $this->badges->findBySlug($slug);
         if ($badge === null || $badge['kind'] !== 'manual') {
             throw new ValidationException(['slug' => 'That badge cannot be granted manually.']);
@@ -126,6 +129,9 @@ final class BadgeService
     /** Moderator lever: clear a manually-granted badge (COMMUNITY §10). Silent (no notification). */
     public function revokeManual(User|int $actor, int $userId, string $slug, ?string $reason = null): bool
     {
+        if ($actor instanceof User) {
+            $this->writeGate?->assertCanWrite($actor);
+        }
         $badge = $this->badges->findBySlug($slug);
         if ($badge === null || $badge['kind'] !== 'manual') {
             throw new ValidationException(['slug' => 'That badge cannot be revoked manually.']);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Service;
 
+use App\Core\ForbiddenException;
 use App\Core\ValidationException;
 use App\Repository\BadgeRepository;
 use App\Repository\ModerationLogRepository;
@@ -25,6 +26,7 @@ final class BadgeServiceManualTest extends TestCase
             100,
             1000,
             new ModerationLogRepository($this->db),
+            new \App\Security\WriteGate(),
         );
     }
 
@@ -76,5 +78,19 @@ final class BadgeServiceManualTest extends TestCase
         $user = $this->makeUser(['username' => 'revokee2']);
         $this->expectException(ValidationException::class);
         $this->service()->revokeManual($this->userEntity($admin), (int) $user['id'], 'welcome');
+    }
+
+    /** State beats role: a suspended admin can read but not write (CLAUDE.md Security §2). */
+    public function test_suspended_admin_cannot_grant_badge(): void
+    {
+        $admin = $this->makeUser([
+            'username' => 'suspended_grant_admin',
+            'role' => 'admin',
+            'status' => 'suspended',
+        ]);
+        $user = $this->makeUser(['username' => 'grantee_blocked']);
+
+        $this->expectException(ForbiddenException::class);
+        $this->service()->grantManual($this->userEntity($admin), (int) $user['id'], 'staff');
     }
 }
