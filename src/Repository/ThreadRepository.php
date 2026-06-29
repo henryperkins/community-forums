@@ -70,6 +70,7 @@ final class ThreadRepository
                     b.post_min_role AS board_post_min_role, b.allow_anonymous AS board_allow_anonymous,
                     b.require_approval AS board_require_approval, b.assignment_mode AS board_assignment_mode,
                     b.tags_enabled AS board_tags_enabled, b.wiki_enabled AS board_wiki_enabled,
+                    b.is_archived AS board_is_archived,
                     b.id AS board_id, au.username AS author_username, au.display_name AS author_display_name
              FROM threads t
              JOIN boards b ON b.id = t.board_id

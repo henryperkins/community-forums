@@ -199,6 +199,7 @@ final class PostingService
         $board = [
             'visibility' => $thread['board_visibility'],
             'post_min_role' => $thread['board_post_min_role'] ?? 'user',
+            'is_archived' => (int) ($thread['board_is_archived'] ?? 0),
         ];
         if (!$this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id()))) {
             throw new ForbiddenException('You cannot post in this board.');
@@ -301,6 +302,10 @@ final class PostingService
         if (!$user->owns((int) $post['user_id'])) {
             throw new ForbiddenException('You can only edit your own posts.');
         }
+        $editBoard = $this->boards->find((int) $post['board_id']);
+        if ($editBoard !== null && $this->policy->isArchived($editBoard)) {
+            throw new ForbiddenException('This board is archived and is read-only.');
+        }
 
         $body = (string) ($input['body'] ?? '');
         $this->validate(null, $body, $input, requireTitle: false);
@@ -358,6 +363,10 @@ final class PostingService
         }
         if (!$user->owns((int) $post['user_id'])) {
             throw new ForbiddenException('You can only delete your own posts.');
+        }
+        $deleteBoard = $this->boards->find((int) $post['board_id']);
+        if ($deleteBoard !== null && $this->policy->isArchived($deleteBoard)) {
+            throw new ForbiddenException('This board is archived and is read-only.');
         }
 
         $deleted = $this->db->transaction(function () use ($post, $postId, $user): bool {
