@@ -195,4 +195,17 @@ final class AppFeatureFlagTest extends TestCase
         $this->setFlags(['oauth' => false]);
         $this->assertStatus(404, $this->get('/settings/connections'));
     }
+
+    public function test_announcements_flag_and_rate_limit_are_declared(): void
+    {
+        // The announcements subsystem is a Phase-2 surface: declared + default ON.
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertArrayHasKey('announcements', $flags->all(), 'announcements must be a declared flag, not an unknown-key false');
+        self::assertTrue($flags->enabled('announcements'), 'announcements defaults on (Phase-2 convention)');
+
+        // The broadcast cap needs a real policy (RateLimitService no-ops on unknown names).
+        $limits = (array) $this->config->get('rate_limits', []);
+        self::assertArrayHasKey('announce', $limits);
+        self::assertCount(2, (array) $limits['announce']);
+    }
 }

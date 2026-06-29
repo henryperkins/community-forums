@@ -34,6 +34,7 @@ final class FeatureFlags
         'community' => true,         // follows/feed, badges, solved, leaderboard (P2-09)
         'oauth' => true,             // OAuth sign-in / account linking (P2-10)
         'presence' => true,          // last-seen presence roster (P2-11)
+        'announcements' => true,     // admin site banner + opt-in in-app broadcast (ADMIN §7.4; SCHEMA §7 #13)
 
         // ── Phase 3 (Gate A) ─────────────────────────────────────────────
         'rich_composer' => true,     // shared composer toolbar + server preview (P3-02); textarea always works
