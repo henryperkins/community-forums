@@ -222,6 +222,24 @@ return [
             explode(',', (string) Env::get('WEBHOOK_ALLOWED_PRIVATE_CIDRS', ''))))),
     ],
 
+    'link_previews' => [
+        'timeout_seconds' => (int) Env::get('LINK_PREVIEW_TIMEOUT_SECONDS', '4'),
+        'max_bytes' => (int) Env::get('LINK_PREVIEW_MAX_BYTES', '262144'),
+        'max_parse_bytes' => (int) Env::get('LINK_PREVIEW_MAX_PARSE_BYTES', '131072'),
+        'allow_http' => Env::bool('LINK_PREVIEW_ALLOW_HTTP', false),
+        'allowed_hosts' => array_values(array_filter(array_map('trim',
+            explode(',', (string) Env::get('LINK_PREVIEW_ALLOWED_HOSTS', ''))))),
+        'allowed_private_cidrs' => array_values(array_filter(array_map('trim',
+            explode(',', (string) Env::get('LINK_PREVIEW_ALLOWED_PRIVATE_CIDRS', ''))))),
+    ],
+
+    'giphy' => [
+        // Public browser API key only. The app never proxies, caches, rewrites, or
+        // downloads GIPHY media; the picker uses GIPHY Search/Trending directly.
+        'public_key' => Env::get('GIPHY_PUBLIC_KEY', ''),
+        'rating' => Env::get('GIPHY_RATING', 'pg'),
+    ],
+
     // Trusted reverse-proxy CIDRs whose X-Forwarded-For we honour for client IP.
     'trusted_proxies' => array_values(array_filter(array_map('trim', explode(',', (string) Env::get('TRUSTED_PROXIES', ''))))),
 

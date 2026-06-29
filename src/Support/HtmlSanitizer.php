@@ -199,11 +199,14 @@ final class HtmlSanitizer
         return in_array('spoiler', preg_split('/\s+/', trim($class)) ?: [], true);
     }
 
-    /** Only same-origin /media/{id} (optionally with a query) is a valid image src. */
+    /** Only same-origin media or operator-managed static emoji assets are valid image srcs. */
     private function safeImageSrc(string $src): ?string
     {
         $src = trim($src);
-        return preg_match('~^/media/\d+(?:\?[^\s"\'<>]*)?$~', $src) === 1 ? $src : null;
+        if (preg_match('~^/media/\d+(?:\?[^\s"\'<>]*)?$~', $src) === 1) {
+            return $src;
+        }
+        return preg_match('~^/emoji/[A-Za-z0-9_.-]+\.(?:png|webp)$~', $src) === 1 ? $src : null;
     }
 
     private function safeHref(string $href): ?string

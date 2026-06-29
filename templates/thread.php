@@ -176,6 +176,49 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 <button class="linkbtn muted" type="submit">Clear accepted answer</button>
             </form>
         <?php endif; ?>
+        <?php if (!empty($polls_on) && !empty($poll)): ?>
+            <section class="memory-panel poll-panel">
+                <h2><?= $e($poll['question']) ?></h2>
+                <?php if (!empty($poll['results_visible'])): ?>
+                    <ul class="link-list">
+                        <?php foreach ($poll['options'] as $option): ?>
+                            <?php $n = (int) $option['vote_count']; ?>
+                            <li><strong><?= $e($option['body']) ?></strong> <span class="muted"><?= $n ?> vote<?= $n === 1 ? '' : 's' ?></span></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php elseif (!empty($poll['can_vote'])): ?>
+                    <form method="post" action="/polls/<?= (int) $poll['id'] ?>/vote" class="stacked">
+                        <?= $this->csrfField() ?>
+                        <?php foreach ($poll['options'] as $option): ?>
+                            <label class="checkline">
+                                <input type="<?= $poll['mode'] === 'multiple' ? 'checkbox' : 'radio' ?>" name="option_ids[]" value="<?= (int) $option['id'] ?>">
+                                <?= $e($option['body']) ?>
+                            </label>
+                        <?php endforeach; ?>
+                        <button class="btn btn-small" type="submit">Vote</button>
+                    </form>
+                <?php else: ?>
+                    <p class="muted">Results are visible after voting or after the poll closes.</p>
+                <?php endif; ?>
+                <?php if (!empty($poll['can_close'])): ?>
+                    <form class="inline" method="post" action="/polls/<?= (int) $poll['id'] ?>/close">
+                        <?= $this->csrfField() ?>
+                        <button class="linkbtn muted" type="submit">Close poll</button>
+                    </form>
+                <?php endif; ?>
+            </section>
+        <?php elseif (!empty($polls_on) && !empty($can_create_poll)): ?>
+            <details class="workflow-actions">
+                <summary class="linkbtn">Add poll</summary>
+                <form class="stacked" method="post" action="/t/<?= (int) $thread['id'] ?>/poll">
+                    <?= $this->csrfField() ?>
+                    <label class="field"><span>Question</span><input class="input" type="text" name="question" maxlength="255" required></label>
+                    <label class="field"><span>Mode</span><select class="input input-small" name="mode"><option value="single">Single choice</option><option value="multiple">Multiple choice</option></select></label>
+                    <label class="field"><span>Options</span><textarea class="input" name="options" rows="4" required></textarea></label>
+                    <button class="btn btn-small" type="submit">Create poll</button>
+                </form>
+            </details>
+        <?php endif; ?>
         <?php if (($engagement ?? false) && $current_user !== null): ?>
             <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
                 <?= $this->csrfField() ?>
@@ -226,6 +269,8 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     'counts' => ($reaction_counts ?? [])[(int) $p['id']] ?? [],
                     'mine' => ($my_reactions ?? [])[(int) $p['id']] ?? [],
                     'allowed_emoji' => $allowed_emoji ?? [],
+                    'reference_cards' => ($reference_cards ?? [])[(int) $p['id']] ?? [],
+                    'link_preview_cards' => ($link_preview_cards ?? [])[(int) $p['id']] ?? [],
                     'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
                     'can_mark_solved' => $can_mark_solved ?? false,
                     'can_reveal_anon' => $can_reveal_anon ?? false,

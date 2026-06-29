@@ -65,12 +65,44 @@ final class MediaController extends Controller
         ]);
     }
 
+    public function uploadFile(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $features = $this->container->get(FeatureFlags::class);
+        if (!$features->enabled('uploads') || !$features->enabled('expanded_files')) {
+            throw new NotFoundException('Not found.');
+        }
+        $this->container->get(RateLimitService::class)->enforce('upload', $request, $user);
+
+        $file = $request->file('file');
+        if ($file === null) {
+            return Response::json(['ok' => false, 'error' => 'No file was uploaded.'], 422);
+        }
+
+        $purpose = $request->str('purpose') === 'dm' ? 'dm' : 'post';
+        try {
+            $row = $this->container->get(AttachmentService::class)->storeFileUpload($user->id(), $file, $purpose);
+        } catch (ValidationException $e) {
+            return Response::json(['ok' => false, 'error' => $e->first()], 422);
+        }
+
+        $url = '/media/' . (int) $row['id'] . '/download';
+        $name = (string) ($row['download_name'] ?? 'attachment');
+        return Response::json([
+            'ok' => true,
+            'id' => (int) $row['id'],
+            'url' => $url,
+            'markdown' => '[' . $name . '](' . $url . ')',
+            'scan_status' => (string) ($row['scan_status'] ?? 'pending'),
+        ]);
+    }
+
     /** @param array<string,string> $params */
     public function show(Request $request, array $params): Response
     {
         $id = (int) ($params['id'] ?? 0);
         $att = $this->container->get(AttachmentRepository::class)->find($id);
-        if ($att === null || $att['status'] === 'deleted') {
+        if ($att === null || $att['status'] === 'deleted' || (string) ($att['kind'] ?? 'image') !== 'image') {
             throw new NotFoundException('Media not found.');
         }
         // Cacheability is decided by the LIVE authorization result, not the stored
@@ -91,6 +123,37 @@ final class MediaController extends Controller
             // Private media is never shared-cacheable; public media may be cached.
             'Cache-Control' => $publicCacheable ? 'public, max-age=31536000, immutable' : 'private, no-store',
         ]));
+    }
+
+    /** @param array<string,string> $params */
+    public function download(Request $request, array $params): Response
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('expanded_files')) {
+            throw new NotFoundException('Media not found.');
+        }
+        $id = (int) ($params['id'] ?? 0);
+        $att = $this->container->get(AttachmentRepository::class)->find($id);
+        if ($att === null || $att['status'] === 'deleted' || (string) $att['kind'] !== 'file') {
+            throw new NotFoundException('Media not found.');
+        }
+        if (($att['scan_status'] ?? 'clean') !== 'clean') {
+            throw new NotFoundException('Media not found.');
+        }
+        $this->authorize($att);
+
+        $bytes = $this->container->get(AttachmentService::class)->readBytes($att);
+        if ($bytes === null) {
+            throw new NotFoundException('Media not found.');
+        }
+
+        $name = $this->downloadName($att);
+        return new Response($bytes, 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Length' => (string) strlen($bytes),
+            'Content-Disposition' => 'attachment; filename="' . $name . '"',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     /**
@@ -162,5 +225,14 @@ final class MediaController extends Controller
             throw new NotFoundException('Media not found.');
         }
         return false;
+    }
+
+    /** @param array<string,mixed> $att */
+    private function downloadName(array $att): string
+    {
+        $name = (string) ($att['download_name'] ?? 'attachment');
+        $name = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $name) ?? 'attachment';
+        $name = trim($name);
+        return $name !== '' ? mb_substr($name, 0, 120) : 'attachment';
     }
 }

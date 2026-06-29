@@ -22,3 +22,7 @@ across these independently-authored specs; the full filenames are distinct.)
 These are generated, not hand-made — regenerate with `cd tests/browser && npm run
 evidence`, or download the `gate-a-browser-evidence` artifact from the
 **Browser evidence** GitHub Actions workflow. See `tests/browser/README.md`.
+
+The current carryover branch also includes `25-poll-voted`, which proves the
+deploy-dark poll UI through the real server-rendered vote POST/redirect/result
+flow on desktop and mobile.

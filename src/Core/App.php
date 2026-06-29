@@ -7,8 +7,11 @@ namespace App\Core;
 use App\Controller\AccountController;
 use App\Controller\AdminAnnouncementController;
 use App\Controller\AdminApiTokenController;
+use App\Controller\AdminBadgeRuleController;
 use App\Controller\AdminController;
+use App\Controller\AdminCustomEmojiController;
 use App\Controller\AdminEmailController;
+use App\Controller\AdminLinkPreviewController;
 use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
@@ -33,11 +36,14 @@ use App\Controller\MediaController;
 use App\Controller\ModerationController;
 use App\Controller\OAuthController;
 use App\Controller\PostController;
+use App\Controller\PollController;
 use App\Controller\PresenceController;
+use App\Controller\PersonalOrganizationController;
 use App\Controller\ProfileController;
 use App\Controller\ReportController;
 use App\Controller\SearchController;
 use App\Controller\SeoController;
+use App\Controller\SlashGiphyController;
 use App\Controller\NotificationController;
 use App\Controller\OnboardingController;
 use App\Controller\SettingsController;
@@ -111,21 +117,28 @@ use App\Service\AnnouncementService;
 use App\Service\AntiAbuseService;
 use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
+use App\Service\AttachmentScanService;
 use App\Service\AuthService;
+use App\Service\ContentReferenceService;
+use App\Service\CustomEmojiService;
 use App\Service\EmailOpsService;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
+use App\Service\BadgeRuleService;
 use App\Service\BadgeService;
 use App\Service\CommunityMemoryService;
 use App\Service\DirectMessageService;
 use App\Service\FeedService;
 use App\Service\FollowService;
+use App\Service\LinkPreviewService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\PostingService;
+use App\Service\PollService;
+use App\Service\PersonalOrganizationService;
 use App\Service\PreferenceService;
 use App\Service\RateLimitService;
 use App\Service\ReactionService;
@@ -537,7 +550,10 @@ final class App
 
         // Support + security primitives.
         $c->bind(HtmlSanitizer::class, fn () => new HtmlSanitizer());
-        $c->bind(Markdown::class, fn (Container $c) => new Markdown($c->get(HtmlSanitizer::class)));
+        $c->bind(Markdown::class, fn (Container $c) => new Markdown(
+            $c->get(HtmlSanitizer::class),
+            $c->get(FeatureFlags::class)->enabled('custom_emoji') ? $c->get(CustomEmojiService::class) : null,
+        ));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
         $c->bind(SecretBox::class, fn () => new SecretBox((string) $config->get('app.key', '')));
         $c->bind(Totp::class, fn () => new Totp());
@@ -621,7 +637,44 @@ final class App
         $c->bind(VerificationRepository::class, fn (Container $c) => new VerificationRepository($c->get(Database::class)));
         $c->bind(IdempotencyRepository::class, fn (Container $c) => new IdempotencyRepository($c->get(Database::class)));
         $c->bind(AttachmentRepository::class, fn (Container $c) => new AttachmentRepository($c->get(Database::class)));
+        $c->bind(AttachmentScanService::class, fn (Container $c) => new AttachmentScanService($c->get(AttachmentRepository::class)));
         $c->bind(MfaRepository::class, fn (Container $c) => new MfaRepository($c->get(Database::class)));
+        $c->bind(CustomEmojiService::class, fn (Container $c) => new CustomEmojiService(
+            $c->get(Database::class),
+            $c->get(WriteGate::class),
+        ));
+        $c->bind(ContentReferenceService::class, fn (Container $c) => new ContentReferenceService(
+            $c->get(Database::class),
+            $c->get(BoardRepository::class),
+            $c->get(ThreadRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+        ));
+        $c->bind(LinkPreviewService::class, fn (Container $c) => new LinkPreviewService(
+            $c->get(Database::class),
+            $c->get(PostRepository::class),
+            $c->get(SettingRepository::class),
+            $config,
+            new EgressGuard(
+                (bool) $config->get('link_previews.allow_http', false),
+                (array) $config->get('link_previews.allowed_private_cidrs', []),
+            ),
+        ));
+        $c->bind(PollService::class, fn (Container $c) => new PollService(
+            $c->get(Database::class),
+            $c->get(ThreadRepository::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(WriteGate::class),
+        ));
+        $c->bind(PersonalOrganizationService::class, fn (Container $c) => new PersonalOrganizationService(
+            $c->get(Database::class),
+            $c->get(BoardRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+        ));
 
         // Phase 3 anti-abuse + rate limiting (P3-05).
         $c->bind(ClientIdentifier::class, fn () => new ClientIdentifier((array) $config->get('trusted_proxies', [])));
@@ -753,6 +806,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(NotificationService::class),
             $c->get(ReputationLedgerService::class),
+            $c->get(FeatureFlags::class)->enabled('custom_emoji') ? $c->get(CustomEmojiService::class) : null,
         ));
         $c->bind(ReputationLedgerService::class, fn (Container $c) => new ReputationLedgerService(
             $c->get(Database::class),
@@ -774,6 +828,13 @@ final class App
             (int) $config->get('community.badge_well_liked_rep', 1000),
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
+        ));
+        $c->bind(BadgeRuleService::class, fn (Container $c) => new BadgeRuleService(
+            $c->get(Database::class),
+            $c->get(BadgeRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(NotificationService::class),
         ));
         $c->bind(FollowService::class, fn (Container $c) => new FollowService(
             $c->get(FollowRepository::class),
@@ -904,6 +965,8 @@ final class App
             $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
             $c->get(ReputationLedgerService::class),
             $c->get(FirstPartyHookRegistry::class),
+            $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
+            $c->get(FeatureFlags::class)->enabled('link_previews') ? $c->get(LinkPreviewService::class) : null,
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -976,10 +1039,13 @@ final class App
 
         // Image uploads + authorization-gated delivery (P3-04).
         $r->post('/upload', [MediaController::class, 'upload']);
+        $r->post('/upload/file', [MediaController::class, 'uploadFile']);
         $r->get('/media/{id}', [MediaController::class, 'show']);
+        $r->get('/media/{id}/download', [MediaController::class, 'download']);
 
         // Shared composer live preview (P3-02) — same render+sanitize pipeline.
         $r->post('/composer/preview', [ComposerController::class, 'preview']);
+        $r->get('/composer/giphy-config', [SlashGiphyController::class, 'pickerConfig']);
         $r->get('/drafts', [DraftController::class, 'index']);
         $r->post('/u/{username}/follow', [FollowController::class, 'toggle']);
         $r->post('/u/{username}/followers/{id}/remove', [FollowController::class, 'removeFollower']);
@@ -995,6 +1061,9 @@ final class App
         $r->post('/t/{id}/summary/retire', [CommunityMemoryController::class, 'retireSummary']);
         $r->post('/t/{id}/summary/restore', [CommunityMemoryController::class, 'republishSummary']);
         $r->post('/t/{id}/related', [CommunityMemoryController::class, 'related']);
+        $r->post('/t/{id}/poll', [PollController::class, 'create']);
+        $r->post('/polls/{id}/vote', [PollController::class, 'vote']);
+        $r->post('/polls/{id}/close', [PollController::class, 'close']);
 
         $r->get('/login', [AuthController::class, 'showLogin']);
         $r->post('/login', [AuthController::class, 'login']);
@@ -1055,6 +1124,9 @@ final class App
         $r->get('/settings/blocks', [BlockController::class, 'index']);
         $r->get('/settings/boards', [SettingsController::class, 'boards']);
         $r->post('/settings/boards/toggle', [SettingsController::class, 'toggleBoardPref']);
+        $r->post('/settings/board-folders', [PersonalOrganizationController::class, 'createFolder']);
+        $r->post('/settings/board-folders/{id}/boards', [PersonalOrganizationController::class, 'addBoard']);
+        $r->post('/settings/saved-feeds', [PersonalOrganizationController::class, 'createSavedFeed']);
 
         $r->get('/setup', [SetupController::class, 'show']);
         $r->post('/setup', [SetupController::class, 'submit']);
@@ -1127,6 +1199,18 @@ final class App
         $r->post('/admin/email/suppressions/remove', [AdminEmailController::class, 'unsuppress']);
         $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
         $r->post('/admin/announcements', [AdminAnnouncementController::class, 'save']);
+        $r->get('/admin/badge-rules', [AdminBadgeRuleController::class, 'index']);
+        $r->post('/admin/badge-rules', [AdminBadgeRuleController::class, 'create']);
+        $r->get('/admin/badge-rules/{id}/preview', [AdminBadgeRuleController::class, 'preview']);
+        $r->post('/admin/badge-rules/{id}/enable', [AdminBadgeRuleController::class, 'enable']);
+        $r->post('/admin/badge-rules/{id}/disable', [AdminBadgeRuleController::class, 'disable']);
+        $r->post('/admin/badge-rules/{id}/backfill', [AdminBadgeRuleController::class, 'backfill']);
+        $r->post('/admin/badge-rules/{id}/revoke', [AdminBadgeRuleController::class, 'revoke']);
+        $r->post('/admin/link-previews/{id}/refresh', [AdminLinkPreviewController::class, 'refresh']);
+        $r->post('/admin/link-previews/{id}/purge', [AdminLinkPreviewController::class, 'purge']);
+        $r->post('/admin/custom-emoji', [AdminCustomEmojiController::class, 'create']);
+        $r->post('/admin/custom-emoji/{shortcode}/enable', [AdminCustomEmojiController::class, 'enable']);
+        $r->post('/admin/custom-emoji/{shortcode}/disable', [AdminCustomEmojiController::class, 'disable']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
         $r->post('/admin/site', [AdminController::class, 'updateSite']);
         $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
