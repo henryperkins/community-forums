@@ -412,7 +412,7 @@ test('site announcement banner: publish, render, dismiss, and persist', async ({
   await visit(page, '/admin/announcements');
   await page.fill('textarea[name="message"]', 'Scheduled maintenance at 02:00 UTC.');
   await page.check('input[name="dismissible"]');
-  await page.click('button[type="submit"]');
+  await page.getByRole('button', { name: 'Publish banner' }).click();
   await page.waitForURL((u) => u.pathname === '/admin/announcements');
 
   // It renders in the global shell at this viewport.
@@ -433,5 +433,5 @@ test('site announcement banner: publish, render, dismiss, and persist', async ({
 
   // Clean up so the banner does not bleed into later evidence runs.
   await visit(page, '/admin/announcements');
-  await page.locator('form.inline button[type="submit"]').click();
+  await page.getByRole('button', { name: 'Clear banner' }).click();
 });
