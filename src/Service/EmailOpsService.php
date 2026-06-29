@@ -70,6 +70,10 @@ final class EmailOpsService
             $this->deliveries->markSent($id, $messageId);
         } catch (Throwable $e) {
             $this->deliveries->markFailed($id, $e->getMessage());
+            // Surface the real failure to the operator instead of flashing
+            // success: test-send exists to verify deliverability (ADMIN §7.6).
+            // The controller's existing ValidationException catch renders this.
+            throw new ValidationException(['email' => 'Test send failed: ' . $e->getMessage()]);
         }
     }
 

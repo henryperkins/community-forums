@@ -52,6 +52,38 @@ final class EmailOpsServiceTest extends TestCase
         $this->service(new SendmailMailer(''))->sendTest($admin);
     }
 
+    public function test_send_test_surfaces_failure_when_configured_transport_throws(): void
+    {
+        $admin = $this->userEntity($this->makeAdmin(['email' => 'fail@example.test']));
+        $mailer = new class implements Mailer {
+            public function send(string $to, string $subject, string $textBody, ?string $htmlBody = null): string
+            {
+                throw new \RuntimeException('smtp 550 mailbox unavailable');
+            }
+
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+        };
+
+        $thrown = null;
+        try {
+            $this->service($mailer)->sendTest($admin);
+        } catch (ValidationException $e) {
+            $thrown = $e;
+        }
+
+        // A genuinely failed send must surface to the operator, not flash success.
+        self::assertInstanceOf(ValidationException::class, $thrown);
+        self::assertStringContainsString('smtp 550 mailbox unavailable', $thrown->first());
+        // The delivery row is still recorded failed (markFailed runs before the re-throw).
+        self::assertSame(
+            'failed',
+            (string) $this->db->fetchValue("SELECT status FROM email_deliveries WHERE kind = 'test' AND email = ?", ['fail@example.test']),
+        );
+    }
+
     public function test_manual_suppress_cascades_email_off_then_unsuppress_restores(): void
     {
         $u = $this->makeUser(['email' => 'sub@example.test']);
