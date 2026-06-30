@@ -283,7 +283,12 @@
     // native <details> stays an inline expand, so creating a topic never needs script.
     var newTopic = document.querySelector('details.composer-details');
     if (newTopic) {
-        var closeTopic = function () { if (newTopic.open) { newTopic.open = false; } };
+        var trigger = newTopic.querySelector('summary');
+        var closeTopic = function () {
+            if (!newTopic.open) { return; }
+            newTopic.open = false;
+            if (trigger) { trigger.focus(); }   // restore focus to the trigger, not hidden content
+        };
         newTopic.addEventListener('toggle', function () {
             if (newTopic.open) {
                 var title = newTopic.querySelector('input[name="title"]');

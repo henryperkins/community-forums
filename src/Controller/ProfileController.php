@@ -72,7 +72,8 @@ final class ProfileController extends Controller
         // Profile activity tabs (§5.4): Overview / Threads / Posts / Commends, each
         // a real ?tab= URL so the view works without JS and is crawlable. Unknown
         // values fall back to Overview.
-        $tab = (string) ($request->query('tab') ?? 'overview');
+        $tabValue = $request->query('tab');
+        $tab = is_string($tabValue) ? $tabValue : 'overview';
         if (!in_array($tab, ['overview', 'threads', 'posts', 'commends'], true)) {
             $tab = 'overview';
         }

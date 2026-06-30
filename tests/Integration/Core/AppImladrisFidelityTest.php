@@ -79,6 +79,7 @@ final class AppImladrisFidelityTest extends TestCase
             'SELECT id FROM posts WHERE thread_id = ? AND is_op = 0 ORDER BY id DESC LIMIT 1',
             [$tid],
         );
+        $this->assertNotNull($reply, 'Expected the reply submission to create a reply before accepting it.');
 
         $this->actingAs($opener);   // the OP accepts the reply
         $this->post('/posts/' . (int) $reply['id'] . '/accept');

@@ -48,10 +48,10 @@
         code: { label: 'Code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
         spoiler: { label: 'Spoiler', before: '||', after: '||', active: 'inline' },
         quote: { label: 'Quote', before: '\n> ', after: '', prefix: '> ', active: 'line' },
-        link: { label: 'Link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' },
         h2: { label: 'Heading', before: '\n## ', after: '', prefix: '## ', active: 'line' },
         list: { label: 'List', before: '\n- ', after: '', prefix: '- ', active: 'line' },
         codeblock: { label: 'Code block', before: '\n```\n', after: '\n```\n', active: 'fence' },
+        link: { label: 'Link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' },
         emoji: { label: 'Emoji', before: ':smile:', after: '' }
     };
     // A hairline separator follows these keys, grouping the bar as
