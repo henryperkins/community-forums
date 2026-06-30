@@ -244,4 +244,33 @@ final class AppDirectMessageTest extends TestCase
         // Nothing was persisted — only the opening message exists.
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM dm_messages WHERE conversation_id = ?', [$convId]));
     }
+
+    public function test_messages_index_unread_filter_lists_only_unread_conversations(): void
+    {
+        $recipient = $this->established(['username' => 'filt_recipient', 'display_name' => 'Filter Recipient']);
+        $alfa = $this->established(['username' => 'filt_alfa', 'display_name' => 'Alfa Sender']);
+        $bravo = $this->established(['username' => 'filt_bravo', 'display_name' => 'Bravo Sender']);
+
+        // Two inbound conversations for the recipient, both initially unread.
+        $this->dm()->start($this->userEntity($alfa), (int) $recipient['id'], 'From Alfa.');
+        $bravoConv = $this->dm()->start($this->userEntity($bravo), (int) $recipient['id'], 'From Bravo.')['conversation_id'];
+
+        // The recipient reads the Bravo conversation (viewing marks it read).
+        $this->actingAs($recipient);
+        $this->get('/messages/' . (int) $bravoConv);
+
+        // "All" lists both conversations…
+        $all = $this->get('/messages');
+        $this->assertStatus(200, $all);
+        $this->assertSeeText($all, 'Alfa Sender');
+        $this->assertSeeText($all, 'Bravo Sender');
+
+        // …"Unread" lists only the still-unread Alfa conversation, and marks the
+        // chip active so the control reflects the applied filter.
+        $unread = $this->get('/messages', ['filter' => 'unread']);
+        $this->assertStatus(200, $unread);
+        $this->assertSeeText($unread, 'Alfa Sender');
+        $this->assertDontSeeText($unread, 'Bravo Sender');
+        $this->assertSeeText($unread, 'class="pill is-active" href="/messages?filter=unread" aria-current="page"');
+    }
 }

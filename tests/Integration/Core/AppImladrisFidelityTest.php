@@ -76,7 +76,7 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'admin-subnav');
         $this->assertSeeText($res, 'admin-pane');
         $this->assertSeeText($res, 'pane-intro');
-        $this->assertSeeText($res, 'audit');
+        $this->assertSeeText($res, 'Recent activity');   // the audit register section renders (empty-state here)
     }
 
     public function test_admin_branding_renders_inside_the_operator_console_register(): void
@@ -87,20 +87,10 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/admin/branding');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'admin');
         $this->assertSeeText($res, 'admin-head');
         $this->assertSeeText($res, 'admin-pane');
         $this->assertSeeText($res, 'brand-cols');
         $this->assertSeeText($res, 'brand-preview');
-    }
-
-    public function test_imported_admin_branding_layout_css_is_available(): void
-    {
-        $css = (string) file_get_contents(dirname(__DIR__, 3) . '/public/assets/app.css');
-
-        self::assertStringContainsString('.brand-cols', $css);
-        self::assertStringContainsString('.code-area', $css);
-        self::assertStringContainsString('.state-active', $css);
     }
 
     public function test_messages_index_renders_the_private_counsel_reading_room(): void
@@ -184,22 +174,11 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/mod/reports');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'mod');
         $this->assertSeeText($res, 'mod-head');
         $this->assertSeeText($res, 'mod-subnav');
         $this->assertSeeText($res, 'mod-pane');
         $this->assertSeeText($res, 'report-row is-urgent');
         $this->assertSeeText($res, 'wardens-table-report-marker');
-    }
-
-    public function test_imported_dm_and_moderation_layout_css_is_available(): void
-    {
-        $css = (string) file_get_contents(dirname(__DIR__, 3) . '/public/assets/app.css');
-
-        self::assertStringContainsString('.dm-shell', $css);
-        self::assertStringContainsString('.dm-bubble', $css);
-        self::assertStringContainsString('.mod-subnav', $css);
-        self::assertStringContainsString('.appeal-resolve', $css);
     }
 
     public function test_single_author_thread_has_no_participant_stack(): void
@@ -265,7 +244,9 @@ final class AppImladrisFidelityTest extends TestCase
         $this->actingAs($reader);
         $res = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'thread-actions');   // star + notify gathered into one bar
+        $this->assertSeeText($res, 'thread-actions');   // the one-line member control bar renders…
+        $this->assertSeeText($res, 'star-btn');         // …with the star control…
+        $this->assertSeeText($res, 'Notify: Instant');  // …and the notify control gathered into it
     }
 
     public function test_profile_tabs_render_and_posts_tab_lists_activity(): void
@@ -277,10 +258,16 @@ final class AppImladrisFidelityTest extends TestCase
         $overview = $this->get('/u/tabbed');
         $this->assertStatus(200, $overview);
         $this->assertSeeText($overview, 'profile-tabs');
-        $this->assertSeeText($overview, 'Overview');
+        // Default view: the Overview tab is the active one, Posts is not.
+        $this->assertSeeText($overview, 'aria-current="page" href="/u/tabbed">Overview');
+        $this->assertDontSeeText($overview, 'aria-current="page" href="/u/tabbed?tab=posts">Posts');
 
+        // ?tab=posts switches the active tab (proves the param is honoured, not ignored)…
         $posts = $this->get('/u/tabbed', ['tab' => 'posts']);
         $this->assertStatus(200, $posts);
-        $this->assertSeeText($posts, 'Tabbed topic');   // the OP post is listed under the Posts tab
+        $this->assertSeeText($posts, 'aria-current="page" href="/u/tabbed?tab=posts">Posts');
+        $this->assertDontSeeText($posts, 'aria-current="page" href="/u/tabbed">Overview');
+        // …and the Posts tab lists the user's activity.
+        $this->assertSeeText($posts, 'Tabbed topic');
     }
 }

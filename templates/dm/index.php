@@ -10,14 +10,15 @@
                 </span>
                 <a class="btn btn-small" href="/messages/new">New message</a>
             </div>
+            <?php $filter = ($filter ?? 'all') === 'unread' ? 'unread' : 'all'; ?>
             <nav class="dm-listpane-filters" aria-label="Message filters">
-                <span class="pill">All</span>
-                <span class="pill">Unread</span>
+                <a class="pill<?= $filter === 'all' ? ' is-active' : '' ?>" href="/messages"<?= $filter === 'all' ? ' aria-current="page"' : '' ?>>All</a>
+                <a class="pill<?= $filter === 'unread' ? ' is-active' : '' ?>" href="/messages?filter=unread"<?= $filter === 'unread' ? ' aria-current="page"' : '' ?>>Unread</a>
             </nav>
         </header>
 
         <?php if (empty($conversations)): ?>
-            <p class="dm-list-empty">No conversations yet.</p>
+            <p class="dm-list-empty"><?= $filter === 'unread' ? 'No unread conversations.' : 'No conversations yet.' ?></p>
         <?php else: ?>
             <ul class="dm-list">
                 <?php foreach ($conversations as $c): ?>
