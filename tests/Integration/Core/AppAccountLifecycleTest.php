@@ -7,6 +7,7 @@ namespace Tests\Integration\Core;
 use App\Service\AccountLifecycleService;
 use App\Repository\AccountDeletionRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
 use App\Repository\SettingRepository;
 use App\Security\PasswordHasher;
@@ -29,6 +30,7 @@ final class AppAccountLifecycleTest extends TestCase
             new AccountDeletionRepository($this->db),
             new SessionRepository($this->db),
             new ModerationLogRepository($this->db),
+            new ServerDraftRepository($this->db),
             new PasswordHasher(),
         );
     }
@@ -43,6 +45,11 @@ final class AppAccountLifecycleTest extends TestCase
         ]);
         $this->actingAs($user);
         $thread = $this->makeThread($this->makeBoard($this->makeCategory()), $user, 'Exportable thread', 'Exportable body');
+        $this->db->run(
+            "INSERT INTO server_drafts (user_id, context_key, revision, title, body, metadata, updated_at, expires_at)
+             VALUES (?, 'thread-export', 1, 'Export draft', 'Draft body', '{\"path\":\"/compose\"}', UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 90 DAY))",
+            [(int) $user['id']],
+        );
 
         // Export is a CSRF-protected POST: it writes an audit row, so it must not
         // be reachable (or forgeable) via a bare GET.
@@ -60,6 +67,9 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertArrayNotHasKey('password_hash', $payload['profile']);
         self::assertNotEmpty($payload['posts']);
         self::assertSame($thread['thread_id'], (int) $payload['posts'][0]['thread_id']);
+        self::assertSame('Export draft', $payload['server_drafts'][0]['title']);
+        self::assertSame('Draft body', $payload['server_drafts'][0]['body']);
+        self::assertSame('/compose', $payload['server_drafts'][0]['metadata']['path']);
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'account_exported'"));
     }
 
@@ -131,6 +141,11 @@ final class AppAccountLifecycleTest extends TestCase
             'password' => 'password123',
         ]);
         $this->users()->updateProfileFull((int) $user['id'], 'Purge Me', 'private bio', 'Somewhere', 'https://example.test', 'they/them', 'signature');
+        $this->db->run(
+            "INSERT INTO server_drafts (user_id, context_key, revision, title, body, metadata, updated_at, expires_at)
+             VALUES (?, 'thread-purge', 1, 'Purge draft', 'Draft body', '{}', UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 90 DAY))",
+            [(int) $user['id']],
+        );
         $this->actingAs($user);
         $thread = $this->makeThread($this->makeBoard($this->makeCategory()), $user, 'Kept discussion', 'Keep the conversation intact');
         $this->get('/settings/account/lifecycle');
@@ -155,6 +170,7 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertNull($row['pronouns']);
         self::assertNull($row['signature']);
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM sessions WHERE user_id = ?', [(int) $user['id']]));
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM server_drafts WHERE user_id = ?', [(int) $user['id']]));
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE thread_id = ?', [(int) $thread['thread_id']]));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'account_purged' AND actor_id IS NULL"));
     }

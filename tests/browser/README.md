@@ -47,6 +47,7 @@ harness grows. The current branch also captures:
 - `22-admin-email-dashboard`, `23-admin-email-suppressed`, `24-admin-email-test-sent`
 - `25-poll-voted` (Phase 4 carryover poll no-JS vote/result flow)
 - `26-slash-menu`, `27-giphy-inserted` (Phase 4 carryover slash menu and direct GIPHY insertion)
+- `28-server-draft-conflict` (`server_drafts` dark-surface cross-device conflict controls)
 
 ## Run it locally
 
@@ -57,6 +58,8 @@ Node 20+, and Chromium for Playwright (`npx playwright install --with-deps chrom
 cd tests/browser
 npm install
 npm run evidence       # prepare.sh resets+seeds retroboards_e2e, then runs Playwright
+npm run evidence:dark  # opts into dark surfaces and captures server-draft conflict evidence
+npm run a11y           # prepare.sh resets+seeds retroboards_e2e, then runs axe checks
 ```
 
 `prepare.sh` drops and recreates the dedicated `retroboards_e2e` database (never
@@ -73,3 +76,13 @@ MariaDB 11 service and uploads the screenshots as a build artifact. It is
 path-filtered — it runs on pushes that touch the app or this harness (and on
 manual `workflow_dispatch`) — so the evidence is regenerated without a local
 environment.
+
+## Accessibility
+
+`npm run a11y` runs `a11y.spec.ts` with `@axe-core/playwright` across the same
+desktop and mobile projects. It opts into `RB_BROWSER_DARK_SURFACES=1` during
+seeding so the otherwise-dark appeal, server-draft, and server-extension pages
+are available without changing screenshot evidence's browser-local draft mode.
+It currently checks the new admin email/admin extension surfaces and the member
+appeals/server-drafts surfaces for serious or critical WCAG 2A/2AA axe
+violations.

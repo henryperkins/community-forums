@@ -14,11 +14,13 @@ run from the project root on the VPS. `bin/console help` lists every command.
 - **Web/DB health:** `GET /healthz` returns `200` with DB status, `503` when the
   database is unreachable (it is dispatched before the DB-querying setup gate).
 - **Worker heartbeat / last success:** the cron wrappers for `worker:email` and
-  `worker:digest` print `sent/suppressed/failed/skipped` counts; capture stdout to
-  a log and alert if the instant worker has not drained in N minutes.
+  `worker:digest` print send/skip/failure counts; `worker:email` also prints
+  `retrying`. Capture stdout to a log and alert if the instant worker has not
+  drained in N minutes.
 - **Queue depth:** `EmailDeliveryRepository::statusCounts()` returns
   `queued/sent/failed/suppressed` totals (surface via a small status script or
-  admin view). A growing `queued` with `sent=0` means the transport is down.
+  admin view). A growing `queued` with `sent=0` means the transport is down;
+  queued rows with `next_attempt_at` in the future are waiting for backoff.
 - **Logs:** fan-out, worker claims/sends, suppression, search errors, DM/report
   actions, and OAuth callbacks log with request context and **never** log tokens
   or private message bodies.
@@ -57,11 +59,19 @@ covered by `AppFeatureFlagTest`.
   first, bounded; safe to run repeatedly — at-most-once per `post:user`).
 - **Send due digests:** `php bin/console worker:digest` (timezone-aware,
   watermarked; never sends twice or empty).
-- **Replay failed sends:** failed rows are marked `failed` and are **not**
-  auto-retried. After fixing the transport, use `/admin/email` to requeue
-  individual failed rows, or requeue them in bulk:
+- **Automatic retry/backoff:** transient transport failures stay `queued` until
+  attempts are exhausted. Defaults are five attempts total with retry delays of
+  5 minutes, 15 minutes, 1 hour, then 6 hours. `max_attempts=1` preserves the old
+  single-attempt behavior. `/admin/email` and the CSV export show attempt count,
+  last attempt, and next retry.
+- **Replay terminal failed sends:** once `attempt_count >= max_attempts`, rows
+  are marked `failed` and are **not** auto-retried. After fixing the transport,
+  use `/admin/email` to requeue individual failed rows, or requeue them in bulk:
   ```sql
-  UPDATE email_deliveries SET status='queued', error=NULL WHERE status='failed';
+  UPDATE email_deliveries
+     SET status='queued', error=NULL, attempt_count=0,
+         last_attempt_at=NULL, next_attempt_at=NULL
+   WHERE status='failed';
   ```
   then run `worker:email`. The `post:user` idempotency key prevents duplicates.
 - **Suppression:** bounced/complained addresses are suppressed and skipped.

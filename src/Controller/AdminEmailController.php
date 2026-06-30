@@ -153,7 +153,21 @@ final class AdminEmailController extends Controller
         $fh = fopen('php://temp', 'r+');
         // Pass $escape explicitly: PHP 8.4+ deprecates the implicit default and
         // an empty escape string is the forward-compatible (PHP 9) behaviour.
-        fputcsv($fh, ['id', 'created_at', 'kind', 'status', 'email', 'subject', 'message_id', 'error', 'sent_at'], escape: '');
+        fputcsv($fh, [
+            'id',
+            'created_at',
+            'kind',
+            'status',
+            'email',
+            'subject',
+            'message_id',
+            'error',
+            'attempt_count',
+            'max_attempts',
+            'last_attempt_at',
+            'next_attempt_at',
+            'sent_at',
+        ], escape: '');
         foreach ($rows as $r) {
             fputcsv($fh, [
                 (int) $r['id'],
@@ -164,6 +178,10 @@ final class AdminEmailController extends Controller
                 (string) ($r['subject'] ?? ''),
                 (string) ($r['message_id'] ?? ''),
                 (string) ($r['error'] ?? ''),
+                (int) ($r['attempt_count'] ?? 0),
+                (int) ($r['max_attempts'] ?? 1),
+                (string) ($r['last_attempt_at'] ?? ''),
+                (string) ($r['next_attempt_at'] ?? ''),
                 (string) ($r['sent_at'] ?? ''),
             ], escape: '');
         }

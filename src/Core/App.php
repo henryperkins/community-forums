@@ -11,6 +11,7 @@ use App\Controller\AdminBadgeRuleController;
 use App\Controller\AdminController;
 use App\Controller\AdminCustomEmojiController;
 use App\Controller\AdminEmailController;
+use App\Controller\AdminExtensionController;
 use App\Controller\AdminLinkPreviewController;
 use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
@@ -89,6 +90,8 @@ use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
 use App\Repository\SessionRepository;
 use App\Repository\ServiceSecretRepository;
+use App\Repository\ServerDraftRepository;
+use App\Repository\ServerExtensionRepository;
 use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\TagRepository;
@@ -130,6 +133,8 @@ use App\Service\ContentReferenceService;
 use App\Service\CustomEmojiService;
 use App\Service\EmailDomainVerifier;
 use App\Service\EmailOpsService;
+use App\Service\Extension\BubblewrapSandboxAdapter;
+use App\Service\Extension\ExtensionSandbox;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeRuleService;
@@ -626,6 +631,8 @@ final class App
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
         $c->bind(ModerationAppealRepository::class, fn (Container $c) => new ModerationAppealRepository($c->get(Database::class)));
+        $c->bind(ServerDraftRepository::class, fn (Container $c) => new ServerDraftRepository($c->get(Database::class)));
+        $c->bind(ServerExtensionRepository::class, fn (Container $c) => new ServerExtensionRepository($c->get(Database::class)));
         $c->bind(ApiTokenRepository::class, fn (Container $c) => new ApiTokenRepository($c->get(Database::class)));
         $c->bind(ApiTokenService::class, fn (Container $c) => new ApiTokenService(
             $c->get(Database::class),
@@ -777,6 +784,7 @@ final class App
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
+        $c->bind(ExtensionSandbox::class, fn () => new BubblewrapSandboxAdapter());
         $c->bind(FirstPartyHookRegistry::class, function (Container $c): FirstPartyHookRegistry {
             $registry = new FirstPartyHookRegistry($c->get(FeatureFlags::class));
             foreach (WebhookEvents::domainEvents() as $event => $_description) {
@@ -969,7 +977,6 @@ final class App
             $c->get(PostRepository::class),
             $c->get(ModerationService::class),
             $c->get(ModerationLogRepository::class),
-            $c->get(RepairService::class),
         ));
         $c->bind(CommunityMemoryService::class, fn (Container $c) => new CommunityMemoryService(
             $c->get(Database::class),
@@ -1031,6 +1038,7 @@ final class App
             $c->get(AccountDeletionRepository::class),
             $c->get(SessionRepository::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(ServerDraftRepository::class),
             $c->get(PasswordHasher::class),
         ));
         $c->bind(MfaService::class, fn (Container $c) => new MfaService(
@@ -1154,6 +1162,10 @@ final class App
         $r->post('/composer/preview', [ComposerController::class, 'preview']);
         $r->get('/composer/giphy-config', [SlashGiphyController::class, 'pickerConfig']);
         $r->get('/drafts', [DraftController::class, 'index']);
+        $r->post('/drafts/{id}/discard', [DraftController::class, 'discardPage']);
+        $r->get('/api/drafts/{key}', [DraftController::class, 'load']);
+        $r->post('/api/drafts/{key}', [DraftController::class, 'save']);
+        $r->post('/api/drafts/{key}/discard', [DraftController::class, 'discard']);
         $r->post('/u/{username}/follow', [FollowController::class, 'toggle']);
         $r->post('/u/{username}/followers/{id}/remove', [FollowController::class, 'removeFollower']);
         $r->post('/b/{id}/follow', [FollowController::class, 'toggleBoard']);
@@ -1322,6 +1334,7 @@ final class App
         $r->post('/admin/email/deliveries/{id}/requeue', [AdminEmailController::class, 'requeue']);
         $r->post('/admin/email/suppressions', [AdminEmailController::class, 'suppress']);
         $r->post('/admin/email/suppressions/remove', [AdminEmailController::class, 'unsuppress']);
+        $r->get('/admin/extensions', [AdminExtensionController::class, 'index']);
         $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
         $r->post('/admin/announcements', [AdminAnnouncementController::class, 'save']);
         $r->get('/admin/badge-rules', [AdminBadgeRuleController::class, 'index']);

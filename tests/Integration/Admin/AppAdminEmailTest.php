@@ -133,6 +133,24 @@ final class AppAdminEmailTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'email_requeued'"));
     }
 
+    public function test_dashboard_and_csv_export_attempt_metadata(): void
+    {
+        $deliv = new EmailDeliveryRepository($this->db);
+        $id = $deliv->enqueue(null, 'retry-meta@example.test', 'instant', 'Retry me', 'retry-meta:1');
+        $deliv->markAttemptFailed($id, 'smtp 451 temporary failure');
+
+        $this->actingAs($this->makeAdmin());
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('retry-meta@example.test', $body);
+        self::assertStringContainsString('1 / 5', $body);
+        self::assertStringContainsString('Next retry', $body);
+
+        $csv = $this->get('/admin/email/export')->body();
+        self::assertStringContainsString('attempt_count,max_attempts,last_attempt_at,next_attempt_at', $csv);
+        self::assertStringContainsString('retry-meta@example.test', $csv);
+        self::assertStringContainsString(',1,5,', $csv);
+    }
+
     public function test_export_returns_csv_attachment(): void
     {
         (new EmailDeliveryRepository($this->db))->enqueue(null, 'csv@example.test', 'instant', 'Hi', 'kx');

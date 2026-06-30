@@ -97,7 +97,7 @@ $this->section('title', 'Email delivery');
             <a class="btn btn-small" href="/admin/email/export">Download CSV</a>
         </form>
         <table class="audit">
-            <thead><tr><th>When</th><th>To</th><th>Kind</th><th>Status</th><th>Subject</th><th>Detail</th><th>Action</th></tr></thead>
+            <thead><tr><th>When</th><th>To</th><th>Kind</th><th>Status</th><th>Attempts</th><th>Subject</th><th>Detail</th><th>Action</th></tr></thead>
             <tbody>
             <?php foreach ($deliveries as $d): ?>
                 <tr>
@@ -105,6 +105,12 @@ $this->section('title', 'Email delivery');
                     <td><?= $e($d['email']) ?></td>
                     <td><?= $e($d['kind']) ?></td>
                     <td><?= $e($d['status']) ?></td>
+                    <td>
+                        <?= (int) ($d['attempt_count'] ?? 0) ?> / <?= (int) ($d['max_attempts'] ?? 1) ?>
+                        <?php if (!empty($d['next_attempt_at'])): ?>
+                            <br><span class="muted">Next retry <?= $e(human_datetime((string) $d['next_attempt_at'])) ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td><?= $e((string) ($d['subject'] ?? '')) ?></td>
                     <td><?= $e((string) ($d['error'] ?? $d['message_id'] ?? '')) ?></td>
                     <td>
@@ -120,7 +126,7 @@ $this->section('title', 'Email delivery');
                 </tr>
             <?php endforeach; ?>
             <?php if (empty($deliveries)): ?>
-                <tr><td colspan="7" class="muted">No deliveries match.</td></tr>
+                <tr><td colspan="8" class="muted">No deliveries match.</td></tr>
             <?php endif; ?>
             </tbody>
         </table>

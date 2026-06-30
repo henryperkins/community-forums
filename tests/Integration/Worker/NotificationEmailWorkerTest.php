@@ -98,12 +98,52 @@ final class NotificationEmailWorkerTest extends TestCase
     public function testTransportFailureMarksRowFailed(): void
     {
         $this->queuedDelivery();
+        $this->db->run('UPDATE email_deliveries SET max_attempts = 1');
         $mailer = new ArrayMailer();
         $mailer->failNext = true;
 
         $stats = $this->worker($mailer)->run();
         self::assertSame(1, $stats['failed']);
         self::assertSame("failed", (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"));
+    }
+
+    public function testTransportFailureSchedulesRetryWithBackoff(): void
+    {
+        $this->queuedDelivery();
+        $mailer = new ArrayMailer();
+        $mailer->failNext = true;
+
+        $stats = $this->worker($mailer)->run();
+
+        self::assertSame(0, $stats['failed']);
+        self::assertSame(1, $stats['retrying']);
+        $row = $this->db->fetch('SELECT status, attempt_count, max_attempts, last_attempt_at, next_attempt_at FROM email_deliveries LIMIT 1');
+        self::assertSame('queued', (string) $row['status']);
+        self::assertSame(1, (int) $row['attempt_count']);
+        self::assertSame(5, (int) $row['max_attempts']);
+        self::assertNotNull($row['last_attempt_at']);
+        self::assertNotNull($row['next_attempt_at']);
+        $seconds = (int) $this->db->fetchValue('SELECT TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), next_attempt_at) FROM email_deliveries LIMIT 1');
+        self::assertGreaterThanOrEqual(250, $seconds);
+        self::assertLessThanOrEqual(310, $seconds);
+    }
+
+    public function testMaxAttemptsOnePreservesTerminalFailureBehavior(): void
+    {
+        $this->queuedDelivery();
+        $this->db->run('UPDATE email_deliveries SET max_attempts = 1');
+        $mailer = new ArrayMailer();
+        $mailer->failNext = true;
+
+        $stats = $this->worker($mailer)->run();
+
+        self::assertSame(1, $stats['failed']);
+        self::assertSame(0, $stats['retrying']);
+        $row = $this->db->fetch('SELECT status, attempt_count, max_attempts, next_attempt_at FROM email_deliveries LIMIT 1');
+        self::assertSame('failed', (string) $row['status']);
+        self::assertSame(1, (int) $row['attempt_count']);
+        self::assertSame(1, (int) $row['max_attempts']);
+        self::assertNull($row['next_attempt_at']);
     }
 
     public function testBoundedDrainRespectsLimitAndResumesWithoutLoss(): void

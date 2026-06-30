@@ -58,6 +58,27 @@ final class AppThreadSplitMergeTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'split_thread' AND target_id = ?", [(int) $thread['thread_id']]));
     }
 
+    public function test_split_updates_touched_counters_without_global_repair(): void
+    {
+        $unrelated = $this->makeUser(['username' => 'split-unrelated']);
+        $this->db->run('UPDATE users SET post_count = 123 WHERE id = ?', [(int) $unrelated['id']]);
+        $thread = $this->makeThread($this->board, $this->member, 'Counter source', 'Opening post');
+        $firstReply = $this->posting()->reply($this->userEntity($this->member), $thread['thread_id'], ['body' => 'Counter reply one']);
+        $this->posting()->reply($this->userEntity($this->member), $thread['thread_id'], ['body' => 'Counter reply two']);
+
+        $this->actingAs($this->admin);
+        $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->post('/mod/t/' . $thread['thread_id'] . '/split', [
+            'title' => 'Counter split',
+            'post_ids' => (string) $firstReply,
+        ]);
+        $newThreadId = (int) $this->db->fetchValue("SELECT id FROM threads WHERE title = 'Counter split'");
+
+        self::assertSame(1, (int) $this->threads()->find($thread['thread_id'])['reply_count']);
+        self::assertSame(0, (int) $this->threads()->find($newThreadId)['reply_count']);
+        self::assertSame(123, (int) $this->db->fetchValue('SELECT post_count FROM users WHERE id = ?', [(int) $unrelated['id']]));
+    }
+
     public function test_admin_merges_source_thread_into_target_and_redirects_old_url(): void
     {
         $source = $this->makeThread($this->board, $this->member, 'Source topic', 'Source OP');
@@ -80,5 +101,24 @@ final class AppThreadSplitMergeTest extends TestCase
 
         $old = $this->get('/t/' . $source['thread_id'] . '-' . $source['slug']);
         $this->assertRedirect($old, '/t/' . $target['thread_id'] . '-' . $target['slug']);
+    }
+
+    public function test_merge_updates_touched_counters_without_global_repair(): void
+    {
+        $unrelated = $this->makeUser(['username' => 'merge-unrelated']);
+        $this->db->run('UPDATE users SET post_count = 456 WHERE id = ?', [(int) $unrelated['id']]);
+        $source = $this->makeThread($this->board, $this->member, 'Merge counter source', 'Source OP');
+        $this->posting()->reply($this->userEntity($this->member), $source['thread_id'], ['body' => 'Source reply']);
+        $target = $this->makeThread($this->board, $this->member, 'Merge counter target', 'Target OP');
+
+        $this->actingAs($this->admin);
+        $this->get('/t/' . $source['thread_id'] . '-' . $source['slug']);
+        $this->post('/mod/t/' . $source['thread_id'] . '/merge', [
+            'target_thread_id' => (int) $target['thread_id'],
+        ]);
+
+        self::assertSame(1, (int) $this->threads()->find($source['thread_id'])['is_deleted']);
+        self::assertSame(2, (int) $this->threads()->find($target['thread_id'])['reply_count']);
+        self::assertSame(456, (int) $this->db->fetchValue('SELECT post_count FROM users WHERE id = ?', [(int) $unrelated['id']]));
     }
 }

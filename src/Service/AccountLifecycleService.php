@@ -9,6 +9,7 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\AccountDeletionRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
@@ -25,6 +26,7 @@ final class AccountLifecycleService
         private AccountDeletionRepository $deletions,
         private SessionRepository $sessions,
         private ModerationLogRepository $logs,
+        private ServerDraftRepository $serverDrafts,
         private PasswordHasher $hasher,
     ) {
     }
@@ -64,6 +66,7 @@ final class AccountLifecycleService
                  ORDER BY m.conversation_id ASC, m.id ASC',
                 [$user->id()],
             ),
+            'server_drafts' => $this->serverDrafts->exportForUser($user->id()),
             'audit_log' => $this->db->fetchAll(
                 "SELECT actor_id, action, target_type, target_id, reason, before_json, after_json, created_at
                  FROM moderation_log
@@ -246,6 +249,7 @@ final class AccountLifecycleService
             'user_totp_credentials',
             'user_recovery_codes',
             'mfa_login_challenges',
+            'server_drafts',
         ];
         foreach ($tables as $table) {
             $this->db->run("DELETE FROM {$table} WHERE user_id = ?", [$userId]);

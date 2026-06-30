@@ -50,7 +50,40 @@ final class AppModerationAppealsTest extends TestCase
 
         $duplicate = $this->post('/appeals/posts/' . $this->replyId, ['reason' => 'Second try.']);
         $this->assertStatus(422, $duplicate);
+        self::assertStringContainsString('Second try.', $duplicate->body());
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM moderation_appeals WHERE target_type = ? AND target_id = ?', ['post', $this->replyId]));
+    }
+
+    public function test_appeals_page_renders_no_js_form_for_deleted_post(): void
+    {
+        $this->actingAs($this->member);
+
+        $page = $this->get('/appeals');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('/appeals/posts/' . $this->replyId, $page->body());
+        self::assertStringContainsString('name="reason"', $page->body());
+        self::assertStringContainsString('Reply to remove', $page->body());
+        self::assertStringContainsString('Submit appeal', $page->body());
+    }
+
+    public function test_appeals_page_renders_no_js_form_for_user_moderation_action(): void
+    {
+        $this->actingAs($this->admin);
+        $this->post('/mod/u/' . $this->member['id'] . '/warn', ['reason' => 'Mind the local rules.']);
+        $logId = (int) $this->db->fetchValue(
+            "SELECT id FROM moderation_log WHERE action = 'warn' AND target_type = 'user' AND target_id = ? ORDER BY id DESC LIMIT 1",
+            [(int) $this->member['id']],
+        );
+
+        $this->actingAs($this->member);
+        $page = $this->get('/appeals');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('/appeals/modlog/' . $logId, $page->body());
+        self::assertStringContainsString('warn', $page->body());
+        self::assertStringContainsString('Mind the local rules.', $page->body());
+        self::assertStringContainsString('Submit appeal', $page->body());
     }
 
     public function test_deleted_post_appeal_expires_after_30_days(): void
