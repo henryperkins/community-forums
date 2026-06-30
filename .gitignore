@@ -34,3 +34,6 @@ Thumbs.db
 
 # transient browser-evidence scratch
 .playwright-mcp/
+
+# design-pull tooling output (extracted design-system bundles; not used at runtime)
+.design-pull/
