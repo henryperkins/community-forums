@@ -1,0 +1,26 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Elevation & gilt" subtitle="Warm soft shadows (never hard black); the gold gilt ring" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 24px 22px; background: var(--surface-page); }
+  .row { display: flex; gap: 20px; align-items: center; }
+  .cell { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .box { width: 80px; height: 54px; background: var(--surface-raised); border-radius: var(--radius-lg); border: 1px solid var(--border-hair); }
+  .gilt { box-shadow: var(--gilt); border-color: transparent; }
+  .lbl { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell"><div class="box" style="box-shadow:var(--shadow-xs)"></div><span class="lbl">xs</span></div>
+    <div class="cell"><div class="box" style="box-shadow:var(--shadow-sm)"></div><span class="lbl">sm</span></div>
+    <div class="cell"><div class="box" style="box-shadow:var(--shadow-md)"></div><span class="lbl">md</span></div>
+    <div class="cell"><div class="box" style="box-shadow:var(--shadow-lg)"></div><span class="lbl">lg</span></div>
+    <div class="cell"><div class="box" style="box-shadow:var(--shadow-xl)"></div><span class="lbl">xl</span></div>
+    <div class="cell"><div class="box gilt"></div><span class="lbl">gilt</span></div>
+  </div>
+</body>
+</html>

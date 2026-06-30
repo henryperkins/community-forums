@@ -37,6 +37,171 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'thread-participants');   // two distinct authors → the stack renders
     }
 
+    public function test_login_renders_the_ceremonial_auth_gate(): void
+    {
+        $res = $this->get('/login');
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'auth-stage');
+        $this->assertSeeText($res, 'auth-stage-star');
+        $this->assertSeeText($res, 'auth-brand');
+        $this->assertSeeText($res, 'auth-eyebrow');
+        $this->assertSeeText($res, 'auth-form');
+        $this->assertSeeText($res, 'auth-colophon');
+    }
+
+    public function test_settings_account_renders_the_lapidary_console(): void
+    {
+        $user = $this->makeUser(['username' => 'scribe', 'display_name' => 'House Scribe']);
+        $this->actingAs($user);
+
+        $res = $this->get('/settings/account');
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'settings-screen');
+        $this->assertSeeText($res, 'settings-head');
+        $this->assertSeeText($res, 'settings-pane');
+        $this->assertSeeText($res, 'scribe-panel');
+        $this->assertSeeText($res, 'field-grid');
+    }
+
+    public function test_admin_dashboard_renders_the_operator_console_register(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'operator']);
+        $this->actingAs($admin);
+
+        $res = $this->get('/admin');
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'admin-subnav');
+        $this->assertSeeText($res, 'admin-pane');
+        $this->assertSeeText($res, 'pane-intro');
+        $this->assertSeeText($res, 'audit');
+    }
+
+    public function test_admin_branding_renders_inside_the_operator_console_register(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandkeeper']);
+        $this->actingAs($admin);
+
+        $res = $this->get('/admin/branding');
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'admin');
+        $this->assertSeeText($res, 'admin-head');
+        $this->assertSeeText($res, 'admin-pane');
+        $this->assertSeeText($res, 'brand-cols');
+        $this->assertSeeText($res, 'brand-preview');
+    }
+
+    public function test_imported_admin_branding_layout_css_is_available(): void
+    {
+        $css = (string) file_get_contents(dirname(__DIR__, 3) . '/public/assets/app.css');
+
+        self::assertStringContainsString('.brand-cols', $css);
+        self::assertStringContainsString('.code-area', $css);
+        self::assertStringContainsString('.state-active', $css);
+    }
+
+    public function test_messages_index_renders_the_private_counsel_reading_room(): void
+    {
+        $sender = $this->makeUser(['username' => 'imladris_dm_sender', 'display_name' => 'Imladris Sender']);
+        $recipient = $this->makeUser(['username' => 'imladris_dm_recipient', 'display_name' => 'Imladris Recipient']);
+        $this->makeThread($this->makeBoard($this->makeCategory()), $sender, 'Introductions', 'I can now write private counsel.');
+
+        $this->actingAs($sender);
+        $this->assertRedirect($this->post('/messages', [
+            'to' => $recipient['username'],
+            'body' => 'Private counsel opens here.',
+        ]));
+
+        $res = $this->get('/messages');
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'dm-shell');
+        $this->assertSeeText($res, 'dm-listpane');
+        $this->assertSeeText($res, 'dm-listpane-head');
+        $this->assertSeeText($res, 'Private counsel');
+        $this->assertSeeText($res, 'dm-row');
+    }
+
+    public function test_message_thread_renders_open_letter_bubbles_and_report_form(): void
+    {
+        $sender = $this->makeUser(['username' => 'letter_sender', 'display_name' => 'Letter Sender']);
+        $recipient = $this->makeUser(['username' => 'letter_recipient', 'display_name' => 'Letter Recipient']);
+        $this->makeThread($this->makeBoard($this->makeCategory()), $sender, 'Letters', 'I can now start conversations.');
+
+        $this->actingAs($sender);
+        $this->assertRedirect($this->post('/messages', [
+            'to' => $recipient['username'],
+            'body' => 'First private counsel.',
+        ]));
+        $conversationId = (int) $this->db->fetchValue('SELECT id FROM conversations ORDER BY id DESC LIMIT 1');
+
+        $this->actingAs($recipient);
+        $this->assertRedirect($this->post('/messages/' . $conversationId, ['body' => 'An open-letter reply.']));
+
+        $this->actingAs($sender);
+        $res = $this->get('/messages/' . $conversationId);
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'dm-shell reading');
+        $this->assertSeeText($res, 'dm-threadpane');
+        $this->assertSeeText($res, 'dm-thread-head');
+        $this->assertSeeText($res, 'dm-scroll');
+        $this->assertSeeText($res, 'dm-bubble');
+        $this->assertSeeText($res, 'dm-report-form');
+    }
+
+    public function test_moderation_reports_render_the_wardens_table(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'warden_admin']);
+        $reporter = $this->makeUser(['username' => 'warden_reporter']);
+        $reported = $this->makeUser(['username' => 'warden_reported']);
+        $this->makeThread($this->makeBoard($this->makeCategory()), $reporter, 'Reporter introduction', 'I can now start conversations.');
+
+        $this->actingAs($reporter);
+        $this->assertRedirect($this->post('/messages', [
+            'to' => $reported['username'],
+            'body' => 'Opening counsel.',
+        ]));
+        $conversationId = (int) $this->db->fetchValue('SELECT id FROM conversations ORDER BY id DESC LIMIT 1');
+
+        $this->actingAs($reported);
+        $this->assertRedirect($this->post('/messages/' . $conversationId, ['body' => 'wardens-table-report-marker']));
+        $messageId = (int) $this->db->fetchValue(
+            'SELECT id FROM dm_messages WHERE conversation_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1',
+            [$conversationId, (int) $reported['id']],
+        );
+
+        $this->actingAs($reporter);
+        $this->assertRedirect($this->post('/dm/' . $messageId . '/report', [
+            'reason_code' => 'harassment',
+            'reason' => 'Please review this.',
+        ]));
+
+        $this->actingAs($admin);
+        $res = $this->get('/mod/reports');
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'mod');
+        $this->assertSeeText($res, 'mod-head');
+        $this->assertSeeText($res, 'mod-subnav');
+        $this->assertSeeText($res, 'mod-pane');
+        $this->assertSeeText($res, 'report-row is-urgent');
+        $this->assertSeeText($res, 'wardens-table-report-marker');
+    }
+
+    public function test_imported_dm_and_moderation_layout_css_is_available(): void
+    {
+        $css = (string) file_get_contents(dirname(__DIR__, 3) . '/public/assets/app.css');
+
+        self::assertStringContainsString('.dm-shell', $css);
+        self::assertStringContainsString('.dm-bubble', $css);
+        self::assertStringContainsString('.mod-subnav', $css);
+        self::assertStringContainsString('.appeal-resolve', $css);
+    }
+
     public function test_single_author_thread_has_no_participant_stack(): void
     {
         $opener = $this->makeUser();

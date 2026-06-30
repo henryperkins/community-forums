@@ -1,8 +1,13 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Appeals'); ?>
-<div class="settings">
-    <h1>Appeals</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Council record</span>
+        <h1>Appeals</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
+        <main class="settings-pane mod-pane">
 
     <?php if (!empty($errors)): ?>
         <div class="card error-list" role="alert">
@@ -20,11 +25,12 @@
     <?php if (!empty($eligiblePosts) || !empty($eligibleLogs)): ?>
         <section class="card">
             <h2>Appealable actions</h2>
+            <p class="member-note">Explain what should be reviewed. The council record keeps the original action and your reason together.</p>
             <ul class="report-list">
                 <?php foreach ($eligiblePosts as $post): ?>
                     <?php $oldReason = (($old['target_type'] ?? '') === 'post' && (int) ($old['target_id'] ?? 0) === (int) $post['id']) ? (string) ($old['reason'] ?? '') : ''; ?>
                     <?php $oldReasonRendered = $oldReasonRendered || $oldReason !== ''; ?>
-                    <li class="report-row">
+                    <li class="report-row is-open">
                         <div class="report-head">
                             <span class="badge">post removed</span>
                             <span class="muted">
@@ -33,10 +39,10 @@
                             </span>
                         </div>
                         <blockquote class="report-excerpt"><?= $e(mb_strimwidth((string) $post['body'], 0, 220, '...')) ?></blockquote>
-                        <form method="post" action="/appeals/posts/<?= (int) $post['id'] ?>" class="stacked">
+                        <form method="post" action="/appeals/posts/<?= (int) $post['id'] ?>" class="appeal-form">
                             <?= $this->csrfField() ?>
                             <label for="appeal-post-<?= (int) $post['id'] ?>">Reason</label>
-                            <textarea id="appeal-post-<?= (int) $post['id'] ?>" name="reason" class="input" rows="3" maxlength="2000" required><?= $e($oldReason) ?></textarea>
+                            <textarea id="appeal-post-<?= (int) $post['id'] ?>" name="reason" class="input textarea-engraved" rows="3" maxlength="2000" required><?= $e($oldReason) ?></textarea>
                             <button class="btn btn-small" type="submit">Submit appeal</button>
                         </form>
                     </li>
@@ -44,16 +50,16 @@
                 <?php foreach ($eligibleLogs as $log): ?>
                     <?php $oldReason = (($old['target_type'] ?? '') === 'moderation_log' && (int) ($old['target_id'] ?? 0) === (int) $log['id']) ? (string) ($old['reason'] ?? '') : ''; ?>
                     <?php $oldReasonRendered = $oldReasonRendered || $oldReason !== ''; ?>
-                    <li class="report-row">
+                    <li class="report-row is-open">
                         <div class="report-head">
                             <span class="badge"><?= $e((string) $log['action']) ?></span>
                             <span class="muted"><?= $e(human_datetime((string) $log['created_at'])) ?></span>
                         </div>
                         <?php if (($log['reason'] ?? '') !== ''): ?><blockquote class="report-excerpt"><?= $e((string) $log['reason']) ?></blockquote><?php endif; ?>
-                        <form method="post" action="/appeals/modlog/<?= (int) $log['id'] ?>" class="stacked">
+                        <form method="post" action="/appeals/modlog/<?= (int) $log['id'] ?>" class="appeal-form">
                             <?= $this->csrfField() ?>
                             <label for="appeal-log-<?= (int) $log['id'] ?>">Reason</label>
-                            <textarea id="appeal-log-<?= (int) $log['id'] ?>" name="reason" class="input" rows="3" maxlength="2000" required><?= $e($oldReason) ?></textarea>
+                            <textarea id="appeal-log-<?= (int) $log['id'] ?>" name="reason" class="input textarea-engraved" rows="3" maxlength="2000" required><?= $e($oldReason) ?></textarea>
                             <button class="btn btn-small" type="submit">Submit appeal</button>
                         </form>
                     </li>
@@ -65,7 +71,7 @@
     <?php if (!$oldReasonRendered && (string) ($old['reason'] ?? '') !== ''): ?>
         <section class="card">
             <h2>Unsubmitted appeal text</h2>
-            <textarea class="input" rows="3" readonly><?= $e((string) $old['reason']) ?></textarea>
+            <textarea class="input textarea-engraved" rows="3" readonly><?= $e((string) $old['reason']) ?></textarea>
         </section>
     <?php endif; ?>
 
@@ -83,10 +89,12 @@
                         </div>
                         <?php if (($appeal['target_summary'] ?? '') !== ''): ?><p><?= $e((string) $appeal['target_summary']) ?></p><?php endif; ?>
                         <blockquote class="report-excerpt"><?= $e((string) $appeal['reason']) ?></blockquote>
-                        <?php if (($appeal['resolution_note'] ?? '') !== ''): ?><p class="muted">Resolution: <?= $e((string) $appeal['resolution_note']) ?></p><?php endif; ?>
+                        <?php if (($appeal['resolution_note'] ?? '') !== ''): ?><p class="resolution-note"><strong>Resolution</strong> <?= $e((string) $appeal['resolution_note']) ?></p><?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>
         <?php endif; ?>
     </section>
+        </main>
+    </div>
 </div>

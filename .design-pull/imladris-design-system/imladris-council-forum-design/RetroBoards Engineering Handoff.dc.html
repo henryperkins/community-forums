@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/imladris-design-system-89e0d236-6451-44a0-8280-e4b7917360ab/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/imladris-design-system-89e0d236-6451-44a0-8280-e4b7917360ab/tokens/colors.css">
+<link rel="stylesheet" href="_ds/imladris-design-system-89e0d236-6451-44a0-8280-e4b7917360ab/tokens/typography.css">
+<link rel="stylesheet" href="_ds/imladris-design-system-89e0d236-6451-44a0-8280-e4b7917360ab/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/imladris-design-system-89e0d236-6451-44a0-8280-e4b7917360ab/tokens/effects.css">
+<style>
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--parchment-100)}
+  .doc{box-sizing:border-box;max-width:8.5in;margin:0 auto;background:var(--parchment-100);padding:0 clamp(22px,5vw,0.85in);color:var(--ink-700);font-family:var(--font-body),Georgia,serif;font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .doc-frame{width:100%;border-collapse:collapse}
+  .doc-frame td{padding:0}
+  .hdr-space,.ftr-space{display:none}
+  .doc p,.doc li{max-width:69ch}
+  .doc h1,.doc h2,.doc h3,.doc h4{text-wrap:balance;margin:0}
+  .doc p,.doc li{text-wrap:pretty}
+  .doc a{color:var(--green-700);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--gold-500) 55%,transparent);text-underline-offset:2px}
+  @page{size:letter;margin:0}
+  @media print{
+    html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    html,body{margin:0;padding:0;background:var(--parchment-100)}
+    .doc{max-width:none!important;margin:0!important;padding:0 0.75in!important}
+    .hdr-space,.ftr-space{display:table-cell;height:0.7in}
+    .doc h2,.doc h3,.doc h4{break-after:avoid}
+    figure,pre,blockquote,img,tr,.keep{break-inside:avoid}
+    .doc p,.doc li{orphans:3;widows:3}
+    .screen-only{display:none!important}
+    .cover{break-after:page}
+    .pbreak{break-before:page}
+  }
+</style>
+</helmet>
+
+<main class="doc">
+<table class="doc-frame" role="presentation">
+<thead><tr><td class="hdr-space"></td></tr></thead>
+<tbody><tr><td>
+
+<!-- ============================ COVER ============================ -->
+<section class="cover" style="padding:34px 0 30px">
+  <div style="display:flex;align-items:center;gap:13px">
+    <span style="width:38px;height:38px;color:var(--green-700);flex:none"><svg viewBox="0 0 100 100" fill="none" style="width:100%;height:100%;display:block" aria-hidden="true"><g stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg></span>
+    <span style="font-family:var(--font-label),serif;font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-700)">Engineering Handoff · Design Reference</span>
+  </div>
+
+  <h1 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:74px;line-height:0.98;letter-spacing:-0.015em;color:var(--ink-900);margin:30px 0 0">RetroBoards</h1>
+  <div style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-weight:500;font-size:29px;line-height:1.2;color:var(--ink-500);margin-top:10px;max-width:24ch">The Community Inbox — information architecture &amp; key flows.</div>
+
+  <div style="height:2px;background:var(--rule-gold);width:128px;margin:26px 0 24px;opacity:0.85"></div>
+
+  <p style="font-size:18px;line-height:1.62;color:var(--ink-700);margin:0;max-width:62ch">This is the reference an engineer reads before touching the screens. It states how the product is organised, how a person moves through it, and what each surface owes the next — the plain account of a build, set beside the screens it describes. The figures throughout are the high-fidelity mock rendered in the Imladris design language; the structure, routes, and data they illustrate are the real RetroBoards.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-hair);border:1px solid var(--border-hair);border-radius:9px;overflow:hidden;margin-top:30px;max-width:none">
+    <div style="background:var(--parchment-50);padding:13px 16px"><div style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-700);margin-bottom:3px">Source of truth</div><div style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--ink-900)">DESIGN.md · v0.11</div></div>
+    <div style="background:var(--parchment-50);padding:13px 16px"><div style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-700);margin-bottom:3px">Stack</div><div style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--ink-900)">PHP 8 + MySQL · server-rendered</div></div>
+    <div style="background:var(--parchment-50);padding:13px 16px"><div style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-700);margin-bottom:3px">Build status</div><div style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--ink-900)">Phase 4 closeout · 456 tests green</div></div>
+    <div style="background:var(--parchment-50);padding:13px 16px"><div style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-700);margin-bottom:3px">Prepared for</div><div style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--ink-900)">Engineering · lakefrontdigital.io</div></div>
+  </div>
+
+  <div style="margin-top:26px;display:flex;flex-wrap:wrap;gap:8px 9px;font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.05em;color:var(--ink-500)">
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">01 Overview</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">02 The shell</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">03 Information architecture</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">04 Navigation &amp; triage</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">05 Screens &amp; flows</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">06 Mobile</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">07 Data model</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">08 Architecture</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">09 Permissions</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">10 Status &amp; tokens</span>
+    <span style="background:var(--parchment-200);border-radius:999px;padding:4px 12px">11 Build status</span>
+  </div>
+</section>
+
+<!-- ============================ §1 OVERVIEW ============================ -->
+<section style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§1 · Overview</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">The Community Inbox</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:54ch;margin:0 0 20px">Outlook's productivity, Slack's conversational warmth, and Discourse's permanence — one durable knowledge space, read like an inbox.</p>
+
+  <p style="margin:0 0 15px">RetroBoards is self-hostable forum software that presents classic message-board depth through an interface people already use daily. The default authenticated home is not a forum homepage; it is a <strong style="color:var(--ink-900);font-weight:600">personalized forum inbox</strong>. The durable unit is the <strong style="color:var(--ink-900);font-weight:600">topic</strong>: the inbox is personal, the topic is durable, and the composer is immediate. That sentence is the lens for every decision in this document.</p>
+
+  <p style="margin:0 0 22px">Three lineages combine, and naming them is the fastest way to predict how any screen should behave:</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;margin:0 0 26px">
+    <div class="keep" style="background:var(--parchment-50);border:1px solid var(--border-hair);border-top:3px solid var(--green-600);border-radius:9px;padding:16px 17px;box-shadow:var(--shadow-xs)">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green-700);margin-bottom:7px">Discourse bones</div>
+      <p style="margin:0;font-size:15px;line-height:1.5;max-width:none">Durable topics, categories, tags, search, solved answers, moderation — canonical knowledge that outlives the session.</p>
+    </div>
+    <div class="keep" style="background:var(--parchment-50);border:1px solid var(--border-hair);border-top:3px solid var(--river-500);border-radius:9px;padding:16px 17px;box-shadow:var(--shadow-xs)">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--river-700);margin-bottom:7px">Slack polish</div>
+      <p style="margin:0;font-size:15px;line-height:1.5;max-width:none">Immediacy, mentions, reactions, lightweight replies, a rich composer — conversational warmth at the point of writing.</p>
+    </div>
+    <div class="keep" style="background:var(--parchment-50);border:1px solid var(--border-hair);border-top:3px solid var(--gold-500);border-radius:9px;padding:16px 17px;box-shadow:var(--shadow-xs)">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:7px">Outlook discipline</div>
+      <p style="margin:0;font-size:15px;line-height:1.5;max-width:none">Triage, split-pane reading, unread state, focused filters, keyboard-driven density — catch up without opening everything.</p>
+    </div>
+  </div>
+
+  <p style="margin:0 0 15px">The aim is <strong style="color:var(--ink-900);font-weight:600">instant learnability</strong>: a first-time visitor reads, finds, and posts within seconds, because the layout mirrors tools they know. Guests read everything; friction appears only at the moment of contribution, and is explained in context. The front-end is progressive — core reading and posting work as server-rendered HTML, and JavaScript only enhances. A single notion of "logged in" drives every affordance on the page.</p>
+
+  <div class="keep" style="display:flex;gap:14px;padding:15px 18px;background:var(--green-050);border-left:3px solid var(--rule-gold);border-radius:7px;margin-top:6px">
+    <p style="margin:0;font-family:var(--font-body),serif;font-style:italic;font-size:16px;line-height:1.55;color:var(--ink-700);max-width:none"><strong style="font-style:normal;font-weight:600;color:var(--ink-900)">Status, stated plainly.</strong> The product is at Phase&nbsp;4 engineering closeout — deploy-dark topic workflow, group-DM hardening, advanced Markdown, public tags, windowed leaderboards, community-memory summaries. The automated suite is green at 456 tests / 1,635 assertions on PHP&nbsp;8.5. Large rich-composer surfaces (previews, polls, custom emoji, slash commands) are explicitly deferred. Where a surface is mock-only or planned, this document says so rather than implying it ships.</p>
+  </div>
+</section>
+
+<!-- ============================ §2 THE SHELL ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§2 · Layout</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">The three-pane shell</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:56ch;margin:0 0 20px">One full-height application screen, three columns and a top bar. Everything else is a state of these four regions.</p>
+
+  <p style="margin:0 0 20px">The shell is fixed; content flows through it. Reading left to right, the panes narrow in scope and deepen in focus: <strong style="color:var(--ink-900);font-weight:600">where am I</strong>, <strong style="color:var(--ink-900);font-weight:600">what is here</strong>, <strong style="color:var(--ink-900);font-weight:600">this conversation</strong>. An engineer can map every screen in this document onto one of these four regions.</p>
+
+  <!-- native shell diagram -->
+  <div class="keep" style="border:1px solid var(--border-hair);border-radius:11px;overflow:hidden;box-shadow:var(--shadow-sm);margin:0 0 14px;background:var(--parchment-50)">
+    <div style="display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 16px;background:var(--parchment-100);border-bottom:1px solid var(--border-hair)">
+      <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-500)">Top bar — brand · search · help · bell · identity</span>
+      <span style="display:flex;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--parchment-300)"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--parchment-300)"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--green-600)"></span></span>
+    </div>
+    <div style="display:flex;min-height:188px">
+      <div style="width:23%;border-right:1px solid var(--border-hair);padding:14px 14px;background:var(--parchment-100)">
+        <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-700);margin-bottom:8px">Pane 1 · Sidebar</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="height:7px;border-radius:3px;background:var(--green-200);width:80%"></span>
+          <span style="height:7px;border-radius:3px;background:var(--parchment-300);width:62%"></span>
+          <span style="height:7px;border-radius:3px;background:var(--parchment-300);width:70%"></span>
+          <span style="height:7px;border-radius:3px;background:var(--parchment-300);width:54%"></span>
+        </div>
+        <div style="font-family:var(--font-body),serif;font-size:12.5px;font-style:italic;color:var(--ink-400);margin-top:11px;line-height:1.4;max-width:none">Channels — quick filters, categories of boards, DMs.</div>
+      </div>
+      <div style="width:38%;border-right:1px solid var(--border-hair);padding:14px 14px">
+        <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-700);margin-bottom:8px">Pane 2 · Thread inbox</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="height:9px;border-radius:3px;background:var(--parchment-300);width:92%"></span>
+          <span style="height:9px;border-radius:3px;background:var(--green-200);width:96%"></span>
+          <span style="height:9px;border-radius:3px;background:var(--parchment-300);width:84%"></span>
+        </div>
+        <div style="font-family:var(--font-body),serif;font-size:12.5px;font-style:italic;color:var(--ink-400);margin-top:11px;line-height:1.4;max-width:none">Email-style rows — subject, snippet, count, unread / star.</div>
+      </div>
+      <div style="width:39%;padding:14px 14px;background:var(--parchment-100)">
+        <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-700);margin-bottom:8px">Pane 3 · Conversation</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="height:24px;border-radius:5px;background:var(--parchment-50);border:1px solid var(--border-hair);width:100%"></span>
+          <span style="height:24px;border-radius:5px;background:var(--green-050);border:1px solid var(--green-200);width:100%"></span>
+        </div>
+        <div style="font-family:var(--font-body),serif;font-size:12.5px;font-style:italic;color:var(--ink-400);margin-top:11px;line-height:1.4;max-width:none">Message stream + composer (or guest join-bar).</div>
+      </div>
+    </div>
+  </div>
+  <div style="font-family:var(--font-mono),monospace;font-size:11.5px;color:var(--ink-400);margin:0 0 26px">Regions map one-to-one onto server partials: <span style="color:var(--ink-700)">layout.php · partials/sidebar.php · partials/thread-list.php · partials/conversation.php · partials/composer.php</span></div>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:9px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-inbox-hall.png" alt="Desktop three-pane shell: sidebar of boards, thread inbox, signed in as a member" style="display:block;width:100%;height:auto;border-radius:5px;border:1px solid var(--border-hair)">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 1</span>
+      <span>The shell, signed in. Sidebar (Pane&nbsp;1) and thread inbox (Pane&nbsp;2) on the route <span style="color:var(--ink-700)">/c/{board-slug}</span>; the top bar carries search, bell, and the member identity area.</span>
+    </figcaption>
+  </figure>
+
+  <div class="keep" style="display:flex;gap:14px;padding:15px 18px;background:var(--surface-sunken);border-radius:8px;margin-top:22px">
+    <div style="flex:none;width:30px;height:30px;border-radius:7px;background:var(--parchment-50);border:1px solid var(--border-hair);display:flex;align-items:center;justify-content:center;color:var(--green-700)"><span style="width:16px;height:16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:100%;height:100%"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg></span></div>
+    <div>
+      <div style="font-family:var(--font-label),serif;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);margin-bottom:4px">Responsive — one column at ≤ 860px</div>
+      <p style="margin:0;font-size:15px;line-height:1.5;color:var(--ink-700);max-width:none">The sidebar becomes a slide-in drawer (a header hamburger opens it; the current board name is the title). Opening a thread slides the conversation over the inbox with a back button. Inbox rows grow to ≥ 44px tap targets, and a floating "New thread" button replaces the inline one. See §6.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ §3 IA ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§3 · Information architecture</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">Forum concepts, messaging metaphors</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:58ch;margin:0 0 22px">Every classic forum object maps onto a pattern the user already knows. Hold the mapping in your head and the rest of the product is legible.</p>
+
+  <div class="keep" style="border:1px solid var(--border-hair);border-radius:10px;overflow:hidden;margin:0 0 28px">
+    <table style="width:100%;border-collapse:collapse;font-size:14.5px">
+      <thead>
+        <tr style="background:var(--parchment-200)">
+          <th style="text-align:left;font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);font-weight:400;padding:9px 14px">Forum concept</th>
+          <th style="text-align:left;font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);font-weight:400;padding:9px 14px">Messaging metaphor</th>
+          <th style="text-align:left;font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);font-weight:400;padding:9px 14px">What it is</th>
+        </tr>
+      </thead>
+      <tbody style="font-family:var(--font-body),serif;color:var(--ink-700)">
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Category</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)">Sidebar section</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Ordered, collapsible grouping of boards.</td></tr>
+        <tr><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Board</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--gold-700)">#channel</span></td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">A topic area with slug, name, description, moderators.</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Thread (topic)</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)">Inbox row / email</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">A titled discussion holding an ordered list of posts. <em>The durable unit.</em></td></tr>
+        <tr><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Post (reply)</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)">Chat message</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">A single message; the first post is the <strong style="font-weight:600;color:var(--ink-900)">OP</strong>.</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Reaction</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)">Emoji reaction</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">A lightweight response to a post; also the unit of reputation.</td></tr>
+        <tr><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Star</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)">Email star / save</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">A personal bookmark on a thread; powers the Starred filter.</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Subscription</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)">"Get notified"</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Opt-in notifications for a thread or a whole board.</td></tr>
+        <tr><td style="padding:9px 14px;border-top:1px solid var(--border-hair);color:var(--ink-900);font-weight:600">Direct message</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair)">Slack DM</td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">A private conversation outside any board (1:1 in v1).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:23px;color:var(--ink-900);margin:0 0 9px">The sidebar is two lists and a header</h3>
+  <p style="margin:0 0 18px">Pane&nbsp;1 reads top to bottom as: a workspace header; a row of <strong style="color:var(--ink-900);font-weight:600">quick filters</strong> that cut across all boards — Inbox, Mentions, Watching, Drafts; then the <strong style="color:var(--ink-900);font-weight:600">categories</strong>, each a collapsible group of boards carrying an unread dot; and a <strong style="color:var(--ink-900);font-weight:600">Direct Messages</strong> section with presence dots. Collapse state is remembered per user.</p>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:0 0 28px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:15px 17px">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:8px">Quick filters — cross-board triage</div>
+      <p style="margin:0;font-size:14.5px;line-height:1.5;max-width:none">Personal views that ignore the category tree: your inbox, the posts that mention you, threads you watch, and unsent drafts. These are the email half of the thesis.</p>
+    </div>
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:15px 17px">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:8px">Categories — the durable tree</div>
+      <p style="margin:0;font-size:14.5px;line-height:1.5;max-width:none">The structural home of every topic. Ordered, collapsible, unread-aware. This is the forum half — where knowledge lives once the inbox has moved on.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:23px;color:var(--ink-900);margin:0 0 9px">Taxonomy is data, not structure</h3>
+  <p style="margin:0 0 16px">Categories and boards are <strong style="color:var(--ink-900);font-weight:600">admin-managed at runtime</strong> — created, renamed, and reordered from <span style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--ink-700)">/admin/structure</span>, never hard-coded. The seed content is illustrative only. The shipping product seeds a gaming community (a <em>Gaming — Current Gen</em> category over boards like <span style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--gold-700)">#playstation-2</span>); the mock in these figures seeds a governance council instead. Both are the same machinery with different rows:</p>
+
+  <div class="keep" style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:18px 20px;margin:0 0 14px;box-shadow:var(--shadow-xs)">
+    <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-400);margin-bottom:12px">Seed taxonomy as pictured — four categories, ten boards</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
+      <div>
+        <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--green-700);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-hair)">The Commons</div>
+        <div style="font-family:var(--font-mono),monospace;font-size:12px;line-height:1.85;color:var(--ink-500)"><div>#announcements</div><div>#introductions</div><div>#the-valley</div></div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--green-700);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-hair)">Vilya · Expose</div>
+        <div style="font-family:var(--font-mono),monospace;font-size:12px;line-height:1.85;color:var(--ink-500)"><div>#interpretability</div><div>#evaluations</div><div>#capability-disclosure</div></div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--green-700);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-hair)">Narya · Govern</div>
+        <div style="font-family:var(--font-mono),monospace;font-size:12px;line-height:1.85;color:var(--ink-500)"><div>#access-control</div><div>#usage-policy</div><div>#incident-response</div></div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--green-700);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-hair)">Nenya · Attest</div>
+        <div style="font-family:var(--font-mono),monospace;font-size:12px;line-height:1.85;color:var(--ink-500)"><div>#provenance</div><div>#audit-trails</div><div>#red-team</div></div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:14px;color:var(--ink-400);font-style:italic;margin:0 0 28px;max-width:none">Engineering note — there is no fixed enum of boards anywhere in the codebase; swapping the seed is a data migration, not a code change.</p>
+
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:23px;color:var(--ink-900);margin:0 0 9px">Every view is a real URL</h3>
+  <p style="margin:0 0 16px">The UI feels like a single-page app, but each view is a server-rendered, shareable, crawlable route. JavaScript enhances navigation; it is never required to reach a view.</p>
+
+  <pre class="keep" style="margin:0 0 8px;background:var(--twilight-800);color:var(--mist-100);border-radius:10px;padding:18px 20px;overflow-x:auto;font-family:var(--font-mono),monospace;font-size:12.5px;line-height:1.85"><span style="color:var(--gold-400)">/</span>                          Home — board index / first board
+<span style="color:var(--gold-400)">/c/{board-slug}</span>            A board's thread inbox      <span style="color:#7E8A78">e.g. /c/playstation-2</span>
+<span style="color:var(--gold-400)">/c/{board-slug}?sort=active</span>  Sorted / paginated inbox
+<span style="color:var(--gold-400)">/t/{thread-id}-{slug}</span>      A thread (conversation)
+<span style="color:var(--gold-400)">/t/{id}-{slug}#p{post_id}</span>  Permalink to one post
+<span style="color:var(--gold-400)">/u/{username}</span>              A user profile
+<span style="color:var(--gold-400)">/dm/{conversation-id}</span>      A direct-message thread     <span style="color:#7E8A78">(auth only)</span>
+<span style="color:var(--gold-400)">/search?q=…</span>               Search results
+<span style="color:var(--gold-400)">/settings</span>                  Account &amp; preferences       <span style="color:#7E8A78">(auth only)</span>
+<span style="color:var(--gold-400)">/login · /register · /logout</span>  Auth
+<span style="color:var(--gold-400)">/mod/… · /admin/…</span>          Moderation &amp; operator tools <span style="color:#7E8A78">(mod / admin)</span></pre>
+  <div style="font-family:var(--font-mono),monospace;font-size:11.5px;color:var(--ink-400);margin:0">Server-rendered first · PDO prepared statements · progressive enhancement over plain links and form POSTs.</div>
+</section>
+
+<!-- ============================ §4 NAV & TRIAGE ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§4 · Navigation &amp; triage</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">Two axes — what to show, how densely</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:58ch;margin:0 0 22px">The inbox is the product's working surface. It is tuned along two independent axes: which threads appear, and how much room each one takes.</p>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 26px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:17px 19px;box-shadow:var(--shadow-xs)">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:10px">Sort tabs — the order</div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:14.5px;line-height:1.45">
+        <div style="display:flex;gap:10px"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700);min-width:74px">Active</span><span style="max-width:none">Default — by <span style="font-family:var(--font-mono),monospace;font-size:12px">last_post_at</span> desc.</span></div>
+        <div style="display:flex;gap:10px"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700);min-width:74px">Newest</span><span style="max-width:none">By <span style="font-family:var(--font-mono),monospace;font-size:12px">created_at</span> desc.</span></div>
+        <div style="display:flex;gap:10px"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700);min-width:74px">Unanswered</span><span style="max-width:none">Toggle — <span style="font-family:var(--font-mono),monospace;font-size:12px">reply_count = 0</span>.</span></div>
+      </div>
+      <p style="margin:11px 0 0;font-size:13px;color:var(--ink-400);font-style:italic;max-width:none">Selection persists in the URL (<span style="font-family:var(--font-mono),monospace;font-size:12px">?sort=active</span>). On <span style="font-family:var(--font-mono),monospace;font-size:12px">/</span> the tabs span all boards; on a board they scope to it.</p>
+    </div>
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:17px 19px;box-shadow:var(--shadow-xs)">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:10px">Filter tabs — the set</div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:14.5px;line-height:1.45">
+        <div style="display:flex;gap:10px"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700);min-width:62px">All</span><span style="max-width:none">Everything in the current scope.</span></div>
+        <div style="display:flex;gap:10px"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700);min-width:62px">Unread</span><span style="max-width:none"><span style="font-family:var(--font-mono),monospace;font-size:12px">last_post_id &gt; last_read_post_id</span>.</span></div>
+        <div style="display:flex;gap:10px"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700);min-width:62px">Starred</span><span style="max-width:none">Personal bookmarks.</span></div>
+        <div style="display:flex;gap:10px"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700);min-width:62px">Mine</span><span style="max-width:none">Threads you authored.</span></div>
+      </div>
+      <p style="margin:11px 0 0;font-size:13px;color:var(--ink-400);font-style:italic;max-width:none">Client filter in the mock; server-backed when live, from <span style="font-family:var(--font-mono),monospace;font-size:12px">thread_user</span>.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:23px;color:var(--ink-900);margin:0 0 9px">Density — comfortable vs. compact</h3>
+  <p style="margin:0 0 16px">The same inbox renders at two densities. <strong style="color:var(--ink-900);font-weight:600">Comfortable</strong> (called <em>Council Hall</em> in the mock, FIG&nbsp;1) gives each thread a card with avatar, snippet, and metadata — for reading and deciding. <strong style="color:var(--ink-900);font-weight:600">Compact</strong> (<em>Watch</em>) collapses to one scannable line per thread, with the status carried on a left rule — for clearing a backlog at speed. Density is a saved account preference (§5.7), not a per-visit toggle.</p>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:9px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-inbox-watch.png" alt="The inbox at compact density: one line per thread with a coloured left rule for status" style="display:block;width:100%;height:auto;border-radius:5px;border:1px solid var(--border-hair)">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 2</span>
+      <span>Compact density. One row per thread; the left-rule colour and a redundant word carry status, so a backlog reads at a glance.</span>
+    </figcaption>
+  </figure>
+
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:23px;color:var(--ink-900);margin:28px 0 9px">The inbox grows email-style triage</h3>
+  <p style="margin:0 0 15px">The thesis makes triage first-class. Beyond the v1 filter tabs, the inbox earns a fuller set of saved views and per-thread states — most are P1/P2 and additive to the schema (a <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">topic_status</span> enum on threads, plus <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">snoozed_until</span> and <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">assigned_to</span> on <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">thread_user</span>). They deepen the core without changing it.</p>
+
+  <div class="keep" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px">
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--green-800);background:var(--green-050);border:1px solid var(--green-200);border-radius:999px;padding:5px 13px">For You</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Unread</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Mentions</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Replies to You</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Watching</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Needs Answer</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Assigned</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Decisions</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Solved</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Drafts</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:999px;padding:5px 13px">Snoozed</span>
+    <span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-500);background:transparent;border:1px dashed var(--border-strong);border-radius:999px;padding:5px 13px">Moderation · staff</span>
+  </div>
+  <p style="font-size:13px;color:var(--ink-400);font-style:italic;margin:9px 0 0;max-width:none">Per-thread status states — Solved, Needs Answer, Decision Made, Staff Notice, Pinned, Locked, Archived, Assigned, Escalated, Watching, Muted, Snoozed — render as status chips in the row and the topic header. Full catalogue and tokens in §10.</p>
+</section>
+
+<!-- ============================ §5 SCREENS & FLOWS ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§5 · Screens &amp; flows</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">Reading, posting, and proving who you are</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:60ch;margin:0 0 8px">Each surface is given the same way: what it is for, the parts it is built from, and the flow that runs through it.</p>
+</section>
+
+<!-- 5.1 Conversation -->
+<section style="padding-top:30px">
+  <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-400);margin-bottom:7px">5.1 · Pane 3</div>
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:26px;color:var(--ink-900);margin:0 0 8px">The conversation</h3>
+  <p style="margin:0 0 18px">A thread opens as a chat-style message stream with the composer pinned to the bottom. The first post is the <strong style="color:var(--ink-900);font-weight:600">OP</strong>; consecutive posts by one author within a window drop the repeated avatar and name. Posts carry derived role badges (<strong style="color:var(--ink-900);font-weight:600">OP</strong>, <strong style="color:var(--ink-900);font-weight:600">Staff</strong>), a reaction count that feeds reputation, and a hover toolbar for react / quote / edit / delete / report.</p>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:0 0 22px">
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45"><strong style="color:var(--ink-900);font-weight:600">Accepted answer.</strong> The OP marks one reply solved; it lifts to the top with a green plate, and the thread shows the <em>Solved</em> chip.</div></div>
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45"><strong style="color:var(--ink-900);font-weight:600">Quote / reply-with-context.</strong> Stored as <span style="font-family:var(--font-mono),monospace;font-size:12px">parent_post_id</span>; the composer pre-fills a quote block.</div></div>
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45"><strong style="color:var(--ink-900);font-weight:600">Edit / delete own.</strong> An edited-at marker; deletes are soft, preserving the audit trail.</div></div>
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45"><strong style="color:var(--ink-900);font-weight:600">Permalink.</strong> Every post is addressable at <span style="font-family:var(--font-mono),monospace;font-size:12px">/t/{id}-{slug}#p{post_id}</span>.</div></div>
+  </div>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:9px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-thread-member.png" alt="An open thread with the OP, an accepted answer, reactions, and the member composer" style="display:block;width:100%;height:auto;border-radius:5px;border:1px solid var(--border-hair)">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 3</span>
+      <span>Route <span style="color:var(--ink-700)">/t/{id}-{slug}</span>, signed in. The OP carries the <span style="color:var(--ink-700)">OP</span> badge; the sticky composer reads "Posting as …". Reaction counts under each post sum into reputation.</span>
+    </figcaption>
+  </figure>
+
+  <div class="keep" style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:17px 19px;margin-top:20px">
+    <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:12px">Flow — reply with a quote</div>
+    <div style="display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;gap:13px;align-items:flex-start;padding-bottom:11px"><span style="flex:none;width:23px;height:23px;border-radius:50%;background:var(--green-700);color:var(--parchment-50);font-family:var(--font-mono),monospace;font-size:11px;display:flex;align-items:center;justify-content:center">1</span><div style="font-size:14.5px;line-height:1.45;padding-top:1px;max-width:none">Hover a post → <strong style="color:var(--ink-900);font-weight:600">Quote</strong>.</div></div>
+      <div style="display:flex;gap:13px;align-items:flex-start;padding-bottom:11px;border-top:1px solid var(--border-hair);padding-top:11px"><span style="flex:none;width:23px;height:23px;border-radius:50%;background:var(--green-700);color:var(--parchment-50);font-family:var(--font-mono),monospace;font-size:11px;display:flex;align-items:center;justify-content:center">2</span><div style="font-size:14.5px;line-height:1.45;padding-top:1px;max-width:none">The composer pre-fills a quote block referencing that post (<span style="font-family:var(--font-mono),monospace;font-size:12px">parent_post_id</span>).</div></div>
+      <div style="display:flex;gap:13px;align-items:flex-start;border-top:1px solid var(--border-hair);padding-top:11px"><span style="flex:none;width:23px;height:23px;border-radius:50%;background:var(--green-700);color:var(--parchment-50);font-family:var(--font-mono),monospace;font-size:11px;display:flex;align-items:center;justify-content:center">3</span><div style="font-size:14.5px;line-height:1.45;padding-top:1px;max-width:none"><strong style="color:var(--ink-900);font-weight:600">Enter</strong> sends; the reply appends optimistically and the count increments.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5.2 Composer -->
+<section style="padding-top:34px">
+  <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-400);margin-bottom:7px">5.2 · Composer</div>
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:26px;color:var(--ink-900);margin:0 0 8px">Writing a post or a topic</h3>
+  <p style="margin:0 0 18px">One composer serves both the sticky quick-reply and the New Topic dialog. The body format is <strong style="color:var(--ink-900);font-weight:600">hybrid live-Markdown</strong> — Markdown is canonical, it formats as you type, and it is sanitised on render. A "Posting as {you}" row keeps logged-in state in view. The full grammar lives in <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">COMPOSER.md</span>.</p>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:0 0 22px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:15px 17px">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:10px">Keyboard</div>
+      <div style="display:flex;flex-direction:column;gap:7px;font-size:14px;line-height:1.4">
+        <div style="display:flex;gap:10px"><kbd style="font-family:var(--font-mono),monospace;font-size:11px;background:var(--parchment-200);border:1px solid var(--border-hair);border-radius:4px;padding:1px 7px;min-width:78px;text-align:center">Enter</kbd><span style="max-width:none">Send</span></div>
+        <div style="display:flex;gap:10px"><kbd style="font-family:var(--font-mono),monospace;font-size:11px;background:var(--parchment-200);border:1px solid var(--border-hair);border-radius:4px;padding:1px 7px;min-width:78px;text-align:center">⇧ Enter</kbd><span style="max-width:none">New line</span></div>
+        <div style="display:flex;gap:10px"><kbd style="font-family:var(--font-mono),monospace;font-size:11px;background:var(--parchment-200);border:1px solid var(--border-hair);border-radius:4px;padding:1px 7px;min-width:78px;text-align:center">Esc</kbd><span style="max-width:none">Blur the composer</span></div>
+        <div style="display:flex;gap:10px"><kbd style="font-family:var(--font-mono),monospace;font-size:11px;background:var(--parchment-200);border:1px solid var(--border-hair);border-radius:4px;padding:1px 7px;min-width:78px;text-align:center">⌘/Ctrl K</kbd><span style="max-width:none">Insert a link</span></div>
+      </div>
+    </div>
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:15px 17px">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:10px">Resilience</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.45">
+        <div style="max-width:none"><strong style="color:var(--ink-900);font-weight:600">Draft auto-save</strong> — per thread, per user, in <span style="font-family:var(--font-mono),monospace;font-size:11.5px">localStorage</span> (<span style="font-family:var(--font-mono),monospace;font-size:11.5px">draft:thread:{t}:{u}</span>); restored on open, cleared on post. The Drafts filter lists them.</div>
+        <div style="max-width:none"><strong style="color:var(--ink-900);font-weight:600">Optimistic send</strong> — the post inserts immediately and rolls back with a toast on error.</div>
+        <div style="max-width:none"><strong style="color:var(--ink-900);font-weight:600">@mentions</strong> — autocomplete in the composer; parsed on submit to notify, block-list aware.</div>
+      </div>
+    </div>
+  </div>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:9px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-new-topic.png" alt="The New Topic dialog: board select, title field, and Markdown body" style="display:block;width:100%;height:auto;border-radius:5px;border:1px solid var(--border-hair)">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 4</span>
+      <span>New Topic — board select (defaults to the current board), a plain title, and a Markdown body. Submit creates the thread; its first post becomes the OP, and it lands at the top of the inbox.</span>
+    </figcaption>
+  </figure>
+
+  <div class="keep" style="background:var(--green-050);border:1px solid var(--green-200);border-radius:10px;padding:17px 19px;margin-top:20px">
+    <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green-800);margin-bottom:12px">Flow — register &amp; first post</div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;font-family:var(--font-body),serif;font-size:14.5px;color:var(--ink-700)">
+      <span style="background:var(--parchment-50);border:1px solid var(--green-200);border-radius:999px;padding:5px 13px">Sign up — email + password</span>
+      <span style="color:var(--gold-600)">→</span>
+      <span style="background:var(--parchment-50);border:1px solid var(--green-200);border-radius:999px;padding:5px 13px">Logged in immediately</span>
+      <span style="color:var(--gold-600)">→</span>
+      <span style="background:var(--parchment-50);border:1px solid var(--green-200);border-radius:999px;padding:5px 13px">Identity appears top-right</span>
+      <span style="color:var(--gold-600)">→</span>
+      <span style="background:var(--parchment-50);border:1px solid var(--green-200);border-radius:999px;padding:5px 13px">Composer replaces the join-bar</span>
+      <span style="color:var(--gold-600)">→</span>
+      <span style="background:var(--parchment-50);border:1px solid var(--green-200);border-radius:999px;padding:5px 13px">Type → Enter → post appears, count +1</span>
+    </div>
+  </div>
+</section>
+
+<!-- 5.3 Identity & auth -->
+<section class="pbreak" style="padding-top:34px">
+  <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-400);margin-bottom:7px">5.3 · Identity</div>
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:26px;color:var(--ink-900);margin:0 0 8px">Logged in vs. logged out</h3>
+  <p style="margin:0 0 18px">This is a cornerstone: it is always obvious whether you are signed in and what you may do. <strong style="color:var(--ink-900);font-weight:600">Two unmistakable signals</strong> carry the state, both driven by a single flag (<span style="font-family:var(--font-mono),monospace;font-size:12px">.app.guest</span>). Guests read everything; the wall appears only at contribution, explained in place.</p>
+
+  <div class="keep" style="border:1px solid var(--border-hair);border-radius:10px;overflow:hidden;margin:0 0 24px">
+    <div style="display:grid;grid-template-columns:120px 1fr 1fr">
+      <div style="background:var(--parchment-200);padding:11px 14px;font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700)">Signal</div>
+      <div style="background:var(--parchment-200);padding:11px 14px;font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-500);border-left:1px solid var(--border-hair)">Guest</div>
+      <div style="background:var(--parchment-200);padding:11px 14px;font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-800);border-left:1px solid var(--border-hair)">Member</div>
+      <div style="background:var(--parchment-50);padding:13px 14px;border-top:1px solid var(--border-hair);font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-900)">Top bar</div>
+      <div style="background:var(--parchment-50);padding:13px 14px;border-top:1px solid var(--border-hair);border-left:1px solid var(--border-hair);font-size:14px;line-height:1.45;max-width:none">A <strong style="color:var(--ink-900);font-weight:600">Guest</strong> pill with <strong style="color:var(--ink-900);font-weight:600">Log in / Sign up</strong> and a generic silhouette.</div>
+      <div style="background:var(--parchment-50);padding:13px 14px;border-top:1px solid var(--border-hair);border-left:1px solid var(--border-hair);font-size:14px;line-height:1.45;max-width:none">Avatar + name + green presence dot + caret → account menu; a notification dot on the bell.</div>
+      <div style="background:var(--parchment-50);padding:13px 14px;border-top:1px solid var(--border-hair);font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.04em;color:var(--ink-900)">Pane 3</div>
+      <div style="background:var(--parchment-50);padding:13px 14px;border-top:1px solid var(--border-hair);border-left:1px solid var(--border-hair);font-size:14px;line-height:1.45;max-width:none">A <strong style="color:var(--ink-900);font-weight:600">join-bar</strong> — "browsing as a guest; log in to reply". New Topic hidden.</div>
+      <div style="background:var(--parchment-50);padding:13px 14px;border-top:1px solid var(--border-hair);border-left:1px solid var(--border-hair);font-size:14px;line-height:1.45;max-width:none">The full composer, labelled "Posting as {you}".</div>
+    </div>
+  </div>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:0 0 4px">
+    <figure style="margin:0">
+      <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:8px;box-shadow:var(--shadow-sm)">
+        <img src="doc-figures/fig-inbox-guest.png" alt="The inbox as a guest: a Guest pill and Log in / Sign up in the top bar" style="display:block;width:100%;height:auto;border-radius:4px;border:1px solid var(--border-hair)">
+      </div>
+      <figcaption style="margin-top:8px;font-family:var(--font-mono),monospace;font-size:11px;line-height:1.5;color:var(--ink-400);display:flex;gap:8px"><span style="color:var(--gold-700);font-weight:500">FIG 5</span><span>Guest top bar — read-only, Log in / Sign up.</span></figcaption>
+    </figure>
+    <figure style="margin:0">
+      <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:8px;box-shadow:var(--shadow-sm)">
+        <img src="doc-figures/fig-thread-guest.png" alt="A thread as a guest: the join-bar replaces the composer" style="display:block;width:100%;height:auto;border-radius:4px;border:1px solid var(--border-hair)">
+      </div>
+      <figcaption style="margin-top:8px;font-family:var(--font-mono),monospace;font-size:11px;line-height:1.5;color:var(--ink-400);display:flex;gap:8px"><span style="color:var(--gold-700);font-weight:500">FIG 6</span><span>The join-bar in place of the composer.</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="keep" style="display:flex;gap:14px;padding:16px 19px;background:var(--green-050);border-left:3px solid var(--rule-gold);border-radius:7px;margin-top:22px">
+    <div style="max-width:none">
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-800);margin-bottom:8px">Acceptance criteria — Auth (P0)</div>
+      <ul style="margin:0;padding-left:18px;font-size:14.5px;line-height:1.55;color:var(--ink-700)">
+        <li style="margin-bottom:5px;max-width:none">A visitor with no account can read all public content and sees a Log in / Sign up affordance and <em>no</em> composer.</li>
+        <li style="margin-bottom:5px;max-width:none">Submitting a unique email + valid password creates an account (password stored only as a hash) and logs them in.</li>
+        <li style="margin-bottom:5px;max-width:none">Returning within the session lifetime keeps them logged in; Log out invalidates the session and returns the guest state.</li>
+        <li style="margin:0;max-width:none">Invalid credentials show a clear error and never reveal whether the email exists.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 5.4 Profile -->
+<section style="padding-top:34px">
+  <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-400);margin-bottom:7px">5.4 · Identity, persisted</div>
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:26px;color:var(--ink-900);margin:0 0 8px">Profile &amp; reputation</h3>
+  <p style="margin:0 0 18px">A public profile at <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">/u/{username}</span> gathers display name, bio, location, join date, post count, reputation, and recent activity. Avatars are generated monograms in the mock; uploads come later. <strong style="color:var(--ink-900);font-weight:600">Reputation is derived, not awarded</strong> — it is the sum of reactions a member's posts have received (+1 each), with a small accepted-answer bonus and self-reactions excluded. Because it is computed from reactions, deleting a post or reaction adjusts it automatically; moderation stays the only lever.</p>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:9px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-profile.png" alt="A member profile with a twilight header, reputation, badges, and an activity feed" style="display:block;width:100%;height:auto;border-radius:5px;border:1px solid var(--border-hair)">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 7</span>
+      <span>Profile — a twilight identity header (reputation, follow / message), marks of esteem (badges, including a locked one shown as a conspicuous gap), and an activity feed. Tabs for Threads / Posts / Commends.</span>
+    </figcaption>
+  </figure>
+  <p style="font-size:13px;color:var(--ink-400);font-style:italic;margin:8px 0 0;max-width:none">Reputation gates nothing in v1 — it is purely social. Trust levels, badges-from-rep, and ranks are the community pass (P2), kept deliberately separate.</p>
+</section>
+
+<!-- 5.5 Leaderboard -->
+<section style="padding-top:34px">
+  <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-400);margin-bottom:7px">5.5 · Recognition</div>
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:26px;color:var(--ink-900);margin:0 0 8px">The leaderboard</h3>
+  <p style="margin:0 0 18px">Windowed and per-board leaderboards (Phase&nbsp;4) rank members by reputation over a window — Week, Month, All-time — backed by a <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">reputation_events</span> ledger rather than a single denormalised total, so a window can be recomputed. It is a <strong style="color:var(--ink-900);font-weight:600">page you choose to visit, never a banner on your inbox</strong>: esteem recognises contribution, grants no power, and a member may keep themselves off the ledger.</p>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:9px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-leaderboard.png" alt="A leaderboard ranking members by reputation, with Week / Month / All-time windows" style="display:block;width:100%;height:auto;border-radius:5px;border:1px solid var(--border-hair)">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 8</span>
+      <span>Top three lifted, the rest as a quiet ledger, with a window switch. The footnote states the social contract: recognition without authority, opt-out at will.</span>
+    </figcaption>
+  </figure>
+</section>
+
+<!-- 5.6 Settings -->
+<section style="padding-top:34px">
+  <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-400);margin-bottom:7px">5.6 · Preferences</div>
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:26px;color:var(--ink-900);margin:0 0 8px">Settings</h3>
+  <p style="margin:0 0 16px">The account area at <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">/settings</span> is a left-rail of preference pages. The figure shows <strong style="color:var(--ink-900);font-weight:600">Appearance</strong> — theme (Parchment / Twilight / System) and the density choice that drives the inbox (§4) — alongside composing toggles. The shipping surface is broader; each row below is its own server template.</p>
+
+  <div class="keep" style="display:flex;flex-wrap:wrap;gap:7px;margin:0 0 22px">
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">account</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">appearance</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">composing</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">notifications</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">privacy</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">security</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">sessions</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">connections</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">blocks</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">boards</span>
+    <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">drafts</span>
+  </div>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:9px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-settings.png" alt="The Appearance settings page: theme cards, density choice, and composing toggles" style="display:block;width:100%;height:auto;border-radius:5px;border:1px solid var(--border-hair)">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 9</span>
+      <span>Appearance — theme and density are saved to the account, so the inbox density in §4 follows the member across devices. "Enter sends" and live preview are composing toggles.</span>
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ============================ §6 MOBILE ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§6 · Mobile</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">The council, in one column</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:58ch;margin:0 0 20px">Below 860px the three panes fold into one. No screen is lost — each pane becomes a layer you summon and dismiss.</p>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 26px">
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45;max-width:none"><strong style="color:var(--ink-900);font-weight:600">Sidebar → drawer.</strong> A header hamburger opens the channel list as a slide-in sheet; the current board name is the title; swipe or tap-scrim to close.</div></div>
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45;max-width:none"><strong style="color:var(--ink-900);font-weight:600">Inbox → thread, as layers.</strong> Opening a thread slides the conversation over the inbox with a back button; the inbox keeps its scroll position.</div></div>
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45;max-width:none"><strong style="color:var(--ink-900);font-weight:600">New-thread FAB.</strong> A floating button replaces the inline New Topic on mobile only.</div></div>
+    <div style="display:flex;gap:11px;align-items:flex-start"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:var(--gold-500);margin-top:7px"></span><div style="font-size:14.5px;line-height:1.45;max-width:none"><strong style="color:var(--ink-900);font-weight:600">Bigger targets.</strong> Inbox rows are full-bleed and ≥44px, with the unread dot preserved.</div></div>
+  </div>
+
+  <figure class="keep" style="margin:0 0 16px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:12px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-mobile-1-3.png" alt="Three mobile frames: inbox, navigation drawer, and thread with reply bar" style="display:block;width:100%;height:auto;border-radius:5px">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 10</span>
+      <span>Inbox · navigation drawer · thread &amp; reply. The drawer is Pane&nbsp;1 as a sheet; the thread is Pane&nbsp;3 slid over Pane&nbsp;2; the reply bar collapses the composer to a single tappable field.</span>
+    </figcaption>
+  </figure>
+
+  <figure class="keep" style="margin:0 0 10px">
+    <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:10px;padding:12px;box-shadow:var(--shadow-sm)">
+      <img src="doc-figures/fig-mobile-4-6.png" alt="Three mobile frames: new topic, guest read-only, and top contributors" style="display:block;width:100%;height:auto;border-radius:5px">
+    </div>
+    <figcaption style="margin-top:9px;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.5;color:var(--ink-400);display:flex;gap:9px">
+      <span style="color:var(--gold-700);white-space:nowrap;font-weight:500">FIG 11</span>
+      <span>New topic (full-screen sheet with keyboard) · guest read-only (the join-bar becomes a two-button footer) · the leaderboard. Every auth and triage state from the desktop has a one-column form.</span>
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ============================ §7 DATA MODEL ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§7 · Data model</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">What the screens are made of</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:60ch;margin:0 0 20px">A category has many boards; a board has many threads; a thread has many posts. Everything else hangs off a user and that spine.</p>
+
+  <p style="margin:0 0 14px">Conventions are uniform: InnoDB, <span style="font-family:var(--font-mono),monospace;font-size:12px">utf8mb4</span>, <span style="font-family:var(--font-mono),monospace;font-size:12px">BIGINT UNSIGNED</span> surrogate keys, UTC <span style="font-family:var(--font-mono),monospace;font-size:12px">DATETIME</span>, and soft-deletes wherever history matters. Read-side counters are <strong style="color:var(--ink-900);font-weight:600">denormalised</strong> and maintained on write inside the same transaction; reads stay cheap. The canonical schema is <span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--ink-700)">SCHEMA.md</span>.</p>
+
+  <div class="keep" style="border:1px solid var(--border-hair);border-radius:10px;overflow:hidden;margin:0 0 24px">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+      <thead><tr style="background:var(--parchment-200)">
+        <th style="text-align:left;font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);font-weight:400;padding:9px 13px">Table</th>
+        <th style="text-align:left;font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);font-weight:400;padding:9px 13px">Holds</th>
+        <th style="text-align:left;font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);font-weight:400;padding:9px 13px">Powers</th>
+      </tr></thead>
+      <tbody style="font-family:var(--font-body),serif;color:var(--ink-700)">
+        <tr style="background:var(--parchment-50)"><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">users</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Account, role, denormalised <span style="font-family:var(--font-mono),monospace;font-size:11.5px">post_count</span> + <span style="font-family:var(--font-mono),monospace;font-size:11.5px">reputation</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Top bar, profile, leaderboard</td></tr>
+        <tr><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">categories · boards</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">The tree; boards carry slug, <span style="font-family:var(--font-mono),monospace;font-size:11.5px">post_min_role</span>, counts</td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Sidebar, board inbox</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">threads</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Title, slug, pinned / locked / deleted, <span style="font-family:var(--font-mono),monospace;font-size:11.5px">reply_count</span>, <span style="font-family:var(--font-mono),monospace;font-size:11.5px">last_post_*</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Inbox rows, thread header</td></tr>
+        <tr><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">posts</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Raw <span style="font-family:var(--font-mono),monospace;font-size:11.5px">body</span> + sanitised <span style="font-family:var(--font-mono),monospace;font-size:11.5px">body_html</span>, <span style="font-family:var(--font-mono),monospace;font-size:11.5px">parent_post_id</span>, <span style="font-family:var(--font-mono),monospace;font-size:11.5px">is_op</span>, FULLTEXT</td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Conversation, search</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">reactions</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">One per (user, post, emoji) — the unit of reputation</td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Post reactions, rep</td></tr>
+        <tr><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">thread_user</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none"><span style="font-family:var(--font-mono),monospace;font-size:11.5px">last_read_post_id</span>, <span style="font-family:var(--font-mono),monospace;font-size:11.5px">is_starred</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Unread + Starred filters</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">subscriptions</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Thread / board notify; in-app + email; instant / daily / off</td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Bell, digest, settings</td></tr>
+        <tr><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">notifications</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Recipient feed; <span style="font-family:var(--font-mono),monospace;font-size:11.5px">type</span> enum; <span style="font-family:var(--font-mono),monospace;font-size:11.5px">is_read</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Bell dropdown + badge</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">conversations · dm_messages</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">DMs + participants, kept apart from boards</td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Direct messages</td></tr>
+        <tr><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">reports · moderation_log</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Report queue + an append-only action trail</td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Moderation, audit</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:8px 13px;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">sessions</span></td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Opaque-token sessions, per-session CSRF, device list</td><td style="padding:8px 13px;border-top:1px solid var(--border-hair);max-width:none">Login state, log-out-everywhere</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="keep" style="display:grid;grid-template-columns:1.15fr 1fr;gap:18px;align-items:start">
+    <div>
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">The durable core</div>
+      <pre style="margin:0;background:var(--twilight-800);color:var(--mist-100);border-radius:10px;padding:16px 17px;overflow-x:auto;font-family:var(--font-mono),monospace;font-size:11.5px;line-height:1.7"><span style="color:#7E8A78">-- a topic is the durable unit</span>
+threads(
+  id, board_id, user_id,
+  title, slug,
+  is_pinned, is_locked, is_deleted,
+  <span style="color:var(--gold-400)">reply_count</span>,        <span style="color:#7E8A78">-- denormalised</span>
+  <span style="color:var(--gold-400)">last_post_id</span>,       <span style="color:#7E8A78">-- drives unread</span>
+  last_post_at, created_at )
+
+<span style="color:#7E8A78">-- a post is one message</span>
+posts(
+  id, thread_id, user_id,
+  parent_post_id,        <span style="color:#7E8A78">-- quote target</span>
+  body, body_html,       <span style="color:#7E8A78">-- raw + sanitised</span>
+  is_op, is_deleted,
+  edited_at, edited_by )</pre>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:14px 16px">
+        <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-700);margin-bottom:6px">Unread is derived</div>
+        <p style="margin:0;font-size:13.5px;line-height:1.5;max-width:none">A thread is unread when <span style="font-family:var(--font-mono),monospace;font-size:11.5px">thread.last_post_id &gt; thread_user.last_read_post_id</span> — no per-post read rows.</p>
+      </div>
+      <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:14px 16px">
+        <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-700);margin-bottom:6px">Sessions, not cookies-as-truth</div>
+        <p style="margin:0;font-size:13.5px;line-height:1.5;max-width:none">Opaque tokens in a <span style="font-family:var(--font-mono),monospace;font-size:11.5px">sessions</span> table; cookies are <span style="font-family:var(--font-mono),monospace;font-size:11.5px">HttpOnly · Secure · SameSite=Lax</span>, rotated on login. A guest is simply a request with no valid session.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ §8 ARCHITECTURE ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§8 · Architecture</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">Server-rendered first, enhanced second</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:60ch;margin:0 0 22px">Vanilla PHP and a micro-router, PDO prepared statements, no ORM. Every view returns complete HTML; JavaScript is a layer, never a load-bearing wall.</p>
+
+  <div class="keep" style="display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:0 0 14px">
+    <div style="flex:1;min-width:118px;background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:8px;padding:11px 13px"><div style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--gold-700);margin-bottom:3px">public/index.php</div><div style="font-size:12.5px;color:var(--ink-500);line-height:1.35">Front controller</div></div>
+    <div style="display:flex;align-items:center;color:var(--gold-600);font-size:18px">→</div>
+    <div style="flex:1;min-width:118px;background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:8px;padding:11px 13px"><div style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--gold-700);margin-bottom:3px">Router</div><div style="font-size:12.5px;color:var(--ink-500);line-height:1.35">method + path → action</div></div>
+    <div style="display:flex;align-items:center;color:var(--gold-600);font-size:18px">→</div>
+    <div style="flex:1;min-width:118px;background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:8px;padding:11px 13px"><div style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--gold-700);margin-bottom:3px">Controller</div><div style="font-size:12.5px;color:var(--ink-500);line-height:1.35">auth, validate</div></div>
+    <div style="display:flex;align-items:center;color:var(--gold-600);font-size:18px">→</div>
+    <div style="flex:1;min-width:118px;background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:8px;padding:11px 13px"><div style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--gold-700);margin-bottom:3px">Repository</div><div style="font-size:12.5px;color:var(--ink-500);line-height:1.35">PDO prepared</div></div>
+    <div style="display:flex;align-items:center;color:var(--gold-600);font-size:18px">→</div>
+    <div style="flex:1;min-width:118px;background:var(--green-700);border:1px solid var(--green-700);border-radius:8px;padding:11px 13px"><div style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--gold-400);margin-bottom:3px">View partials</div><div style="font-size:12.5px;color:var(--mist-200);line-height:1.35">HTML response</div></div>
+  </div>
+  <p style="margin:0 0 24px">State-changing requests are CSRF-protected, perform the write inside a transaction — including the denormalised counter updates — then redirect (the PRG pattern) or return JSON for the enhanced path. The client JS for channel-switching, opening threads, filters, and send calls small JSON endpoints and patches the DOM. <strong style="color:var(--ink-900);font-weight:600">With JavaScript disabled, the same actions work via plain links and form POSTs.</strong></p>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;margin:0 0 8px">
+    <div>
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">Enhancement endpoints</div>
+      <pre style="margin:0;background:var(--twilight-800);color:var(--mist-100);border-radius:10px;padding:15px 16px;overflow-x:auto;font-family:var(--font-mono),monospace;font-size:11px;line-height:1.75"><span style="color:var(--river-200)">GET </span> /c/{slug}?page=n   <span style="color:#7E8A78">thread list</span>
+<span style="color:var(--river-200)">GET </span> /t/{id}?page=n     <span style="color:#7E8A78">posts page</span>
+<span style="color:var(--gold-400)">POST</span> /threads          <span style="color:#7E8A78">create thread</span>
+<span style="color:var(--gold-400)">POST</span> /t/{id}/reply      <span style="color:#7E8A78">create post</span>
+<span style="color:var(--gold-400)">POST</span> /posts/{id}/edit   <span style="color:#7E8A78">edit own</span>
+<span style="color:var(--gold-400)">POST</span> /posts/{id}/delete <span style="color:#7E8A78">soft delete</span>
+<span style="color:var(--gold-400)">POST</span> /posts/{id}/react  <span style="color:#7E8A78">toggle reaction</span>
+<span style="color:var(--gold-400)">POST</span> /t/{id}/star       <span style="color:#7E8A78">toggle star</span>
+<span style="color:var(--gold-400)">POST</span> /mod/t/{id}/pin    <span style="color:#7E8A78">moderation</span></pre>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:13px">
+      <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:14px 16px">
+        <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-700);margin-bottom:6px">Posts: raw in, sanitised out</div>
+        <p style="margin:0;font-size:13.5px;line-height:1.5;max-width:none">The body is stored raw Markdown and rendered to a cached, sanitised <span style="font-family:var(--font-mono),monospace;font-size:11.5px">body_html</span> through an allowlist — no raw HTML, no scripts. Spoilers and @mention links resolve at render time.</p>
+      </div>
+      <div style="background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:9px;padding:14px 16px">
+        <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-700);margin-bottom:6px">One mockup, one view layer</div>
+        <p style="margin:0;font-size:13.5px;line-height:1.5;max-width:none">The prototype maps one-to-one onto the server partials (§2); its CSS is reused as-is, and the client JS becomes the enhancement layer over the same routes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ §9 PERMISSIONS ============================ -->
+<section style="padding-top:38px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§9 · Permissions</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">Four roles, cumulative</h2>
+  <p style="margin:0 0 18px">Capability accumulates: <span style="font-family:var(--font-mono),monospace;font-size:13px;color:var(--ink-700)">Admin ⊇ Moderator ⊇ User ⊇ Guest</span>. Moderator powers may be <strong style="color:var(--ink-900);font-weight:600">scoped per board</strong> — a member can moderate one board without moderating the site (the grant lives in <span style="font-family:var(--font-mono),monospace;font-size:12px">board_moderators</span>). A board's <span style="font-family:var(--font-mono),monospace;font-size:12px">post_min_role</span> can also raise the bar to post — an announcements board is staff-post-only.</p>
+
+  <div class="keep" style="border:1px solid var(--border-hair);border-radius:10px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <thead><tr style="background:var(--parchment-200)">
+        <th style="text-align:left;font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-700);font-weight:400;padding:9px 14px">Can…</th>
+        <th style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500);font-weight:400;padding:9px 10px;text-align:center">Guest</th>
+        <th style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500);font-weight:400;padding:9px 10px;text-align:center">User</th>
+        <th style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-500);font-weight:400;padding:9px 10px;text-align:center">Mod</th>
+        <th style="font-family:var(--font-label),serif;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--green-800);font-weight:400;padding:9px 10px;text-align:center">Admin</th>
+      </tr></thead>
+      <tbody style="font-family:var(--font-body),serif;color:var(--ink-700)">
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Read all public content</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td></tr>
+        <tr><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Post, reply, react, star, DM</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--ink-300)">—</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Edit / delete own posts</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--ink-300)">—</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td></tr>
+        <tr><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Pin / lock / move / delete any</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--ink-300)">—</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--ink-300)">—</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--gold-700);font-size:11px;font-family:var(--font-label),serif;letter-spacing:0.04em">scoped</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Manage boards, roles, branding</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--ink-300)">—</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--ink-300)">—</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--ink-300)">—</td><td style="padding:9px 10px;border-top:1px solid var(--border-hair);text-align:center;color:var(--green-600);font-weight:700">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ §10 STATUS & TOKENS ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§10 · Status &amp; tokens</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">State you can read at a glance</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:60ch;margin:0 0 22px">Status is never carried by colour alone. Every state pairs a hue with a word, so it survives a greyscale print and a colour-blind reader alike.</p>
+
+  <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:11px">Topic status chips</div>
+  <div class="keep" style="display:flex;flex-wrap:wrap;gap:9px;margin:0 0 12px">
+    <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--success);background:var(--green-050);border:1px solid var(--green-200);border-radius:999px;padding:3px 11px">Solved</span>
+    <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--warning);background:var(--gold-100);border:1px solid var(--gold-200);border-radius:999px;padding:3px 11px">Needs answer</span>
+    <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-800);background:var(--brand-subtle);border:1px solid var(--green-200);border-radius:999px;padding:3px 11px">Decision made</span>
+    <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-700);background:var(--accent-subtle);border:1px solid var(--gold-200);border-radius:999px;padding:3px 11px">Staff notice</span>
+    <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-500);background:var(--surface-sunken);border:1px solid var(--border-hair);border-radius:999px;padding:3px 11px">Pinned</span>
+    <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-500);background:var(--surface-sunken);border:1px solid var(--border-hair);border-radius:999px;padding:3px 11px">Locked</span>
+    <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-400);background:transparent;border:1px dashed var(--border-strong);border-radius:999px;padding:3px 11px">Archived</span>
+  </div>
+  <p style="font-size:13.5px;color:var(--ink-400);font-style:italic;margin:0 0 26px;max-width:none">…with Assigned, Escalated, Watching, Muted, and Snoozed completing the set. Chips appear in the inbox row and the topic header.</p>
+
+  <div class="keep" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:0 0 26px;align-items:start">
+    <div>
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:11px">The status ledger — three build states</div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:center;gap:12px;background:var(--parchment-50);border:1px solid var(--border-hair);border-left:3px solid var(--status-done);border-radius:7px;padding:10px 14px"><span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--on-done);min-width:64px">Done</span><span style="font-size:13.5px;color:var(--ink-500);max-width:none">merged · shipped · released</span></div>
+        <div style="display:flex;align-items:center;gap:12px;background:var(--parchment-50);border:1px solid var(--border-hair);border-left:3px solid var(--status-review);border-radius:7px;padding:10px 14px"><span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--on-review);min-width:64px">Review</span><span style="font-size:13.5px;color:var(--ink-500);max-width:none">in review · proposal · open</span></div>
+        <div style="display:flex;align-items:center;gap:12px;background:var(--parchment-50);border:1px solid var(--border-hair);border-left:3px solid var(--status-pending);border-radius:7px;padding:10px 14px"><span style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--on-pending);min-width:64px">Pending</span><span style="font-size:13.5px;color:var(--ink-500);max-width:none">scheduled · queued · reserved</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:11px">Role &amp; answer badges</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+        <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-800);background:var(--brand-subtle);border:1px solid var(--green-200);border-radius:999px;padding:2px 9px">OP</span>
+        <span style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-700);background:var(--accent-subtle);border:1px solid var(--gold-200);border-radius:999px;padding:2px 9px">Staff</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-800);background:var(--parchment-50);border:1px solid var(--green-200);border-radius:999px;padding:2px 9px"><span style="width:11px;height:11px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" style="width:100%;height:100%"><path d="M20 6L9 17l-5-5"/></svg></span>Accepted</span>
+      </div>
+      <p style="font-size:13.5px;line-height:1.5;color:var(--ink-500);margin:0;max-width:none">Badges are <strong style="color:var(--ink-700);font-weight:600">derived</strong>, never stored on the post — OP from authorship of the thread, Staff from role, Accepted from the thread's solved pointer.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:23px;color:var(--ink-900);margin:0 0 9px">A single tokenised theme</h3>
+  <p style="margin:0 0 14px">The whole look re-skins from CSS variables on <span style="font-family:var(--font-mono),monospace;font-size:12px">:root</span> — no UI kit, no React components. Beyond the base palette, the tokens carry forum-state families so unread, mention, solved, moderation, and decision states read clearly without noise. Beauty from clarity and rhythm, not gradients.</p>
+  <pre class="keep" style="margin:0 0 8px;background:var(--twilight-800);color:var(--mist-100);border-radius:10px;padding:16px 18px;overflow-x:auto;font-family:var(--font-mono),monospace;font-size:12px;line-height:1.85"><span style="color:var(--gold-400)">surface</span>.{ base · raised · sunken · selected · hover · unread · mention · moderation }
+<span style="color:var(--gold-400)">border</span> .{ subtle · strong · focus · unread }
+<span style="color:var(--gold-400)">text</span>   .{ primary · secondary · muted · inverse }
+<span style="color:var(--gold-400)">accent</span> .{ brand · category · tag · mention · unread · solved · warning · moderation · dm }
+<span style="color:var(--gold-400)">status</span> .{ solved · needsAnswer · decision · locked · archived · assigned }
+<span style="color:var(--gold-400)">density</span>.{ comfortable · compact }   <span style="color:var(--gold-400)">composer</span>.{ idle · focus · error }   <span style="color:var(--gold-400)">presence</span>.{ online · away · offline }</pre>
+  <div style="font-family:var(--font-mono),monospace;font-size:11.5px;color:var(--ink-400)">Admin branding maps the brand + accent tokens to the operator's colours; a retro-2002 skin is a P2 alternative theme.</div>
+</section>
+
+<!-- ============================ §11 BUILD STATUS ============================ -->
+<section class="pbreak" style="padding-top:40px">
+  <div style="font-family:var(--font-label),serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold-700);margin-bottom:9px">§11 · Build status</div>
+  <h2 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:34px;line-height:1.06;color:var(--ink-900);margin-bottom:14px">Where the work stands</h2>
+  <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:21px;line-height:1.4;color:var(--ink-500);max-width:60ch;margin:0 0 20px">Status is stated, not implied. Every feature in the catalogue carries a tag, and this document inherits them — so a reader never mistakes a drawing for a deployment.</p>
+
+  <div class="keep" style="display:flex;flex-wrap:wrap;gap:9px;margin:0 0 24px">
+    <span style="display:inline-flex;align-items:center;gap:7px;font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.05em;color:var(--green-800);background:var(--green-050);border:1px solid var(--green-200);border-radius:7px;padding:6px 13px"><span style="width:8px;height:8px;border-radius:50%;background:var(--status-done)"></span>Live — built &amp; shipped</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.05em;color:var(--gold-700);background:var(--gold-100);border:1px solid var(--gold-200);border-radius:7px;padding:6px 13px"><span style="width:8px;height:8px;border-radius:50%;background:var(--status-review)"></span>Done (mockup) — prototype only</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.05em;color:var(--ink-500);background:var(--surface-sunken);border:1px solid var(--border-hair);border-radius:7px;padding:6px 13px"><span style="width:8px;height:8px;border-radius:50%;background:var(--status-pending)"></span>Planned — specified, not built</span>
+  </div>
+
+  <div class="keep" style="display:grid;grid-template-columns:1.1fr 1fr;gap:18px;align-items:start;margin:0 0 26px">
+    <div>
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:11px">Seven delivery phases</div>
+      <div style="display:flex;flex-direction:column;gap:1px;border:1px solid var(--border-hair);border-radius:9px;overflow:hidden">
+        <div style="display:flex;gap:11px;align-items:center;padding:8px 13px;background:var(--parchment-50)"><span style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--ink-400);width:14px">1</span><span style="font-size:13.5px;color:var(--ink-700);max-width:none">MVP backend — auth, posting, read path</span></div>
+        <div style="display:flex;gap:11px;align-items:center;padding:8px 13px;background:var(--parchment-50);border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--ink-400);width:14px">2</span><span style="font-size:13.5px;color:var(--ink-700);max-width:none">Community essentials — reactions, search, DMs</span></div>
+        <div style="display:flex;gap:11px;align-items:center;padding:8px 13px;background:var(--parchment-50);border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--ink-400);width:14px">3</span><span style="font-size:13.5px;color:var(--ink-700);max-width:none">Polish, trust &amp; scale — composer, uploads, a11y</span></div>
+        <div style="display:flex;gap:11px;align-items:center;padding:9px 13px;background:var(--green-700);border-top:1px solid var(--green-700)"><span style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--gold-400);width:14px">4</span><span style="font-size:13.5px;color:var(--parchment-50);font-weight:600;max-width:none">Advanced community &amp; content</span><span style="margin-left:auto;font-family:var(--font-label),serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--twilight-800);background:var(--gold-400);border-radius:999px;padding:2px 8px">Closeout</span></div>
+        <div style="display:flex;gap:11px;align-items:center;padding:8px 13px;background:var(--parchment-50);border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--ink-400);width:14px">5</span><span style="font-size:13.5px;color:var(--ink-500);max-width:none">Ecosystem, identity &amp; governance</span></div>
+        <div style="display:flex;gap:11px;align-items:center;padding:8px 13px;background:var(--parchment-50);border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--ink-400);width:14px">6</span><span style="font-size:13.5px;color:var(--ink-500);max-width:none">Realtime &amp; scale — SSE, Redis, CDN</span></div>
+        <div style="display:flex;gap:11px;align-items:center;padding:8px 13px;background:var(--parchment-50);border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:11px;color:var(--ink-400);width:14px">7</span><span style="font-size:13.5px;color:var(--ink-500);max-width:none">Platform expansion — i18n, PWA, federation</span></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-400);font-style:italic;margin:10px 0 0;max-width:none">Phase 4 engineering closeout · 456 tests / 1,635 assertions green on PHP 8.5.</p>
+    </div>
+    <div>
+      <div style="font-family:var(--font-label),serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-700);margin-bottom:11px">Explicitly deferred at closeout</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px">
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">composer previews</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">polls</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">custom emoji</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">non-image files</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">slash commands · GIFs</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">automated context</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">split / merge</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">custom badge rules</span>
+        <span style="font-size:12.5px;color:var(--ink-500);background:var(--parchment-50);border:1px solid var(--border-hair);border-radius:6px;padding:4px 10px">reference cards</span>
+      </div>
+      <p style="font-size:13px;color:var(--ink-500);line-height:1.55;margin:14px 0 0;max-width:none">For the current Live / Planned line on any single feature, read the catalogue in <span style="font-family:var(--font-mono),monospace;font-size:11.5px;color:var(--ink-700)">DESIGN.md §6</span> beside the <span style="font-family:var(--font-mono),monospace;font-size:11.5px;color:var(--ink-700)">PHASE_*_STATUS</span> files — those are the source, this is the map.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--font-display),Georgia,serif;font-weight:500;font-size:23px;color:var(--ink-900);margin:0 0 11px">Where to look next</h3>
+  <div class="keep" style="border:1px solid var(--border-hair);border-radius:10px;overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+      <tbody style="font-family:var(--font-body),serif;color:var(--ink-700)">
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;white-space:nowrap"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">DECISIONS.md</span></td><td style="padding:9px 14px;max-width:none">Locked decisions and the replaceable-interface seams. <strong style="color:var(--ink-900);font-weight:600">Wins on any conflict.</strong></td></tr>
+        <tr><td style="padding:9px 14px;white-space:nowrap;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">DESIGN.md</span></td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Product &amp; technical source of truth; the roadmap.</td></tr>
+        <tr style="background:var(--parchment-50)"><td style="padding:9px 14px;white-space:nowrap;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">SCHEMA.md</span></td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">Final table shapes and the per-phase build cut.</td></tr>
+        <tr><td style="padding:9px 14px;white-space:nowrap;border-top:1px solid var(--border-hair)"><span style="font-family:var(--font-mono),monospace;font-size:12px;color:var(--green-700)">USER · ADMIN · COMMUNITY · COMPOSER</span></td><td style="padding:9px 14px;border-top:1px solid var(--border-hair);max-width:none">The member, operator, community-layer, and composer surfaces.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ COLOPHON ============================ -->
+<section class="keep" style="margin-top:46px;background:var(--twilight-800);border-radius:12px;padding:34px 34px 30px;position:relative;overflow:hidden">
+  <div style="position:absolute;top:-44px;right:-30px;width:200px;height:200px;color:var(--gold-500);opacity:0.12;pointer-events:none"><svg viewBox="0 0 100 100" fill="none" style="width:100%;height:100%"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg></div>
+  <div style="position:relative">
+    <div style="font-family:var(--font-label),serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-400);margin-bottom:12px">Colophon</div>
+    <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:23px;line-height:1.4;color:var(--parchment-50);margin:0 0 16px;max-width:46ch">Status is verified, not asserted; outcomes resolve into artifacts; testimony never outranks the work.</p>
+    <p style="font-size:15px;line-height:1.62;color:var(--mist-200);margin:0 0 8px;max-width:70ch">The figures in this handoff are the high-fidelity RetroBoards mock rendered in the Imladris design language — parchment surfaces, evergreen brand, a single mallorn-gold accent, the serif stack of Cormorant, Marcellus, EB&nbsp;Garamond, and JetBrains&nbsp;Mono. The structure, routes, schema, and flows they illustrate are the real product, drawn from its authoritative design documents. Where a surface is mock-only or planned, the text says so.</p>
+    <div style="height:1px;background:var(--twilight-700);margin:20px 0 16px"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:18px 28px;font-family:var(--font-mono),monospace;font-size:11.5px;color:var(--mist-200)">
+      <span><span style="color:var(--gold-400)">Product</span> · RetroBoards — the Community Inbox</span>
+      <span><span style="color:var(--gold-400)">Prepared for</span> · Engineering · lakefrontdigital.io</span>
+      <span><span style="color:var(--gold-400)">Source</span> · DESIGN.md · SCHEMA.md · DECISIONS.md</span>
+    </div>
+    <p style="font-family:var(--font-display),Georgia,serif;font-style:italic;font-size:13.5px;color:var(--gold-400);margin:20px 0 0;opacity:0.85">Et Eärello Endorenna utúlien.</p>
+  </div>
+</section>
+<div style="height:18px"></div>
+
+</td></tr></tbody>
+<tfoot><tr><td class="ftr-space"></td></tr></tfoot>
+</table>
+</main>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Radii" subtitle="Restrained — sm chips, md controls, lg cards, pill for chips/search" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px 22px; background: var(--surface-page); }
+  .row { display: flex; gap: 16px; align-items: flex-end; }
+  .cell { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .box { width: 78px; height: 56px; background: var(--surface-raised); border: 1.5px solid var(--green-400); }
+  .lbl { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); text-align: center; }
+  .lbl b { display: block; color: var(--text); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell"><div class="box" style="border-radius:var(--radius-sm)"></div><span class="lbl"><b>sm</b>4px</span></div>
+    <div class="cell"><div class="box" style="border-radius:var(--radius-md)"></div><span class="lbl"><b>md</b>7px</span></div>
+    <div class="cell"><div class="box" style="border-radius:var(--radius-lg)"></div><span class="lbl"><b>lg</b>12px</span></div>
+    <div class="cell"><div class="box" style="border-radius:var(--radius-xl)"></div><span class="lbl"><b>xl</b>20px</span></div>
+    <div class="cell"><div class="box" style="width:100px;border-radius:var(--radius-pill)"></div><span class="lbl"><b>pill</b>999px</span></div>
+  </div>
+</body>
+</html>
