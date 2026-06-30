@@ -41,13 +41,13 @@ final class NotificationEmailWorker
     }
 
     /**
-     * Process up to $limit queued sends. Returns [sent, suppressed, failed, skipped].
+     * Process up to $limit queued sends. Returns [sent, suppressed, retrying, failed, skipped].
      *
-     * @return array{sent:int,suppressed:int,failed:int,skipped:int}
+     * @return array{sent:int,suppressed:int,retrying:int,failed:int,skipped:int}
      */
     public function run(int $limit = 100): array
     {
-        $stats = ['sent' => 0, 'suppressed' => 0, 'failed' => 0, 'skipped' => 0];
+        $stats = ['sent' => 0, 'suppressed' => 0, 'retrying' => 0, 'failed' => 0, 'skipped' => 0];
 
         if (!$this->mailer->isConfigured()) {
             // Fail closed: leave rows queued for when the transport is configured.
@@ -90,8 +90,12 @@ final class NotificationEmailWorker
                     $this->deliveries->markSent($id, $messageId);
                     $stats['sent']++;
                 } catch (MailException | Throwable $e) {
-                    $this->deliveries->markFailed($id, $e->getMessage());
-                    $stats['failed']++;
+                    $status = $this->deliveries->markAttemptFailed($id, $e->getMessage());
+                    if ($status === 'failed') {
+                        $stats['failed']++;
+                    } else {
+                        $stats['retrying']++;
+                    }
                 }
             }
         } finally {

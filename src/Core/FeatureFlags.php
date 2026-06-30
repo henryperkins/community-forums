@@ -39,6 +39,7 @@ final class FeatureFlags
         // ── Phase 3 (Gate A) ─────────────────────────────────────────────
         'rich_composer' => true,     // shared composer toolbar + server preview (P3-02); textarea always works
         'drafts' => true,            // local autosave drafts + Drafts view (P3-03)
+        'server_drafts' => false,    // authenticated cross-device draft sync (ADR 0010 pull-forward; deploy-dark)
         'uploads' => true,           // image upload/paste/drop + private delivery (P3-04)
         'anti_abuse' => true,        // central limiter, content filters, holds, audit (P3-05)
         'appeals' => false,          // self-service moderation appeals + staff queue (ADR 0007 carryover; deploy-dark)

@@ -22,7 +22,7 @@
                         <span class="sr-only">Notifications</span>
                     </a>
                 <?php endif; ?>
-                <a class="topbar-user" href="/u/<?= $e($current_user->username()) ?>">
+                <a class="topbar-user" href="/u/<?= $e($current_user->username()) ?>" aria-label="<?= $e($current_user->displayName()) ?>">
                     <span class="topbar-avatar">
                         <?= $this->partial('partials/monogram', ['name' => $current_user->displayName(), 'username' => $current_user->username()]) ?>
                         <span class="presence-dot" aria-hidden="true"></span>

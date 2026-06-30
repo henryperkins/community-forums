@@ -22,7 +22,6 @@ final class ThreadSplitMergeService
         private PostRepository $posts,
         private ModerationService $moderation,
         private ModerationLogRepository $logs,
-        private RepairService $repair,
     ) {
     }
 
@@ -69,6 +68,9 @@ final class ThreadSplitMergeService
             $in = implode(',', array_fill(0, count($ids), '?'));
             $this->db->run("UPDATE posts SET thread_id = ?, is_op = 0 WHERE id IN ($in)", array_merge([$newThreadId], $ids));
             $this->db->run('UPDATE posts SET is_op = 1, parent_post_id = NULL WHERE id = ?', [(int) $selected[0]['id']]);
+            $this->recountThread($sourceThreadId);
+            $this->recountThread($newThreadId);
+            $this->recountBoards([(int) $source['board_id']]);
             $this->logs->log([
                 'actor_id' => $actor->id(),
                 'action' => 'split_thread',
@@ -91,7 +93,6 @@ final class ThreadSplitMergeService
             return $newThreadId;
         });
 
-        $this->repair->repairAll();
         $new = $this->threads->find($newThreadId);
         if ($new === null) {
             throw new \RuntimeException('Split thread was not created.');
@@ -117,9 +118,12 @@ final class ThreadSplitMergeService
             throw new ForbiddenException('You do not moderate the target board.');
         }
 
-        $this->db->transaction(function () use ($actor, $sourceThreadId, $targetThreadId): void {
+        $this->db->transaction(function () use ($actor, $source, $target, $sourceThreadId, $targetThreadId): void {
             $this->db->run('UPDATE posts SET thread_id = ?, is_op = 0 WHERE thread_id = ?', [$targetThreadId, $sourceThreadId]);
             $this->db->run('UPDATE threads SET is_deleted = 1 WHERE id = ?', [$sourceThreadId]);
+            $this->recountThread($sourceThreadId);
+            $this->recountThread($targetThreadId);
+            $this->recountBoards([(int) $source['board_id'], (int) $target['board_id']]);
             $operationId = $this->db->insert(
                 "INSERT INTO thread_operations
                     (operation_type, actor_id, source_thread_id, destination_thread_id, status, dry_run_plan, after_snapshot, created_at, applied_at)
@@ -147,11 +151,84 @@ final class ThreadSplitMergeService
             ]);
         });
 
-        $this->repair->repairAll();
         $target = $this->threads->find($targetThreadId);
         if ($target === null) {
             throw new \RuntimeException('Merge target disappeared.');
         }
         return $target;
+    }
+
+    private function recountThread(int $threadId): void
+    {
+        $this->db->run(
+            'UPDATE threads t SET reply_count = (
+                SELECT COUNT(*) FROM posts p
+                WHERE p.thread_id = t.id AND p.is_deleted = 0 AND p.is_pending = 0 AND p.is_op = 0
+             )
+             WHERE t.id = ?',
+            [$threadId],
+        );
+        $this->db->run(
+            'UPDATE threads t
+             LEFT JOIN (
+                SELECT p.thread_id, p.id AS post_id, p.user_id, p.created_at
+                FROM posts p
+                JOIN (
+                    SELECT thread_id, MAX(id) AS max_id
+                    FROM posts
+                    WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0
+                    GROUP BY thread_id
+                ) latest ON latest.thread_id = p.thread_id AND latest.max_id = p.id
+             ) lp ON lp.thread_id = t.id
+             SET t.last_post_id = lp.post_id, t.last_post_user_id = lp.user_id, t.last_post_at = lp.created_at
+             WHERE t.id = ?',
+            [$threadId, $threadId],
+        );
+    }
+
+    /** @param list<int> $boardIds */
+    private function recountBoards(array $boardIds): void
+    {
+        foreach (array_values(array_unique($boardIds)) as $boardId) {
+            $this->db->run(
+                'UPDATE boards b SET thread_count = (
+                    SELECT COUNT(*) FROM threads t
+                    WHERE t.board_id = b.id AND t.is_deleted = 0 AND t.is_pending = 0
+                 )
+                 WHERE b.id = ?',
+                [$boardId],
+            );
+            $this->db->run(
+                'UPDATE boards b SET post_count = (
+                    SELECT COUNT(*) FROM posts p
+                    JOIN threads t ON t.id = p.thread_id
+                    WHERE t.board_id = b.id
+                      AND p.is_deleted = 0 AND p.is_pending = 0
+                      AND t.is_deleted = 0 AND t.is_pending = 0
+                 )
+                 WHERE b.id = ?',
+                [$boardId],
+            );
+            $this->db->run(
+                'UPDATE boards b
+                 LEFT JOIN (
+                    SELECT t.board_id, p.thread_id, p.created_at
+                    FROM posts p
+                    JOIN threads t ON t.id = p.thread_id
+                    JOIN (
+                        SELECT t2.board_id, MAX(p2.id) AS max_id
+                        FROM posts p2
+                        JOIN threads t2 ON t2.id = p2.thread_id
+                        WHERE t2.board_id = ?
+                          AND p2.is_deleted = 0 AND p2.is_pending = 0
+                          AND t2.is_deleted = 0 AND t2.is_pending = 0
+                        GROUP BY t2.board_id
+                    ) latest ON latest.board_id = t.board_id AND latest.max_id = p.id
+                 ) lp ON lp.board_id = b.id
+                 SET b.last_thread_id = lp.thread_id, b.last_post_at = lp.created_at
+                 WHERE b.id = ?',
+                [$boardId, $boardId],
+            );
+        }
     }
 }

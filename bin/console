@@ -19,6 +19,8 @@ use App\Repository\EmailSuppressionRepository;
 use App\Repository\SessionRepository;
 use App\Repository\PostRepository;
 use App\Repository\ServiceSecretRepository;
+use App\Repository\ServerDraftRepository;
+use App\Repository\ServerExtensionRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Repository\WebhookDeliveryRepository;
@@ -38,8 +40,10 @@ use App\Repository\ModerationLogRepository;
 use App\Service\AttachmentService;
 use App\Service\AttachmentScanService;
 use App\Service\EmailDomainVerifier;
+use App\Service\Extension\BubblewrapSandboxAdapter;
 use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
+use App\Worker\ServerExtensionWorker;
 use App\Worker\WebhookDeliveryWorker;
 use App\Worker\IpRetentionPurger;
 use App\Worker\NotificationEmailWorker;
@@ -186,7 +190,7 @@ try {
                 $domainVerifier($db),
             );
             $stats = $worker->run((int) ($argv[2] ?? 100));
-            $log(sprintf('Instant email: sent=%d suppressed=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['failed'], $stats['skipped']));
+            $log(sprintf('Instant email: sent=%d suppressed=%d retrying=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['retrying'], $stats['failed'], $stats['skipped']));
             break;
 
         case 'worker:digest':
@@ -260,9 +264,19 @@ try {
                 new AccountDeletionRepository($db),
                 new SessionRepository($db),
                 new ModerationLogRepository($db),
+                new ServerDraftRepository($db),
                 new PasswordHasher(),
             ))->purgeDue((int) ($argv[2] ?? 100));
             $log(sprintf('Account purge: anonymised %d due deletion(s).', $stats['purged']));
+            break;
+
+        case 'worker:drafts':
+            // Server draft retention (ADR 0010 pull-forward). Drafts self-expire
+            // on read/write, and this worker provides the operator smoke/cron path
+            // for deleting rows past the 90-day retention boundary.
+            $db = $database();
+            $purged = (new ServerDraftRepository($db))->purgeExpired();
+            $log(sprintf('Server drafts: purged_expired=%d', $purged));
             break;
 
         case 'worker:attachments':
@@ -319,6 +333,23 @@ try {
             );
             $stats = $worker->run((int) ($argv[2] ?? 250));
             $log(sprintf('Related-topic refresh: linked=%d skipped=%d', $stats['linked'], $stats['skipped']));
+            break;
+
+        case 'worker:extensions':
+            $db = $database();
+            $flags = new FeatureFlags(new SettingRepository($db));
+            $stats = (new ServerExtensionWorker(
+                new ServerExtensionRepository($db),
+                new BubblewrapSandboxAdapter(),
+                $flags->enabled('server_extensions'),
+            ))->run((int) ($argv[2] ?? 50));
+            $log(sprintf(
+                'Server extensions: ran=%d failed=%d skipped=%d quarantined=%d',
+                $stats['ran'],
+                $stats['failed'],
+                $stats['skipped'],
+                $stats['quarantined'],
+            ));
             break;
 
         case 'engagement:cutover':
@@ -395,12 +426,14 @@ try {
             $log('  engagement:cutover [UTC]  Set the unread cutover timestamp');
             $log('  worker:email [limit]  Drain the instant notification-email queue');
             $log('  worker:digest         Send due daily digests');
+            $log('  worker:drafts         Purge expired server-side drafts');
             $log('  worker:purge-ips [days]  Anonymise sessions.ip/posts.ip older than N days (default 90)');
             $log('  worker:purge-accounts [limit]  Anonymise accounts whose 30-day deletion grace has elapsed');
             $log('  worker:attachments    Sweep orphaned/deleted-parent upload files');
             $log('  worker:attachment-scans [minutes]  Fail stale expanded-file scans closed');
             $log('  worker:previews [limit]  Fetch queued allowlisted link-preview metadata');
             $log('  worker:related-topics [limit]  Refresh deterministic tag-related topic links');
+            $log('  worker:extensions [limit]  Drain queued async server-extension jobs when enabled');
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
             break;

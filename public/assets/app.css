@@ -903,6 +903,17 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-upload-card progress { width: 100%; }
 .composer-upload-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .composer-discard { margin-left: 6px; }
+.composer-draft-sync {
+    display: grid; gap: 8px; margin-top: 8px; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface-2); color: var(--text-muted); font-size: .9rem;
+}
+.composer-draft-sync[hidden] { display: none; }
+.composer-draft-sync.is-conflict {
+    border-color: var(--warning); background: var(--gold-soft); color: var(--text-strong);
+}
+.composer-draft-sync p { margin: 0; }
+.composer-draft-sync-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .composer-slash-menu {
     display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0;
     border: 1px solid var(--border); border-radius: var(--radius);

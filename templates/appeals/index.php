@@ -12,6 +12,51 @@
         </div>
     <?php endif; ?>
 
+    <?php
+    $eligiblePosts = $eligible['posts'] ?? [];
+    $eligibleLogs = $eligible['moderation_logs'] ?? [];
+    ?>
+    <?php if (!empty($eligiblePosts) || !empty($eligibleLogs)): ?>
+        <section class="card">
+            <h2>Appealable actions</h2>
+            <ul class="report-list">
+                <?php foreach ($eligiblePosts as $post): ?>
+                    <li class="report-row">
+                        <div class="report-head">
+                            <span class="badge">post removed</span>
+                            <span class="muted">
+                                <a href="/t/<?= (int) $post['thread_id'] ?>-<?= $e((string) $post['thread_slug']) ?>"><?= $e((string) $post['thread_title']) ?></a>
+                                <?php if (!empty($post['deleted_at'])): ?> · <?= $e(human_datetime((string) $post['deleted_at'])) ?><?php endif; ?>
+                            </span>
+                        </div>
+                        <blockquote class="report-excerpt"><?= $e(mb_strimwidth((string) $post['body'], 0, 220, '...')) ?></blockquote>
+                        <form method="post" action="/appeals/posts/<?= (int) $post['id'] ?>" class="stacked">
+                            <?= $this->csrfField() ?>
+                            <label for="appeal-post-<?= (int) $post['id'] ?>">Reason</label>
+                            <textarea id="appeal-post-<?= (int) $post['id'] ?>" name="reason" class="input" rows="3" maxlength="2000" required></textarea>
+                            <button class="btn btn-small" type="submit">Submit appeal</button>
+                        </form>
+                    </li>
+                <?php endforeach; ?>
+                <?php foreach ($eligibleLogs as $log): ?>
+                    <li class="report-row">
+                        <div class="report-head">
+                            <span class="badge"><?= $e((string) $log['action']) ?></span>
+                            <span class="muted"><?= $e(human_datetime((string) $log['created_at'])) ?></span>
+                        </div>
+                        <?php if (($log['reason'] ?? '') !== ''): ?><blockquote class="report-excerpt"><?= $e((string) $log['reason']) ?></blockquote><?php endif; ?>
+                        <form method="post" action="/appeals/modlog/<?= (int) $log['id'] ?>" class="stacked">
+                            <?= $this->csrfField() ?>
+                            <label for="appeal-log-<?= (int) $log['id'] ?>">Reason</label>
+                            <textarea id="appeal-log-<?= (int) $log['id'] ?>" name="reason" class="input" rows="3" maxlength="2000" required></textarea>
+                            <button class="btn btn-small" type="submit">Submit appeal</button>
+                        </form>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+    <?php endif; ?>
+
     <section class="card">
         <h2>Your appeals</h2>
         <?php if (empty($appeals)): ?>

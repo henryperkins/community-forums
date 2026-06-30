@@ -15,6 +15,9 @@ use App\Core\Database;
  */
 final class EmailDeliveryRepository
 {
+    /** @var list<int> seconds after failed attempts 1-4; attempt 5 is terminal by default. */
+    private const BACKOFF_SECONDS = [300, 900, 3600, 21600];
+
     public function __construct(private Database $db)
     {
     }
@@ -24,11 +27,12 @@ final class EmailDeliveryRepository
      * already exists (the send was already queued — a no-op duplicate).
      */
     /** @param array<string,mixed>|null $payload */
-    public function enqueue(?int $userId, string $email, string $kind, ?string $subject, ?string $idempotencyKey = null, ?array $payload = null): int
+    public function enqueue(?int $userId, string $email, string $kind, ?string $subject, ?string $idempotencyKey = null, ?array $payload = null, int $maxAttempts = 5): int
     {
+        $maxAttempts = max(1, min(255, $maxAttempts));
         $stmt = $this->db->run(
-            'INSERT IGNORE INTO email_deliveries (user_id, email, kind, subject, payload, status, idempotency_key, created_at)
-             VALUES (:uid, :email, :kind, :subj, :payload, :status, :idem, UTC_TIMESTAMP())',
+            'INSERT IGNORE INTO email_deliveries (user_id, email, kind, subject, payload, status, idempotency_key, max_attempts, created_at)
+             VALUES (:uid, :email, :kind, :subj, :payload, :status, :idem, :max_attempts, UTC_TIMESTAMP())',
             [
                 'uid' => $userId,
                 'email' => $email,
@@ -37,6 +41,7 @@ final class EmailDeliveryRepository
                 'payload' => $payload === null ? null : json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 'status' => 'queued',
                 'idem' => $idempotencyKey,
+                'max_attempts' => $maxAttempts,
             ],
         );
         return $stmt->rowCount() > 0 ? (int) $this->db->pdo()->lastInsertId() : 0;
@@ -46,8 +51,8 @@ final class EmailDeliveryRepository
     public function enqueueSystemForActiveUsers(int $actorId, string $subject, array $payload, string $idempotencyPrefix): int
     {
         return $this->db->run(
-            'INSERT IGNORE INTO email_deliveries (user_id, email, kind, subject, payload, status, idempotency_key, created_at)
-             SELECT u.id, u.email, "system", :subject, :payload, "queued", CONCAT(:prefix, u.id), UTC_TIMESTAMP()
+            'INSERT IGNORE INTO email_deliveries (user_id, email, kind, subject, payload, status, idempotency_key, max_attempts, created_at)
+             SELECT u.id, u.email, "system", :subject, :payload, "queued", CONCAT(:prefix, u.id), 5, UTC_TIMESTAMP()
              FROM users u
              WHERE u.status = "active" AND u.id <> :actor',
             [
@@ -86,14 +91,22 @@ final class EmailDeliveryRepository
     {
         $limit = max(1, $limit);
         return $this->db->fetchAll(
-            "SELECT * FROM email_deliveries WHERE status = 'queued' ORDER BY id ASC LIMIT " . $limit,
+            "SELECT * FROM email_deliveries
+             WHERE status = 'queued'
+               AND (next_attempt_at IS NULL OR next_attempt_at <= UTC_TIMESTAMP())
+             ORDER BY COALESCE(next_attempt_at, created_at) ASC, id ASC
+             LIMIT " . $limit,
         );
     }
 
     public function markSent(int $id, ?string $messageId = null): void
     {
         $this->db->run(
-            "UPDATE email_deliveries SET status = 'sent', sent_at = UTC_TIMESTAMP(), message_id = ? WHERE id = ?",
+            "UPDATE email_deliveries
+             SET status = 'sent', sent_at = UTC_TIMESTAMP(), message_id = ?,
+                 attempt_count = attempt_count + 1, last_attempt_at = UTC_TIMESTAMP(),
+                 next_attempt_at = NULL, error = NULL
+             WHERE id = ?",
             [$messageId, $id],
         );
     }
@@ -101,9 +114,45 @@ final class EmailDeliveryRepository
     public function markFailed(int $id, string $error): void
     {
         $this->db->run(
-            "UPDATE email_deliveries SET status = 'failed', error = ? WHERE id = ?",
+            "UPDATE email_deliveries
+             SET status = 'failed', error = ?, attempt_count = attempt_count + 1,
+                 last_attempt_at = UTC_TIMESTAMP(), next_attempt_at = NULL
+             WHERE id = ?",
             [substr($error, 0, 255), $id],
         );
+    }
+
+    /** Record a failed send attempt, keeping it queued until attempts are exhausted. */
+    public function markAttemptFailed(int $id, string $error): string
+    {
+        $row = $this->find($id);
+        if ($row === null) {
+            return 'failed';
+        }
+
+        $nextAttempt = ((int) ($row['attempt_count'] ?? 0)) + 1;
+        $maxAttempts = max(1, (int) ($row['max_attempts'] ?? 1));
+        if ($nextAttempt >= $maxAttempts) {
+            $this->db->run(
+                "UPDATE email_deliveries
+                 SET status = 'failed', attempt_count = attempt_count + 1,
+                     last_attempt_at = UTC_TIMESTAMP(), next_attempt_at = NULL, error = ?
+                 WHERE id = ?",
+                [substr($error, 0, 255), $id],
+            );
+            return 'failed';
+        }
+
+        $delay = self::BACKOFF_SECONDS[min($nextAttempt - 1, count(self::BACKOFF_SECONDS) - 1)];
+        $this->db->run(
+            "UPDATE email_deliveries
+             SET status = 'queued', attempt_count = attempt_count + 1,
+                 last_attempt_at = UTC_TIMESTAMP(), next_attempt_at = DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? SECOND),
+                 error = ?
+             WHERE id = ?",
+            [$delay, substr($error, 0, 255), $id],
+        );
+        return 'queued';
     }
 
     public function markQueuedBlocked(string $reason): int
@@ -157,7 +206,8 @@ final class EmailDeliveryRepository
         }
         $clause = $where === [] ? '' : ' WHERE ' . implode(' AND ', $where);
         return $this->db->fetchAll(
-            'SELECT id, user_id, email, kind, subject, status, error, message_id, created_at, sent_at
+            'SELECT id, user_id, email, kind, subject, status, attempt_count, max_attempts, last_attempt_at, next_attempt_at,
+                    error, message_id, created_at, sent_at
              FROM email_deliveries' . $clause . ' ORDER BY id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
             $params,
         );
@@ -187,7 +237,10 @@ final class EmailDeliveryRepository
     public function requeue(int $id): int
     {
         return $this->db->run(
-            "UPDATE email_deliveries SET status = 'queued', error = NULL WHERE id = ? AND status = 'failed'",
+            "UPDATE email_deliveries
+             SET status = 'queued', attempt_count = 0, last_attempt_at = NULL,
+                 next_attempt_at = NULL, error = NULL
+             WHERE id = ? AND status = 'failed'",
             [$id],
         )->rowCount();
     }

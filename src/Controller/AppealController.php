@@ -17,8 +17,10 @@ final class AppealController extends Controller
     public function index(Request $request, array $params): Response
     {
         $user = $this->requireAppeals();
+        $service = $this->container->get(AppealService::class);
         return $this->view('appeals/index', [
-            'appeals' => $this->container->get(AppealService::class)->forUser($user->id()),
+            'appeals' => $service->forUser($user->id()),
+            'eligible' => $service->eligibleTargetsForUser($user->id()),
             'errors' => [],
         ]);
     }
@@ -33,6 +35,7 @@ final class AppealController extends Controller
         } catch (ValidationException $e) {
             return $this->view('appeals/index', [
                 'appeals' => $this->container->get(AppealService::class)->forUser($user->id()),
+                'eligible' => $this->container->get(AppealService::class)->eligibleTargetsForUser($user->id()),
                 'errors' => $e->errors,
             ], 422);
         }
@@ -49,6 +52,7 @@ final class AppealController extends Controller
         } catch (ValidationException $e) {
             return $this->view('appeals/index', [
                 'appeals' => $this->container->get(AppealService::class)->forUser($user->id()),
+                'eligible' => $this->container->get(AppealService::class)->eligibleTargetsForUser($user->id()),
                 'errors' => $e->errors,
             ], 422);
         }

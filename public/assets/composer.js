@@ -22,6 +22,11 @@
     function draftsEnabled() {
         return document.body.getAttribute('data-drafts') !== '0';
     }
+    function serverDraftsEnabled() {
+        return draftsEnabled()
+            && document.body.getAttribute('data-server-drafts') === '1'
+            && document.body.getAttribute('data-user');
+    }
 
     function tokenField(form) {
         var t = form.querySelector('input[name="_token"]');
@@ -190,6 +195,193 @@
     function draftKeyFor(who, context) {
         return 'rb-draft:' + who + ':' + context;
     }
+    function serverDraftKey(context) {
+        var key = encodeURIComponent(context).replace(/%/g, '~');
+        if (key.length <= 191) { return key; }
+        var hash = 5381;
+        for (var i = 0; i < context.length; i++) {
+            hash = ((hash << 5) + hash + context.charCodeAt(i)) >>> 0;
+        }
+        return 'ctx-' + hash.toString(16);
+    }
+    function draftTitle(form, fallback) {
+        var title = form.querySelector('input[name="title"]');
+        if (title && title.value.trim()) { return title.value.trim(); }
+        return fallback || '';
+    }
+    function setDraftTitle(form, title) {
+        var input = form.querySelector('input[name="title"]');
+        if (input && title) {
+            input.value = title;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    }
+    function buildDraftSyncPanel(ta) {
+        var panel = document.createElement('div');
+        panel.className = 'composer-draft-sync';
+        panel.hidden = true;
+        panel.setAttribute('role', 'status');
+        panel.setAttribute('aria-live', 'polite');
+        ta.parentNode.appendChild(panel);
+        return panel;
+    }
+    function wireServerDrafts(form, ta, localKey, context, updateDiscard) {
+        var apiKey = serverDraftKey(context);
+        var panel = buildDraftSyncPanel(ta);
+        var timer = null;
+        var revision = 0;
+        var paused = false;
+        var applying = false;
+
+        function showStatus(text) {
+            panel.classList.remove('is-conflict');
+            panel.setAttribute('role', 'status');
+            panel.textContent = text;
+            panel.hidden = text === '';
+        }
+        function request(method, suffix, data) {
+            var options = {
+                method: method,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            };
+            if (data) {
+                data.append('_token', tokenField(form));
+                options.body = data;
+            }
+            return fetch('/api/drafts/' + apiKey + (suffix || ''), options);
+        }
+        function saveWithRevision(expectedRevision, body, title) {
+            var data = new FormData();
+            data.append('revision', String(expectedRevision));
+            data.append('title', title || '');
+            data.append('body', body);
+            data.append('metadata', JSON.stringify({ context: context, path: location.pathname }));
+            return request('POST', '', data)
+                .then(function (r) {
+                    return r.json().then(function (j) { return { status: r.status, json: j }; });
+                })
+                .then(function (res) {
+                    if (res.status === 409) {
+                        renderConflict(res.json.server || null, body, title);
+                        return;
+                    }
+                    if (res.status >= 200 && res.status < 300 && res.json && res.json.draft) {
+                        revision = parseInt(res.json.draft.revision, 10) || revision;
+                        paused = false;
+                        showStatus('Saved to server drafts.');
+                    }
+                })
+                .catch(function () {
+                    showStatus('Saved locally; server draft sync is unavailable.');
+                });
+        }
+        function applyServerDraft(server) {
+            if (!server) { return; }
+            applying = true;
+            revision = parseInt(server.revision, 10) || 0;
+            ta.value = server.body || '';
+            setDraftTitle(form, server.title || '');
+            try {
+                ta.value ? localStorage.setItem(localKey, ta.value) : localStorage.removeItem(localKey);
+            } catch (e) {}
+            ta.dispatchEvent(new Event('input', { bubbles: true }));
+            applying = false;
+            updateDiscard();
+        }
+        function renderConflict(server, localBody, localTitle) {
+            if (!server) {
+                revision = 0;
+                return;
+            }
+            revision = parseInt(server.revision, 10) || revision;
+            panel.hidden = false;
+            panel.classList.add('is-conflict');
+            panel.setAttribute('role', 'alert');
+            panel.innerHTML = '';
+
+            var message = document.createElement('p');
+            message.textContent = 'Draft conflict detected.';
+            var detail = document.createElement('p');
+            detail.className = 'muted';
+            detail.textContent = 'A newer server draft exists for this composer.';
+            var actions = document.createElement('div');
+            actions.className = 'composer-draft-sync-actions';
+
+            var keepLocal = document.createElement('button');
+            keepLocal.type = 'button';
+            keepLocal.className = 'btn btn-secondary btn-small';
+            keepLocal.textContent = 'Keep local';
+            keepLocal.addEventListener('click', function () {
+                paused = true;
+                showStatus('Kept local draft in this browser; server draft unchanged.');
+            });
+
+            var keepServer = document.createElement('button');
+            keepServer.type = 'button';
+            keepServer.className = 'btn btn-secondary btn-small';
+            keepServer.textContent = 'Keep server';
+            keepServer.addEventListener('click', function () {
+                paused = false;
+                applyServerDraft(server);
+                showStatus('Loaded server draft.');
+            });
+
+            var saveLocal = document.createElement('button');
+            saveLocal.type = 'button';
+            saveLocal.className = 'btn btn-small';
+            saveLocal.textContent = 'Save local as next revision';
+            saveLocal.addEventListener('click', function () {
+                paused = false;
+                saveWithRevision(parseInt(server.revision, 10) || revision, localBody, localTitle);
+            });
+
+            actions.appendChild(keepLocal);
+            actions.appendChild(keepServer);
+            actions.appendChild(saveLocal);
+            panel.appendChild(message);
+            panel.appendChild(detail);
+            panel.appendChild(actions);
+        }
+        function saveCurrent() {
+            if (paused || applying) { return; }
+            var body = ta.value;
+            if (!body) {
+                request('POST', '/discard', new FormData()).catch(function () {});
+                revision = 0;
+                showStatus('');
+                return;
+            }
+            saveWithRevision(revision, body, draftTitle(form, draftLabel(context)));
+        }
+        function scheduleSave() {
+            if (paused || applying) { return; }
+            if (timer) { clearTimeout(timer); }
+            timer = setTimeout(saveCurrent, 800);
+        }
+
+        request('GET', '')
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (j) {
+                var server = j && j.draft ? j.draft : null;
+                if (!server) { return; }
+                revision = parseInt(server.revision, 10) || 0;
+                if (ta.value && ta.value !== (server.body || '')) {
+                    renderConflict(server, ta.value, draftTitle(form, draftLabel(context)));
+                    return;
+                }
+                if (!ta.value && server.body) {
+                    applyServerDraft(server);
+                    showStatus('Loaded server draft.');
+                }
+            })
+            .catch(function () {});
+
+        return {
+            input: scheduleSave,
+            discard: function () { request('POST', '/discard', new FormData()).catch(function () {}); }
+        };
+    }
     var pendingDraftSubmitKey = 'rb-draft:pending-submits';
     function pendingDraftSubmits() {
         try {
@@ -282,8 +474,10 @@
             if (saved && !ta.value) { ta.value = saved; ta.dispatchEvent(new Event('input', { bubbles: true })); }
         } catch (e) {}
         var updateDiscard = buildDiscard(form, ta, key);
+        var serverDrafts = serverDraftsEnabled() ? wireServerDrafts(form, ta, key, context, updateDiscard) : null;
         ta.addEventListener('input', function () {
             try { ta.value ? localStorage.setItem(key, ta.value) : localStorage.removeItem(key); } catch (e) {}
+            if (serverDrafts) { serverDrafts.input(); }
             updateDiscard();
         });
         form.addEventListener('submit', function () {
@@ -291,6 +485,7 @@
             // the same page. The next successfully loaded page clears this context
             // before an empty composer can repopulate from localStorage.
             rememberPendingDraftSubmit(key, context);
+            if (serverDrafts) { serverDrafts.discard(); }
             updateDiscard();
         });
     }
@@ -315,6 +510,7 @@
     function renderDraftsPage() {
         var host = document.querySelector('[data-drafts-list]');
         if (!host || !draftsEnabled()) { return; }
+        if (host.hasAttribute('data-server-drafts')) { return; }
         var who = draftUser();
         migrateAnonDrafts(who);
         var prefix = 'rb-draft:' + who + ':';

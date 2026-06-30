@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.23 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-30
+**Status:** v1.24 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-30
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -117,6 +117,11 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 97 | `thread_bookmark_folders` | Accounts / bookmarks | 4 | ADR 0003 carryover / migration 0062 |
 | 98 | `thread_bookmark_folder_threads` | Accounts / bookmarks | 4 | ADR 0003 carryover / migration 0062 |
 | 99 | `user_profile_fields` | Accounts / profile | 4 | ADR 0003 carryover / migration 0062 |
+| 100 | `server_drafts` | Composer / drafts | 3 | ADR 0010 pull-forward / migration 0064 |
+| 101 | `server_extension_handlers` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
+| 102 | `server_extension_jobs` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
+| 103 | `server_extension_runs` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
+| 104 | `server_extension_kv` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -152,6 +157,11 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > additive, deploy-dark account-lifecycle, moderation-appeals, email-domain, and
 > bookmark/profile-field shapes (see §4B). `account_lifecycle` and `appeals`
 > default dark; `bookmark_folders` and `custom_profile_fields` were already dark.
+>
+> Migration `0063` adds email retry/backoff columns to `email_deliveries`.
+> Table 100 is deploy-dark server draft sync (`0064`, `server_drafts` flag).
+> Tables 101–104 are the deploy-dark Phase 5 Gate B server-extension runtime
+> evidence harness (`0065`, `server_extensions` flag).
 
 ---
 
@@ -698,6 +708,10 @@ CREATE TABLE email_deliveries (
   kind       ENUM('instant','digest','test','system') NOT NULL,
   subject    VARCHAR(255) NULL,
   status     ENUM('queued','sent','bounced','complained','suppressed','failed') NOT NULL DEFAULT 'queued',
+  attempt_count INT UNSIGNED NOT NULL DEFAULT 0,             -- migration 0063: automatic retry/backoff attempts already made
+  max_attempts TINYINT UNSIGNED NOT NULL DEFAULT 5,           -- max 1 preserves old single-attempt behavior
+  last_attempt_at DATETIME NULL,
+  next_attempt_at DATETIME NULL,                             -- NULL = immediately claimable when status='queued'
   error      VARCHAR(255) NULL,
   message_id VARCHAR(191) NULL,
   idempotency_key VARCHAR(191) NULL,                          -- DESIGN §9.6: post_id+':'+user_id for transactional 'instant' fan-out; NULL for digest/test/system
@@ -706,7 +720,8 @@ CREATE TABLE email_deliveries (
   PRIMARY KEY (id),
   UNIQUE KEY uq_deliv_idem (idempotency_key),                 -- dedupes one send per (post,recipient); InnoDB allows multiple NULLs
   KEY idx_deliv_user (user_id, created_at),
-  KEY idx_deliv_status (status, created_at)
+  KEY idx_deliv_status (status, created_at),
+  KEY idx_deliv_retry (status, next_attempt_at, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -909,9 +924,11 @@ inert. Link previews, expanded files, polls, custom emoji, board folders, saved
 feed filters, since-last-read context, related-topic refresh, profile media, and
 the existing `0048` content-reference and badge-rule shapes have deploy-dark
 service/controller/worker evidence. Appeals, account lifecycle/export/delete,
-bookmark folders, and custom profile fields now have deploy-dark implementation
-evidence too (migrations `0059`–`0062`, see §4B). Split/merge remains an open
-carryover whose counter path still calls `RepairService::repairAll()`.
+bookmark folders, custom profile fields, email retry/backoff, server drafts,
+and scoped split/merge counter maintenance now have deploy-dark implementation
+evidence too (migrations `0059`–`0064`, see §4B/§4C). Split/merge keeps the
+global repair command as rehearsal/repair tooling, not as the normal operation
+path.
 
 ---
 
@@ -937,6 +954,32 @@ New tables:
 - `thread_bookmark_folders(id, user_id, name, position, created_at, updated_at)` (`0062`) with unique `(user_id, name)`, user-position index, user FK (CASCADE) — private folders for bookmarked threads.
 - `thread_bookmark_folder_threads(folder_id, thread_id, position, created_at)` (`0062`) PK `(folder_id, thread_id)`, thread index, folder/thread FKs (CASCADE).
 - `user_profile_fields(id, user_id, label, value, position, created_at, updated_at)` (`0062`) with unique `(user_id, position)` and user FK (CASCADE) — bounded (≤3) extra public profile fields; `label VARCHAR(40)`, `value VARCHAR(160)`.
+
+---
+
+## 4C. Email retry and server draft pull-forward (migrations 0063–0064)
+
+Migration `0063` keeps `email_deliveries.failed` terminal but adds automatic
+retry/backoff metadata so transient delivery failures do not require manual
+operator replay on the first failed transport call:
+
+- `email_deliveries.attempt_count INT UNSIGNED NOT NULL DEFAULT 0`
+- `email_deliveries.max_attempts TINYINT UNSIGNED NOT NULL DEFAULT 5`
+- `email_deliveries.last_attempt_at DATETIME NULL`
+- `email_deliveries.next_attempt_at DATETIME NULL`
+- `KEY idx_deliv_retry (status, next_attempt_at, id)`
+
+The default backoff sequence is 5 minutes, 15 minutes, 1 hour, then 6 hours.
+Rows with `max_attempts=1` preserve the old single-attempt behavior. Admin email
+views, worker stats, and CSV export surface the retry state.
+
+Migration `0064` implements ADR 0010's deploy-dark server draft sync shape:
+
+- `server_drafts(id, user_id, context_key, revision, title, body, metadata, updated_at, expires_at)` with unique `(user_id, context_key)`, user-updated and expiry indexes, and user FK (CASCADE).
+
+`server_drafts` defaults dark. The app enforces 90-day retention, a 50-draft
+per-user quota, optimistic revision conflicts (`409`), no-JS listing/discard on
+`/drafts`, account export inclusion, and account-deletion purge.
 
 ---
 
@@ -1047,15 +1090,36 @@ are removed.
 
 ---
 
+## 5C. Phase 5 Gate B server-extension runtime (migration 0065)
+
+Migration `0065` implements ADR 0011's deploy-dark runtime evidence harness. It
+does not make untrusted code part of web requests; jobs are async-only behind the
+`server_extensions` flag and a host sandbox probe.
+
+New tables:
+
+- `server_extension_handlers(id, installed_package_id, handler_key, entrypoint, events_json, jobs_json, permissions_json, resource_limits_json, storage_quota_bytes, status, quarantine_reason, created_at, updated_at)` with unique `(installed_package_id, handler_key)`, status index, and install FK (CASCADE). `status ENUM('enabled','disabled','quarantined')`.
+- `server_extension_jobs(id, handler_id, event_name, payload_json, status, attempts, max_attempts, available_at, locked_at, last_error, created_at, updated_at)` with claim index `(status, available_at, id)`, handler index, and handler FK (CASCADE). `status ENUM('queued','running','succeeded','failed','quarantined')`.
+- `server_extension_runs(id, job_id, handler_id, status, exit_code, duration_ms, output_bytes, stdout_json, error, started_at, finished_at)` with job/handler indexes, job FK (SET NULL), and handler FK (CASCADE). `status ENUM('succeeded','failed','timeout','quarantined')`.
+- `server_extension_kv(installed_package_id, kv_key, value_blob, bytes, updated_at)` with primary key `(installed_package_id, kv_key)` and install FK (CASCADE).
+
+Public manifests use `server_extension.v1` and declare entrypoint, events/jobs,
+permissions, resource limits, and storage quota. Outbound hosts are denied by
+default and entrypoints may not escape the package root. Bubblewrap is the
+primary local isolation profile; unsupported hosts fail closed and workers leave
+jobs queued.
+
+---
+
 ## 6. Phase map (suggested build cut)
 
-This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above; appeals, bookmark-folders, and custom-profile-fields are now specced as DDL in **§4B** (migrations `0060`/`0062`); its remaining tables (automation-rules, `drafts`) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
+This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above; appeals, bookmark-folders, custom-profile-fields, and server drafts are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); its remaining automation-rule table is **identified as a schema gap in PHASE_3_PLAN §8.2 and is not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
 
 - **Phase 1 (MVP backend):** `users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`. → See **[PHASE_1_MIGRATIONS.md](PHASE_1_MIGRATIONS.md)** for the exact Phase‑1 column cut, migration order (`0001`–`0010`), and which columns are held back to Phases 2–3.
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
-- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built deploy-dark by `0057`), `api_tokens`; appeals, bookmark-folder, and custom-profile-field tables are now specced as DDL in **§4B** (migrations `0060`/`0062`); automation-rule and draft-sync tables remain **schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
+- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built deploy-dark by `0057`), `api_tokens`; appeals, bookmark-folder, custom-profile-field, and server-draft tables are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); the automation-rule table remains a **schema gap in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
-- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), webhook delivery slice (`0057`), and code-only first-party hook registry are reconciled here. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#12/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
+- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), webhook delivery slice (`0057`), code-only first-party hook registry, and Gate B server-extension runtime tables (`0065`) are reconciled here. The remaining Phase 5 schema (theme packages, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
 
@@ -1095,7 +1159,6 @@ Where the docs genuinely disagreed, this file picks one answer. Each is reversib
 Mentioned in the docs as future schema, deliberately **not** added here until specced:
 
 - **`categories` default-collapsed flag** — ADMIN §4.1 describes an admin-set default-collapsed flag; no column specced. If built, add it as a cheap `categories.is_collapsed_default TINYINT(1)` in the Phase 3 admin-polish pass. (Per-user collapse state is separate — it lives in `user_preferences`.)
-- **`drafts`** table — server-side draft sync is P2; v1 drafts are `localStorage` only (COMPOSER §16.2).
 - **`post_mentions`** lookup table — optional, to speed "who was mentioned" queries (COMPOSER §16.2).
 - **post-submission idempotency** — COMPOSER §9.2/§14.3 dedupes double-submit + brief client retries via a **short-lived/transient** key; v1 commits no column. A durable `posts`/`dm_messages` idempotency column (e.g. `client_token`, `UNIQUE`) would be added here only if durable cross-retry dedupe is later required. (Distinct from `email_deliveries.idempotency_key`, which dedupes email fan-out.)
 
@@ -1103,6 +1166,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.24 | 2026-06-30 | Reconciled the Phase 2-4 completion pull-forward migrations `0063`-`0065`: email retry/backoff columns and retry index, deploy-dark `server_drafts`, and deploy-dark Phase 5 Gate B server-extension runtime tables (`server_extension_handlers`, `server_extension_jobs`, `server_extension_runs`, `server_extension_kv`). Updated the phase map and removed server drafts from foreshadowed gaps. |
 | v1.23 | 2026-06-30 | Reconciled the **Phase 2–4 carryover completion** migrations `0059`–`0062` in new **§4B**: widened `users.status` ENUM (`deactivated`/`pending_deletion`/`deleted`), added `email_deliveries.payload JSON`, and new tables `account_deletion_requests` (`0059`), `moderation_appeals`/`moderation_appeal_events` (`0060`), `email_domain_status` (`0061`), `thread_bookmark_folders`/`thread_bookmark_folder_threads`/`user_profile_fields` (`0062`). Added table-index rows 93–99. Additive + deploy-dark (`account_lifecycle`/`appeals` default off; `bookmark_folders`/`custom_profile_fields` already dark). |
 | v1.22 | 2026-06-29 | Reconciled Phase 4 carryover behavior notes after deploy-dark implementation evidence for content references, automated context, related-topic refresh, profile media/signature hardening, and the earlier `0058` carryover slices; no schema shape change. |
 | v1.21 | 2026-06-29 | Added Phase 4 carryover migration `0058`: `link_previews`, expanded-file scanner/quarantine columns on `attachments`, polls, `custom_emoji`, personal `board_folders`/`saved_feed_filters`, since-last-read context, profile-moderation audit columns on `users`, and widened `reactions.emoji`. |

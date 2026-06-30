@@ -4,10 +4,13 @@
   "description": "Playwright browser-evidence run for RetroBoards Gate A (desktop + mobile capture).",
   "scripts": {
     "prepare-db": "bash prepare.sh",
-    "evidence": "bash prepare.sh && playwright test",
+    "evidence": "bash prepare.sh && playwright test gate-a.spec.ts",
+    "evidence:dark": "RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && playwright test server-drafts.spec.ts",
+    "a11y": "RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && playwright test a11y.spec.ts",
     "test": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "1.61.1"
   }
 }

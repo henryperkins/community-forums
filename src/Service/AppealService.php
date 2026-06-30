@@ -165,6 +165,67 @@ final class AppealService
     }
 
     /**
+     * Member-facing appeal targets that can be opened without JavaScript.
+     *
+     * @return array{
+     *   posts:array<int,array<string,mixed>>,
+     *   moderation_logs:array<int,array<string,mixed>>
+     * }
+     */
+    public function eligibleTargetsForUser(int $userId): array
+    {
+        $posts = $this->db->fetchAll(
+            "SELECT p.id, p.body, p.deleted_at, p.thread_id,
+                    t.title AS thread_title, t.slug AS thread_slug,
+                    (
+                        SELECT ml.id
+                        FROM moderation_log ml
+                        WHERE ml.target_type = 'post'
+                          AND ml.target_id = p.id
+                          AND ml.action = 'delete_post'
+                        ORDER BY ml.id DESC
+                        LIMIT 1
+                    ) AS moderation_log_id
+             FROM posts p
+             JOIN threads t ON t.id = p.thread_id
+             LEFT JOIN moderation_appeals a
+               ON a.appellant_id = :uid_active
+              AND a.target_type = 'post'
+              AND a.target_id = p.id
+              AND a.status = 'open'
+             WHERE p.user_id = :uid_posts
+               AND p.is_deleted = 1
+               AND p.deleted_at IS NOT NULL
+               AND p.deleted_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)
+               AND a.id IS NULL
+               AND EXISTS (
+                   SELECT 1 FROM moderation_log ml
+                   WHERE ml.target_type = 'post'
+                     AND ml.target_id = p.id
+                     AND ml.action = 'delete_post'
+               )
+             ORDER BY p.deleted_at DESC, p.id DESC
+             LIMIT 20",
+            ['uid_active' => $userId, 'uid_posts' => $userId],
+        );
+
+        $hasOpenUserAppeal = $this->appeals->activeForTarget($userId, 'user', $userId) !== null;
+        $logs = $hasOpenUserAppeal ? [] : $this->db->fetchAll(
+            "SELECT id, action, reason, created_at
+             FROM moderation_log
+             WHERE target_type = 'user'
+               AND target_id = ?
+               AND action IN ('warn', 'suspend', 'ban', 'clear_signature')
+               AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)
+             ORDER BY created_at DESC, id DESC
+             LIMIT 20",
+            [$userId],
+        );
+
+        return ['posts' => $posts, 'moderation_logs' => $logs];
+    }
+
+    /**
      * Staff appeal queue, scoped to the actor's board authority (mirrors the
      * report queue): admins see every open appeal; a board moderator sees only
      * post appeals in boards they moderate. A user who moderates nothing is
