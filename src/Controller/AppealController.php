@@ -33,10 +33,12 @@ final class AppealController extends Controller
             $this->container->get(AppealService::class)
                 ->openForPost($user, (int) ($params['id'] ?? 0), $request->str('reason'));
         } catch (ValidationException $e) {
+            $service = $this->container->get(AppealService::class);
             return $this->view('appeals/index', [
-                'appeals' => $this->container->get(AppealService::class)->forUser($user->id()),
-                'eligible' => $this->container->get(AppealService::class)->eligibleTargetsForUser($user->id()),
+                'appeals' => $service->forUser($user->id()),
+                'eligible' => $service->eligibleTargetsForUser($user->id()),
                 'errors' => $e->errors,
+                'old' => $this->oldReason('post', (int) ($params['id'] ?? 0), $request),
             ], 422);
         }
         return $this->redirectWithFlash('/appeals', 'Appeal submitted.');
@@ -50,10 +52,12 @@ final class AppealController extends Controller
             $this->container->get(AppealService::class)
                 ->openForModerationLog($user, (int) ($params['id'] ?? 0), $request->str('reason'));
         } catch (ValidationException $e) {
+            $service = $this->container->get(AppealService::class);
             return $this->view('appeals/index', [
-                'appeals' => $this->container->get(AppealService::class)->forUser($user->id()),
-                'eligible' => $this->container->get(AppealService::class)->eligibleTargetsForUser($user->id()),
+                'appeals' => $service->forUser($user->id()),
+                'eligible' => $service->eligibleTargetsForUser($user->id()),
                 'errors' => $e->errors,
+                'old' => $this->oldReason('moderation_log', (int) ($params['id'] ?? 0), $request),
             ], 422);
         }
         return $this->redirectWithFlash('/appeals', 'Appeal submitted.');
@@ -96,5 +100,15 @@ final class AppealController extends Controller
             throw new NotFoundException('Not found.');
         }
         return $this->requireUser();
+    }
+
+    /** @return array{target_type:string,target_id:int,reason:string} */
+    private function oldReason(string $targetType, int $targetId, Request $request): array
+    {
+        return [
+            'target_type' => $targetType,
+            'target_id' => $targetId,
+            'reason' => (string) $request->post('reason', ''),
+        ];
     }
 }

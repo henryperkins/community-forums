@@ -50,6 +50,7 @@ final class AppModerationAppealsTest extends TestCase
 
         $duplicate = $this->post('/appeals/posts/' . $this->replyId, ['reason' => 'Second try.']);
         $this->assertStatus(422, $duplicate);
+        self::assertStringContainsString('Second try.', $duplicate->body());
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM moderation_appeals WHERE target_type = ? AND target_id = ?', ['post', $this->replyId]));
     }
 
