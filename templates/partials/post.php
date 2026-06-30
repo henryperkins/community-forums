@@ -11,8 +11,10 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
 <?php $accepted = $accepted ?? false; ?>
 <?php // A grouped post is a consecutive reply by the same (non-anonymous) author —
       // it drops the repeated avatar and name (§5.1). The OP and the accepted answer
-      // always keep their full header, so they are never grouped. ?>
-<?php $grouped = ($grouped ?? false) && !$accepted && (int) $p['is_op'] !== 1; ?>
+      // always keep their full header, so they are never grouped; staff/mod/admin and
+      // wiki posts are also left ungrouped so their role/Wiki badge is never hidden. ?>
+<?php $grouped = ($grouped ?? false) && !$accepted && (int) $p['is_op'] !== 1
+    && (($p['author_role'] ?? 'user') === 'user') && empty($p['is_wiki']); ?>
 <div class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>">
     <?php if ($show_avatars ?? true): ?>
         <?php if ($grouped): ?><span class="post-avatar-spacer" aria-hidden="true"></span>
