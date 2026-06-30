@@ -110,6 +110,14 @@ final class UserRepository
         return (int) $this->db->fetchValue("SELECT COUNT(*) FROM users WHERE role = 'admin'");
     }
 
+    public function activeAdminCountExcluding(int $userId): int
+    {
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM users WHERE role = 'admin' AND status = 'active' AND id <> ?",
+            [$userId],
+        );
+    }
+
     /** @return list<int> ids of all admins (for staff notifications) */
     public function adminIds(): array
     {
@@ -177,6 +185,47 @@ final class UserRepository
         $this->db->run(
             'UPDATE users SET status = ?, suspended_until = ? WHERE id = ?',
             [$status, $suspendedUntil, $id],
+        );
+    }
+
+    public function anonymizeDeletedAccount(int $id): void
+    {
+        $this->db->run(
+            "UPDATE users
+             SET username = :username,
+                 email = :email,
+                 password_hash = NULL,
+                 display_name = 'Deleted user',
+                 role = 'user',
+                 title = NULL,
+                 signature = NULL,
+                 location = NULL,
+                 bio = NULL,
+                 website = NULL,
+                 pronouns = NULL,
+                 avatar_path = NULL,
+                 avatar_source = 'monogram',
+                 profile_visibility = 'members',
+                 allow_dms = 'none',
+                 show_presence = 0,
+                 status = 'deleted',
+                 suspended_until = NULL,
+                 email_verified_at = NULL,
+                 onboarded_at = NULL,
+                 timezone = NULL,
+                 digest_hour = NULL,
+                 last_daily_digest_at = NULL,
+                 last_seen_at = NULL,
+                 signature_removed_at = NULL,
+                 signature_removed_by = NULL,
+                 avatar_removed_at = NULL,
+                 avatar_removed_by = NULL
+             WHERE id = :id",
+            [
+                'username' => 'deleted-user-' . $id,
+                'email' => 'deleted-user-' . $id . '@deleted.invalid',
+                'id' => $id,
+            ],
         );
     }
 

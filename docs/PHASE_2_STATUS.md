@@ -379,7 +379,7 @@ recompute counters, rebuild search indexes, and restore from backup.
 - [x] Saved/board preferences and session/device controls pass.
 - [~] Approved export/delete behaviour — **formally re-scoped to Phase 3** (retention/anonymisation policy not yet approved; USER §3.5). Recorded below.
 - [x] Presence passes; mobile/keyboard/accessibility CSS in place. [x] Browser evidence — see Gate A.
-- [x] Email delivery visibility/test/recovery tools — `statusCounts` + worker stats + suppression recovery present; the dedicated admin delivery dashboard (`/admin/email`: delivery log + status/kind/email filters, queue status cards, test-send, suppression add/remove with the §7.6 subscription cascade, From/config banner, CSV export) was originally **re-scoped to Phase 3** but was **pulled back into the Phase 2 closeout on 2026-06-29** rather than left deferred (see `docs/adr/0005-phase2-operator-surface-closeout.md`). Still deferred: the email-broadcast announcement channel, the `NotificationEmailWorker` `kind='system'` render path, and the §7.5 SPF/DKIM domain-status / sending-blocked gate (only `Mailer::isConfigured()` From-presence is enforced today).
+- [x] Email delivery visibility/test/recovery tools — `statusCounts` + worker stats + suppression recovery present; the dedicated admin delivery dashboard (`/admin/email`: delivery log + status/kind/email filters, queue status cards, test-send, failed-delivery requeue, suppression add/remove with the §7.6 subscription cascade, From/config banner, CSV export) was originally **re-scoped to Phase 3** but was **pulled back into the Phase 2 closeout on 2026-06-29** rather than left deferred (see `docs/adr/0005-phase2-operator-surface-closeout.md`). The 2026-06-30 carryover slice adds the email-broadcast announcement channel, `NotificationEmailWorker` `kind='system'` rendering, and the §7.5 SPF/DKIM domain-status / sending-blocked gate.
 - [x] All Gate B deferrals recorded here rather than silently omitted.
 - [~] **Full Phase 2 evidence captured** — consolidated Playwright run (2026-06-29): 22/22 green, all four operator surfaces (A per-user admin record, B reorder/archive, C announcements banner, D email-ops dashboard) at desktop + mobile in `docs/evidence/browser/`; PHPUnit 679/679 green. **Product-owner closeout sign-off pending** (incl. the archive tag-tightening noted below).
 
@@ -389,8 +389,9 @@ recompute counters, rebuild search indexes, and restore from backup.
   harness in `tests/browser/` captures 14 Gate A surfaces at 1280×800 and 390×844
   (`docs/evidence/browser/`), with `.github/workflows/browser-evidence.yml`
   regenerating them in CI against a MariaDB service.
-- **Self-service data export/delete** (USER §3.5): deferred pending an approved
-  retention/anonymisation/grace-period policy (the plan explicitly permits this).
+- **Self-service data export/delete** (USER §3.5): originally deferred pending an
+  approved retention/anonymisation/grace-period policy; implemented in the
+  2026-06-30 account lifecycle carryover slice under ADR 0006.
 - **Admin assignment UIs**: board moderator/member assignment **shipped** (see M4
   follow-up above). Manual badge grant + cosmetic title override **shipped** in the
   Phase 2 closeout (2026-06-29): the ADMIN §5.2 per-user admin record at
@@ -399,12 +400,18 @@ recompute counters, rebuild search indexes, and restore from backup.
   `docs/adr/0005-phase2-operator-surface-closeout.md`).
 - **Board archive + category/board reorder** and **admin announcements** (site banner +
   in-app broadcast) **shipped** in the Phase 2 closeout (2026-06-29), reusing existing
-  tables/flags (ADR 0005). Still deferred: the **email-broadcast** announcement channel
-  and its `NotificationEmailWorker` `kind='system'` path. NOTE: the archive read-only
+  tables/flags (ADR 0005). The **email-broadcast** announcement channel and
+  `NotificationEmailWorker` `kind='system'` path shipped in the 2026-06-30
+  carryover slice. NOTE: the archive read-only
   "close-everything" tightening removed the tag-edit carve-out — a board-moderator who is
   not a member of a *private* board can no longer tag there; **flagged for product-owner
   sign-off**.
 - **Signature rendering under posts**: the field is stored/editable; display is a
   small follow-up.
-- **Failed-email auto-retry**: failed rows require operator replay (runbook); an
-  automatic backoff retry is a Phase-3 enhancement.
+- **Failed-email auto-retry**: failed rows require operator replay from the
+  `/admin/email` dashboard or the runbook; an automatic backoff retry is a
+  later enhancement.
+- **Email domain send-blocking**: SPF/DKIM policy is now gated by
+  `docs/adr/0008-email-domain-send-blocking-policy.md`; implementation shipped
+  in the 2026-06-30 carryover slice with cached domain status, manual refresh,
+  opt-in send blocking, and worker queued-row blocking reasons.

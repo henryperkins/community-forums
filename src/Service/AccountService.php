@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Config;
+use App\Core\Database;
+use App\Core\FeatureFlags;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\UserPreferenceRepository;
+use App\Repository\UserProfileFieldRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
 use App\Security\WriteGate;
@@ -21,11 +24,14 @@ use App\Security\WriteGate;
 final class AccountService
 {
     public function __construct(
+        private Database $db,
         private UserRepository $users,
         private PasswordHasher $hasher,
         private WriteGate $writeGate,
         private Config $config,
         private ?UserPreferenceRepository $prefs = null,
+        private ?FeatureFlags $flags = null,
+        private ?UserProfileFieldRepository $profileFields = null,
     ) {
     }
 
@@ -69,19 +75,57 @@ final class AccountService
             $errors['signature'] = 'Signature is too tall (max 3 lines).';
         }
 
+        $customFields = [];
+        if ($this->flags?->enabled('custom_profile_fields') && $this->profileFields !== null) {
+            $customFields = $this->customProfileFields($input, $errors);
+        }
+
         if ($errors !== []) {
             throw new ValidationException($errors, $input);
         }
 
-        $this->users->updateProfileFull(
-            $user->id(),
-            $displayName !== '' ? $displayName : null,
-            $bio !== '' ? $bio : null,
-            $location !== '' ? $location : null,
-            $website !== '' ? $website : null,
-            $pronouns !== '' ? $pronouns : null,
-            $signature !== '' ? $signature : null,
-        );
+        // The display-name/bio row and the custom-field rows are one logical
+        // profile update — write them atomically so a failure can't commit one
+        // without the other.
+        $this->db->transaction(function () use ($user, $displayName, $bio, $location, $website, $pronouns, $signature, $customFields): void {
+            $this->users->updateProfileFull(
+                $user->id(),
+                $displayName !== '' ? $displayName : null,
+                $bio !== '' ? $bio : null,
+                $location !== '' ? $location : null,
+                $website !== '' ? $website : null,
+                $pronouns !== '' ? $pronouns : null,
+                $signature !== '' ? $signature : null,
+            );
+            if ($this->flags?->enabled('custom_profile_fields') && $this->profileFields !== null) {
+                $this->profileFields->replaceForUser($user->id(), $customFields);
+            }
+        });
+    }
+
+    /** @param array<string,mixed> $input @param array<string,string> $errors @return array<int,array{label:string,value:string}> */
+    private function customProfileFields(array $input, array &$errors): array
+    {
+        $fields = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $label = trim((string) ($input['custom_label_' . $i] ?? ''));
+            $value = trim((string) ($input['custom_value_' . $i] ?? ''));
+            if ($label === '' && $value === '') {
+                continue;
+            }
+            if ($label === '' || $value === '') {
+                $errors['custom_profile_fields'] = 'Custom profile fields need both a label and a value.';
+                continue;
+            }
+            if (mb_strlen($label) > 40) {
+                $errors['custom_profile_fields'] = 'Custom profile labels are limited to 40 characters.';
+            }
+            if (mb_strlen($value) > 160) {
+                $errors['custom_profile_fields'] = 'Custom profile values are limited to 160 characters.';
+            }
+            $fields[] = ['label' => $label, 'value' => $value];
+        }
+        return array_slice($fields, 0, 3);
     }
 
     /**

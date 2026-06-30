@@ -19,6 +19,12 @@ if (!empty($features['oauth'])) {
 $items['/settings/sessions'] = 'Sessions';
 $items['/settings/blocks'] = 'Blocks';
 $items['/settings/boards'] = 'Boards';
+if (!empty($features['account_lifecycle'])) {
+    $items['/settings/account/lifecycle'] = 'Account';
+}
+if (!empty($features['appeals'])) {
+    $items['/appeals'] = 'Appeals';
+}
 ?>
 <nav class="subnav">
     <?php foreach ($items as $href => $label): ?>

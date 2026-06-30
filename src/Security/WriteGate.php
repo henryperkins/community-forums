@@ -24,6 +24,12 @@ final class WriteGate
         if ($user->isBanned()) {
             throw new ForbiddenException('Your account is banned and cannot perform this action.');
         }
+        if ($user->isPendingDeletion()) {
+            throw new ForbiddenException('Your account is pending deletion and cannot perform this action.');
+        }
+        if ($user->isDeactivated()) {
+            throw new ForbiddenException('Your account is deactivated and cannot perform this action.');
+        }
         if (!$user->isActive()) {
             throw new ForbiddenException('Your account is suspended and cannot perform this action.');
         }

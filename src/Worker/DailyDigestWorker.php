@@ -11,6 +11,7 @@ use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\SettingRepository;
+use App\Service\EmailDomainVerifier;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
@@ -33,6 +34,7 @@ final class DailyDigestWorker
         private Mailer $mailer,
         private Config $config,
         private ?SettingRepository $settings = null,
+        private ?EmailDomainVerifier $domainVerifier = null,
     ) {
     }
 
@@ -44,6 +46,10 @@ final class DailyDigestWorker
     {
         $stats = ['sent' => 0, 'skipped_empty' => 0, 'suppressed' => 0];
         if (!$this->mailer->isConfigured()) {
+            return $stats;
+        }
+        if ($this->domainVerifier !== null && ($blocked = $this->domainVerifier->blockedReason()) !== null) {
+            $this->deliveries->markQueuedBlocked($blocked);
             return $stats;
         }
 

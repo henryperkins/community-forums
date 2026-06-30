@@ -13,6 +13,7 @@ use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Service\EmailDomainVerifier;
 use Throwable;
 
 /**
@@ -35,6 +36,7 @@ final class NotificationEmailWorker
         private Mailer $mailer,
         private Config $config,
         private ?SettingRepository $settings = null,
+        private ?EmailDomainVerifier $domainVerifier = null,
     ) {
     }
 
@@ -49,6 +51,10 @@ final class NotificationEmailWorker
 
         if (!$this->mailer->isConfigured()) {
             // Fail closed: leave rows queued for when the transport is configured.
+            return $stats;
+        }
+        if ($this->domainVerifier !== null && ($blocked = $this->domainVerifier->blockedReason()) !== null) {
+            $this->deliveries->markQueuedBlocked($blocked);
             return $stats;
         }
 
@@ -69,7 +75,9 @@ final class NotificationEmailWorker
                     continue;
                 }
 
-                $rendered = $this->renderInstant($row);
+                $rendered = ((string) ($row['kind'] ?? '') === 'system')
+                    ? $this->renderSystem($row)
+                    : $this->renderInstant($row);
                 if ($rendered === null) {
                     // Target gone or recipient lost access — dequeue without leaking.
                     $this->deliveries->markSent($id, 'skipped:unavailable');
@@ -124,6 +132,41 @@ final class NotificationEmailWorker
             . "\n\nUnsubscribe from these emails: " . $unsub;
         $html = '<p>There&#39;s new activity in a thread you&#39;re following on ' . htmlspecialchars($siteName, ENT_QUOTES) . '.</p>'
             . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">View the thread</a></p>'
+            . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
+
+        return ['subject' => $subject, 'text' => $text, 'html' => $html];
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @return array{subject:string,text:string,html:string}|null
+     */
+    private function renderSystem(array $row): ?array
+    {
+        $payload = json_decode((string) ($row['payload'] ?? ''), true);
+        if (!is_array($payload) || ($payload['type'] ?? '') !== 'announcement') {
+            return null;
+        }
+        $message = trim((string) ($payload['message'] ?? ''));
+        if ($message === '') {
+            return null;
+        }
+
+        $siteName = $this->siteName();
+        $subject = (string) ($row['subject'] ?? '');
+        if ($subject === '') {
+            $subject = 'Announcement from ' . $siteName;
+        }
+        $appUrl = (string) $this->config->get('app.url', '');
+        $url = rtrim($appUrl, '/') . '/';
+        // A broadcast announcement is bulk mail; carry a one-click unsubscribe
+        // link like every other email path (CAN-SPAM / deliverability).
+        $unsub = UnsubscribeController::link($appUrl, (string) ($row['email'] ?? ''), (string) $this->config->get('app.key', ''));
+        $text = $siteName . " announcement\n\n" . $message . "\n\n" . $url
+            . "\n\nUnsubscribe from these emails: " . $unsub;
+        $html = '<p><strong>' . htmlspecialchars($siteName, ENT_QUOTES) . ' announcement</strong></p>'
+            . '<p>' . nl2br(htmlspecialchars($message, ENT_QUOTES)) . '</p>'
+            . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">View the forum</a></p>'
             . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
         return ['subject' => $subject, 'text' => $text, 'html' => $html];

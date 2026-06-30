@@ -66,6 +66,7 @@ final class AdminAnnouncementController extends Controller
                 $request->str('message'),
                 $request->post('dismissible') !== null,
                 $request->post('broadcast') !== null,
+                $request->post('broadcast_email') !== null,
             );
         } catch (ValidationException $e) {
             return $this->view('admin/announcements', [
@@ -75,6 +76,7 @@ final class AdminAnnouncementController extends Controller
                     'message' => $request->str('message'),
                     'dismissible' => $request->post('dismissible') !== null,
                     'broadcast' => $request->post('broadcast') !== null,
+                    'broadcast_email' => $request->post('broadcast_email') !== null,
                 ],
             ], 422);
         }

@@ -23,21 +23,40 @@ final class EmailDeliveryRepository
      * Enqueue a send. Returns the new row id, or 0 when the idempotency key
      * already exists (the send was already queued — a no-op duplicate).
      */
-    public function enqueue(?int $userId, string $email, string $kind, ?string $subject, ?string $idempotencyKey = null): int
+    /** @param array<string,mixed>|null $payload */
+    public function enqueue(?int $userId, string $email, string $kind, ?string $subject, ?string $idempotencyKey = null, ?array $payload = null): int
     {
         $stmt = $this->db->run(
-            'INSERT IGNORE INTO email_deliveries (user_id, email, kind, subject, status, idempotency_key, created_at)
-             VALUES (:uid, :email, :kind, :subj, :status, :idem, UTC_TIMESTAMP())',
+            'INSERT IGNORE INTO email_deliveries (user_id, email, kind, subject, payload, status, idempotency_key, created_at)
+             VALUES (:uid, :email, :kind, :subj, :payload, :status, :idem, UTC_TIMESTAMP())',
             [
                 'uid' => $userId,
                 'email' => $email,
                 'kind' => $kind,
                 'subj' => $subject,
+                'payload' => $payload === null ? null : json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 'status' => 'queued',
                 'idem' => $idempotencyKey,
             ],
         );
         return $stmt->rowCount() > 0 ? (int) $this->db->pdo()->lastInsertId() : 0;
+    }
+
+    /** @param array<string,mixed> $payload */
+    public function enqueueSystemForActiveUsers(int $actorId, string $subject, array $payload, string $idempotencyPrefix): int
+    {
+        return $this->db->run(
+            'INSERT IGNORE INTO email_deliveries (user_id, email, kind, subject, payload, status, idempotency_key, created_at)
+             SELECT u.id, u.email, "system", :subject, :payload, "queued", CONCAT(:prefix, u.id), UTC_TIMESTAMP()
+             FROM users u
+             WHERE u.status = "active" AND u.id <> :actor',
+            [
+                'subject' => $subject,
+                'payload' => json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'prefix' => $idempotencyPrefix,
+                'actor' => $actorId,
+            ],
+        )->rowCount();
     }
 
     /** Mark an already-enqueued row suppressed without sending (recipient on the suppression list). */
@@ -85,6 +104,14 @@ final class EmailDeliveryRepository
             "UPDATE email_deliveries SET status = 'failed', error = ? WHERE id = ?",
             [substr($error, 0, 255), $id],
         );
+    }
+
+    public function markQueuedBlocked(string $reason): int
+    {
+        return $this->db->run(
+            "UPDATE email_deliveries SET error = ? WHERE status = 'queued'",
+            [substr($reason, 0, 255)],
+        )->rowCount();
     }
 
     /** @return array<string,int> status => count, for queue observability */

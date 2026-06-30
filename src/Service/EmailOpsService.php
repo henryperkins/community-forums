@@ -33,6 +33,7 @@ final class EmailOpsService
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
         private Mailer $mailer,
+        private EmailDomainVerifier $domainVerifier,
     ) {
     }
 
@@ -45,6 +46,9 @@ final class EmailOpsService
         $this->writeGate->assertCanWrite($admin);
         if (!$this->mailer->isConfigured()) {
             throw new ValidationException(['email' => 'Configure your sending domain first.']);
+        }
+        if (($blocked = $this->domainVerifier->blockedReason()) !== null) {
+            throw new ValidationException(['email' => $blocked]);
         }
 
         $email = $admin->email();

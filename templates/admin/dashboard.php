@@ -14,6 +14,7 @@
         <?php if (!empty($features['webhooks'])): ?><a href="/admin/webhooks">Webhooks</a><?php endif; ?>
         <?php if (!empty($features['email'])): ?><a href="/admin/email">Email</a><?php endif; ?>
         <?php if (!empty($features['announcements'])): ?><a href="/admin/announcements">Announcements</a><?php endif; ?>
+        <?php if (!empty($features['appeals'])): ?><a href="/mod/appeals">Appeals</a><?php endif; ?>
     </nav>
 
     <section class="card">

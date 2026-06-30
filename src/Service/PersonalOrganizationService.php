@@ -10,6 +10,8 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
+use App\Repository\ThreadRepository;
+use App\Repository\ThreadUserRepository;
 use App\Security\BoardPolicy;
 
 final class PersonalOrganizationService
@@ -19,6 +21,8 @@ final class PersonalOrganizationService
         private BoardRepository $boards,
         private BoardMemberRepository $members,
         private BoardPolicy $policy,
+        private ThreadRepository $threads,
+        private ThreadUserRepository $threadUsers,
     ) {
     }
 
@@ -45,6 +49,35 @@ final class PersonalOrganizationService
              VALUES (?, ?, COALESCE((SELECT next_pos FROM (SELECT MAX(position) + 1 AS next_pos FROM board_folder_boards WHERE folder_id = ?) x), 0), UTC_TIMESTAMP())
              ON DUPLICATE KEY UPDATE position = VALUES(position)',
             [$folderId, (int) $board['id'], $folderId],
+        );
+    }
+
+    public function createBookmarkFolder(User $user, string $name): int
+    {
+        $name = $this->name($name);
+        return $this->db->insert(
+            'INSERT INTO thread_bookmark_folders (user_id, name, position, created_at)
+             VALUES (?, ?, COALESCE((SELECT next_pos FROM (SELECT MAX(position) + 1 AS next_pos FROM thread_bookmark_folders WHERE user_id = ?) x), 0), UTC_TIMESTAMP())
+             ON DUPLICATE KEY UPDATE updated_at = UTC_TIMESTAMP()',
+            [$user->id(), $name, $user->id()],
+        );
+    }
+
+    public function addThreadToBookmarkFolder(User $user, int $folderId, int $threadId): void
+    {
+        $folder = $this->db->fetch('SELECT * FROM thread_bookmark_folders WHERE id = ? AND user_id = ?', [$folderId, $user->id()]);
+        if ($folder === null) {
+            throw new NotFoundException('Folder not found.');
+        }
+        $thread = $this->readableThread($user, $threadId);
+        if (!$this->threadUsers->isStarred($user->id(), (int) $thread['id'])) {
+            throw new ValidationException(['thread_id' => 'Star the thread before adding it to a bookmark folder.']);
+        }
+        $this->db->run(
+            'INSERT INTO thread_bookmark_folder_threads (folder_id, thread_id, position, created_at)
+             VALUES (?, ?, COALESCE((SELECT next_pos FROM (SELECT MAX(position) + 1 AS next_pos FROM thread_bookmark_folder_threads WHERE folder_id = ?) x), 0), UTC_TIMESTAMP())
+             ON DUPLICATE KEY UPDATE position = VALUES(position)',
+            [$folderId, (int) $thread['id'], $folderId],
         );
     }
 
@@ -92,5 +125,22 @@ final class PersonalOrganizationService
             throw new NotFoundException('Board not found.');
         }
         return $board;
+    }
+
+    /** @return array<string,mixed> */
+    private function readableThread(User $user, int $threadId): array
+    {
+        $thread = $this->threads->findWithBoard($threadId);
+        if ($thread === null || (int) ($thread['is_deleted'] ?? 0) === 1 || (int) ($thread['is_pending'] ?? 0) === 1) {
+            throw new NotFoundException('Thread not found.');
+        }
+        $isMember = $this->members->isMember((int) $thread['board_id'], $user->id());
+        if (!$this->policy->canRead([
+            'visibility' => $thread['board_visibility'],
+            'id' => $thread['board_id'],
+        ], $user, $isMember)) {
+            throw new NotFoundException('Thread not found.');
+        }
+        return $thread;
     }
 }
