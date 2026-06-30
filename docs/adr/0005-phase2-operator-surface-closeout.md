@@ -47,6 +47,8 @@ flag** (no new flag introduced):
 - **test-send**, rate-limited under the `email_test` policy and **fail-closed**:
   it refuses to send when the transport is unconfigured
   (`Mailer::isConfigured()` is false);
+- manual **failed-delivery requeue**, using the existing audited
+  `EmailOpsService::requeueFailed()` path;
 - manual **suppression list add/remove**, applying the **ADMIN §7.6 per-user
   subscription `email_enabled` cascade** (removing/adding a suppression keeps the
   subscription channel state consistent);
@@ -60,20 +62,22 @@ Every mutation is `requireAdmin` + `WriteGate` gated and writes one
 **No schema change:** the dashboard reads/writes only existing tables
 (`email_deliveries`, `email_suppressions`, `subscriptions`, `moderation_log`).
 
-### 2. Remains deferred (explicitly NOT built here)
+### 2. Deferred from this closeout, later resolved
 
-These are recorded as owned, explicit carryovers — **not** claimed as done and
-**not** silently reclassified:
+These were recorded as owned, explicit carryovers for the 2026-06-29 closeout —
+**not** claimed as done in this ADR and **not** silently reclassified. They were
+implemented later in the 2026-06-30 carryover slice under ADR 0008:
 
 - **(a) Email-broadcast announcement channel.** Group C shipped the dismissible
-  announcement **banner** and **in-app** broadcast **only**. There is no email
-  broadcast / fan-out of announcements to subscribers.
+  announcement **banner** and **in-app** broadcast **only**. The later slice adds
+  email broadcast fan-out through `email_deliveries.kind='system'`.
 - **(b) `NotificationEmailWorker` `kind='system'` render path.** The worker
-  **silently drops** `kind='system'` rows. `src/Worker/NotificationEmailWorker.php`
-  is intentionally **NOT** modified in this closeout.
+  was intentionally **NOT** modified in this closeout. The later slice renders
+  announcement payloads and applies suppression/worker policy.
 - **(c) ADMIN §7.5 SPF/DKIM domain-status / sending-blocked gate.** Only
-  `Mailer::isConfigured()` (From-address presence) is enforced today. Real domain
-  / DNS authentication verification and a sending-blocked gate are future work.
+  `Mailer::isConfigured()` (From-address presence) was enforced in this closeout.
+  The later slice adds cached SPF/DKIM status, manual refresh, and opt-in verified
+  domain send blocking.
 
 ### 3. Product-owner sign-off item — Group B side-effect
 

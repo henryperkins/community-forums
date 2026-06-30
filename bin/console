@@ -11,6 +11,7 @@ use App\Core\Migrator;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
+use App\Repository\EmailDomainStatusRepository;
 use App\Repository\BadgeRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
@@ -32,6 +33,7 @@ use App\Repository\AttachmentRepository;
 use App\Repository\ModerationLogRepository;
 use App\Service\AttachmentService;
 use App\Service\AttachmentScanService;
+use App\Service\EmailDomainVerifier;
 use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
 use App\Worker\WebhookDeliveryWorker;
@@ -57,6 +59,12 @@ $migrator = static function () use ($config): Migrator {
 
 /** A Database bound to the configured database. */
 $database = static fn (): Database => new Database($config->get('db'));
+
+$domainVerifier = static fn (Database $db): EmailDomainVerifier => new EmailDomainVerifier(
+    $config,
+    new SettingRepository($db),
+    new EmailDomainStatusRepository($db),
+);
 
 /** Build the configured mail transport (matches App::buildContainer). */
 $mailer = static function () use ($config): Mailer {
@@ -171,6 +179,7 @@ try {
                 $mailer(),
                 $config,
                 new SettingRepository($db),
+                $domainVerifier($db),
             );
             $stats = $worker->run((int) ($argv[2] ?? 100));
             $log(sprintf('Instant email: sent=%d suppressed=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['failed'], $stats['skipped']));
@@ -185,6 +194,7 @@ try {
                 $mailer(),
                 $config,
                 new SettingRepository($db),
+                $domainVerifier($db),
             );
             $stats = $worker->run(gmdate('Y-m-d H:i:s'));
             $log(sprintf('Daily digest: sent=%d skipped_empty=%d suppressed=%d', $stats['sent'], $stats['skipped_empty'], $stats['suppressed']));

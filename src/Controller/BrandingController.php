@@ -24,12 +24,13 @@ use App\Service\AttachmentService;
  */
 final class BrandingController extends Controller
 {
-    /** Public dynamic stylesheet: only emitted when colors are customized. */
+    /** Public dynamic stylesheet: emitted only for enabled, validated brand overrides. */
     public function css(Request $request): Response
     {
         // When branding is disabled the UI falls back to the built-in chrome, so
         // emit an empty rule set rather than the stored brand colours.
-        if (!$this->container->get(FeatureFlags::class)->enabled('branding')) {
+        $flags = $this->container->get(FeatureFlags::class);
+        if (!$flags->enabled('branding')) {
             return new Response(':root{}', 200, [
                 'Content-Type' => 'text/css; charset=UTF-8',
                 'Cache-Control' => 'public, max-age=300',
@@ -38,8 +39,12 @@ final class BrandingController extends Controller
         $settings = $this->container->get(SettingRepository::class);
         $primary = $settings->getString('brand_color_primary', '');
         $accent = $settings->getString('brand_color_accent', '');
+        $preset = $settings->getString('brand_theme_preset', 'classic');
 
         $css = ':root{';
+        if ($preset === 'retro') {
+            $css .= '--surface:#fff7dc;--surface-soft:#fff1bd;--text:#241706;--accent:#8f3d12;--accent-2:#d78322;--border:#c78b45;';
+        }
         if (self::isHex($primary)) {
             $contrast = self::contrastToken($primary) ?? '#ffffff';
             $css .= '--accent:' . $primary . ';--brand-primary:' . $primary . ';--accent-contrast:' . $contrast . ';';
@@ -49,6 +54,13 @@ final class BrandingController extends Controller
             $css .= '--accent-2:' . $accent . ';--brand-accent:' . $accent . ';--brand-accent-contrast:' . $contrast . ';';
         }
         $css .= '}';
+
+        if ($flags->enabled('custom_css')
+            && $settings->get('brand_custom_css_enabled', false) === true
+            && $settings->getString('brand_custom_css', '') !== ''
+        ) {
+            $css .= "\n" . $settings->getString('brand_custom_css', '');
+        }
 
         return (new Response($css, 200, [
             'Content-Type' => 'text/css; charset=UTF-8',
@@ -61,15 +73,9 @@ final class BrandingController extends Controller
         $this->requireAdmin();
         $this->requireBrandingEnabled();
         $settings = $this->container->get(SettingRepository::class);
-        return $this->view('admin/branding', [
+        return $this->view('admin/branding', $this->formData($settings, [
             'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
-            'color_primary' => $settings->getString('brand_color_primary', ''),
-            'color_accent' => $settings->getString('brand_color_accent', ''),
-            'logo_path' => $settings->getString('brand_logo_path', ''),
-            'favicon_path' => $settings->getString('brand_favicon_path', ''),
-            'theme_default' => $settings->getString('brand_theme_default', 'system'),
-            'errors' => [],
-        ]);
+        ]));
     }
 
     public function update(Request $request): Response
@@ -79,7 +85,18 @@ final class BrandingController extends Controller
         $settings = $this->container->get(SettingRepository::class);
 
         if ($request->str('reset') === '1') {
-            foreach (['brand_color_primary', 'brand_color_accent', 'brand_logo_path', 'brand_favicon_path', 'brand_theme_default'] as $key) {
+            foreach ([
+                'brand_color_primary',
+                'brand_color_accent',
+                'brand_logo_path',
+                'brand_logo_light_path',
+                'brand_logo_dark_path',
+                'brand_favicon_path',
+                'brand_theme_default',
+                'brand_theme_preset',
+                'brand_custom_css_enabled',
+                'brand_custom_css',
+            ] as $key) {
                 $settings->set($key, '');
             }
             $this->bustBrandCache($settings);
@@ -110,30 +127,78 @@ final class BrandingController extends Controller
         if (!in_array($themeDefault, ['system', 'light', 'dark'], true)) {
             $themeDefault = 'system';
         }
+        $themePreset = $request->str('theme_preset', 'classic');
+        if (!in_array($themePreset, ['classic', 'retro'], true)) {
+            $themePreset = 'classic';
+        }
+
+        $flags = $this->container->get(FeatureFlags::class);
+        $customCssAvailable = $flags->enabled('custom_css');
+        $customCssEnabled = $customCssAvailable && $request->str('custom_css_enabled') === '1';
+        $customCss = trim((string) $request->post('custom_css', ''));
+        if ($customCssEnabled) {
+            if ($request->str('custom_css_ack') !== '1') {
+                $errors['custom_css'] = 'Confirm that custom CSS can affect the whole site.';
+            } elseif (($customError = self::customCssError($customCss)) !== null) {
+                $errors['custom_css'] = $customError;
+            }
+        } elseif ($customCssAvailable && $customCss !== '' && ($customError = self::customCssError($customCss)) !== null) {
+            $errors['custom_css'] = $customError;
+        }
 
         if ($errors !== []) {
-            return $this->view('admin/branding', [
+            return $this->view('admin/branding', $this->formData($settings, [
                 'site_name' => $name,
                 'color_primary' => $primary,
                 'color_accent' => $accent,
-                'logo_path' => $settings->getString('brand_logo_path', ''),
-                'favicon_path' => $settings->getString('brand_favicon_path', ''),
                 'theme_default' => $themeDefault,
+                'theme_preset' => $themePreset,
+                'custom_css_enabled' => $customCssEnabled,
+                'custom_css' => $customCss,
                 'errors' => $errors,
-            ], 422);
+            ]), 422);
         }
 
         $settings->set('site_name', $name);
         $settings->set('brand_color_primary', self::isHex($primary) ? strtolower($primary) : '');
         $settings->set('brand_color_accent', self::isHex($accent) ? strtolower($accent) : '');
         $settings->set('brand_theme_default', $themeDefault);
+        $settings->set('brand_theme_preset', $themePreset);
+
+        if ($customCssAvailable) {
+            $settings->set('brand_custom_css_enabled', $customCssEnabled);
+            $settings->set('brand_custom_css', $customCss);
+        }
 
         $this->storeAsset($admin->id(), $request->file('logo'), 'brand_logo', 'brand_logo_path');
+        $this->storeAsset($admin->id(), $request->file('logo_light'), 'brand_logo_light', 'brand_logo_light_path');
+        $this->storeAsset($admin->id(), $request->file('logo_dark'), 'brand_logo_dark', 'brand_logo_dark_path');
         $this->storeAsset($admin->id(), $request->file('favicon'), 'brand_favicon', 'brand_favicon_path');
         $this->bustBrandCache($settings);
 
         $this->audit($admin->id(), 'update');
         return $this->redirectWithFlash('/admin/branding', 'Branding updated.');
+    }
+
+    /** @param array<string,mixed> $overrides */
+    private function formData(SettingRepository $settings, array $overrides = []): array
+    {
+        $data = [
+            'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
+            'color_primary' => $settings->getString('brand_color_primary', ''),
+            'color_accent' => $settings->getString('brand_color_accent', ''),
+            'logo_path' => $settings->getString('brand_logo_path', ''),
+            'logo_light_path' => $settings->getString('brand_logo_light_path', ''),
+            'logo_dark_path' => $settings->getString('brand_logo_dark_path', ''),
+            'favicon_path' => $settings->getString('brand_favicon_path', ''),
+            'theme_default' => $settings->getString('brand_theme_default', 'system'),
+            'theme_preset' => $settings->getString('brand_theme_preset', 'classic'),
+            'custom_css_available' => $this->container->get(FeatureFlags::class)->enabled('custom_css'),
+            'custom_css_enabled' => $settings->get('brand_custom_css_enabled', false) === true,
+            'custom_css' => $settings->getString('brand_custom_css', ''),
+            'errors' => [],
+        ];
+        return array_replace($data, $overrides);
     }
 
     /** @param array{name:string,type:string,tmp_name:string,error:int,size:int}|null $file */
@@ -209,5 +274,28 @@ final class BrandingController extends Controller
             return $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4;
         }, $parts);
         return 0.2126 * $linear[0] + 0.7152 * $linear[1] + 0.0722 * $linear[2];
+    }
+
+    private static function customCssError(string $css): ?string
+    {
+        if ($css === '') {
+            return null;
+        }
+        if (strlen($css) > 12000) {
+            return 'Custom CSS must be 12 KB or less.';
+        }
+        if (preg_match('/@import\b/i', $css) === 1) {
+            return 'Custom CSS cannot import external stylesheets.';
+        }
+        if (preg_match('/javascript\s*:/i', $css) === 1 || preg_match('/expression\s*\(/i', $css) === 1) {
+            return 'Custom CSS cannot include script-like expressions.';
+        }
+        if (preg_match('/url\s*\(\s*[\'"]?\s*(?:https?:|\/\/|data:)/i', $css) === 1) {
+            return 'Custom CSS cannot load remote or data URLs.';
+        }
+        if (preg_match('/#[A-Za-z0-9_-]*(delete|destroy|purge|reset)[A-Za-z0-9_-]*/i', $css) === 1) {
+            return 'Custom CSS cannot target destructive admin controls by ID.';
+        }
+        return null;
     }
 }

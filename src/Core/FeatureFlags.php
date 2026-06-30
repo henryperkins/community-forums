@@ -41,7 +41,9 @@ final class FeatureFlags
         'drafts' => true,            // local autosave drafts + Drafts view (P3-03)
         'uploads' => true,           // image upload/paste/drop + private delivery (P3-04)
         'anti_abuse' => true,        // central limiter, content filters, holds, audit (P3-05)
+        'appeals' => true,           // self-service moderation appeals + staff queue (P3 Gate B carryover)
         'branding' => true,          // operator branding: name/logo/favicon/colors (P3-07)
+        'custom_css' => false,        // guarded raw CSS editor for trusted operators (ADR 0009)
         'seo' => true,               // public metadata, sitemap, robots (P3-10)
         'product_tour' => true,      // new-user onboarding tour (P3-11)
 
@@ -64,7 +66,9 @@ final class FeatureFlags
         'split_merge' => false,        // moderator split/merge dry-run/apply/repair operations
         'profile_media' => false,      // avatar upload/signature moderation surfaces
         'board_folders' => false,      // private personal board folders
+        'bookmark_folders' => false,   // private folders for starred/bookmarked threads
         'saved_feeds' => false,        // private saved feed filters/digest composition
+        'custom_profile_fields' => false, // bounded extra public profile fields
         'automated_context' => false,  // since-last-read context + suggested related topics
 
         // ── Phase 5 Gate A (deploy-dark foundation/workstreams) ─────────────

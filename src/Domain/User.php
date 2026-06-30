@@ -71,7 +71,7 @@ final class User
     public function isActive(): bool
     {
         $status = $this->status();
-        if ($status === 'banned') {
+        if (in_array($status, ['banned', 'deactivated', 'pending_deletion', 'deleted'], true)) {
             return false;
         }
         if ($status === 'suspended') {
@@ -93,6 +93,16 @@ final class User
     public function isBanned(): bool
     {
         return $this->status() === 'banned';
+    }
+
+    public function isDeactivated(): bool
+    {
+        return $this->status() === 'deactivated';
+    }
+
+    public function isPendingDeletion(): bool
+    {
+        return $this->status() === 'pending_deletion';
     }
 
     public function isEmailVerified(): bool

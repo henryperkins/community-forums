@@ -39,13 +39,47 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
         </label>
 
         <label class="field">
+            <span>Theme preset</span>
+            <select name="theme_preset" class="input">
+                <option value="classic"<?= $sel('classic', $theme_preset) ?>>Classic</option>
+                <option value="retro"<?= $sel('retro', $theme_preset) ?>>Retro</option>
+            </select>
+        </label>
+
+        <label class="field">
             <span>Logo<?php if ($logo_path !== ''): ?> <span class="muted">(current set)</span><?php endif; ?></span>
             <input type="file" name="logo" accept="image/*" class="input">
+        </label>
+        <label class="field">
+            <span>Light theme logo<?php if ($logo_light_path !== ''): ?> <span class="muted">(current set)</span><?php endif; ?></span>
+            <input type="file" name="logo_light" accept="image/*" class="input">
+        </label>
+        <label class="field">
+            <span>Dark theme logo<?php if ($logo_dark_path !== ''): ?> <span class="muted">(current set)</span><?php endif; ?></span>
+            <input type="file" name="logo_dark" accept="image/*" class="input">
         </label>
         <label class="field">
             <span>Favicon<?php if ($favicon_path !== ''): ?> <span class="muted">(current set)</span><?php endif; ?></span>
             <input type="file" name="favicon" accept="image/*" class="input">
         </label>
+
+        <?php if (!empty($custom_css_available)): ?>
+            <label class="field checkbox-row">
+                <input type="checkbox" name="custom_css_enabled" value="1"<?= !empty($custom_css_enabled) ? ' checked' : '' ?>>
+                <span>Enable custom CSS</span>
+            </label>
+            <label class="field">
+                <span>Custom CSS</span>
+                <textarea name="custom_css" class="input" rows="8" maxlength="12000" spellcheck="false"><?= $e($custom_css) ?></textarea>
+            </label>
+            <label class="field checkbox-row">
+                <input type="checkbox" name="custom_css_ack" value="1">
+                <span>I understand this CSS applies site-wide and can affect usability.</span>
+            </label>
+            <?php if (!empty($errors['custom_css'])): ?><p class="field-error"><?= $e($errors['custom_css']) ?></p><?php endif; ?>
+        <?php else: ?>
+            <p class="muted">Custom CSS is saved behind the custom_css feature flag and is not available on this install.</p>
+        <?php endif; ?>
 
         <button class="btn" type="submit">Save branding</button>
     </form>
@@ -63,7 +97,7 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
                 <span class="brand-preview-accent">Accent marker</span>
             </div>
         </div>
-        <p class="muted">Separate light/dark logo variants are deferred; uploaded logos should work on both themes for Gate A.</p>
+        <p class="muted">Light and dark logo variants are used when the resolved theme explicitly matches that variant; system theme falls back to the base logo.</p>
     </section>
 
     <form method="post" action="/admin/branding" class="stacked card">

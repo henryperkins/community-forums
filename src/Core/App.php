@@ -17,6 +17,7 @@ use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
 use App\Controller\Api\MeController as ApiMeController;
 use App\Controller\ApprovalController;
+use App\Controller\AppealController;
 use App\Controller\AuthController;
 use App\Controller\BlockController;
 use App\Controller\BrandingController;
@@ -64,15 +65,18 @@ use App\Search\MysqlSearchService;
 use App\Search\SearchService;
 use App\Repository\BadgeRepository;
 use App\Repository\BlockRepository;
+use App\Repository\AccountDeletionRepository;
 use App\Repository\ApiTokenRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\ModerationAppealRepository;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
 use App\Repository\AttachmentRepository;
+use App\Repository\EmailDomainStatusRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\FollowRepository;
@@ -93,6 +97,7 @@ use App\Repository\ThreadAssignmentRepository;
 use App\Repository\ThreadUserRepository;
 use App\Repository\UserBoardPrefRepository;
 use App\Repository\UserPreferenceRepository;
+use App\Repository\UserProfileFieldRepository;
 use App\Repository\UsernameHistoryRepository;
 use App\Repository\VerificationRepository;
 use App\Repository\UserRepository;
@@ -112,15 +117,18 @@ use App\Security\Totp;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 use App\Service\AccountService;
+use App\Service\AccountLifecycleService;
 use App\Service\AdminService;
 use App\Service\AnnouncementService;
 use App\Service\AntiAbuseService;
+use App\Service\AppealService;
 use App\Service\ApiTokenService;
 use App\Service\AttachmentService;
 use App\Service\AttachmentScanService;
 use App\Service\AuthService;
 use App\Service\ContentReferenceService;
 use App\Service\CustomEmojiService;
+use App\Service\EmailDomainVerifier;
 use App\Service\EmailOpsService;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
@@ -150,6 +158,7 @@ use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
 use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
+use App\Service\ThreadSplitMergeService;
 use App\Service\ThreadWorkflowService;
 use App\Service\UserModerationService;
 use App\Service\SetupService;
@@ -406,7 +415,7 @@ final class App
         }
 
         // Branding (P3-07): operator name/logo/favicon/colors with safe fallbacks.
-        $branding = $this->branding($container, $siteName);
+        $branding = $this->branding($container, $siteName, $appearance);
 
         // Configured OAuth providers power the "Sign in with …" buttons.
         $oauthProviders = [];
@@ -468,9 +477,10 @@ final class App
      * safe built-in fallbacks. Never throws — a missing setting or table yields
      * the default RetroBoards chrome so the shell always renders.
      *
-     * @return array{name:string,logo_path:?string,favicon_path:?string,color_primary:string,color_accent:string}
+     * @param array<string,mixed> $appearance
+     * @return array{name:string,logo_path:?string,favicon_path:?string,color_primary:string,color_accent:string,theme_preset:string,has_custom_colors:bool,version:string}
      */
-    private function branding(Container $container, string $siteName): array
+    private function branding(Container $container, string $siteName, array $appearance = []): array
     {
         $brand = [
             'name' => $siteName,
@@ -478,6 +488,7 @@ final class App
             'favicon_path' => null,
             'color_primary' => '',
             'color_accent' => '',
+            'theme_preset' => 'classic',
             'has_custom_colors' => false,
             'version' => '',
         ];
@@ -487,12 +498,21 @@ final class App
             }
             $settings = $container->get(SettingRepository::class);
             $logo = $settings->getString('brand_logo_path', '');
+            $lightLogo = $settings->getString('brand_logo_light_path', '');
+            $darkLogo = $settings->getString('brand_logo_dark_path', '');
             $favicon = $settings->getString('brand_favicon_path', '');
             $primary = $settings->getString('brand_color_primary', '');
             $accent = $settings->getString('brand_color_accent', '');
+            $preset = $settings->getString('brand_theme_preset', 'classic');
             $brand['version'] = $settings->getString('brand_version', '');
-            if ($logo !== '') {
-                $brand['logo_path'] = $logo;
+            $theme = (string) ($appearance['theme'] ?? 'system');
+            $selectedLogo = match ($theme) {
+                'dark' => $darkLogo !== '' ? $darkLogo : $logo,
+                'light' => $lightLogo !== '' ? $lightLogo : $logo,
+                default => $logo,
+            };
+            if ($selectedLogo !== '') {
+                $brand['logo_path'] = $selectedLogo;
             }
             if ($favicon !== '') {
                 $brand['favicon_path'] = $favicon;
@@ -503,7 +523,16 @@ final class App
             if (self::isHexColor($accent)) {
                 $brand['color_accent'] = $accent;
             }
-            $brand['has_custom_colors'] = $brand['color_primary'] !== '' || $brand['color_accent'] !== '';
+            if (in_array($preset, ['classic', 'retro'], true)) {
+                $brand['theme_preset'] = $preset;
+            }
+            $hasCustomCss = $container->get(FeatureFlags::class)->enabled('custom_css')
+                && $settings->get('brand_custom_css_enabled', false) === true
+                && $settings->getString('brand_custom_css', '') !== '';
+            $brand['has_custom_colors'] = $brand['color_primary'] !== ''
+                || $brand['color_accent'] !== ''
+                || $brand['theme_preset'] !== 'classic'
+                || $hasCustomCss;
         } catch (Throwable) {
             // Keep safe defaults.
         }
@@ -588,6 +617,7 @@ final class App
 
         // Repositories.
         $c->bind(UserRepository::class, fn (Container $c) => new UserRepository($c->get(Database::class)));
+        $c->bind(AccountDeletionRepository::class, fn (Container $c) => new AccountDeletionRepository($c->get(Database::class)));
         $c->bind(SessionRepository::class, fn (Container $c) => new SessionRepository($c->get(Database::class)));
         $c->bind(SettingRepository::class, fn (Container $c) => new SettingRepository($c->get(Database::class)));
         $c->bind(CategoryRepository::class, fn (Container $c) => new CategoryRepository($c->get(Database::class)));
@@ -595,6 +625,7 @@ final class App
         $c->bind(ThreadRepository::class, fn (Container $c) => new ThreadRepository($c->get(Database::class)));
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
+        $c->bind(ModerationAppealRepository::class, fn (Container $c) => new ModerationAppealRepository($c->get(Database::class)));
         $c->bind(ApiTokenRepository::class, fn (Container $c) => new ApiTokenRepository($c->get(Database::class)));
         $c->bind(ApiTokenService::class, fn (Container $c) => new ApiTokenService(
             $c->get(Database::class),
@@ -645,6 +676,7 @@ final class App
         $c->bind(ReactionRepository::class, fn (Container $c) => new ReactionRepository($c->get(Database::class)));
         $c->bind(SubscriptionRepository::class, fn (Container $c) => new SubscriptionRepository($c->get(Database::class)));
         $c->bind(NotificationRepository::class, fn (Container $c) => new NotificationRepository($c->get(Database::class)));
+        $c->bind(EmailDomainStatusRepository::class, fn (Container $c) => new EmailDomainStatusRepository($c->get(Database::class)));
         $c->bind(EmailDeliveryRepository::class, fn (Container $c) => new EmailDeliveryRepository($c->get(Database::class)));
         $c->bind(EmailSuppressionRepository::class, fn (Container $c) => new EmailSuppressionRepository($c->get(Database::class)));
         $c->bind(ConversationRepository::class, fn (Container $c) => new ConversationRepository($c->get(Database::class)));
@@ -657,6 +689,7 @@ final class App
         $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
         $c->bind(UserBoardPrefRepository::class, fn (Container $c) => new UserBoardPrefRepository($c->get(Database::class)));
+        $c->bind(UserProfileFieldRepository::class, fn (Container $c) => new UserProfileFieldRepository($c->get(Database::class)));
         $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
         $c->bind(VerificationRepository::class, fn (Container $c) => new VerificationRepository($c->get(Database::class)));
         $c->bind(IdempotencyRepository::class, fn (Container $c) => new IdempotencyRepository($c->get(Database::class)));
@@ -698,6 +731,8 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(BoardMemberRepository::class),
             $c->get(BoardPolicy::class),
+            $c->get(ThreadRepository::class),
+            $c->get(ThreadUserRepository::class),
         ));
         $c->bind(SinceLastReadContextService::class, fn (Container $c) => new SinceLastReadContextService(
             $c->get(Database::class),
@@ -782,6 +817,11 @@ final class App
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
         ));
+        $c->bind(EmailDomainVerifier::class, fn (Container $c) => new EmailDomainVerifier(
+            $config,
+            $c->get(SettingRepository::class),
+            $c->get(EmailDomainStatusRepository::class),
+        ));
         $c->bind(EmailOpsService::class, fn (Container $c) => new EmailOpsService(
             $c->get(Database::class),
             $c->get(EmailDeliveryRepository::class),
@@ -791,12 +831,14 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(Mailer::class),
+            $c->get(EmailDomainVerifier::class),
         ));
         $c->bind(AnnouncementService::class, fn (Container $c) => new AnnouncementService(
             $c->get(Database::class),
             $c->get(SettingRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(NotificationRepository::class),
+            $c->get(EmailDeliveryRepository::class),
             $c->get(WriteGate::class),
         ));
         $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(
@@ -806,6 +848,16 @@ final class App
             $c->get(WriteGate::class),
             $c->get(BoardModeratorRepository::class),
             $c->get(FirstPartyHookRegistry::class),
+        ));
+        $c->bind(AppealService::class, fn (Container $c) => new AppealService(
+            $c->get(Database::class),
+            $c->get(ModerationAppealRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(NotificationRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(ModerationService::class),
+            $c->get(UserModerationService::class),
         ));
         $c->bind(ReportService::class, fn (Container $c) => new ReportService(
             $c->get(Database::class),
@@ -910,6 +962,14 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
         ));
+        $c->bind(ThreadSplitMergeService::class, fn (Container $c) => new ThreadSplitMergeService(
+            $c->get(Database::class),
+            $c->get(ThreadRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(ModerationService::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(RepairService::class),
+        ));
         $c->bind(CommunityMemoryService::class, fn (Container $c) => new CommunityMemoryService(
             $c->get(Database::class),
             $c->get(ThreadRepository::class),
@@ -960,6 +1020,16 @@ final class App
             $c->get(WriteGate::class),
             $config,
             $c->get(UserPreferenceRepository::class),
+            $c->get(FeatureFlags::class),
+            $c->get(UserProfileFieldRepository::class),
+        ));
+        $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
+            $c->get(Database::class),
+            $c->get(UserRepository::class),
+            $c->get(AccountDeletionRepository::class),
+            $c->get(SessionRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(PasswordHasher::class),
         ));
         $c->bind(MfaService::class, fn (Container $c) => new MfaService(
             $c->get(MfaRepository::class),
@@ -1133,6 +1203,12 @@ final class App
         $r->get('/settings', [AccountController::class, 'index']);
         $r->get('/settings/account', [AccountController::class, 'accountForm']);
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
+        $r->get('/settings/account/export', [AccountController::class, 'exportAccount']);
+        $r->get('/settings/account/lifecycle', [AccountController::class, 'lifecycleForm']);
+        $r->post('/settings/account/deactivate', [AccountController::class, 'deactivate']);
+        $r->post('/settings/account/reactivate', [AccountController::class, 'reactivate']);
+        $r->post('/settings/account/delete/request', [AccountController::class, 'requestDeletion']);
+        $r->post('/settings/account/delete/cancel', [AccountController::class, 'cancelDeletion']);
         $r->post('/settings/avatar', [AccountController::class, 'uploadAvatar']);
         $r->post('/settings/avatar/remove', [AccountController::class, 'removeAvatar']);
         $r->get('/settings/security', [AccountController::class, 'securityForm']);
@@ -1163,6 +1239,9 @@ final class App
         $r->post('/settings/boards/toggle', [SettingsController::class, 'toggleBoardPref']);
         $r->post('/settings/board-folders', [PersonalOrganizationController::class, 'createFolder']);
         $r->post('/settings/board-folders/{id}/boards', [PersonalOrganizationController::class, 'addBoard']);
+        $r->post('/settings/bookmark-folders', [PersonalOrganizationController::class, 'createBookmarkFolder']);
+        $r->post('/settings/bookmark-folders/add-thread', [PersonalOrganizationController::class, 'addThreadToBookmarkFolder']);
+        $r->post('/settings/bookmark-folders/{id}/threads', [PersonalOrganizationController::class, 'addThreadToBookmarkFolder']);
         $r->post('/settings/saved-feeds', [PersonalOrganizationController::class, 'createSavedFeed']);
 
         $r->get('/setup', [SetupController::class, 'show']);
@@ -1198,6 +1277,11 @@ final class App
         $r->post('/notifications/clear', [NotificationController::class, 'clear']);
         $r->post('/notifications/{id}/read', [NotificationController::class, 'read']);
 
+        // Moderation appeals (ADR 0007): member submission + staff resolution.
+        $r->get('/appeals', [AppealController::class, 'index']);
+        $r->post('/appeals/posts/{id}', [AppealController::class, 'openPost']);
+        $r->post('/appeals/modlog/{id}', [AppealController::class, 'openModerationLog']);
+
         // Login-free one-click unsubscribe (P2-04).
         $r->get('/unsubscribe', [UnsubscribeController::class, 'show']);
         $r->post('/unsubscribe', [UnsubscribeController::class, 'confirm']);
@@ -1232,6 +1316,8 @@ final class App
         $r->get('/admin/email', [AdminEmailController::class, 'index']);
         $r->get('/admin/email/export', [AdminEmailController::class, 'export']);
         $r->post('/admin/email/test', [AdminEmailController::class, 'test']);
+        $r->post('/admin/email/domain/verify', [AdminEmailController::class, 'verifyDomain']);
+        $r->post('/admin/email/deliveries/{id}/requeue', [AdminEmailController::class, 'requeue']);
         $r->post('/admin/email/suppressions', [AdminEmailController::class, 'suppress']);
         $r->post('/admin/email/suppressions/remove', [AdminEmailController::class, 'unsuppress']);
         $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
@@ -1286,6 +1372,8 @@ final class App
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);
         $r->post('/mod/t/{id}/move', [ModerationController::class, 'move']);
+        $r->post('/mod/t/{id}/split', [ModerationController::class, 'split']);
+        $r->post('/mod/t/{id}/merge', [ModerationController::class, 'merge']);
         $r->post('/mod/p/{id}/restore', [ModerationController::class, 'restorePost']);
         $r->post('/mod/p/{id}/reveal', [ModerationController::class, 'reveal']);
 
@@ -1302,6 +1390,8 @@ final class App
         $r->post('/mod/reports/{id}/claim', [ReportController::class, 'claim']);
         $r->post('/mod/reports/{id}/resolve', [ReportController::class, 'resolve']);
         $r->post('/mod/reports/{id}/dismiss', [ReportController::class, 'dismiss']);
+        $r->get('/mod/appeals', [AppealController::class, 'queue']);
+        $r->post('/mod/appeals/{id}/resolve', [AppealController::class, 'resolve']);
 
         // User moderation (P2-08).
         $r->post('/mod/u/{id}/warn', [UserModerationController::class, 'warn']);

@@ -23,6 +23,35 @@ $this->section('title', 'Email delivery');
     <?php else: ?>
         <p class="muted">Sending is configured<?php if (($mail_from ?? '') !== ''): ?> from <code><?= $e($mail_from) ?></code><?php endif; ?>. The delivery worker drains queued mail.</p>
     <?php endif; ?>
+    <?php if (!empty($send_blocked)): ?>
+        <div class="flash" role="alert">
+            <strong>Email sending is blocked until SPF and DKIM pass.</strong>
+            Refresh the sending-domain status after DNS records are published.
+        </div>
+    <?php endif; ?>
+
+    <section class="card">
+        <h2>Sending domain</h2>
+        <?php $domain = $domain_status ?? []; ?>
+        <?php if (($domain['domain'] ?? '') === ''): ?>
+            <p class="muted">Set a From address before verifying SPF and DKIM.</p>
+        <?php else: ?>
+            <p>
+                <strong><?= $e((string) $domain['domain']) ?></strong>
+                <span class="muted">selector <code><?= $e((string) ($domain['dkim_selector'] ?? 'default')) ?></code></span>
+            </p>
+            <p class="muted">
+                SPF: <?= $e((string) ($domain['spf_status'] ?? 'unknown')) ?> ·
+                DKIM: <?= $e((string) ($domain['dkim_status'] ?? 'unknown')) ?>
+                <?php if (!empty($domain['checked_at'])): ?> · checked <?= $e(human_datetime((string) $domain['checked_at'])) ?><?php endif; ?>
+            </p>
+            <form method="post" action="/admin/email/domain/verify" class="inline-form">
+                <?= $this->csrfField() ?>
+                <button class="btn btn-small" type="submit">Refresh SPF/DKIM status</button>
+            </form>
+            <p class="muted">Verified-domain send blocking is <?= !empty($domain['required']) ? 'enabled' : 'disabled' ?>.</p>
+        <?php endif; ?>
+    </section>
 
     <section class="card">
         <h2>Queue status</h2>
@@ -68,7 +97,7 @@ $this->section('title', 'Email delivery');
             <a class="btn btn-small" href="/admin/email/export">Download CSV</a>
         </form>
         <table class="audit">
-            <thead><tr><th>When</th><th>To</th><th>Kind</th><th>Status</th><th>Subject</th><th>Detail</th></tr></thead>
+            <thead><tr><th>When</th><th>To</th><th>Kind</th><th>Status</th><th>Subject</th><th>Detail</th><th>Action</th></tr></thead>
             <tbody>
             <?php foreach ($deliveries as $d): ?>
                 <tr>
@@ -78,10 +107,20 @@ $this->section('title', 'Email delivery');
                     <td><?= $e($d['status']) ?></td>
                     <td><?= $e((string) ($d['subject'] ?? '')) ?></td>
                     <td><?= $e((string) ($d['error'] ?? $d['message_id'] ?? '')) ?></td>
+                    <td>
+                        <?php if (($d['status'] ?? '') === 'failed'): ?>
+                            <form method="post" action="/admin/email/deliveries/<?= (int) $d['id'] ?>/requeue" class="inline-form">
+                                <?= $this->csrfField() ?>
+                                <button class="btn btn-small" type="submit">Requeue</button>
+                            </form>
+                        <?php else: ?>
+                            <span class="muted">—</span>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endforeach; ?>
             <?php if (empty($deliveries)): ?>
-                <tr><td colspan="6" class="muted">No deliveries match.</td></tr>
+                <tr><td colspan="7" class="muted">No deliveries match.</td></tr>
             <?php endif; ?>
             </tbody>
         </table>

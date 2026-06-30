@@ -46,6 +46,32 @@ final class PersonalOrganizationController extends Controller
         return $this->redirectWithFlash('/settings/boards', 'Saved feed created.');
     }
 
+    public function createBookmarkFolder(Request $request, array $params): Response
+    {
+        $this->requireFlag('bookmark_folders');
+        try {
+            $this->container->get(PersonalOrganizationService::class)->createBookmarkFolder($this->requireUser(), $request->str('name'));
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/settings/boards', $e->first());
+        }
+        return $this->redirectWithFlash('/settings/boards', 'Bookmark folder saved.');
+    }
+
+    public function addThreadToBookmarkFolder(Request $request, array $params): Response
+    {
+        $this->requireFlag('bookmark_folders');
+        try {
+            $this->container->get(PersonalOrganizationService::class)->addThreadToBookmarkFolder(
+                $this->requireUser(),
+                (int) ($params['id'] ?? $request->int('folder_id', 0)),
+                (int) $request->int('thread_id', 0),
+            );
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/settings/boards', $e->first());
+        }
+        return $this->redirectWithFlash('/settings/boards', 'Thread added to bookmark folder.');
+    }
+
     private function requireFlag(string $flag): void
     {
         if (!$this->container->get(FeatureFlags::class)->enabled($flag)) {

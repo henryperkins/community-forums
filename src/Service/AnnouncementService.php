@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Core\ForbiddenException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\EmailDeliveryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
@@ -30,11 +31,12 @@ final class AnnouncementService
         private SettingRepository $settings,
         private ModerationLogRepository $log,
         private NotificationRepository $notifications,
+        private EmailDeliveryRepository $deliveries,
         private WriteGate $writeGate,
     ) {
     }
 
-    public function setBanner(User $admin, string $message, bool $dismissible, bool $inAppBroadcast): void
+    public function setBanner(User $admin, string $message, bool $dismissible, bool $inAppBroadcast, bool $emailBroadcast = false): void
     {
         $this->assertAdmin($admin);
 
@@ -42,13 +44,13 @@ final class AnnouncementService
         if ($message === '' || mb_strlen($message) > self::MAX_MESSAGE) {
             throw new ValidationException(
                 ['message' => 'Announcement message must be 1–' . self::MAX_MESSAGE . ' characters.'],
-                ['message' => $message, 'dismissible' => $dismissible, 'broadcast' => $inAppBroadcast],
+                ['message' => $message, 'dismissible' => $dismissible, 'broadcast' => $inAppBroadcast, 'broadcast_email' => $emailBroadcast],
             );
         }
 
         $version = $this->currentVersion() + 1;
 
-        $this->db->transaction(function () use ($admin, $message, $dismissible, $inAppBroadcast, $version): void {
+        $this->db->transaction(function () use ($admin, $message, $dismissible, $inAppBroadcast, $emailBroadcast, $version): void {
             $this->settings->set('site_announcement', [
                 'active' => true,
                 'message' => $message,
@@ -58,13 +60,22 @@ final class AnnouncementService
             if ($inAppBroadcast) {
                 $this->notifications->broadcastAnnouncement($admin->id());
             }
+            $emailCount = 0;
+            if ($emailBroadcast) {
+                $emailCount = $this->deliveries->enqueueSystemForActiveUsers(
+                    $admin->id(),
+                    'Announcement from ' . $this->siteName(),
+                    ['type' => 'announcement', 'version' => $version, 'message' => $message],
+                    'announcement:' . $version . ':',
+                );
+            }
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'set_announcement',
                 'target_type' => 'setting',
                 'target_id' => 0,
                 'reason' => 'site_announcement',
-                'after' => ['active' => true, 'version' => $version, 'broadcast' => $inAppBroadcast],
+                'after' => ['active' => true, 'version' => $version, 'broadcast' => $inAppBroadcast, 'email_broadcast' => $emailBroadcast, 'email_count' => $emailCount],
             ]);
         });
     }
@@ -95,6 +106,11 @@ final class AnnouncementService
             return (int) $current['version'];
         }
         return 0;
+    }
+
+    private function siteName(): string
+    {
+        return $this->settings->getString('site_name', 'RetroBoards');
     }
 
     private function assertAdmin(User $admin): void

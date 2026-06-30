@@ -3,7 +3,7 @@
 **Status:** engineering closeout complete with explicit deferrals; product-owner accepted as the Phase 5 entry baseline on 2026-06-28
 **Last updated:** 2026-06-29
 **Branch:** accepted baseline on `main`; carryover progress on `phase3-4-closeout-completion`
-**Suite:** accepted baseline `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green. Current carryover branch `./vendor/bin/phpunit` → 720 tests / 2744 assertions, green
+**Suite:** accepted baseline `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green. Current carryover branch `composer test` → 744 tests / 2908 assertions, green
 
 > 2026-06-29 carryover note: branch `phase3-4-closeout-completion` implements
 > additional ADR 0003 carryovers behind dark flags, but it does not complete all
@@ -32,21 +32,32 @@ advanced-community slice:
 The 2026-06-28 Phase 5 release-train instruction accepts these deferrals as
 explicit carryovers, not shipped behavior.
 
-The following remain incomplete or not accepted for broad rollout:
+The following remain not accepted for broad rollout:
 
-- Moderation appeals.
-- Moderator split/merge services and redirect flows.
-- Account deactivation/reactivation, self-serve export/delete, bookmark folders,
-  and limited custom profile fields.
+- 2026-06-30 carryover implementations for moderation appeals, moderator
+  split/merge, account lifecycle/export/delete, advanced theming, email
+  domain/broadcast, bookmark folders, and limited custom profile fields still
+  need browser/a11y/runbook evidence before broad enablement.
 - Production rollout/a11y/load/SEO artifacts beyond the local automated suite,
   Playwright browser capture, and backup/restore rehearsal.
 
-The 2026-06-29 carryover branch has deploy-dark implementation evidence for
+Implementation gates are now recorded for policy-heavy carryovers:
+`docs/adr/0006-account-lifecycle-export-delete-policy.md`,
+`docs/adr/0007-moderation-appeals-policy.md`,
+`docs/adr/0008-email-domain-send-blocking-policy.md`,
+`docs/adr/0009-advanced-theming-custom-css-policy.md`,
+`docs/adr/0010-server-draft-sync-scope.md`, and
+`docs/adr/0011-public-plugin-runtime-scope.md`.
+
+The carryover branch has deploy-dark implementation evidence for
 badge rules, post/DM/summary content references, link previews, expanded files,
 polls, custom emoji, slash/GIPHY insertion, board folders, saved feed filters,
 deterministic since-last-read context, scheduled related-topic refresh, avatar
-upload/removal, and signature hardening. These remain behind flags until the
-missing browser/a11y/upgrade/worker/runbook evidence is attached.
+upload/removal, signature hardening, moderation appeals, moderator split/merge,
+account lifecycle/export/delete, email domain/broadcast, advanced theming,
+bookmark folders, and bounded custom profile fields. These remain behind flags
+or operator gates where applicable until the missing browser/a11y/upgrade/worker
+runbook evidence is attached.
 
 ## Evidence Index
 
@@ -55,7 +66,7 @@ missing browser/a11y/upgrade/worker/runbook evidence is attached.
 - Carryover ledger: `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
 - Current carryover stopping point: `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
 - Full suite: `./vendor/bin/phpunit` → 456 tests / 1635 assertions.
-- Current carryover branch full suite: `./vendor/bin/phpunit` → 720 tests / 2744 assertions.
+- Current carryover branch full suite: `composer test` → 744 tests / 2908 assertions.
 - Current carryover focused suite: `AppContentReferenceTest`, `AppAutomatedContextTest`, `AppProfileMediaTest`, `RelatedTopicRefreshWorkerTest` → 13 tests / 72 assertions.
 - Slash/GIPHY focused suite: `AppCustomEmojiGiphyTest` → 5 tests / 26 assertions.
 - Focused Phase 4 regressions: `tests/Integration/Core/AppPhase4GateATest.php`.

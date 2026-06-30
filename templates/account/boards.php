@@ -35,4 +35,22 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </section>
+
+    <?php if (!empty($features['bookmark_folders'])): ?>
+        <section class="card">
+            <h2>Bookmark folders</h2>
+            <p class="muted">Create private folders for threads you have starred.</p>
+            <form method="post" action="/settings/bookmark-folders" class="inline-form">
+                <?= $this->csrfField() ?>
+                <input type="text" name="name" class="input" maxlength="80" placeholder="Read later" required>
+                <button class="btn btn-small" type="submit">Create folder</button>
+            </form>
+            <form method="post" action="/settings/bookmark-folders/add-thread" class="inline-form">
+                <?= $this->csrfField() ?>
+                <input type="number" name="folder_id" class="input" min="1" placeholder="Folder ID" required>
+                <input type="number" name="thread_id" class="input" min="1" placeholder="Starred thread ID" required>
+                <button class="btn btn-small" type="submit">Add thread</button>
+            </form>
+        </section>
+    <?php endif; ?>
 </div>

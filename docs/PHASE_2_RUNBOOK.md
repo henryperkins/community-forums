@@ -58,7 +58,8 @@ covered by `AppFeatureFlagTest`.
 - **Send due digests:** `php bin/console worker:digest` (timezone-aware,
   watermarked; never sends twice or empty).
 - **Replay failed sends:** failed rows are marked `failed` and are **not**
-  auto-retried. After fixing the transport, requeue them:
+  auto-retried. After fixing the transport, use `/admin/email` to requeue
+  individual failed rows, or requeue them in bulk:
   ```sql
   UPDATE email_deliveries SET status='queued', error=NULL WHERE status='failed';
   ```
@@ -68,6 +69,11 @@ covered by `AppFeatureFlagTest`.
   can clear a row from `email_suppressions` once the inbox is healthy.
 - **Sender not configured:** with `MAIL_FROM` empty the worker fails closed and
   leaves rows `queued` — configure the sender, then drain.
+- **Verified-domain blocking:** when `mail.require_verified_domain` or
+  `settings.email_require_verified_domain` is true, `/admin/email` must show SPF
+  and DKIM as `pass` for the configured From domain before test sends or workers
+  send mail. Use **Refresh SPF/DKIM status** after DNS changes. Blocked workers
+  leave rows `queued` and stamp the blocked reason in `email_deliveries.error`.
 
 ## 4. Counter & reputation reconciliation
 

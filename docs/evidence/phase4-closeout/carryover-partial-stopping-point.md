@@ -49,19 +49,21 @@ claim full Phase 4 carryover acceptance.
 - Implemented profile-media upload/removal for local avatars, three-line
   signature height enforcement, and moderator signature removal audit behind the
   `profile_media` flag.
+- Implemented moderation appeals with member submission, staff queue, reverse
+  restoration, notification, and audit coverage.
+- Implemented moderator split/merge operations behind `split_merge`, using the
+  existing thread operation/redirect schema plus counter repair.
+- Implemented account deactivation/reactivation, JSON export, deletion
+  request/cancel, and purge/anonymization under ADR 0006.
+- Implemented advanced local theming: retro preset, light/dark logo variants,
+  and guarded custom CSS behind `custom_css`.
+- Implemented email announcement broadcast, `system` email worker rendering,
+  cached SPF/DKIM domain status, and opt-in verified-domain send blocking.
+- Implemented private bookmark folders for starred threads and bounded custom
+  public profile fields.
 
 ## Unfinished Or Partial Items
 
-- Moderation appeals are not implemented. There is no appeal submission/queue,
-  restoration policy, notification flow, or audit acceptance evidence yet.
-- Moderator split/merge operations are not implemented in this branch. The flag
-  and pre-existing `0048` schema remain available, but there is no dry-run/apply
-  service, route, verification, redirect repair, or counter/read-state repair
-  flow yet.
-- Account deactivation/reactivation, self-serve export/delete, bookmark folders
-  for starred/bookmarked threads, and limited custom profile fields remain open
-  carryovers. Board folders and saved feed filters are implemented, but they do
-  not cover those account/profile surfaces.
 - Additional per-slice browser evidence, a11y evidence, crawler evidence, load
   probes, worker smoke, backup/restore, upgrade rehearsal, and operator runbook
   rehearsal are not complete for every new carryover slice.
@@ -77,6 +79,18 @@ Focused regression for this increment:
   -> 13 tests / 72 assertions, green.
 - `./vendor/bin/phpunit tests/Integration/Core/AppCustomEmojiGiphyTest.php`
   -> 5 tests / 26 assertions, green.
+- `./vendor/bin/phpunit tests/Integration/Core/AppAccountLifecycleTest.php`
+  -> 5 tests / 48 assertions, green.
+- `./vendor/bin/phpunit tests/Integration/Core/AppModerationAppealsTest.php`
+  -> 3 tests / 21 assertions, green.
+- `./vendor/bin/phpunit tests/Integration/Core/AppThreadSplitMergeTest.php`
+  -> 2 tests / 19 assertions, green.
+- `./vendor/bin/phpunit tests/Integration/Core/AppBrandingThemeTest.php`
+  -> 10 tests / 39 assertions, green.
+- `./vendor/bin/phpunit tests/Integration/Admin/AppAdminEmailTest.php`
+  -> 12 tests / 75 assertions, green.
+- `./vendor/bin/phpunit tests/Integration/Core/AppBoardFoldersSavedFeedsTest.php`
+  -> 7 tests / 46 assertions, green.
 - `cd tests/browser && npm run prepare-db && npx playwright test --project=desktop -g "slash menu"`
   and the same command with `--project=mobile` -> both green; screenshots:
   `docs/evidence/browser/{desktop,mobile}/26-slash-menu.png` and
@@ -84,7 +98,7 @@ Focused regression for this increment:
 
 Full regression for this branch:
 
-- `./vendor/bin/phpunit` -> 720 tests / 2744 assertions, green.
+- `composer test` -> 744 tests / 2908 assertions, green.
 - `cd tests/browser && npm run evidence` -> 27 passed / 1 skipped across 28
   Playwright tests, green.
 
@@ -93,6 +107,6 @@ Worker smoke for this increment:
 - `APP_ENV=testing DB_DATABASE=retroboards_test php bin/console worker:related-topics 10`
   -> `Related-topic refresh: linked=0 skipped=1` with the feature dark.
 
-This branch is still not final Phase 4 carryover acceptance because split/merge,
-appeals, account/profile carryovers, broader browser/a11y/upgrade/worker
-evidence, and release runbook rehearsal remain incomplete.
+This branch is still not final Phase 4 carryover acceptance because broader
+browser/a11y/upgrade/worker evidence and release runbook rehearsal remain
+incomplete for the newer carryover slices.

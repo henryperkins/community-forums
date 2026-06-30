@@ -78,6 +78,17 @@ $profileUrl = '/u/' . $profile['username'];
         </section>
     <?php endif; ?>
 
+    <?php if (!empty($custom_fields)): ?>
+        <section class="profile-fields">
+            <h2>Profile details</h2>
+            <dl class="profile-custom-fields">
+                <?php foreach ($custom_fields as $field): ?>
+                    <div><dt><?= $e($field['label']) ?></dt><dd><?= $e($field['value']) ?></dd></div>
+                <?php endforeach; ?>
+            </dl>
+        </section>
+    <?php endif; ?>
+
     <?php if (!empty($recent_threads)): ?>
         <section class="profile-threads">
             <h2>Recent topics</h2>

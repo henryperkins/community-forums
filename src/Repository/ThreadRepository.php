@@ -80,6 +80,18 @@ final class ThreadRepository
         );
     }
 
+    /** @return array<string,mixed>|null target thread for an old merged source id */
+    public function redirectTarget(int $sourceThreadId): ?array
+    {
+        return $this->db->fetch(
+            'SELECT t.*
+             FROM thread_redirects r
+             JOIN threads t ON t.id = r.canonical_thread_id
+             WHERE r.old_thread_id = ?',
+            [$sourceThreadId],
+        );
+    }
+
     /**
      * One page of non-deleted threads for a board: pinned first, then by the
      * reader's chosen sort — last activity (default, idx_threads_inbox), newest,
