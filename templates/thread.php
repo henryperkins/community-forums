@@ -34,6 +34,71 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         $byReplies = (int) ($thread['reply_count'] ?? 0);
         ?>
         <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?></p>
+        <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
+        <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
+            <div class="thread-participants" aria-label="Participants">
+                <?php foreach ($participants as $pp): ?>
+                    <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false); ?>
+                    <span class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed']]) ?></span>
+                <?php endforeach; ?>
+                <?php $shownParticipants = count($participants); if ((int) ($participant_count ?? 0) > $shownParticipants): ?>
+                    <span class="participant-more">+<?= (int) $participant_count - $shownParticipants ?></span>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+        <?php
+        // Topic action bar (§5.1): the always-on member/mod controls — star, notify,
+        // clear-accepted, pin/lock — gathered onto one calm line instead of a stack of
+        // raw links. (The deploy-dark workflow controls below keep their own bar.)
+        $hasThreadActions = (($engagement ?? false) && $current_user !== null)
+            || (($notifications_on ?? false) && $current_user !== null)
+            || (($accepted_post_id ?? null) !== null && !empty($can_mark_solved))
+            || ($is_admin ?? false);
+        ?>
+        <?php if ($hasThreadActions): ?>
+            <div class="thread-actions">
+                <?php if (($engagement ?? false) && $current_user !== null): ?>
+                    <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
+                        <?= $this->csrfField() ?>
+                        <input type="hidden" name="return" value="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">
+                        <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>">
+                            <?= ($is_starred ?? false) ? '★ Starred' : '☆ Star' ?>
+                        </button>
+                    </form>
+                <?php endif; ?>
+                <?php if (($notifications_on ?? false) && $current_user !== null): ?>
+                    <?php $freq = $subscription['frequency'] ?? 'off'; ?>
+                    <form class="inline subscribe-form" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
+                        <?= $this->csrfField() ?>
+                        <label class="sr-only" for="sub-freq">Notify me</label>
+                        <select class="input input-small" id="sub-freq" name="frequency">
+                            <option value="instant"<?= $freq === 'instant' ? ' selected' : '' ?>>Notify: Instant</option>
+                            <option value="daily"<?= $freq === 'daily' ? ' selected' : '' ?>>Notify: Daily</option>
+                            <option value="off"<?= $freq === 'off' ? ' selected' : '' ?>>Notify: Off</option>
+                        </select>
+                        <input type="hidden" name="in_app" value="1">
+                        <input type="hidden" name="email" value="1">
+                        <button class="linkbtn" type="submit">Save</button>
+                    </form>
+                <?php endif; ?>
+                <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
+                    <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept">
+                        <?= $this->csrfField() ?>
+                        <button class="linkbtn muted" type="submit">Clear accepted answer</button>
+                    </form>
+                <?php endif; ?>
+                <?php if ($is_admin): ?>
+                    <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
+                        <?= $this->csrfField() ?>
+                        <button class="linkbtn" type="submit"><?= (int) $thread['is_pinned'] === 1 ? 'Unpin' : 'Pin' ?></button>
+                    </form>
+                    <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock">
+                        <?= $this->csrfField() ?>
+                        <button class="linkbtn" type="submit"><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
         <?php if ($workflow_on ?? false): ?>
             <div class="workflow-bar">
                 <span class="muted">Status: <?= $e($status_labels[$thread['status'] ?? 'open'] ?? 'Open') ?></span>
@@ -191,12 +256,6 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 </form>
             </details>
         <?php endif; ?>
-        <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
-            <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept">
-                <?= $this->csrfField() ?>
-                <button class="linkbtn muted" type="submit">Clear accepted answer</button>
-            </form>
-        <?php endif; ?>
         <?php if (!empty($polls_on) && !empty($poll)): ?>
             <section class="memory-panel poll-panel">
                 <h2><?= $e($poll['question']) ?></h2>
@@ -240,42 +299,6 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 </form>
             </details>
         <?php endif; ?>
-        <?php if (($engagement ?? false) && $current_user !== null): ?>
-            <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
-                <?= $this->csrfField() ?>
-                <input type="hidden" name="return" value="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">
-                <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>">
-                    <?= ($is_starred ?? false) ? '★ Starred' : '☆ Star' ?>
-                </button>
-            </form>
-        <?php endif; ?>
-        <?php if (($notifications_on ?? false) && $current_user !== null): ?>
-            <?php $freq = $subscription['frequency'] ?? 'off'; ?>
-            <form class="inline subscribe-form" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
-                <?= $this->csrfField() ?>
-                <label class="sr-only" for="sub-freq">Notify me</label>
-                <select class="input input-small" id="sub-freq" name="frequency">
-                    <option value="instant"<?= $freq === 'instant' ? ' selected' : '' ?>>Notify: Instant</option>
-                    <option value="daily"<?= $freq === 'daily' ? ' selected' : '' ?>>Notify: Daily</option>
-                    <option value="off"<?= $freq === 'off' ? ' selected' : '' ?>>Notify: Off</option>
-                </select>
-                <input type="hidden" name="in_app" value="1">
-                <input type="hidden" name="email" value="1">
-                <button class="linkbtn" type="submit">Save</button>
-            </form>
-        <?php endif; ?>
-        <?php if ($is_admin): ?>
-            <div class="mod-bar">
-                <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
-                    <?= $this->csrfField() ?>
-                    <button class="linkbtn" type="submit"><?= (int) $thread['is_pinned'] === 1 ? 'Unpin' : 'Pin' ?></button>
-                </form>
-                <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock">
-                    <?= $this->csrfField() ?>
-                    <button class="linkbtn" type="submit"><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></button>
-                </form>
-            </div>
-        <?php endif; ?>
     </header>
 
     <?php if (!empty($since_last_read_context)): ?>
@@ -298,9 +321,24 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         <p class="muted empty">This thread has no visible posts.</p>
     <?php else: ?>
         <div class="post-stream">
+            <?php $prevAuthorId = null; $prevAnon = true; $prevAt = 0; ?>
             <?php foreach ($posts as $p): ?>
+                <?php
+                // Group a reply with the one above it when the same non-anonymous
+                // author posted again within ten minutes (§5.1); the partial keeps the
+                // OP and the accepted answer ungrouped so their headers always show.
+                $thisAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
+                $thisAt = strtotime((string) $p['created_at'] . ' UTC') ?: 0;
+                $grouped = $prevAuthorId !== null && !$thisAnon && !$prevAnon
+                    && (int) $p['user_id'] === $prevAuthorId
+                    && ($thisAt - $prevAt) >= 0 && ($thisAt - $prevAt) <= 600;
+                $prevAuthorId = (int) $p['user_id'];
+                $prevAnon = $thisAnon;
+                $prevAt = $thisAt;
+                ?>
                 <?= $this->partial('partials/post', [
                     'p' => $p,
+                    'grouped' => $grouped,
                     'thread' => $thread,
                     'engagement' => $engagement ?? false,
                     'counts' => ($reaction_counts ?? [])[(int) $p['id']] ?? [],

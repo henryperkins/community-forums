@@ -9,19 +9,30 @@ $isAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
 $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? null, $p['author_role'] ?? 'user', $isAnon);
 ?>
 <?php $accepted = $accepted ?? false; ?>
-<div class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?>" id="p<?= (int) $p['id'] ?>">
-    <?php if ($show_avatars ?? true): ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?><?php endif; ?>
+<?php // A grouped post is a consecutive reply by the same (non-anonymous) author —
+      // it drops the repeated avatar and name (§5.1). The OP and the accepted answer
+      // always keep their full header, so they are never grouped. ?>
+<?php $grouped = ($grouped ?? false) && !$accepted && (int) $p['is_op'] !== 1; ?>
+<div class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>">
+    <?php if ($show_avatars ?? true): ?>
+        <?php if ($grouped): ?><span class="post-avatar-spacer" aria-hidden="true"></span>
+        <?php else: ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?><?php endif; ?>
+    <?php endif; ?>
     <div class="post-main">
+        <?php if ($accepted): ?>
+            <p class="accepted-flag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Marked as the answer<span class="star-marker" aria-hidden="true">✦</span></p>
+        <?php endif; ?>
         <div class="post-head">
-            <?php if ($a['profile_url'] !== null): ?>
-                <a class="post-author" href="<?= $e($a['profile_url']) ?>"><?= $e($a['label']) ?></a>
-            <?php else: ?>
-                <span class="post-author"><?= $e($a['label']) ?></span>
+            <?php if (!$grouped): ?>
+                <?php if ($a['profile_url'] !== null): ?>
+                    <a class="post-author" href="<?= $e($a['profile_url']) ?>"><?= $e($a['label']) ?></a>
+                <?php else: ?>
+                    <span class="post-author"><?= $e($a['label']) ?></span>
+                <?php endif; ?>
+                <?php if ((int) $p['is_op'] === 1): ?><span class="badge">OP</span><?php endif; ?>
+                <?php if (!empty($p['is_wiki'])): ?><span class="badge">Wiki</span><?php endif; ?>
+                <?php if ($a['is_staff']): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
             <?php endif; ?>
-            <?php if ((int) $p['is_op'] === 1): ?><span class="badge">OP</span><?php endif; ?>
-            <?php if (!empty($p['is_wiki'])): ?><span class="badge">Wiki</span><?php endif; ?>
-            <?php if ($a['is_staff']): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
-            <?php if ($accepted): ?><span class="badge badge-solved" title="Accepted answer">✓ Accepted answer</span><?php endif; ?>
             <span class="post-time"><?= $e(human_datetime($p['created_at'])) ?></span>
             <?php if (!empty($p['edited_at'])): ?><span class="muted post-edited">(edited)</span><?php endif; ?>
             <?php if ($isAnon && !empty($can_reveal_anon)): ?>

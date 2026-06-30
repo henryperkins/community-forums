@@ -99,6 +99,40 @@ final class PostRepository
     }
 
     /**
+     * Distinct visible participants in a thread (authors of non-deleted posts),
+     * ordered by first contribution, for the topic-header avatar stack (§5.1).
+     * Anonymous posts are EXCLUDED so the stack can never deanonymise a masked
+     * author — mirrors the same guard in {@see recentByUser}.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function participantsForThread(int $threadId, int $limit): array
+    {
+        $limit = max(1, $limit);
+        return $this->db->fetchAll(
+            'SELECT u.id AS user_id, u.username AS author_username, u.display_name AS author_display_name,
+                    u.role AS author_role, MIN(p.created_at) AS first_at
+             FROM posts p
+             JOIN users u ON u.id = p.user_id
+             WHERE p.thread_id = ? AND p.is_deleted = 0 AND p.is_pending = 0 AND p.is_anonymous = 0
+             GROUP BY u.id, u.username, u.display_name, u.role
+             ORDER BY first_at ASC, u.id ASC
+             LIMIT ' . $limit,
+            [$threadId],
+        );
+    }
+
+    /** Count of distinct non-anonymous participants (drives the "+N" overflow). */
+    public function participantCountForThread(int $threadId): int
+    {
+        return (int) $this->db->fetchValue(
+            'SELECT COUNT(DISTINCT user_id) FROM posts
+             WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0 AND is_anonymous = 0',
+            [$threadId],
+        );
+    }
+
+    /**
      * 1-based page (at $perPage) on which a post appears in the public thread
      * render order — created_at ASC, id ASC over visible posts, matching
      * {@see listByThread}. Lets a failed inline edit re-render the page that

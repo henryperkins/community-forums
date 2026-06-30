@@ -9,5 +9,8 @@
     <?php if (!empty($board['allow_anonymous'])): ?>
         <label class="checkline"><input type="checkbox" name="is_anonymous" value="1" <?= !empty($old['is_anonymous']) ? 'checked' : '' ?>> Post anonymously <span class="muted">(your name is hidden from other members; moderators can still see it)</span></label>
     <?php endif; ?>
-    <button class="btn" type="submit">Create topic</button>
+    <div class="composer-actions">
+        <button class="btn" type="submit">Create topic</button>
+        <button class="btn-secondary composer-cancel" type="button" data-close-composer>Cancel</button>
+    </div>
 </form>

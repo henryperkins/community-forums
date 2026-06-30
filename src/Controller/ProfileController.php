@@ -69,16 +69,25 @@ final class ProfileController extends Controller
             && $this->container->get(FeatureFlags::class)->enabled('dms')
             && $allowDms !== 'none';
 
+        // Profile activity tabs (§5.4): Overview / Threads / Posts / Commends, each
+        // a real ?tab= URL so the view works without JS and is crawlable. Unknown
+        // values fall back to Overview.
+        $tab = (string) ($request->query('tab') ?? 'overview');
+        if (!in_array($tab, ['overview', 'threads', 'posts', 'commends'], true)) {
+            $tab = 'overview';
+        }
+
         return $this->view('profile/show', [
             'profile' => $profile,
+            'tab' => $tab,
             'bio_html' => $bioHtml,
             'title' => $titles->resolve($profile['title'] ?? null, (int) $profile['reputation']),
             'badges' => $community ? $this->container->get(BadgeRepository::class)->forUser($profileId) : [],
             'follower_count' => $follows->followerCount($profileId),
             'following_count' => $follows->followingCount($profileId),
             'solved_count' => $this->container->get(UserRepository::class)->solvedAnswerCount($profileId),
-            'recent_threads' => $threadRepo->recentByUser($profileId, 5),
-            'recent_posts' => $postRepo->recentByUser($profileId, 5),
+            'recent_threads' => $threadRepo->recentByUser($profileId, 20),
+            'recent_posts' => $postRepo->recentByUser($profileId, 20),
             'is_self' => $isSelf,
             'community' => $community,
             'can_follow' => $community && $viewer !== null && !$isSelf && !$blockedEither,
