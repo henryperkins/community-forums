@@ -108,6 +108,15 @@ final class ServerExtensionRepository
             $this->db->run("UPDATE server_extension_jobs SET status = 'succeeded', updated_at = UTC_TIMESTAMP() WHERE id = ?", [(int) $job['id']]);
             return;
         }
+        if ($status === 'quarantined') {
+            $this->db->run(
+                "UPDATE server_extension_jobs
+                 SET status = 'quarantined', last_error = ?, updated_at = UTC_TIMESTAMP()
+                 WHERE id = ?",
+                [isset($result['error']) ? substr((string) $result['error'], 0, 255) : 'extension quarantined', (int) $job['id']],
+            );
+            return;
+        }
         $this->db->run(
             "UPDATE server_extension_jobs
              SET status = IF(attempts >= max_attempts, 'failed', 'queued'),

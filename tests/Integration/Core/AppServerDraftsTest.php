@@ -71,6 +71,19 @@ final class AppServerDraftsTest extends TestCase
         self::assertSame('Updated body', $updated['draft']['body']);
     }
 
+    public function test_invalid_discard_context_returns_422_json(): void
+    {
+        $this->setFlags(['server_drafts' => true]);
+        $this->actingAs($this->makeUser(['username' => 'discard-validator']));
+
+        $response = $this->post('/api/drafts/' . str_repeat('a', 192) . '/discard');
+
+        $this->assertStatus(422, $response);
+        $payload = json_decode($response->body(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('validation', $payload['error']);
+        self::assertSame('Draft context is invalid.', $payload['messages']['context_key']);
+    }
+
     public function test_drafts_page_lists_and_discards_server_drafts_without_js(): void
     {
         $this->setFlags(['server_drafts' => true]);

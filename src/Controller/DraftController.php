@@ -68,7 +68,11 @@ final class DraftController extends Controller
     public function discard(Request $request, array $params): Response
     {
         $user = $this->requireServerDrafts();
-        $this->repo()->discardByContext($user->id(), (string) ($params['key'] ?? ''));
+        try {
+            $this->repo()->discardByContext($user->id(), (string) ($params['key'] ?? ''));
+        } catch (ValidationException $e) {
+            return Response::json(['error' => 'validation', 'messages' => $e->errors], 422);
+        }
         return Response::json(['discarded' => true]);
     }
 

@@ -71,6 +71,7 @@ final class ConversationController extends Controller
         } catch (ValidationException $e) {
             return $this->view('dm/new', ['to' => $to, 'title' => $title, 'errors' => $e->errors, 'body' => $body, 'allowGroups' => $allowGroups], 422);
         }
+        $this->discardServerDraftFor($user, $request->path());
         return $this->redirect('/messages/' . $result['conversation_id']);
     }
 
@@ -163,6 +164,7 @@ final class ConversationController extends Controller
                 'body' => $body,
             ], 422);
         }
+        $this->discardServerDraftFor($user, $request->path());
         return $this->redirect('/messages/' . $conversationId);
     }
 

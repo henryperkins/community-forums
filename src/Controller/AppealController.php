@@ -105,10 +105,11 @@ final class AppealController extends Controller
     /** @return array{target_type:string,target_id:int,reason:string} */
     private function oldReason(string $targetType, int $targetId, Request $request): array
     {
+        $reason = $request->post('reason', '');
         return [
             'target_type' => $targetType,
             'target_id' => $targetId,
-            'reason' => (string) $request->post('reason', ''),
+            'reason' => is_scalar($reason) ? (string) $reason : '',
         ];
     }
 }
