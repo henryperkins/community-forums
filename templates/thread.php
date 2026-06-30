@@ -14,7 +14,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
 ?>
 <article class="thread">
     <header class="thread-head">
-        <p class="breadcrumb"><a class="breadcrumb-back" href="/c/<?= $e($thread['board_slug']) ?>"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
+        <p class="breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Inbox</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
         <h1>
             <?php if ((int) $thread['is_pinned'] === 1): ?><span class="badge">Pinned</span><?php endif; ?>
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
@@ -375,7 +375,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
     <?php elseif ($can_reply): ?>
         <?= $this->partial('partials/composer', ['thread' => $thread, 'reply_errors' => $reply_errors, 'reply_old' => $reply_old]) ?>
     <?php elseif ($current_user === null): ?>
-        <div class="joinbar"><span>You're browsing as a guest — log in to add your reply.</span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
+        <div class="joinbar"><span>You're browsing as a guest — <em>log in to add your counsel.</em></span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
     <?php elseif ($current_user !== null && !$current_user->isActive()): ?>
         <div class="joinbar">Your account cannot post right now.</div>
     <?php elseif ($current_user !== null): ?>

@@ -18,7 +18,20 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
 <div class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>">
     <?php if ($show_avatars ?? true): ?>
         <?php if ($grouped): ?><span class="post-avatar-spacer" aria-hidden="true"></span>
-        <?php else: ?><?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?><?php endif; ?>
+        <?php else: ?>
+            <div class="post-avatar">
+                <?= $this->partial('partials/monogram', ['name' => $a['mono_name'], 'username' => $a['mono_seed']]) ?>
+                <?php // Regard plinth (§5.1): the author's commends earned, read from the
+                      // real users.reputation. Suppressed for an anonymous post so a masked
+                      // byline never leaks the real author's reputation. ?>
+                <?php if (!$isAnon && ($p['author_reputation'] ?? null) !== null): ?>
+                    <span class="regard-block">
+                        <span class="regard-n"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $p['author_reputation']) ?></span>
+                        <span class="regard-label">Commends</span>
+                    </span>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
     <div class="post-main">
         <?php if ($accepted): ?>

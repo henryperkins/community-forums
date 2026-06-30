@@ -1414,7 +1414,10 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .profile-rep-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .12em; font-size: .64rem; color: var(--mist-200); margin-top: 5px; }
 .profile-cover .profile-actions { margin: 0; justify-content: flex-end; }
 .profile-cover .profile-actions .linkbtn { color: var(--mist-200); }
-.profile-badges__label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-wide); font-size: .7rem; color: var(--text-faint); margin: 0 0 8px; }
+.profile-badges-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-wide); font-size: .7rem; color: var(--text-faint); margin: 0 0 10px; }
+/* Marks of esteem — lapidary-caps chips with a brand dot (no emoji), per the kit. */
+.badge-chip { border: 1px solid var(--border-hair); border-radius: var(--radius-pill); background: var(--surface-raised); font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--text-body); gap: 7px; padding: 5px 12px; }
+.badge-chip .b-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-500); flex: 0 0 auto; }
 .badge-chip.is-locked { background: transparent; border: 1px dashed var(--border-strong); color: var(--text-muted); }
 
 /* — Leaderboard: footnote card + headline top-3 reputation (§5.5) — */
@@ -1426,6 +1429,15 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     font-family: var(--font-body); font-style: italic; color: var(--text-muted);
     line-height: 1.55; max-width: 64ch;
 }
+/* — Leaderboard fidelity (Imladris UI kit: retroboards Leaderboard): the council
+   eyebrow, top-3 identity cards with a "@handle · title" sub-line, and a smaller
+   mono regard on the compact rows. Values from the design system's kit.css. — */
+.board-header .eyebrow { display: block; margin: 0 0 4px; }
+.lb-id { display: flex; flex-direction: column; min-width: 0; }
+.lb-handle { font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); }
+.lb-row-rep { margin-left: auto; font-family: var(--font-mono); color: var(--text-muted); font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 5px; }
+.lb-row-rep .star-marker { color: var(--star); }
+.leaderboard-row:not(.lb-top) .monogram { width: 28px; height: 28px; font-size: .72rem; }
 
 /* — Settings: theme/density choice cards, switches, left-rail subnav (§5.6) — */
 .choice-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 4px 0 6px; }
@@ -1530,10 +1542,39 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .accepted-flag .star-marker { color: var(--star); margin-left: 2px; }
 
 /* — Consecutive posts by one author drop the repeated avatar + name (§5.1).
-   A 44px spacer keeps the body aligned under the author's earlier post. */
-.post-avatar-spacer { flex: 0 0 44px; width: 44px; }
+   A 56px spacer keeps the body aligned under the author's earlier post. */
+.post-avatar-spacer { flex: 0 0 56px; width: 56px; }
 .post-grouped { margin-top: -4px; box-shadow: none; border-color: transparent; background: transparent; }
 .post-grouped .post-head { margin-bottom: 2px; }
+
+/* — Conversation fidelity (Imladris UI kit: retroboards Conversation + forum Post).
+   The post's identity column is a 56px gilt avatar over a "regard" plinth — the
+   commends the author has earned. Values lifted verbatim from the design system's
+   components.css. The plinth markup is masked-aware (suppressed for anon posts in
+   templates/partials/post.php), so it never leaks a hidden author's reputation. */
+.post-avatar { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 0 0 auto; width: 56px; }
+.post-avatar > .monogram, .post-avatar > .avatar-wrap > .monogram { width: 56px; height: 56px; font-size: 1.25rem; }
+.regard-block { display: flex; flex-direction: column; align-items: center; gap: 1px; margin-top: 8px; text-align: center; }
+.regard-block .regard-n {
+    font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.1rem;
+    color: var(--text-strong); font-variant-numeric: tabular-nums; line-height: 1;
+    display: inline-flex; align-items: center; gap: 4px;
+}
+.regard-block .regard-n .star-marker { color: var(--star); font-size: .85rem; }
+.regard-block .regard-label {
+    font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em;
+    font-size: .53rem; color: var(--text-faint);
+}
+/* The timestamp sits at the trailing edge of the post head (the kit's right-aligned time). */
+.post-head .post-time { margin-left: auto; }
+/* Guest join-bar: the ceremonial emphasis on the council's invitation. */
+.joinbar em { font-style: italic; color: var(--text-strong); }
+/* Breadcrumb back-trail: "‹ Inbox / #board" as one calm mono line. */
+.breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.breadcrumb a { color: var(--text-faint); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text-muted); }
+.breadcrumb .breadcrumb-board .hash { color: var(--gold-ink); }
+.breadcrumb-sep { color: var(--border-strong); }
 
 /* — Member profile: tabbed activity + the "Regard" cell, gold-keyed (§5.4) — */
 .profile-rep-value { position: relative; }
