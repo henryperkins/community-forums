@@ -14,6 +14,7 @@ $this->section('title', 'Users');
         <a class="active" href="/admin/users">Users</a>
     </nav>
 
+    <div class="admin-pane">
     <section class="card">
         <form method="get" action="/admin/users" class="inline-form">
             <input type="search" name="q" class="input" maxlength="80" value="<?= $e($q) ?>" placeholder="Search username, name, or email">
@@ -29,8 +30,8 @@ $this->section('title', 'Users');
                         <a href="/admin/users/<?= (int) $u['id'] ?>"><?= $e($u['username']) ?></a>
                         <?php if (($u['display_name'] ?? '') !== ''): ?><span class="muted">(<?= $e($u['display_name']) ?>)</span><?php endif; ?>
                     </td>
-                    <td><?= $e($u['role']) ?></td>
-                    <td><?= $e($u['status']) ?></td>
+                    <td><span class="role-pill role-<?= $e($u['role']) ?>"><?= $e($u['role']) ?></span></td>
+                    <td><span class="state state-<?= $e($u['status']) ?>"><?= $e($u['status']) ?></span></td>
                     <td><?= (int) $u['reputation'] ?></td>
                     <td><?= $e(human_date($u['created_at'])) ?></td>
                 </tr>
@@ -46,4 +47,5 @@ $this->section('title', 'Users');
             <?php if (!empty($has_next)): ?><a class="btn btn-small" href="/admin/users?<?= $e(http_build_query(['q' => $q, 'page' => $page + 1])) ?>">Next</a><?php endif; ?>
         </nav>
     </section>
+    </div>
 </div>

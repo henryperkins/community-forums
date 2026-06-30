@@ -5,13 +5,18 @@ $this->section('title', 'Notification settings');
 $tz = (string) ($row['timezone'] ?? '');
 $hour = $row['digest_hour'];
 ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
-    <form method="post" action="/settings/notifications" class="stacked card">
+        <div class="settings-pane">
+    <form method="post" action="/settings/notifications" class="stacked scribe-panel">
+        <h2 class="scribe-panel-head">Daily digest</h2>
         <?= $this->csrfField() ?>
-        <h2>Daily digest</h2>
         <label class="field">
             <span>Timezone</span>
             <select name="timezone" class="input">
@@ -63,4 +68,6 @@ $hour = $row['digest_hour'];
             </ul>
         <?php endif; ?>
     </section>
+        </div>
+    </div>
 </div>

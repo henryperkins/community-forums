@@ -15,6 +15,7 @@ $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((strin
         <a href="/admin/webhooks">Webhooks</a>
     </nav>
 
+    <div class="admin-pane">
     <?php if (!empty($new_secret)): ?>
         <div class="flash" role="status">
             <strong>Copy this signing secret now - it will not be shown again:</strong>
@@ -101,4 +102,5 @@ $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((strin
             </tbody>
         </table>
     </section>
+    </div>
 </div>

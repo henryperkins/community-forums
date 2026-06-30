@@ -5,7 +5,7 @@ $display = ($profile['display_name'] ?? '') !== '' ? $profile['display_name'] : 
 $heading = $mode === 'followers' ? 'Followers' : 'Following';
 $this->section('title', $heading . ' · @' . $profile['username']);
 ?>
-<div class="connections">
+<div class="read-main read-pad connections">
     <header class="board-header">
         <h1><?= $e($heading) ?> <span class="muted">· <a href="/u/<?= $e($profile['username']) ?>">@<?= $e($profile['username']) ?></a></span></h1>
     </header>
@@ -18,7 +18,7 @@ $this->section('title', $heading . ' · @' . $profile['username']);
                 <li class="person-row">
                     <?= $this->partial('partials/monogram', ['name' => $pd, 'username' => $person['username']]) ?>
                     <a class="person-name" href="/u/<?= $e($person['username']) ?>"><?= $e($pd) ?></a>
-                    <span class="muted">@<?= $e($person['username']) ?></span>
+                    <span class="handle">@<?= $e($person['username']) ?></span>
                     <span class="muted person-rep"><?= (int) ($person['reputation'] ?? 0) ?> rep</span>
                     <?php if (!empty($can_remove_followers)): ?>
                         <form class="inline" method="post" action="/u/<?= $e($profile['username']) ?>/followers/<?= (int) $person['id'] ?>/remove">

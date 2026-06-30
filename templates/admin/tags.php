@@ -11,6 +11,7 @@
         <a class="active" href="/admin/tags">Tags</a>
     </nav>
 
+    <div class="admin-pane">
     <section class="card">
         <h2>Add a tag</h2>
         <form method="post" action="/admin/tags" class="stacked">
@@ -61,4 +62,5 @@
             </ul>
         <?php endif; ?>
     </section>
+    </div>
 </div>

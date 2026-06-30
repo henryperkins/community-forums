@@ -10,6 +10,7 @@
         <a class="active" href="/admin/structure">Boards &amp; categories</a>
     </nav>
 
+    <div class="admin-pane">
     <?php if (!empty($reorder_error ?? null)): ?>
         <div class="flash flash-error"><?= $e($reorder_error) ?></div>
     <?php endif; ?>
@@ -130,4 +131,5 @@
             </form>
         </section>
     <?php endif; ?>
+    </div>
 </div>

@@ -1,9 +1,14 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Connections'); ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
+        <div class="settings-pane">
     <section class="card">
         <h2>Connected accounts</h2>
         <p class="muted">Link Google, GitHub, or Apple to sign in faster. Email/password always stays available.</p>
@@ -51,4 +56,6 @@
             </form>
         </section>
     <?php endif; ?>
+        </div>
+    </div>
 </div>

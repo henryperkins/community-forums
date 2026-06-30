@@ -1,10 +1,15 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Drafts'); $this->section('robots', 'noindex,nofollow'); ?>
 
-<div class="settings">
-    <h1>Drafts</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Drafts</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
+        <div class="settings-pane">
     <section class="card" data-drafts-list<?= !empty($server_drafts_enabled) ? ' data-server-drafts="1"' : '' ?>>
         <?php if (!empty($server_drafts_enabled)): ?>
             <?php if (empty($server_drafts)): ?>
@@ -33,4 +38,6 @@
             <noscript><p class="muted">Drafts are browser-local and require JavaScript to list or discard.</p></noscript>
         <?php endif; ?>
     </section>
+        </div>
+    </div>
 </div>

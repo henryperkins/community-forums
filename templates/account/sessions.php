@@ -1,9 +1,14 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Active sessions'); ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
+        <div class="settings-pane">
     <section class="card">
         <div class="sessions-head">
             <h2>Active sessions &amp; devices</h2>
@@ -32,4 +37,6 @@
             <?php endforeach; ?>
         </ul>
     </section>
+        </div>
+    </div>
 </div>

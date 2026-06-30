@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+!.env.example
+.phpunit.cache
+vendor
+node_modules
+tests/browser/node_modules
+storage
+docs/evidence/browser/.artifacts
+docs/evidence/browser/desktop
+docs/evidence/browser/mobile

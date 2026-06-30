@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\BoardMemberRepository;
+use App\Repository\SettingRepository;
+use App\Repository\TagRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -93,6 +96,174 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'brand-preview');
     }
 
+    public function test_admin_sibling_pages_render_inside_the_operator_console_register(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'consolekeeper']);
+        $this->actingAs($admin);
+
+        foreach (['/admin/users', '/admin/email', '/admin/structure'] as $path) {
+            $res = $this->get($path);
+            $this->assertStatus(200, $res);
+            $this->assertSeeText($res, 'admin-pane');
+        }
+    }
+
+    public function test_settings_sibling_pages_render_inside_the_lapidary_console(): void
+    {
+        $user = $this->makeUser(['username' => 'console_scribe']);
+        $this->actingAs($user);
+
+        foreach (['/settings/privacy', '/settings/appearance', '/settings/preferences', '/settings/composing'] as $path) {
+            $res = $this->get($path);
+            $this->assertStatus(200, $res);
+            $this->assertSeeText($res, 'settings-screen');
+            $this->assertSeeText($res, 'settings-pane');
+            $this->assertSeeText($res, 'scribe-panel');
+        }
+
+        $privacy = $this->get('/settings/privacy');
+        $this->assertSeeText($privacy, 'gem-check');
+    }
+
+    public function test_settings_pages_keep_one_main_landmark_and_real_section_headings(): void
+    {
+        $user = $this->makeUser(['username' => 'landmark_scribe']);
+        $this->actingAs($user);
+
+        foreach ([
+            '/settings/account',
+            '/settings/privacy',
+            '/settings/security',
+            '/settings/appearance',
+            '/settings/preferences',
+            '/settings/composing',
+            '/settings/notifications',
+            '/settings/connections',
+            '/settings/sessions',
+            '/settings/blocks',
+            '/settings/boards',
+            '/drafts',
+        ] as $path) {
+            $res = $this->get($path);
+            $this->assertStatus(200, $res);
+            self::assertSame(1, substr_count($res->body(), '<main '), $path . ' should render only the layout main landmark.');
+        }
+
+        $security = $this->get('/settings/security')->body();
+        self::assertStringContainsString('<h2 class="scribe-panel-head">Password</h2>', $security);
+        self::assertStringContainsString('<h2 class="scribe-panel-head">Two-factor authentication</h2>', $security);
+
+        $notifications = $this->get('/settings/notifications')->body();
+        self::assertStringContainsString('<h2 class="scribe-panel-head">Daily digest</h2>', $notifications);
+    }
+
+    public function test_board_preference_toggles_keep_link_button_active_state(): void
+    {
+        $user = $this->makeUser(['username' => 'board_toggler']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Toggled Board', 'slug' => 'toggled-board']);
+        $this->actingAs($user);
+
+        $this->assertRedirect($this->post('/settings/boards/toggle', [
+            'board_id' => (int) $board['id'],
+            'pref' => 'favorite',
+        ]));
+        $this->assertRedirect($this->post('/settings/boards/toggle', [
+            'board_id' => (int) $board['id'],
+            'pref' => 'mute',
+        ]));
+
+        $body = $this->get('/settings/boards')->body();
+        self::assertStringNotContainsString('toggle-link', $body);
+        self::assertStringContainsString('class="linkbtn btn-on"', $body);
+        self::assertStringContainsString('Favorited', $body);
+        self::assertStringContainsString('Muted', $body);
+    }
+
+    public function test_tag_index_counts_match_each_viewers_visible_topics(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['tags' => true]);
+        $author = $this->makeUser(['username' => 'tag_counter']);
+        $member = $this->makeUser(['username' => 'tag_member']);
+        $admin = $this->makeAdmin(['username' => 'tag_admin']);
+        $tagRepo = new TagRepository($this->db);
+        $tagId = $tagRepo->create('counted-tag', 'Counted Tag', 'A counted public tag.', (int) $author['id']);
+
+        $categoryId = $this->makeCategory('Tagged spaces');
+        $publicBoard = $this->makeBoard($categoryId, ['name' => 'Public Tags', 'slug' => 'public-tags']);
+        $privateBoard = $this->makeBoard($categoryId, ['name' => 'Private Tags', 'slug' => 'private-tags', 'visibility' => 'private']);
+        $hiddenBoard = $this->makeBoard($categoryId, ['name' => 'Hidden Tags', 'slug' => 'hidden-tags', 'visibility' => 'hidden']);
+        $boardMembers = new BoardMemberRepository($this->db);
+        $boardMembers->add((int) $privateBoard['id'], (int) $author['id'], (int) $admin['id']);
+        $boardMembers->add((int) $privateBoard['id'], (int) $member['id'], (int) $admin['id']);
+
+        $publicThread = $this->makeThread($publicBoard, $author, 'Public tagged topic', 'Visible to everyone.');
+        $privateThread = $this->makeThread($privateBoard, $author, 'Private tagged topic', 'Visible only to members.');
+        $hiddenThread = $this->makeThread($hiddenBoard, $author, 'Hidden tagged topic', 'Visible to admins on discovery routes.');
+
+        $tagRepo->setForThread((int) $publicThread['thread_id'], [$tagId], (int) $author['id']);
+        $tagRepo->setForThread((int) $privateThread['thread_id'], [$tagId], (int) $author['id']);
+        $tagRepo->setForThread((int) $hiddenThread['thread_id'], [$tagId], (int) $author['id']);
+
+        $guestIndex = $this->get('/tags')->body();
+        self::assertStringContainsString('Counted Tag', $guestIndex);
+        self::assertStringContainsString('<span class="tag-count">1 topic</span>', $guestIndex);
+        self::assertStringNotContainsString('<span class="tag-count">1 topics</span>', $guestIndex);
+
+        $guestDetail = $this->get('/tags/counted-tag')->body();
+        self::assertStringContainsString('Public tagged topic', $guestDetail);
+        self::assertStringNotContainsString('Private tagged topic', $guestDetail);
+        self::assertStringNotContainsString('Hidden tagged topic', $guestDetail);
+
+        $this->actingAs($member);
+        $memberIndex = $this->get('/tags')->body();
+        self::assertStringContainsString('<span class="tag-count">2 topics</span>', $memberIndex);
+
+        $memberDetail = $this->get('/tags/counted-tag')->body();
+        self::assertStringContainsString('Public tagged topic', $memberDetail);
+        self::assertStringContainsString('Private tagged topic', $memberDetail);
+        self::assertStringNotContainsString('Hidden tagged topic', $memberDetail);
+
+        $this->actingAs($admin);
+        $adminIndex = $this->get('/tags')->body();
+        self::assertStringContainsString('<span class="tag-count">3 topics</span>', $adminIndex);
+
+        $adminDetail = $this->get('/tags/counted-tag')->body();
+        self::assertStringContainsString('Public tagged topic', $adminDetail);
+        self::assertStringContainsString('Private tagged topic', $adminDetail);
+        self::assertStringContainsString('Hidden tagged topic', $adminDetail);
+    }
+
+    public function test_lapidary_toggle_css_covers_gem_variants_and_captions(): void
+    {
+        $css = file_get_contents(__DIR__ . '/../../../public/assets/app.css');
+        self::assertIsString($css);
+
+        foreach (['.toggle-stack', '.gem-leaf', '.gem-gold', '.gem-river', '.gem-sub'] as $selector) {
+            self::assertStringContainsString($selector, $css);
+        }
+    }
+
+    public function test_reading_surfaces_render_inside_the_reading_rooms_shell(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Audit trails', 'slug' => 'audit-trails']);
+        $user = $this->makeUser(['username' => 'reader']);
+        $this->makeThread($board, $user, 'Who changed what', 'The diff is small; the audit trail must be whole.');
+        $this->actingAs($user);
+
+        foreach (['/', '/c/audit-trails', '/feed'] as $path) {
+            $res = $this->get($path);
+            $this->assertStatus(200, $res);
+            $this->assertSeeText($res, 'read-main');
+            $this->assertSeeText($res, 'read-pad');
+        }
+
+        $search = $this->get('/search', ['q' => 'audit']);
+        $this->assertStatus(200, $search);
+        $this->assertSeeText($search, 'read-main');
+        $this->assertSeeText($search, 'read-pad');
+        $this->assertSeeText($search, 'search-form');
+    }
+
     public function test_messages_index_renders_the_private_counsel_reading_room(): void
     {
         $sender = $this->makeUser(['username' => 'imladris_dm_sender', 'display_name' => 'Imladris Sender']);
@@ -179,6 +350,47 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'mod-pane');
         $this->assertSeeText($res, 'report-row is-urgent');
         $this->assertSeeText($res, 'wardens-table-report-marker');
+    }
+
+    public function test_topic_workflow_renders_the_warden_bar_controls(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['topic_workflow' => true]);
+        $admin = $this->makeAdmin(['username' => 'warden_bar_admin']);
+        $author = $this->makeUser(['username' => 'warden_bar_author']);
+        $board = $this->makeBoard($this->makeCategory('Warden Bar'), ['name' => 'Warden Bar']);
+        $thread = $this->makeThread($board, $author, 'Reading attention as a map', 'Opening body.');
+
+        $this->actingAs($admin);
+        $res = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'wf-bar');
+        $this->assertSeeText($res, 'wf-btn');
+        $this->assertSeeText($res, 'Assign');
+        $this->assertSeeText($res, 'Snooze');
+        $this->assertSeeText($res, 'Workflow');
+    }
+
+    public function test_split_merge_flag_renders_topic_restructuring_surface(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['split_merge' => true]);
+        $admin = $this->makeAdmin(['username' => 'split_surface_admin']);
+        $author = $this->makeUser(['username' => 'split_surface_author']);
+        $board = $this->makeBoard($this->makeCategory('Split Surface'), ['name' => 'Split Surface']);
+        $thread = $this->makeThread($board, $author, 'Split this topic', 'Opening body.');
+        $this->actingAs($author);
+        $this->post('/t/' . (int) $thread['thread_id'] . '/reply', ['body' => 'Reply that can be moved.']);
+
+        $this->actingAs($admin);
+        $res = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $res);
+        $this->assertSeeText($res, 'sm-panel');
+        $this->assertSeeText($res, 'Split into a new topic');
+        $this->assertSeeText($res, 'Merge this topic');
+        $this->assertSeeText($res, 'post_ids[]');
+        $this->assertSeeText($res, '/mod/t/' . (int) $thread['thread_id'] . '/split');
+        $this->assertSeeText($res, '/mod/t/' . (int) $thread['thread_id'] . '/merge');
     }
 
     public function test_single_author_thread_has_no_participant_stack(): void

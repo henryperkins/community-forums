@@ -15,6 +15,7 @@ $this->section('title', 'Email delivery');
         <a class="active" href="/admin/email">Email</a>
     </nav>
 
+    <div class="admin-pane">
     <?php if (empty($mailer_configured)): ?>
         <div class="flash" role="alert">
             <strong>Email is not ready to send.</strong>
@@ -104,7 +105,7 @@ $this->section('title', 'Email delivery');
                     <td><?= $e(human_datetime($d['created_at'])) ?></td>
                     <td><?= $e($d['email']) ?></td>
                     <td><?= $e($d['kind']) ?></td>
-                    <td><?= $e($d['status']) ?></td>
+                    <td><span class="state state-<?= $e((string) $d['status']) ?>"><?= $e((string) $d['status']) ?></span></td>
                     <td>
                         <?= (int) ($d['attempt_count'] ?? 0) ?> / <?= (int) ($d['max_attempts'] ?? 1) ?>
                         <?php if (!empty($d['next_attempt_at'])): ?>
@@ -163,4 +164,5 @@ $this->section('title', 'Email delivery');
             </tbody>
         </table>
     </section>
+    </div>
 </div>

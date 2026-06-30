@@ -27,9 +27,10 @@ final class PersonalOrganizationController extends Controller
     public function addBoard(Request $request, array $params): Response
     {
         $this->requireFlag('board_folders');
+        $folderId = ((int) ($params['id'] ?? 0)) ?: (int) $request->int('folder_id', 0);
         $this->container->get(PersonalOrganizationService::class)->addBoardToFolder(
             $this->requireUser(),
-            (int) ($params['id'] ?? 0),
+            $folderId,
             (int) $request->int('board_id', 0),
         );
         return $this->redirectWithFlash('/settings/boards', 'Board added to folder.');

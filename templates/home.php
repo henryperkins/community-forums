@@ -1,6 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', $site_name); ?>
-<div class="board-index">
+<div class="read-main read-pad board-index">
     <h1 class="page-title"><?= $e($site_name) ?></h1>
 
     <?php $hasBoards = false; foreach ($sections as $s) { if (!empty($s['boards'])) { $hasBoards = true; break; } } ?>

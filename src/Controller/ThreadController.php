@@ -159,27 +159,29 @@ final class ThreadController extends Controller
             unset($item);
         }
 
+        $canWriteUser = $user !== null
+            && $this->container->get(WriteGate::class)->canWrite($user);
+        $canModerateBoard = $canWriteUser
+            && (
+                $user->isAdmin()
+                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
+            );
+
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
         // may accept/clear an answer; everyone sees the accepted marker.
         $community = (bool) $this->container->get(FeatureFlags::class)->enabled('community');
         $acceptedPostId = $thread['accepted_answer_post_id'] !== null ? (int) $thread['accepted_answer_post_id'] : null;
         $canMarkSolved = $community && $user !== null
-            && $this->container->get(WriteGate::class)->canWrite($user)
+            && $canWriteUser
             && (
                 (int) $thread['user_id'] === $user->id()
-                || $user->isAdmin()
-                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
+                || $canModerateBoard
             );
 
         // Anonymous-author reveal (P2-08): an admin or this board's moderator may
         // unmask an anonymous post; the byline stays masked for everyone — the
         // reveal is a separate audited action.
-        $canRevealAnon = $user !== null
-            && $this->container->get(WriteGate::class)->canWrite($user)
-            && (
-                $user->isAdmin()
-                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
-            );
+        $canRevealAnon = $canModerateBoard;
 
         // Subscription state for the subscribe control (P2-03).
         $notificationsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('notifications');
@@ -295,6 +297,7 @@ final class ThreadController extends Controller
             'can_reply' => $canReply,
             'locked' => $locked,
             'is_admin' => $user?->isAdmin() ?? false,
+            'can_moderate_board' => $canModerateBoard,
             'engagement' => $engagement,
             'show_signatures' => $reading['show_signatures'],
             'show_avatars' => $reading['show_avatars'],

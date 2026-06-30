@@ -7,7 +7,7 @@
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav') ?>
-        <main class="settings-pane mod-pane">
+        <div class="settings-pane mod-pane">
 
     <?php if (!empty($errors)): ?>
         <div class="card error-list" role="alert">
@@ -95,6 +95,6 @@
             </ul>
         <?php endif; ?>
     </section>
-        </main>
+        </div>
     </div>
 </div>

@@ -6,13 +6,18 @@ $totp = $totp ?? ['enabled' => false, 'pending' => false, 'unused_recovery_codes
 $setup = $totp_setup ?? null;
 $recoveryCodes = $new_recovery_codes ?? [];
 ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
-    <form method="post" action="/settings/security" class="stacked card">
+        <div class="settings-pane">
+    <form method="post" action="/settings/security" class="stacked scribe-panel">
+        <h2 class="scribe-panel-head">Password</h2>
         <?= $this->csrfField() ?>
-        <h2>Password</h2>
         <label class="field">
             <span>Current password</span>
             <input type="password" name="current_password" class="input" autocomplete="current-password" required>
@@ -31,8 +36,8 @@ $recoveryCodes = $new_recovery_codes ?? [];
         <button class="btn" type="submit">Change password</button>
     </form>
 
-    <section class="stacked card">
-        <h2>Two-factor authentication</h2>
+    <section class="stacked scribe-panel">
+        <h2 class="scribe-panel-head">Two-factor authentication</h2>
         <?php if (!empty($totp['enabled'])): ?>
             <p class="muted">Enabled. <?= (int) $totp['unused_recovery_codes'] ?> recovery code<?= (int) $totp['unused_recovery_codes'] === 1 ? '' : 's' ?> remaining.</p>
         <?php elseif (!empty($totp['pending'])): ?>
@@ -116,4 +121,6 @@ $recoveryCodes = $new_recovery_codes ?? [];
             </form>
         <?php endif; ?>
     </section>
+        </div>
+    </div>
 </div>

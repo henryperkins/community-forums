@@ -15,7 +15,8 @@
 # Uses the local rb-mariadb dev container by default (no host MySQL client needed)
 # and the dedicated retroboards_backup_{src,dst} databases — never dev/test/prod
 # data. Override DB_CONTAINER / DB_ROOT_PASSWORD / DB_MYSQL_CLIENT /
-# DB_MYSQLDUMP_CLIENT when a checkout uses a differently named local DB container.
+# DB_MYSQLDUMP_CLIENT / BACKUP_REHEARSAL_PORT when a checkout uses a differently
+# named local DB container or port 8021 is already occupied.
 #
 #   tests/backup/rehearse.sh                 # human run
 #   tests/backup/rehearse.sh | tee docs/evidence/backup-restore/rehearsal.log
@@ -31,7 +32,7 @@ MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
 MYSQLDUMP_CLIENT="${DB_MYSQLDUMP_CLIENT:-mariadb-dump}"
 SRC=retroboards_backup_src
 DST=retroboards_backup_dst
-PORT=8021
+PORT="${BACKUP_REHEARSAL_PORT:-8021}"
 DUMP="$(mktemp -d)/retroboards-backup.sql"
 
 # rootpw is the fixed local rb-mariadb dev-container password (see project README);
@@ -69,7 +70,11 @@ echo "   seeded."
 echo "-- 2. Snapshot source"
 SRC_SNAP="$(mktemp)"; snapshot "$SRC" "$SRC_SNAP"
 SRC_TABLES=$(wc -l < "$SRC_SNAP")
-SRC_ROWS=$(awk '{s+=$2} END{print s}' "$SRC_SNAP")
+SRC_ROWS=$(awk '{s+=$2} END{print s+0}' "$SRC_SNAP")
+if [ "$SRC_TABLES" -eq 0 ]; then
+  echo "   FAIL: source snapshot is empty; check DB_* env and DB_CONTAINER alignment." >&2
+  exit 1
+fi
 echo "   $SRC_TABLES tables, $SRC_ROWS rows."
 
 echo "-- 3. Back up with mariadb-dump"
@@ -97,15 +102,23 @@ MIG=$(DB_DATABASE="$DST" php bin/console migrate)
 echo "   $MIG"
 case "$MIG" in *"Nothing to migrate"*) echo "   PASS: no pending migrations.";;
   *) echo "   FAIL: restored schema was incomplete." >&2; exit 1;; esac
+echo "   migrate:status:"
+DB_DATABASE="$DST" php bin/console migrate:status | sed 's/^/   /'
 
 echo "-- 7. Reconcile counters/reputation on the restore (runbook step 4)"
 DB_DATABASE="$DST" php bin/console repair >/dev/null && echo "   PASS: repair ran clean."
 
 echo "-- 8. Boot the app on the restored DB and serve the home page"
+SRV_LOG="$(mktemp)"
 DB_DATABASE="$DST" SESSION_SECURE=false MAIL_DRIVER=array APP_URL="http://127.0.0.1:$PORT" \
-  php -S 127.0.0.1:"$PORT" -t public public/index.php >/dev/null 2>&1 &
-SRV=$!; trap 'kill "$SRV" 2>/dev/null || true' EXIT
+  php -S 127.0.0.1:"$PORT" -t public public/index.php >"$SRV_LOG" 2>&1 &
+SRV=$!; trap 'kill "$SRV" 2>/dev/null || true; rm -f "$SRV_LOG"' EXIT
 sleep 2
+if ! kill -0 "$SRV" 2>/dev/null; then
+  echo "   FAIL: php -S did not stay up on port $PORT (set BACKUP_REHEARSAL_PORT or stop anything already listening there)." >&2
+  sed 's/^/   /' "$SRV_LOG" >&2 || true
+  exit 1
+fi
 CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/")
 BODY_OK=$(curl -s "http://127.0.0.1:$PORT/" | grep -c 'Announcements' || true)
 if [ "$CODE" = "200" ] && [ "$BODY_OK" -ge 1 ]; then

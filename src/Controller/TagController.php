@@ -24,8 +24,9 @@ final class TagController extends Controller
     public function index(Request $request): Response
     {
         $this->requireTags();
+        $user = $this->currentUser();
         return $this->view('tags/index', [
-            'tags' => $this->container->get(TagRepository::class)->allEnabled(),
+            'tags' => $this->container->get(TagRepository::class)->catalogForViewer($user?->id() ?? 0, $user?->isAdmin() ?? false),
         ]);
     }
 

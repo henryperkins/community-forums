@@ -15,11 +15,12 @@ $display = ($subject['display_name'] ?? '') !== '' ? $subject['display_name'] : 
         <a class="active" href="/admin/users">Users</a>
     </nav>
 
+    <div class="admin-pane">
     <section class="card">
         <h2>Identity</h2>
         <dl class="profile-stats">
-            <div><dt>Role</dt><dd><?= $e($subject['role']) ?></dd></div>
-            <div><dt>State</dt><dd><?= $e($subject['status']) ?></dd></div>
+            <div><dt>Role</dt><dd><span class="role-pill role-<?= $e($subject['role']) ?>"><?= $e($subject['role']) ?></span></dd></div>
+            <div><dt>State</dt><dd><span class="state state-<?= $e($subject['status']) ?>"><?= $e($subject['status']) ?></span></dd></div>
             <div><dt>Reputation</dt><dd><?= (int) $subject['reputation'] ?></dd></div>
             <div><dt>Profile</dt><dd><a href="/u/<?= $e($subject['username']) ?>">View public profile</a></dd></div>
         </dl>
@@ -87,7 +88,7 @@ $display = ($subject['display_name'] ?? '') !== '' ? $subject['display_name'] : 
             <ul class="link-list">
                 <?php foreach ($held_manual as $b): ?>
                     <li>
-                        <span class="badge-icon" aria-hidden="true"><?= $e($b['icon'] ?? '🏷️') ?></span>
+                        <span class="badge-icon" aria-hidden="true"><?= $e($b['icon'] ?? '*') ?></span>
                         <?= $e($b['name']) ?>
                         <form method="post" action="/admin/users/<?= (int) $subject['id'] ?>/badges/revoke" class="inline">
                             <?= $this->csrfField() ?>
@@ -99,4 +100,5 @@ $display = ($subject['display_name'] ?? '') !== '' ? $subject['display_name'] : 
             </ul>
         <?php endif; ?>
     </section>
+    </div>
 </div>

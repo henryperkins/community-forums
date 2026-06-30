@@ -1,11 +1,11 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Following'); ?>
-<div class="feed">
+<div class="read-main read-pad feed">
     <header class="board-header">
         <h1><?= ($feed_view ?? 'following') === 'latest' ? 'Latest' : 'Following' ?></h1>
         <p class="muted"><?= ($feed_view ?? 'following') === 'latest' ? 'Recent visible community activity.' : (!empty($expanded_feeds) ? 'Recent activity from people, boards, and tags you follow.' : 'Recent activity from people you follow.') ?></p>
     </header>
-    <nav class="inbox-tabs" aria-label="Feed views">
+    <nav class="inbox-tabs feed-tabs" aria-label="Feed views">
         <a class="inbox-tab<?= ($feed_view ?? 'following') === 'following' ? ' is-active' : '' ?>" href="/feed?view=following">Following</a>
         <?php if (!empty($expanded_feeds)): ?>
             <a class="inbox-tab<?= ($feed_view ?? 'following') === 'latest' ? ' is-active' : '' ?>" href="/feed?view=latest">Latest</a>

@@ -1,9 +1,14 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Blocked users'); ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
+        <div class="settings-pane">
     <section class="card">
         <h2>Blocked users</h2>
         <p class="muted">Blocked members can't message or @mention you, and their notifications to you are suppressed.</p>
@@ -26,4 +31,6 @@
             </ul>
         <?php endif; ?>
     </section>
+        </div>
+    </div>
 </div>

@@ -61,7 +61,7 @@ final class FeatureFlags
         // ── Phase 4 carryover completion (deploy-dark, independently reversible)
         'link_previews' => false,      // allowlisted server-fetched URL metadata + purge/refresh
         'expanded_files' => false,     // PDF/text-family uploads behind scanner/quarantine gates
-        'polls' => false,              // one poll per thread, no-JS vote/result flows
+        'polls' => true,               // one poll per thread, no-JS vote/result flows — GA default-on (2026-06-30; reversible via features override)
         'custom_emoji' => false,       // operator-managed static PNG/WebP shortcode assets
         'slash_giphy' => false,        // PE slash inserts + client-side GIPHY picker config
         'split_merge' => false,        // moderator split/merge dry-run/apply/repair operations

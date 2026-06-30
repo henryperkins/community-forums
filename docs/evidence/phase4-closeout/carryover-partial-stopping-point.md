@@ -1,7 +1,7 @@
 # Phase 4 Carryover Partial Stopping Point
 
-Date: 2026-06-29
-Branch: `phase3-4-closeout-completion`
+Date: 2026-06-30
+Branch: current closeout train
 Base: `main`
 
 This branch is a partial implementation of ADR 0003 carryovers. It does not
@@ -67,9 +67,11 @@ claim full Phase 4 carryover acceptance.
 - Additional per-slice browser evidence, a11y evidence, crawler evidence, load
   probes, worker smoke, backup/restore, upgrade rehearsal, and operator runbook
   rehearsal are not complete for every new carryover slice.
-- Full Phase 4 closeout docs (`SCHEMA.md`, ADR 0003 full acceptance wording, and
-  final evidence bundle) were intentionally not converted to acceptance wording
-  because the carryover scope is still incomplete.
+- Full Phase 4 closeout docs were intentionally not converted to broad-rollout
+  acceptance wording because release evidence is still incomplete for several
+  deploy-dark carryover slices. `SCHEMA.md` is reconciled through the current
+  carryover migrations; ADR/status/evidence docs remain explicit about dark
+  posture and missing acceptance evidence.
 
 ## Verification Boundary
 
@@ -96,9 +98,9 @@ Focused regression for this increment:
   `docs/evidence/browser/{desktop,mobile}/26-slash-menu.png` and
   `docs/evidence/browser/{desktop,mobile}/27-giphy-inserted.png`.
 
-Full regression for this branch:
+Full regression for the current checkout:
 
-- `composer test` -> 744 tests / 2908 assertions, green.
+- `RB_TEST_FRESH=1 composer test` -> 803 tests / 3236 assertions, green.
 - `cd tests/browser && npm run evidence` -> 27 passed / 1 skipped across 28
   Playwright tests, green.
 

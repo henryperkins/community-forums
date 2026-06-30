@@ -26,6 +26,13 @@ Re-run any time:
 tests/backup/rehearse.sh | tee docs/evidence/backup-restore/rehearsal.log
 ```
 
+If `tests/prodlike/compose.yml` is already running and owns `127.0.0.1:8021`, give
+the temporary restore server a different port first:
+
+```bash
+BACKUP_REHEARSAL_PORT=8031 tests/backup/rehearse.sh | tee docs/evidence/backup-restore/rehearsal.log
+```
+
 For a differently named local DB container/client, keep the same app DB env and
 override the container/client settings, for example:
 
@@ -36,15 +43,17 @@ DB_PORT=3307 DB_PASSWORD=retro \
 tests/backup/rehearse.sh | tee docs/evidence/backup-restore/rehearsal.log
 ```
 
-## Result (see `rehearsal.log`)
+## Current result
+
+Latest saved closeout log: `prodlike-rehearsal-2026-06-30.log`
 
 ```
 == REHEARSAL PASSED ==
-Backup: 74673 bytes · 53 tables · 83 rows · restore verified byte-for-byte by
+Backup: 164996 bytes · 105 tables · 116 rows · restore verified byte-for-byte by
 row count + CHECKSUM TABLE, schema intact, app boots.
 ```
 
-- **53 tables / 83 rows** backed up and restored.
+- **105 tables / 116 rows** backed up and restored.
 - **Row counts and `CHECKSUM TABLE` identical** for every base table (source vs restore).
 - Restored schema complete — `migrate` reports *Nothing to migrate*.
 - `repair` runs clean on the restore; the app returns **200** and renders the

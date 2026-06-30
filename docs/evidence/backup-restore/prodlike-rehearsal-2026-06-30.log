@@ -1,0 +1,87 @@
+== Backup → restore rehearsal (PHASE_2_RUNBOOK §7) ==
+-- 1. Build + seed source DB (retroboards_backup_src)
+   seeded.
+-- 2. Snapshot source
+   105 tables, 116 rows.
+-- 3. Back up with mariadb-dump
+   wrote /tmp/tmp.35fiSqaMbs/retroboards-backup.sql (164996 bytes).
+-- 4. Restore into a fresh DB (retroboards_backup_dst)
+   restored.
+-- 5. Snapshot restore + diff vs source
+   PASS: every table's row count AND checksum match the source.
+-- 6. Restored schema is complete (migrate is a no-op)
+   Nothing to migrate.
+   PASS: no pending migrations.
+   migrate:status:
+     [x] 0001_users
+     [x] 0002_categories
+     [x] 0003_settings
+     [x] 0004_boards
+     [x] 0005_sessions
+     [x] 0006_verifications
+     [x] 0007_board_slug_history
+     [x] 0008_threads
+     [x] 0009_posts
+     [x] 0010_moderation_log
+     [x] 0011_users_phase2_columns
+     [x] 0012_boards_phase2_columns
+     [x] 0013_threads_phase2
+     [x] 0014_posts_phase2
+     [x] 0015_sessions_ip
+     [x] 0016_board_moderators
+     [x] 0017_thread_user
+     [x] 0018_blocks
+     [x] 0019_reactions
+     [x] 0020_subscriptions
+     [x] 0021_notifications
+     [x] 0022_email_suppressions
+     [x] 0023_email_deliveries
+     [x] 0024_conversations
+     [x] 0025_conversation_participants
+     [x] 0026_dm_messages
+     [x] 0027_reports
+     [x] 0028_bans
+     [x] 0029_warnings
+     [x] 0030_user_notes
+     [x] 0031_board_members
+     [x] 0032_oauth_identities
+     [x] 0033_user_preferences
+     [x] 0034_user_board_prefs
+     [x] 0035_username_history
+     [x] 0036_follows
+     [x] 0037_badges
+     [x] 0038_user_badges
+     [x] 0039_reports_dm
+     [x] 0040_seed_badges
+     [x] 0041_users_reputation_index
+     [x] 0042_users_phase3
+     [x] 0043_attachments
+     [x] 0044_submission_idempotency
+     [x] 0045_pending_columns
+     [x] 0046_boards_require_approval
+     [x] 0047_posts_deleted_at
+     [x] 0048_phase4_gate_a
+     [x] 0049_phase5_registry_packages
+     [x] 0050_phase5_capabilities_roles
+     [x] 0051_phase5_webauthn
+     [x] 0052_phase5_provider_registry
+     [x] 0053_phase5_invitations
+     [x] 0054_phase5_totp_recovery
+     [x] 0055_phase5_service_secrets
+     [x] 0056_phase5_api_tokens
+     [x] 0057_phase5_webhooks
+     [x] 0058_phase4_carryover_foundation
+     [x] 0059_account_lifecycle
+     [x] 0060_moderation_appeals
+     [x] 0061_email_domain_and_system_mail
+     [x] 0062_bookmark_folders_profile_fields
+     [x] 0063_email_delivery_retry_backoff
+     [x] 0064_server_drafts
+     [x] 0065_server_extension_runtime
+-- 7. Reconcile counters/reputation on the restore (runbook step 4)
+   PASS: repair ran clean.
+-- 8. Boot the app on the restored DB and serve the home page
+   PASS: home returned 200 and rendered restored content.
+
+== REHEARSAL PASSED ==
+Backup: 164996 bytes · 105 tables · 116 rows · restore verified byte-for-byte by row count + CHECKSUM TABLE, schema intact, app boots.

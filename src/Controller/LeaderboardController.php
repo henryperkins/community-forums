@@ -8,7 +8,10 @@ use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardRepository;
 use App\Repository\UserRepository;
+use App\Security\BoardPolicy;
 use App\Service\ReputationLedgerService;
 use App\Service\TitleService;
 
@@ -36,6 +39,19 @@ final class LeaderboardController extends Controller
         if (!$ledgerOn) {
             $window = 'all';
             $boardId = null;
+        }
+        if ($boardId !== null) {
+            // The board-scoped leaderboard must honor the board read gate: this is
+            // a public route, so without this an outsider could enumerate a
+            // private board's contributors via ?board_id=. A 404 (matching
+            // BoardController) reveals nothing about the board's existence.
+            $viewer = $this->currentUser();
+            $board = $this->container->get(BoardRepository::class)->find($boardId);
+            $isMember = $board !== null && $viewer !== null
+                && $this->container->get(BoardMemberRepository::class)->isMember($boardId, $viewer->id());
+            if ($board === null || !$this->container->get(BoardPolicy::class)->canRead($board, $viewer, $isMember)) {
+                throw new NotFoundException('Not found.');
+            }
         }
         $rows = $window === 'all' && $boardId === null
             ? $this->container->get(UserRepository::class)->leaderboard($size)

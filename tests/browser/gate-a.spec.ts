@@ -21,6 +21,26 @@ const execFileAsync = promisify(execFile);
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
 
+async function runWebhookWorker(repoRoot: string): Promise<{ stdout: string; stderr: string }> {
+  if (process.env.E2E_SKIP_WEBSERVER === '1') {
+    return execFileAsync('docker', ['compose', '-f', 'tests/prodlike/compose.yml', 'exec', '-T', 'app', 'php', 'bin/console', 'worker:webhooks'], {
+      cwd: repoRoot,
+      env: process.env,
+    });
+  }
+
+  return execFileAsync('php', ['bin/console', 'worker:webhooks'], {
+    cwd: repoRoot,
+    env: {
+      ...process.env,
+      DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e',
+      WEBHOOK_ALLOW_HTTP: 'true',
+      WEBHOOK_ALLOWED_PRIVATE_CIDRS: '127.0.0.1/32,::1/128',
+      MAIL_DRIVER: 'array',
+    },
+  });
+}
+
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
@@ -374,12 +394,15 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
       res.end('ok');
     });
   });
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+  const prodlikeTarget = process.env.E2E_SKIP_WEBSERVER === '1';
+  const receiverBind = prodlikeTarget ? '0.0.0.0' : '127.0.0.1';
+  const receiverHost = prodlikeTarget ? 'host.docker.internal' : '127.0.0.1';
+  await new Promise<void>((resolve) => server.listen(0, receiverBind, () => resolve()));
   const address = server.address();
   if (typeof address === 'string' || address === null) {
     throw new Error('expected TCP server address');
   }
-  const hookUrl = `http://127.0.0.1:${address.port}/hook`;
+  const hookUrl = `http://${receiverHost}:${address.port}/hook`;
 
   try {
     await login(page, 'admin@retro.test');
@@ -416,16 +439,7 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
         setTimeout(() => reject(new Error('webhook receiver did not receive a POST')), 10_000);
       }),
     ]);
-    const worker = execFileAsync('php', ['bin/console', 'worker:webhooks'], {
-      cwd: repoRoot,
-      env: {
-        ...process.env,
-        DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e',
-        WEBHOOK_ALLOW_HTTP: 'true',
-        WEBHOOK_ALLOWED_PRIVATE_CIDRS: '127.0.0.1/32,::1/128',
-        MAIL_DRIVER: 'array',
-      },
-    });
+    const worker = runWebhookWorker(repoRoot);
     const [{ stdout }] = await Promise.all([worker, deliverySeen]);
     expect(stdout).toContain('Webhook delivery: delivered=');
     expect(stdout).not.toContain('delivered=0');

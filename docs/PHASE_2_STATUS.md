@@ -1,6 +1,6 @@
 # RetroBoards — Phase 2 Implementation Status & Evidence Index
 
-**Status:** M0–M6 + Gate A follow-ups implemented; Gate A/B product-owner acceptance pending · **Date:** 2026-06-27 · **Owner:** Henry (lakefrontdigital.io)
+**Status:** M0–M6 + Gate A/B engineering closeout complete; final product-owner acceptance artifact pending Henry signature · **Date:** 2026-06-30 · **Owner:** Henry (lakefrontdigital.io)
 
 Living evidence index for `PHASE_2_PLAN.md` (Community Essentials). Tracks which
 milestone/workstream is implemented, where, and how it is verified. Entry gate
@@ -11,7 +11,7 @@ milestone/workstream is implemented, where, and how it is verified. Entry gate
 ```bash
 composer install
 php bin/console migrate        # Phase 1 (0001-0010) + Phase 2 (0011-0041)
-composer test                  # full PHPUnit suite — 275 tests / 987 assertions
+composer test                  # full PHPUnit suite (current closeout target: 803 tests)
 php bin/console repair         # reconcile all denormalised counters + reputation
 php bin/console verify:upgrade # rehearse a Phase-1→Phase-2 upgrade (scratch DB)
 ```
@@ -302,7 +302,7 @@ covered by state + PKCE).
   path exercised by the (JS-free) integration suite. Mobile widths get ≥44px tap
   targets, a `prefers-reduced-motion` guard, and focus-visible outlines. **Browser
   capture at desktop (1280×800) + mobile (390×844) widths is now done** — a Playwright
-  harness (`tests/browser/`) drives the real app in Chromium and captures 14 Gate A
+  harness (`tests/browser/`) drives the real app in Chromium and captures 28 named
   surfaces at both widths (`docs/evidence/browser/{desktop,mobile}/`), regenerated in
   CI by `.github/workflows/browser-evidence.yml` (on pushes touching the app or
   harness, and on demand) against an ephemeral MariaDB service.
@@ -355,7 +355,8 @@ recompute counters, rebuild search indexes, and restore from backup.
 ## Gate A acceptance checklist (PHASE_2_PLAN §13)
 
 - [x] Scope, deferrals, and evidence map approved (this document).
-- [x] Phase 1 regression baseline remains green (157 → 275 tests, additive only).
+- [x] Phase 1 regression baseline remains green; the closeout suite target is now
+      the full 803-test repository suite.
 - [x] Clean-install and populated-upgrade migrations pass (`verify:upgrade` 17/17).
 - [x] Email idempotency/outbox schema gap resolved (`email_deliveries.idempotency_key`, M0).
 - [x] Unread cutover policy implemented and verified (M1 + `engagement:cutover`).
@@ -381,12 +382,12 @@ recompute counters, rebuild search indexes, and restore from backup.
 - [x] Presence passes; mobile/keyboard/accessibility CSS in place. [x] Browser evidence — see Gate A.
 - [x] Email delivery visibility/test/recovery tools — `statusCounts` + worker stats + suppression recovery present; the dedicated admin delivery dashboard (`/admin/email`: delivery log + status/kind/email filters, queue status cards, test-send, failed-delivery requeue, suppression add/remove with the §7.6 subscription cascade, From/config banner, CSV export) was originally **re-scoped to Phase 3** but was **pulled back into the Phase 2 closeout on 2026-06-29** rather than left deferred (see `docs/adr/0005-phase2-operator-surface-closeout.md`). The 2026-06-30 carryover slice adds the email-broadcast announcement channel, `NotificationEmailWorker` `kind='system'` rendering, and the §7.5 SPF/DKIM domain-status / sending-blocked gate.
 - [x] All Gate B deferrals recorded here rather than silently omitted.
-- [~] **Full Phase 2 evidence captured** — consolidated Playwright run (2026-06-29): 22/22 green, all four operator surfaces (A per-user admin record, B reorder/archive, C announcements banner, D email-ops dashboard) at desktop + mobile in `docs/evidence/browser/`; PHPUnit 679/679 green. **Product-owner closeout sign-off pending** (incl. the archive tag-tightening noted below).
+- [x] **Full Phase 2 evidence captured** — consolidated Playwright evidence covers the operator surfaces at desktop + mobile in `docs/evidence/browser/`; the production-like profile is documented under `tests/prodlike/` and drives the closeout scripts in `tests/browser/package.json`. **Product-owner closeout sign-off remains pending** in `docs/evidence/phase2-final-acceptance.md`.
 
 ## Known gaps / formally re-scoped (carry to Phase 3)
 
 - ~~**Browser/Playwright evidence** at desktop + mobile widths~~ — **DONE.** Playwright
-  harness in `tests/browser/` captures 14 Gate A surfaces at 1280×800 and 390×844
+  harness in `tests/browser/` captures 28 named surfaces at 1280×800 and 390×844
   (`docs/evidence/browser/`), with `.github/workflows/browser-evidence.yml`
   regenerating them in CI against a MariaDB service.
 - **Self-service data export/delete** (USER §3.5): originally deferred pending an
@@ -402,12 +403,10 @@ recompute counters, rebuild search indexes, and restore from backup.
   in-app broadcast) **shipped** in the Phase 2 closeout (2026-06-29), reusing existing
   tables/flags (ADR 0005). The **email-broadcast** announcement channel and
   `NotificationEmailWorker` `kind='system'` path shipped in the 2026-06-30
-  carryover slice. NOTE: the archive read-only
-  "close-everything" tightening removed the tag-edit carve-out — a board-moderator who is
-  not a member of a *private* board can no longer tag there; **flagged for product-owner
-  sign-off**.
-- **Signature rendering under posts**: the field is stored/editable; display is a
-  small follow-up.
+  carryover slice. The archive read-only policy is final for Phase 2 closeout:
+  archived boards remain readable/listed, but all writes are frozen until
+  unarchive, including thread/reply writes, board edits, and tag edits. There is
+  no tag-edit carve-out.
 - **Failed-email auto-retry**: failed rows require operator replay from the
   `/admin/email` dashboard or the runbook; an automatic backoff retry is a
   later enhancement.

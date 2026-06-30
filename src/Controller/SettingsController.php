@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
@@ -16,6 +17,7 @@ use App\Repository\UserPreferenceRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Service\AccountService;
+use App\Service\PersonalOrganizationService;
 use App\Service\PreferenceService;
 use App\Support\PreferenceSchema;
 
@@ -185,6 +187,7 @@ final class SettingsController extends Controller
     public function boards(Request $request): Response
     {
         $user = $this->requireUser();
+        $featureFlags = $this->container->get(FeatureFlags::class);
         $policy = $this->container->get(BoardPolicy::class);
         $categories = $this->container->get(CategoryRepository::class)->all();
         $allBoards = $this->container->get(BoardRepository::class)->allOrdered();
@@ -203,7 +206,29 @@ final class SettingsController extends Controller
             }
         }
 
-        return $this->view('account/boards', ['groups' => $groups, 'prefs' => $prefs]);
+        $organizationFlags = [
+            'board_folders' => $featureFlags->enabled('board_folders'),
+            'saved_feeds' => $featureFlags->enabled('saved_feeds'),
+            'bookmark_folders' => $featureFlags->enabled('bookmark_folders'),
+        ];
+        $organization = [
+            'board_folders' => [],
+            'saved_feeds' => [],
+            'bookmark_folders' => [],
+            'starred_threads' => [],
+        ];
+        if (in_array(true, $organizationFlags, true)) {
+            $organization = $this->container->get(PersonalOrganizationService::class)->overview($user, $organizationFlags);
+        }
+
+        return $this->view('account/boards', [
+            'groups' => $groups,
+            'prefs' => $prefs,
+            'board_folders' => $organization['board_folders'],
+            'saved_feeds' => $organization['saved_feeds'],
+            'bookmark_folders' => $organization['bookmark_folders'],
+            'starred_threads' => $organization['starred_threads'],
+        ]);
     }
 
     public function toggleBoardPref(Request $request): Response

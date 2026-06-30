@@ -13,6 +13,7 @@ $this->section('title', 'API tokens');
         <a class="active" href="/admin/api-tokens">API tokens</a>
     </nav>
 
+    <div class="admin-pane">
     <?php if (!empty($new_token)): ?>
         <div class="flash" role="status">
             <strong>Copy this token now — it will not be shown again:</strong>
@@ -62,7 +63,7 @@ $this->section('title', 'API tokens');
                     <td><?= $e(implode(', ', json_decode((string) $t['scopes'], true) ?: [])) ?></td>
                     <td><?= $e((string) $t['created_at']) ?></td>
                     <td><?= $e((string) ($t['last_used_at'] ?? '—')) ?></td>
-                    <td><?= $t['revoked_at'] ? 'revoked' : 'active' ?></td>
+                    <td><?php $tRevoked = (bool) $t['revoked_at']; ?><span class="state state-<?= $tRevoked ? 'revoked' : 'active' ?>"><?= $tRevoked ? 'revoked' : 'active' ?></span></td>
                     <td>
                         <?php if (!$t['revoked_at']): ?>
                         <form method="post" action="/admin/api-tokens/<?= (int) $t['id'] ?>/revoke" class="inline">
@@ -76,4 +77,5 @@ $this->section('title', 'API tokens');
             </tbody>
         </table>
     </section>
+    </div>
 </div>

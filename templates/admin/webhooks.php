@@ -13,6 +13,7 @@ $this->section('title', 'Webhooks');
         <a class="active" href="/admin/webhooks">Webhooks</a>
     </nav>
 
+    <div class="admin-pane">
     <?php if (!empty($new_secret)): ?>
         <div class="flash" role="status">
             <strong>Copy this signing secret now - it will not be shown again:</strong>
@@ -67,7 +68,7 @@ $this->section('title', 'Webhooks');
                 <tr>
                     <td><?= $e($w['name']) ?></td>
                     <td><?= $e($w['url']) ?></td>
-                    <td><?= ((int) $w['is_active']) === 1 ? 'active' : 'paused' ?></td>
+                    <td><?php $wActive = ((int) $w['is_active']) === 1; ?><span class="state state-<?= $wActive ? 'active' : 'paused' ?>"><?= $wActive ? 'active' : 'paused' ?></span></td>
                     <td><?= $e((string) ($w['last_status'] ?? '-')) ?></td>
                     <td><a href="/admin/webhooks/<?= (int) $w['id'] ?>">Manage</a></td>
                 </tr>
@@ -78,4 +79,5 @@ $this->section('title', 'Webhooks');
             </tbody>
         </table>
     </section>
+    </div>
 </div>

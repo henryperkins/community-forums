@@ -16,6 +16,7 @@ $active = is_array($ann) && !empty($ann['active']);
         <a class="active" href="/admin/announcements">Announcements</a>
     </nav>
 
+    <div class="admin-pane">
     <section class="card">
         <h2>Current banner</h2>
         <?php if ($active): ?>
@@ -50,4 +51,5 @@ $active = is_array($ann) && !empty($ann['active']);
             <div class="form-actions"><button class="btn" type="submit">Publish banner</button></div>
         </form>
     </section>
+    </div>
 </div>

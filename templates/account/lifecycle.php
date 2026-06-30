@@ -5,10 +5,15 @@ $this->section('title', 'Account lifecycle');
 $status = (string) ($row['status'] ?? 'active');
 $pending = is_array($pending_deletion ?? null) ? $pending_deletion : null;
 ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
+        <div class="settings-pane">
     <?php if (!empty($errors)): ?>
         <div class="card error-list" role="alert">
             <?php foreach ($errors as $message): ?>
@@ -68,4 +73,6 @@ $pending = is_array($pending_deletion ?? null) ? $pending_deletion : null;
             </form>
         <?php endif; ?>
     </section>
+        </div>
+    </div>
 </div>

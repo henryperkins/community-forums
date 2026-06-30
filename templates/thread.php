@@ -36,6 +36,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?></p>
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
+            <span class="thread-participants-label">In council</span>
             <div class="thread-participants" aria-label="Participants">
                 <?php foreach ($participants as $pp): ?>
                     <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false); ?>
@@ -100,7 +101,8 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             </div>
         <?php endif; ?>
         <?php if ($workflow_on ?? false): ?>
-            <div class="workflow-bar">
+            <div class="workflow-bar wf-bar">
+                <span class="wf-bar-label">Workflow</span>
                 <span class="muted">Status: <?= $e($status_labels[$thread['status'] ?? 'open'] ?? 'Open') ?></span>
                 <?php if (!empty($assignment)): ?>
                     <span class="muted">Assigned to @<?= $e($assignment['assigned_username']) ?></span>
@@ -111,7 +113,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             </div>
 
             <?php if ($current_user !== null): ?>
-                <div class="workflow-actions">
+                <div class="workflow-actions wf-actions">
                     <?php if (!empty(array_filter($can_change_statuses ?? []))): ?>
                         <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/status">
                             <?= $this->csrfField() ?>
@@ -124,7 +126,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                                 <?php endforeach; ?>
                             </select>
                             <input class="input input-small" type="text" name="reason" maxlength="255" placeholder="Reason">
-                            <button class="linkbtn" type="submit">Update status</button>
+                            <button class="linkbtn wf-btn" type="submit">Update status</button>
                         </form>
                     <?php endif; ?>
 
@@ -137,7 +139,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                             <option value="tomorrow">Tomorrow</option>
                             <option value="week">Next week</option>
                         </select>
-                        <button class="linkbtn" type="submit">Snooze</button>
+                        <button class="linkbtn wf-btn" type="submit">Snooze</button>
                     </form>
 
                     <?php if (!empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)): ?>
@@ -146,15 +148,17 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                             <?php if (!empty($can_staff_assign)): ?>
                                 <label class="sr-only" for="thread-assignee">Assign to</label>
                                 <input id="thread-assignee" class="input input-small" type="text" name="assignee" maxlength="32" placeholder="username">
-                                <button class="linkbtn" type="submit">Assign</button>
+                                <button class="linkbtn wf-btn" type="submit">Assign</button>
                             <?php elseif (!empty($can_self_assign)): ?>
                                 <input type="hidden" name="self" value="1">
-                                <button class="linkbtn" type="submit">Assign to me</button>
+                                <button class="linkbtn wf-btn" type="submit">Assign to me</button>
                             <?php endif; ?>
                             <?php if (!empty($assignment)): ?>
-                                <button class="linkbtn muted" type="submit" name="action" value="unassign">Unassign</button>
+                                <button class="linkbtn wf-btn muted" type="submit" name="action" value="unassign">Unassign</button>
                             <?php endif; ?>
                         </form>
+                    <?php else: ?>
+                        <span class="wf-btn muted" aria-disabled="true">Assign</span>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -257,25 +261,47 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             </details>
         <?php endif; ?>
         <?php if (!empty($polls_on) && !empty($poll)): ?>
-            <section class="memory-panel poll-panel">
-                <h2><?= $e($poll['question']) ?></h2>
+            <section class="poll-card poll-panel">
+                <div class="poll-head">
+                    <span class="poll-icon" aria-hidden="true">✦</span>
+                    <span>
+                        <span class="poll-eyebrow">Poll</span>
+                        <span class="poll-sub"><?= $poll['mode'] === 'multiple' ? 'Choose any' : 'Choose one' ?></span>
+                    </span>
+                    <span class="poll-status<?= (string) ($poll['status'] ?? '') === 'closed' ? ' is-closed' : '' ?>">
+                        <?= (string) ($poll['status'] ?? '') === 'closed' ? 'Closed' : 'Open' ?>
+                    </span>
+                </div>
+                <h2 class="poll-question"><?= $e($poll['question']) ?></h2>
                 <?php if (!empty($poll['results_visible'])): ?>
-                    <ul class="link-list">
+                    <?php $pollTotal = max(1, array_sum(array_map(static fn ($option): int => (int) $option['vote_count'], $poll['options']))); ?>
+                    <ul class="poll-results link-list">
                         <?php foreach ($poll['options'] as $option): ?>
                             <?php $n = (int) $option['vote_count']; ?>
-                            <li><strong><?= $e($option['body']) ?></strong> <span class="muted"><?= $n ?> vote<?= $n === 1 ? '' : 's' ?></span></li>
+                            <li class="poll-result<?= !empty($option['viewer_voted']) ? ' is-mine' : '' ?>">
+                                <span class="poll-result-row">
+                                    <strong><?= $e($option['body']) ?></strong>
+                                    <?php if (!empty($option['viewer_voted'])): ?><span class="poll-result-mine">Your vote</span><?php endif; ?>
+                                    <span class="poll-result-count"><?= $n ?> vote<?= $n === 1 ? '' : 's' ?></span>
+                                </span>
+                                <span class="poll-result-bar"><meter min="0" max="<?= $pollTotal ?>" value="<?= $n ?>"><?= $n ?></meter></span>
+                            </li>
                         <?php endforeach; ?>
                     </ul>
                 <?php elseif (!empty($poll['can_vote'])): ?>
-                    <form method="post" action="/polls/<?= (int) $poll['id'] ?>/vote" class="stacked">
+                    <form method="post" action="/polls/<?= (int) $poll['id'] ?>/vote" class="poll-options">
                         <?= $this->csrfField() ?>
                         <?php foreach ($poll['options'] as $option): ?>
-                            <label class="checkline">
+                            <label class="poll-option">
                                 <input type="<?= $poll['mode'] === 'multiple' ? 'checkbox' : 'radio' ?>" name="option_ids[]" value="<?= (int) $option['id'] ?>">
+                                <span class="poll-option-mark" aria-hidden="true"></span>
                                 <?= $e($option['body']) ?>
                             </label>
                         <?php endforeach; ?>
-                        <button class="btn btn-small" type="submit">Vote</button>
+                        <div class="poll-foot">
+                            <span class="poll-meta">Open to the council</span>
+                            <button class="btn btn-small" type="submit">Vote</button>
+                        </div>
                     </form>
                 <?php else: ?>
                     <p class="muted">Results are visible after voting or after the poll closes.</p>
@@ -288,16 +314,63 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 <?php endif; ?>
             </section>
         <?php elseif (!empty($polls_on) && !empty($can_create_poll)): ?>
-            <details class="workflow-actions">
+            <details class="workflow-actions poll-builder">
                 <summary class="linkbtn">Add poll</summary>
                 <form class="stacked" method="post" action="/t/<?= (int) $thread['id'] ?>/poll">
                     <?= $this->csrfField() ?>
+                    <div class="builder-head">
+                        <span class="poll-icon" aria-hidden="true">✦</span>
+                        <span class="poll-eyebrow">Add a poll</span>
+                        <span class="builder-hint">A topic may hold one poll.</span>
+                    </div>
                     <label class="field"><span>Question</span><input class="input" type="text" name="question" maxlength="255" required></label>
                     <label class="field"><span>Mode</span><select class="input input-small" name="mode"><option value="single">Single choice</option><option value="multiple">Multiple choice</option></select></label>
+                    <label class="field"><span>Closes</span><select class="input input-small" name="closes_in"><option value="never">Never</option><option value="1d">In 1 day</option><option value="3d">In 3 days</option><option value="1w">In 1 week</option></select></label>
                     <label class="field"><span>Options</span><textarea class="input" name="options" rows="4" required></textarea></label>
                     <button class="btn btn-small" type="submit">Create poll</button>
                 </form>
             </details>
+        <?php endif; ?>
+        <?php if (!empty($features['split_merge']) && !empty($can_moderate_board)): ?>
+            <?php $movablePosts = array_values(array_filter($posts ?? [], static fn ($post): bool => (int) ($post['is_op'] ?? 0) !== 1)); ?>
+            <section class="sm-panel topic-restructure" aria-label="Split or merge topic">
+                <div class="sm-panel-head">
+                    <span class="sm-panel-title">Split a topic, or merge two</span>
+                    <span class="sm-note">Selected replies move into a new topic; merging redirects this topic to the chosen target.</span>
+                </div>
+                <div class="sm-grid">
+                    <form class="stacked" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/split">
+                        <?= $this->csrfField() ?>
+                        <h2>Split into a new topic</h2>
+                        <?php if (empty($movablePosts)): ?>
+                            <p class="muted">There are no replies to split yet.</p>
+                        <?php else: ?>
+                            <div class="sm-post-list">
+                                <?php foreach ($movablePosts as $post): ?>
+                                    <?php $pa = mask_author($post['author_display_name'] ?? null, $post['author_username'] ?? null, $post['author_role'] ?? 'user', (int) ($post['is_anonymous'] ?? 0) === 1); ?>
+                                    <label class="sm-post">
+                                        <input type="checkbox" name="post_ids[]" value="<?= (int) $post['id'] ?>">
+                                        <span class="sm-post-main">
+                                            <span class="sm-post-by"><?= $e($pa['label']) ?> · #<?= (int) $post['id'] ?></span>
+                                            <span class="sm-post-body"><?= $e(mb_strimwidth(strip_tags((string) ($post['body_html'] ?? '')), 0, 120, '…')) ?></span>
+                                        </span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                        <label class="field"><span>New topic title</span><input class="input" type="text" name="title" maxlength="255" required></label>
+                        <button class="btn btn-small" type="submit"<?= empty($movablePosts) ? ' disabled' : '' ?>>Split replies out</button>
+                    </form>
+                    <form class="stacked" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/merge">
+                        <?= $this->csrfField() ?>
+                        <h2>Merge this topic</h2>
+                        <p class="merge-from"><span>From</span><strong><?= $e($thread['title']) ?></strong><span>#<?= $e($thread['board_slug']) ?></span></p>
+                        <label class="field"><span>Target topic ID</span><input class="input" type="number" name="target_thread_id" min="1" required></label>
+                        <p class="sm-note">All posts move into the chosen topic. The move is logged and reversible through repair tooling.</p>
+                        <button class="btn btn-small" type="submit">Merge topics</button>
+                    </form>
+                </div>
+            </section>
         <?php endif; ?>
     </header>
 

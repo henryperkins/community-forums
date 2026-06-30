@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\BoardModeratorRepository;
 use Tests\Support\TestCase;
 
 final class AppThreadSplitMergeTest extends TestCase
@@ -120,6 +121,23 @@ final class AppThreadSplitMergeTest extends TestCase
         self::assertSame(1, (int) $this->threads()->find($source['thread_id'])['is_deleted']);
         self::assertSame(2, (int) $this->threads()->find($target['thread_id'])['reply_count']);
         self::assertSame(456, (int) $this->db->fetchValue('SELECT post_count FROM users WHERE id = ?', [(int) $unrelated['id']]));
+    }
+
+    public function test_scoped_board_moderator_sees_the_split_merge_surface(): void
+    {
+        $moderator = $this->makeUser(['username' => 'split-board-mod']);
+        (new BoardModeratorRepository($this->db))->assign((int) $this->board['id'], (int) $moderator['id']);
+        $thread = $this->makeThread($this->board, $this->member, 'Moderator topic', 'Opening post');
+        $this->posting()->reply($this->userEntity($this->member), $thread['thread_id'], ['body' => 'Reply to move']);
+
+        $this->actingAs($moderator);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('Split into a new topic', $page->body());
+        self::assertStringContainsString('Merge this topic', $page->body());
+        self::assertStringContainsString('/mod/t/' . $thread['thread_id'] . '/split', $page->body());
+        self::assertStringContainsString('/mod/t/' . $thread['thread_id'] . '/merge', $page->body());
     }
 
     public function test_merge_recounts_last_activity_by_timestamp_not_post_id(): void

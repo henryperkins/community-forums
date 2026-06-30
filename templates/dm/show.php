@@ -29,7 +29,7 @@ $this->section('title', $title);
             <p class="breadcrumb"><a href="/messages">← Messages</a></p>
             <div class="dm-thread-title-row">
                 <div class="dm-thread-id">
-                    <?= $this->partial('partials/monogram', ['name' => $title, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName)]) ?>
+                    <?= $this->partial('partials/monogram', ['name' => $title, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'gilt' => true]) ?>
                     <div>
                         <h1 class="dm-thread-title">
                             <?php if (!empty($is_group)): ?>

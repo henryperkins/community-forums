@@ -9,11 +9,17 @@ $font = (string) ($prefs['font_size'] ?? 'medium');
 $motion = !empty($prefs['reduced_motion']);
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';
 ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
-    <form method="post" action="/settings/appearance" class="stacked card">
+        <div class="settings-pane">
+    <form method="post" action="/settings/appearance" class="stacked scribe-panel">
+        <span class="scribe-panel-head">Appearance</span>
         <?= $this->csrfField() ?>
         <div class="field">
             <span>Theme</span>
@@ -62,4 +68,6 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
         <p class="muted">Reset appearance, reading, and composing preferences to their defaults.</p>
         <button class="btn btn-secondary" type="submit">Reset to defaults</button>
     </form>
+        </div>
+    </div>
 </div>

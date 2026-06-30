@@ -7,7 +7,7 @@
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav') ?>
-        <main class="settings-pane">
+        <div class="settings-pane">
 
     <?php if (isset($email_verified) && !$email_verified): ?>
         <div class="card notice" role="status">
@@ -109,6 +109,6 @@
         <?php endif; ?>
         <button class="btn" type="submit">Save changes</button>
     </form>
-        </main>
+        </div>
     </div>
 </div>

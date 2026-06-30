@@ -37,6 +37,30 @@ final class PersonalOrganizationService
         );
     }
 
+    /**
+     * @return array{
+     *   board_folders:list<array<string,mixed>>,
+     *   saved_feeds:list<array<string,mixed>>,
+     *   bookmark_folders:list<array<string,mixed>>,
+     *   starred_threads:list<array<string,mixed>>
+     * }
+     */
+    public function overview(User $user, array $enabled): array
+    {
+        $boardFoldersOn = !empty($enabled['board_folders']);
+        $savedFeedsOn = !empty($enabled['saved_feeds']);
+        $bookmarkFoldersOn = !empty($enabled['bookmark_folders']);
+
+        return [
+            // Dark features must not make /settings/boards depend on later
+            // migrations before an operator flips them on.
+            'board_folders' => $boardFoldersOn ? $this->boardFolders($user) : [],
+            'saved_feeds' => $savedFeedsOn ? $this->savedFeeds($user) : [],
+            'bookmark_folders' => $bookmarkFoldersOn ? $this->bookmarkFolders($user) : [],
+            'starred_threads' => $bookmarkFoldersOn ? $this->starredThreads($user) : [],
+        ];
+    }
+
     public function addBoardToFolder(User $user, int $folderId, int $boardId): void
     {
         $folder = $this->db->fetch('SELECT * FROM board_folders WHERE id = ? AND user_id = ?', [$folderId, $user->id()]);
@@ -142,5 +166,188 @@ final class PersonalOrganizationService
             throw new NotFoundException('Thread not found.');
         }
         return $thread;
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function boardFolders(User $user): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT f.id AS folder_id, f.name AS folder_name, f.position AS folder_position,
+                    b.id AS board_id, b.name AS board_name, b.slug AS board_slug, b.visibility AS board_visibility
+             FROM board_folders f
+             LEFT JOIN board_folder_boards fb ON fb.folder_id = f.id
+             LEFT JOIN boards b ON b.id = fb.board_id
+             WHERE f.user_id = ?
+             ORDER BY f.position ASC, f.id ASC, fb.position ASC, b.name ASC',
+            [$user->id()],
+        );
+        $folders = [];
+        foreach ($rows as $row) {
+            $id = (int) $row['folder_id'];
+            if (!isset($folders[$id])) {
+                $folders[$id] = [
+                    'id' => $id,
+                    'name' => (string) $row['folder_name'],
+                    'boards' => [],
+                ];
+            }
+            if ($row['board_id'] !== null) {
+                $boardId = (int) $row['board_id'];
+                if ($this->canReadBoard($user, $boardId, (string) ($row['board_visibility'] ?? 'public'))) {
+                    $folders[$id]['boards'][] = [
+                        'id' => $boardId,
+                        'name' => (string) $row['board_name'],
+                        'slug' => (string) $row['board_slug'],
+                    ];
+                }
+            }
+        }
+        return array_values($folders);
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function savedFeeds(User $user): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT id, name, filter_json, digest_enabled, position
+             FROM saved_feed_filters
+             WHERE user_id = ?
+             ORDER BY position ASC, id ASC',
+            [$user->id()],
+        );
+        foreach ($rows as &$row) {
+            $filter = json_decode((string) ($row['filter_json'] ?? '{}'), true);
+            $filter = is_array($filter) ? $filter : [];
+            $boardIds = [];
+            foreach (($filter['board_ids'] ?? []) as $boardId) {
+                $boardId = (int) $boardId;
+                if ($boardId <= 0) {
+                    continue;
+                }
+                $board = $this->boards->find($boardId);
+                if ($board === null || !$this->canReadBoard($user, $boardId, (string) ($board['visibility'] ?? 'public'))) {
+                    continue;
+                }
+                $boardIds[$boardId] = $boardId;
+            }
+            $filter['board_ids'] = array_values($boardIds);
+            $row['filter'] = $filter;
+        }
+        unset($row);
+        return $rows;
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function bookmarkFolders(User $user): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT f.id AS folder_id, f.name AS folder_name, f.position AS folder_position,
+                    t.id AS thread_id, t.title AS thread_title, t.slug AS thread_slug,
+                    t.is_deleted AS thread_is_deleted, t.is_pending AS thread_is_pending,
+                    b.id AS board_id, b.name AS board_name, b.slug AS board_slug, b.visibility AS board_visibility,
+                    COALESCE(tu.is_starred, 0) AS is_starred
+             FROM thread_bookmark_folders f
+             LEFT JOIN thread_bookmark_folder_threads ft ON ft.folder_id = f.id
+             LEFT JOIN threads t ON t.id = ft.thread_id
+             LEFT JOIN boards b ON b.id = t.board_id
+             LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             WHERE f.user_id = ?
+             ORDER BY f.position ASC, f.id ASC, ft.position ASC, COALESCE(t.last_post_at, t.created_at) DESC',
+            [$user->id(), $user->id()],
+        );
+        $folders = [];
+        $staleMemberships = [];
+        foreach ($rows as $row) {
+            $id = (int) $row['folder_id'];
+            if (!isset($folders[$id])) {
+                $folders[$id] = [
+                    'id' => $id,
+                    'name' => (string) $row['folder_name'],
+                    'threads' => [],
+                ];
+            }
+            if ($row['thread_id'] !== null) {
+                $threadId = (int) $row['thread_id'];
+                if ((int) ($row['is_starred'] ?? 0) !== 1) {
+                    $staleMemberships[$id . ':' . $threadId] = [$id, $threadId];
+                    continue;
+                }
+
+                $boardId = (int) $row['board_id'];
+                if ((int) ($row['thread_is_deleted'] ?? 0) === 1
+                    || (int) ($row['thread_is_pending'] ?? 0) === 1
+                    || !$this->canReadBoard($user, $boardId, (string) ($row['board_visibility'] ?? 'public'))
+                ) {
+                    continue;
+                }
+
+                $folders[$id]['threads'][] = [
+                    'id' => $threadId,
+                    'title' => (string) $row['thread_title'],
+                    'slug' => (string) $row['thread_slug'],
+                    'board_name' => (string) $row['board_name'],
+                    'board_slug' => (string) $row['board_slug'],
+                ];
+            }
+        }
+
+        // Bookmark-folder membership is defined only for currently-starred
+        // threads; drop stale links once the user has unstarred a topic.
+        foreach ($staleMemberships as [$folderId, $threadId]) {
+            $this->db->run(
+                'DELETE FROM thread_bookmark_folder_threads WHERE folder_id = ? AND thread_id = ?',
+                [$folderId, $threadId],
+            );
+        }
+
+        return array_values($folders);
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function starredThreads(User $user): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT t.id AS thread_id, t.title AS thread_title, t.slug AS thread_slug,
+                    b.id AS board_id, b.name AS board_name, b.slug AS board_slug, b.visibility AS board_visibility
+             FROM thread_user tu
+             JOIN threads t ON t.id = tu.thread_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE tu.user_id = ?
+               AND tu.is_starred = 1
+               AND t.is_deleted = 0
+               AND t.is_pending = 0
+             ORDER BY COALESCE(t.last_post_at, t.created_at) DESC, t.id DESC',
+            [$user->id()],
+        );
+
+        $threads = [];
+        foreach ($rows as $row) {
+            $boardId = (int) $row['board_id'];
+            $isMember = $this->members->isMember($boardId, $user->id());
+            if (!$this->policy->canRead([
+                'visibility' => $row['board_visibility'],
+                'id' => $boardId,
+            ], $user, $isMember)) {
+                continue;
+            }
+            $threads[] = [
+                'id' => (int) $row['thread_id'],
+                'title' => (string) $row['thread_title'],
+                'slug' => (string) $row['thread_slug'],
+                'board_name' => (string) $row['board_name'],
+                'board_slug' => (string) $row['board_slug'],
+            ];
+        }
+
+        return $threads;
+    }
+
+    private function canReadBoard(User $user, int $boardId, string $visibility): bool
+    {
+        if ($boardId <= 0) {
+            return false;
+        }
+        $isMember = $this->members->isMember($boardId, $user->id());
+        return $this->policy->canRead(['visibility' => $visibility, 'id' => $boardId], $user, $isMember);
     }
 }

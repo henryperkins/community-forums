@@ -1,0 +1,76 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: retroboards-prodlike-db
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpw
+      MARIADB_DATABASE: retroboards_prodlike
+      MARIADB_USER: retro
+      MARIADB_PASSWORD: retro
+    ports:
+      - "127.0.0.1:3321:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h 127.0.0.1 -uroot -prootpw --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - prodlike-db:/var/lib/mysql
+
+  app:
+    build:
+      context: ../..
+      dockerfile: tests/prodlike/Dockerfile
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_URL: http://127.0.0.1:8021
+      APP_KEY: 15060e1b09270977c6a924d22847f57f9a2931f386e5cc5e21423490d90154d4
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: retroboards_prodlike
+      DB_USERNAME: retro
+      DB_PASSWORD: retro
+      SESSION_SECURE: "false"
+      SECURITY_HSTS: "false"
+      MAIL_DRIVER: array
+      RATELIMIT_PATH: /var/www/html/storage/ratelimit-prodlike
+      WEBHOOK_ALLOW_HTTP: "true"
+      WEBHOOK_ALLOWED_PRIVATE_CIDRS: 127.0.0.1/32,172.16.0.0/12
+      UPLOADS_MIN_FREE_BYTES: "0"
+    depends_on:
+      db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - prodlike-storage:/var/www/html/storage
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "127.0.0.1:8021:80"
+    depends_on:
+      - app
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../public:/var/www/html/public:ro
+
+  k6:
+    image: grafana/k6:0.53.0
+    user: "${K6_UID:-1000}:${K6_GID:-1000}"
+    environment:
+      BASE_URL: http://nginx
+      K6_DURATION: "${K6_DURATION:-15m}"
+      K6_VUS: "${K6_VUS:-20}"
+      RB_USER_EMAIL: bob@retro.test
+      RB_USER_PASSWORD: password123
+    depends_on:
+      - nginx
+    volumes:
+      - ./phase3-load.js:/scripts/phase3-load.js:ro
+      - ../../docs/evidence/phase3-load:/evidence
+
+volumes:
+  prodlike-db:
+  prodlike-storage:

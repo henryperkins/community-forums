@@ -31,7 +31,7 @@
                     ?>
                     <li>
                         <a class="dm-row dm-link<?= !empty($c['is_unread']) ? ' is-unread' : '' ?>" href="/messages/<?= (int) $c['conversation_id'] ?>">
-                        <?= $this->partial('partials/monogram', ['name' => $other, 'username' => $seed]) ?>
+                        <?= $this->partial('partials/monogram', ['name' => $other, 'username' => $seed, 'gilt' => $isGroup]) ?>
                             <span class="dm-row-top">
                                 <?php if (!empty($c['is_unread'])): ?><span class="unread-dot" aria-hidden="true"></span><?php endif; ?>
                                 <span class="dm-other"><?= $e($other) ?></span>

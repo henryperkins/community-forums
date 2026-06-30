@@ -59,4 +59,28 @@ final class AppAdminExtensionsTest extends TestCase
         self::assertStringContainsString('admin-handler', $page->body());
         self::assertStringContainsString('Global emergency disable', $page->body());
     }
+
+    public function test_extensions_admin_page_renders_feature_activation_index(): void
+    {
+        $this->setFlags([
+            'server_extensions' => true,
+            'polls' => true,
+            'community_memory' => true,
+            'content_references' => true,
+            'bookmark_folders' => true,
+            'custom_profile_fields' => true,
+        ]);
+        $this->actingAs($this->makeAdmin(['username' => 'activation-admin']));
+
+        $page = $this->get('/admin/extensions');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('feature-activation-index', $page->body());
+        self::assertStringContainsString('The UI that was missing', $page->body());
+        self::assertStringContainsString('feature-area-card', $page->body());
+        self::assertStringContainsString('polls', $page->body());
+        self::assertStringContainsString('bookmark_folders', $page->body());
+        self::assertStringContainsString('link_previews', $page->body());
+        self::assertStringContainsString('Design-ahead', $page->body());
+    }
 }

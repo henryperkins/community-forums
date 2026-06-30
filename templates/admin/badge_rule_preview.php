@@ -8,6 +8,7 @@ $this->section('title', 'Badge rule preview');
         <h1>Badge rule preview</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
+    <div class="admin-pane">
     <p><a href="/admin/badge-rules">Back to badge rules</a></p>
     <section class="card">
         <h2><?= $e($rule['badge_name']) ?></h2>
@@ -25,4 +26,5 @@ $this->section('title', 'Badge rule preview');
             </ul>
         <?php endif; ?>
     </section>
+    </div>
 </div>

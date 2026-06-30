@@ -40,6 +40,27 @@ final class TagRepository
     }
 
     /** @return array<int,array<string,mixed>> */
+    public function catalogForViewer(int $viewerId, bool $isAdmin): array
+    {
+        [$visSql, $params] = $this->visibility($isAdmin, $viewerId);
+
+        return $this->db->fetchAll(
+            "SELECT t.*, COALESCE(c.thread_count, 0) AS thread_count
+             FROM tags t
+             LEFT JOIN (
+                 SELECT tt.tag_id, COUNT(*) AS thread_count
+                 FROM thread_tags tt
+                 JOIN threads th ON th.id = tt.thread_id AND th.is_deleted = 0 AND th.is_pending = 0
+                 JOIN boards b ON b.id = th.board_id AND b.tags_enabled = 1 AND ($visSql)
+                 GROUP BY tt.tag_id
+             ) c ON c.tag_id = t.id
+             WHERE t.is_enabled = 1 AND t.visibility = 'public'
+             ORDER BY t.name ASC, t.id ASC",
+            $params,
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> */
     public function allForAdmin(): array
     {
         return $this->db->fetchAll(

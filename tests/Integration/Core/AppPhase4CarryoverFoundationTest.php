@@ -13,10 +13,10 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
     public function test_phase4_carryover_flags_default_dark_and_override_independently(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
+        // `polls` graduated to default-on (GA 2026-06-30); the rest stay dark.
         $carryovers = [
             'link_previews',
             'expanded_files',
-            'polls',
             'custom_emoji',
             'slash_giphy',
             'split_merge',
@@ -32,11 +32,11 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
             self::assertFalse($flags->enabled($flag), "$flag must deploy dark by default");
         }
 
-        (new SettingRepository($this->db))->set('features', ['polls' => true]);
+        (new SettingRepository($this->db))->set('features', ['link_previews' => true]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));
 
-        self::assertTrue($overridden->enabled('polls'));
-        self::assertFalse($overridden->enabled('custom_emoji'), 'enabling polls must not enable another carryover flag');
+        self::assertTrue($overridden->enabled('link_previews'));
+        self::assertFalse($overridden->enabled('custom_emoji'), 'enabling one carryover flag must not enable another');
     }
 
     public function test_phase4_carryover_additive_schema_exists(): void

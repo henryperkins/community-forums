@@ -11,11 +11,17 @@ $av = !empty($prefs['show_avatars']);
 $rx = !empty($prefs['show_reactions']);
 $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
 ?>
-<div class="settings">
-    <h1>Account settings</h1>
-    <?= $this->partial('partials/settings_nav') ?>
+<div class="settings-screen">
+    <header class="settings-head">
+        <span class="eyebrow">Account</span>
+        <h1>Account settings</h1>
+    </header>
+    <div class="settings">
+        <?= $this->partial('partials/settings_nav') ?>
 
-    <form method="post" action="/settings/preferences" class="stacked card">
+        <div class="settings-pane">
+    <form method="post" action="/settings/preferences" class="stacked scribe-panel">
+        <span class="scribe-panel-head">Reading</span>
         <?= $this->csrfField() ?>
         <label class="field">
             <span>Threads per page</span>
@@ -42,9 +48,13 @@ $opt = static fn (int $v, int $cur): string => $v === $cur ? ' selected' : '';
                 <option value="replies"<?= $sort === 'replies' ? ' selected' : '' ?>>Most replies</option>
             </select>
         </label>
-        <label class="checkline"><input type="checkbox" name="show_signatures" value="1"<?= $sig ? ' checked' : '' ?>> Show signatures</label>
-        <label class="checkline"><input type="checkbox" name="show_avatars" value="1"<?= $av ? ' checked' : '' ?>> Show avatars</label>
-        <label class="checkline"><input type="checkbox" name="show_reactions" value="1"<?= $rx ? ' checked' : '' ?>> Show reactions</label>
+        <div class="toggle-stack">
+            <label class="gem-field"><input class="gem-check gem-leaf" type="checkbox" name="show_signatures" value="1"<?= $sig ? ' checked' : '' ?>><span>Show signatures</span></label>
+            <label class="gem-field"><input class="gem-check gem-leaf" type="checkbox" name="show_avatars" value="1"<?= $av ? ' checked' : '' ?>><span>Show avatars</span></label>
+            <label class="gem-field"><input class="gem-check gem-leaf" type="checkbox" name="show_reactions" value="1"<?= $rx ? ' checked' : '' ?>><span>Show reactions</span></label>
+        </div>
         <button class="btn" type="submit">Save reading preferences</button>
     </form>
+        </div>
+    </div>
 </div>

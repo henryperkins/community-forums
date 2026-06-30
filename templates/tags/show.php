@@ -4,13 +4,13 @@ $this->layout('layout');
 $this->section('title', 'Tag: ' . $tag['name']);
 $this->section('canonical', '/tags/' . $tag['slug']);
 ?>
-<div class="tag-view">
+<div class="read-main read-pad tag-view">
     <header class="board-header">
         <p class="breadcrumb"><a href="/tags">Tags</a></p>
         <h1><?= $e($tag['name']) ?></h1>
         <?php if (!empty($tag['description'])): ?><p class="muted"><?= $e($tag['description']) ?></p><?php endif; ?>
         <?php if ($current_user !== null && !empty($expanded_feeds)): ?>
-            <form class="inline" method="post" action="/tags/<?= $e($tag['slug']) ?>/follow">
+            <form class="inline header-follow" method="post" action="/tags/<?= $e($tag['slug']) ?>/follow">
                 <?= $this->csrfField() ?>
                 <button class="linkbtn" type="submit"><?= !empty($following) ? 'Unfollow tag' : 'Follow tag' ?></button>
                 <span class="muted">Discovery feed only</span>

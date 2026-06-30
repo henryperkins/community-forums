@@ -14,6 +14,7 @@ $this->section('title', 'Badge rules');
         <a class="active" href="/admin/badge-rules">Badge rules</a>
     </nav>
 
+    <div class="admin-pane">
     <section class="card">
         <h2>Create rule</h2>
         <form method="post" action="/admin/badge-rules" class="stacked">
@@ -76,4 +77,5 @@ $this->section('title', 'Badge rules');
             </ul>
         <?php endif; ?>
     </section>
+    </div>
 </div>

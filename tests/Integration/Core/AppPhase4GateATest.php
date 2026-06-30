@@ -356,6 +356,52 @@ final class AppPhase4GateATest extends TestCase
         $this->assertDontSeeText($hidden, 'Window Author');
     }
 
+    public function testBoardScopedLeaderboardDoesNotLeakPrivateBoardContributorsToOutsiders(): void
+    {
+        // reputation_ledger is ON (setUp). The board-scoped leaderboard filter
+        // (?board_id=) must be read-gated: a private board's contributors must
+        // never be enumerable by someone who cannot read the board, even though
+        // /leaderboard is a public route.
+        $admin = $this->makeAdmin(['username' => 'privlbadmin']);
+        $author = $this->makeUser(['username' => 'privlbauthor', 'display_name' => 'Private Contributor']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'secret-lb', 'visibility' => 'private']);
+        (new ReputationLedgerService($this->db, $this->users()))->apply(
+            (int) $author['id'],
+            (int) $board['id'],
+            'reaction',
+            1,
+            'reaction:privlb:' . (int) $author['id'],
+            5,
+        );
+
+        // Outsider (guest): scoping to the private board must 404, not leak.
+        $leak = $this->get('/leaderboard', ['window' => 'week', 'board_id' => (int) $board['id']]);
+        $this->assertStatus(404, $leak);
+        $this->assertDontSeeText($leak, 'Private Contributor');
+    }
+
+    public function testBoardScopedLeaderboardStillServesAuthorizedViewersOfThePrivateBoard(): void
+    {
+        // The read-gate must not over-block: an admin (or member) who can read
+        // the private board still gets the board-scoped windowed leaderboard.
+        $admin = $this->makeAdmin(['username' => 'privlbadmin2']);
+        $author = $this->makeUser(['username' => 'privlbauthor2', 'display_name' => 'Trusted Contributor']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'secret-lb-2', 'visibility' => 'private']);
+        (new ReputationLedgerService($this->db, $this->users()))->apply(
+            (int) $author['id'],
+            (int) $board['id'],
+            'reaction',
+            1,
+            'reaction:privlb2:' . (int) $author['id'],
+            5,
+        );
+
+        $this->actingAs($admin);
+        $ok = $this->get('/leaderboard', ['window' => 'week', 'board_id' => (int) $board['id']]);
+        $this->assertStatus(200, $ok);
+        $this->assertSeeText($ok, 'Trusted Contributor');
+    }
+
     public function testDeleteRestoreAndRebuildKeepReputationLedgerCanonical(): void
     {
         $admin = $this->makeAdmin(['username' => 'repadmin']);

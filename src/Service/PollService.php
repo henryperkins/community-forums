@@ -42,6 +42,7 @@ final class PollService
 
         $question = trim((string) ($input['question'] ?? ''));
         $mode = (string) ($input['mode'] ?? 'single');
+        $closesAt = $this->closesAtFromChoice((string) ($input['closes_in'] ?? 'never'));
         $options = $this->parseOptions((string) ($input['options'] ?? ''));
         $errors = [];
         if ($question === '' || mb_strlen($question) > 255) {
@@ -57,11 +58,11 @@ final class PollService
             throw new ValidationException($errors, $input);
         }
 
-        return $this->db->transaction(function () use ($threadId, $actor, $question, $mode, $options): int {
+        return $this->db->transaction(function () use ($threadId, $actor, $question, $mode, $closesAt, $options): int {
             $pollId = $this->db->insert(
-                "INSERT INTO polls (thread_id, question, mode, status, results_policy, created_by, created_at)
-                 VALUES (?, ?, ?, 'open', 'after_vote_or_close', ?, UTC_TIMESTAMP())",
-                [$threadId, $question, $mode, $actor->id()],
+                "INSERT INTO polls (thread_id, question, mode, status, results_policy, closes_at, created_by, created_at)
+                 VALUES (?, ?, ?, 'open', 'after_vote_or_close', ?, ?, UTC_TIMESTAMP())",
+                [$threadId, $question, $mode, $closesAt, $actor->id()],
             );
             $pos = 0;
             foreach ($options as $option) {
@@ -134,6 +135,19 @@ final class PollService
             'SELECT 1 FROM poll_votes WHERE poll_id = ? AND user_id = ? LIMIT 1',
             [(int) $poll['id'], $viewer->id()],
         ) !== false;
+        $viewerOptionIds = [];
+        if ($viewer !== null) {
+            foreach ($this->db->fetchAll(
+                'SELECT option_id FROM poll_votes WHERE poll_id = ? AND user_id = ?',
+                [(int) $poll['id'], $viewer->id()],
+            ) as $row) {
+                $viewerOptionIds[(int) $row['option_id']] = true;
+            }
+        }
+        foreach ($options as &$option) {
+            $option['viewer_voted'] = isset($viewerOptionIds[(int) $option['id']]);
+        }
+        unset($option);
         $closed = !$this->isOpen($poll);
         $poll['options'] = $options;
         $poll['viewer_voted'] = $voted;
@@ -196,6 +210,25 @@ final class PollService
             }
         }
         return array_slice(array_values(array_unique($out)), 0, 10);
+    }
+
+    /**
+     * Map the builder's "Closes" choice to a UTC closing timestamp, or null for
+     * an open-ended poll. Computed from time() so it lines up with isOpen()'s
+     * `closes_at > now` comparison. Unknown values fall back to open-ended.
+     */
+    private function closesAtFromChoice(string $choice): ?string
+    {
+        $days = match ($choice) {
+            '1d' => 1,
+            '3d' => 3,
+            '1w' => 7,
+            default => 0,
+        };
+        if ($days === 0) {
+            return null;
+        }
+        return gmdate('Y-m-d H:i:s', time() + $days * 86400);
     }
 
     /** @return array<int,true> */

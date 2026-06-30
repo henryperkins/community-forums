@@ -10,7 +10,7 @@ if (($board['visibility'] ?? 'public') !== 'public') {
     $this->section('robots', 'noindex, nofollow');
 }
 ?>
-<div class="board-view">
+<div class="read-main read-pad board-view">
     <header class="board-header">
         <h1><span class="hash">#</span><?= $e($board['name']) ?>
             <?php if ($board['visibility'] !== 'public'): ?><span class="tag"><?= $e($board['visibility']) ?></span><?php endif; ?>

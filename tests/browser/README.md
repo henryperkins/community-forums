@@ -69,6 +69,30 @@ the screenshots. Override the database or port with `DB_DATABASE` / `E2E_PORT`.
 For a differently named local DB container/client, keep the normal app DB env and
 set `DB_RESET_CONTAINER`, `DB_ROOT_PASSWORD`, and `DB_MYSQL_CLIENT`.
 
+For the production-like closeout profile, start the compose stack first:
+
+```bash
+docker compose -f ../prodlike/compose.yml up -d --build
+npm run evidence:prodlike
+npm run evidence:dark:prodlike
+npm run a11y:prodlike
+```
+
+Those scripts reset and seed the compose MariaDB database through localhost
+`3321`, skip Playwright's built-in `php -S` web server, and target the Nginx/PHP-FPM
+app at `http://127.0.0.1:8021`.
+
+The webhook evidence step shells into the running `app` container for
+`worker:webhooks`, so the delivery run uses the same `APP_KEY` and runtime profile
+as the PHP-FPM app under test. In the production-like profile, the temporary
+Playwright receiver binds on the host and the registered callback uses
+`host.docker.internal`; `tests/prodlike/compose.yml` maps that name to Docker's
+host gateway for the app container.
+
+Because this profile occupies `8021`, run `tests/backup/rehearse.sh` with a
+different `BACKUP_REHEARSAL_PORT` (for example `8031`) or stop the stack before
+rehearsing backup/restore in the same checkout.
+
 ## CI
 
 `.github/workflows/browser-evidence.yml` runs the same flow against an ephemeral

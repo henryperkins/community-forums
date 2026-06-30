@@ -1,6 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'New topic'); ?>
-<div class="card">
+<div class="read-main read-pad compose-page">
     <h1>New topic</h1>
     <form method="post" action="/threads" class="composer stacked">
         <?= $this->csrfField() ?>

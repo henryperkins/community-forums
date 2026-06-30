@@ -10,6 +10,7 @@
         <a href="/admin/structure">Boards &amp; categories</a>
     </nav>
 
+    <div class="admin-pane">
     <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>" class="stacked card">
         <?= $this->csrfField() ?>
         <label class="field"><span>Category</span>
@@ -124,4 +125,5 @@
             <button class="btn btn-small" type="submit">Add member</button>
         </form>
     </section>
+    </div>
 </div>
