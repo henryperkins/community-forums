@@ -44,7 +44,11 @@ final class AppAccountLifecycleTest extends TestCase
         $this->actingAs($user);
         $thread = $this->makeThread($this->makeBoard($this->makeCategory()), $user, 'Exportable thread', 'Exportable body');
 
-        $response = $this->get('/settings/account/export');
+        // Export is a CSRF-protected POST: it writes an audit row, so it must not
+        // be reachable (or forgeable) via a bare GET.
+        $this->assertSame(405, $this->get('/settings/account/export')->status(), 'export must not be a GET');
+
+        $response = $this->post('/settings/account/export');
 
         $this->assertStatus(200, $response);
         self::assertSame('application/json; charset=UTF-8', $response->getHeader('Content-Type'));

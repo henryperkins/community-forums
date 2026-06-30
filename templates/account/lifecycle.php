@@ -20,7 +20,10 @@ $pending = is_array($pending_deletion ?? null) ? $pending_deletion : null;
     <section class="card stacked">
         <h2>Export account data</h2>
         <p class="muted">Download a JSON archive of your profile, preferences, sessions metadata, subscriptions, notifications, reports, posts, direct messages, and related audit rows.</p>
-        <p><a class="btn btn-secondary" href="/settings/account/export" download>Download account export</a></p>
+        <form method="post" action="/settings/account/export" class="inline-form">
+            <?= $this->csrfField() ?>
+            <button class="btn btn-secondary" type="submit">Download account export</button>
+        </form>
     </section>
 
     <section class="card stacked">

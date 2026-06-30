@@ -90,7 +90,7 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/mod/appeals'));
 
         // Account lifecycle/export/delete routes are 404 while the flag is dark…
-        $this->assertStatus(404, $this->get('/settings/account/export'));
+        $this->assertStatus(404, $this->post('/settings/account/export'));
         $this->assertStatus(404, $this->get('/settings/account/lifecycle'));
         $this->assertStatus(404, $this->post('/settings/account/deactivate', ['current_password' => 'x']));
         $this->assertStatus(404, $this->post('/settings/account/reactivate'));

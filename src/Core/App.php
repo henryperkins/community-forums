@@ -1205,7 +1205,7 @@ final class App
         $r->get('/settings', [AccountController::class, 'index']);
         $r->get('/settings/account', [AccountController::class, 'accountForm']);
         $r->post('/settings/account', [AccountController::class, 'updateAccount']);
-        $r->get('/settings/account/export', [AccountController::class, 'exportAccount']);
+        $r->post('/settings/account/export', [AccountController::class, 'exportAccount']);
         $r->get('/settings/account/lifecycle', [AccountController::class, 'lifecycleForm']);
         $r->post('/settings/account/deactivate', [AccountController::class, 'deactivate']);
         $r->post('/settings/account/reactivate', [AccountController::class, 'reactivate']);
