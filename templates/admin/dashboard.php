@@ -2,11 +2,14 @@
 <?php $this->layout('layout'); $this->section('title', 'Admin'); ?>
 <div class="admin">
     <header class="admin-head">
-        <h1>Admin console</h1>
+        <span>
+            <span class="eyebrow">Operator desk</span>
+            <h1>Admin console</h1>
+        </span>
         <span class="pill pill-admin">Admin mode</span>
     </header>
 
-    <nav class="subnav">
+    <nav class="subnav admin-subnav">
         <a class="active" href="/admin">Dashboard</a>
         <a href="/admin/structure">Boards &amp; categories</a>
         <a href="/admin/users">Users</a>
@@ -16,6 +19,9 @@
         <?php if (!empty($features['announcements'])): ?><a href="/admin/announcements">Announcements</a><?php endif; ?>
         <?php if (!empty($features['appeals'])): ?><a href="/mod/appeals">Appeals</a><?php endif; ?>
     </nav>
+
+    <div class="admin-pane">
+    <p class="pane-intro">Manage the community's structure, trust controls, and audit trail from one dense operator surface.</p>
 
     <section class="card">
         <h2>Site name</h2>
@@ -77,4 +83,5 @@
             </table>
         <?php endif; ?>
     </section>
+    </div>
 </div>

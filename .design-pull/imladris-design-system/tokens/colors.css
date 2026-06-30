@@ -1,0 +1,154 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Imladris — colour
+   Rivendell register: parchment + evergreen surfaces, a single mallorn-gold
+   accent, the Bruinen river-blue for information, and a twilight night register.
+   Status is always carried by colour AND a word — never colour alone.
+
+   Two layers:
+     1. Primitives  — raw scales (--parchment-50 … --twilight-900). Don't paint
+        UI directly from these in app code; reach for the semantic aliases.
+     2. Semantics   — purpose-named tokens (--surface, --accent, --on-done …)
+        that every component reads. Re-skinning the whole product = re-point
+        these. The [data-theme="dark"] block below flips them to twilight.
+
+   Values transcribed verbatim from the live RetroBoards app.css :root, which is
+   the operator's authoritative transcription of the Imladris token manifest.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+    /* ── Primitives ──────────────────────────────────────────────────────── */
+    /* Parchment — the page itself; warm aged paper. */
+    --parchment-50:  #FAF6EC;
+    --parchment-100: #F5EFE1;
+    --parchment-200: #ECE4D2;
+    --parchment-300: #DED2B8;
+    /* Mist — cool neutral, a quieter alternative to parchment. */
+    --mist-100: #EEF1ED;
+    --mist-200: #DCE3DD;
+    /* Ink — the text scale, warm near-black to soft grey-green. */
+    --ink-900: #1B231D;
+    --ink-700: #313B33;
+    --ink-500: #515C52;
+    --ink-400: #5C685D;
+    --ink-300: #94A095;
+    /* Evergreen — the brand. Mallorn boughs over Rivendell. */
+    --green-900: #1C2E24;
+    --green-800: #24402F;
+    --green-700: #2E4A3A;
+    --green-600: #3A5C49;
+    --green-500: #4E7459;
+    --green-400: #6E9479;
+    --green-200: #BCD0BF;
+    --green-100: #DCE8DD;
+    --green-050: #EDF3ED;
+    /* River — the Bruinen. Information, links to artifacts, a cool counterpoint. */
+    --river-900: #1E3040;
+    --river-700: #2C4D63;
+    --river-500: #3F6E89;
+    --river-400: #5E8CA6;
+    --river-200: #BAD2DF;
+    --river-100: #DCE9F0;
+    /* Gold — mallorn leaf. The single accent: indicators, active, unread, esteem. */
+    --gold-700: #9A7530;
+    --gold-600: #B08A3A;
+    --gold-500: #C29A44;
+    --gold-400: #D2B062;
+    --gold-200: #EAD9A8;
+    --gold-100: #F4EBCF;
+    /* Twilight — the night register (dark surfaces). */
+    --twilight-900: #161D24;
+    --twilight-800: #1E2730;
+    --twilight-700: #283440;
+    /* Named status hues. */
+    --leaf:  #4E7459;   /* success — green-500 */
+    --amber: #B7842F;   /* warning */
+    --rust:  #9C4A33;   /* danger  */
+    --slate: #3F6E89;   /* info — river-500 */
+
+    /* ── Semantic: surfaces / ink / lines ────────────────────────────────── */
+    --surface-page:    var(--parchment-100);  /* the page ground            */
+    --surface-raised:  var(--parchment-50);   /* cards, topbar, inputs       */
+    --surface-sunken:  var(--parchment-200);  /* pills, code, join-bar wells */
+    --surface-cool:    var(--mist-100);
+    --surface-inverse: var(--twilight-800);   /* twilight covers on day      */
+    --border-hair:   var(--parchment-300);    /* the default hairline        */
+    --border-soft:   var(--mist-200);
+    --border-strong: var(--ink-300);
+    --rule-gold:     var(--gold-500);         /* gold left-rules, blockquotes */
+
+    /* ── Semantic: brand + accent ────────────────────────────────────────── */
+    --brand:         var(--green-700);   /* primary brand: links, buttons    */
+    --brand-hover:   var(--green-800);
+    --brand-press:   var(--green-900);
+    --brand-subtle:  var(--green-050);   /* active rows, OP badge wash        */
+    --gold:          var(--gold-500);    /* the indicator accent              */
+    --gold-soft:     var(--gold-100);
+    --gold-ink:      #7E5F22;            /* darker gold for small text (AA)    */
+    --on-brand-subtle: var(--green-800); /* ink on the brand-subtle wash       */
+
+    /* ── Semantic: status ledger (colour + a word, never colour alone) ───── */
+    --success: var(--leaf);    --surface-done:    var(--green-050); --on-done:    var(--green-800);
+    --warning: var(--amber);   --surface-review:  var(--gold-100);  --on-review:  #7E5F22;
+    --pending: var(--ink-400); --surface-pending: var(--parchment-200); --on-pending: var(--ink-500);
+    --info:    var(--river-500); --surface-info:  var(--river-100);  --on-info:    var(--river-700);
+    --star:    var(--gold-600); /* the esteem star                              */
+    --artifact-link: var(--river-500);
+    --presence:      var(--leaf); /* the "online" leaf dot                      */
+
+    /* ── Legacy aliases (kept so older rules recolour with the system) ────── */
+    --surface:   var(--parchment-50);
+    --surface-2: var(--parchment-100);
+    --surface-3: var(--parchment-200);
+    --border:    var(--parchment-300);
+    --text:         var(--ink-900);
+    --text-muted:   var(--ink-500);
+    --text-strong:  var(--ink-900);
+    --text-body:    var(--ink-700);
+    --text-faint:   var(--ink-400);
+    --text-inverse: var(--parchment-50);
+    --accent:          var(--green-700);
+    --accent-contrast: var(--parchment-50);
+    --accent-2:        var(--gold-500);
+    --danger:          var(--rust);
+}
+
+/* ── Twilight night register ──────────────────────────────────────────────
+   Gold becomes the actionable colour (links/buttons), parchment is the ink,
+   evergreen the quiet brand. Apply with <html data-theme="dark">. */
+[data-theme="dark"] {
+    --surface:   var(--twilight-700);
+    --surface-2: var(--twilight-900);
+    --surface-3: var(--twilight-800);
+    --border: #36434f;
+    --text:         #ECE4D2;
+    --text-muted:   #AEB8B4;
+    --text-strong:  var(--parchment-50);
+    --text-body:    #D7DCD2;
+    --text-faint:   var(--ink-300);
+    --text-inverse: var(--ink-900);
+    --on-brand-subtle: #BCD0BF;
+    --gold-ink:        var(--gold-400);
+    --accent:          var(--gold-400);
+    --accent-contrast: var(--twilight-900);
+    --accent-2:        var(--gold-500);
+    --danger:          #DB8C73;
+    --surface-page:    var(--twilight-900);
+    --surface-raised:  var(--twilight-800);
+    --surface-sunken:  var(--twilight-700);
+    --surface-inverse: var(--parchment-100);
+    --border-hair:   #36434f;
+    --border-soft:   #2C3742;
+    --border-strong: #51606C;
+    --brand:        var(--green-500);
+    --brand-hover:  var(--green-400);
+    --brand-subtle: rgba(78,116,89,.20);
+    --gold-soft:    rgba(194,154,68,.16);
+    --rule-gold:    var(--gold-400);
+    --success: var(--green-400);  --surface-done:    rgba(78,116,89,.20);  --on-done:    #BCD0BF;
+    --warning: var(--gold-400);   --surface-review:  rgba(194,154,68,.16); --on-review:  #DCC68A;
+    --pending: var(--ink-300);    --surface-pending: var(--twilight-700);  --on-pending: #AEB8B4;
+    --info:    var(--river-400);  --surface-info:    rgba(63,110,137,.20); --on-info:    var(--river-200);
+    --star:    var(--gold-400);
+    --presence: var(--green-400);
+    --focus-ring: rgba(210,176,98,.75);
+}

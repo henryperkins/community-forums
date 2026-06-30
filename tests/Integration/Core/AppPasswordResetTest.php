@@ -136,6 +136,32 @@ final class AppPasswordResetTest extends TestCase
         self::assertNotNull($auth->attempt('bob@example.test', 'newpassword9'));
     }
 
+    public function test_reset_success_flash_is_shown_on_the_login_page(): void
+    {
+        // Regression guard: the auth pages render through the layout's
+        // `variant=auth` branch, which must still emit the flash partial so the
+        // post-reset confirmation (and OAuth sign-in errors) redirected to
+        // /login actually reach the user.
+        $this->makeUser(['username' => 'fin', 'email' => 'fin@example.test', 'password' => 'oldpassword1']);
+        $mailer = new ArrayMailer();
+        $this->resetService($mailer)->request('fin@example.test');
+        $token = $this->tokenFromEmail($mailer, 'fin@example.test');
+
+        $this->get('/reset', ['token' => $token]); // seed CSRF
+        $done = $this->post('/reset', [
+            'token' => $token,
+            'password' => 'newpassword9',
+            'password_confirm' => 'newpassword9',
+        ]);
+        $this->assertRedirect($done, '/login');
+
+        // The login page (rendered through the layout's variant=auth branch)
+        // must surface the queued flash message.
+        $login = $this->get('/login');
+        $this->assertStatus(200, $login);
+        $this->assertSeeText($login, 'Your password has been updated. Please sign in.');
+    }
+
     public function test_reset_revokes_all_existing_sessions(): void
     {
         $user = $this->makeUser(['username' => 'sid', 'email' => 'sid@example.test', 'password' => 'oldpassword1']);

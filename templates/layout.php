@@ -10,6 +10,7 @@ $robots = $this->block('robots', '');
 $ogType = $this->block('og_type', 'website');
 $ogImage = $this->block('og_image', '');
 $desc = $this->block('description', $brand['name'] . ' — a community forum.');
+$showChrome = $variant !== 'auth';
 ?>
 <!doctype html>
 <html lang="en"
@@ -38,7 +39,9 @@ $desc = $this->block('description', $brand['name'] . ' — a community forum.');
 </head>
 <body class="variant-<?= $e($variant) ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>"<?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>
+<?php if ($showChrome): ?>
 <?= $this->partial('partials/topbar') ?>
+<?php endif; ?>
 <?php if (is_array($site_announcement ?? null) && !empty($site_announcement['active'])): ?>
 <?= $this->partial('partials/announcement_banner') ?>
 <?php endif; ?>
@@ -51,6 +54,17 @@ $desc = $this->block('description', $brand['name'] . ' — a community forum.');
             <?= $content ?>
         </main>
     </div>
+<?php elseif ($variant === 'auth'): ?>
+    <main class="auth-stage" id="main">
+        <svg class="auth-stage-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
+        <a class="auth-brand" href="/">
+            <svg class="auth-brand-star" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
+            <span class="auth-brand-name"><?= $e($brand['name']) ?></span>
+        </a>
+        <?= $this->partial('partials/flash') ?>
+        <?= $content ?>
+        <p class="auth-colophon">Et Eärello Endorenna utúlien.</p>
+    </main>
 <?php else: ?>
     <main class="container" id="main">
         <?= $this->partial('partials/flash') ?>

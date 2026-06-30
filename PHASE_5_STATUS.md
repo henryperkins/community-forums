@@ -1,9 +1,32 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, and all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
-**Last updated:** 2026-06-29
+**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, and all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The remaining §2 entry-gate artifacts (A1/A4/A5/A8) are now recorded with owner sign-offs in ADR 0012 (Proposed); the Foundation increment (F1–F11) is next.
+**Last updated:** 2026-06-30
 **Branch:** `main`
 **Suite:** `./vendor/bin/phpunit` → **579 tests / 2190 assertions, green**. Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile. Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), and the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`).
+
+## Gate A entry-gate artifacts (recorded 2026-06-30)
+
+The remaining `PHASE_5_PLAN.md` §2 entry-gate artifacts are recorded; **ADR 0012**
+(`docs/adr/0012-phase-5-gate-a-entry-gate-artifacts.md`) carries the gate record and
+the owner sign-offs (received 2026-06-30), held at **Proposed** pending a final
+acceptance pass. The acceptance ADR is renumbered **0013**.
+
+- **A1 — capability taxonomy** → `docs/phase5/capability-taxonomy.md`: 54 `core.*`
+  keys (hybrid granularity), scope/risk per the `0050` ENUMs, 5 non-delegable
+  protected keys (decision #22), parity-first with documented legacy quirks. Source
+  of truth the Foundation **F3** generates `CapabilityCatalog.php` + the `0066` seed from.
+- **A4 — signing-key custody** → `docs/phase5/registry-signing-key-custody.md`:
+  offline Ed25519, public-key-only in DB, signed-transition rotation; approved
+  cadence annual + on-compromise, deployment-local custody, air-gapped-media default.
+- **A5 — canonical origin / RP ID** → `docs/phase5/canonical-origin-and-rp-id.md`:
+  RP-ID = registrable domain of `APP_URL`, origin-equality validation, prod-HTTPS
+  hard-refuse, domain-change/DR runbook (self-host framing).
+- **A8 — product-demand review** → ADR 0012: declarative-first Gate A ecosystem
+  approved, conditioned on the non-critical + no-untrusted-PHP guarantees.
+
+Still dark/inert — no behavior enables. Next is the **Foundation increment (F1–F11)**
+TDD plan. A2 (first named OIDC provider) is still required before P5-12 acceptance.
 
 ## What this increment is (and is not)
 
@@ -44,7 +67,7 @@ dispatch path.
   revoke/prune remain available.
 - **Additive foundation migrations** `0049`–`0053` (`SCHEMA.md` §5A documents every shape):
   - `0049` registry/packages/releases/installs/permissions/history/advisories/local-blocks (§8.2 #1–5).
-  - `0050` capability registry, 4 protected system-role anchors, role-capability map, scoped/temporary assignments + audit, protected-owner authority (§8.2 #8/#9/#13). Capability catalogue **seeded empty** (taxonomy pending approval).
+  - `0050` capability registry, 4 protected system-role anchors, role-capability map, scoped/temporary assignments + audit, protected-owner authority (§8.2 #8/#9/#13). Capability catalogue **seeded empty** (taxonomy now recorded — `docs/phase5/capability-taxonomy.md`, ADR 0012; the `0066` seed lands with Foundation F3).
   - `0051` WebAuthn credentials + one-time challenges (§8.2 #14) — public credential material only.
   - `0052` identity-provider registry + the `oauth_identities.provider` **ENUM→VARCHAR(64)** widen + nullable `provider_config_id` linkage; seeds google/apple/github as dark builtin rows + aliases (§8.2 #15).
   - `0053` invitations + redemptions — hash-only tokens, non-privileged onboarding only (§8.2 #16).

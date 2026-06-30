@@ -26,7 +26,7 @@ if (!empty($features['appeals'])) {
     $items['/appeals'] = 'Appeals';
 }
 ?>
-<nav class="subnav">
+<nav class="subnav settings-rail">
     <?php foreach ($items as $href => $label): ?>
         <a class="<?= $here === $href ? 'active' : '' ?>" href="<?= $e($href) ?>"><?= $e($label) ?></a>
     <?php endforeach; ?>

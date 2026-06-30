@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Parchment & mist — surfaces" subtitle="Aged-paper page grounds; mist is the cool alternative" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 18px; background: var(--surface-page); }
+  .swatches { display: flex; gap: 10px; }
+  .sw { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .chip { height: 66px; border-radius: 8px; border: 1px solid rgba(27,35,29,.08); }
+  .lbl { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); line-height: 1.35; }
+  .lbl b { display: block; color: var(--text); font-family: var(--font-label); letter-spacing: .04em; font-size: 10px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:var(--parchment-50)"></div><span class="lbl"><b>Parchment 50</b>#FAF6EC · raised</span></div>
+    <div class="sw"><div class="chip" style="background:var(--parchment-100)"></div><span class="lbl"><b>Parchment 100</b>#F5EFE1 · page</span></div>
+    <div class="sw"><div class="chip" style="background:var(--parchment-200)"></div><span class="lbl"><b>Parchment 200</b>#ECE4D2 · sunken</span></div>
+    <div class="sw"><div class="chip" style="background:var(--parchment-300)"></div><span class="lbl"><b>Parchment 300</b>#DED2B8 · hairline</span></div>
+    <div class="sw"><div class="chip" style="background:var(--mist-100)"></div><span class="lbl"><b>Mist 100</b>#EEF1ED</span></div>
+    <div class="sw"><div class="chip" style="background:var(--mist-200)"></div><span class="lbl"><b>Mist 200</b>#DCE3DD</span></div>
+  </div>
+</body>
+</html>
