@@ -2257,6 +2257,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     gap: 7px;
     margin-top: 12px;
 }
+.dm-listpane-filters .pill { text-decoration: none; }
+.dm-listpane-filters .pill:hover { color: var(--text); }
+.dm-listpane-filters .pill.is-active { background: var(--accent); color: var(--accent-contrast); }
 .dm-list {
     list-style: none;
     margin: 0;

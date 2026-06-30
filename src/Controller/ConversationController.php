@@ -30,8 +30,17 @@ final class ConversationController extends Controller
     public function index(Request $request): Response
     {
         $user = $this->requireDms();
+        $filter = ((string) $request->query('filter', 'all')) === 'unread' ? 'unread' : 'all';
+        $conversations = $this->container->get(ConversationRepository::class)->listForUser($user->id());
+        if ($filter === 'unread') {
+            $conversations = array_values(array_filter(
+                $conversations,
+                static fn (array $c): bool => !empty($c['is_unread']),
+            ));
+        }
         return $this->view('dm/index', [
-            'conversations' => $this->container->get(ConversationRepository::class)->listForUser($user->id()),
+            'conversations' => $conversations,
+            'filter' => $filter,
         ]);
     }
 
