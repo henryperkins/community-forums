@@ -173,12 +173,9 @@ final class ThreadSplitMergeService
              LEFT JOIN (
                 SELECT p.thread_id, p.id AS post_id, p.user_id, p.created_at
                 FROM posts p
-                JOIN (
-                    SELECT thread_id, MAX(id) AS max_id
-                    FROM posts
-                    WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0
-                    GROUP BY thread_id
-                ) latest ON latest.thread_id = p.thread_id AND latest.max_id = p.id
+                WHERE p.thread_id = ? AND p.is_deleted = 0 AND p.is_pending = 0
+                ORDER BY p.created_at DESC, p.id DESC
+                LIMIT 1
              ) lp ON lp.thread_id = t.id
              SET t.last_post_id = lp.post_id, t.last_post_user_id = lp.user_id, t.last_post_at = lp.created_at
              WHERE t.id = ?',
@@ -215,15 +212,11 @@ final class ThreadSplitMergeService
                     SELECT t.board_id, p.thread_id, p.created_at
                     FROM posts p
                     JOIN threads t ON t.id = p.thread_id
-                    JOIN (
-                        SELECT t2.board_id, MAX(p2.id) AS max_id
-                        FROM posts p2
-                        JOIN threads t2 ON t2.id = p2.thread_id
-                        WHERE t2.board_id = ?
-                          AND p2.is_deleted = 0 AND p2.is_pending = 0
-                          AND t2.is_deleted = 0 AND t2.is_pending = 0
-                        GROUP BY t2.board_id
-                    ) latest ON latest.board_id = t.board_id AND latest.max_id = p.id
+                    WHERE t.board_id = ?
+                      AND p.is_deleted = 0 AND p.is_pending = 0
+                      AND t.is_deleted = 0 AND t.is_pending = 0
+                    ORDER BY p.created_at DESC, p.id DESC
+                    LIMIT 1
                  ) lp ON lp.board_id = b.id
                  SET b.last_thread_id = lp.thread_id, b.last_post_at = lp.created_at
                  WHERE b.id = ?',

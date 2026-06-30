@@ -262,6 +262,18 @@
                     return r.json().then(function (j) { return { status: r.status, json: j }; });
                 })
                 .then(function (res) {
+                    if (res.status === 422) {
+                        var messages = res.json && res.json.messages ? res.json.messages : {};
+                        var first = '';
+                        for (var key in messages) {
+                            if (Object.prototype.hasOwnProperty.call(messages, key) && messages[key]) {
+                                first = messages[key];
+                                break;
+                            }
+                        }
+                        showStatus(first || 'Saved locally; server draft sync rejected this change.');
+                        return;
+                    }
                     if (res.status === 409) {
                         renderConflict(res.json.server || null, body, title);
                         return;
@@ -400,16 +412,36 @@
     }
     function rememberPendingDraftSubmit(key, context) {
         var items = pendingDraftSubmits().filter(function (item) { return item && item.key !== key; });
-        items.push({ key: key, context: context, at: Date.now() });
+        items.push({ key: key, context: context, user: draftUser(), at: Date.now() });
         writePendingDraftSubmits(items.slice(-20));
     }
     function clearCompletedDraftSubmits() {
         var pending = pendingDraftSubmits();
         if (!pending.length) { return; }
+        var currentUser = draftUser();
+        var tokenInput = document.querySelector('input[name="_token"]');
+        var csrfToken = tokenInput ? tokenInput.value : '';
         var keep = [];
+
+        function discardServerDraftForContext(context) {
+            if (!serverDraftsEnabled() || !csrfToken) { return; }
+            var data = new FormData();
+            data.append('_token', csrfToken);
+            fetch('/api/drafts/' + serverDraftKey(context) + '/discard', {
+                method: 'POST',
+                body: data,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            }).catch(function () {});
+        }
+
         var forms = document.querySelectorAll('form.composer');
         pending.forEach(function (item) {
             if (!item || !item.key || !item.context) { return; }
+            if (item.user && item.user !== currentUser) {
+                try { localStorage.removeItem(item.key); } catch (e) {}
+                return;
+            }
             var samePostUrlWithBody = false;
             for (var i = 0; i < forms.length; i++) {
                 var form = forms[i];
@@ -425,6 +457,7 @@
                 return;
             }
             try { localStorage.removeItem(item.key); } catch (e) {}
+            discardServerDraftForContext(item.context);
         });
         writePendingDraftSubmits(keep);
     }
@@ -485,7 +518,6 @@
             // the same page. The next successfully loaded page clears this context
             // before an empty composer can repopulate from localStorage.
             rememberPendingDraftSubmit(key, context);
-            if (serverDrafts) { serverDrafts.discard(); }
             updateDiscard();
         });
     }

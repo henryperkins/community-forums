@@ -102,6 +102,18 @@ final class AppModerationAppealsTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM moderation_appeals'));
     }
 
+    public function test_invalid_array_reason_rerenders_without_string_cast_warnings(): void
+    {
+        $this->actingAs($this->member);
+        $this->get('/appeals');
+
+        $response = $this->post('/appeals/posts/' . $this->replyId, ['reason' => ['crafted']]);
+
+        $this->assertStatus(422, $response);
+        $this->assertSeeText($response, 'Explain why you are appealing this moderation action.');
+        self::assertStringContainsString('name="reason"', $response->body());
+    }
+
     public function test_admin_reverses_deleted_post_appeal_and_notifies_appellant(): void
     {
         $this->actingAs($this->member);

@@ -6,13 +6,16 @@ namespace App\Controller;
 
 use App\Core\Config;
 use App\Core\Container;
+use App\Core\FeatureFlags;
 use App\Core\Flash;
 use App\Core\ForbiddenException;
 use App\Core\HttpException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\ValidationException;
 use App\Core\View;
 use App\Domain\User;
+use App\Repository\ServerDraftRepository;
 use App\Security\Session;
 
 /**
@@ -66,6 +69,19 @@ abstract class Controller
     {
         $this->flash()->add($message);
         return $this->redirect($to);
+    }
+
+    protected function discardServerDraftFor(User $user, string $contextKey): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('server_drafts')) {
+            return;
+        }
+        try {
+            $this->container->get(ServerDraftRepository::class)->discardByContext($user->id(), $contextKey);
+        } catch (ValidationException) {
+            // Best-effort cleanup only. Successful writes should not fail if the
+            // draft surface cannot be trimmed.
+        }
     }
 
     /** Require an authenticated user, otherwise bounce to the login page. */

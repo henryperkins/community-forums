@@ -121,4 +121,29 @@ final class AppThreadSplitMergeTest extends TestCase
         self::assertSame(2, (int) $this->threads()->find($target['thread_id'])['reply_count']);
         self::assertSame(456, (int) $this->db->fetchValue('SELECT post_count FROM users WHERE id = ?', [(int) $unrelated['id']]));
     }
+
+    public function test_merge_recounts_last_activity_by_timestamp_not_post_id(): void
+    {
+        $source = $this->makeThread($this->board, $this->member, 'Timestamp source', 'Source OP');
+        $sourceReply = $this->posting()->reply($this->userEntity($this->member), $source['thread_id'], ['body' => 'Source reply']);
+        $target = $this->makeThread($this->board, $this->member, 'Timestamp target', 'Target OP');
+        $this->posting()->reply($this->userEntity($this->member), $target['thread_id'], ['body' => 'Target reply']);
+
+        $late = gmdate('Y-m-d H:i:s', time() + 3600);
+        $early = gmdate('Y-m-d H:i:s', time() - 3600);
+        $this->db->run('UPDATE posts SET created_at = ? WHERE id = ?', [$late, $sourceReply]);
+        $this->db->run('UPDATE posts SET created_at = ? WHERE thread_id = ? AND is_op = 0', [$early, (int) $target['thread_id']]);
+
+        $this->actingAs($this->admin);
+        $this->get('/t/' . $source['thread_id'] . '-' . $source['slug']);
+        $this->post('/mod/t/' . $source['thread_id'] . '/merge', [
+            'target_thread_id' => (int) $target['thread_id'],
+        ]);
+
+        $targetAfter = $this->threads()->find($target['thread_id']);
+        self::assertNotNull($targetAfter);
+        self::assertSame($late, (string) $targetAfter['last_post_at']);
+        self::assertSame($late, (string) $this->db->fetchValue('SELECT last_post_at FROM boards WHERE id = ?', [(int) $this->board['id']]));
+        self::assertSame((int) $target['thread_id'], (int) $this->db->fetchValue('SELECT last_thread_id FROM boards WHERE id = ?', [(int) $this->board['id']]));
+    }
 }

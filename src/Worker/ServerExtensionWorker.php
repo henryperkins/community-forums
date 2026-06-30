@@ -35,11 +35,17 @@ final class ServerExtensionWorker
             try {
                 $result = $this->sandbox->run($job, $job);
                 $this->extensions->recordRun($job, $result);
-                if (($result['status'] ?? '') === 'succeeded') {
+                $status = (string) ($result['status'] ?? '');
+                if ($status === 'succeeded') {
                     $stats['ran']++;
-                } else {
-                    $stats['failed']++;
+                    continue;
                 }
+                if ($status === 'quarantined') {
+                    $this->extensions->quarantineHandler((int) $job['handler_id'], (string) ($result['error'] ?? 'extension quarantined'));
+                    $stats['quarantined']++;
+                    continue;
+                }
+                $stats['failed']++;
             } catch (Throwable $e) {
                 $this->extensions->recordRun($job, [
                     'status' => 'failed',

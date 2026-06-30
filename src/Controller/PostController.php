@@ -43,6 +43,7 @@ final class PostController extends Controller
             ], 422);
         }
 
+        $this->discardServerDraftFor($user, $request->path());
         $this->awardBadges($user->id());
 
         // A held thread is not yet visible; send the author back to the board with
@@ -77,6 +78,7 @@ final class PostController extends Controller
             ])->withStatus(422);
         }
 
+        $this->discardServerDraftFor($user, $request->path());
         $this->awardBadges($user->id());
 
         $thread = $this->container->get(ThreadRepository::class)->find($threadId);

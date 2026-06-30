@@ -113,3 +113,72 @@ test('server drafts expose conflict choices and save local as next revision', as
   expect(saved.draft.body).toBe('Local second draft');
   expect(saved.draft.revision).toBe(3);
 });
+
+test('server draft validation errors replace stale success status', async ({ page }) => {
+  await login(page, 'bob@retro.test');
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+
+  const title = page.locator('form.composer input[name="title"]').first();
+  const body = page.locator('form.composer textarea.composer-input').first();
+  const key = serverDraftKey('/threads');
+  await discardServerDraft(page, key);
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+
+  await title.fill('Validation status topic');
+  await body.fill('Saved before validation error');
+  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+
+  await body.evaluate((node) => {
+    const textarea = node as HTMLTextAreaElement;
+    textarea.value = 'x'.repeat(20001);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  await expect(page.getByText('Draft body must be 20000 characters or fewer.')).toBeVisible({ timeout: 5000 });
+});
+
+test('failed submits keep server drafts and successful submits clear them after navigation', async ({ page }) => {
+  await login(page, 'bob@retro.test');
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+
+  const title = page.locator('form.composer input[name="title"]').first();
+  const body = page.locator('form.composer textarea.composer-input').first();
+  const key = serverDraftKey('/threads');
+  await discardServerDraft(page, key);
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+
+  await title.fill('Draft retention topic');
+  await body.fill('Keep this shared draft on failed submit');
+  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+
+  await body.evaluate((node) => {
+    const textarea = node as HTMLTextAreaElement;
+    textarea.value = 'x'.repeat(20001);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  await page.getByRole('button', { name: 'Create topic' }).click();
+  await expect(page.getByText('Your post is too long.')).toBeVisible({ timeout: 5000 });
+
+  const afterFailedSubmit = await page.evaluate(async ({ key }) => {
+    const response = await fetch(`/api/drafts/${key}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    return response.json();
+  }, { key });
+  expect(afterFailedSubmit.draft.body).toBe('Keep this shared draft on failed submit');
+
+  await body.fill('Now submit successfully');
+  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+
+  await page.getByRole('button', { name: 'Create topic' }).click();
+  await page.waitForURL(/\/t\/\d+-/);
+
+  const afterSuccess = await page.evaluate(async ({ key }) => {
+    const response = await fetch(`/api/drafts/${key}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    return response.json();
+  }, { key });
+  expect(afterSuccess.draft).toBeNull();
+});

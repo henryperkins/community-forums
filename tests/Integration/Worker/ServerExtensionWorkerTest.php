@@ -71,6 +71,21 @@ final class ServerExtensionWorkerTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM server_extension_runs WHERE job_id = ?', [$jobId]));
     }
 
+    public function test_worker_quarantines_handler_when_sandbox_requests_it(): void
+    {
+        $this->setFlags(['server_extensions' => true]);
+        $repo = new ServerExtensionRepository($this->db);
+        $jobId = $this->createQueuedJob($repo);
+        $handlerId = (int) $this->db->fetchValue('SELECT handler_id FROM server_extension_jobs WHERE id = ?', [$jobId]);
+
+        $stats = (new ServerExtensionWorker($repo, new QuarantiningSandbox(), true))->run();
+
+        self::assertSame(['ran' => 0, 'failed' => 0, 'skipped' => 0, 'quarantined' => 1], $stats);
+        self::assertSame('quarantined', (string) $this->db->fetchValue('SELECT status FROM server_extension_handlers WHERE id = ?', [$handlerId]));
+        self::assertSame('quarantined', (string) $this->db->fetchValue('SELECT status FROM server_extension_jobs WHERE id = ?', [$jobId]));
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM server_extension_runs WHERE job_id = ? AND status = 'quarantined'", [$jobId]));
+    }
+
     private function createQueuedJob(ServerExtensionRepository $repo): int
     {
         $admin = $this->makeAdmin(['username' => 'ext-admin']);
@@ -125,6 +140,26 @@ final class SuccessfulSandbox implements ExtensionSandbox
             'output_bytes' => 18,
             'stdout_json' => ['ok' => true],
             'error' => null,
+        ];
+    }
+}
+
+final class QuarantiningSandbox implements ExtensionSandbox
+{
+    public function probe(): array
+    {
+        return ['supported' => true, 'adapter' => 'fake', 'reason' => null];
+    }
+
+    public function run(array $handler, array $job): array
+    {
+        return [
+            'status' => 'quarantined',
+            'exit_code' => null,
+            'duration_ms' => 7,
+            'output_bytes' => 0,
+            'stdout_json' => null,
+            'error' => 'manifest revoked during execution',
         ];
     }
 }
