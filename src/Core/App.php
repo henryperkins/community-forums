@@ -858,6 +858,7 @@ final class App
             $c->get(UserRepository::class),
             $c->get(ModerationService::class),
             $c->get(UserModerationService::class),
+            $c->get(BoardModeratorRepository::class),
         ));
         $c->bind(ReportService::class, fn (Container $c) => new ReportService(
             $c->get(Database::class),
@@ -1015,6 +1016,7 @@ final class App
             $c->get(SettingRepository::class),
         ));
         $c->bind(AccountService::class, fn (Container $c) => new AccountService(
+            $c->get(Database::class),
             $c->get(UserRepository::class),
             $c->get(PasswordHasher::class),
             $c->get(WriteGate::class),

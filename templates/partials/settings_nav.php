@@ -5,7 +5,6 @@ $items = [
     '/settings/account' => 'Profile',
     '/settings/security' => 'Security',
     '/settings/privacy' => 'Privacy',
-    '/settings/account/lifecycle' => 'Account',
     '/settings/appearance' => 'Appearance',
     '/settings/preferences' => 'Reading',
     '/settings/composing' => 'Composing',
@@ -20,6 +19,9 @@ if (!empty($features['oauth'])) {
 $items['/settings/sessions'] = 'Sessions';
 $items['/settings/blocks'] = 'Blocks';
 $items['/settings/boards'] = 'Boards';
+if (!empty($features['account_lifecycle'])) {
+    $items['/settings/account/lifecycle'] = 'Account';
+}
 if (!empty($features['appeals'])) {
     $items['/appeals'] = 'Appeals';
 }

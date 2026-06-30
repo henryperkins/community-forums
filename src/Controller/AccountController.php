@@ -95,6 +95,7 @@ final class AccountController extends Controller
     /** @param array<string,string> $params */
     public function exportAccount(Request $request, array $params): Response
     {
+        $this->requireAccountLifecycle();
         $user = $this->requireUser();
         $payload = $this->container->get(AccountLifecycleService::class)->export($user);
         $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{}';
@@ -107,6 +108,7 @@ final class AccountController extends Controller
     /** @param array<string,string> $params */
     public function lifecycleForm(Request $request, array $params): Response
     {
+        $this->requireAccountLifecycle();
         $user = $this->requireUser();
         return $this->lifecycleView($user);
     }
@@ -114,6 +116,7 @@ final class AccountController extends Controller
     /** @param array<string,string> $params */
     public function deactivate(Request $request, array $params): Response
     {
+        $this->requireAccountLifecycle();
         $user = $this->requireUser();
         try {
             $this->container->get(AccountLifecycleService::class)->deactivate(
@@ -130,6 +133,7 @@ final class AccountController extends Controller
     /** @param array<string,string> $params */
     public function reactivate(Request $request, array $params): Response
     {
+        $this->requireAccountLifecycle();
         $user = $this->requireUser();
         try {
             $this->container->get(AccountLifecycleService::class)->reactivate($user);
@@ -142,6 +146,7 @@ final class AccountController extends Controller
     /** @param array<string,string> $params */
     public function requestDeletion(Request $request, array $params): Response
     {
+        $this->requireAccountLifecycle();
         $user = $this->requireUser();
         try {
             $this->container->get(AccountLifecycleService::class)->requestDeletion(
@@ -158,6 +163,7 @@ final class AccountController extends Controller
     /** @param array<string,string> $params */
     public function cancelDeletion(Request $request, array $params): Response
     {
+        $this->requireAccountLifecycle();
         $user = $this->requireUser();
         try {
             $this->container->get(AccountLifecycleService::class)->cancelDeletion($user);
@@ -294,6 +300,13 @@ final class AccountController extends Controller
     private function requireProfileMedia(): void
     {
         if (!$this->container->get(FeatureFlags::class)->enabled('profile_media')) {
+            throw new NotFoundException('Not found.');
+        }
+    }
+
+    private function requireAccountLifecycle(): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('account_lifecycle')) {
             throw new NotFoundException('Not found.');
         }
     }

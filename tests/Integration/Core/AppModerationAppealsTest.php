@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\BoardModeratorRepository;
+use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
 final class AppModerationAppealsTest extends TestCase
@@ -19,6 +21,8 @@ final class AppModerationAppealsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Appeals ship deploy-dark (ADR 0007); enable the flag for this suite.
+        (new SettingRepository($this->db))->set('features', ['appeals' => true]);
         $this->admin = $this->makeAdmin(['username' => 'appeal-admin']);
         $this->member = $this->makeUser(['username' => 'appeal-member']);
         $board = $this->makeBoard($this->makeCategory(), ['slug' => 'appeals']);
@@ -84,5 +88,50 @@ final class AppModerationAppealsTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_appeal_events WHERE appeal_id = ? AND event = 'reversed'", [$appealId]));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'appeal_resolved' AND target_type = 'post' AND target_id = ?", [$this->replyId]));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND type = 'mod'", [(int) $this->member['id']]));
+    }
+
+    public function test_appeal_queue_is_board_scoped_for_non_admin_moderators(): void
+    {
+        // Appeal #1 lives in the first board (the deleted reply from setUp).
+        $this->actingAs($this->member);
+        $this->get('/appeals');
+        $this->post('/appeals/posts/' . $this->replyId, ['reason' => 'Reinstate my first-board reply.']);
+
+        // A second board the moderator will NOT be assigned to, with its own appeal.
+        $otherBoard = $this->makeBoard($this->makeCategory(), ['slug' => 'second-board']);
+        $otherThread = $this->makeThread($otherBoard, $this->member, 'Second topic', 'Second OP');
+        $otherReply = $this->posting()->reply($this->userEntity($this->member), $otherThread['thread_id'], ['body' => 'Second reply']);
+        $this->actingAs($this->admin);
+        $this->get('/t/' . $otherThread['thread_id'] . '-' . $otherThread['slug']);
+        $this->post('/posts/' . $otherReply . '/delete', ['reason' => 'cleanup']);
+        $this->actingAs($this->member);
+        $this->get('/appeals');
+        $this->post('/appeals/posts/' . $otherReply, ['reason' => 'Reinstate my second-board reply.']);
+
+        // A board moderator assigned ONLY to the first board (role stays 'user' —
+        // board authority comes from board_moderators, not users.role).
+        $firstBoardId = (int) $this->db->fetchValue('SELECT board_id FROM threads WHERE id = ?', [$this->thread['thread_id']]);
+        $mod = $this->makeUser(['username' => 'scopedmod']);
+        (new BoardModeratorRepository($this->db))->assign($firstBoardId, (int) $mod['id']);
+
+        $this->actingAs($mod);
+        $queue = $this->get('/mod/appeals');
+        $this->assertStatus(200, $queue);
+        $this->assertSeeText($queue, 'Reinstate my first-board reply.');
+        self::assertStringNotContainsString(
+            'Reinstate my second-board reply.',
+            $queue->body(),
+            'a board moderator must not see appeals for boards they do not moderate',
+        );
+
+        // A user who moderates nothing cannot reach the queue at all.
+        $this->actingAs($this->makeUser(['username' => 'nobodymod']));
+        self::assertSame(403, $this->get('/mod/appeals')->status());
+
+        // Admin still sees both appeals site-wide.
+        $this->actingAs($this->admin);
+        $adminQueue = $this->get('/mod/appeals');
+        $this->assertSeeText($adminQueue, 'Reinstate my first-board reply.');
+        $this->assertSeeText($adminQueue, 'Reinstate my second-board reply.');
     }
 }

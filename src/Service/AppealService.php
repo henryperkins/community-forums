@@ -9,6 +9,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationAppealRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\NotificationRepository;
@@ -28,6 +29,7 @@ final class AppealService
         private UserRepository $users,
         private ModerationService $moderation,
         private UserModerationService $userModeration,
+        private BoardModeratorRepository $boardMods,
     ) {
     }
 
@@ -162,13 +164,22 @@ final class AppealService
         return $this->appeals->forUser($userId);
     }
 
-    /** @return array<int,array<string,mixed>> */
+    /**
+     * Staff appeal queue, scoped to the actor's board authority (mirrors the
+     * report queue): admins see every open appeal; a board moderator sees only
+     * post appeals in boards they moderate. A user who moderates nothing is
+     * refused. Authority comes from board_moderators, never a bare users.role.
+     *
+     * @return array<int,array<string,mixed>>
+     */
     public function queue(User $actor): array
     {
-        if (!$actor->isModerator()) {
+        $isAdmin = $actor->isAdmin();
+        $boardIds = $isAdmin ? [] : $this->boardMods->boardsFor($actor->id());
+        if (!$isAdmin && $boardIds === []) {
             throw new ForbiddenException('Staff access required.');
         }
-        return $this->appeals->openQueue();
+        return $this->appeals->openQueue($isAdmin, $boardIds);
     }
 
     /** @param array<string,mixed> $appeal */

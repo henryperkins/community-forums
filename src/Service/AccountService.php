@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Config;
+use App\Core\Database;
 use App\Core\FeatureFlags;
 use App\Core\ValidationException;
 use App\Domain\User;
@@ -23,6 +24,7 @@ use App\Security\WriteGate;
 final class AccountService
 {
     public function __construct(
+        private Database $db,
         private UserRepository $users,
         private PasswordHasher $hasher,
         private WriteGate $writeGate,
@@ -82,18 +84,23 @@ final class AccountService
             throw new ValidationException($errors, $input);
         }
 
-        $this->users->updateProfileFull(
-            $user->id(),
-            $displayName !== '' ? $displayName : null,
-            $bio !== '' ? $bio : null,
-            $location !== '' ? $location : null,
-            $website !== '' ? $website : null,
-            $pronouns !== '' ? $pronouns : null,
-            $signature !== '' ? $signature : null,
-        );
-        if ($this->flags?->enabled('custom_profile_fields') && $this->profileFields !== null) {
-            $this->profileFields->replaceForUser($user->id(), $customFields);
-        }
+        // The display-name/bio row and the custom-field rows are one logical
+        // profile update — write them atomically so a failure can't commit one
+        // without the other.
+        $this->db->transaction(function () use ($user, $displayName, $bio, $location, $website, $pronouns, $signature, $customFields): void {
+            $this->users->updateProfileFull(
+                $user->id(),
+                $displayName !== '' ? $displayName : null,
+                $bio !== '' ? $bio : null,
+                $location !== '' ? $location : null,
+                $website !== '' ? $website : null,
+                $pronouns !== '' ? $pronouns : null,
+                $signature !== '' ? $signature : null,
+            );
+            if ($this->flags?->enabled('custom_profile_fields') && $this->profileFields !== null) {
+                $this->profileFields->replaceForUser($user->id(), $customFields);
+            }
+        });
     }
 
     /** @param array<string,mixed> $input @param array<string,string> $errors @return array<int,array{label:string,value:string}> */

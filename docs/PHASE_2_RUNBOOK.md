@@ -75,6 +75,22 @@ covered by `AppFeatureFlagTest`.
   send mail. Use **Refresh SPF/DKIM status** after DNS changes. Blocked workers
   leave rows `queued` and stamp the blocked reason in `email_deliveries.error`.
 
+## 3a. Account deletion grace (ADR 0006)
+
+Self-serve account deletion is a 30-day reversible grace: a request flips the
+account to `pending_deletion` and schedules a purge; cancelling reactivates it.
+A cron worker completes due deletions by anonymising PII (email, profile,
+sessions, DMs). Nothing purges until the grace window elapses, and the purge
+never touches an account whose status is no longer `pending_deletion`.
+
+- **Run the purge on cron** (same cadence as `worker:purge-ips`):
+  ```bash
+  php bin/console worker:purge-accounts [limit]   # default 100; idempotent + audited
+  ```
+- The `account_lifecycle` flag gates the member-facing export/deactivate/delete
+  routes. It ships **deploy-dark**; enable it per operator once acceptance
+  evidence lands. With the worker unscheduled, deletion requests never complete.
+
 ## 4. Counter & reputation reconciliation
 
 Denormalised counters are maintained transactionally, but a repair command exists

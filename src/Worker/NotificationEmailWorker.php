@@ -157,11 +157,17 @@ final class NotificationEmailWorker
         if ($subject === '') {
             $subject = 'Announcement from ' . $siteName;
         }
-        $url = rtrim((string) $this->config->get('app.url', ''), '/') . '/';
-        $text = $siteName . " announcement\n\n" . $message . "\n\n" . $url;
+        $appUrl = (string) $this->config->get('app.url', '');
+        $url = rtrim($appUrl, '/') . '/';
+        // A broadcast announcement is bulk mail; carry a one-click unsubscribe
+        // link like every other email path (CAN-SPAM / deliverability).
+        $unsub = UnsubscribeController::link($appUrl, (string) ($row['email'] ?? ''), (string) $this->config->get('app.key', ''));
+        $text = $siteName . " announcement\n\n" . $message . "\n\n" . $url
+            . "\n\nUnsubscribe from these emails: " . $unsub;
         $html = '<p><strong>' . htmlspecialchars($siteName, ENT_QUOTES) . ' announcement</strong></p>'
             . '<p>' . nl2br(htmlspecialchars($message, ENT_QUOTES)) . '</p>'
-            . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">View the forum</a></p>';
+            . '<p><a href="' . htmlspecialchars($url, ENT_QUOTES) . '">View the forum</a></p>'
+            . '<p style="font-size:12px;color:#888"><a href="' . htmlspecialchars($unsub, ENT_QUOTES) . '">Unsubscribe</a></p>';
 
         return ['subject' => $subject, 'text' => $text, 'html' => $html];
     }

@@ -41,7 +41,7 @@ final class FeatureFlags
         'drafts' => true,            // local autosave drafts + Drafts view (P3-03)
         'uploads' => true,           // image upload/paste/drop + private delivery (P3-04)
         'anti_abuse' => true,        // central limiter, content filters, holds, audit (P3-05)
-        'appeals' => true,           // self-service moderation appeals + staff queue (P3 Gate B carryover)
+        'appeals' => false,          // self-service moderation appeals + staff queue (ADR 0007 carryover; deploy-dark)
         'branding' => true,          // operator branding: name/logo/favicon/colors (P3-07)
         'custom_css' => false,        // guarded raw CSS editor for trusted operators (ADR 0009)
         'seo' => true,               // public metadata, sitemap, robots (P3-10)
@@ -69,6 +69,7 @@ final class FeatureFlags
         'bookmark_folders' => false,   // private folders for starred/bookmarked threads
         'saved_feeds' => false,        // private saved feed filters/digest composition
         'custom_profile_fields' => false, // bounded extra public profile fields
+        'account_lifecycle' => false,  // self-serve export/deactivate/reactivate/30-day-grace delete (ADR 0006; deploy-dark)
         'automated_context' => false,  // since-last-read context + suggested related topics
 
         // ── Phase 5 Gate A (deploy-dark foundation/workstreams) ─────────────

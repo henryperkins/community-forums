@@ -3,7 +3,7 @@
 **Status:** engineering closeout complete with explicit deferrals; product-owner accepted as the Phase 5 entry baseline on 2026-06-28
 **Last updated:** 2026-06-29
 **Branch:** accepted baseline on `main`; carryover progress on `phase3-4-closeout-completion`
-**Suite:** accepted baseline `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green. Current carryover branch `composer test` → 744 tests / 2908 assertions, green
+**Suite:** accepted baseline `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green. Current carryover branch `composer test` → 748 tests / 2938 assertions, green
 
 > 2026-06-29 carryover note: branch `phase3-4-closeout-completion` implements
 > additional ADR 0003 carryovers behind dark flags, but it does not complete all
@@ -49,6 +49,19 @@ Implementation gates are now recorded for policy-heavy carryovers:
 `docs/adr/0010-server-draft-sync-scope.md`, and
 `docs/adr/0011-public-plugin-runtime-scope.md`.
 
+2026-06-30 review-hardening pass (pre-merge): `appeals` and the new
+`account_lifecycle` slice now default deploy-dark and are route-gated with
+dark-assertion coverage; account lifecycle request/deactivate/reactivate/cancel
+and profile updates run inside `$db->transaction()`; the deletion purge is wired
+to `php bin/console worker:purge-accounts` (runbook §3a) and refuses to anonymize
+any account no longer `pending_deletion`; the staff appeal queue is board-scoped
+like the report queue; and broadcast announcement emails carry an unsubscribe
+link. Still-open carryovers from the same review (tracked, not blocking): the
+split/merge counter path still calls `RepairService::repairAll()` rather than
+maintaining scoped counters in-transaction; the member-facing appeal-submission
+UI is not yet rendered; and `SCHEMA.md` has not been updated for migrations
+0059–0062.
+
 The carryover branch has deploy-dark implementation evidence for
 badge rules, post/DM/summary content references, link previews, expanded files,
 polls, custom emoji, slash/GIPHY insertion, board folders, saved feed filters,
@@ -66,7 +79,7 @@ runbook evidence is attached.
 - Carryover ledger: `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
 - Current carryover stopping point: `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
 - Full suite: `./vendor/bin/phpunit` → 456 tests / 1635 assertions.
-- Current carryover branch full suite: `composer test` → 744 tests / 2908 assertions.
+- Current carryover branch full suite: `composer test` → 748 tests / 2938 assertions.
 - Current carryover focused suite: `AppContentReferenceTest`, `AppAutomatedContextTest`, `AppProfileMediaTest`, `RelatedTopicRefreshWorkerTest` → 13 tests / 72 assertions.
 - Slash/GIPHY focused suite: `AppCustomEmojiGiphyTest` → 5 tests / 26 assertions.
 - Focused Phase 4 regressions: `tests/Integration/Core/AppPhase4GateATest.php`.

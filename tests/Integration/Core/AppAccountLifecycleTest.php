@@ -8,11 +8,31 @@ use App\Service\AccountLifecycleService;
 use App\Repository\AccountDeletionRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SessionRepository;
+use App\Repository\SettingRepository;
 use App\Security\PasswordHasher;
 use Tests\Support\TestCase;
 
 final class AppAccountLifecycleTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Account lifecycle/export/delete ships deploy-dark (ADR 0006); enable it.
+        (new SettingRepository($this->db))->set('features', ['account_lifecycle' => true]);
+    }
+
+    private function lifecycleService(): AccountLifecycleService
+    {
+        return new AccountLifecycleService(
+            $this->db,
+            $this->users(),
+            new AccountDeletionRepository($this->db),
+            new SessionRepository($this->db),
+            new ModerationLogRepository($this->db),
+            new PasswordHasher(),
+        );
+    }
+
     public function test_user_can_export_account_archive_without_secrets(): void
     {
         $this->makeAdmin();
@@ -116,14 +136,7 @@ final class AppAccountLifecycleTest extends TestCase
             [(int) $user['id']],
         );
 
-        $result = (new AccountLifecycleService(
-            $this->db,
-            $this->users(),
-            new AccountDeletionRepository($this->db),
-            new SessionRepository($this->db),
-            new ModerationLogRepository($this->db),
-            new PasswordHasher(),
-        ))->purgeDue();
+        $result = $this->lifecycleService()->purgeDue();
 
         self::assertSame(['purged' => 1], $result);
         $row = $this->users()->find((int) $user['id']);
@@ -140,5 +153,34 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM sessions WHERE user_id = ?', [(int) $user['id']]));
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE thread_id = ?', [(int) $thread['thread_id']]));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'account_purged' AND actor_id IS NULL"));
+    }
+
+    public function test_purge_skips_request_when_account_is_no_longer_pending_deletion(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser([
+            'username' => 'reactivated-before-purge',
+            'email' => 'rbp@example.test',
+            'password' => 'password123',
+        ]);
+        $this->actingAs($user);
+        $this->get('/settings/account/lifecycle');
+        $this->post('/settings/account/delete/request', ['current_password' => 'password123']);
+        // The grace window elapses…
+        $this->db->run(
+            "UPDATE account_deletion_requests SET purge_after = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 SECOND) WHERE user_id = ?",
+            [(int) $user['id']],
+        );
+        // …but the account is no longer pending_deletion (a desync, or an operator
+        // flipped the status back). The purge must NOT anonymize an active account.
+        $this->users()->setStatus((int) $user['id'], 'active');
+
+        $result = $this->lifecycleService()->purgeDue();
+
+        self::assertSame(['purged' => 0], $result);
+        $row = $this->users()->find((int) $user['id']);
+        self::assertSame('active', (string) $row['status'], 'a non-pending_deletion account must never be anonymized');
+        self::assertSame('rbp@example.test', (string) $row['email'], 'PII is preserved when status is not pending_deletion');
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'account_purged'"));
     }
 }

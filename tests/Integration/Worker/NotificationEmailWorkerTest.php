@@ -135,6 +135,30 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(3, $mailer->count(), 'every queued send delivered exactly once across batches');
     }
 
+    public function testSystemAnnouncementEmailIncludesUnsubscribeLink(): void
+    {
+        // A broadcast announcement email is bulk mail; like every other email path
+        // it must carry a one-click unsubscribe link (CAN-SPAM / deliverability).
+        $recipient = $this->makeUser(['email' => 'sys@example.test']);
+        (new EmailDeliveryRepository($this->db))->enqueue(
+            (int) $recipient['id'],
+            'sys@example.test',
+            'system',
+            'Heads up',
+            null,
+            ['type' => 'announcement', 'version' => 1, 'message' => 'Scheduled maintenance tonight.'],
+        );
+        $mailer = new ArrayMailer();
+
+        $stats = $this->worker($mailer)->run();
+
+        self::assertSame(1, $stats['sent']);
+        $message = $mailer->to('sys@example.test')[0];
+        self::assertStringContainsString('Scheduled maintenance tonight.', (string) $message['text']);
+        self::assertStringContainsString('/unsubscribe?', (string) $message['text'], 'system email text must include an unsubscribe link');
+        self::assertStringContainsString('/unsubscribe?', (string) $message['html'], 'system email html must include an unsubscribe link');
+    }
+
     public function testConcurrentRunBacksOffWhileOutboxIsLocked(): void
     {
         // EMAIL-1: a second worker run must not drain the outbox while another

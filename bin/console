@@ -11,10 +11,12 @@ use App\Core\Migrator;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
+use App\Repository\AccountDeletionRepository;
 use App\Repository\EmailDomainStatusRepository;
 use App\Repository\BadgeRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
+use App\Repository\SessionRepository;
 use App\Repository\PostRepository;
 use App\Repository\ServiceSecretRepository;
 use App\Repository\SettingRepository;
@@ -22,7 +24,9 @@ use App\Repository\UserRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\EgressGuard;
+use App\Security\PasswordHasher;
 use App\Security\SecretBox;
+use App\Service\AccountLifecycleService;
 use App\Service\LinkPreviewService;
 use App\Service\Webhook\CurlWebhookTransport;
 use App\Service\BadgeService;
@@ -245,6 +249,22 @@ try {
             $log(sprintf('IP retention purge (>%d days): sessions=%d posts=%d (cutoff %s UTC)', $stats['days'], $stats['sessions'], $stats['posts'], $stats['cutoff']));
             break;
 
+        case 'worker:purge-accounts':
+            // Grace-period account deletion (ADR 0006). Anonymises accounts whose
+            // 30-day deletion-grace window has elapsed; idempotent + audited. Run
+            // on the same cron cadence as the other purge workers.
+            $db = $database();
+            $stats = (new AccountLifecycleService(
+                $db,
+                new UserRepository($db),
+                new AccountDeletionRepository($db),
+                new SessionRepository($db),
+                new ModerationLogRepository($db),
+                new PasswordHasher(),
+            ))->purgeDue((int) ($argv[2] ?? 100));
+            $log(sprintf('Account purge: anonymised %d due deletion(s).', $stats['purged']));
+            break;
+
         case 'worker:attachments':
             // Reclaim orphaned upload storage (P3-04): abandoned temp uploads
             // past their TTL + finalized media whose parent post was deleted.
@@ -376,6 +396,7 @@ try {
             $log('  worker:email [limit]  Drain the instant notification-email queue');
             $log('  worker:digest         Send due daily digests');
             $log('  worker:purge-ips [days]  Anonymise sessions.ip/posts.ip older than N days (default 90)');
+            $log('  worker:purge-accounts [limit]  Anonymise accounts whose 30-day deletion grace has elapsed');
             $log('  worker:attachments    Sweep orphaned/deleted-parent upload files');
             $log('  worker:attachment-scans [minutes]  Fail stale expanded-file scans closed');
             $log('  worker:previews [limit]  Fetch queued allowlisted link-preview metadata');

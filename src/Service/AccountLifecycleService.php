@@ -90,17 +90,19 @@ final class AccountLifecycleService
         $this->assertNotFinalActiveAdmin($user);
 
         $before = $this->users->find($user->id());
-        $this->users->setStatus($user->id(), 'deactivated');
-        $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
-        $this->logs->log([
-            'actor_id' => $user->id(),
-            'action' => 'account_deactivated',
-            'target_type' => 'user',
-            'target_id' => $user->id(),
-            'reason' => 'self_service',
-            'before' => ['status' => $before['status'] ?? null],
-            'after' => ['status' => 'deactivated'],
-        ]);
+        $this->db->transaction(function () use ($user, $before, $currentSessionId): void {
+            $this->users->setStatus($user->id(), 'deactivated');
+            $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
+            $this->logs->log([
+                'actor_id' => $user->id(),
+                'action' => 'account_deactivated',
+                'target_type' => 'user',
+                'target_id' => $user->id(),
+                'reason' => 'self_service',
+                'before' => ['status' => $before['status'] ?? null],
+                'after' => ['status' => 'deactivated'],
+            ]);
+        });
     }
 
     public function reactivate(User $user): void
@@ -110,16 +112,18 @@ final class AccountLifecycleService
             throw new ValidationException(['account' => 'Only deactivated accounts can be reactivated here.']);
         }
 
-        $this->users->setStatus($user->id(), 'active');
-        $this->logs->log([
-            'actor_id' => $user->id(),
-            'action' => 'account_reactivated',
-            'target_type' => 'user',
-            'target_id' => $user->id(),
-            'reason' => 'self_service',
-            'before' => ['status' => 'deactivated'],
-            'after' => ['status' => 'active'],
-        ]);
+        $this->db->transaction(function () use ($user): void {
+            $this->users->setStatus($user->id(), 'active');
+            $this->logs->log([
+                'actor_id' => $user->id(),
+                'action' => 'account_reactivated',
+                'target_type' => 'user',
+                'target_id' => $user->id(),
+                'reason' => 'self_service',
+                'before' => ['status' => 'deactivated'],
+                'after' => ['status' => 'active'],
+            ]);
+        });
     }
 
     public function requestDeletion(User $user, string $currentPassword, ?string $currentSessionId = null): void
@@ -132,17 +136,19 @@ final class AccountLifecycleService
         }
 
         $purgeAfter = gmdate('Y-m-d H:i:s', time() + 30 * 86400);
-        $requestId = $this->deletions->create($user->id(), $user->id(), $purgeAfter, 'self_service');
-        $this->users->setStatus($user->id(), 'pending_deletion');
-        $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
-        $this->logs->log([
-            'actor_id' => $user->id(),
-            'action' => 'account_deletion_requested',
-            'target_type' => 'user',
-            'target_id' => $user->id(),
-            'reason' => 'self_service',
-            'after' => ['request_id' => $requestId, 'purge_after' => $purgeAfter],
-        ]);
+        $this->db->transaction(function () use ($user, $purgeAfter, $currentSessionId): void {
+            $requestId = $this->deletions->create($user->id(), $user->id(), $purgeAfter, 'self_service');
+            $this->users->setStatus($user->id(), 'pending_deletion');
+            $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
+            $this->logs->log([
+                'actor_id' => $user->id(),
+                'action' => 'account_deletion_requested',
+                'target_type' => 'user',
+                'target_id' => $user->id(),
+                'reason' => 'self_service',
+                'after' => ['request_id' => $requestId, 'purge_after' => $purgeAfter],
+            ]);
+        });
     }
 
     public function cancelDeletion(User $user): void
@@ -151,7 +157,10 @@ final class AccountLifecycleService
         if ($pending === null) {
             throw new ValidationException(['account' => 'No pending deletion request was found.']);
         }
-        if ($this->deletions->cancel((int) $pending['id'], $user->id())) {
+        $this->db->transaction(function () use ($user, $pending): void {
+            if (!$this->deletions->cancel((int) $pending['id'], $user->id())) {
+                return;
+            }
             $this->users->setStatus($user->id(), 'active');
             $this->logs->log([
                 'actor_id' => $user->id(),
@@ -162,7 +171,7 @@ final class AccountLifecycleService
                 'before' => ['request_id' => (int) $pending['id'], 'status' => 'pending'],
                 'after' => ['request_id' => (int) $pending['id'], 'status' => 'canceled'],
             ]);
-        }
+        });
     }
 
     /** @return array{purged:int} */
@@ -173,7 +182,12 @@ final class AccountLifecycleService
             $this->db->transaction(function () use ($request, &$purged): void {
                 $userId = (int) $request['user_id'];
                 $row = $this->users->find($userId);
-                if ($row === null || !$this->deletions->markPurged((int) $request['id'])) {
+                // Defence in depth: never anonymize an account that is no longer
+                // pending_deletion (e.g. reactivated, or a legacy status desync).
+                if ($row === null || (string) ($row['status'] ?? '') !== 'pending_deletion') {
+                    return;
+                }
+                if (!$this->deletions->markPurged((int) $request['id'])) {
                     return;
                 }
 

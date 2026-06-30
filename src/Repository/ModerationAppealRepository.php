@@ -78,17 +78,42 @@ final class ModerationAppealRepository
         );
     }
 
-    /** @return array<int,array<string,mixed>> */
-    public function openQueue(int $limit = 100): array
+    /**
+     * Open appeals for the staff queue, board-scoped like the report queue
+     * (P2-08): an admin sees every open appeal; a board-assigned moderator sees
+     * only post appeals whose post lives in a board they moderate (user-target
+     * ban/suspend appeals are admin-only and never surface to board moderators).
+     *
+     * @param list<int> $boardIds boards the non-admin actor moderates
+     * @return array<int,array<string,mixed>>
+     */
+    public function openQueue(bool $isAdmin, array $boardIds, int $limit = 100): array
     {
         $limit = max(1, min(500, $limit));
+        if ($isAdmin) {
+            return $this->db->fetchAll(
+                'SELECT a.*, u.username AS appellant_username, u.display_name AS appellant_display_name
+                 FROM moderation_appeals a
+                 JOIN users u ON u.id = a.appellant_id
+                 WHERE a.status = \'open\'
+                 ORDER BY a.created_at ASC, a.id ASC
+                 LIMIT ' . $limit,
+            );
+        }
+        if ($boardIds === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($boardIds), '?'));
         return $this->db->fetchAll(
             'SELECT a.*, u.username AS appellant_username, u.display_name AS appellant_display_name
              FROM moderation_appeals a
              JOIN users u ON u.id = a.appellant_id
-             WHERE a.status = \'open\'
+             JOIN posts p ON a.target_type = \'post\' AND p.id = a.target_id
+             JOIN threads t ON t.id = p.thread_id
+             WHERE a.status = \'open\' AND t.board_id IN (' . $place . ')
              ORDER BY a.created_at ASC, a.id ASC
              LIMIT ' . $limit,
+            $boardIds,
         );
     }
 }
