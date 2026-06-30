@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.22 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-29
+**Status:** v1.23 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-30
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -110,6 +110,13 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 90 | `board_folder_boards` | Accounts / boards | 4 | ADR 0003 carryover / migration 0058 |
 | 91 | `saved_feed_filters` | Accounts / feeds | 4 | ADR 0003 carryover / migration 0058 |
 | 92 | `since_last_read_context` | Reading context | 4 | ADR 0003 carryover / migration 0058 |
+| 93 | `account_deletion_requests` | Accounts / lifecycle | 2 | ADR 0006 carryover / migration 0059 |
+| 94 | `moderation_appeals` | Admin / moderation | 2 | ADR 0007 carryover / migration 0060 |
+| 95 | `moderation_appeal_events` | Admin / moderation | 2 | ADR 0007 carryover / migration 0060 |
+| 96 | `email_domain_status` | Admin / email | 2 | P2-04 carryover / migration 0061 |
+| 97 | `thread_bookmark_folders` | Accounts / bookmarks | 4 | ADR 0003 carryover / migration 0062 |
+| 98 | `thread_bookmark_folder_threads` | Accounts / bookmarks | 4 | ADR 0003 carryover / migration 0062 |
+| 99 | `user_profile_fields` | Accounts / profile | 4 | ADR 0003 carryover / migration 0062 |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -139,6 +146,12 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > the **Phase 4 carryover foundation** (migration `0058`): additive, feature-flag
 > dark shapes for previews, expanded files, polls, custom emoji, personal board
 > organization, saved feeds, profile moderation, and since-last-read context.
+>
+> Tables 93–99 and the reconciled `users.status` / `email_deliveries.payload`
+> deltas are the **Phase 2–4 carryover completion** (migrations `0059`–`0062`):
+> additive, deploy-dark account-lifecycle, moderation-appeals, email-domain, and
+> bookmark/profile-field shapes (see §4B). `account_lifecycle` and `appeals`
+> default dark; `bookmark_folders` and `custom_profile_fields` were already dark.
 
 ---
 
@@ -895,8 +908,35 @@ Carryover implementation note (2026-06-29): the `0058` shapes are no longer all
 inert. Link previews, expanded files, polls, custom emoji, board folders, saved
 feed filters, since-last-read context, related-topic refresh, profile media, and
 the existing `0048` content-reference and badge-rule shapes have deploy-dark
-service/controller/worker evidence. Split/merge, appeals, account deactivation,
-bookmark folders, and custom profile fields remain open carryovers.
+service/controller/worker evidence. Appeals, account lifecycle/export/delete,
+bookmark folders, and custom profile fields now have deploy-dark implementation
+evidence too (migrations `0059`–`0062`, see §4B). Split/merge remains an open
+carryover whose counter path still calls `RepairService::repairAll()`.
+
+---
+
+## 4B. Phase 2–4 carryover completion (migrations 0059–0062)
+
+Migrations `0059`–`0062` add the remaining ADR 0006/0007 and P2-04 carryover
+shapes that PR #26 implemented. All are additive; the member-facing surfaces are
+feature-flag dark (`account_lifecycle`, `appeals` default off; `bookmark_folders`,
+`custom_profile_fields` were already dark) until each has browser/a11y/runbook
+acceptance evidence. "Inert schema is not evidence" (DESIGN §13).
+
+Modified existing tables:
+
+- `users.status` **ENUM widened** to `('active','deactivated','pending_deletion','deleted','suspended','banned')` (migration `0059`) for self-service lifecycle states. Accounts are never hard-deleted; the grace-period purge anonymizes PII while preserving content + audit history.
+- `email_deliveries` adds `payload JSON NULL AFTER subject` (migration `0061`) so a `kind='system'` broadcast carries a durable per-recipient payload the worker renders at send time.
+
+New tables:
+
+- `account_deletion_requests(id, user_id, requested_by, status, requested_at, purge_after, canceled_at, canceled_by, purged_at, reason)` (`0059`) with `KEY (user_id, status)`, due-purge `KEY (status, purge_after)`, and user/requester FKs (CASCADE) + `canceled_by` FK (SET NULL). `status ENUM('pending','canceled','purged')`; the `worker:purge-accounts` cron anonymizes rows past `purge_after`.
+- `moderation_appeals(id, appellant_id, target_type, target_id, moderation_log_id, original_action, target_summary, reason, status, resolution_note, resolved_by, resolved_at, created_at, updated_at)` (`0060`) with appellant/status/target/log indexes; `target_type ENUM('post','user')`, `status ENUM('open','upheld','modified','reversed','dismissed')`; appellant FK (CASCADE), log/resolver FKs (SET NULL). Durable, never physically deleted by cleanup.
+- `moderation_appeal_events(id, appeal_id, actor_id, event, note, created_at)` (`0060`) — append-only state-change log; `event ENUM('opened','upheld','modified','reversed','dismissed')`; appeal FK (CASCADE), actor FK (SET NULL).
+- `email_domain_status(domain PK, dkim_selector, spf_status, dkim_status, details JSON, checked_at, updated_at)` (`0061`) caches SPF/DKIM verification state for the configured From domain; `spf_status`/`dkim_status ENUM('unknown','pass','fail')`. Workers refuse to send while the required domain is unverified.
+- `thread_bookmark_folders(id, user_id, name, position, created_at, updated_at)` (`0062`) with unique `(user_id, name)`, user-position index, user FK (CASCADE) — private folders for bookmarked threads.
+- `thread_bookmark_folder_threads(folder_id, thread_id, position, created_at)` (`0062`) PK `(folder_id, thread_id)`, thread index, folder/thread FKs (CASCADE).
+- `user_profile_fields(id, user_id, label, value, position, created_at, updated_at)` (`0062`) with unique `(user_id, position)` and user FK (CASCADE) — bounded (≤3) extra public profile fields; `label VARCHAR(40)`, `value VARCHAR(160)`.
 
 ---
 
@@ -1009,11 +1049,11 @@ are removed.
 
 ## 6. Phase map (suggested build cut)
 
-This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above, but its remaining tables (appeals, automation-rules, `drafts`, bookmark-folders, and custom-profile-fields) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
+This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 three-phase roadmap (DoD: *register → log in → read → start a thread → reply, server-rendered*) and the USER §8 / ADMIN §11 deltas. Phases 1–2 are fully consolidated below. **Phase 3 is partially consolidated:** `attachments`, `plugins`, `webhooks`, `webhook_deliveries`, `api_tokens`, `email_deliveries`, and the TOTP/recovery carryover now have DDL above; appeals, bookmark-folders, and custom-profile-fields are now specced as DDL in **§4B** (migrations `0060`/`0062`); its remaining tables (automation-rules, `drafts`) are **identified as schema gaps in PHASE_3_PLAN §8.2 and are not yet specced as DDL**. Phases 4–7 list their domains here as **schema requirements**, with DDL defined in each phase plan and folded back here on acceptance.
 
 - **Phase 1 (MVP backend):** `users`, `sessions`, `verifications`, `categories`, `boards`, `board_slug_history`, `threads`, `posts`, `settings`, `moderation_log`. → See **[PHASE_1_MIGRATIONS.md](PHASE_1_MIGRATIONS.md)** for the exact Phase‑1 column cut, migration order (`0001`–`0010`), and which columns are held back to Phases 2–3.
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
-- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built deploy-dark by `0057`), `api_tokens`, plus appeals, automation-rule, draft-sync, bookmark-folder, and custom-profile-field tables **identified as schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
+- **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built deploy-dark by `0057`), `api_tokens`; appeals, bookmark-folder, and custom-profile-field tables are now specced as DDL in **§4B** (migrations `0060`/`0062`); automation-rule and draft-sync tables remain **schema gaps in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
 - **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), webhook delivery slice (`0057`), and code-only first-party hook registry are reconciled here. The remaining Phase 5 schema (theme packages, extension storage/jobs, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#12/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
@@ -1063,6 +1103,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.23 | 2026-06-30 | Reconciled the **Phase 2–4 carryover completion** migrations `0059`–`0062` in new **§4B**: widened `users.status` ENUM (`deactivated`/`pending_deletion`/`deleted`), added `email_deliveries.payload JSON`, and new tables `account_deletion_requests` (`0059`), `moderation_appeals`/`moderation_appeal_events` (`0060`), `email_domain_status` (`0061`), `thread_bookmark_folders`/`thread_bookmark_folder_threads`/`user_profile_fields` (`0062`). Added table-index rows 93–99. Additive + deploy-dark (`account_lifecycle`/`appeals` default off; `bookmark_folders`/`custom_profile_fields` already dark). |
 | v1.22 | 2026-06-29 | Reconciled Phase 4 carryover behavior notes after deploy-dark implementation evidence for content references, automated context, related-topic refresh, profile media/signature hardening, and the earlier `0058` carryover slices; no schema shape change. |
 | v1.21 | 2026-06-29 | Added Phase 4 carryover migration `0058`: `link_previews`, expanded-file scanner/quarantine columns on `attachments`, polls, `custom_emoji`, personal `board_folders`/`saved_feed_filters`, since-last-read context, profile-moderation audit columns on `users`, and widened `reactions.emoji`. |
 | v1.20 | 2026-06-29 | Documented B2 SP4 as code-only schema-neutral work: `first_party_hooks` gates first-party domain producers that enqueue public-board events through the existing webhook ledger; no plugin manifests, lifecycle tables, sandbox, service principals, or third-party PHP execution are added. |
