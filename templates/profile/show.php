@@ -36,7 +36,7 @@ $profileUrl = '/u/' . $profile['username'];
         <div class="profile-aside">
             <div class="profile-rep">
                 <span class="profile-rep-value"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $profile['reputation']) ?></span>
-                <span class="profile-rep-label">Reputation</span>
+                <span class="profile-rep-label">Regard</span>
             </div>
             <?php if (($current_user !== null) && empty($is_self)): ?>
                 <div class="profile-actions">
@@ -67,50 +67,104 @@ $profileUrl = '/u/' . $profile['username'];
         </div>
     </header>
 
+    <?php // Marks of esteem (§5.4): the badge row sits in the identity header, always visible. ?>
     <?php if (!empty($community) && !empty($badges)): ?>
         <?= $this->partial('partials/badges', ['badges' => $badges]) ?>
     <?php endif; ?>
 
-    <?php if (($bio_html ?? '') !== ''): ?>
-        <section class="profile-bio">
-            <h2>About</h2>
-            <div class="prose"><?= $bio_html /* pre-sanitised */ ?></div>
-        </section>
-    <?php endif; ?>
+    <?php
+    // Activity tabs (§5.4): Overview / Topics / Posts / Commends. Each is a real
+    // ?tab= URL (works without JS, crawlable); Commends only exists when the
+    // community layer is on. Unknown/guarded values fall back to Overview.
+    $activeTab = (string) ($tab ?? 'overview');
+    if ($activeTab === 'commends' && empty($community)) { $activeTab = 'overview'; }
+    ?>
+    <nav class="profile-tabs" aria-label="Profile activity">
+        <a class="profile-tab<?= $activeTab === 'overview' ? ' is-active' : '' ?>"<?= $activeTab === 'overview' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>">Overview</a>
+        <a class="profile-tab<?= $activeTab === 'threads' ? ' is-active' : '' ?>"<?= $activeTab === 'threads' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=threads">Topics</a>
+        <a class="profile-tab<?= $activeTab === 'posts' ? ' is-active' : '' ?>"<?= $activeTab === 'posts' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=posts">Posts</a>
+        <?php if (!empty($community)): ?>
+            <a class="profile-tab<?= $activeTab === 'commends' ? ' is-active' : '' ?>"<?= $activeTab === 'commends' ? ' aria-current="page"' : '' ?> href="<?= $e($profileUrl) ?>?tab=commends">Commends</a>
+        <?php endif; ?>
+    </nav>
 
-    <?php if (!empty($custom_fields)): ?>
-        <section class="profile-fields">
-            <h2>Profile details</h2>
-            <dl class="profile-custom-fields">
-                <?php foreach ($custom_fields as $field): ?>
-                    <div><dt><?= $e($field['label']) ?></dt><dd><?= $e($field['value']) ?></dd></div>
-                <?php endforeach; ?>
-            </dl>
-        </section>
-    <?php endif; ?>
-
-    <?php if (!empty($recent_threads)): ?>
+    <?php if ($activeTab === 'overview'): ?>
+        <?php if (($bio_html ?? '') !== ''): ?>
+            <section class="profile-bio">
+                <h2>About</h2>
+                <div class="prose"><?= $bio_html /* pre-sanitised */ ?></div>
+            </section>
+        <?php endif; ?>
+        <?php if (!empty($custom_fields)): ?>
+            <section class="profile-fields">
+                <h2>Profile details</h2>
+                <dl class="profile-custom-fields">
+                    <?php foreach ($custom_fields as $field): ?>
+                        <div><dt><?= $e($field['label']) ?></dt><dd><?= $e($field['value']) ?></dd></div>
+                    <?php endforeach; ?>
+                </dl>
+            </section>
+        <?php endif; ?>
+        <?php if (!empty($recent_threads)): ?>
+            <section class="profile-threads">
+                <h2>Recent topics</h2>
+                <ul class="link-list">
+                    <?php foreach (array_slice($recent_threads, 0, 5) as $t): ?>
+                        <li><a href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?>"><?= $e($t['title']) ?></a> <span class="muted">in #<?= $e($t['board_slug']) ?></span></li>
+                    <?php endforeach; ?>
+                </ul>
+            </section>
+        <?php endif; ?>
+        <?php if (!empty($recent_posts)): ?>
+            <section class="profile-posts">
+                <h2>Recent posts</h2>
+                <ul class="link-list">
+                    <?php foreach (array_slice($recent_posts, 0, 5) as $p): ?>
+                        <li>
+                            <a href="/t/<?= (int) $p['thread_id'] ?>-<?= $e($p['thread_slug']) ?>#p<?= (int) $p['id'] ?>"><?= $e($p['thread_title']) ?></a>
+                            <span class="muted">— <?= $e(mb_strimwidth((string) $p['body'], 0, 90, '…')) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </section>
+        <?php endif; ?>
+        <?php if (($bio_html ?? '') === '' && empty($custom_fields) && empty($recent_threads) && empty($recent_posts)): ?>
+            <p class="profile-panel-empty">No public activity yet.</p>
+        <?php endif; ?>
+    <?php elseif ($activeTab === 'threads'): ?>
         <section class="profile-threads">
-            <h2>Recent topics</h2>
-            <ul class="link-list">
-                <?php foreach ($recent_threads as $t): ?>
-                    <li><a href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?>"><?= $e($t['title']) ?></a> <span class="muted">in #<?= $e($t['board_slug']) ?></span></li>
-                <?php endforeach; ?>
-            </ul>
+            <h2>Topics</h2>
+            <?php if (!empty($recent_threads)): ?>
+                <ul class="link-list">
+                    <?php foreach ($recent_threads as $t): ?>
+                        <li><a href="/t/<?= (int) $t['id'] ?>-<?= $e($t['slug']) ?>"><?= $e($t['title']) ?></a> <span class="muted">in #<?= $e($t['board_slug']) ?></span></li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p class="profile-panel-empty">No topics started yet.</p>
+            <?php endif; ?>
         </section>
-    <?php endif; ?>
-
-    <?php if (!empty($recent_posts)): ?>
+    <?php elseif ($activeTab === 'posts'): ?>
         <section class="profile-posts">
-            <h2>Recent posts</h2>
-            <ul class="link-list">
-                <?php foreach ($recent_posts as $p): ?>
-                    <li>
-                        <a href="/t/<?= (int) $p['thread_id'] ?>-<?= $e($p['thread_slug']) ?>#p<?= (int) $p['id'] ?>"><?= $e($p['thread_title']) ?></a>
-                        <span class="muted">— <?= $e(mb_strimwidth((string) $p['body'], 0, 90, '…')) ?></span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+            <h2>Posts</h2>
+            <?php if (!empty($recent_posts)): ?>
+                <ul class="link-list">
+                    <?php foreach ($recent_posts as $p): ?>
+                        <li>
+                            <a href="/t/<?= (int) $p['thread_id'] ?>-<?= $e($p['thread_slug']) ?>#p<?= (int) $p['id'] ?>"><?= $e($p['thread_title']) ?></a>
+                            <span class="muted">— <?= $e(mb_strimwidth((string) $p['body'], 0, 90, '…')) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php else: ?>
+                <p class="profile-panel-empty">No posts yet.</p>
+            <?php endif; ?>
+        </section>
+    <?php elseif ($activeTab === 'commends'): ?>
+        <section class="profile-commends">
+            <h2>Regard</h2>
+            <p class="profile-rep-recap"><span class="star-marker" aria-hidden="true">✦</span><strong><?= number_format((int) $profile['reputation']) ?></strong> Regard</p>
+            <p class="muted">Regard is the sum of the reactions <?= $e($display) ?>'s posts have received, with a small bonus for accepted answers. It recognises contribution — it grants no powers.</p>
         </section>
     <?php endif; ?>
 </div>

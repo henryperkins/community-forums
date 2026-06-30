@@ -87,6 +87,12 @@ final class ThreadController extends Controller
 
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage);
 
+        // Topic-header participant stack (§5.1): the distinct visible authors, capped
+        // to a handful of monograms with a "+N" overflow. Anonymous posters are
+        // excluded by the repository so the stack can never deanonymise a masked author.
+        $participants = $postRepo->participantsForThread((int) $thread['id'], 5);
+        $participantCount = $postRepo->participantCountForThread((int) $thread['id']);
+
         $isMember = $user !== null
             && $this->container->get(BoardMemberRepository::class)->isMember((int) $thread['board_id'], $user->id());
         $locked = (int) $thread['is_locked'] === 1;
@@ -279,6 +285,8 @@ final class ThreadController extends Controller
         return $this->view('thread', array_merge([
             'thread' => $thread,
             'posts' => $posts,
+            'participants' => $participants,
+            'participant_count' => $participantCount,
             'markdown' => $markdown,
             'page' => $page,
             'pages' => $pages,

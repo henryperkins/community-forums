@@ -39,19 +39,24 @@
         ta.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
+    // Sentence-case labels render in the Marcellus toolbar (handoff §5.2). The
+    // accessible label stays "Insert {label}" so existing role queries still match.
     var ACTIONS = {
-        bold: { label: 'bold', before: '**', after: '**', shortcut: 'b', active: 'inline' },
-        italic: { label: 'italic', before: '*', after: '*', shortcut: 'i', active: 'inline' },
-        strike: { label: 'strike', before: '~~', after: '~~', active: 'inline' },
-        code: { label: 'code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
-        spoiler: { label: 'spoiler', before: '||', after: '||', active: 'inline' },
-        quote: { label: 'quote', before: '\n> ', after: '', prefix: '> ', active: 'line' },
-        link: { label: 'link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' },
-        h2: { label: 'heading', before: '\n## ', after: '', prefix: '## ', active: 'line' },
-        list: { label: 'list', before: '\n- ', after: '', prefix: '- ', active: 'line' },
-        codeblock: { label: 'code block', before: '\n```\n', after: '\n```\n', active: 'fence' },
-        emoji: { label: 'emoji', before: ':smile:', after: '' }
+        bold: { label: 'Bold', before: '**', after: '**', shortcut: 'b', active: 'inline' },
+        italic: { label: 'Italic', before: '*', after: '*', shortcut: 'i', active: 'inline' },
+        strike: { label: 'Strike', before: '~~', after: '~~', active: 'inline' },
+        code: { label: 'Code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
+        spoiler: { label: 'Spoiler', before: '||', after: '||', active: 'inline' },
+        quote: { label: 'Quote', before: '\n> ', after: '', prefix: '> ', active: 'line' },
+        h2: { label: 'Heading', before: '\n## ', after: '', prefix: '## ', active: 'line' },
+        list: { label: 'List', before: '\n- ', after: '', prefix: '- ', active: 'line' },
+        codeblock: { label: 'Code block', before: '\n```\n', after: '\n```\n', active: 'fence' },
+        link: { label: 'Link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' },
+        emoji: { label: 'Emoji', before: ':smile:', after: '' }
     };
+    // A hairline separator follows these keys, grouping the bar as
+    // emphasis | block | insert (handoff §5.2).
+    var GROUP_BREAKS = { spoiler: true, codeblock: true };
 
     function applyAction(ta, key) {
         var action = ACTIONS[key];
@@ -115,6 +120,12 @@
             });
             buttons.push({ button: b, action: action });
             bar.appendChild(b);
+            if (GROUP_BREAKS[key]) {
+                var sep = document.createElement('span');
+                sep.className = 'composer-toolbar-sep';
+                sep.setAttribute('aria-hidden', 'true');
+                bar.appendChild(sep);
+            }
         });
         ['input', 'keyup', 'mouseup', 'select'].forEach(function (evt) {
             ta.addEventListener(evt, updateState);

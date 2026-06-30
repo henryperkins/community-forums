@@ -601,8 +601,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* ── Phase 2: notifications + bell ── */
 .bell { position: relative; }
 .bell-count {
+    /* Imladris: the unread cue is the mallorn-gold marker (--accent-2), never a
+       red alert badge — kept in sync with the Imladris topbar rule below so the
+       two .bell-count definitions can't disagree (handoff §10: gold = unread). */
     position: absolute; top: -4px; right: -8px; min-width: 16px; height: 16px;
-    padding: 0 4px; border-radius: 8px; background: var(--danger); color: #fff;
+    padding: 0 4px; border-radius: 8px; background: var(--accent-2); color: var(--ink-900);
     font-size: 11px; line-height: 16px; text-align: center; font-weight: 700;
 }
 .notif-list { list-style: none; padding: 0; margin: 12px 0 0; }
@@ -863,17 +866,22 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .spoiler.is-revealed,
 .spoiler:focus { color: var(--accent-contrast); background: var(--surface-3); }
 
-/* Composer toolbar (P3-02). Enhancement only; the textarea works without it. */
-.composer-toolbar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+/* Composer toolbar (P3-02). Enhancement only; the textarea works without it.
+   Imladris (handoff §5.2): lapidary Marcellus button labels in sentence case,
+   visually grouped (emphasis | block | insert) by hairline separators. */
+.composer-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; margin-bottom: 8px; }
 .composer-toolbar button {
-    font: inherit; background: var(--surface-2); border: 1px solid var(--border);
-    border-radius: 6px; padding: 4px 8px; cursor: pointer; color: var(--text);
+    font-family: var(--font-label); font-size: .72rem; letter-spacing: .02em;
+    background: var(--surface-raised); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-sm); padding: 4px 9px; cursor: pointer; color: var(--text-muted);
 }
 .composer-toolbar button:hover,
-.composer-toolbar button[aria-pressed="true"] { background: var(--surface-3); }
-.composer-toolbar button[aria-pressed="true"] { border-color: var(--accent-2); }
-.composer-count { color: var(--text-muted); font-size: 0.85em; margin-top: 4px; }
-.composer-count.over { color: var(--danger); }
+.composer-toolbar button[aria-pressed="true"] { background: var(--surface-sunken); color: var(--text-strong); }
+.composer-toolbar button[aria-pressed="true"] { border-color: var(--accent-2); color: var(--gold-700); }
+/* Group divider — a quiet vertical hairline between B/I/S | block | insert sets. */
+.composer-toolbar-sep { width: 1px; align-self: stretch; margin: 1px 3px; background: var(--border-hair); }
+.composer-count { font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8em; margin-top: 4px; }
+.composer-count.over { color: var(--danger); font-weight: var(--weight-semibold); }
 .composer-preview {
     border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--surface-2); padding: 12px; margin-top: 8px;
@@ -1336,7 +1344,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 [data-density="compact"] .thread-title { order: 1; flex: 1; min-width: 0; font-size: 1rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-density="compact"] .thread-row-chips { order: 2; flex: 0 0 auto; margin-bottom: 0; }
 [data-density="compact"] .thread-meta { order: 3; flex: 0 0 auto; margin-top: 0; white-space: nowrap; }
-[data-density="compact"] .thread-unread::before { background: var(--gold-400); }
+[data-density="compact"] .thread-unread::before { background: var(--accent-2); }
 [data-density="compact"] .thread-star { align-self: center; }
 
 /* — Inbox row: starred marker pinned to the card's trailing edge (§4) — */
@@ -1460,4 +1468,96 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     .profile-aside { grid-column: 1 / -1; align-items: flex-start; margin-top: 12px; }
     .profile-rep { text-align: left; }
     .profile-cover .profile-actions { justify-content: flex-start; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris — Engineering-Handoff fidelity pass, part 2.
+   Conversation header action bar, accepted-answer plate, participant stack,
+   grouped (same-author) posts, reaction "name · count" chips, profile tabs,
+   and the New-Topic modal. Visual-only + light markup hooks; strict CSP
+   (classes, no inline); semantic tokens so the twilight register flips cleanly.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* — Topic status: the "Decision made" left rule + chip (handoff §10) — */
+.thread-status-decision_made::before { background: var(--green-600); }
+.chip-decision_made { color: var(--green-800); background: var(--brand-subtle); border-color: var(--green-200); }
+
+/* — Reactions read "emoji · count"; the dot is the lapidary separator (§5.1) — */
+.reaction-n::before { content: "· "; color: inherit; opacity: .7; }
+
+/* — Conversation header: one calm action bar instead of stacked raw links (§5.1) —
+   The star is already a pill (.star-btn); the notify <select> and the
+   clear-accepted / pin / lock controls join it on the same quiet line. */
+.thread-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 9px; margin: 12px 0 0; }
+.thread-actions form { margin: 0; display: inline-flex; align-items: center; gap: 6px; }
+.thread-actions .linkbtn,
+.thread-actions .subscribe-form select {
+    font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
+    border: 1.5px solid var(--border-soft); border-radius: var(--radius-md);
+    background: var(--surface-raised); color: var(--text-body); padding: 6px 12px;
+}
+.thread-actions .linkbtn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
+.thread-actions .linkbtn.danger:hover { border-color: var(--rust); color: var(--rust); }
+
+/* — Participant avatar stack on the topic header (§5.1) — */
+.thread-participants { display: inline-flex; align-items: center; margin: 10px 0 0; }
+.thread-participants .participant { display: inline-flex; margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface-page); }
+.thread-participants .participant:first-child { margin-left: 0; }
+.thread-participants .monogram { width: 28px; height: 28px; font-size: .68rem; }
+.participant-more {
+    margin-left: 7px; font-family: var(--font-label); font-size: .72rem;
+    letter-spacing: .03em; color: var(--text-muted);
+}
+
+/* — Accepted answer: the green "plate" caption + gilt avatar (already set) (§5.1) — */
+.accepted-flag {
+    display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px;
+    font-family: var(--font-label); text-transform: uppercase; letter-spacing: .09em;
+    font-size: .64rem; color: var(--on-done);
+}
+.accepted-flag svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.accepted-flag .star-marker { color: var(--star); margin-left: 2px; }
+
+/* — Consecutive posts by one author drop the repeated avatar + name (§5.1).
+   A 44px spacer keeps the body aligned under the author's earlier post. */
+.post-avatar-spacer { flex: 0 0 44px; width: 44px; }
+.post-grouped { margin-top: -4px; box-shadow: none; border-color: transparent; background: transparent; }
+.post-grouped .post-head { margin-bottom: 2px; }
+
+/* — Member profile: tabbed activity + the "Regard" cell, gold-keyed (§5.4) — */
+.profile-rep-value { position: relative; }
+.profile-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 18px; border-bottom: 1px solid var(--border-hair); }
+.profile-tab {
+    font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted);
+    padding: 8px 14px; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.profile-tab:hover { background: var(--surface-sunken); text-decoration: none; }
+.profile-tab.is-active { color: var(--text-strong); font-weight: var(--weight-semibold); box-shadow: inset 0 -2px 0 var(--accent-2); }
+.profile-panel-empty { color: var(--text-muted); font-style: italic; margin: 8px 0 0; }
+.profile-rep-recap { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-display); font-size: 1.6rem; color: var(--text-strong); margin: 4px 0 8px; }
+.profile-rep-recap .star-marker { color: var(--star); }
+
+/* — New-Topic disclosure becomes a centred modal once JS is present (§5.2).
+   No-JS keeps the native <details> inline expand, so navigation never traps. */
+.composer-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.composer-cancel { display: none; }
+.has-js .composer-details[open]::before {
+    content: ""; position: fixed; inset: 0; z-index: 80;
+    background: rgba(22, 29, 36, .42); backdrop-filter: blur(2px);
+}
+.has-js .composer-details[open] > .composer {
+    position: fixed; z-index: 81; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 64px); overflow-y: auto;
+    background: var(--surface-raised); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); padding: 22px 24px;
+    animation: rb-rise var(--dur-base) var(--ease-calm);
+}
+.has-js .composer-details[open] > .composer .composer-cancel { display: inline-flex; }
+@keyframes rb-rise {
+    from { opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.985); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .has-js .composer-details[open] > .composer { animation: none; }
 }

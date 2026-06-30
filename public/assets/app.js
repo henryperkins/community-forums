@@ -276,4 +276,34 @@
             });
         }
     }
+
+    // New-Topic composer becomes a centred modal once JS is present (handoff §5.2).
+    // The overlay itself is CSS, gated on .has-js; here we add Esc, scrim-click, and
+    // a Cancel button to dismiss it, and focus the title on open. Without JS the
+    // native <details> stays an inline expand, so creating a topic never needs script.
+    var newTopic = document.querySelector('details.composer-details');
+    if (newTopic) {
+        var trigger = newTopic.querySelector('summary');
+        var closeTopic = function () {
+            if (!newTopic.open) { return; }
+            newTopic.open = false;
+            if (trigger) { trigger.focus(); }   // restore focus to the trigger, not hidden content
+        };
+        newTopic.addEventListener('toggle', function () {
+            if (newTopic.open) {
+                var title = newTopic.querySelector('input[name="title"]');
+                if (title) { title.focus(); }
+            }
+        });
+        // A click on the backdrop (the open details' ::before fills the viewport and
+        // hit-tests to the details element itself) dismisses the modal.
+        newTopic.addEventListener('click', function (e) {
+            if (e.target === newTopic) { closeTopic(); }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && newTopic.open) { closeTopic(); }
+        });
+        var cancel = newTopic.querySelector('[data-close-composer]');
+        if (cancel) { cancel.addEventListener('click', closeTopic); }
+    }
 })();

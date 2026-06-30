@@ -73,7 +73,7 @@ final class AppUserSettingsTest extends TestCase
         $this->assertSeeText($response, '@publicguy');
         $this->assertSeeText($response, 'My bio here');
         $this->assertSeeText($response, 'Lakeside');
-        $this->assertSeeText($response, 'Reputation');
+        $this->assertSeeText($response, 'Regard');   // Imladris reputation noun (§5.4)
         $this->assertDontSeeText($response, 'secret@example.test');
     }
 
