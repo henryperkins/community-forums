@@ -73,6 +73,19 @@
             <textarea name="signature" rows="3" class="composer-input" maxlength="500"><?= $e($old['signature'] ?? '') ?></textarea>
             <?php if (!empty($errors['signature'])): ?><span class="field-error"><?= $e($errors['signature']) ?></span><?php endif; ?>
         </label>
+        <?php if (!empty($custom_profile_fields)): ?>
+            <fieldset class="field">
+                <legend>Custom profile fields</legend>
+                <p class="muted">Add up to three public profile facts. Labels are limited to 40 characters; values to 160.</p>
+                <?php for ($i = 1; $i <= 3; $i++): ?>
+                    <div class="inline-form">
+                        <input type="text" name="custom_label_<?= $i ?>" class="input" maxlength="40" placeholder="Label" value="<?= $e($old['custom_label_' . $i] ?? '') ?>">
+                        <input type="text" name="custom_value_<?= $i ?>" class="input" maxlength="160" placeholder="Value" value="<?= $e($old['custom_value_' . $i] ?? '') ?>">
+                    </div>
+                <?php endfor; ?>
+                <?php if (!empty($errors['custom_profile_fields'])): ?><span class="field-error"><?= $e($errors['custom_profile_fields']) ?></span><?php endif; ?>
+            </fieldset>
+        <?php endif; ?>
         <button class="btn" type="submit">Save changes</button>
     </form>
 </div>

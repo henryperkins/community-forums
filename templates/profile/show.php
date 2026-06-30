@@ -95,6 +95,16 @@ $profileUrl = '/u/' . $profile['username'];
                 <div class="prose"><?= $bio_html /* pre-sanitised */ ?></div>
             </section>
         <?php endif; ?>
+        <?php if (!empty($custom_fields)): ?>
+            <section class="profile-fields">
+                <h2>Profile details</h2>
+                <dl class="profile-custom-fields">
+                    <?php foreach ($custom_fields as $field): ?>
+                        <div><dt><?= $e($field['label']) ?></dt><dd><?= $e($field['value']) ?></dd></div>
+                    <?php endforeach; ?>
+                </dl>
+            </section>
+        <?php endif; ?>
         <?php if (!empty($recent_threads)): ?>
             <section class="profile-threads">
                 <h2>Recent topics</h2>
@@ -118,7 +128,7 @@ $profileUrl = '/u/' . $profile['username'];
                 </ul>
             </section>
         <?php endif; ?>
-        <?php if (($bio_html ?? '') === '' && empty($recent_threads) && empty($recent_posts)): ?>
+        <?php if (($bio_html ?? '') === '' && empty($custom_fields) && empty($recent_threads) && empty($recent_posts)): ?>
             <p class="profile-panel-empty">No public activity yet.</p>
         <?php endif; ?>
     <?php elseif ($activeTab === 'threads'): ?>

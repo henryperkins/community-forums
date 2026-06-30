@@ -58,7 +58,8 @@ covered by `AppFeatureFlagTest`.
 - **Send due digests:** `php bin/console worker:digest` (timezone-aware,
   watermarked; never sends twice or empty).
 - **Replay failed sends:** failed rows are marked `failed` and are **not**
-  auto-retried. After fixing the transport, requeue them:
+  auto-retried. After fixing the transport, use `/admin/email` to requeue
+  individual failed rows, or requeue them in bulk:
   ```sql
   UPDATE email_deliveries SET status='queued', error=NULL WHERE status='failed';
   ```
@@ -68,6 +69,27 @@ covered by `AppFeatureFlagTest`.
   can clear a row from `email_suppressions` once the inbox is healthy.
 - **Sender not configured:** with `MAIL_FROM` empty the worker fails closed and
   leaves rows `queued` — configure the sender, then drain.
+- **Verified-domain blocking:** when `mail.require_verified_domain` or
+  `settings.email_require_verified_domain` is true, `/admin/email` must show SPF
+  and DKIM as `pass` for the configured From domain before test sends or workers
+  send mail. Use **Refresh SPF/DKIM status** after DNS changes. Blocked workers
+  leave rows `queued` and stamp the blocked reason in `email_deliveries.error`.
+
+## 3a. Account deletion grace (ADR 0006)
+
+Self-serve account deletion is a 30-day reversible grace: a request flips the
+account to `pending_deletion` and schedules a purge; cancelling reactivates it.
+A cron worker completes due deletions by anonymising PII (email, profile,
+sessions, DMs). Nothing purges until the grace window elapses, and the purge
+never touches an account whose status is no longer `pending_deletion`.
+
+- **Run the purge on cron** (same cadence as `worker:purge-ips`):
+  ```bash
+  php bin/console worker:purge-accounts [limit]   # default 100; idempotent + audited
+  ```
+- The `account_lifecycle` flag gates the member-facing export/deactivate/delete
+  routes. It ships **deploy-dark**; enable it per operator once acceptance
+  evidence lands. With the worker unscheduled, deletion requests never complete.
 
 ## 4. Counter & reputation reconciliation
 

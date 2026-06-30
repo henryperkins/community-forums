@@ -39,6 +39,10 @@ final class ThreadController extends Controller
     public function show(Request $request, array $params): Response
     {
         $id = (int) ($params['id'] ?? 0);
+        $redirectTarget = $this->container->get(ThreadRepository::class)->redirectTarget($id);
+        if ($redirectTarget !== null) {
+            return $this->redirect('/t/' . (int) $redirectTarget['id'] . '-' . (string) $redirectTarget['slug'], 301);
+        }
         $thread = $this->loadReadableThread($id);
 
         // Canonicalise the URL (id+slug) for SEO and consistency.

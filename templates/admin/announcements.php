@@ -45,6 +45,7 @@ $active = is_array($ann) && !empty($ann['active']);
 
             <label><input type="checkbox" name="dismissible" value="1" <?= !empty($old['dismissible']) ? 'checked' : '' ?>> Members can dismiss this banner</label>
             <label><input type="checkbox" name="broadcast" value="1" <?= !empty($old['broadcast']) ? 'checked' : '' ?>> Also send an in-app broadcast notification to all members</label>
+            <label><input type="checkbox" name="broadcast_email" value="1" <?= !empty($old['broadcast_email']) ? 'checked' : '' ?>> Also queue an email broadcast to active members</label>
 
             <div class="form-actions"><button class="btn" type="submit">Publish banner</button></div>
         </form>

@@ -9,11 +9,14 @@ use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
 use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailDomainStatusRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\UserRepository;
 use App\Security\WriteGate;
+use App\Service\EmailDomainVerifier;
 use App\Service\EmailOpsService;
 use Tests\Support\TestCase;
 
@@ -30,6 +33,7 @@ final class EmailOpsServiceTest extends TestCase
             new ModerationLogRepository($this->db),
             new WriteGate(),
             $mailer ?? new ArrayMailer(),
+            new EmailDomainVerifier($this->config, new SettingRepository($this->db), new EmailDomainStatusRepository($this->db)),
         );
     }
 

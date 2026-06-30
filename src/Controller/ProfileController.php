@@ -13,6 +13,7 @@ use App\Repository\BlockRepository;
 use App\Repository\FollowRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\UserProfileFieldRepository;
 use App\Repository\UserRepository;
 use App\Repository\UsernameHistoryRepository;
 use App\Service\TitleService;
@@ -89,6 +90,9 @@ final class ProfileController extends Controller
             'solved_count' => $this->container->get(UserRepository::class)->solvedAnswerCount($profileId),
             'recent_threads' => $threadRepo->recentByUser($profileId, 20),
             'recent_posts' => $postRepo->recentByUser($profileId, 20),
+            'custom_fields' => $this->container->get(FeatureFlags::class)->enabled('custom_profile_fields')
+                ? $this->container->get(UserProfileFieldRepository::class)->forUser($profileId)
+                : [],
             'is_self' => $isSelf,
             'community' => $community,
             'can_follow' => $community && $viewer !== null && !$isSelf && !$blockedEither,

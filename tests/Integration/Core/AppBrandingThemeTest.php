@@ -113,4 +113,78 @@ final class AppBrandingThemeTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/branding', ['site_name' => 'Nope', 'theme_default' => 'system']));
         $this->assertDontSeeText($this->get('/brand.css'), '#654321');
     }
+
+    public function test_custom_css_requires_flag_and_confirmation_before_emitting(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin7']);
+        $this->actingAs($admin);
+        $settings = new \App\Repository\SettingRepository($this->db);
+
+        $settings->set('features', ['custom_css' => true]);
+        $res = $this->post('/admin/branding', [
+            'site_name' => 'CSS Forum',
+            'theme_default' => 'system',
+            'theme_preset' => 'retro',
+            'custom_css_enabled' => '1',
+            'custom_css' => '.brand-name{letter-spacing:.04em;}',
+        ]);
+        $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'Confirm that custom CSS can affect the whole site.');
+
+        $res = $this->post('/admin/branding', [
+            'site_name' => 'CSS Forum',
+            'theme_default' => 'system',
+            'theme_preset' => 'retro',
+            'custom_css_enabled' => '1',
+            'custom_css_ack' => '1',
+            'custom_css' => '.brand-name{letter-spacing:.04em;}',
+        ]);
+        $this->assertRedirect($res, '/admin/branding');
+
+        $css = $this->get('/brand.css');
+        $this->assertSeeText($css, '--surface:#fff7dc');
+        $this->assertSeeText($css, '.brand-name{letter-spacing:.04em;}');
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'branding_update' AND actor_id = ?", [$admin['id']]));
+
+        $settings->set('features', ['custom_css' => false]);
+        $css = $this->get('/brand.css');
+        $this->assertSeeText($css, '--surface:#fff7dc');
+        $this->assertDontSeeText($css, '.brand-name{letter-spacing:.04em;}');
+    }
+
+    public function test_custom_css_rejects_unsafe_constructs(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin8']);
+        $this->actingAs($admin);
+        (new \App\Repository\SettingRepository($this->db))->set('features', ['custom_css' => true]);
+
+        $res = $this->post('/admin/branding', [
+            'site_name' => 'Unsafe CSS',
+            'theme_default' => 'system',
+            'custom_css_enabled' => '1',
+            'custom_css_ack' => '1',
+            'custom_css' => '@import url("https://evil.example/x.css");',
+        ]);
+
+        $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'Custom CSS cannot import external stylesheets.');
+    }
+
+    public function test_dark_default_theme_uses_dark_logo_variant(): void
+    {
+        $this->makeAdmin();
+        $settings = new \App\Repository\SettingRepository($this->db);
+        $settings->set('site_name', 'Variant Forum');
+        $settings->set('brand_logo_path', '/media/base-logo');
+        $settings->set('brand_logo_light_path', '/media/light-logo');
+        $settings->set('brand_logo_dark_path', '/media/dark-logo');
+        $settings->set('brand_theme_default', 'dark');
+        $settings->set('brand_version', 'variant1');
+
+        $home = $this->get('/');
+
+        $this->assertSeeText($home, '/media/dark-logo');
+        $this->assertDontSeeText($home, '/media/base-logo');
+        $this->assertDontSeeText($home, '/media/light-logo');
+    }
 }

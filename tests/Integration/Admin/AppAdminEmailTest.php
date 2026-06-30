@@ -7,6 +7,10 @@ namespace Tests\Integration\Admin;
 use App\Core\App;
 use App\Core\Config;
 use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailSuppressionRepository;
+use App\Repository\PostRepository;
+use App\Repository\SettingRepository;
+use App\Worker\NotificationEmailWorker;
 use Tests\Support\TestCase;
 
 final class AppAdminEmailTest extends TestCase
@@ -22,10 +26,18 @@ final class AppAdminEmailTest extends TestCase
     }
 
     /** Rebuild the kernel so its Mailer is a configured ArrayMailer. */
-    private function useArrayMailer(): void
+    private function useArrayMailer(string $from = 'sender@example.test', string $selector = 's1', bool $requireVerifiedDomain = false): void
     {
-        $cfg = new Config(array_replace_recursive($this->config->all(), ['mail' => ['driver' => 'array']]));
+        $cfg = new Config(array_replace_recursive($this->config->all(), [
+            'mail' => [
+                'driver' => 'array',
+                'from' => $from,
+                'dkim_selector' => $selector,
+                'require_verified_domain' => $requireVerifiedDomain,
+            ],
+        ]));
         $this->app = new App($cfg, $this->db, $this->rateLimiter);
+        $this->config = $cfg;
     }
 
     public function test_index_requires_admin(): void
@@ -102,6 +114,25 @@ final class AppAdminEmailTest extends TestCase
         self::assertStringNotContainsString('dig@example.test', $body);
     }
 
+    public function test_admin_requeues_failed_delivery_from_dashboard(): void
+    {
+        $deliv = new EmailDeliveryRepository($this->db);
+        $id = $deliv->enqueue(null, 'retry@example.test', 'instant', 'Retry me', 'retry:1');
+        $deliv->markFailed($id, 'smtp 451 temporary failure');
+
+        $this->actingAs($this->makeAdmin());
+        $body = $this->get('/admin/email', ['status' => 'failed'])->body();
+        self::assertStringContainsString('/admin/email/deliveries/' . $id . '/requeue', $body);
+
+        $this->assertRedirectContains(
+            $this->post('/admin/email/deliveries/' . $id . '/requeue'),
+            '/admin/email?status=failed',
+        );
+
+        self::assertSame('queued', (string) $this->db->fetchValue('SELECT status FROM email_deliveries WHERE id = ?', [$id]));
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'email_requeued'"));
+    }
+
     public function test_export_returns_csv_attachment(): void
     {
         (new EmailDeliveryRepository($this->db))->enqueue(null, 'csv@example.test', 'instant', 'Hi', 'kx');
@@ -123,5 +154,88 @@ final class AppAdminEmailTest extends TestCase
             self::assertContains($this->post('/admin/email/test', [])->status(), [302, 303]);
         }
         $this->assertStatus(429, $this->post('/admin/email/test', []));
+    }
+
+    public function test_domain_verification_refresh_records_spf_and_dkim_status(): void
+    {
+        $this->useArrayMailer('sender@example.test', 's1');
+        (new SettingRepository($this->db))->set('email_dns_txt_records', [
+            'example.test' => ['v=spf1 include:_spf.example.test ~all'],
+            's1._domainkey.example.test' => ['v=DKIM1; k=rsa; p=abc123'],
+        ]);
+        $this->actingAs($this->makeAdmin(['username' => 'domainadmin']));
+
+        $this->assertRedirectContains($this->post('/admin/email/domain/verify'), '/admin/email');
+
+        $status = $this->db->fetch('SELECT * FROM email_domain_status WHERE domain = ?', ['example.test']);
+        self::assertSame('pass', (string) $status['spf_status']);
+        self::assertSame('pass', (string) $status['dkim_status']);
+        self::assertSame('s1', (string) $status['dkim_selector']);
+
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('example.test', $body);
+        self::assertStringContainsString('SPF: pass', $body);
+        self::assertStringContainsString('DKIM: pass', $body);
+    }
+
+    public function test_verified_domain_requirement_blocks_test_send_until_spf_and_dkim_pass(): void
+    {
+        $this->useArrayMailer('sender@example.test', 's1', true);
+        $settings = new SettingRepository($this->db);
+        $settings->set('email_dns_txt_records', [
+            'example.test' => ['v=spf1 include:_spf.example.test ~all'],
+            's1._domainkey.example.test' => ['not yet verified'],
+        ]);
+        $this->actingAs($this->makeAdmin(['email' => 'sender@example.test']));
+
+        $this->post('/admin/email/domain/verify');
+        $this->assertRedirectContains($this->post('/admin/email/test'), '/admin/email');
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'test'"));
+        self::assertStringContainsString('Email sending is blocked until SPF and DKIM pass.', $this->get('/admin/email')->body());
+
+        $settings->set('email_dns_txt_records', [
+            'example.test' => ['v=spf1 include:_spf.example.test ~all'],
+            's1._domainkey.example.test' => ['v=DKIM1; k=rsa; p=abc123'],
+        ]);
+        $this->post('/admin/email/domain/verify');
+        $this->assertRedirectContains($this->post('/admin/email/test'), '/admin/email');
+        self::assertSame('sent', (string) $this->db->fetchValue("SELECT status FROM email_deliveries WHERE kind = 'test'"));
+    }
+
+    public function test_announcement_email_broadcast_queues_system_email_and_worker_sends_it(): void
+    {
+        $this->useArrayMailer('sender@example.test', 's1');
+        $admin = $this->makeAdmin(['email' => 'admin@example.test']);
+        $member = $this->makeUser(['email' => 'member@example.test']);
+        $this->makeUser(['email' => 'banned@example.test', 'status' => 'banned']);
+        $this->actingAs($admin);
+
+        $this->assertRedirectContains(
+            $this->post('/admin/announcements', [
+                'message' => 'Maintenance window at 02:00 UTC',
+                'broadcast_email' => '1',
+            ]),
+            '/admin/announcements',
+        );
+
+        self::assertSame(2, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'system'"));
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'system' AND user_id = ?", [$member['id']]));
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'system' AND email = 'banned@example.test'"));
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'system' AND user_id = ?", [$admin['id']]));
+
+        $mailer = new \App\Mail\ArrayMailer();
+        $stats = (new NotificationEmailWorker(
+            new EmailDeliveryRepository($this->db),
+            new EmailSuppressionRepository($this->db),
+            new PostRepository($this->db),
+            $this->users(),
+            $mailer,
+            $this->config,
+            new SettingRepository($this->db),
+        ))->run();
+
+        self::assertSame(2, $stats['sent']);
+        self::assertSame('sent', (string) $this->db->fetchValue("SELECT status FROM email_deliveries WHERE kind = 'system'"));
+        self::assertStringContainsString('Maintenance window at 02:00 UTC', $mailer->to('member@example.test')[0]['text']);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Service;
 
 use App\Core\ValidationException;
+use App\Repository\EmailDeliveryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
@@ -21,6 +22,7 @@ final class AnnouncementServiceTest extends TestCase
             new SettingRepository($this->db),
             new ModerationLogRepository($this->db),
             new NotificationRepository($this->db),
+            new EmailDeliveryRepository($this->db),
             new WriteGate(),
         );
     }

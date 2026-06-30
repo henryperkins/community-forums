@@ -12,6 +12,7 @@ use App\Core\ValidationException;
 use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
+use App\Service\EmailDomainVerifier;
 use App\Service\EmailOpsService;
 use App\Service\RateLimitService;
 
@@ -44,6 +45,7 @@ final class AdminEmailController extends Controller
         $deliveries = $this->container->get(EmailDeliveryRepository::class);
         $suppress = $this->container->get(EmailSuppressionRepository::class);
         $mailer = $this->container->get(Mailer::class);
+        $domain = $this->container->get(EmailDomainVerifier::class)->current();
 
         return $this->view('admin/email', [
             'deliveries' => $deliveries->recent($perPage, $offset, $status, $kind, $email !== '' ? $email : null),
@@ -53,6 +55,8 @@ final class AdminEmailController extends Controller
             'suppression_count' => $suppress->count(null),
             'mailer_configured' => $mailer->isConfigured(),
             'mail_from' => (string) $this->config()->get('mail.from', ''),
+            'domain_status' => $domain,
+            'send_blocked' => !empty($domain['required']) && empty($domain['allowed']),
             'f_status' => $status ?? '',
             'f_kind' => $kind ?? '',
             'f_email' => $email,
@@ -98,6 +102,39 @@ final class AdminEmailController extends Controller
             return $this->redirectWithFlash('/admin/email', $e->first());
         }
         return $this->redirectWithFlash('/admin/email', 'Address removed from the suppression list.');
+    }
+
+    /** @param array<string,string> $params */
+    public function requeue(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $this->gate();
+
+        $this->container->get(EmailOpsService::class)->requeueFailed($admin, (int) ($params['id'] ?? 0));
+
+        return $this->redirectWithFlash('/admin/email?status=failed', 'Failed delivery requeued.');
+    }
+
+    /** @param array<string,string> $params */
+    public function verifyDomain(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $this->gate();
+
+        $status = $this->container->get(EmailDomainVerifier::class)->verify();
+        $this->container->get(\App\Repository\ModerationLogRepository::class)->log([
+            'actor_id' => $admin->id(),
+            'action' => 'email_domain_verified',
+            'target_type' => 'setting',
+            'target_id' => 0,
+            'after' => [
+                'domain' => $status['domain'] ?? '',
+                'spf_status' => $status['spf_status'] ?? 'unknown',
+                'dkim_status' => $status['dkim_status'] ?? 'unknown',
+            ],
+        ]);
+
+        return $this->redirectWithFlash('/admin/email', 'Email domain status refreshed.');
     }
 
     /** Read-only CSV export of the (filtered) delivery log. GET → no CSRF. @param array<string,string> $params */

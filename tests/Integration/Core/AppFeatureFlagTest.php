@@ -70,6 +70,42 @@ final class AppFeatureFlagTest extends TestCase
         self::assertFalse($overridden->enabled('passkeys'), 'enabling one Phase 5 flag must not enable others');
     }
 
+    public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void
+    {
+        // ADR 0007 (appeals) + ADR 0006 (account lifecycle/export/delete) ship as
+        // deploy-dark carryovers: their routes must be offline by default until
+        // browser/a11y/runbook acceptance evidence is attached.
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        foreach (['appeals', 'account_lifecycle'] as $flag) {
+            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
+            self::assertArrayHasKey($flag, $flags->all(), "$flag must be a declared flag, not an unknown-key false");
+        }
+
+        $member = $this->makeUser(['username' => 'darkcarryovermember']);
+        $this->actingAs($member);
+
+        // Appeals member + staff routes are 404 while the flag is dark.
+        $this->assertStatus(404, $this->get('/appeals'));
+        $this->assertStatus(404, $this->post('/appeals/posts/1', ['reason' => 'x']));
+        $this->assertStatus(404, $this->get('/mod/appeals'));
+
+        // Account lifecycle/export/delete routes are 404 while the flag is dark…
+        $this->assertStatus(404, $this->post('/settings/account/export'));
+        $this->assertStatus(404, $this->get('/settings/account/lifecycle'));
+        $this->assertStatus(404, $this->post('/settings/account/deactivate', ['current_password' => 'x']));
+        $this->assertStatus(404, $this->post('/settings/account/reactivate'));
+        $this->assertStatus(404, $this->post('/settings/account/delete/request', ['current_password' => 'x']));
+        $this->assertStatus(404, $this->post('/settings/account/delete/cancel'));
+
+        // …but core profile editing is NOT part of the dark slice and stays up.
+        self::assertNotSame(404, $this->get('/settings/account')->status(), 'core profile editing must stay available');
+
+        // The override seam still re-enables each carryover independently.
+        $this->setFlags(['account_lifecycle' => true]);
+        self::assertNotSame(404, $this->get('/settings/account/lifecycle')->status());
+        $this->assertStatus(404, $this->get('/appeals'), 'enabling account_lifecycle must not enable appeals');
+    }
+
     public function test_group_dms_flag_gates_group_creation_and_management(): void
     {
         // group_dms defaults dark; the legacy `dms` flag defaults on. Group DMs
