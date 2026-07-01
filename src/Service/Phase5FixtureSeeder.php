@@ -96,8 +96,11 @@ final class Phase5FixtureSeeder
             $owners->designate($admin, null);
 
             $roleId = function (string $key): int {
+                // fetchValue() wraps PDOStatement::fetchColumn(), which returns
+                // false (not null) when no row matches — matching every other
+                // fetchValue() "not found" check in the codebase.
                 $id = $this->db->fetchValue('SELECT id FROM roles WHERE role_key = ?', [$key]);
-                if ($id === null) {
+                if ($id === false || $id === null) {
                     throw new \RuntimeException("Phase5FixtureSeeder: role '$key' not seeded (migration 0050 required)");
                 }
                 return (int) $id;
