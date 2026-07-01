@@ -837,6 +837,8 @@ DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console verify:phase5-
 
 Expected: prints `[BASELINE] resolver.p95 → <n> ms legacy`, `[PENDING (inc2)] registry.fetch_p95 → —`, … and `Wrote …/docs/evidence/phase5/performance-budgets.md`. Confirm the file exists and contains the envelope + budget table.
 
+**Non-mutating (F9 follow-up fix):** the command seeds and measures the baseline **inside a transaction it always rolls back**, so the target DB is left byte-for-byte unchanged — no `p5fix_*` rows and no `phase5_fixture_version` settings marker persist. It is safe to run against the shared `retroboards_test` database without polluting a later plain (schema-reusing) PHPUnit run; the report file is written from the in-transaction measurement after rollback.
+
 - [ ] **Step 3: Full suite green**
 
 Run: `vendor/bin/phpunit`

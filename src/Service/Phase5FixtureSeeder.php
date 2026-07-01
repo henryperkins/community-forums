@@ -41,12 +41,12 @@ final class Phase5FixtureSeeder
     /**
      * @return array{users:int,boards:int,moderators:int,assignments:int,owners:int,skipped:bool}
      */
-    public function seed(): array
+    public function seed(bool $force = false): array
     {
         if ($this->appEnv === 'production') {
             throw new \RuntimeException('Phase5FixtureSeeder refuses to run with app.env=production');
         }
-        if ($this->isSeeded()) {
+        if (!$force && $this->isSeeded()) {
             return ['users' => 0, 'boards' => 0, 'moderators' => 0, 'assignments' => 0, 'owners' => 0, 'skipped' => true];
         }
 

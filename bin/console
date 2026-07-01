@@ -420,19 +420,33 @@ try {
                 exit(1);
             }
             $db = $database();
-            $noSeed = in_array('--no-seed', $argv, true);
-            if (!$noSeed) {
-                $summary = (new Phase5FixtureSeeder($db, new SettingRepository($db), $env))->seed();
-                $log($summary['skipped'] ? 'Fixture already seeded.' : sprintf(
-                    'Seeded fixture: %d users, %d boards, %d assignments, %d owner(s).',
-                    $summary['users'], $summary['boards'], $summary['assignments'], $summary['owners'],
-                ));
-            }
             $report = new Phase5BudgetReportService($db);
             $path = $root . '/docs/evidence/phase5/performance-budgets.md';
-            $report->write($path);
-            foreach ($report->rows() as $r) {
-                $log(sprintf('  [%-20s] %s → %s', $r['status'], $r['key'], $r['measured']));
+
+            // Non-mutating: seed + measure inside a transaction that is always
+            // rolled back, so the target DB (including a shared
+            // retroboards_test) is left byte-for-byte unchanged. The report is
+            // written from the in-memory, memoized sample after rollback.
+            $pdo = $db->pdo();
+            $pdo->beginTransaction();
+            $reportRows = [];
+            try {
+                if (!in_array('--no-seed', $argv, true)) {
+                    $summary = (new Phase5FixtureSeeder($db, new SettingRepository($db), $env))->seed(true);
+                    $log($summary['skipped']
+                        ? 'Fixture already seeded.'
+                        : sprintf('Seeded fixture (throwaway tx): %d users, %d boards, %d assignments, %d owner(s).',
+                            $summary['users'], $summary['boards'], $summary['assignments'], $summary['owners']));
+                }
+                $reportRows = $report->rows(); // measures the baseline INSIDE the tx (seeded rows visible) and memoizes it
+            } finally {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+            }
+            $report->write($path); // reuses the memoized in-tx sample; no DB access, so the file is written after rollback
+            foreach ($reportRows as $r) {
+                $log(sprintf('  [%-20s] %s -> %s', $r['status'], $r['key'], $r['measured']));
             }
             $log('Wrote ' . $path);
             break;
