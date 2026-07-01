@@ -14,7 +14,7 @@ use App\Repository\ApiTokenRepository;
 use App\Repository\ModerationLogRepository;
 use App\Security\ApiPrincipal;
 use App\Security\ApiScopes;
-use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\WriteGate;
 
 /**
@@ -30,7 +30,7 @@ final class ApiTokenService
         private ModerationLogRepository $log,
         private FeatureFlags $flags,
         private Config $config,
-        private PasswordHasher $hasher,
+        private ReauthGate $reauth,
         private WriteGate $writeGate,
     ) {
     }
@@ -45,9 +45,7 @@ final class ApiTokenService
         if (!$this->flags->enabled('api_tokens')) {
             throw new ApiTokensDisabledException('API tokens are disabled.');
         }
-        if (!$this->hasher->verify($currentPassword, $admin->passwordHash())) {
-            throw new ValidationException(['current_password' => 'Your current password is incorrect.']);
-        }
+        $this->reauth->requirePassword($admin, $currentPassword);
 
         $name = trim($name);
         if ($name === '' || mb_strlen($name) > 80) {

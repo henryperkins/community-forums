@@ -11,6 +11,7 @@ use App\Repository\ApiTokenRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\WriteGate;
 use App\Service\ApiTokenService;
 use Tests\Support\TestCase;
@@ -24,7 +25,7 @@ final class ApiReadEndpointsTest extends TestCase
         $svc = new ApiTokenService(
             $this->db, new ApiTokenRepository($this->db), new ModerationLogRepository($this->db),
             new FeatureFlags(new SettingRepository($this->db)), $this->config,
-            new PasswordHasher(), new WriteGate(),
+            new ReauthGate(new PasswordHasher()), new WriteGate(),
         );
         $admin = $this->userEntity($this->makeAdmin(['password' => 'password123']));
         return $svc->mint($admin, 'password123', 'ci', $scopes, $days)['token'];

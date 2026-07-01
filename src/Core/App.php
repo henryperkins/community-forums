@@ -114,6 +114,7 @@ use App\Security\EgressGuard;
 use App\Security\FileRateLimiter;
 use App\Security\LastOwnerGuard;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\RateLimiter;
 use App\Security\SecurityHeaders;
 use App\Security\SecretBox;
@@ -626,6 +627,7 @@ final class App
             $c->get(FeatureFlags::class)->enabled('custom_emoji') ? $c->get(CustomEmojiService::class) : null,
         ));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
+        $c->bind(ReauthGate::class, fn (Container $c) => new ReauthGate($c->get(PasswordHasher::class)));
         $c->bind(SecretBox::class, fn () => new SecretBox((string) $config->get('app.key', '')));
         $c->bind(Totp::class, fn () => new Totp());
         $c->bind(WriteGate::class, fn () => new WriteGate());
@@ -653,7 +655,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(FeatureFlags::class),
             $config,
-            $c->get(PasswordHasher::class),
+            $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
         ));
         $c->bind(ServiceSecretRepository::class, fn (Container $c) => new ServiceSecretRepository($c->get(Database::class)));
@@ -682,7 +684,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(FeatureFlags::class),
             $config,
-            $c->get(PasswordHasher::class),
+            $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
             new EgressGuard(
                 (bool) $config->get('webhooks.allow_http', false),
@@ -1040,6 +1042,7 @@ final class App
             $c->get(Database::class),
             $c->get(UserRepository::class),
             $c->get(PasswordHasher::class),
+            $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
             $config,
             $c->get(UserPreferenceRepository::class),
@@ -1060,13 +1063,13 @@ final class App
             $c->get(SessionRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(ServerDraftRepository::class),
-            $c->get(PasswordHasher::class),
+            $c->get(ReauthGate::class),
             $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(LastOwnerGuard::class) : null,
         ));
         $c->bind(MfaService::class, fn (Container $c) => new MfaService(
             $c->get(MfaRepository::class),
             $c->get(UserRepository::class),
-            $c->get(PasswordHasher::class),
+            $c->get(ReauthGate::class),
             $c->get(SecretBox::class),
             $c->get(Totp::class),
             $c->get(WriteGate::class),

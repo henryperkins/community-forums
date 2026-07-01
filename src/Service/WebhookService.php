@@ -15,7 +15,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\EgressGuard;
-use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 
@@ -30,7 +30,7 @@ final class WebhookService
         private ModerationLogRepository $log,
         private FeatureFlags $flags,
         private Config $config,
-        private PasswordHasher $hasher,
+        private ReauthGate $reauth,
         private WriteGate $writeGate,
         private EgressGuard $egress,
     ) {
@@ -274,9 +274,7 @@ final class WebhookService
 
     private function assertPassword(User $admin, string $password): void
     {
-        if (!$this->hasher->verify($password, $admin->passwordHash())) {
-            throw new ValidationException(['current_password' => 'Your current password is incorrect.']);
-        }
+        $this->reauth->requirePassword($admin, $password);
     }
 
     private function assertValidName(string $name): void

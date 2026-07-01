@@ -13,7 +13,7 @@ use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
 use App\Security\LastOwnerGuard;
-use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 
 /**
  * Self-service account lifecycle policy (ADR 0006): export, reversible
@@ -28,7 +28,7 @@ final class AccountLifecycleService
         private SessionRepository $sessions,
         private ModerationLogRepository $logs,
         private ServerDraftRepository $serverDrafts,
-        private PasswordHasher $hasher,
+        private ReauthGate $reauth,
         private ?LastOwnerGuard $ownerGuard = null,
     ) {
     }
@@ -224,9 +224,7 @@ final class AccountLifecycleService
 
     private function assertPassword(User $user, string $currentPassword): void
     {
-        if (!$this->hasher->verify($currentPassword, $user->passwordHash())) {
-            throw new ValidationException(['current_password' => 'Your current password is incorrect.']);
-        }
+        $this->reauth->requirePassword($user, $currentPassword);
     }
 
     private function assertNotFinalActiveAdmin(User $user): void

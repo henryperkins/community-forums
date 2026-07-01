@@ -13,6 +13,7 @@ use App\Repository\ApiTokenRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\WriteGate;
 use App\Service\ApiTokenService;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -29,7 +30,7 @@ final class ApiTokenServiceTest extends TestCase
             new ModerationLogRepository($this->db),
             new FeatureFlags(new SettingRepository($this->db)),
             $this->config,
-            new PasswordHasher(),
+            new ReauthGate(new PasswordHasher()),
             new WriteGate(),
         );
     }

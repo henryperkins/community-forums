@@ -15,6 +15,7 @@ use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\EgressGuard;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\SecretBox;
 use App\Security\WriteGate;
 use App\Service\SecretVault;
@@ -35,7 +36,7 @@ final class WebhookServiceTest extends TestCase
             new ModerationLogRepository($this->db),
             new FeatureFlags(new SettingRepository($this->db)),
             $this->config,
-            new PasswordHasher(),
+            new ReauthGate(new PasswordHasher()),
             new WriteGate(),
             new EgressGuard(false, []),
         );
@@ -117,7 +118,7 @@ final class WebhookServiceTest extends TestCase
             new ModerationLogRepository($this->db),
             new FeatureFlags(new SettingRepository($this->db)),
             $this->config,
-            new PasswordHasher(),
+            new ReauthGate(new PasswordHasher()),
             new WriteGate(),
             new EgressGuard(false, []),
         );

@@ -13,6 +13,7 @@ use App\Repository\UserPreferenceRepository;
 use App\Repository\UserProfileFieldRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\WriteGate;
 
 /**
@@ -27,6 +28,7 @@ final class AccountService
         private Database $db,
         private UserRepository $users,
         private PasswordHasher $hasher,
+        private ReauthGate $reauth,
         private WriteGate $writeGate,
         private Config $config,
         private ?UserPreferenceRepository $prefs = null,
@@ -194,7 +196,7 @@ final class AccountService
         $confirm = (string) ($input['new_password_confirm'] ?? '');
 
         $errors = [];
-        if (!$this->hasher->verify($current, $user->passwordHash())) {
+        if (!$this->reauth->verifyPassword($user, $current)) {
             $errors['current_password'] = 'Your current password is incorrect.';
         }
         $min = (int) $this->config->get('limits.password_min', 8);

@@ -11,6 +11,7 @@ use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
 use App\Repository\SettingRepository;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use Tests\Support\TestCase;
 
 final class AppAccountLifecycleTest extends TestCase
@@ -31,7 +32,7 @@ final class AppAccountLifecycleTest extends TestCase
             new SessionRepository($this->db),
             new ModerationLogRepository($this->db),
             new ServerDraftRepository($this->db),
-            new PasswordHasher(),
+            new ReauthGate(new PasswordHasher()),
         );
     }
 

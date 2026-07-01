@@ -11,7 +11,7 @@ use App\Domain\User;
 use App\Repository\MfaRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
-use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\SecretBox;
 use App\Security\Totp;
 use App\Security\WriteGate;
@@ -21,7 +21,7 @@ final class MfaService
     public function __construct(
         private MfaRepository $mfa,
         private UserRepository $users,
-        private PasswordHasher $hasher,
+        private ReauthGate $reauth,
         private SecretBox $secrets,
         private Totp $totp,
         private WriteGate $writeGate,
@@ -155,12 +155,12 @@ final class MfaService
 
     private function requirePassword(User $user, string $currentPassword): void
     {
-        if ($user->passwordHash() === null) {
-            throw new ValidationException(['current_password' => 'Set a password before managing two-factor authentication.']);
-        }
-        if (!$this->hasher->verify($currentPassword, $user->passwordHash())) {
-            throw new ValidationException(['current_password' => 'Your current password is incorrect.']);
-        }
+        $this->reauth->requirePassword(
+            $user,
+            $currentPassword,
+            'current_password',
+            'Set a password before managing two-factor authentication.',
+        );
     }
 
     private function verifySecondFactor(int $userId, string $code): ?string
