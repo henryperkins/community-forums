@@ -158,7 +158,17 @@ final class RepairService
      */
     public function repairProtectedOwners(): int
     {
-        if ((int) $this->db->fetchValue('SELECT EXISTS(SELECT 1 FROM protected_owners WHERE is_active = 1)') === 1) {
+        // An "active owner" requires a live account (users.status = 'active'), not
+        // just the write-once is_active flag — matches ProtectedOwnerRepository so
+        // a stale row from a deactivated owner does not mask a lost invariant.
+        $hasActiveOwner = (int) $this->db->fetchValue(
+            "SELECT EXISTS(
+                SELECT 1 FROM protected_owners po
+                JOIN users u ON u.id = po.user_id
+                WHERE po.is_active = 1 AND u.status = 'active'
+            )",
+        ) === 1;
+        if ($hasActiveOwner) {
             return 0;
         }
         $adminId = $this->db->fetchValue(

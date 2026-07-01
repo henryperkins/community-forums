@@ -10,6 +10,13 @@ use App\Core\Database;
  * Thin wrapper over `protected_owners` (Foundation F5). Backs the "≥1 active
  * recoverable owner" invariant (decision #27) consumed by LastOwnerGuard and
  * RepairService. Returns scalars/bools; all business logic lives in the guard.
+ *
+ * "Active owner" = a designated row (`is_active = 1`) whose *account* is still
+ * active (`users.status = 'active'`). `is_active` alone is a write-once flag no
+ * path clears, and `users.status` gained deactivated/pending_deletion/deleted
+ * states (migration 0059) — so recoverable-owner-ness must always derive from
+ * the live account status, mirroring the legacy `activeAdminCountExcluding`
+ * predicate the guard's parity fallback uses.
  */
 final class ProtectedOwnerRepository
 {
@@ -19,13 +26,23 @@ final class ProtectedOwnerRepository
 
     public function hasAnyActiveOwner(): bool
     {
-        return (int) $this->db->fetchValue('SELECT EXISTS(SELECT 1 FROM protected_owners WHERE is_active = 1)') === 1;
+        return (int) $this->db->fetchValue(
+            "SELECT EXISTS(
+                SELECT 1 FROM protected_owners po
+                JOIN users u ON u.id = po.user_id
+                WHERE po.is_active = 1 AND u.status = 'active'
+            )",
+        ) === 1;
     }
 
     public function isActiveOwner(int $userId): bool
     {
         return (int) $this->db->fetchValue(
-            'SELECT EXISTS(SELECT 1 FROM protected_owners WHERE user_id = ? AND is_active = 1)',
+            "SELECT EXISTS(
+                SELECT 1 FROM protected_owners po
+                JOIN users u ON u.id = po.user_id
+                WHERE po.user_id = ? AND po.is_active = 1 AND u.status = 'active'
+            )",
             [$userId],
         ) === 1;
     }
@@ -33,7 +50,9 @@ final class ProtectedOwnerRepository
     public function activeOwnerCountExcluding(int $userId): int
     {
         return (int) $this->db->fetchValue(
-            'SELECT COUNT(*) FROM protected_owners WHERE is_active = 1 AND user_id <> ?',
+            "SELECT COUNT(*) FROM protected_owners po
+             JOIN users u ON u.id = po.user_id
+             WHERE po.is_active = 1 AND u.status = 'active' AND po.user_id <> ?",
             [$userId],
         );
     }

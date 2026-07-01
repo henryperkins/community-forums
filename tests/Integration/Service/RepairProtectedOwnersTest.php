@@ -43,4 +43,20 @@ final class RepairProtectedOwnersTest extends TestCase
         $out = (new RepairService($this->db))->repairAll();
         self::assertArrayHasKey('protected_owners', $out);
     }
+
+    public function test_reconciles_when_the_only_owner_row_is_a_deactivated_account(): void
+    {
+        // A designated owner whose account later deactivated leaves a stale
+        // is_active=1 row but no *recoverable* owner. With another active admin
+        // present, repair must designate that admin rather than treating the
+        // stale row as satisfying the invariant.
+        $stale = $this->makeAdmin(['username' => 'repair_stale_owner']);
+        $live = $this->makeAdmin(['username' => 'repair_live_admin']);
+        $repo = new ProtectedOwnerRepository($this->db);
+        $repo->designate((int) $stale['id'], null);
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [(int) $stale['id']]);
+
+        self::assertSame(1, (new RepairService($this->db))->repairProtectedOwners());
+        self::assertTrue($repo->isActiveOwner((int) $live['id']), 'the active admin becomes a recoverable owner');
+    }
 }

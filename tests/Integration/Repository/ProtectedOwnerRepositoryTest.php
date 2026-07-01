@@ -39,4 +39,29 @@ final class ProtectedOwnerRepositoryTest extends TestCase
         self::assertFalse($repo->designate($a, null), 'second designation is a no-op (INSERT IGNORE)');
         self::assertSame(0, $repo->activeOwnerCountExcluding($a));
     }
+
+    public function test_owner_whose_account_is_not_active_is_not_a_recoverable_owner(): void
+    {
+        // Regression: `protected_owners.is_active` is a write-once flag that no
+        // path ever clears, and `users.status` gained deactivated/pending_deletion/
+        // deleted values (migration 0059). Owner "activeness" must derive from the
+        // account status, not the stale flag — otherwise a deactivated co-owner is
+        // counted as a live safety net that does not exist.
+        $repo = new ProtectedOwnerRepository($this->db);
+        $a = (int) $this->makeAdmin(['username' => 'owner_live'])['id'];
+        $b = (int) $this->makeAdmin(['username' => 'owner_gone'])['id'];
+        $repo->designate($a, null);
+        $repo->designate($b, $a);
+        self::assertSame(1, $repo->activeOwnerCountExcluding($a));
+
+        // B deactivates: the stale row must stop counting as a recoverable owner.
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [$b]);
+        self::assertFalse($repo->isActiveOwner($b), 'a deactivated account is not an active owner');
+        self::assertSame(0, $repo->activeOwnerCountExcluding($a), 'deactivated co-owner must not be counted');
+        self::assertTrue($repo->hasAnyActiveOwner(), 'A is still an active owner');
+
+        // Once A also leaves, no recoverable owner remains.
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [$a]);
+        self::assertFalse($repo->hasAnyActiveOwner(), 'no active-status owner remains');
+    }
 }

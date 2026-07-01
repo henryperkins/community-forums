@@ -58,6 +58,41 @@ final class AppProtectedOwnerTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
+    public function test_owner_set_does_not_count_a_deactivated_co_owner(): void
+    {
+        // Regression: with two owners designated, if one deactivates their account
+        // the guard must treat the remaining owner as the last one. The stale
+        // `is_active=1` row must not mask the lockout the guard exists to prevent.
+        $aRow = $this->makeAdmin(['username' => 'live_owner']);
+        $bRow = $this->makeAdmin(['username' => 'gone_owner']);
+        $repo = new ProtectedOwnerRepository($this->db);
+        $repo->designate((int) $aRow['id'], null);
+        $repo->designate((int) $bRow['id'], (int) $aRow['id']);
+        // B deactivates; only A remains a recoverable owner.
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [(int) $bRow['id']]);
+
+        $this->expectException(ValidationException::class);
+        $this->guard()->assertNotLastOwner($this->userEntity($aRow), 'current_password');
+    }
+
+    public function test_capabilities_on_blocks_last_owner_when_co_owner_is_deactivated(): void
+    {
+        // The reachable fail-open: capabilities on, a third active admin (so the
+        // legacy last-admin check passes), two designated owners, one of whom has
+        // deactivated. Deactivating the sole remaining recoverable owner must 422.
+        $this->setFlags(['account_lifecycle' => true, 'capabilities' => true]);
+        $a = $this->makeAdmin(['username' => 'wired_live_owner']);
+        $b = $this->makeAdmin(['username' => 'wired_gone_owner']);
+        $this->makeAdmin(['username' => 'wired_spare_admin']); // keeps legacy check happy
+        $repo = new ProtectedOwnerRepository($this->db);
+        $repo->designate((int) $a['id'], null);
+        $repo->designate((int) $b['id'], (int) $a['id']);
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [(int) $b['id']]);
+
+        $this->actingAs($a);
+        $this->assertStatus(422, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+    }
+
     public function test_capabilities_dark_leaves_account_lifecycle_behavior_unchanged(): void
     {
         // With capabilities dark (default), the guard is not wired: the legacy
