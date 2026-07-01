@@ -242,6 +242,18 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   **capability resolver (P5-08, Increment 1)** and the **remaining four
   owner-loss enforcement paths (Increment 6)** are not yet built, so this is not
   R4/R5. Deploy-dark; no live behavior.
+- **Fixture + baselines + budget harness (Foundation F9):** R2 (implemented,
+  deploy-dark — no flag; the seeder refuses `app.env=production`) +
+  **R3-partial** — `Phase5FixtureSeeder` (representative role/assignment/
+  provider/moderator corpus), `BaselineMetricsService` (legacy
+  authority-read baseline), the code-owned `Phase5Budgets` D11 catalogue,
+  and `Phase5BudgetReportService` wired via `bin/console verify:phase5-budgets`
+  are implemented with enforcing PHPUnit evidence. The **A3** entry-gate
+  artifact (`docs/evidence/phase5/performance-budgets.md`) is generated and
+  measures `resolver.p95` as a real BASELINE number against the F9 fixture
+  (`webhook.delivery_timeout` reports its CONFIG cap); the remaining nine
+  D11 budgets stay **PENDING** until each owning increment measures them on
+  this same fixture — not R4/R5.
 - **All other Phase 5 subsystems (registry, themes, passkeys,
   providers, invitations, sandbox, governance, service principals, verified
   links):** R0/R1 — pending implementation and workstream-specific evidence.

@@ -41,6 +41,8 @@ use App\Service\AttachmentService;
 use App\Service\AttachmentScanService;
 use App\Service\EmailDomainVerifier;
 use App\Service\Extension\BubblewrapSandboxAdapter;
+use App\Service\Phase5BudgetReportService;
+use App\Service\Phase5FixtureSeeder;
 use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
 use App\Worker\ServerExtensionWorker;
@@ -407,6 +409,34 @@ try {
             $log(sprintf('Webhook delivery: delivered=%d retrying=%d dead=%d skipped=%d', $stats['delivered'], $stats['retrying'], $stats['dead'], $stats['skipped']));
             break;
 
+        case 'verify:phase5-budgets':
+            // Phase 5 Foundation F9 — seeds the representative fixture (unless
+            // --no-seed) and writes the A3 measured-vs-D11 budget report. Gated
+            // behind an env check because it seeds data; never run against
+            // production (CONSOLE-1 precedent, see verify:upgrade above).
+            $env = (string) $config->get('app.env', 'production');
+            if ($env === 'production') {
+                $log('Refusing: verify:phase5-budgets seeds a fixture and must not run with app.env=production.');
+                exit(1);
+            }
+            $db = $database();
+            $noSeed = in_array('--no-seed', $argv, true);
+            if (!$noSeed) {
+                $summary = (new Phase5FixtureSeeder($db, new SettingRepository($db), $env))->seed();
+                $log($summary['skipped'] ? 'Fixture already seeded.' : sprintf(
+                    'Seeded fixture: %d users, %d boards, %d assignments, %d owner(s).',
+                    $summary['users'], $summary['boards'], $summary['assignments'], $summary['owners'],
+                ));
+            }
+            $report = new Phase5BudgetReportService($db);
+            $path = $root . '/docs/evidence/phase5/performance-budgets.md';
+            $report->write($path);
+            foreach ($report->rows() as $r) {
+                $log(sprintf('  [%-20s] %s → %s', $r['status'], $r['key'], $r['measured']));
+            }
+            $log('Wrote ' . $path);
+            break;
+
         case 'help':
         default:
             $log('RetroBoards console');
@@ -436,6 +466,7 @@ try {
             $log('  worker:extensions [limit]  Drain queued async server-extension jobs when enabled');
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
+            $log('  verify:phase5-budgets   Seed the F9 fixture and write the D11 budget report (A3)');
             break;
     }
 } catch (Throwable $e) {
