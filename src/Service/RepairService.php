@@ -149,6 +149,31 @@ final class RepairService
         return $toSolved + $toOpen;
     }
 
+    /**
+     * Ensure the "≥1 active recoverable owner" invariant (decision #27) is
+     * satisfiable: if any active admin exists but no active protected owner is
+     * designated, designate the earliest active admin. Idempotent — a no-op once
+     * an owner exists or when there is no admin (fresh install pre-setup).
+     * @return int rows inserted
+     */
+    public function repairProtectedOwners(): int
+    {
+        if ((int) $this->db->fetchValue('SELECT EXISTS(SELECT 1 FROM protected_owners WHERE is_active = 1)') === 1) {
+            return 0;
+        }
+        $adminId = $this->db->fetchValue(
+            "SELECT id FROM users WHERE role = 'admin' AND status = 'active' ORDER BY id ASC LIMIT 1",
+        );
+        if ($adminId === null) {
+            return 0;
+        }
+        return $this->db->run(
+            'INSERT IGNORE INTO protected_owners (user_id, is_active, designated_by, designated_at, created_at)
+             VALUES (?, 1, NULL, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
+            [(int) $adminId],
+        )->rowCount();
+    }
+
     public function repairAll(): array
     {
         return $this->db->transaction(function (): array {
@@ -157,6 +182,7 @@ final class RepairService
                 'thread_counters' => $this->repairThreadCounters(),
                 'board_counters' => $this->repairBoardCounters(),
                 'thread_statuses' => $this->repairThreadStatuses(),
+                'protected_owners' => $this->repairProtectedOwners(),
                 'reputation' => $this->repairReputation(),
             ];
             return $out;
