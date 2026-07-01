@@ -184,6 +184,17 @@ use Throwable;
  */
 final class App
 {
+    /**
+     * Core compatibility version (Foundation F2). Package releases declare
+     * `core_min`/`core_max` (0049 package_releases) against this identity;
+     * `App\Support\CoreVersion::satisfies()` is the comparison the Inc-2
+     * compatibility resolver builds on. `-dev` orders BEFORE the bare release
+     * (version_compare), so a dev core fails closed for packages that require
+     * the released core. Bump on release; distinct from the cosmetic
+     * `brand_version` setting (cache-busting only).
+     */
+    public const CORE_VERSION = '0.5.0-dev';
+
     private Router $router;
 
     public function __construct(
