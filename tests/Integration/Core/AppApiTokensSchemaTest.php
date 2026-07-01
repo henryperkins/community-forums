@@ -27,7 +27,11 @@ final class AppApiTokensSchemaTest extends TestCase
         self::assertSame('char(64)', $hash['column_type']);
         self::assertNull($this->column('api_tokens', 'token'), 'no raw-token column may exist');
         self::assertNotNull($this->column('api_tokens', 'scopes'));
-        self::assertSame('json', $this->column('api_tokens', 'scopes')['type']);
+        // MySQL 8 reports the native 'json' type; MariaDB stores JSON as a LONGTEXT
+        // alias and reports 'longtext'. The project supports both engines, so accept
+        // either rather than pinning the assertion to MySQL.
+        $scopesType = $this->column('api_tokens', 'scopes')['type'];
+        self::assertContains($scopesType, ['json', 'longtext'], "scopes must be a JSON column (got {$scopesType})");
         self::assertSame(
             1,
             (int) $this->db->fetchValue(

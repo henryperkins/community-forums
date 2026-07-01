@@ -188,6 +188,43 @@ test('phase 4 poll vote works through the server-rendered thread flow', async ({
   await shot(page, info, '25-poll-voted');
 });
 
+test('phase 4 topic workflow: status, snooze, and assignment via the server-rendered thread', async ({ page }, info) => {
+  // topic_workflow graduated to default-on (GA 2026-07-01). Drive the no-JS
+  // workflow bar as alice — moderator of #general (staff), which #general opts
+  // into assignment via assignment_mode=staff (seed). Each control is a plain
+  // form POST → PRG redirect back to the thread; the summary bar reflects it.
+  await login(page, 'alice@retro.test');
+
+  await visit(page, '/c/general');
+  await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
+  await page.waitForURL(/\/t\//);
+  await expect(page.locator('.wf-bar')).toBeVisible();
+
+  // Status: staff moves the topic to "Needs answer".
+  await page.locator('#thread-status').selectOption('needs_answer');
+  await page.locator('.wf-actions input[name="reason"]').fill('Needs a reply');
+  await page.getByRole('button', { name: 'Update status' }).click();
+  await expect(page.locator('.wf-bar')).toContainText('Needs answer');
+
+  // Snooze: a personal reminder (no cross-user effect).
+  await page.locator('#thread-snooze').selectOption('tomorrow');
+  await page.getByRole('button', { name: 'Snooze', exact: true }).click();
+  await expect(page.locator('.wf-bar')).toContainText('Snoozed until');
+
+  // Assignment: staff assigns the topic to @bob (board is opted into assignment).
+  await page.locator('#thread-assignee').fill('bob');
+  await page.getByRole('button', { name: 'Assign', exact: true }).click();
+  await expect(page.locator('.wf-bar')).toContainText('Assigned to @bob');
+  await expect(page.getByRole('button', { name: 'Unassign' })).toBeVisible();
+
+  // Status history is surfaced (audit trail) — expand it so the evidence
+  // screenshot captures the recorded transitions.
+  await page.locator('.wf-history > summary').click();
+  await expect(page.locator('.wf-history-list')).toContainText('Needs answer');
+
+  await shot(page, info, '29-topic-workflow');
+});
+
 test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
 

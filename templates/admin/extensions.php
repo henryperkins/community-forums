@@ -37,7 +37,7 @@
             'num' => '04',
             'title' => "The moderator's tools",
             'desc' => 'A workflow bar to assign, snooze and escalate; tools to split and merge topics.',
-            'flags' => [['topic_workflow', 'Capture away'], ['split_merge', 'Design-ahead']],
+            'flags' => [['topic_workflow', 'Flip now'], ['split_merge', 'Design-ahead']],
             'summary' => '2 flags',
         ],
         [

@@ -122,6 +122,33 @@ final class RepairService
     }
 
     /** Run every repair pass. @return array<string,int> */
+    /**
+     * Reconcile the topic_workflow `solved` status projection from the canonical
+     * accepted-answer marker (`threads.accepted_answer_post_id`). Mirrors the live
+     * SolvedAnswerService sync — only `open`/`needs_answer` ⇄ `solved` — so
+     * staff-set statuses (`decision_made`/`archived`) are never clobbered. Lets an
+     * operator run `repair` to pick up answers accepted while `topic_workflow` was
+     * disabled (the flag gates the live sync). @return int rows changed
+     */
+    public function repairThreadStatuses(): int
+    {
+        $toSolved = $this->db->run(
+            "UPDATE threads
+                SET status = 'solved', status_changed_at = UTC_TIMESTAMP()
+              WHERE accepted_answer_post_id IS NOT NULL
+                AND is_deleted = 0
+                AND status IN ('open', 'needs_answer')",
+        )->rowCount();
+        $toOpen = $this->db->run(
+            "UPDATE threads
+                SET status = 'open', status_changed_at = UTC_TIMESTAMP()
+              WHERE accepted_answer_post_id IS NULL
+                AND is_deleted = 0
+                AND status = 'solved'",
+        )->rowCount();
+        return $toSolved + $toOpen;
+    }
+
     public function repairAll(): array
     {
         return $this->db->transaction(function (): array {
@@ -129,6 +156,7 @@ final class RepairService
                 'user_post_counts' => $this->repairUserPostCounts(),
                 'thread_counters' => $this->repairThreadCounters(),
                 'board_counters' => $this->repairBoardCounters(),
+                'thread_statuses' => $this->repairThreadStatuses(),
                 'reputation' => $this->repairReputation(),
             ];
             return $out;

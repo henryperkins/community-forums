@@ -31,7 +31,7 @@ final class AppFeatureFlagTest extends TestCase
     public function test_phase4_gate_a_flags_default_dark(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        foreach (['topic_workflow', 'group_dms', 'tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory'] as $flag) {
+        foreach (['group_dms', 'tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory'] as $flag) {
             self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
         }
 
@@ -39,6 +39,36 @@ final class AppFeatureFlagTest extends TestCase
         $overridden = new FeatureFlags(new SettingRepository($this->db));
         self::assertTrue($overridden->enabled('tags'));
         self::assertTrue($overridden->enabled('community'));
+    }
+
+    public function test_topic_workflow_is_available_by_default_and_can_be_disabled(): void
+    {
+        // topic_workflow graduated to default-on (GA 2026-07-01): with no
+        // features override, the status route is live for a permitted author. An
+        // operator can still take the whole surface offline via the features
+        // setting (the rollback path), mirroring the polls graduation.
+        $author = $this->makeUser(['username' => 'wf_default_author']);
+        $board = $this->makeBoard($this->makeCategory('Workflow Default'));
+        $thread = $this->makeThread($board, $author, 'Workflow default', 'body');
+        $this->actingAs($author);
+
+        // Available by default (no override): the OP may set open/needs_answer/
+        // solved, so the status write redirects back to the thread, not 404.
+        $this->assertRedirectContains($this->post('/t/' . $thread['thread_id'] . '/status', [
+            'status' => 'needs_answer',
+            'reason' => 'triage',
+        ]), '/t/' . $thread['thread_id']);
+        self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('topic_workflow'));
+
+        // Isolation: graduating topic_workflow must not enable a Gate A neighbour.
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'));
+
+        // Operator rollback: disabling the flag takes the route offline (404).
+        $this->setFlags(['topic_workflow' => false]);
+        $this->assertStatus(404, $this->post('/t/' . $thread['thread_id'] . '/status', [
+            'status' => 'solved',
+            'reason' => 'x',
+        ]));
     }
 
     public function test_phase5_foundation_flags_default_dark(): void

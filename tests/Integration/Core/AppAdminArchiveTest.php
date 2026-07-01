@@ -106,6 +106,7 @@ final class AppAdminArchiveTest extends TestCase
             new \App\Repository\BoardMemberRepository($this->db),
             new \App\Repository\ModerationLogRepository($this->db),
             new \App\Security\WriteGate(),
+            new \App\Core\FeatureFlags(new \App\Repository\SettingRepository($this->db)),
         );
 
         $this->expectException(\App\Core\ForbiddenException::class);
@@ -357,6 +358,7 @@ final class AppAdminArchiveTest extends TestCase
             new \App\Repository\BoardMemberRepository($this->db),
             new \App\Repository\ModerationLogRepository($this->db),
             new \App\Security\WriteGate(),
+            new \App\Core\FeatureFlags(new \App\Repository\SettingRepository($this->db)),
         );
     }
 }

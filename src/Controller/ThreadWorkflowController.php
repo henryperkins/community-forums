@@ -14,6 +14,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
+use App\Security\WriteGate;
 use App\Service\ThreadWorkflowService;
 
 final class ThreadWorkflowController extends Controller
@@ -45,6 +46,10 @@ final class ThreadWorkflowController extends Controller
     {
         $this->requireWorkflow();
         $user = $this->requireUser();
+        // State beats role: suspended/banned/deactivated accounts cannot write,
+        // even a personal snooze. Status/assign gate this via ThreadWorkflowService;
+        // snooze writes the per-user row directly, so it must gate here too.
+        $this->container->get(WriteGate::class)->assertCanWrite($user);
         $threadId = (int) ($params['id'] ?? 0);
         $thread = $this->readableThread($threadId);
 

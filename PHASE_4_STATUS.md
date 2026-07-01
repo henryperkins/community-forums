@@ -1,7 +1,7 @@
 # Phase 4 Status
 
 **Status:** engineering closeout complete with explicit deferrals; product-owner accepted as the Phase 5 entry baseline on 2026-06-28
-**Last updated:** 2026-06-30
+**Last updated:** 2026-07-01
 **Branch:** accepted baseline on `main`; current checkout includes later deploy-dark carryover code and closeout evidence
 **Suite:** accepted baseline `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green. Current checkout `RB_TEST_FRESH=1 composer test` → 803 tests / 3236 assertions, green
 
@@ -99,5 +99,6 @@ runtime source of truth.
 ## Operating Notes
 
 - `php bin/console repair:reputation`, `repair:reputation-ledger`, and `reputation:reconcile` now rebuild `reputation_events` from canonical reactions/accepted answers, reverse stale events, and reconcile `users.reputation`.
-- Phase 4 Gate A feature flags default `false`: `topic_workflow`, `group_dms`, `tags`, `expanded_feeds`, `reputation_ledger`, `badge_rules`, `community_memory`.
+- Phase 4 Gate A feature flags default `false`: `group_dms`, `tags`, `expanded_feeds`, `reputation_ledger`, `badge_rules`, `community_memory`.
+- `topic_workflow` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppFeatureFlagTest::test_topic_workflow_is_available_by_default_and_can_be_disabled`, browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, `docs/runbooks/topic_workflow.md`). Reversible via the `features` override.
 - All-time leaderboard remains governed by the existing `community` flag; windowed/board leaderboard modes require `reputation_ledger`.

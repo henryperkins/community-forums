@@ -87,3 +87,31 @@ test('phase 4 poll panel has no serious axe violations (vote form and results)',
     await expectNoSeriousA11yViolations(page, info, '.poll-panel');
   }
 });
+
+test('phase 4 topic workflow bar has no serious axe violations (actions and summary)', async ({ page }, info) => {
+  // topic_workflow graduated to default-on (GA 2026-07-01). Scan the no-JS
+  // workflow surface as alice (moderator of #general → the full status/snooze/
+  // assign control set renders). Scope to the workflow selectors so this gate
+  // isn't blocked by unrelated pre-existing thread-page issues.
+  await login(page, 'alice@retro.test');
+
+  await visit(page, '/c/general');
+  await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
+  await page.waitForURL(/\/t\//);
+
+  await expect(page.locator('.wf-actions')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.wf-actions');
+
+  await expect(page.locator('.wf-bar')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.wf-bar');
+
+  // Status history is surfaced as a collapsible audit list. Generate a change so
+  // the list exists regardless of run order vs the gate-a flow, then expand and
+  // scan it (a no-op change simply reuses the existing history row).
+  await page.locator('#thread-status').selectOption('needs_answer');
+  await page.getByRole('button', { name: 'Update status' }).click();
+  await expect(page.locator('.wf-history')).toBeVisible();
+  await page.locator('.wf-history > summary').click();
+  await expect(page.locator('.wf-history-list')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.wf-history');
+});

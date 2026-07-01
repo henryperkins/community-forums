@@ -162,6 +162,26 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
+            <?php if (!empty($status_history)): ?>
+                <details class="workflow-history wf-history">
+                    <summary>Status history</summary>
+                    <ol class="wf-history-list">
+                        <?php foreach ($status_history as $wfEvent): ?>
+                            <li class="wf-history-item">
+                                <span class="wf-history-to"><?= $e($status_labels[$wfEvent['new_status']] ?? $wfEvent['new_status']) ?></span>
+                                <?php if (!empty($wfEvent['previous_status'])): ?>
+                                    <span class="muted">from <?= $e($status_labels[$wfEvent['previous_status']] ?? $wfEvent['previous_status']) ?></span>
+                                <?php endif; ?>
+                                <span class="wf-history-actor"><?= $e($wfEvent['actor_display_name'] ?? $wfEvent['actor_username'] ?? 'system') ?></span>
+                                <span class="muted"><?= $e(human_datetime($wfEvent['created_at'])) ?></span>
+                                <?php if (!empty($wfEvent['reason'])): ?>
+                                    <span class="wf-history-reason">— <?= $e($wfEvent['reason']) ?></span>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ol>
+                </details>
+            <?php endif; ?>
         <?php endif; ?>
         <?php if (($tags_on ?? false) && !empty($thread_tags)): ?>
             <div class="workflow-bar" aria-label="Topic tags">

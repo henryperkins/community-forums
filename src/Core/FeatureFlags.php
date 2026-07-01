@@ -49,7 +49,7 @@ final class FeatureFlags
         'product_tour' => true,      // new-user onboarding tour (P3-11)
 
         // ── Phase 4 Gate A ───────────────────────────────────────────────
-        'topic_workflow' => false,    // canonical status, history, snooze, assignment
+        'topic_workflow' => true,     // canonical status, history, snooze, assignment — GA default-on (2026-07-01; reversible via features override)
         'group_dms' => false,         // group conversation creation/invites
         'tags' => false,              // curated tag catalogue + thread tagging
         'expanded_feeds' => false,    // board/tag follows, Following + Latest feeds

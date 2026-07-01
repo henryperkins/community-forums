@@ -970,6 +970,7 @@ final class App
             $c->get(BoardMemberRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
         ));
         $c->bind(ThreadSplitMergeService::class, fn (Container $c) => new ThreadSplitMergeService(
             $c->get(Database::class),

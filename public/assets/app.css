@@ -3554,6 +3554,39 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 span.wf-btn {
     color: var(--text-muted);
 }
+.wf-history {
+    margin-top: 6px;
+    padding-left: 13px;
+    border-left: 3px solid var(--rule-gold);
+    font-size: .85rem;
+}
+.wf-history > summary {
+    font-family: var(--font-label);
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    cursor: pointer;
+}
+.wf-history-list {
+    margin: 6px 0 0;
+    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.wf-history-item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+}
+.wf-history-actor {
+    font-weight: 600;
+}
+.wf-history-reason {
+    color: var(--text-muted);
+}
 
 .poll-card {
     margin-top: 18px;

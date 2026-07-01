@@ -123,6 +123,97 @@ final class AppPhase4GateATest extends TestCase
         self::assertSame('decision_made', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$thread['thread_id']]));
     }
 
+    public function testSuspendedMemberCannotSnooze(): void
+    {
+        $author = $this->makeUser(['username' => 'snoozeauthor']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Snooze Gate']);
+        $thread = $this->makeThread($board, $author, 'Snooze gate', 'Opening body');
+
+        // An active member may snooze (redirect, not 403).
+        $active = $this->makeUser(['username' => 'snoozeactive']);
+        $this->actingAs($active);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/snooze', ['until' => 'tomorrow']));
+
+        // State beats role: a suspended account cannot write — including a personal
+        // snooze. Status/assign gate this in ThreadWorkflowService; snooze writes
+        // the per-user row directly, so the controller must gate it too.
+        $suspended = $this->makeUser(['username' => 'snoozesuspended', 'status' => 'suspended']);
+        $this->actingAs($suspended);
+        $this->assertStatus(403, $this->post('/t/' . $thread['thread_id'] . '/snooze', ['until' => 'tomorrow']));
+    }
+
+    public function testStatusHistoryRendersOnThreadPage(): void
+    {
+        $author = $this->makeUser(['username' => 'historyauthor']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'History']);
+        $thread = $this->makeThread($board, $author, 'History thread', 'Opening body');
+        $slug = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/status', ['status' => 'needs_answer', 'reason' => 'please advise']));
+
+        // The status change is now surfaced on the thread page (audit trail), not
+        // just recorded — the transition, reason, and actor render.
+        $page = $this->get($slug);
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'Status history');
+        $this->assertSeeText($page, 'please advise');
+    }
+
+    public function testAcceptingAnswerSkipsStatusWhenWorkflowDarkAndRepairReconciles(): void
+    {
+        // Fix 3 (Option A): the community accept-answer path syncs threads.status
+        // only when topic_workflow is on. Disabling the flag freezes the status
+        // projection; `repair` reconciles it from the accepted-answer marker.
+        (new SettingRepository($this->db))->set('features', ['topic_workflow' => false]);
+
+        $op = $this->makeUser(['username' => 'darkacceptop']);
+        $answerer = $this->makeUser(['username' => 'darkacceptanswerer']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Dark Accept']);
+        $thread = $this->makeThread($board, $op, 'Need an answer', 'Opening body');
+        $threadId = $thread['thread_id'];
+        $replyId = $this->posting()->reply($this->userEntity($answerer), $threadId, ['body' => 'Do it like this.']);
+
+        $this->actingAs($op);
+        $this->assertRedirectContains($this->post('/posts/' . $replyId . '/accept'), '/t/' . $threadId);
+
+        // Accepted-answer marker is set (community), but status is NOT synced while dark.
+        self::assertSame($replyId, (int) $this->db->fetchValue('SELECT accepted_answer_post_id FROM threads WHERE id = ?', [$threadId]));
+        self::assertSame('open', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$threadId]));
+
+        // repair reconciles the projection from the accepted answer.
+        self::assertSame(1, (new RepairService($this->db))->repairThreadStatuses());
+        self::assertSame('solved', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$threadId]));
+
+        // Unaccepting while dark clears the marker but leaves status frozen…
+        $this->assertRedirectContains($this->post('/t/' . $threadId . '/unaccept'), '/t/' . $threadId);
+        self::assertNull($this->db->fetchValue('SELECT accepted_answer_post_id FROM threads WHERE id = ?', [$threadId]));
+        self::assertSame('solved', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$threadId]));
+
+        // …until repair reconciles it back to open.
+        self::assertSame(1, (new RepairService($this->db))->repairThreadStatuses());
+        self::assertSame('open', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$threadId]));
+    }
+
+    public function testRepairThreadStatusesPreservesStaffSetStatus(): void
+    {
+        // The reconcile maps only open/needs_answer ⇄ solved; a staff-set
+        // decision_made/archived is never clobbered even with an accepted answer.
+        $op = $this->makeUser(['username' => 'preserveop']);
+        $answerer = $this->makeUser(['username' => 'preserveanswerer']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Staff Preserve']);
+        $thread = $this->makeThread($board, $op, 'Decided', 'Opening body');
+        $replyId = $this->posting()->reply($this->userEntity($answerer), $thread['thread_id'], ['body' => 'answer']);
+
+        $this->db->run(
+            'UPDATE threads SET accepted_answer_post_id = ?, status = ? WHERE id = ?',
+            [$replyId, 'decision_made', $thread['thread_id']],
+        );
+
+        self::assertSame(0, (new RepairService($this->db))->repairThreadStatuses());
+        self::assertSame('decision_made', (string) $this->db->fetchValue('SELECT status FROM threads WHERE id = ?', [$thread['thread_id']]));
+    }
+
     public function testGroupDmMembershipBoundaries(): void
     {
         $owner = $this->established(['username' => 'groupowner']);

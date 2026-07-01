@@ -10,6 +10,7 @@ composer.lock
 /.env
 /storage/cache/*
 /storage/ratelimit/*
+/storage/ratelimit-e2e/
 !/storage/cache/.gitkeep
 !/storage/ratelimit/.gitkeep
 

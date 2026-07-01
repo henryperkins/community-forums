@@ -58,6 +58,7 @@ $evidenceFeatures = [
     'announcements' => true,
     'polls' => true,
     'slash_giphy' => true,
+    'topic_workflow' => true, // GA default-on (2026-07-01); listed explicitly so the workflow bar is captured regardless of the DEFAULTS map
 ];
 if ($includeDarkSurfaceFixtures) {
     $evidenceFeatures['appeals'] = true;
@@ -275,6 +276,7 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
     $general = $boards->create([
         'category_id' => $community, 'slug' => 'general', 'name' => 'General',
         'description' => 'Talk about anything.', 'visibility' => 'public', 'post_min_role' => 'user', 'allow_anonymous' => 1,
+        'assignment_mode' => 'staff', // opt #general into topic assignment so the workflow assign control renders for staff (alice)
     ]);
     $boards->create([
         'category_id' => $community, 'slug' => 'feedback', 'name' => 'Feedback',

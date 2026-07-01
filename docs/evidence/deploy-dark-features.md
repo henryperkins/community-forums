@@ -1,6 +1,6 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-06-30
+**Date:** 2026-07-01
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`. That default means the code and schema may be
@@ -21,7 +21,7 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
-| `topic_workflow` | Canonical status, history, snooze, assignment | Accepted Gate A engineering baseline; default-dark until intentional enablement |
+| `topic_workflow` | Canonical status, history, snooze, assignment | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, runbook `docs/runbooks/topic_workflow.md`. Retained here for traceability. |
 | `group_dms` | Group conversation creation and invites | Accepted Gate A engineering baseline; default-dark until intentional enablement |
 | `tags` | Curated tag catalogue and thread tagging | Accepted Gate A engineering baseline; default-dark until intentional enablement |
 | `expanded_feeds` | Board/tag follows, expanded Following and Latest feeds | Accepted Gate A engineering baseline; default-dark until intentional enablement |
@@ -82,6 +82,13 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 - TOTP/recovery code support is not listed here because it does not have a
   global default-off feature flag in `FeatureFlags`; it is user/account opt-in.
 - `polls` graduated out of deploy-dark on 2026-06-30: its `FeatureFlags` default
-  is now `true` (acceptance evidence complete). It is the one row in this
-  inventory that no longer defaults to `false`; it is retained for traceability
+  is now `true` (acceptance evidence complete). It is retained for traceability
   and remains reversible via the `features` override.
+- `topic_workflow` graduated out of deploy-dark on 2026-07-01: its `FeatureFlags`
+  default is now `true` (acceptance evidence complete). Like `polls`, it no longer
+  defaults to `false`; it is retained here for traceability and remains reversible
+  via the `features` override. The `solved` status projection is gated on the
+  flag: disabling `topic_workflow` freezes all workflow status writes (the ✓
+  accepted-answer badge remains the community solved indicator); run
+  `php bin/console repair` after re-enabling to reconcile the projection from
+  accepted answers.

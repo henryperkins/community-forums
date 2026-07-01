@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Core\FeatureFlags;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
@@ -37,6 +38,7 @@ final class ThreadWorkflowService
         private BoardMemberRepository $boardMembers,
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
+        private FeatureFlags $flags,
     ) {
     }
 
@@ -75,6 +77,15 @@ final class ThreadWorkflowService
 
     public function syncSolvedStatus(User $actor, int $threadId, bool $solved): void
     {
+        // The accept-answer path (SolvedAnswerService) is gated by the `community`
+        // flag, not topic_workflow, and reaches this service directly. Only project
+        // the accepted-answer marker into the workflow status column when
+        // topic_workflow is enabled, so disabling the flag freezes ALL workflow
+        // status writes. RepairService::repairThreadStatuses() reconciles the
+        // projection from accepted answers when the flag is (re-)enabled.
+        if (!$this->flags->enabled('topic_workflow')) {
+            return;
+        }
         $thread = $this->threadOrFail($threadId);
         $current = (string) ($thread['status'] ?? 'open');
         if ($solved && $current !== 'solved') {
