@@ -372,4 +372,37 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/email/suppressions', ['email' => 'x@example.test']));
         $this->assertStatus(404, $this->post('/admin/email/suppressions/remove', ['email' => 'x@example.test']));
     }
+
+    public function test_core_forum_survives_with_every_feature_flag_disabled(): void
+    {
+        // Foundation F10: the emergency posture "all flags off" must leave the
+        // Phase 1 core forum operable: anonymous reading, authenticated posting,
+        // and the admin dashboard. If this fails, fix the offending flag guard.
+        $allOff = array_map(
+            static fn () => false,
+            (new FeatureFlags(new SettingRepository($this->db)))->all(),
+        );
+        $this->setFlags($allOff);
+
+        $author = $this->makeUser(['username' => 'allflagsoff']);
+        $board = $this->makeBoard($this->makeCategory('Dark Ops'));
+        $thread = $this->makeThread($board, $author, 'Core survives dark', 'Opening post.');
+        $threadPath = '/t/' . $thread['thread_id'] . '-' . $thread['slug'];
+
+        $this->assertStatus(200, $this->get('/'));
+        $this->assertStatus(200, $this->get($threadPath));
+
+        $this->actingAs($author);
+        $this->assertRedirectContains(
+            $this->post('/t/' . $thread['thread_id'] . '/reply', [
+                'body' => 'Still posting with every flag dark.',
+                'idempotency_key' => 'allflagsoff-' . bin2hex(random_bytes(6)),
+            ]),
+            '/t/' . $thread['thread_id'],
+        );
+
+        $admin = $this->makeAdmin(['username' => 'darkadmin']);
+        $this->actingAs($admin);
+        $this->assertStatus(200, $this->get('/admin'));
+    }
 }
