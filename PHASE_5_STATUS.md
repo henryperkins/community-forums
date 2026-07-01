@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation authorization spine F3 (capability catalogue + coverage) and F5 (protected-owner seed + `LastOwnerGuard`) landed deploy-dark behind `capabilities`.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The remaining §2 entry-gate artifacts (A1/A4/A5/A8) are recorded with owner sign-offs and **accepted 2026-07-01** in ADR 0012; the Foundation increment (F1–F11) is underway — **F3 + F5 landed 2026-07-01**.
+**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** F2/F4/F6/F7/F8/F10/F11 landed 2026-07-01: `CORE_VERSION`, `DataClasses`, the Ed25519 signing harness + registry fixtures, `ReauthGate`, `Telemetry`/`LogRedactor`, the machine-checkable requirement ledger + all-flags-off regression, and six threat-model dossiers (recorded, pending owner review). Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. Increments 1 (resolver shadow) and 2 (registry) are unblocked.
 **Last updated:** 2026-07-01
-**Branch:** `main`
-**Suite:** `./vendor/bin/phpunit` → **857 tests / 4456 assertions, green** (post-F3/F5; +28 tests over the prior 829 baseline, incl. the owner-status adversarial-review regression; verified on two consecutive plain runs — both the fresh-migrate and the reused-schema `composer test` path). Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile (F3/F5 add no UI surface — PHPUnit + `verify:upgrade` only). Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`), and the Foundation F3/F5 suite (`CapabilityCatalogTest`, `CapabilityInventoryCoverageTest`, `AppPhase5CapabilitySeedTest`, `ProtectedOwnerRepositoryTest`, `RepairProtectedOwnersTest`, `AppProtectedOwnerTest`).
+**Branch:** `phase5-foundation-f9`
+**Suite:** `composer test` → **924 tests / 4927 assertions, green** on two consecutive closeout runs (fresh and reused-schema paths). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` → **4 tests / 8 assertions**, `vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php --filter test_phase5_foundation_flags_default_dark` → **1 test / 20 assertions**. Browser evidence remains **14/14 Playwright checks, green** across desktop + mobile; F2/F4/F6/F7/F8/F10/F11 add no UI surface.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -254,6 +254,12 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   (`webhook.delivery_timeout` reports its CONFIG cap); the remaining nine
   D11 budgets stay **PENDING** until each owning increment measures them on
   this same fixture — not R4/R5.
+- **Foundation remainder (F2/F4/F6/F7/F8/F10/F11):** R3 — see
+  `docs/phase5/requirement-ledger.json`, now the machine-checked source of
+  truth for states. This lands `CORE_VERSION`, `DataClasses`, the Ed25519
+  signing harness + registry fixtures, `ReauthGate`, `Telemetry`/`LogRedactor`,
+  the all-flags-off core-survival regression, and six recorded-pending-review
+  threat-model dossiers.
 - **All other Phase 5 subsystems (registry, themes, passkeys,
   providers, invitations, sandbox, governance, service principals, verified
   links):** R0/R1 — pending implementation and workstream-specific evidence.
@@ -271,7 +277,15 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
 - Webhook regression (B2 sub-project 3): `tests/Integration/Core/AppWebhooksSchemaTest.php`, `tests/Unit/Support/CidrTest.php`, `tests/Unit/Security/WebhookEventsTest.php`, `tests/Unit/Security/EgressGuardTest.php`, `tests/Unit/Service/WebhookSignerTest.php`, `tests/Unit/Service/WebhookTransportTest.php`, `tests/Integration/Repository/WebhookRepositoryTest.php`, `tests/Integration/Repository/WebhookDeliveryRepositoryTest.php`, `tests/Integration/Service/WebhookServiceTest.php`, `tests/Integration/Worker/WebhookDeliveryWorkerTest.php`, `tests/Integration/Admin/AdminWebhookTest.php`.
 - First-party hook/domain producer regression (B2 sub-project 4): `tests/Unit/Hook/FirstPartyHookRegistryTest.php`, `tests/Integration/Service/DomainWebhookProducerTest.php`.
 - Webhook browser evidence: `docs/evidence/browser/{desktop,mobile}/22-admin-webhook-registered.png` + `23-admin-webhook-delivery-log.png` (admin register → show-once signing secret → create public topic → worker delivery log with `topic.created`).
-- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all 57 migrations on every PHPUnit run; full suite **579 tests / 2190 assertions green**.
+- Foundation remainder (F2/F4/F6/F7/F8/F10/F11): `tests/Unit/Support/CoreVersionTest.php`,
+  `tests/Unit/Security/DataClassesTest.php`, `tests/Unit/Support/SigningHarnessTest.php`,
+  `tests/Integration/Core/RegistryFixturesTest.php`, `tests/Integration/Security/ReauthGateTest.php`,
+  `tests/Unit/Support/LogRedactorTest.php`, `tests/Unit/Core/TelemetryRedactionTest.php`,
+  `tests/Unit/Core/Phase5EvidenceMapTest.php`, `tests/Unit/Core/ThreatModelIndexTest.php`,
+  `AppFeatureFlagTest::test_core_forum_survives_with_every_feature_flag_disabled`.
+- Requirement ledger: `docs/phase5/requirement-ledger.json` (R0-R5 states + per-flag rollback map, machine-checked).
+- Threat models: `docs/phase5/threat-models/` (6 dossiers + `fixtures.json`, 48 negative-fixture stubs; TM-SE-01 already implemented).
+- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **924 tests / 4927 assertions green**.
 - **Browser evidence:** `npm run evidence` → **14/14 Playwright checks green** on desktop + mobile; includes admin API-token and domain webhook no-JS journeys.
 - **Worker smoke:** `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 MAIL_DRIVER=array php bin/console worker:webhooks` → `delivered=0 retrying=0 dead=0 skipped=0`.
 - **Populated-upgrade rehearsal:** `APP_ENV=testing DB_DATABASE=retroboards_upgrade_verify php bin/console verify:upgrade --force` → **PASS 17/17** (`0049`–`0057` applied on seeded Phase-1 data; `oauth_identities` ENUM→VARCHAR widen included; 90 Phase-1 columns intact; zero data loss).
