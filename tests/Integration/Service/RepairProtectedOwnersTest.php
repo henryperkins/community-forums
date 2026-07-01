@@ -59,4 +59,16 @@ final class RepairProtectedOwnersTest extends TestCase
         self::assertSame(1, (new RepairService($this->db))->repairProtectedOwners());
         self::assertTrue($repo->isActiveOwner((int) $live['id']), 'the active admin becomes a recoverable owner');
     }
+
+    public function test_reactivates_inactive_owner_row_for_active_admin(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'repair_inactive_owner']);
+        $repo = new ProtectedOwnerRepository($this->db);
+        $repo->designate((int) $admin['id'], null);
+        $this->db->run('UPDATE protected_owners SET is_active = 0 WHERE user_id = ?', [(int) $admin['id']]);
+        self::assertFalse($repo->hasAnyActiveOwner());
+
+        self::assertSame(1, (new RepairService($this->db))->repairProtectedOwners());
+        self::assertTrue($repo->isActiveOwner((int) $admin['id']));
+    }
 }

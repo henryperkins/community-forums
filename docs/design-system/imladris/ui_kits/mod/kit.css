@@ -1,0 +1,135 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Moderation UI kit — the warden's table
+   The triage side of RetroBoards, distinct from the admin console: reports,
+   the approval hold, appeals review, and the member's own appeal view.
+   Faithful to templates/mod/{reports,approvals,appeals}.php + appeals/index.php
+   — the .reports-view / .report-list / .report-row / .approval-list shapes —
+   in the Imladris register. The working desk, not the ceremonial hall, but
+   on-brand: serif headings, Marcellus labels, parchment cards, gold active nav.
+   Primitives come from styles.css + _ds_bundle.js; this is only the layout.
+   ────────────────────────────────────────────────────────────────────────── */
+
+html, body { height: 100%; }
+body { margin: 0; background: var(--surface-page); }
+.app-root { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ── Top bar (shared chrome) ────────────────────────────────────────────── */
+.topbar {
+    min-height: var(--topbar-h);
+    background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-hair); position: sticky; top: 0; z-index: 20;
+}
+.topbar-inner { max-width: var(--maxw); margin: 0 auto; min-height: var(--topbar-h); padding: 0 18px; display: flex; align-items: center; gap: 14px; }
+.brand { display: inline-flex; align-items: center; gap: 11px; color: var(--brand); text-decoration: none; }
+.brand-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.4rem; color: var(--text-strong); line-height: 1; }
+.topbar-back { font-family: var(--font-label); letter-spacing: .03em; font-size: .85rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.topbar-back:hover { color: var(--brand); text-decoration: none; }
+.topbar-back svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.topbar-user { display: inline-flex; align-items: center; gap: 9px; color: var(--text-strong); }
+.topbar-user .topbar-name { font-family: var(--font-body); font-weight: var(--weight-medium); font-size: .95rem; }
+
+/* ── Moderation shell ───────────────────────────────────────────────────── */
+.mod { max-width: 1120px; margin: 0 auto; width: 100%; padding: 24px 28px 64px; }
+.mod-head { display: flex; align-items: center; gap: 13px; margin-bottom: 4px; }
+.mod-head .eyebrow { display: block; white-space: nowrap; line-height: 1; margin: 0 0 5px; }
+.mod-head h1 { font-size: 1.9rem; margin: 0; line-height: 1.1; white-space: nowrap; }
+.mod-head > span:first-child { min-width: 0; }
+.mod-pill { margin-left: auto; color: var(--green-800); background: var(--brand-subtle); box-shadow: inset 0 0 0 1px var(--green-200); }
+
+/* Horizontal subnav with queue counts */
+.mod-subnav { display: flex; flex-wrap: wrap; gap: 2px; margin: 14px 0 22px; border-bottom: 1px solid var(--border-hair); }
+.mod-subnav button {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-label); letter-spacing: .03em; font-size: .82rem;
+    color: var(--text-muted); background: none; border: 0; cursor: pointer;
+    padding: 9px 13px; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+}
+.mod-subnav button:hover { color: var(--text-strong); }
+.mod-subnav button.active { color: var(--text-strong); border-bottom-color: var(--accent-2); }
+.mod-count {
+    font-family: var(--font-mono); font-size: .68rem; line-height: 1; font-variant-numeric: tabular-nums;
+    min-width: 18px; padding: 3px 6px; border-radius: var(--radius-pill); text-align: center;
+    background: var(--surface-sunken); color: var(--text-muted); border: 1px solid var(--border-hair);
+}
+.mod-subnav button.active .mod-count { background: var(--gold-100); color: var(--gold-700); border-color: var(--gold-200); }
+.mod-count.is-urgent { background: #F3E2DC; color: var(--rust); border-color: color-mix(in srgb, var(--rust) 30%, transparent); }
+
+.mod-pane { display: flex; flex-direction: column; gap: 18px; }
+
+/* Section header (the product's .board-header) */
+.board-header { margin-bottom: 4px; }
+.board-header h1 { font-size: 1.4rem; margin: 0 0 3px; }
+.board-header .muted { margin: 0; max-width: 70ch; }
+.mod-pane h2 { font-size: 1.2rem; margin: 8px 0 6px; }
+.mod-pane .card > h2:first-child { margin-top: 0; }
+.empty { padding: 22px 0; }
+
+/* ── Report list (reports + appeals review share .report-row) ───────────── */
+.report-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+.report-row {
+    background: var(--surface-raised); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow-xs);
+    border-left: 3px solid var(--border-soft);
+}
+.report-row.is-open { border-left-color: var(--accent-2); }
+.report-row.is-urgent { border-left-color: var(--rust); }
+.report-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 10px; }
+.report-head .badge { white-space: nowrap; }
+.report-head .muted { font-family: var(--font-mono); font-size: .76rem; }
+.report-target { margin: 0 0 8px; font-family: var(--font-body); font-size: 1.05rem; color: var(--text-strong); }
+.report-target a { color: var(--brand); text-decoration: none; font-weight: var(--weight-medium); }
+.report-target a:hover { text-decoration: underline; }
+.report-target em { font-style: italic; color: var(--text-body); }
+.report-excerpt {
+    margin: 0 0 10px; padding: 9px 14px; border-left: 3px solid var(--border-soft);
+    background: var(--surface-sunken); border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-family: var(--font-body); font-size: .98rem; line-height: 1.55; color: var(--text-body);
+}
+.report-note { margin: 0 0 12px; color: var(--text-muted); font-style: italic; }
+.report-note::before, .report-note::after { content: '\201C'; }
+.report-note::after { content: '\201D'; }
+.report-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--border-hair); margin-top: 2px; }
+.report-actions .resolved-tag { font-family: var(--font-label); letter-spacing: .03em; font-size: .78rem; color: var(--leaf); display: inline-flex; align-items: center; gap: 5px; }
+.report-actions .resolved-tag svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── Appeals review: inline resolve form on each row ────────────────────── */
+.appeal-resolve { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-hair); display: grid; grid-template-columns: 200px 1fr auto; gap: 10px 14px; align-items: end; }
+.appeal-resolve .field { width: 100%; max-width: none; }
+.appeal-resolve .field > span:first-child { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .76rem; color: var(--text-muted); margin-bottom: 5px; }
+.appeal-resolve .btn { white-space: nowrap; }
+@media (max-width: 720px) { .appeal-resolve { grid-template-columns: 1fr; } }
+
+/* ── Approval list (mod/approvals) ──────────────────────────────────────── */
+.approval-list { list-style: none; padding: 0; margin: 0 0 6px; display: flex; flex-direction: column; gap: 10px; }
+.approval-item {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    background: var(--surface-raised); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg); padding: 14px 17px;
+}
+.approval-meta { min-width: 0; flex: 1 1 340px; }
+.approval-meta strong { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.12rem; color: var(--text-strong); display: block; }
+.approval-meta > a { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.12rem; color: var(--brand); text-decoration: none; }
+.approval-meta > a:hover { text-decoration: underline; }
+.approval-meta .muted { display: block; font-family: var(--font-mono); font-size: .74rem; margin-top: 3px; }
+.approval-meta > p { margin: 9px 0 0; font-family: var(--font-body); font-size: .98rem; line-height: 1.55; color: var(--text-body); }
+.approval-actions { display: flex; gap: 9px; align-items: center; flex: 0 0 auto; }
+
+/* ── Member appeal view (appeals/index) ─────────────────────────────────── */
+.mod-pane .card { display: flex; flex-direction: column; }
+.member-note { color: var(--text-muted); margin: 0 0 14px; max-width: 70ch; }
+.appeal-form { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-hair); }
+.appeal-form label { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .78rem; color: var(--text-muted); margin-bottom: 6px; }
+.appeal-form .textarea { margin-bottom: 10px; }
+.resolution-note { margin: 10px 0 0; padding: 9px 13px; background: var(--surface-info); color: var(--on-info); border-radius: var(--radius-md); font-size: .92rem; box-shadow: inset 0 0 0 1px var(--river-200); }
+.resolution-note strong { font-family: var(--font-label); letter-spacing: .03em; }
+
+/* error-list (shared with appeals) */
+.error-list { background: #F3E2DC; color: var(--rust); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--rust) 30%, transparent); }
+.error-list p { margin: 0; }
+
+@media (max-width: 600px) {
+    .topbar-back span, .topbar-user .topbar-name { display: none; }
+    .approval-actions { width: 100%; }
+}

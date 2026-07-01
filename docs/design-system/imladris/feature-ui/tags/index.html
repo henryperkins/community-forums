@@ -1,0 +1,371 @@
+<!-- @dsCard group="Feature activation" viewport="980x880" name="Tags" subtitle="tags — chips on a topic, the composer tag input, and browse-by-tag" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tags — feature design · RetroBoards</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../shared/chrome.css">
+<style>
+  .pane { background: var(--surface-raised); padding: 22px 24px; }
+
+  /* ── tag chip (shared) ─────────────────────────────────────── */
+  .tagc { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-body), serif; font-size: 13.5px; line-height: 1; color: var(--text-body); background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-pill); padding: 6px 11px; white-space: nowrap; text-decoration: none; transition: background var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm); }
+  .tagc .hash { color: var(--gold-ink); font-family: var(--font-mono), monospace; font-size: 12px; }
+  a.tagc, button.tagc { cursor: pointer; }
+  a.tagc:hover, button.tagc:hover { background: var(--brand-subtle); border-color: var(--green-200); color: var(--on-brand-subtle); }
+  .tagc.on { background: var(--brand-subtle); border-color: var(--gold-400); color: var(--on-brand-subtle); box-shadow: var(--gilt); }
+  .tagc.on .hash { color: var(--gold-600); }
+  .tagc.featured { background: var(--gold-soft); border-color: var(--gold-200); color: var(--gold-700); }
+  .tagc.featured .hash { color: var(--gold-600); }
+  .tagc .cnt { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-faint); }
+  .tagc.on .cnt { color: var(--gold-600); }
+  .tagc-x { display: inline-flex; margin: -2px -4px -2px 1px; padding: 2px; border-radius: 50%; color: var(--text-faint); cursor: pointer; transition: background var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm); }
+  .tagc-x:hover { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+
+  .tag-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* ── 01 · on a topic ───────────────────────────────────────── */
+  .tt-crumb { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); margin: 0 0 6px; }
+  .tt-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 23px; line-height: 1.14; color: var(--text-strong); margin: 0 0 12px; }
+  .tt-metarow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tt-by { display: flex; align-items: center; gap: 9px; }
+  .tt-by-name { font-family: var(--font-display), serif; font-weight: 600; font-size: 14px; color: var(--text-strong); }
+  .tt-by-meta { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); }
+  .tt-divider { height: 1px; background: var(--border-hair); margin: 4px 0 16px; }
+
+  .tt-list { display: flex; flex-direction: column; gap: 9px; }
+  .tt-item { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); transition: border-color var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm); }
+  .tt-item:hover { border-color: var(--green-200); box-shadow: var(--shadow-xs); }
+  .tt-item-main { min-width: 0; flex: 1; }
+  .tt-item-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 15.5px; line-height: 1.2; color: var(--text-strong); display: block; }
+  .tt-item-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+  .tt-item-count { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); flex: none; text-align: right; }
+
+  /* ── 02 · composer input ───────────────────────────────────── */
+  .fc { background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-inset); padding: 16px 18px; }
+  .fc-id { display: flex; align-items: center; gap: 8px; font-family: var(--font-label), serif; font-size: 12px; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 12px; }
+  .fc-titlefield { font-family: var(--font-display), serif; font-weight: 500; font-size: 20px; color: var(--text-strong); padding: 4px 0; border: 0; border-bottom: 1px solid var(--border-hair); outline: none; background: none; width: 100%; margin-bottom: 14px; }
+  .fc-titlefield::placeholder { color: var(--text-faint); }
+  .fc-body { font-family: var(--font-body), serif; font-size: 15.5px; line-height: 1.55; color: var(--text-body); min-height: 44px; margin-bottom: 16px; }
+  .fc-body .ph { color: var(--text-faint); }
+
+  .taginput-label { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+  .taginput-label .l { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; color: var(--text-muted); }
+  .taginput-label .lim { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-faint); }
+  .taginput-label .lim.full { color: var(--warning); }
+  .taginput { position: relative; }
+  .taginput-box { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; padding: 9px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); cursor: text; transition: border-color var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm); }
+  .taginput-box.focus { border-color: var(--gold-400); box-shadow: var(--gilt); }
+  .taginput-box input { flex: 1; min-width: 130px; border: 0; outline: none; background: none; font-family: var(--font-body), serif; font-size: 14.5px; color: var(--text-strong); padding: 3px 2px; }
+  .taginput-box input::placeholder { color: var(--text-faint); }
+  .taginput-chip { background: var(--brand-subtle); border-color: var(--green-200); color: var(--on-brand-subtle); }
+  .taginput-chip .hash { color: var(--gold-600); }
+
+  .tag-menu { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30; background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px; max-height: 244px; overflow-y: auto; }
+  .tag-menu-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 9.5px; color: var(--text-muted); padding: 6px 9px 5px; }
+  .tag-opt { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 9px; border: 0; background: none; cursor: pointer; border-radius: var(--radius-sm); text-align: left; transition: background var(--dur-fast) var(--ease-calm); }
+  .tag-opt:hover, .tag-opt.cursor { background: var(--surface-sunken); }
+  .tag-opt .hash { color: var(--gold-ink); font-family: var(--font-mono), monospace; font-size: 13px; flex: none; }
+  .tag-opt-name { font-family: var(--font-body), serif; font-size: 14.5px; color: var(--text-strong); flex: 1; min-width: 0; }
+  .tag-opt-count { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); }
+  .tag-opt-desc { font-family: var(--font-body), serif; font-size: 12px; color: var(--text-faint); }
+  .tag-opt.create { border-top: 1px solid var(--border-hair); margin-top: 4px; padding-top: 11px; }
+  .tag-opt.create .plus { display: inline-flex; color: var(--brand); flex: none; }
+  .tag-opt.create .new { font-family: var(--font-body), serif; font-size: 14px; color: var(--text-body); }
+  .tag-opt.create .newtag { font-family: var(--font-mono), monospace; color: var(--gold-ink); }
+  .fc-actions { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-hair); }
+  .fc-actions .sp { flex: 1; }
+  .fc-hint { font-family: var(--font-body), serif; font-style: italic; font-size: 12.5px; color: var(--text-faint); }
+
+  /* ── 03 · browse ───────────────────────────────────────────── */
+  .browse { display: grid; grid-template-columns: 250px 1fr; gap: 0; min-height: 380px; }
+  @media (max-width: 720px) { .browse { grid-template-columns: 1fr; } }
+  .browse-dir { border-right: 1px solid var(--border-hair); background: var(--surface-sunken); padding: 15px 14px; }
+  .browse-dir-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .browse-dir-title { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; color: var(--gold-ink); }
+  .browse-dir-sort { font-family: var(--font-mono), monospace; font-size: 10.5px; color: var(--text-faint); }
+  .browse-cloud { display: flex; flex-wrap: wrap; gap: 7px; }
+  .browse-results { padding: 16px 18px; }
+  .browse-results-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .browse-results-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 18px; color: var(--text-strong); margin: 0; }
+  .browse-active { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .browse-clear { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .06em; font-size: 10px; color: var(--text-muted); background: none; border: 0; cursor: pointer; padding: 4px 6px; }
+  .browse-clear:hover { color: var(--danger); }
+  .browse-empty { padding: 34px 20px; text-align: center; font-family: var(--font-body), serif; font-style: italic; color: var(--text-muted); font-size: 15px; }
+  .b-mono { width: 30px; height: 30px; border-radius: 50%; background: var(--brand-subtle); color: var(--on-brand-subtle); display: grid; place-items: center; font-family: var(--font-display), serif; font-weight: 600; font-size: 12px; box-shadow: var(--gilt); flex: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react" src="../shared/chrome.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useRef, useMemo } = React;
+const DS = window.ImladrisDesignSystem_c3e027;
+const { Button, Monogram } = DS;
+const { Icons, Segmented, useTheme, Topbar, Lede, Spec, FrameBar } = window.FA;
+const I = (name, s) => Icons[name](s);
+
+/* tag catalog — name, topic count, optional featured + gloss */
+const CATALOG = [
+  { name: 'interpretability', count: 47, featured: true, desc: 'reading model internals' },
+  { name: 'evaluations', count: 63, featured: true, desc: 'how we test and grade' },
+  { name: 'audit-trails', count: 39, desc: 'who changed what, and proof' },
+  { name: 'capability-disclosure', count: 22, desc: 'what to reveal, and when' },
+  { name: 'rollback', count: 18 },
+  { name: 'red-team', count: 27 },
+  { name: 'governance', count: 31 },
+  { name: 'tooling', count: 24 },
+  { name: 'proposal', count: 15 },
+  { name: 'decision', count: 11, featured: true, desc: 'resolved into an artifact' },
+  { name: 'onboarding', count: 9 },
+  { name: 'retro', count: 7 },
+];
+const byName = (n) => CATALOG.find((t) => t.name === n) || { name: n, count: 0 };
+
+/* Tag chip */
+function TagChip({ name, count, featured, onClick, on, onRemove, className }) {
+  const cls = 'tagc' + (featured ? ' featured' : '') + (on ? ' on' : '') + (className ? ' ' + className : '');
+  const inner = (
+    <>
+      <span className="hash">#</span>{name}
+      {count != null ? <span className="cnt">{count}</span> : null}
+      {onRemove ? <span className="tagc-x" onClick={(e) => { e.stopPropagation(); onRemove(); }} role="button" aria-label={'Remove ' + name}>{I('x', 12)}</span> : null}
+    </>
+  );
+  if (onClick) return <button type="button" className={cls} onClick={onClick} aria-pressed={!!on}>{inner}</button>;
+  if (onRemove) return <span className={cls}>{inner}</span>;
+  return <a className={cls} href="#" onClick={(e) => e.preventDefault()}>{inner}</a>;
+}
+
+/* ════════ 01 · on a topic ════════ */
+const TAGGED = [
+  { id: 1, title: 'Reading attention as a map, not a verdict', tags: ['interpretability', 'tooling'], replies: 17 },
+  { id: 2, title: 'Who changed what — prove the rollback?', tags: ['audit-trails', 'rollback', 'governance'], replies: 41 },
+  { id: 3, title: 'Evaluations as ritual, not gate', tags: ['evaluations', 'decision'], replies: 23 },
+];
+function OnATopic() {
+  return (
+    <div className="frame">
+      <FrameBar route={<span><span className="seg-strong">Inbox</span> / #interpretability / Reading attention as a map</span>} />
+      <div className="pane">
+        <p className="tt-crumb"># interpretability</p>
+        <h3 className="tt-title">Reading attention as a map, not a verdict</h3>
+        <div className="tt-metarow">
+          <span className="tt-by">
+            <Monogram name="Arwen" username="arwen" size="sm" gilt presence="online" />
+            <span><span className="tt-by-name">Arwen</span> <span className="tt-by-meta">· opened 1 day ago · 17 replies</span></span>
+          </span>
+        </div>
+        <div className="tag-row">
+          {['interpretability', 'tooling'].map((t) => <TagChip key={t} name={t} featured={byName(t).featured} />)}
+        </div>
+        <div className="tt-divider" />
+        <p style={{ fontFamily: 'var(--font-label), serif', textTransform: 'uppercase', letterSpacing: '.1em', fontSize: 11, color: 'var(--text-muted)', margin: '0 0 11px' }}>More in these tags</p>
+        <div className="tt-list">
+          {TAGGED.map((t) => (
+            <div className="tt-item" key={t.id}>
+              <span className="tt-item-main">
+                <span className="tt-item-title">{t.title}</span>
+                <span className="tt-item-tags">{t.tags.map((x) => <TagChip key={x} name={x} featured={byName(x).featured} onClick={() => {}} />)}</span>
+              </span>
+              <span className="tt-item-count">{t.replies} replies</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 02 · composer input ════════ */
+const MAX_TAGS = 5;
+function ComposerTags() {
+  const [tags, setTags] = useState(['interpretability', 'tooling']);
+  const [text, setText] = useState('');
+  const [focus, setFocus] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const inputRef = useRef(null);
+  const boxRef = useRef(null);
+  const full = tags.length >= MAX_TAGS;
+
+  const matches = useMemo(() => {
+    const q = text.trim().toLowerCase();
+    return CATALOG.filter((t) => !tags.includes(t.name) && (!q || t.name.includes(q)));
+  }, [text, tags]);
+  const exact = CATALOG.some((t) => t.name === text.trim().toLowerCase());
+  const canCreate = text.trim().length >= 2 && !exact && !tags.includes(text.trim().toLowerCase());
+  const options = [...matches.map((m) => ({ kind: 'tag', ...m })), ...(canCreate ? [{ kind: 'create', name: text.trim().toLowerCase() }] : [])];
+
+  const add = (name) => { if (!tags.includes(name) && tags.length < MAX_TAGS) setTags((t) => [...t, name]); setText(''); setCursor(0); inputRef.current && inputRef.current.focus(); };
+  const remove = (name) => setTags((t) => t.filter((x) => x !== name));
+  const onKey = (e) => {
+    if (e.key === 'Backspace' && !text && tags.length) { remove(tags[tags.length - 1]); return; }
+    if (!options.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setCursor((c) => (c + 1) % options.length); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setCursor((c) => (c - 1 + options.length) % options.length); }
+    else if (e.key === 'Enter') { e.preventDefault(); add(options[Math.min(cursor, options.length - 1)].name); }
+  };
+  const open = focus && !full && options.length > 0;
+
+  return (
+    <div className="fc" onClick={() => inputRef.current && inputRef.current.focus()}>
+      <div className="fc-id" onClick={(e) => e.stopPropagation()}>{I('pencil', 14)} New topic in #interpretability</div>
+      <input className="fc-titlefield" defaultValue="Annotating heatmaps so the caveat travels" onClick={(e) => e.stopPropagation()} />
+      <div className="fc-body" onClick={(e) => e.stopPropagation()}><span className="ph">A sketch of an overlay that keeps the “map, not verdict” caveat attached to the image…</span></div>
+
+      <div className="taginput" onClick={(e) => e.stopPropagation()}>
+        <div className="taginput-label">
+          <span className="l">Tags</span>
+          <span className={'lim' + (full ? ' full' : '')}>{tags.length} / {MAX_TAGS}{full ? ' · limit reached' : ''}</span>
+        </div>
+        <div ref={boxRef} className={'taginput-box' + (focus ? ' focus' : '')} onClick={() => inputRef.current && inputRef.current.focus()}>
+          {tags.map((t) => <TagChip key={t} name={t} className="taginput-chip" onRemove={() => remove(t)} />)}
+          {!full && (
+            <input ref={inputRef} value={text} placeholder={tags.length ? 'Add another…' : 'Add up to five tags…'}
+              onChange={(e) => { setText(e.target.value); setCursor(0); }} onKeyDown={onKey}
+              onFocus={() => setFocus(true)} onBlur={() => setTimeout(() => setFocus(false), 150)} />
+          )}
+        </div>
+        {open && (
+          <div className="tag-menu">
+            <p className="tag-menu-label">{text.trim() ? 'Matching tags' : 'Frequently used'}</p>
+            {options.map((o, i) => o.kind === 'create' ? (
+              <button key="__create" className={'tag-opt create' + (i === cursor ? ' cursor' : '')} onMouseDown={(e) => { e.preventDefault(); add(o.name); }} onMouseEnter={() => setCursor(i)}>
+                <span className="plus">{I('plus', 15)}</span>
+                <span className="new">Create <span className="newtag">#{o.name}</span></span>
+              </button>
+            ) : (
+              <button key={o.name} className={'tag-opt' + (i === cursor ? ' cursor' : '')} onMouseDown={(e) => { e.preventDefault(); add(o.name); }} onMouseEnter={() => setCursor(i)}>
+                <span className="hash">#</span>
+                <span className="tag-opt-name">{o.name}{o.desc ? <span className="tag-opt-desc"> — {o.desc}</span> : null}</span>
+                <span className="tag-opt-count">{o.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="fc-actions">
+        <span className="fc-hint">Type to search · Enter to add · ↑↓ to choose</span>
+        <span className="sp" />
+        <Button variant="ghost" size="sm">Save draft</Button>
+        <Button variant="primary" size="sm">Post topic</Button>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 03 · browse ════════ */
+const DIRECTORY_TOPICS = [
+  { id: 1, title: 'Reading attention as a map, not a verdict', author: 'Arwen', tags: ['interpretability', 'tooling'], replies: 17 },
+  { id: 2, title: 'Who changed what — prove the rollback?', author: 'Erestor', tags: ['audit-trails', 'rollback', 'governance'], replies: 41 },
+  { id: 3, title: 'Evaluations as ritual, not gate', author: 'Galadriel', tags: ['evaluations', 'decision'], replies: 23 },
+  { id: 4, title: 'A weekly rollback drill, logged and signed', author: 'Elrond', tags: ['audit-trails', 'rollback', 'proposal'], replies: 12 },
+  { id: 5, title: 'Red-team notes from the last capability review', author: 'Glorfindel', tags: ['red-team', 'capability-disclosure'], replies: 29 },
+  { id: 6, title: 'Onboarding the newest loremasters', author: 'Lindir', tags: ['onboarding', 'governance'], replies: 6 },
+];
+function Browse() {
+  const [sel, setSel] = useState(['audit-trails']);
+  const toggle = (name) => setSel((s) => s.includes(name) ? s.filter((x) => x !== name) : [...s, name]);
+  const results = sel.length === 0 ? DIRECTORY_TOPICS : DIRECTORY_TOPICS.filter((t) => sel.every((s) => t.tags.includes(s)));
+  const sorted = [...CATALOG].sort((a, b) => b.count - a.count);
+
+  return (
+    <div className="frame">
+      <FrameBar route={<span><span className="seg-strong">Inbox</span> / tags{sel.length ? ' / ' + sel.map((s) => '#' + s).join(' + ') : ''}</span>} />
+      <div className="browse">
+        <aside className="browse-dir">
+          <div className="browse-dir-head">
+            <span className="browse-dir-title">All tags</span>
+            <span className="browse-dir-sort">by use</span>
+          </div>
+          <div className="browse-cloud">
+            {sorted.map((t) => (
+              <TagChip key={t.name} name={t.name} count={t.count} featured={t.featured && !sel.includes(t.name)} on={sel.includes(t.name)} onClick={() => toggle(t.name)} />
+            ))}
+          </div>
+        </aside>
+        <div className="browse-results">
+          <div className="browse-results-head">
+            <h4 className="browse-results-title">{sel.length ? results.length + (results.length === 1 ? ' topic' : ' topics') : 'All topics'}</h4>
+            {sel.length ? (
+              <>
+                <span className="browse-active">
+                  {sel.map((s) => <TagChip key={s} name={s} className="taginput-chip" onRemove={() => toggle(s)} />)}
+                </span>
+                <button className="browse-clear" onClick={() => setSel([])}>Clear</button>
+              </>
+            ) : null}
+          </div>
+          {results.length === 0 ? (
+            <div className="browse-empty">No topics carry all of these tags together.</div>
+          ) : (
+            <div className="tt-list">
+              {results.map((t) => (
+                <div className="tt-item" key={t.id}>
+                  <span className="b-mono">{t.author.slice(0, 2).toUpperCase()}</span>
+                  <span className="tt-item-main">
+                    <span className="tt-item-title">{t.title}</span>
+                    <span className="tt-item-tags">
+                      {t.tags.map((x) => <TagChip key={x} name={x} on={sel.includes(x)} featured={byName(x).featured && !sel.includes(x)} onClick={() => toggle(x)} />)}
+                    </span>
+                  </span>
+                  <span className="tt-item-count">{t.replies} replies</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ Page ════════ */
+function Page() {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div>
+      <Topbar eyebrow="Feature activation · tags"
+        flags={[{ name: 'tags' }]} theme={theme} setTheme={setTheme} />
+      <div className="fa-doc">
+        <Lede eyebrow="Flipping on now · needs a polished surface" title="Tags"
+          ledger={[{ flag: 'tags', desc: 'label · find · browse topics' }]}>
+          Tags are the connective tissue of the hall — the Discourse bone that lets a topic belong to more than one board. The model shipped; what it needs before it goes live is a surface that feels finished. Here it is in three parts: how a tag <b>reads</b> on a topic, how you <b>add</b> tags while composing, and how you <b>browse</b> the hall by them.
+        </Lede>
+
+        <Spec num="01" label="tags · display" title="A tag, on a topic"
+          note="Tags sit beneath the title as quiet chips — a hash in gold, the word in evergreen, featured tags warmed to gold. Each is a link to everything else that carries it, so a topic is never a dead end.">
+          <OnATopic />
+        </Spec>
+
+        <Spec num="02" label="tags · input" title="Adding tags while you write"
+          note="The composer gains a tag field: type to search existing tags with their counts, arrow-key or click to add, and create a new tag inline when none fits. Backspace removes the last; a clear five-tag ceiling keeps topics honest.">
+          <ComposerTags />
+        </Spec>
+
+        <Spec num="03" label="tags · browse" title="Browsing the hall by tag"
+          note="A directory lists every tag by use. Select one — or several — to narrow the hall to topics that carry them all; each result shows its own tags, so you can pivot sideways in a click. This is the surface that makes tagging worth the effort.">
+          <Browse />
+        </Spec>
+
+        <div className="fa-callout">
+          <span className="fa-callout-icon">{I('check', 18)}</span>
+          <p><b>tags</b> renders across the topic header, the composer, and a browse view — all reachable, no new plumbing. With these surfaces in place it clears the last bar in the near-ready tier and is <b>flipping on now</b>.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

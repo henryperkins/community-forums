@@ -29,7 +29,7 @@ final class RelatedTopicRefreshWorkerTest extends TestCase
 
     public function test_worker_is_dark_without_tags_flag(): void
     {
-        $this->setFlags(['community_memory' => true, 'automated_context' => true]);
+        $this->setFlags(['community_memory' => true, 'automated_context' => true, 'tags' => false]);
         $worker = new RelatedTopicRefreshWorker($this->db, new FeatureFlags(new SettingRepository($this->db)));
 
         self::assertSame(['linked' => 0, 'skipped' => 1], $worker->run());

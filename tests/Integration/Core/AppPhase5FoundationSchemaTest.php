@@ -176,6 +176,23 @@ final class AppPhase5FoundationSchemaTest extends TestCase
         );
     }
 
+    public function test_owner_lifecycle_lock_has_supporting_user_index(): void
+    {
+        // Last-owner lifecycle mutations lock active admins by role/status. Keep
+        // that locking read on a narrow index so it does not scan-lock users.
+        self::assertSame(
+            'role,status,id',
+            (string) $this->db->fetchValue(
+                "SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX)
+                 FROM information_schema.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = 'users'
+                   AND INDEX_NAME = 'idx_users_role_status_id'",
+            ),
+            'users(role, status, id) must be indexed for owner/admin FOR UPDATE guards',
+        );
+    }
+
     public function test_secret_and_separation_invariants_are_locked(): void
     {
         // decision #35: provider/package secrets are an encrypted-service REFERENCE

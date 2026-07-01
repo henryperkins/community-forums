@@ -1,0 +1,378 @@
+<!-- @dsCard group="Feature activation" viewport="980x860" name="Moderator's tools" subtitle="topic_workflow · split_merge — triage and restructuring at the warden's table" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moderator's tools — feature design · RetroBoards</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../shared/chrome.css">
+<style>
+  .pane { background: var(--surface-raised); padding: 20px 22px; }
+
+  /* ── topic_workflow — the workflow bar ─────────────────────── */
+  .wf-topic { font-family: var(--font-display), serif; font-weight: 500; font-size: 20px; color: var(--text-strong); margin: 0 0 3px; }
+  .wf-crumb { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); margin: 0 0 14px; }
+  .wf-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--border-hair); border-left: 3px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface-sunken); transition: border-left-color var(--dur-base) var(--ease-calm); }
+  .wf-bar.escalated { border-left-color: var(--danger); }
+  .wf-bar-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 10px; color: var(--text-muted); margin-right: 2px; }
+  .wf-ctrl { position: relative; }
+  .wf-btn { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label), serif; font-size: 12px; letter-spacing: .02em; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; color: var(--text-body); transition: background var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm); }
+  .wf-btn:hover { background: var(--surface-sunken); color: var(--text-strong); }
+  .wf-btn .ic { color: var(--text-faint); display: inline-flex; }
+  .wf-btn.set { border-color: var(--green-200); background: var(--brand-subtle); color: var(--on-brand-subtle); }
+  .wf-btn.set .ic { color: var(--brand); }
+  .wf-btn.danger.set { border-color: color-mix(in srgb, var(--danger) 40%, var(--border-hair)); background: color-mix(in srgb, var(--danger) 12%, var(--surface-raised)); color: var(--danger); }
+  .wf-btn.danger.set .ic { color: var(--danger); }
+  .wf-btn .chev { color: var(--text-faint); margin-left: 1px; }
+  .wf-spacer { flex: 1; }
+
+  .wf-menu { position: absolute; left: 0; top: calc(100% + 5px); z-index: 30; min-width: 184px; background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px; }
+  .wf-menu.right { left: auto; right: 0; }
+  .wf-menu-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 9.5px; color: var(--text-muted); padding: 5px 9px 6px; }
+  .wf-opt { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 9px; border: 0; background: none; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-body); font-family: var(--font-body), serif; font-size: 14px; text-align: left; }
+  .wf-opt:hover { background: var(--surface-sunken); }
+  .wf-opt .ic { color: var(--text-faint); display: inline-flex; flex: none; }
+  .wf-opt .check { margin-left: auto; color: var(--brand); display: inline-flex; }
+  .wf-mono { width: 24px; height: 24px; border-radius: 50%; background: var(--brand-subtle); color: var(--on-brand-subtle); display: grid; place-items: center; font-family: var(--font-display), serif; font-weight: 600; font-size: 11px; box-shadow: var(--gilt); flex: none; }
+
+  /* triage queue */
+  .triage { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .triage-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border-hair); border-left: 3px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-raised); }
+  .triage-row.open { border-left-color: var(--accent-2); }
+  .triage-row.hot { border-left-color: var(--danger); }
+  .triage-main { min-width: 0; flex: 1; }
+  .triage-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 15.5px; color: var(--text-strong); display: block; line-height: 1.2; }
+  .triage-meta { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .triage-chips { display: flex; align-items: center; gap: 6px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+  .wf-chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .05em; font-size: 9.5px; padding: 4px 9px; border-radius: var(--radius-pill); border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); white-space: nowrap; }
+  .wf-chip.assigned { color: var(--on-brand-subtle); background: var(--brand-subtle); border-color: var(--green-200); }
+  .wf-chip.snoozed { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
+  .wf-chip.escalated { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--surface-raised)); border-color: color-mix(in srgb, var(--danger) 30%, var(--border-hair)); }
+  .wf-chip .ic { display: inline-flex; }
+
+  /* ── split_merge ───────────────────────────────────────────── */
+  .sm-grid { display: grid; grid-template-columns: 1fr 296px; gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .sm-grid { grid-template-columns: 1fr; } }
+  .sm-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .sm-head h4 { font-family: var(--font-display), serif; font-weight: 500; font-size: 17px; color: var(--text-strong); margin: 0; }
+  .sm-head .n { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); }
+
+  .sm-post { display: flex; gap: 11px; align-items: flex-start; padding: 11px 13px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); cursor: pointer; margin-bottom: 8px; transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm); }
+  .sm-post:hover { border-color: var(--green-200); }
+  .sm-post.picked { border-color: var(--gold-400); background: var(--gold-soft); box-shadow: var(--gilt); }
+  .sm-post.op { opacity: .55; cursor: not-allowed; }
+  .sm-check { flex: none; width: 18px; height: 18px; border: 2px solid var(--border-strong); border-radius: 5px; display: grid; place-items: center; color: transparent; margin-top: 2px; transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm); }
+  .sm-post.picked .sm-check { border-color: var(--gold-500); background: var(--gold-500); color: #fff; }
+  .sm-post-main { min-width: 0; flex: 1; }
+  .sm-post-by { display: flex; align-items: center; gap: 8px; }
+  .sm-post-author { font-family: var(--font-display), serif; font-weight: 600; font-size: 14px; color: var(--text-strong); }
+  .sm-post-op-tag { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .07em; font-size: 9px; color: var(--on-brand-subtle); background: var(--brand-subtle); border: 1px solid var(--green-200); border-radius: var(--radius-pill); padding: 1px 7px; white-space: nowrap; flex: none; }
+  .sm-post-time { font-family: var(--font-mono), monospace; font-size: 10.5px; color: var(--text-faint); margin-left: auto; }
+  .sm-post-body { font-family: var(--font-body), serif; font-size: 14px; line-height: 1.5; color: var(--text-body); margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .sm-panel { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: var(--shadow-inset); padding: 16px; position: sticky; top: 78px; }
+  .sm-panel-title { display: flex; align-items: center; gap: 9px; font-family: var(--font-display), serif; font-weight: 500; font-size: 16px; color: var(--text-strong); margin: 0 0 12px; }
+  .sm-panel-title .ic { color: var(--gold-ink); display: inline-flex; }
+  .sm-field-label { display: block; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; color: var(--text-muted); margin: 12px 0 6px; }
+  .sm-count-pill { display: inline-flex; align-items: baseline; gap: 6px; padding: 9px 13px; border-radius: var(--radius-md); background: var(--surface-raised); border: 1px solid var(--border-hair); margin-bottom: 4px; }
+  .sm-count-n { font-family: var(--font-display), serif; font-weight: 600; font-size: 22px; color: var(--gold-ink); font-variant-numeric: tabular-nums; }
+  .sm-count-label { font-family: var(--font-body), serif; font-size: 13px; color: var(--text-muted); }
+  .sm-note { font-family: var(--font-body), serif; font-style: italic; font-size: 13px; line-height: 1.5; color: var(--text-muted); margin: 12px 0 0; }
+  .sm-panel-foot { margin-top: 16px; }
+  .sm-panel-foot .btn-full { width: 100%; justify-content: center; }
+
+  /* merge mode */
+  .merge-from { padding: 13px 15px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); margin-bottom: 4px; }
+  .merge-from-label, .merge-into-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; color: var(--text-muted); display: block; margin-bottom: 5px; }
+  .merge-from-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 15px; color: var(--text-strong); }
+  .merge-from-meta { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .merge-arrow { display: grid; place-items: center; color: var(--gold-ink); margin: 9px 0; }
+  .merge-into { padding: 13px 15px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); background: var(--surface-sunken); transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm); }
+  .merge-into.chosen { border-style: solid; border-color: var(--gold-400); background: var(--gold-soft); }
+  .merge-pick-btn { width: 100%; display: flex; align-items: center; gap: 9px; background: none; border: 0; cursor: pointer; font-family: var(--font-body), serif; font-size: 14px; color: var(--text-muted); padding: 0; }
+  .merge-pick-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .merge-pick-item { display: block; width: 100%; text-align: left; padding: 8px 10px; border: 1px solid var(--border-hair); border-radius: var(--radius-sm); background: var(--surface-raised); cursor: pointer; transition: border-color var(--dur-fast) var(--ease-calm); }
+  .merge-pick-item:hover { border-color: var(--green-200); }
+  .merge-pick-item-t { font-family: var(--font-display), serif; font-weight: 600; font-size: 13.5px; color: var(--text-strong); display: block; }
+  .merge-pick-item-m { font-family: var(--font-mono), monospace; font-size: 10.5px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react" src="../shared/chrome.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState } = React;
+const DS = window.ImladrisDesignSystem_c3e027;
+const { Button, Input } = DS;
+const { Icons, Segmented, useTheme, Topbar, Lede, Spec, FrameBar } = window.FA;
+const I = (name, s) => Icons[name](s);
+const initials = (n) => n.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+
+/* ════════ 01 · topic_workflow ════════ */
+const MODS = ['Glorfindel', 'Erestor', 'Galadriel', 'Elrond (me)'];
+const SNOOZES = [['tomorrow', 'Until tomorrow'], ['3d', 'In 3 days'], ['week', 'Next week']];
+function TopicWorkflow() {
+  const [menu, setMenu] = useState(null);
+  const [assignee, setAssignee] = useState(null);
+  const [snooze, setSnooze] = useState(null);
+  const [escalated, setEscalated] = useState(false);
+  const close = () => setMenu(null);
+  const snoozeLabel = (s) => (SNOOZES.find((x) => x[0] === s) || [null, ''])[1].replace('Until ', '').replace('In ', '');
+
+  return (
+    <div className="frame" onClick={close}>
+      <FrameBar route={<span><span className="seg-strong">Mod</span> / triage / Reading attention as a map, not a verdict</span>} />
+      <div className="pane" onClick={(e) => e.stopPropagation()}>
+        <p className="wf-crumb"># interpretability · opened by Arwen · 17 replies</p>
+        <h3 className="wf-topic">Reading attention as a map, not a verdict</h3>
+
+        <div className={'wf-bar' + (escalated ? ' escalated' : '')}>
+          <span className="wf-bar-label">Workflow</span>
+
+          <span className="wf-ctrl">
+            <button className={'wf-btn' + (assignee ? ' set' : '')} onClick={() => setMenu(menu === 'assign' ? null : 'assign')}>
+              {assignee ? <span className="wf-mono">{initials(assignee)}</span> : <span className="ic">{I('user', 14)}</span>}
+              {assignee ? assignee.replace(' (me)', '') : 'Assign'}
+              <span className="chev">{I('chevron', 12)}</span>
+            </button>
+            {menu === 'assign' && (
+              <div className="wf-menu">
+                <p className="wf-menu-label">Assign to</p>
+                {MODS.map((m) => (
+                  <button key={m} className="wf-opt" onClick={() => { setAssignee(m); close(); }}>
+                    <span className="wf-mono">{initials(m)}</span>{m}
+                    {assignee === m ? <span className="check">{I('check', 14)}</span> : null}
+                  </button>
+                ))}
+                {assignee && <button className="wf-opt" onClick={() => { setAssignee(null); close(); }} style={{ color: 'var(--text-muted)' }}><span className="ic">{I('x', 14)}</span>Unassign</button>}
+              </div>
+            )}
+          </span>
+
+          <span className="wf-ctrl">
+            <button className={'wf-btn' + (snooze ? ' set' : '')} onClick={() => setMenu(menu === 'snooze' ? null : 'snooze')}>
+              <span className="ic">{I('clock', 14)}</span>{snooze ? 'Snoozed · ' + snoozeLabel(snooze) : 'Snooze'}
+              <span className="chev">{I('chevron', 12)}</span>
+            </button>
+            {menu === 'snooze' && (
+              <div className="wf-menu">
+                <p className="wf-menu-label">Snooze until</p>
+                {SNOOZES.map(([k, label]) => (
+                  <button key={k} className="wf-opt" onClick={() => { setSnooze(k); close(); }}>
+                    <span className="ic">{I('clock', 14)}</span>{label}
+                    {snooze === k ? <span className="check">{I('check', 14)}</span> : null}
+                  </button>
+                ))}
+                {snooze && <button className="wf-opt" onClick={() => { setSnooze(null); close(); }} style={{ color: 'var(--text-muted)' }}><span className="ic">{I('x', 14)}</span>Wake now</button>}
+              </div>
+            )}
+          </span>
+
+          <button className={'wf-btn danger' + (escalated ? ' set' : '')} onClick={() => setEscalated((e) => !e)}>
+            <span className="ic">{I('escalate', 14)}</span>{escalated ? 'Escalated' : 'Escalate'}
+          </button>
+
+          <span className="wf-spacer" />
+          <Button variant="ghost" size="sm" onClick={() => { setAssignee(null); setSnooze(null); setEscalated(false); }}>Reset</Button>
+        </div>
+
+        <ul className="triage">
+          <li className={'triage-row' + (escalated ? ' hot' : ' open')}>
+            <span className="triage-main">
+              <span className="triage-title">Reading attention as a map, not a verdict</span>
+              <span className="triage-meta">#interpretability · 17 replies · this topic</span>
+            </span>
+            <span className="triage-chips">
+              {assignee ? <span className="wf-chip assigned"><span className="ic">{I('user', 11)}</span>{assignee.replace(' (me)', '')}</span> : null}
+              {snooze ? <span className="wf-chip snoozed"><span className="ic">{I('clock', 11)}</span>{snoozeLabel(snooze)}</span> : null}
+              {escalated ? <span className="wf-chip escalated"><span className="ic">{I('escalate', 11)}</span>Escalated</span> : null}
+              {!assignee && !snooze && !escalated ? <span className="wf-chip">Untouched</span> : null}
+            </span>
+          </li>
+          <li className="triage-row hot">
+            <span className="triage-main">
+              <span className="triage-title">Who changed what — prove the rollback?</span>
+              <span className="triage-meta">#audit-trails · 41 replies</span>
+            </span>
+            <span className="triage-chips">
+              <span className="wf-chip assigned"><span className="ic">{I('user', 11)}</span>Glorfindel</span>
+              <span className="wf-chip escalated"><span className="ic">{I('escalate', 11)}</span>Escalated</span>
+            </span>
+          </li>
+          <li className="triage-row">
+            <span className="triage-main">
+              <span className="triage-title">On exposing capability before we are asked</span>
+              <span className="triage-meta">#capability-disclosure · 12 replies</span>
+            </span>
+            <span className="triage-chips">
+              <span className="wf-chip snoozed"><span className="ic">{I('clock', 11)}</span>3 days</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 02 · split_merge ════════ */
+const POSTS = [
+  { id: 1, author: 'Arwen', op: true, time: '1d', body: 'Attention tells you where the model looked, not what it concluded. I keep watching people read a verdict into a heatmap.' },
+  { id: 2, author: 'Lindir', time: '20h', body: 'Is there a clean way to annotate a heatmap so the caveat travels with the image? That feels like a separate tooling question.' },
+  { id: 3, author: 'Galadriel', time: '14h', body: 'It is separate — and worth its own topic. The map/verdict distinction is conceptual; the annotation tooling is practical.' },
+  { id: 4, author: 'Lindir', time: '11h', body: 'Agreed. I can draft requirements for an annotation overlay if we spin it out.' },
+];
+const MERGE_TARGETS = [
+  { id: 'evals', title: 'Evaluations as ritual, not gate', meta: '#evaluations · 23 replies' },
+  { id: 'rollback', title: 'Who changed what — prove the rollback?', meta: '#audit-trails · 41 replies' },
+  { id: 'tooling', title: 'Heatmap annotation tooling', meta: '#interpretability · 5 replies' },
+];
+function SplitMerge() {
+  const [mode, setMode] = useState('split');
+  const [picked, setPicked] = useState([2, 3, 4]);
+  const [target, setTarget] = useState(null);
+  const [pickOpen, setPickOpen] = useState(false);
+  const toggle = (id) => setPicked((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
+
+  return (
+    <div>
+      <div className="demo-controls">
+        <span className="demo-controls-label">Tool</span>
+        <Segmented value={mode} onChange={setMode} options={[{ value: 'split', label: 'Split' }, { value: 'merge', label: 'Merge' }]} />
+        <span className="demo-controls-spacer" />
+        <span className="demo-hint">{mode === 'split' ? 'Tick replies to move into a new topic' : 'Choose a topic to merge this one into'}</span>
+      </div>
+
+      <div className="frame">
+        <FrameBar route={<span><span className="seg-strong">Mod</span> / {mode === 'split' ? 'split topic' : 'merge topic'} / Reading attention as a map</span>} />
+        <div className="pane">
+          <div className="sm-grid">
+            <div>
+              <div className="sm-head">
+                <h4>Reading attention as a map, not a verdict</h4>
+                <span className="n">{POSTS.length} posts · #interpretability</span>
+              </div>
+              {POSTS.map((p) => {
+                const on = picked.includes(p.id);
+                return (
+                  <div key={p.id} className={'sm-post' + (p.op ? ' op' : '') + (on ? ' picked' : '')}
+                    onClick={() => !p.op && mode === 'split' && toggle(p.id)}>
+                    {mode === 'split' && <span className="sm-check">{on ? I('check', 12) : null}</span>}
+                    <span className="sm-post-main">
+                      <span className="sm-post-by">
+                        <span className="sm-post-author">{p.author}</span>
+                        {p.op ? <span className="sm-post-op-tag">OP · stays</span> : null}
+                        <span className="sm-post-time">{p.time}</span>
+                      </span>
+                      <span className="sm-post-body">{p.body}</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {mode === 'split' ? (
+              <div className="sm-panel">
+                <p className="sm-panel-title"><span className="ic">{I('split', 17)}</span> Split into a new topic</p>
+                <span className="sm-count-pill"><span className="sm-count-n">{picked.length}</span><span className="sm-count-label">{picked.length === 1 ? 'reply' : 'replies'} selected</span></span>
+                <label className="sm-field-label">New topic title</label>
+                <Input defaultValue="Heatmap annotation tooling" />
+                <label className="sm-field-label">Board</label>
+                <Input defaultValue="#interpretability" />
+                <p className="sm-note">Selected replies move to the new topic; a link is left in place so the thread stays followable.</p>
+                <div className="sm-panel-foot">
+                  <Button variant="primary" className="btn-full" disabled={picked.length === 0}>
+                    Split {picked.length} {picked.length === 1 ? 'reply' : 'replies'} out
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="sm-panel">
+                <p className="sm-panel-title"><span className="ic">{I('merge', 17)}</span> Merge this topic</p>
+                <div className="merge-from">
+                  <span className="merge-from-label">From</span>
+                  <span className="merge-from-title">Reading attention as a map…</span>
+                  <span className="merge-from-meta">#interpretability · 4 posts</span>
+                </div>
+                <div className="merge-arrow">{I('chevron', 18)}</div>
+                <div className={'merge-into' + (target ? ' chosen' : '')}>
+                  <span className="merge-into-label">Into</span>
+                  {target ? (
+                    <div onClick={() => setPickOpen(true)} style={{ cursor: 'pointer' }}>
+                      <span className="merge-from-title">{target.title}</span>
+                      <span className="merge-from-meta">{target.meta}</span>
+                    </div>
+                  ) : (
+                    <button className="merge-pick-btn" onClick={() => setPickOpen((o) => !o)}>
+                      <span style={{ display: 'inline-flex', color: 'var(--gold-ink)' }}>{I('search', 15)}</span> Choose a topic…
+                    </button>
+                  )}
+                  {pickOpen && (
+                    <div className="merge-pick-list">
+                      {MERGE_TARGETS.map((t) => (
+                        <button key={t.id} className="merge-pick-item" onClick={() => { setTarget(t); setPickOpen(false); }}>
+                          <span className="merge-pick-item-t">{t.title}</span>
+                          <span className="merge-pick-item-m">{t.meta}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="sm-note">All 4 posts move into the chosen topic; this one redirects there. The move is logged and reversible.</p>
+                <div className="sm-panel-foot">
+                  <Button variant="primary" className="btn-full" disabled={!target}>Merge topics</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ Page ════════ */
+function Page() {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div>
+      <Topbar eyebrow="Feature activation · the warden's table"
+        flags={[{ name: 'topic_workflow' }, { name: 'split_merge', blocked: true }]}
+        theme={theme} setTheme={setTheme} />
+      <div className="fa-doc">
+        <Lede eyebrow="Built · awaiting a surface" title="The moderator's tools"
+          ledger={[
+            { flag: 'topic_workflow', desc: 'assign · snooze · escalate' },
+            { flag: 'split_merge', desc: 'split & merge topics' },
+          ]}>
+          Two tools for the wardens. Both act on topics the backend can already move and tag — what they lack is the controls to do it by hand. Designed here in the warden's-table register: working surfaces, not ceremony.
+        </Lede>
+
+        <Spec num="01" label="topic_workflow" title="Assign, snooze, escalate"
+          note="A workflow bar rides the top of any topic in triage. Assign it to a warden, snooze it out of the queue until a date, or escalate it — the bar turns to the danger rule and the topic surfaces hot. Each control writes the same state the queue below reads, so the table always agrees with itself.">
+          <TopicWorkflow />
+        </Spec>
+
+        <Spec num="02" label="split_merge" title="Split a topic, or merge two"
+          note="When one thread becomes two conversations, tick the replies that belong elsewhere and split them into a new topic — the OP stays put. When two threads are really one, merge this topic into another. Both leave a link behind and log the move.">
+          <SplitMerge />
+        </Spec>
+
+        <div className="fa-callout" style={{ background: 'var(--surface-review)', borderLeftColor: 'var(--rule-gold)' }}>
+          <span className="fa-callout-icon" style={{ color: 'var(--warning)' }}>{I('clock', 18)}</span>
+          <p style={{ color: 'var(--on-review)' }}><b>topic_workflow</b> is near-ready — a browser/a11y capture from flipping. <b>split_merge</b> the audit places in the do-not-activate tier: it touches post ownership and counters and the build is reported incomplete, so the surface here runs ahead of the work.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

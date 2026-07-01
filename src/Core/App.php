@@ -1126,6 +1126,7 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(Session::class),
+            $c->get(ProtectedOwnerRepository::class),
         ));
 
         return $c;

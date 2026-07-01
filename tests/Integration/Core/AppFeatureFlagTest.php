@@ -6,6 +6,7 @@ namespace Tests\Integration\Core;
 
 use App\Core\FeatureFlags;
 use App\Repository\SettingRepository;
+use App\Repository\TagRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -28,16 +29,22 @@ final class AppFeatureFlagTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
-    public function test_phase4_gate_a_flags_default_dark(): void
+    public function test_phase4_gate_a_flags_have_expected_default_posture(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        foreach (['group_dms', 'tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory'] as $flag) {
+        $defaults = $flags->all();
+        foreach (['tags', 'expanded_feeds', 'reputation_ledger'] as $flag) {
+            self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
+            self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
+        }
+        foreach (['group_dms', 'badge_rules', 'community_memory', 'content_references'] as $flag) {
+            self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
         }
 
-        $this->setFlags(['tags' => true]);
+        $this->setFlags(['tags' => false]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));
-        self::assertTrue($overridden->enabled('tags'));
+        self::assertFalse($overridden->enabled('tags'));
         self::assertTrue($overridden->enabled('community'));
     }
 
@@ -190,6 +197,60 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/tags', ['name' => 'Hidden']));
         $this->assertStatus(404, $this->post('/admin/tags/1', ['name' => 'Hidden', 'slug' => 'hidden']));
         $this->assertStatus(404, $this->post('/admin/tags/1/merge', ['target_id' => 2]));
+    }
+
+    public function test_tags_are_available_by_default_and_can_be_disabled(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'tagsdefaultadmin']);
+
+        $this->assertStatus(200, $this->get('/tags'));
+
+        $this->actingAs($admin);
+        $this->assertStatus(200, $this->get('/admin/tags'));
+        $this->assertRedirect($this->post('/admin/tags', ['name' => 'Default Tags']));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM tags WHERE slug = ?', ['default-tags']));
+
+        $this->setFlags(['tags' => false]);
+        $this->assertStatus(404, $this->get('/tags'));
+        $this->assertStatus(404, $this->get('/admin/tags'));
+        $this->assertStatus(404, $this->post('/admin/tags', ['name' => 'Hidden']));
+    }
+
+    public function test_expanded_feeds_are_available_by_default_and_can_be_disabled(): void
+    {
+        $viewer = $this->makeUser(['username' => 'expandedviewer']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'expanded-feed-board']);
+        $tagId = (new TagRepository($this->db))->create('expanded-feed-tag', 'Expanded Feed Tag', null, (int) $viewer['id']);
+        self::assertGreaterThan(0, $tagId);
+
+        $this->actingAs($viewer);
+
+        $latest = $this->get('/feed', ['view' => 'latest']);
+        $this->assertStatus(200, $latest);
+        self::assertStringContainsString('href="/feed?view=latest"', $latest->body());
+        $this->assertRedirect($this->post('/b/' . (int) $board['id'] . '/follow'));
+        $this->assertRedirect($this->post('/tags/expanded-feed-tag/follow'));
+
+        $this->setFlags(['tags' => true, 'expanded_feeds' => false]);
+        $following = $this->get('/feed', ['view' => 'latest']);
+        $this->assertStatus(200, $following);
+        $this->assertDontSeeText($following, 'Recent visible community activity.');
+        $this->assertStatus(404, $this->post('/b/' . (int) $board['id'] . '/follow'));
+        $this->assertStatus(404, $this->post('/tags/expanded-feed-tag/follow'));
+    }
+
+    public function test_reputation_ledger_is_available_by_default_and_can_be_disabled(): void
+    {
+        $windowed = $this->get('/leaderboard', ['window' => 'week']);
+        $this->assertStatus(200, $windowed);
+        $this->assertSeeText($windowed, 'Week');
+        $this->assertSeeText($windowed, 'Month');
+
+        $this->setFlags(['reputation_ledger' => false]);
+        $allTimeOnly = $this->get('/leaderboard', ['window' => 'week']);
+        $this->assertStatus(200, $allTimeOnly);
+        $this->assertDontSeeText($allTimeOnly, 'Week');
+        $this->assertDontSeeText($allTimeOnly, 'Month');
     }
 
     public function test_disabling_a_flag_takes_its_get_routes_offline_but_keeps_core_up(): void

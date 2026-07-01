@@ -1,0 +1,23 @@
+<!-- @dsCard group="Type" viewport="700x250" name="Type scale" subtitle="One serif ramp: display → title → thread → body → meta" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin: 0; padding: 20px 22px; background: var(--surface-raised); }
+  .row { display: flex; align-items: baseline; gap: 14px; padding: 3px 0; }
+  .row .t { font-family: var(--font-display); font-weight: 500; color: var(--text-strong); line-height: 1.1; letter-spacing: -0.01em; }
+  .row .n { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted); margin-left: auto; white-space: nowrap; }
+</style>
+</head>
+<body>
+  <div class="row"><span class="t" style="font-size:38px">Display</span><span class="n">2.40rem · display-xl</span></div>
+  <div class="row"><span class="t" style="font-size:36px">Page title</span><span class="n">2.25rem · display-lg</span></div>
+  <div class="row"><span class="t" style="font-size:30px">Inbox heading</span><span class="n">1.85rem · display-md</span></div>
+  <div class="row"><span class="t" style="font-size:22px">Board / h3</span><span class="n">1.375rem · title</span></div>
+  <div class="row"><span class="t" style="font-size:19px">Thread title</span><span class="n">1.20rem · thread</span></div>
+  <div class="row"><span class="t" style="font-family:var(--font-body);font-size:17px;font-weight:400">Body prose</span><span class="n">1.0625rem · body</span></div>
+  <div class="row"><span class="t" style="font-family:var(--font-label);font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold-ink)">Eyebrow / meta</span><span class="n">0.72rem · eyebrow</span></div>
+</body>
+</html>

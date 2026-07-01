@@ -56,4 +56,35 @@ final class LastOwnerGuard
             throw new ValidationException([$field => 'Designate another site owner before removing the last one.']);
         }
     }
+
+    /**
+     * Transactional mutation guard. Callers must already be inside the same
+     * transaction that performs the owner-loss mutation.
+     */
+    public function assertNotLastOwnerForUpdate(User $user, string $field = 'account'): void
+    {
+        $activeOwnerIds = $this->owners->activeOwnerIdsForUpdate();
+        if ($activeOwnerIds === []) {
+            // Legacy parity, but with the active-admin rows locked so two admins
+            // cannot concurrently remove themselves and strand the install.
+            if ($user->isAdmin() && $this->users->activeAdminCountExcludingForUpdate($user->id()) === 0) {
+                throw new ValidationException([$field => 'Add another active admin before removing the last one.']);
+            }
+            return;
+        }
+
+        $isOwner = false;
+        $otherOwners = 0;
+        foreach ($activeOwnerIds as $ownerId) {
+            if ($ownerId === $user->id()) {
+                $isOwner = true;
+            } else {
+                $otherOwners++;
+            }
+        }
+
+        if ($isOwner && $otherOwners === 0) {
+            throw new ValidationException([$field => 'Designate another site owner before removing the last one.']);
+        }
+    }
 }

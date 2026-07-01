@@ -1,0 +1,122 @@
+<!-- @dsCard group="Components" viewport="760x600" name="Forms — input, textarea, switch, choice" subtitle="The lapidary register: engraved parchment frames, set-gem toggles & jewel checks" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-page); }
+  .cols { display: grid; grid-template-columns: minmax(0, 1.04fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .cap { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .12em; font-size: 10px; color: var(--gold-ink); margin: 0 0 9px; }
+  .rcol { display: flex; flex-direction: column; gap: 18px; }
+  .gemcol { display: flex; flex-direction: column; gap: 12px; }
+  .gem-field { width: 100%; }
+  .gem-field > span { flex: 1; min-width: 0; line-height: 1.3; }
+  .switches .switchline { width: 100%; }
+  .switches .switch-text { flex: 1; min-width: 0; }
+  .gemrow { display: flex; flex-wrap: wrap; gap: 14px 18px; }
+  .cards2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+  .cards2.d2 { grid-template-columns: 1fr 1fr; }
+  .seal { position: absolute; opacity: .42; pointer-events: none; }
+  .fieldset-label { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .82rem; color: var(--text-muted); margin: 14px 0 6px; }
+  .switches { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { Input, Textarea, Switch, ChoiceCard } = window.ImladrisDesignSystem_c3e027;
+
+const Seal = ({ style }) => (
+  <span className="seal" style={style} aria-hidden="true">
+    <svg viewBox="0 0 100 100" width="11" height="11"><path fill="var(--gold-500)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z" /></svg>
+  </span>
+);
+const RowStar = () => (
+  <svg viewBox="0 0 100 100" width="11" height="11" aria-hidden="true" style={{ display: 'block' }}><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z" /></svg>
+);
+const swatch = (cls) => <span className={'theme-swatch ' + cls}><span className="sw-bg" /><span className="sw-card" /><span className="sw-accent" /></span>;
+
+function Demo() {
+  return (
+    <div className="cols">
+      {/* Left — the engraved scribe's panel */}
+      <div className="scribe-panel">
+        <Seal style={{ top: 15, left: 15 }} />
+        <Seal style={{ top: 15, right: 15 }} />
+        <Seal style={{ bottom: 15, left: 15 }} />
+        <Seal style={{ bottom: 15, right: 15 }} />
+        <span className="scribe-panel-head">Settings of the house</span>
+
+        <Input label="Display name" defaultValue="Erestor" className="input-engraved" />
+
+        <span className="fieldset-label">Known also as</span>
+        <div className="field-row">
+          <span className="row-bullet" aria-hidden="true" />
+          <input className="row-input" defaultValue="Loremaster of Imladris" aria-label="Alias one" />
+          <span className="row-mark" aria-hidden="true"><RowStar /></span>
+        </div>
+        <div className="field-row">
+          <span className="row-bullet" aria-hidden="true" />
+          <input className="row-input" defaultValue="Keeper of the Red Book" aria-label="Alias two" />
+          <span className="row-mark" aria-hidden="true"><RowStar /></span>
+        </div>
+
+        <span className="fieldset-label">Your counsel</span>
+        <Textarea rows={3} className="textarea-engraved" defaultValue="The diff is small; the audit trail must be whole." />
+
+        <div className="switches">
+          <Switch label="Show my online presence" defaultChecked />
+          <Switch label="Email me about replies" />
+        </div>
+      </div>
+
+      {/* Right — gem wards, register, theme & density seals */}
+      <div className="rcol">
+        <div>
+          <span className="cap">Marks &amp; wards</span>
+          <div className="gemcol">
+            <label className="gem-field"><input type="checkbox" className="gem-check gem-leaf" defaultChecked /><span>Weekly commend digest</span></label>
+            <label className="gem-field"><input type="checkbox" className="gem-check gem-gold" defaultChecked /><span>Notify on mentions</span></label>
+            <label className="gem-field"><input type="checkbox" className="gem-check gem-river" /><span>Quiet hours, dusk to dawn</span></label>
+            <label className="gem-field"><input type="checkbox" className="gem-check gem-rust" /><span>Pause all wards</span></label>
+          </div>
+        </div>
+
+        <div>
+          <span className="cap">Standing</span>
+          <div className="gemrow">
+            <label className="gem-field"><input type="radio" name="reg" className="gem-radio" defaultChecked /><span>Member</span></label>
+            <label className="gem-field"><input type="radio" name="reg" className="gem-radio" /><span>Veteran</span></label>
+            <label className="gem-field"><input type="radio" name="reg" className="gem-radio gem-gold" /><span>Loremaster</span></label>
+          </div>
+        </div>
+
+        <div>
+          <span className="cap">Theme</span>
+          <div className="cards2">
+            <ChoiceCard name="theme" title="Parchment" desc="Day" swatch={swatch('swatch-parchment')} defaultChecked />
+            <ChoiceCard name="theme" title="Twilight" desc="Night" swatch={swatch('swatch-twilight')} />
+            <ChoiceCard name="theme" title="Auto" desc="System" swatch={swatch('swatch-system')} />
+          </div>
+        </div>
+
+        <div>
+          <span className="cap">Density</span>
+          <div className="cards2 d2">
+            <ChoiceCard name="density" title="Comfortable" desc="The Hall" defaultChecked />
+            <ChoiceCard name="density" title="Compact" desc="The Watch" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

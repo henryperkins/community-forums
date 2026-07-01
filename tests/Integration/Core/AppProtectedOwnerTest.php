@@ -124,6 +124,31 @@ final class AppProtectedOwnerTest extends TestCase
         $this->assertRedirect($this->post('/settings/account/deactivate', ['current_password' => 'password123']));
     }
 
+    public function test_capabilities_on_enforces_owner_invariant_on_deletion_request(): void
+    {
+        $this->setFlags(['account_lifecycle' => true, 'capabilities' => true]);
+        $a = $this->makeAdmin(['username' => 'delete_owner_a']);
+        $b = $this->makeAdmin(['username' => 'delete_owner_b']);
+        $repo = new ProtectedOwnerRepository($this->db);
+        $repo->designate((int) $a['id'], null);
+
+        $this->actingAs($a);
+        $this->assertStatus(422, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+
+        $repo->designate((int) $b['id'], (int) $a['id']);
+        $this->assertRedirect($this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+    }
+
+    public function test_locked_guard_uses_the_same_owner_invariant(): void
+    {
+        $aRow = $this->makeAdmin(['username' => 'locked_guard_owner']);
+        $this->makeAdmin(['username' => 'locked_guard_admin']);
+        (new ProtectedOwnerRepository($this->db))->designate((int) $aRow['id'], null);
+
+        $this->expectException(ValidationException::class);
+        $this->guard()->assertNotLastOwnerForUpdate($this->userEntity($aRow), 'current_password');
+    }
+
     /** @param array<string,bool> $flags */
     private function setFlags(array $flags): void
     {

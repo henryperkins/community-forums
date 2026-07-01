@@ -1,0 +1,66 @@
+<!-- @dsCard group="Components" viewport="700x600" name="Forum — inbox row, conversation, composer" subtitle="The Council Inbox surfaces: tabs, thread rows, a post, the join-bar" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 22px; background: var(--surface-page); }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .cap { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: 10px; color: var(--gold-ink); margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { ThreadRow, Post, Composer, JoinBar, Tabs, Reaction } = window.ImladrisDesignSystem_c3e027;
+const check = <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M20 6L9 17l-5-5"/></svg>;
+function Demo() {
+  const [den, setDen] = React.useState('Hall');
+  const [filter, setFilter] = React.useState('All');
+  return (
+    <div className="stack">
+      <div className="group">
+        <Tabs variant="segment" items={['Hall','Watch']} value={den} onChange={setDen} />
+        <Tabs variant="pill" items={['All','Unread','Starred','Mine']} value={filter} onChange={setFilter} />
+      </div>
+      <ul className={"thread-list" + (den === 'Watch' ? ' is-compact' : '')}>
+        <ThreadRow title="Evaluations as ritual, not gate" author="Galadriel" authorSeed="galadriel"
+          authorTier="Loremaster" authorRep="5.1k" presence="online" giltAuthor status="solved"
+          replies={23} time="2h" commends={31} starred
+          snippet="We keep treating the eval suite as a turnstile. What if it were a rite the whole council kept?" />
+        <ThreadRow title="Who changed what — and can you prove the rollback?" author="Erestor" authorSeed="erestor"
+          authorTier="Legend" authorRep="3.9k" presence="online" giltAuthor
+          replies={41} time="5h" commends={54} unread
+          snippet="The diff is small; the audit trail must be whole. Here is the rollback drill we ran on Tuesday." />
+        <ThreadRow title="On exposing capability before we are asked" author="Elrond" authorSeed="elrond"
+          authorTier="Legend" authorRep="8.7k" giltAuthor status="decision_made"
+          replies={12} time="1d" snippet="A decision, recorded: we publish the capability notes the same day we brief the council." />
+      </ul>
+      <div>
+        <div className="cap">Conversation</div>
+        <Post author="Erestor" authorSeed="erestor" authorTier="Legend" handle="erestor" authorTitle="Loremaster of Imladris" presence="online" op rep="3.9k" time="2 days ago"
+          reactions={<><Reaction name="Commend" count="31" active /><Reaction name="Seconded" count="8" icon={check} /></>}>
+          <p style={{margin:0}}>The diff is small; the audit trail must be whole. <em>AI proposes; the council approves.</em></p>
+        </Post>
+      </div>
+      <div>
+        <div className="cap">Composer · member</div>
+        <Composer postingAs="Erestor" sendLabel="Reply" count="0 / 20000" />
+      </div>
+      <div>
+        <div className="cap">Join-bar · guest</div>
+        <JoinBar />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

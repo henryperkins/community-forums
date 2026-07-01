@@ -92,11 +92,11 @@ final class AccountLifecycleService
     public function deactivate(User $user, string $currentPassword, ?string $currentSessionId = null): void
     {
         $this->assertPassword($user, $currentPassword);
-        $this->assertNotFinalActiveAdmin($user);
-        $this->ownerGuard?->assertNotLastOwner($user, 'current_password');
 
-        $before = $this->users->find($user->id());
-        $this->db->transaction(function () use ($user, $before, $currentSessionId): void {
+        $this->db->transaction(function () use ($user, $currentSessionId): void {
+            $this->assertNotFinalActiveAdmin($user);
+            $this->ownerGuard?->assertNotLastOwnerForUpdate($user, 'current_password');
+            $before = $this->users->find($user->id());
             $this->users->setStatus($user->id(), 'deactivated');
             $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
             $this->logs->log([
@@ -135,15 +135,15 @@ final class AccountLifecycleService
     public function requestDeletion(User $user, string $currentPassword, ?string $currentSessionId = null): void
     {
         $this->assertPassword($user, $currentPassword);
-        $this->assertNotFinalActiveAdmin($user);
-        $this->ownerGuard?->assertNotLastOwner($user, 'current_password');
 
-        if ($this->deletions->pendingForUser($user->id()) !== null) {
-            return;
-        }
+        $this->db->transaction(function () use ($user, $currentSessionId): void {
+            $this->assertNotFinalActiveAdmin($user);
+            $this->ownerGuard?->assertNotLastOwnerForUpdate($user, 'current_password');
+            if ($this->deletions->pendingForUser($user->id()) !== null) {
+                return;
+            }
 
-        $purgeAfter = gmdate('Y-m-d H:i:s', time() + 30 * 86400);
-        $this->db->transaction(function () use ($user, $purgeAfter, $currentSessionId): void {
+            $purgeAfter = gmdate('Y-m-d H:i:s', time() + 30 * 86400);
             $requestId = $this->deletions->create($user->id(), $user->id(), $purgeAfter, 'self_service');
             $this->users->setStatus($user->id(), 'pending_deletion');
             $this->sessions->revokeOthersForUser($user->id(), $currentSessionId ?? '');
@@ -231,7 +231,7 @@ final class AccountLifecycleService
 
     private function assertNotFinalActiveAdmin(User $user): void
     {
-        if ($user->isAdmin() && $this->users->activeAdminCountExcluding($user->id()) === 0) {
+        if ($user->isAdmin() && $this->users->activeAdminCountExcludingForUpdate($user->id()) === 0) {
             throw new ValidationException(['current_password' => 'Add another active admin before changing this account lifecycle state.']);
         }
     }

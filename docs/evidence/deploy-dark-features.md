@@ -3,7 +3,8 @@
 **Date:** 2026-07-01
 
 This inventory lists feature flags that default to `false` in
-`src/Core/FeatureFlags.php`. That default means the code and schema may be
+`src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
+rollback traceability. A default-dark flag means the code and schema may be
 present in a deploy, but the feature is unavailable until an operator explicitly
 enables it through the `features` setting.
 
@@ -23,9 +24,9 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 |---|---|---|
 | `topic_workflow` | Canonical status, history, snooze, assignment | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, runbook `docs/runbooks/topic_workflow.md`. Retained here for traceability. |
 | `group_dms` | Group conversation creation and invites | Accepted Gate A engineering baseline; default-dark until intentional enablement |
-| `tags` | Curated tag catalogue and thread tagging | Accepted Gate A engineering baseline; default-dark until intentional enablement |
-| `expanded_feeds` | Board/tag follows, expanded Following and Latest feeds | Accepted Gate A engineering baseline; default-dark until intentional enablement |
-| `reputation_ledger` | Reputation-event ledger and windowed rankings | Accepted Gate A engineering baseline; default-dark until intentional enablement |
+| `tags` | Curated tag catalogue and thread tagging | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
+| `expanded_feeds` | Board/tag follows, expanded Following and Latest feeds | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
+| `reputation_ledger` | Reputation-event ledger and windowed rankings | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppLeaderboardTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `badge_rules` | Custom badge rules, preview, backfill, revoke history | Deploy-dark carryover; awaiting operator browser evidence and rollback rehearsal |
 | `community_memory` | Summaries, related topics, wiki revisions | Accepted Gate A engineering baseline; default-dark until intentional enablement |
 | `content_references` | Persisted board/thread/post/DM/summary references and read-gated cards | Deploy-dark carryover; awaiting browser/no-JS and inaccessible-target evidence |
@@ -41,9 +42,9 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 | `slash_giphy` | Progressive slash insertion and client-side GIPHY picker config | Deploy-dark; limited browser evidence exists, awaiting privacy/provider runbook and a11y signoff |
 | `split_merge` | Moderator split/merge routes, redirects, audit, touched-counter repair | Deploy-dark; awaiting browser/runbook evidence and larger repair rehearsal |
 | `profile_media` | Avatar upload/removal, signature hardening, moderator signature removal | Deploy-dark; awaiting browser/a11y evidence and moderation runbook |
-| `board_folders` | Private personal board folders | Deploy-dark; awaiting browser/a11y evidence |
-| `bookmark_folders` | Private folders for starred/bookmarked threads | Deploy-dark; awaiting browser/a11y evidence and profile/privacy copy review |
-| `saved_feeds` | Private saved feed filters and digest-composition groundwork | Deploy-dark; awaiting browser/a11y evidence and digest-composition decision |
+| `board_folders` | Private personal board folders | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
+| `bookmark_folders` | Private folders for starred/bookmarked threads | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
+| `saved_feeds` | Private saved feed filters and digest-composition groundwork | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `custom_profile_fields` | Bounded extra public profile fields | Deploy-dark; awaiting browser/a11y evidence and profile/privacy copy review |
 | `account_lifecycle` | Export, deactivate/reactivate, 30-day deletion request/cancel, purge/anonymization | Deploy-dark; awaiting browser/no-JS evidence and scheduled purge runbook |
 | `automated_context` | Since-last-read context and suggested related topics | Deploy-dark; awaiting browser/no-JS evidence, replay/disable runbook, worker proof, and stale-link policy |
@@ -92,3 +93,12 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
   accepted-answer badge remains the community solved indicator); run
   `php bin/console repair` after re-enabling to reconcile the projection from
   accepted answers.
+- `tags`, `expanded_feeds`, and `reputation_ledger` graduated out of deploy-dark
+  on 2026-07-01: their `FeatureFlags` defaults are now `true`. They are retained
+  here for traceability, remain reversible via the `features` override, and are
+  mapped to the imported Imladris design system in
+  `docs/design-system/imladris/ACTIVATED_FEATURES.md`.
+- `board_folders`, `bookmark_folders`, and `saved_feeds` graduated out of
+  deploy-dark on 2026-07-01: their `FeatureFlags` defaults are now `true`. They
+  are retained here for traceability, remain reversible via the `features`
+  override, and share the private personal-organization settings surface.
