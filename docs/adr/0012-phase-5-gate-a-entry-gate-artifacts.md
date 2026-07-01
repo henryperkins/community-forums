@@ -1,11 +1,13 @@
 # ADR 0012: Phase 5 Gate A entry-gate artifacts (A1/A4/A5 recorded; A8 product-demand review)
 
 **Date:** 2026-06-30
-**Status:** **Proposed.** Owner sign-offs for A4/A5/A8 were received 2026-06-30 (see
+**Status:** **Accepted 2026-07-01.** Owner sign-offs for A4/A5/A8 were received 2026-06-30 (see
 *Owner sign-off* below) and the two A1 corrections (`manage_workflow` dual-path;
-`core.board.manage` → `category` scope) are landed. Held at **Proposed** at the
-owner's instruction pending a final acceptance pass; on the owner's go, flip to
-**Accepted** and update `PHASE_5_STATUS.md`.
+`core.board.manage` → `category` scope) are landed. The owner's final acceptance
+pass returned a **go** on 2026-07-01; this ADR flips from Proposed to **Accepted**
+and `PHASE_5_STATUS.md` is updated to match. Acceptance covers the §2 **entry-gate
+artifacts only** — it does **not** accept any Gate A *behavior* (that remains
+**ADR 0013**, Increment 10).
 **Supersedes a numbering reservation:** the Gate A program plan originally
 reserved ADR `0012` for the *acceptance* record; that acceptance ADR is
 renumbered **`0013`**. This ADR (`0012`) is entry-gate artifacts.

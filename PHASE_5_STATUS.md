@@ -1,16 +1,16 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, and all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The remaining §2 entry-gate artifacts (A1/A4/A5/A8) are now recorded with owner sign-offs in ADR 0012 (Proposed); the Foundation increment (F1–F11) is next.
-**Last updated:** 2026-06-30
+**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, and all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The remaining §2 entry-gate artifacts (A1/A4/A5/A8) are now recorded with owner sign-offs and **accepted 2026-07-01** in ADR 0012; the Foundation increment (F1–F11) is next.
+**Last updated:** 2026-07-01
 **Branch:** `main`
 **Suite:** `./vendor/bin/phpunit` → **579 tests / 2190 assertions, green**. Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile. Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), and the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`).
 
-## Gate A entry-gate artifacts (recorded 2026-06-30)
+## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
 The remaining `PHASE_5_PLAN.md` §2 entry-gate artifacts are recorded; **ADR 0012**
 (`docs/adr/0012-phase-5-gate-a-entry-gate-artifacts.md`) carries the gate record and
-the owner sign-offs (received 2026-06-30), held at **Proposed** pending a final
-acceptance pass. The acceptance ADR is renumbered **0013**.
+the owner sign-offs (received 2026-06-30), **accepted 2026-07-01** on the owner's
+final acceptance pass. The acceptance ADR is renumbered **0013**.
 
 - **A1 — capability taxonomy** → `docs/phase5/capability-taxonomy.md`: 54 `core.*`
   keys (hybrid granularity), scope/risk per the `0050` ENUMs, 5 non-delegable
@@ -25,8 +25,10 @@ acceptance pass. The acceptance ADR is renumbered **0013**.
 - **A8 — product-demand review** → ADR 0012: declarative-first Gate A ecosystem
   approved, conditioned on the non-critical + no-untrusted-PHP guarantees.
 
-Still dark/inert — no behavior enables. Next is the **Foundation increment (F1–F11)**
-TDD plan. A2 (first named OIDC provider) is still required before P5-12 acceptance.
+Still dark/inert — no behavior enables. With the §2 entry-gate artifacts **accepted
+2026-07-01** (ADR 0012), the **Foundation increment (F1–F11)** may now proceed as an
+executable TDD plan — the next step. A2 (first named OIDC provider) is still required
+before P5-12 acceptance.
 
 ## What this increment is (and is not)
 
