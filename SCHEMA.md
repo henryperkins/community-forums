@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.24 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-30
+**Status:** v1.25 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-01
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -1015,7 +1015,7 @@ New tables — **ecosystem / packages** (`0049`, §8.2 #1–5):
 
 New tables — **governance / least-privilege** (`0050`, §8.2 #8/#9/#13):
 
-- `capabilities(id, capability_key, namespace, scope_type, risk_class, is_delegable, is_protected, source, source_version, description, retired_at, created_at)` with unique `capability_key`; the catalogue is **seeded empty** (taxonomy is Milestone-0 owner policy, shipped with the resolver).
+- `capabilities(id, capability_key, namespace, scope_type, risk_class, is_delegable, is_protected, source, source_version, description, retired_at, created_at)` with unique `capability_key`; the catalogue is seeded by **`0066`** from `src/Security/CapabilityCatalog.php` (54 core keys); `role_capabilities` reproduces the cumulative guest/user/mod/admin authority and `protected_owners` is backfilled from existing active admins (F3/F5, deploy-dark).
 - `roles(id, role_key, name, kind, is_protected, role_rank, version, description, created_by, created_at, updated_at)` with unique `role_key`; **seeds 4 protected system roles** `system.guest|user|moderator|admin` with `role_rank` 0/10/20/30 (maps the `boards.post_min_role` floor). (`role_rank`, not `rank` — reserved in MySQL 8.)
 - `role_capabilities(role_id, capability_id, created_at)` PK `(role_id, capability_id)`, FKs to roles/capabilities.
 - `role_assignments(id, subject_type, subject_id, role_id, scope_type, scope_id, grantor_id, reason, approval_ref, starts_at, ends_at, revoked_at, revoked_by, assignment_version, created_at)` with subject/role/scope/expiry indexes and role/grantor/revoker FKs; `subject_id`/`scope_id` are polymorphic (no FK); resolver enforces `ends_at` directly (expiry never waits on a cleanup job).
@@ -1166,6 +1166,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.25 | 2026-07-01 | Phase 5 Foundation F3/F5 seed migration `0066` (seed-only): populated the `0050` `capabilities` catalogue (54 core keys) + `role_capabilities` (cumulative system.guest/user/moderator/admin) from the code-owned `CapabilityCatalog`, and backfilled `protected_owners` from existing active admins. Deploy-dark behind `capabilities`; no shape change. |
 | v1.24 | 2026-06-30 | Reconciled the Phase 2-4 completion pull-forward migrations `0063`-`0065`: email retry/backoff columns and retry index, deploy-dark `server_drafts`, and deploy-dark Phase 5 Gate B server-extension runtime tables (`server_extension_handlers`, `server_extension_jobs`, `server_extension_runs`, `server_extension_kv`). Updated the phase map and removed server drafts from foreshadowed gaps. |
 | v1.23 | 2026-06-30 | Reconciled the **Phase 2–4 carryover completion** migrations `0059`–`0062` in new **§4B**: widened `users.status` ENUM (`deactivated`/`pending_deletion`/`deleted`), added `email_deliveries.payload JSON`, and new tables `account_deletion_requests` (`0059`), `moderation_appeals`/`moderation_appeal_events` (`0060`), `email_domain_status` (`0061`), `thread_bookmark_folders`/`thread_bookmark_folder_threads`/`user_profile_fields` (`0062`). Added table-index rows 93–99. Additive + deploy-dark (`account_lifecycle`/`appeals` default off; `bookmark_folders`/`custom_profile_fields` already dark). |
 | v1.22 | 2026-06-29 | Reconciled Phase 4 carryover behavior notes after deploy-dark implementation evidence for content references, automated context, related-topic refresh, profile media/signature hardening, and the earlier `0058` carryover slices; no schema shape change. |
