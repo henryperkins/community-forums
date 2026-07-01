@@ -115,14 +115,15 @@ final class AppPhase5FoundationSchemaTest extends TestCase
         self::assertSame($ranks, [0, 10, 20, 30]);
     }
 
-    public function test_capability_catalogue_is_not_seeded(): void
+    public function test_capability_catalogue_is_seeded_by_0066(): void
     {
-        // The permission taxonomy is owner-approved Milestone-0 policy; the
-        // foundation must NOT presume it. The catalogue ships with the resolver.
+        // The owner-approved taxonomy (A1, ADR 0012) is now transcribed in
+        // CapabilityCatalog and seeded by migration 0066 (Foundation F3),
+        // deploy-dark behind the `capabilities` flag.
         self::assertSame(
-            0,
+            54,
             (int) $this->db->fetchValue('SELECT COUNT(*) FROM capabilities'),
-            'capability catalogue must stay empty until the taxonomy is approved',
+            'capability catalogue is seeded by migration 0066 from CapabilityCatalog',
         );
     }
 
