@@ -24,6 +24,12 @@ final class Phase5BudgetsTest extends TestCase
         self::assertSame(5000, Phase5Budgets::target('webhook.delivery_timeout'));
         self::assertSame(250, Phase5Budgets::target('registry.signature_verify_p95'));
         self::assertSame(86400, Phase5Budgets::target('registry.snapshot_freshness'));
+        self::assertSame(2000, Phase5Budgets::target('registry.fetch_p95'));
+        self::assertSame(10000, Phase5Budgets::target('package.install_update_p95'));
+        self::assertSame(2000, Phase5Budgets::target('webauthn.ceremony_p95'));
+        self::assertSame(2000, Phase5Budgets::target('oidc.discovery_p95_cached'));
+        self::assertSame(5000, Phase5Budgets::target('oidc.discovery_p95_cold'));
+        self::assertSame(2000, Phase5Budgets::target('sandbox.walltime_default'));
     }
 
     public function test_every_budget_has_a_valid_shape(): void

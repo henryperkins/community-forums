@@ -95,7 +95,13 @@ final class Phase5FixtureSeeder
             $mods->assign($bMod, $mod1);
             $owners->designate($admin, null);
 
-            $roleId = fn (string $key): int => (int) $this->db->fetchValue('SELECT id FROM roles WHERE role_key = ?', [$key]);
+            $roleId = function (string $key): int {
+                $id = $this->db->fetchValue('SELECT id FROM roles WHERE role_key = ?', [$key]);
+                if ($id === null) {
+                    throw new \RuntimeException("Phase5FixtureSeeder: role '$key' not seeded (migration 0050 required)");
+                }
+                return (int) $id;
+            };
             $adminRole = $roleId('system.admin');
             $modRole = $roleId('system.moderator');
 
