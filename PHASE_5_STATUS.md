@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, and all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The remaining §2 entry-gate artifacts (A1/A4/A5/A8) are now recorded with owner sign-offs and **accepted 2026-07-01** in ADR 0012; the Foundation increment (F1–F11) is next.
+**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation authorization spine F3 (capability catalogue + coverage) and F5 (protected-owner seed + `LastOwnerGuard`) landed deploy-dark behind `capabilities`.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The remaining §2 entry-gate artifacts (A1/A4/A5/A8) are recorded with owner sign-offs and **accepted 2026-07-01** in ADR 0012; the Foundation increment (F1–F11) is underway — **F3 + F5 landed 2026-07-01**.
 **Last updated:** 2026-07-01
 **Branch:** `main`
-**Suite:** `./vendor/bin/phpunit` → **579 tests / 2190 assertions, green**. Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile. Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), and the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`).
+**Suite:** `./vendor/bin/phpunit` → **853 tests / 4447 assertions, green** (post-F3/F5; +24 tests over the prior 829 baseline; verified on two consecutive plain runs — both the fresh-migrate and the reused-schema `composer test` path). Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile (F3/F5 add no UI surface — PHPUnit + `verify:upgrade` only). Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`), and the Foundation F3/F5 suite (`CapabilityCatalogTest`, `CapabilityInventoryCoverageTest`, `AppPhase5CapabilitySeedTest`, `ProtectedOwnerRepositoryTest`, `RepairProtectedOwnersTest`, `AppProtectedOwnerTest`).
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -136,6 +136,47 @@ dispatch path.
   delivery — landed, 4) first-party hook registry + producer wiring — landed.
   No public/untrusted PHP execution is included in these Gate A sub-projects.
 
+## Foundation F3/F5 landed (2026-07-01) — authorization spine, deploy-dark
+
+The Foundation authorization spine landed behind the dark `capabilities` flag;
+no live behavior changed and `AppFeatureFlagTest::test_phase5_foundation_flags_default_dark`
+still proves every Phase 5 flag dark.
+
+- **F3 — code-owned capability catalogue** (`src/Security/CapabilityCatalog.php`):
+  the A1 taxonomy (`docs/phase5/capability-taxonomy.md` §4, ADR 0012) transcribed as a
+  pure static enumeration of the **54 `core.*` keys** (scope/risk/delegable/protected/
+  description/consent), the 5-key non-delegable protected set (decision #22), and the
+  cumulative `system.guest/user/moderator/admin` role maps (**1 / 15 / 28 / 49**).
+  Mirrors `ApiScopes`. `CapabilityCatalogTest` pins the count, the
+  `risk='protected' ⇔ is_protected ⇔ ¬delegable` invariant, the consent-string rule,
+  and the cumulative counts.
+- **F3 — capability golden matrix + coverage** (`src/Service/CapabilityInventoryService.php`):
+  every non-protected key maps to ≥1 authoritative call-site anchor (taxonomy §4) plus
+  the §8 non-capability exclusions; `CapabilityInventoryCoverageTest` enforces
+  catalogue⟺matrix parity (A1 enforcement — adding/removing a key without wiring fails CI).
+- **F3 — seed migration `0066`** (seed-only, additive, `INSERT IGNORE`): populates the
+  empty `0050` `capabilities` catalogue + `role_capabilities` from `CapabilityCatalog`;
+  `AppPhase5CapabilitySeedTest` proves the seeded rows match the code and no protected
+  capability is ever role-mapped. `SCHEMA.md` → **v1.25**.
+- **F5 — protected-owner spine** (decision #27, "≥1 active recoverable owner"):
+  `0066` backfills `protected_owners` from existing active admins;
+  `src/Repository/ProtectedOwnerRepository.php` is the thin single-table wrapper;
+  `src/Security/LastOwnerGuard.php` is the shared invariant — **parity-safe**: while the
+  owner set is unseeded (dark / fresh install) it defers to the legacy last-active-admin
+  rule, and enforces the owner invariant directly once populated;
+  `RepairService::repairProtectedOwners()` reconciles the invariant idempotently and is
+  surfaced by `bin/console repair`.
+- **F5 — wired one owner-loss path** (`src/Service/AccountLifecycleService.php`,
+  `src/Core/App.php`): `deactivate()`/`requestDeletion()` consult `LastOwnerGuard` via
+  `?->` — the guard is injected **only when `capabilities` is on**, so dark = today's
+  legacy behavior unchanged. The four not-yet-built owner-loss paths (role revoke/demote
+  Inc 6, passkey removal Inc 7, sole-provider unlink Inc 8, invitations Inc 9) have the
+  guard's public API + a documented future hook, not silent omissions.
+- **Populated-data proof** (`verify:upgrade`, which the empty-users PHPUnit bootstrap
+  cannot show): `0066` applied on a seeded Phase-1 DB → catalogue = 54, role maps
+  1/15/28/49, 0 protected keys role-mapped, and the pre-existing `legacy_admin` backfilled
+  as an active protected owner; `bin/console repair` designated 1 owner then 0 (idempotent).
+
 ## Product-owner approvals recorded
 
 This instruction accepts ADR 0004 as the Milestone-0 decision record using its
@@ -182,7 +223,15 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   mobile browser evidence of register → show-once → public topic creation →
   worker delivery log for `topic.created`. Deploy-dark behind `webhooks` and
   `first_party_hooks`.
-- **All other Phase 5 subsystems (registry, themes, capabilities/roles, passkeys,
+- **Capabilities / roles + protected-owner spine (Foundation F3/F5):** R2
+  (implemented behind the disabled `capabilities` flag) + **R3-partial** — the
+  code-owned catalogue (54 keys), the `0066` catalogue/role-map seed, the
+  `protected_owners` backfill, `LastOwnerGuard`, and its reconcile are
+  implemented with enforcing PHPUnit + `verify:upgrade` evidence, but the
+  **capability resolver (P5-08, Increment 1)** and the **remaining four
+  owner-loss enforcement paths (Increment 6)** are not yet built, so this is not
+  R4/R5. Deploy-dark; no live behavior.
+- **All other Phase 5 subsystems (registry, themes, passkeys,
   providers, invitations, sandbox, governance, service principals, verified
   links):** R0/R1 — pending implementation and workstream-specific evidence.
 
