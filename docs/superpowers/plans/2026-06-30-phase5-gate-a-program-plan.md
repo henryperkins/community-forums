@@ -17,7 +17,7 @@ This document sequences the work; it does **not** waive `PHASE_5_PLAN.md` §2. T
 *Every task in every increment implicitly includes this section. Values are copied from CLAUDE.md, `PHASE_5_PLAN.md`, and `docs/adr/0004`.*
 
 - **Deploy-dark.** Every Gate A subsystem ships behind its existing `FeatureFlags` flag, **default `false`**, route-gated (controller throws `NotFoundException` when off), with a regression in `tests/Integration/Core/AppFeatureFlagTest.php`. No Gate A slice leaves dark-by-default status until it reaches **R4/R5** in the ledger. Pre-acceptance enablement is limited to the staged `PHASE_5_PLAN` / ADR-0004 order (shadow, staff preview/browse, constrained cohort), and **broad/public/default-on enablement** still waits for formal Gate A acceptance (`§11.1`, `§13.1`). The Gate A flags: `package_registry`, `package_themes`, `capabilities`, `passkeys`, `provider_registry`, `invitations`, plus the already-landed-dark `service_secrets`, `api_tokens`, `webhooks`, `first_party_hooks`.
-- **Migrations** are additive-only / forward-only; allocate the **exact number from §C** (do not re-grab `0066`); `up()` additive, `down()` drops FKs before columns; hand-update `SCHEMA.md` (shape + §9 changelog + version bump, currently v1.24) per landed migration. Seeds use `INSERT IGNORE` (pattern `0040_seed_badges.php`).
+- **Migrations** are additive-only / forward-only; allocate the **exact number from §C** (never re-grab an already-allocated number — the F1 guard fails CI if you do); `up()` additive, `down()` drops FKs before columns; hand-update `SCHEMA.md` (shape + §9 changelog + version bump, currently v1.26) per landed migration. Seeds use `INSERT IGNORE` (pattern `0040_seed_badges.php`).
 - **Strict CSP** (`SecurityHeaders`): `script-src 'self'; style-src 'self'`, **no inline `<script>`/`<style>`**. All PE JS in `public/assets/*.js`; **every flow works server-rendered, no-JS first.** Theme/built CSS is served as an external app-origin stylesheet, never inline.
 - **CSRF** `_token` on every POST; **no GET mutates state**; the only exemption stays the OAuth callback. New high-impact admin actions require **recent reauthentication** (WriteGate + password) via the unified gate from §B-F7.
 - **Write path & counters.** Multi-table mutations run in `$db->transaction(fn)`. Every denormalized counter/pointer added (`invitations.used_count`, `packages.latest_release_id`, theme active/LKG pointer, `advisory_status`) gets a matching recompute in `RepairService` with identical WHERE clauses.
@@ -37,7 +37,7 @@ This document sequences the work; it does **not** waive `PHASE_5_PLAN.md` §2. T
 | `0054` TOTP/recovery | The one **enabled** (opt-in) behavior; passkey prerequisite |
 | B2 seam `0055`–`0057` + hooks | service-secret vault, read-only `/api/v1` tokens, webhook delivery, first-party hooks — **all dark, R3** |
 | `0065` server_extensions | Gate **B** scaffold (PR #27), dark — out of Gate A scope |
-| Migrations on disk | through **`0065`**; next number is **`0066`** |
+| Migrations on disk | through **`0067`** (0066 F3/F5 seed, 0067 owner-lifecycle index); next number is **`0068`** |
 
 **The gap is behavior, not shape.** Per `PHASE_5_STATUS` §11.1, every Gate A subsystem (registry, themes, capabilities/roles, passkeys, providers, invitations) is **R0/R1**. The four landed B2 slices + TOTP are **R3** and must reach R4/R5 (browser/no-JS, authorization-matrix, adversarial, perf, a11y, runbook evidence) before their flags flip.
 
@@ -70,7 +70,7 @@ D5 (sandbox host matrix) and D10 (verified-link methods) are approved **Gate B**
 
 | Sub-plan | Deliverable | Notes |
 |---|---|---|
-| **F1 — Migration-number ledger** | Adopt the **§C allocation table**; add a CI/test guard asserting migration filenames are gapless and unique. | Kills the "ten briefs grab 0066" collision. |
+| **F1 — Migration-number ledger** | Adopt the **§C allocation table**; add a CI/test guard asserting migration filenames are gapless and unique. **Landed 2026-07-01** → `tests/Unit/Core/MigrationLedgerTest.php` + §C re-baselined for the `0067` owner-lifecycle index. | Kills the "ten briefs grab 0066" collision. |
 | **F2 — `CORE_VERSION`** | `App::CORE_VERSION` constant + surface to the compatibility resolver; `CompatibilityResolverTest` boundary cases. | Today only the cosmetic `brand_version` exists. Required by P5-01/02/03. |
 | **F3 — Capability catalogue (seed + code)** | `src/Security/CapabilityCatalog.php` (code-owned `core.*` enumeration + non-delegable protected set) generated from `src/Service/CapabilityInventoryService.php` (a route/permission **golden matrix**); seed migration into the empty `0050` tables (catalogue + `role_capabilities` reproducing Guest/User/Mod/Admin). Coverage test: **every authorization call site maps to exactly one catalogued key**; every key has scope_type + risk_class + consent string. | **Owned here, not split** (resolves the P5-00↔P5-08 ownership gap). Lands before any P5-02/04/09/13 validation merges. Gated dark by `capabilities`. Needs A1. |
 | **F4 — `DataClasses.php`** | `src/Security/DataClasses.php` approved local data-class catalogue + human consent vocabulary (mirrors `ApiScopes`/`WebhookEvents`). | Required by P5-02 manifest validation, P5-04 consent, P5-08 risk_class. |
@@ -93,16 +93,25 @@ All additive on already-inert tables; relative numeric order is safe because eac
 | # | Migration | Increment |
 |---|---|---|
 | `0066` | `phase5_seed_capabilities_owners` — catalogue + role_capabilities + protected_owners seed | **F (Foundation)** |
-| `0067` | `phase5_registry_snapshots` — snapshot cache + `moderation_log.target_type` widen | Inc 2 (P5-01) |
-| `0068` | `phase5_package_lifecycle` — `installed_packages` pin/update_policy/settings/export cols | Inc 3 (P5-02) |
-| `0069` | `phase5_theme_packages` — theme_packages/versions/assets/state | Inc 4 (P5-03) |
-| `0070` | `phase5_package_integrations` — `installed_package_settings` + remote-app credential linkage | Inc 5 (P5-04) |
-| `0071` | `phase5_publisher_review_security` — publisher_signing_keys, package_review_decisions, package_transparency_log | Inc 3 (P5-02 / P5-07-A enforcement pre-req) |
-| `0072` | `phase5_assignment_lifecycle` *(conditional)* — `role_assignments.origin`/status if `0050` insufficient | Inc 6 (P5-09) |
-| `0073` | `phase5_passkey_mfa_policy` *(conditional)* — privileged-MFA grace/policy (else settings-backed) | Inc 7 (P5-11) |
-| `0074` | `phase5_provider_identity_repoint` — backfill `provider_config_id` + uniqueness change to include config/issuer | Inc 8 (P5-12) |
+| `0067` | `owner_lifecycle_user_index` — `users` `idx_users_role_status_id (role, status, id)` for last-owner/admin `FOR UPDATE` guards | **F (Foundation F5 / owner-lifecycle)** — *landed 2026-07-01* |
+| `0068` | `phase5_registry_snapshots` — snapshot cache + `moderation_log.target_type` widen | Inc 2 (P5-01) |
+| `0069` | `phase5_package_lifecycle` — `installed_packages` pin/update_policy/settings/export cols | Inc 3 (P5-02) |
+| `0070` | `phase5_theme_packages` — theme_packages/versions/assets/state | Inc 4 (P5-03) |
+| `0071` | `phase5_package_integrations` — `installed_package_settings` + remote-app credential linkage | Inc 5 (P5-04) |
+| `0072` | `phase5_publisher_review_security` — publisher_signing_keys, package_review_decisions, package_transparency_log | Inc 3 (P5-02 / P5-07-A enforcement pre-req) |
+| `0073` | `phase5_assignment_lifecycle` *(conditional)* — `role_assignments.origin`/status if `0050` insufficient | Inc 6 (P5-09) |
+| `0074` | `phase5_passkey_mfa_policy` *(conditional)* — privileged-MFA grace/policy (else settings-backed) | Inc 7 (P5-11) |
+| `0075` | `phase5_provider_identity_repoint` — backfill `provider_config_id` + uniqueness change to include config/issuer | Inc 8 (P5-12) |
 | — | **P5-13 invitations: NO migration** (`0053` + `settings` suffice); conditional only for member quotas | Inc 9 |
 | — | **P5-16: NO migration** (policy/evidence/telemetry/SEO are code) | Inc 10 |
+
+> **Re-baselined 2026-07-01.** The owner-lifecycle work took `0067`
+> (`owner_lifecycle_user_index`, an F5 support index) on the
+> `codex/phase4-graduation-owner-lifecycle` branch, so every Inc-2-and-later
+> slot shifted **+1** (registry snapshots `0067→0068`, … provider repoint
+> `0074→0075`). The **F1** gapless-unique guard (`tests/Unit/Core/MigrationLedgerTest.php`)
+> now enforces this table's invariant so the next drift fails CI instead of
+> colliding silently.
 
 Each group must pass clean-install + populated-upgrade (`verify:upgrade`) + rollback-compatibility + backup/restore + feature-disabled tests before its behavior enables (`§8.3`).
 
@@ -121,43 +130,43 @@ Each increment is **build-now** but **enable-later** (dark until staged rollout)
 ### Increment 2 — Registry protocol & package identity (P5-01) · flag `package_registry` · L
 **Depends:** Foundation (F2 CORE_VERSION, F6 signing harness). **Parallel with Inc 1.** Enable = staff-only catalogue browse, install OFF.
 - **Scope:** thin repos over `0049`; canonical `(source_id + package_uid)` identity; **pure** trust-chain + ed25519 detached-signature + sha256 digest verifier (constant-time, fail-closed; **public-key-only** — never read/write private root in DB); key rotation/revocation via signed transition; signed+expiring snapshots with **anti-replay** + offline cache; source-pinning / dependency-confusion refusal; compatibility resolution; advisory ingest/evaluate (warn→block_new→force_disable→revoke); **registry-independent local blocklist**; refresh worker `worker:registry-refresh` (EgressGuard-guarded fetch); staff-only read-only catalogue browse (no install).
-- **Migration:** `0067` (snapshot cache + `moderation_log.target_type` widen). **Exit gate:** signature/tamper/replay/staleness/key-rotation/dependency-confusion fixtures pass; staff browse renders; install absent.
-- **→ Sub-plans:** SP1 repos+identity · SP2 trust-chain/signature/snapshot verifier · SP3 compatibility + source-pinning · SP4 refresh worker + offline cache (`0067`) · SP5 advisory + blocklist · SP6 staff catalogue UI.
+- **Migration:** `0068` (snapshot cache + `moderation_log.target_type` widen). **Exit gate:** signature/tamper/replay/staleness/key-rotation/dependency-confusion fixtures pass; staff browse renders; install absent.
+- **→ Sub-plans:** SP1 repos+identity · SP2 trust-chain/signature/snapshot verifier · SP3 compatibility + source-pinning · SP4 refresh worker + offline cache (`0068`) · SP5 advisory + blocklist · SP6 staff catalogue UI.
 
 ### Increment 3 — Package manifest, install & lifecycle (P5-02) + review-enforcement seam (P5-07-A part 1 / schema pre-req) · flag `package_registry` · XL
 **Depends:** Inc 2; Foundation (F3 catalogue for "reject invalid capability names", F4 DataClasses, F7 reauth). Enable = small cohort, auto-update OFF, manual pin/rollback.
 - **Scope:** `manifest.v2` schema + **fail-closed validation**; Gate-A type allowlist (theme/automation/remote_app/local — **reject `server_extension`**); compatibility check; **install plan/preview** (resolve exact digest without executing); atomic install with full provenance + permission snapshot (`granted=0` until consent); enable/disable; pin/unpin; **update + permission diff + re-consent** (staged, old grant retained, reduction immediate); rollback to a verified digest; uninstall + export + retention; digest/tamper **health worker** `worker:packages` → quarantine; immutable history; local emergency-disable enforcement; no-JS admin surface. **Co-developed:** the `PackageSecurityGate` + `package_review_decisions` enforcement primitive (P5-07-A) so install **fails closed** on revoked/unapproved-digest/blocked — resolving the P5-02↔P5-07-A reverse dependency.
-- **Migration:** `0068` (pin/update_policy/settings/export cols); `0071` review/security tables land here as the schema/enforcement pre-req for Increment 5's operator console and response flows. **Exit gate:** `§9` Manifest-validation, Install-rollback, Permission-increase/reduction, Review-digest, Tampered-local-files scenarios pass.
-- **→ Sub-plans:** SP1 manifest+compat+type policy (pure) · SP2 read-only catalogue · SP3 install+consent+enable/disable + `PackageSecurityGate` · SP4 update+diff+pin (`0068`) · SP5 rollback+uninstall/export + health worker + Repair reconcile.
+- **Migration:** `0069` (pin/update_policy/settings/export cols); `0072` review/security tables land here as the schema/enforcement pre-req for Increment 5's operator console and response flows. **Exit gate:** `§9` Manifest-validation, Install-rollback, Permission-increase/reduction, Review-digest, Tampered-local-files scenarios pass.
+- **→ Sub-plans:** SP1 manifest+compat+type policy (pure) · SP2 read-only catalogue · SP3 install+consent+enable/disable + `PackageSecurityGate` · SP4 update+diff+pin (`0069`) · SP5 rollback+uninstall/export + health worker + Repair reconcile.
 
 ### Increment 4 — Declarative theme packages (P5-03) · flag `package_themes` · L
 **Depends:** Inc 2 (parallel with Inc 3). Enable = staff preview → reviewed themes; safe mode retained.
 - **Scope:** theme data model (tokens, token-schema version, asset digests, validation, preview/build state, active/default + **last-known-good** pointer, safe-mode bypass); approved-**token-whitelist** validation (no selectors/JS/PHP/@import/remote/data:); local-asset scan via `AttachmentService` sniff/re-encode + digest pin (zero outbound at page load); **deterministic build** (content digest = cache key); **external-stylesheet** serving (CSP-safe, no inline); WCAG contrast/a11y validation (critical failures hard-block); **per-admin isolated preview** (never mutates global default); transactional activation invariant; **flag-independent safe mode** rendering the built-in baseline; one-action LKG rollback; theme-phishing structural guard.
-- **Migration:** `0069`. **Exit gate:** Theme-safety/accessibility/phishing fixtures pass; preview isolation proven; safe mode works against a broken theme; `package_themes`-off serves the system theme.
+- **Migration:** `0070`. **Exit gate:** Theme-safety/accessibility/phishing fixtures pass; preview isolation proven; safe mode works against a broken theme; `package_themes`-off serves the system theme.
 - **→ Sub-plans:** SP1 schema+repo · SP2 policy+validator+asset-scanner (pure) · SP3 deterministic build + CSP-safe serving · SP4 lifecycle UI (preview/activate/safe-mode/rollback) + audit + browser/a11y. **Decision:** lock theme state location + composition precedence (package theme vs `brand_color_*` vs presets vs `/brand.css`) and migrated built-in theme IDs **at Foundation/M1.5**.
 
 ### Increment 5 — Public declarative/remote integrations (P5-04) + security-response console (P5-07-A part 2) · flag `package_registry` · L
 **Depends:** Inc 3; the **B2 seam must itself reach Gate A acceptance** (api_tokens/webhooks/service_secrets/first_party_hooks R4/R5). Enable = re-consent on expansion; `service_secrets` is a **hard predecessor** (kill switch, not a feature flag).
 - **Scope:** install of `automation`/`remote_app` types on the P5-02 engine; manifest scope mapping (declared API scopes→`ApiScopes` read-only, events→`WebhookEvents`, data classes→`DataClasses`); permission+data consent committed with the grant; **remote-app install-scoped credentials** minted via `ApiTokenService`/`WebhookService` (never reuse the human token — `Human-token separation`); scope isolation at the real gate; secret storage via `SecretVault` (redacted); settings-schema form; disable/uninstall/export; registry-outage fail-closed. **P5-07-A console:** publisher verify/suspend/revoke + signing-key lifecycle; signed publication bound to exact digest; signed revocation/yank; advisory ingest/escalate + `worker:advisories`; append-only **transparency log**; **global flag-independent emergency disable / safe mode**; `RepairService` advisory_status reconcile.
-- **Migration:** `0070` (package settings + credential linkage); `0071` already landed in Inc 3. **Exit gate:** Remote-app-scope, Human-token-separation, Secret-redaction, Revoked-release, Global-emergency-disable, Publisher-compromise scenarios pass.
+- **Migration:** `0071` (package settings + credential linkage); `0072` already landed in Inc 3. **Exit gate:** Remote-app-scope, Human-token-separation, Secret-redaction, Revoked-release, Global-emergency-disable, Publisher-compromise scenarios pass.
 - **→ Sub-plans:** P5-04 SP1 manifest profile + scope/data mapping · SP2 install+consent · SP3 remote-app credential provisioning · SP4 settings schema · SP5 disable/uninstall/export + emergency disable. P5-07-A SP1 publisher/key lifecycle · SP2 signed publication + exact-digest + transparency · SP3 advisory worker · SP4 emergency console.
 
 ### Increment 6 — Scoped assignments + role editor + resolver **enforcement cutover** (P5-09 + P5-08 part 2) · flag `capabilities` · L
 **Depends:** Inc 1. **Enable ONLY after shadow parity is zero**, with the compatibility-snapshot rollback wired **first**.
 - **Scope:** writeable `role_assignments` with site/category/board scope, `starts_at`/`ends_at`, renew/revoke; **pure `GrantorAuthority`** (same-or-broader scope + delegable + must-hold); resolver scope-narrowing + version-keyed cache; **legacy migration** (`users.role` + `board_moderators` → scoped assignments, **non-broadening**, ambiguous held non-enforcing) + `boards.post_min_role` → board-scoped post capability (**enum kept as rollback source**, decision #41); `LastOwnerGuard` (F5) on revoke/demote; impact preview; no-JS assignment UI; the **enforcement switch** (staged: staff/test scopes → broader, only after zero mismatch; new grants go INACTIVE on fallback, never approximated as Admin).
-- **Migration:** `0072` (conditional). **Exit gate:** Built-in-role parity, Custom-role scope, Non-delegable, Grantor-authority, Temporary-grant, Last-owner scenarios pass via **direct requests on the real resolver**; rollback to compatibility snapshot rehearsed.
+- **Migration:** `0073` (conditional). **Exit gate:** Built-in-role parity, Custom-role scope, Non-delegable, Grantor-authority, Temporary-grant, Last-owner scenarios pass via **direct requests on the real resolver**; rollback to compatibility snapshot rehearsed.
 - **→ Sub-plans:** SP1 assignment repo+service · SP2 resolver narrowing + expiry + cache · SP3 protected-owner guard + reauth + fallback · SP4 legacy migration + post-gate translation + parity · SP5 assignment UI + impact preview + browser.
 
 ### Increment 7 — Passkeys (P5-11) · flag `passkeys` · XL
 **Depends:** Foundation (F5 LastOwnerGuard, F7 reauth) + landed TOTP/recovery. **Parallel-capable** once Inc 1 is soaking. **Gate-A boundary: enrollment + step-up only; NO privileged-MFA enforcement** (A7 default off).
 - **Scope:** `src/Security/WebAuthn/*` protocol core (CBOR/COSE/clientData/authenticatorData/attestation parsers, RP-ID/UP/UV/origin/challenge checks, ES256 mandatory); enrollment + credential management; sign-in (email-first challenge, `allowCredentials`) integrated with `AuthController`/`completeMfa` + OAuth step-up; recovery on the TOTP/recovery path; `LastOwnerGuard` final-method block; synced-counter as risk-signal (not auto-ban); CDP **virtual-authenticator** browser evidence; RP-ID/domain-change rehearsal; extend `AccountLifecycleService` export/delete for passkey metadata.
-- **Migration:** `0073` (conditional; else settings-backed). **Exit gate:** real supported-browser ceremony + protocol-negative fixtures (replay/cross-account/wrong-origin/stale/altered-sig); no-JS fallback-to-TOTP journey.
+- **Migration:** `0074` (conditional; else settings-backed). **Exit gate:** real supported-browser ceremony + protocol-negative fixtures (replay/cross-account/wrong-origin/stale/altered-sig); no-JS fallback-to-TOTP journey.
 - **→ Sub-plans:** SP1 WebAuthn protocol core (pure) · SP2 enrollment + management · SP3 sign-in + step-up · SP4 recovery + final-owner + (off-by-default) privileged-MFA policy + staff pilot.
 
 ### Increment 8 — Provider registry & generic OIDC (P5-12) · flag `provider_registry` · L
 **Depends:** Foundation; needs A2 (named provider) + `service_secrets` enabled for client-secret storage. **Parallel-capable.**
 - **Scope:** provider-registry CRUD + admin console; **generic OIDC** verification library (`OidcDiscovery` + `JwksCache` issuer-pinned + `JwtVerifier` iss/aud/azp/nonce/iat/exp/nbf + alg allowlist + `ClaimMapper`); registry-driven provider resolution + live callback (test mode); client-secret storage/rotation via `SecretVault`; **identity reconciliation** repointing google/apple/github to `provider_config_id` (no duplicate/orphan/ban-bypass) + **uniqueness change** to include provider config/issuer + stable subject; provider disable/fallback; extend `AccountLifecycleService` for provider identities; stub-OIDC-issuer fixture (shared with P5-16).
-- **Migration:** `0074` (backfill + unique-key swap on populated `oauth_identities` — pre-validate collisions, reversible while dark). **Exit gate:** issuer-mixup/JWKS-rotation/nonce/state/PKCE/audience tests; migration-identity reconciliation; the named additional provider works end-to-end.
+- **Migration:** `0075` (backfill + unique-key swap on populated `oauth_identities` — pre-validate collisions, reversible while dark). **Exit gate:** issuer-mixup/JWKS-rotation/nonce/state/PKCE/audience tests; migration-identity reconciliation; the named additional provider works end-to-end.
 - **→ Sub-plans:** SP-A registry data layer + admin CRUD · SP-B OIDC verification core (pure) · SP-C registry-driven resolution + callback + test/health · SP-D identity repoint migration + first provider.
 
 ### Increment 9 — Invitations (P5-13) · flag `invitations` · L

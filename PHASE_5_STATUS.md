@@ -157,7 +157,10 @@ still proves every Phase 5 flag dark.
 - **F3 — seed migration `0066`** (seed-only, additive, `INSERT IGNORE`): populates the
   empty `0050` `capabilities` catalogue + `role_capabilities` from `CapabilityCatalog`;
   `AppPhase5CapabilitySeedTest` proves the seeded rows match the code and no protected
-  capability is ever role-mapped. `SCHEMA.md` → **v1.25**.
+  capability is ever role-mapped. `SCHEMA.md` → **v1.25** (the `0066` seed); a
+  follow-on `0067` owner-lifecycle locking index (`idx_users_role_status_id`)
+  landed with the phase-4 graduation on this branch and bumped `SCHEMA.md` to
+  **v1.26**.
 - **F5 — protected-owner spine** (decision #27, "≥1 active recoverable owner"):
   `0066` backfills `protected_owners` from existing active admins;
   `src/Repository/ProtectedOwnerRepository.php` is the thin single-table wrapper;
