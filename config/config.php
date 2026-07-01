@@ -38,6 +38,12 @@ return [
         'hsts' => Env::bool('SECURITY_HSTS', true),
     ],
 
+    'telemetry' => [
+        // Foundation F8: structured correlation-ID telemetry. Dark by default;
+        // emitted context is always redacted by App\Support\LogRedactor.
+        'enabled' => Env::bool('TELEMETRY_ENABLED', false),
+    ],
+
     'auth' => [
         // Password-reset link lifetime in seconds (default 1 hour). Tokens are
         // single-use; this only bounds how long an unused link stays valid.

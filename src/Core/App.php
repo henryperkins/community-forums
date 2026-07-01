@@ -233,6 +233,11 @@ final class App
         $this->shareViewGlobals($container, $request);
 
         $response = $this->process($container, $request);
+        $container->get(Telemetry::class)->emit('http.request', [
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'status' => $response->status(),
+        ]);
 
         SecurityHeaders::apply(
             $response,
@@ -628,6 +633,7 @@ final class App
         ));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
         $c->bind(ReauthGate::class, fn (Container $c) => new ReauthGate($c->get(PasswordHasher::class)));
+        $c->bind(Telemetry::class, fn () => new Telemetry($config));
         $c->bind(SecretBox::class, fn () => new SecretBox((string) $config->get('app.key', '')));
         $c->bind(Totp::class, fn () => new Totp());
         $c->bind(WriteGate::class, fn () => new WriteGate());
