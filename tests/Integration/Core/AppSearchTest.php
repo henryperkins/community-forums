@@ -49,8 +49,11 @@ final class AppSearchTest extends TestCase
         // tests depend on survive this destructive reset. TRUNCATE auto-commits,
         // so wiping these would leak an empty seed into every later test in the
         // suite (badges -> 0040, roles -> 0050, identity_providers /
-        // provider_aliases -> 0052).
-        $preserve = ['schema_migrations', 'badges', 'roles', 'identity_providers', 'provider_aliases'];
+        // provider_aliases -> 0052, capabilities / role_capabilities -> 0066).
+        $preserve = [
+            'schema_migrations', 'badges', 'roles', 'identity_providers', 'provider_aliases',
+            'capabilities', 'role_capabilities',
+        ];
         $this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');
         foreach ($this->pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) as $t) {
             if (!in_array($t, $preserve, true)) {
