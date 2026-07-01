@@ -5,7 +5,7 @@ Updated: 2026-07-01
 ## Automated Tests
 
 - Accepted Gate A baseline: `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green.
-- Current checkout: `composer test` → 866 tests / 4493 assertions, green.
+- Current checkout: `composer test` → 866 tests / 4519 assertions, green.
 - `./vendor/bin/phpunit tests/Unit/SanitizationTest.php` → table rendering is sanitized.
 - `./vendor/bin/phpunit tests/Integration/Core/AppPhase4GateATest.php` → topic workflow, staff-set status protection, group-DM intervals/reports/account-state/report throttle, advanced Markdown, board/tag follows, board tag/wiki toggles, tag merge/visibility/hidden-write gating, reputation ledger window/delete/restore/rebuild, legacy repair-to-ledger compatibility, remove-follower, summary source/retire/restore, and wiki revert coverage.
 - `./vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php` → `topic_workflow`, `tags`, `expanded_feeds`, and `reputation_ledger` default on and remain rollback-safe through the `features` override; non-graduated Gate A flags remain default-dark.
