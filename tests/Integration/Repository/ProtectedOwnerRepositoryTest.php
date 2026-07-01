@@ -40,6 +40,30 @@ final class ProtectedOwnerRepositoryTest extends TestCase
         self::assertSame(0, $repo->activeOwnerCountExcluding($a));
     }
 
+    public function test_designate_or_reactivate_revives_an_inactive_owner_row(): void
+    {
+        $repo = new ProtectedOwnerRepository($this->db);
+        $a = (int) $this->makeAdmin(['username' => 'owner_reactivate'])['id'];
+        self::assertTrue($repo->designate($a, null));
+        $this->db->run('UPDATE protected_owners SET is_active = 0 WHERE user_id = ?', [$a]);
+        self::assertFalse($repo->isActiveOwner($a));
+
+        self::assertTrue($repo->designateOrReactivate($a, null));
+        self::assertTrue($repo->isActiveOwner($a));
+    }
+
+    public function test_locked_active_owner_ids_exclude_inactive_accounts(): void
+    {
+        $repo = new ProtectedOwnerRepository($this->db);
+        $a = (int) $this->makeAdmin(['username' => 'owner_locked_live'])['id'];
+        $b = (int) $this->makeAdmin(['username' => 'owner_locked_gone'])['id'];
+        $repo->designate($a, null);
+        $repo->designate($b, $a);
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [$b]);
+
+        self::assertSame([$a], $repo->activeOwnerIdsForUpdate());
+    }
+
     public function test_owner_whose_account_is_not_active_is_not_a_recoverable_owner(): void
     {
         // Regression: `protected_owners.is_active` is a write-once flag that no

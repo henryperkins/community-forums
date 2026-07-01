@@ -10,10 +10,17 @@ use Tests\Support\TestCase;
 
 final class AppPhase4CarryoverFoundationTest extends TestCase
 {
-    public function test_phase4_carryover_flags_default_dark_and_override_independently(): void
+    public function test_phase4_carryover_flags_have_expected_default_posture_and_override_independently(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        // `polls` graduated to default-on (GA 2026-06-30); the rest stay dark.
+        // `polls` graduated to default-on (GA 2026-06-30); the personal
+        // organization slice graduated to default-on on 2026-07-01. The rest
+        // stay dark until their own rollout evidence lands.
+        foreach (['board_folders', 'bookmark_folders', 'saved_feeds'] as $flag) {
+            self::assertArrayHasKey($flag, $flags->all(), "$flag must be declared, not merely unknown");
+            self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
+        }
+
         $carryovers = [
             'link_previews',
             'expanded_files',
@@ -21,8 +28,6 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
             'slash_giphy',
             'split_merge',
             'profile_media',
-            'board_folders',
-            'saved_feeds',
             'automated_context',
             'content_references',
         ];
@@ -37,6 +42,7 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
 
         self::assertTrue($overridden->enabled('link_previews'));
         self::assertFalse($overridden->enabled('custom_emoji'), 'enabling one carryover flag must not enable another');
+        self::assertTrue($overridden->enabled('board_folders'), 'enabling one dark carryover flag must not disable graduated flags');
     }
 
     public function test_phase4_carryover_additive_schema_exists(): void

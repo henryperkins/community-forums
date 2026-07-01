@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
 
 /**
@@ -177,11 +178,7 @@ final class RepairService
         if ($adminId === null) {
             return 0;
         }
-        return $this->db->run(
-            'INSERT IGNORE INTO protected_owners (user_id, is_active, designated_by, designated_at, created_at)
-             VALUES (?, 1, NULL, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
-            [(int) $adminId],
-        )->rowCount();
+        return (new ProtectedOwnerRepository($this->db))->designateOrReactivate((int) $adminId, null) ? 1 : 0;
     }
 
     public function repairAll(): array

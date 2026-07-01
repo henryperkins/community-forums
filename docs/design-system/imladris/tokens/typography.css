@@ -1,0 +1,86 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Imladris — typography
+   An all-serif voice. Display serif for headings, lapidary roman caps for
+   labels and buttons, a book-weight serif for prose, and a mono for data.
+   Fallback stacks keep the register intact before the webfonts (fonts.css)
+   load. Type *scale* and base element styles live here too so specimens and
+   prose read correctly out of the box.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+    /* Families */
+    --font-display: "Cormorant Garamond", "Hoefler Text", Garamond, Georgia, "Times New Roman", serif;
+    --font-label:   "Marcellus", "Optima", "Palatino Linotype", Palatino, "Cormorant Garamond", serif;
+    --font-body:    "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --font-mono:    "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+    --font: var(--font-body);
+
+    /* Weights — the serifs are set medium, not bold; restraint reads as quality. */
+    --weight-regular:  400;
+    --weight-medium:   500;
+    --weight-semibold: 600;
+    --weight-bold:     700;
+
+    /* Tracking — lapidary caps get generous letterspacing. */
+    --tracking-caps: 0.16em;
+    --tracking-wide: 0.04em;
+
+    /* Type scale (rem). Body base is book-like at 1.0625rem (17px). */
+    --text-display-xl: 2.4rem;    /* profile name, hero               */
+    --text-display-lg: 2.25rem;   /* h1, page title                   */
+    --text-display-md: 1.85rem;   /* inbox heading                    */
+    --text-display-sm: 1.75rem;   /* h2                               */
+    --text-title:      1.375rem;  /* h3, board name                   */
+    --text-thread:     1.2rem;    /* thread row title                 */
+    --text-body:       1.0625rem; /* prose / posts                    */
+    --text-sm:         0.95rem;
+    --text-meta:       0.78rem;   /* Marcellus meta lines             */
+    --text-eyebrow:    0.72rem;   /* tracked caps eyebrow             */
+    --text-chip:       0.62rem;   /* status chip caps                 */
+}
+
+/* ── Base element styles ─────────────────────────────────────────────────── */
+body {
+    font-family: var(--font);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--surface-page);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, .page-title, .display {
+    font-family: var(--font-display);
+    font-weight: var(--weight-medium);
+    color: var(--text-strong);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0 0 0.4em;
+}
+h1, .page-title { font-size: var(--text-display-lg); }
+h2 { font-size: var(--text-display-sm); }
+h3 { font-size: var(--text-title); }
+
+p { text-wrap: pretty; }
+
+/* The eyebrow: a tracked Marcellus cap line above a heading. */
+.eyebrow {
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    font-size: var(--text-eyebrow);
+    color: var(--text-muted);
+}
+
+/* Links: evergreen text with a translucent-gold underline that warms on hover. */
+a {
+    color: var(--accent);
+    text-decoration: none;
+    text-underline-offset: 2px;
+    text-decoration-color: color-mix(in srgb, var(--gold-500) 45%, transparent);
+}
+a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
+
+code, pre, kbd, samp { font-family: var(--font-mono); }

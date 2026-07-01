@@ -1,0 +1,574 @@
+<!-- @dsCard group="Feature activation" viewport="980x820" name="The rail" subtitle="board_folders · saved_feeds · bookmark_folders — the organizing surfaces" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The rail — feature design · RetroBoards</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../shared/chrome.css">
+<style>
+  /* ── Mini app-shell frame (rail + faint stage) ─────────────── */
+  .shell { display: grid; grid-template-columns: 258px 1fr; min-height: 392px; }
+  @media (max-width: 720px) { .shell { grid-template-columns: 1fr; } .shell-stage { display: none; } }
+
+  .rail { background: var(--surface-sunken); border-right: 1px solid var(--border-hair); padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; overflow: visible; }
+  .rail-group { margin-top: 14px; }
+  .rail-group:first-child { margin-top: 2px; }
+
+  .rail-fhead { display: flex; align-items: center; gap: 7px; width: 100%; padding: 6px 9px; border: 0; background: none; cursor: pointer; border-radius: var(--radius-sm); color: var(--gold-ink); font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; text-align: left; }
+  .rail-fhead:hover { background: var(--surface-page); }
+  .rail-fchev { display: inline-flex; color: var(--text-faint); transition: transform var(--dur-fast) var(--ease-calm); }
+  .rail-fchev.collapsed { transform: rotate(-90deg); }
+  .rail-ficon { display: inline-flex; color: var(--text-faint); }
+  .rail-fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rail-fcount { font-family: var(--font-mono), monospace; font-size: .66rem; color: var(--text-faint); letter-spacing: 0; }
+  .rail-fpencil { display: inline-flex; color: var(--text-faint); padding: 2px; border-radius: 4px; }
+  .rail-fpencil:hover { color: var(--brand); background: var(--surface-page); }
+
+  .rail-boards { list-style: none; margin: 1px 0 0; padding: 0; }
+  .rail-board { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 10px 6px 22px; border: 0; background: none; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-body); font-family: var(--font-body), serif; font-size: .93rem; text-align: left; transition: background var(--dur-fast) var(--ease-calm); }
+  .rail-board:hover { background: var(--surface-page); }
+  .rail-board.active { background: var(--brand-subtle); box-shadow: inset 3px 0 0 var(--accent-2); color: var(--on-brand-subtle); font-weight: 600; }
+  .rail-board .hash { color: var(--text-faint); width: 11px; text-align: center; flex: none; }
+  .rail-board.active .hash { color: var(--brand); }
+  .rail-bname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rail-bcount { font-family: var(--font-mono), monospace; font-size: .66rem; color: var(--text-faint); }
+  .rail-grip { color: var(--border-strong); cursor: grab; display: inline-flex; flex: none; margin-left: -4px; }
+  .rail-grip:active { cursor: grabbing; }
+
+  .rail-feed { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; background: none; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-body); font-family: var(--font-body), serif; font-size: .93rem; text-align: left; transition: background var(--dur-fast) var(--ease-calm); }
+  .rail-feed:hover { background: var(--surface-page); }
+  .rail-feed.active { background: var(--brand-subtle); box-shadow: inset 3px 0 0 var(--accent-2); color: var(--on-brand-subtle); font-weight: 600; }
+  .rail-feed-ic { display: inline-flex; flex: none; }
+  .rail-feed-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rail-feed-count { font-family: var(--font-mono), monospace; font-size: .66rem; color: var(--accent-2); }
+  .rail-feed.just-saved { animation: feedIn var(--dur-slow) var(--ease-calm); }
+  @keyframes feedIn { from { background: var(--gold-soft); opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+  .rail-add { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start; margin: 4px 0 0 6px; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .06em; font-size: .66rem; color: var(--brand); background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer; transition: background var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm); }
+  .rail-add:hover { background: var(--brand-subtle); border-color: var(--green-200); }
+  .rail-add.sub { margin-left: 22px; }
+
+  .rail-newfolder { display: flex; align-items: center; gap: 6px; margin: 4px 6px 0; padding: 4px; }
+  .rail-newfolder input { flex: 1; font-family: var(--font-body), serif; font-size: .9rem; padding: 6px 9px; border: 1px solid var(--gold-400); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-strong); outline: none; box-shadow: var(--gilt); }
+
+  /* faint content stage */
+  .shell-stage { background: var(--surface-raised); padding: 18px 22px; position: relative; }
+  .stage-route { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); margin: 0 0 14px; }
+  .stage-route .on { color: var(--text-body); }
+  .ghost-row { height: 14px; border-radius: 6px; background: var(--surface-sunken); margin-bottom: 12px; }
+  .ghost-card { border: 1px solid var(--border-hair); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 10px; background: var(--surface-raised); }
+  .ghost-card .gline { height: 11px; border-radius: 5px; background: var(--surface-sunken); }
+
+  /* ── saved-feeds toolbar + popover ─────────────────────────── */
+  .toolbar { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill); background: var(--surface-sunken); font-family: var(--font-label), serif; font-size: .74rem; letter-spacing: .02em; color: var(--text-body); }
+  .filter-chip .k { color: var(--text-faint); }
+  .filter-chip .v { color: var(--on-brand-subtle); font-weight: 600; }
+  .toolbar-spacer { flex: 1; }
+  .save-feed-wrap { position: relative; }
+
+  .feed-pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; width: 280px; background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 15px; }
+  .feed-pop::before { content: ""; position: absolute; right: 22px; top: -7px; width: 12px; height: 12px; background: var(--surface-raised); border-left: 1px solid var(--border-strong); border-top: 1px solid var(--border-strong); transform: rotate(45deg); }
+  .feed-pop-title { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; color: var(--gold-ink); margin: 0 0 10px; }
+  .feed-pop label { display: block; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; color: var(--text-muted); margin: 12px 0 6px; }
+  .feed-pop input.name { width: 100%; font-family: var(--font-body), serif; font-size: 15px; padding: 8px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--text-strong); outline: none; }
+  .feed-pop input.name:focus { border-color: var(--gold-400); box-shadow: var(--gilt); }
+  .icon-swatches { display: flex; gap: 7px; }
+  .icon-swatch { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--text-muted); cursor: pointer; transition: border-color var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm); }
+  .icon-swatch:hover { color: var(--text-strong); }
+  .icon-swatch.on { border-color: var(--gold-400); color: var(--gold-ink); background: var(--gold-soft); box-shadow: var(--gilt); }
+  .feed-pop-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+  /* ── bookmarks panel ───────────────────────────────────────── */
+  .bm { display: grid; grid-template-columns: 224px 1fr; min-height: 404px; }
+  @media (max-width: 720px) { .bm { grid-template-columns: 1fr; } }
+  .bm-folders { border-right: 1px solid var(--border-hair); background: var(--surface-sunken); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .bm-folders-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; color: var(--gold-ink); padding: 0 11px 6px; }
+  .bm-folder { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 11px; border: 0; background: none; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-body); font-family: var(--font-body), serif; font-size: .95rem; text-align: left; transition: background var(--dur-fast) var(--ease-calm); }
+  .bm-folder:hover { background: var(--surface-page); }
+  .bm-folder.active { background: var(--brand-subtle); box-shadow: inset 3px 0 0 var(--accent-2); color: var(--on-brand-subtle); font-weight: 600; }
+  .bm-folder-ic { display: inline-flex; color: var(--text-faint); flex: none; }
+  .bm-folder.active .bm-folder-ic { color: var(--brand); }
+  .bm-folder-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bm-folder-count { font-family: var(--font-mono), monospace; font-size: .7rem; color: var(--text-faint); }
+
+  .bm-list { padding: 16px; display: flex; flex-direction: column; gap: 9px; overflow: visible; }
+  .bm-list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 2px; }
+  .bm-list-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 19px; color: var(--text-strong); margin: 0; white-space: nowrap; }
+  .bm-list-sub { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); white-space: nowrap; flex: none; }
+  .bm-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); transition: box-shadow var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm); animation: bmIn var(--dur-base) var(--ease-calm); }
+  @keyframes bmIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+  .bm-item:hover { border-color: var(--green-200); box-shadow: var(--shadow-xs); }
+  .bm-item-star { color: var(--star); flex: none; display: inline-flex; }
+  .bm-item-main { min-width: 0; flex: 1; }
+  .bm-item-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 16px; line-height: 1.2; color: var(--text-strong); display: block; }
+  .bm-item-meta { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .bm-item-tag { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .06em; font-size: 9.5px; color: var(--gold-ink); background: var(--gold-soft); padding: 3px 9px; border-radius: var(--radius-pill); flex: none; }
+  .bm-move { position: relative; flex: none; }
+  .bm-move-btn { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid transparent; background: none; border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; transition: background var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm); }
+  .bm-move-btn:hover, .bm-move-btn.on { background: var(--surface-sunken); border-color: var(--border-hair); color: var(--text-strong); }
+  .bm-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 184px; background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px; }
+  .bm-menu-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 9.5px; color: var(--text-muted); padding: 5px 9px 6px; }
+  .bm-menu-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 9px; border: 0; background: none; cursor: pointer; border-radius: var(--radius-sm); color: var(--text-body); font-family: var(--font-body), serif; font-size: 14px; text-align: left; }
+  .bm-menu-item:hover { background: var(--surface-sunken); }
+  .bm-menu-item .ic { color: var(--text-faint); display: inline-flex; flex: none; }
+  .bm-menu-item.current { color: var(--on-brand-subtle); font-weight: 600; }
+  .bm-menu-item.current .ic { color: var(--brand); }
+  .bm-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-family: var(--font-body), serif; font-style: italic; font-size: 15px; }
+
+  /* ── expanded_feeds — a saved feed, read expanded ───────── */
+  .ef-toolbar { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--border-hair); background: var(--surface-sunken); flex-wrap: wrap; }
+  .ef-feed-ic { display: inline-flex; color: var(--gold-ink); flex: none; }
+  .ef-feedname { font-family: var(--font-display), serif; font-weight: 500; font-size: 17px; color: var(--text-strong); }
+  .ef-feed-count { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); }
+  .ef-list { display: flex; flex-direction: column; }
+  .ef-list.expanded .ef-head { cursor: default; }
+  .ef-row { border-bottom: 1px solid var(--border-hair); transition: background var(--dur-fast) var(--ease-calm); }
+  .ef-row:last-child { border-bottom: 0; }
+  .ef-row.lit { background: color-mix(in srgb, var(--gold-soft) 24%, var(--surface-raised)); }
+  .ef-head { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; border: 0; background: none; cursor: pointer; padding: 13px 16px; }
+  .ef-chevron { display: inline-flex; color: var(--text-faint); flex: none; transition: transform var(--dur-fast) var(--ease-calm); }
+  .ef-chevron.open { transform: rotate(90deg); }
+  .ef-head-main { min-width: 0; flex: 1; }
+  .ef-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 16px; line-height: 1.2; color: var(--text-strong); display: block; }
+  .ef-meta { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); margin-top: 2px; display: block; }
+  .ef-unread { flex: none; font-family: var(--font-mono), monospace; font-size: 11px; font-weight: 600; color: var(--accent-contrast); background: var(--accent-2); border-radius: var(--radius-pill); padding: 2px 8px; }
+  .ef-body { padding: 0 16px 16px 43px; }
+  .ef-list.expanded .ef-body { padding-left: 16px; }
+  .ef-excerpt { font-family: var(--font-body), serif; font-size: 15px; line-height: 1.55; color: var(--text-body); margin: 0 0 12px; }
+  .ef-reply { display: flex; gap: 11px; align-items: flex-start; padding: 11px 13px; background: var(--surface-sunken); border-radius: var(--radius-md); border-left: 3px solid var(--rule-gold); }
+  .ef-reply-main { min-width: 0; }
+  .ef-reply-by { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); display: block; }
+  .ef-reply-by b { color: var(--text-strong); font-family: var(--font-display), serif; font-size: 13px; }
+  .ef-reply-text { font-family: var(--font-body), serif; font-size: 14px; line-height: 1.5; color: var(--text-body); margin-top: 3px; display: block; }
+  .ef-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .ef-parts { display: flex; align-items: center; }
+  .ef-part { display: inline-flex; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface-raised); }
+  .ef-part-n { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); margin-left: 10px; }
+  .ef-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ef-tag { font-family: var(--font-body), serif; font-size: 12px; color: var(--text-body); background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-pill); padding: 3px 9px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react" src="../shared/chrome.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+const DS = window.ImladrisDesignSystem_c3e027;
+const { Button, Input, Monogram } = DS;
+const { Icons, EightStar, Segmented, useTheme, Topbar, Lede, Spec, FrameBar } = window.FA;
+const I = (name, s) => Icons[name](s);
+
+/* ════════ 01 · board_folders — collapsible, organizable rail ════════ */
+function BoardFolders() {
+  const [organizing, setOrganizing] = useState(false);
+  const [active, setActive] = useState('evaluations');
+  const [folders, setFolders] = useState([
+    { id: 'commons', name: 'The Commons', collapsed: false, boards: [
+      { slug: 'announcements', name: 'announcements', count: 12 },
+      { slug: 'introductions', name: 'introductions', count: 31 },
+      { slug: 'the-valley', name: 'the-valley', count: 88 },
+    ] },
+    { id: 'vilya', name: 'Vilya · Expose', collapsed: false, boards: [
+      { slug: 'interpretability', name: 'interpretability', count: 47 },
+      { slug: 'evaluations', name: 'evaluations', count: 63 },
+      { slug: 'audit-trails', name: 'audit-trails', count: 39 },
+    ] },
+    { id: 'watch', name: 'My watch', collapsed: false, boards: [
+      { slug: 'capability-disclosure', name: 'capability-disclosure', count: 22 },
+    ] },
+  ]);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState('');
+  const addRef = useRef(null);
+  useEffect(() => { if (adding && addRef.current) addRef.current.focus(); }, [adding]);
+
+  const toggle = (id) => setFolders((fs) => fs.map((f) => f.id === id ? { ...f, collapsed: !f.collapsed } : f));
+  const commitFolder = () => {
+    const n = draft.trim();
+    if (n) setFolders((fs) => [...fs, { id: 'f' + Date.now(), name: n, collapsed: false, boards: [] }]);
+    setDraft(''); setAdding(false);
+  };
+
+  return (
+    <div>
+      <div className="demo-controls">
+        <span className="demo-controls-label">Mode</span>
+        <Segmented value={organizing ? 'org' : 'browse'} onChange={(v) => setOrganizing(v === 'org')}
+          options={[{ value: 'browse', label: 'Browse' }, { value: 'org', label: 'Organize' }]} />
+        <span className="demo-controls-spacer" />
+        <span className="demo-hint">{organizing ? 'Drag to reorder · rename · add folders' : 'Click a folder to collapse it'}</span>
+      </div>
+      <div className="frame">
+        <div className="shell">
+          <nav className="rail" aria-label="Boards">
+            {folders.map((f) => (
+              <div className="rail-group" key={f.id}>
+                <button className="rail-fhead" onClick={() => !organizing && toggle(f.id)}>
+                  {organizing ? <span className="rail-grip">{I('grip', 14)}</span>
+                    : <span className={'rail-fchev' + (f.collapsed ? ' collapsed' : '')}>{I('chevron', 13)}</span>}
+                  <span className="rail-ficon">{I(f.collapsed ? 'folder' : 'folderOpen', 14)}</span>
+                  <span className="rail-fname">{f.name}</span>
+                  {organizing ? <span className="rail-fpencil">{I('pencil', 12)}</span>
+                    : <span className="rail-fcount">{f.boards.length}</span>}
+                </button>
+                {!f.collapsed && (
+                  <ul className="rail-boards">
+                    {f.boards.map((b) => (
+                      <li key={b.slug}>
+                        <button className={'rail-board' + (active === b.slug ? ' active' : '')} onClick={() => setActive(b.slug)}>
+                          {organizing ? <span className="rail-grip">{I('grip', 13)}</span> : <span className="hash">#</span>}
+                          <span className="rail-bname">{b.name}</span>
+                          <span className="rail-bcount">{b.count}</span>
+                        </button>
+                      </li>
+                    ))}
+                    {organizing && <button className="rail-add sub">{I('plus', 12)} Add board</button>}
+                  </ul>
+                )}
+              </div>
+            ))}
+            {organizing && (adding ? (
+              <div className="rail-newfolder">
+                <input ref={addRef} value={draft} placeholder="Folder name"
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') commitFolder(); if (e.key === 'Escape') { setAdding(false); setDraft(''); } }}
+                  onBlur={commitFolder} />
+              </div>
+            ) : (
+              <button className="rail-add" onClick={() => setAdding(true)}>{I('plus', 12)} New folder</button>
+            ))}
+          </nav>
+          <div className="shell-stage">
+            <p className="stage-route"># <span className="on">{active}</span></p>
+            <div className="ghost-card"><div className="gline" style={{ width: '70%', marginBottom: 9 }} /><div className="gline" style={{ width: '92%', height: 8 }} /></div>
+            <div className="ghost-card"><div className="gline" style={{ width: '55%', marginBottom: 9 }} /><div className="gline" style={{ width: '88%', height: 8 }} /></div>
+            <div className="ghost-card"><div className="gline" style={{ width: '63%', marginBottom: 9 }} /><div className="gline" style={{ width: '80%', height: 8 }} /></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 02 · saved_feeds — save a filter as a named feed ════════ */
+const FEED_ICONS = ['filter', 'star', 'history', 'bookmark'];
+function SavedFeeds() {
+  const [feeds, setFeeds] = useState([
+    { id: 'mentions', name: 'Mentions of me', icon: 'history', count: 3 },
+    { id: 'decisions', name: 'Decisions log', icon: 'star', count: 1 },
+  ]);
+  const [active, setActive] = useState('mentions');
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('Unanswered in evaluations');
+  const [icon, setIcon] = useState('filter');
+  const [savedId, setSavedId] = useState(null);
+
+  const save = () => {
+    const id = 'f' + Date.now();
+    setFeeds((fs) => [...fs, { id, name: name.trim() || 'Untitled feed', icon, count: 9 }]);
+    setSavedId(id); setActive(id); setOpen(false);
+    setTimeout(() => setSavedId(null), 1200);
+  };
+
+  return (
+    <div className="frame">
+      <div className="shell">
+        <nav className="rail" aria-label="Feeds and boards">
+          <div className="rail-group">
+            <div className="rail-fhead" style={{ cursor: 'default' }}>
+              <span className="rail-ficon">{I('filter', 13)}</span>
+              <span className="rail-fname">Your feeds</span>
+              <span className="rail-fcount">{feeds.length}</span>
+            </div>
+            <ul className="rail-boards" style={{ paddingLeft: 0 }}>
+              {feeds.map((f) => (
+                <li key={f.id}>
+                  <button className={'rail-feed' + (active === f.id ? ' active' : '') + (savedId === f.id ? ' just-saved' : '')} onClick={() => setActive(f.id)}>
+                    <span className="rail-feed-ic">{I(f.icon, 14)}</span>
+                    <span className="rail-feed-name">{f.name}</span>
+                    {f.count ? <span className="rail-feed-count">{f.count}</span> : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rail-group">
+            <div className="rail-fhead" style={{ cursor: 'default' }}>
+              <span className="rail-ficon">{I('folderOpen', 14)}</span>
+              <span className="rail-fname">Vilya · Expose</span>
+            </div>
+            <ul className="rail-boards">
+              {[['interpretability', 47], ['evaluations', 63], ['audit-trails', 39]].map(([s, c]) => (
+                <li key={s}><button className="rail-board" onClick={() => setActive(null)}><span className="hash">#</span><span className="rail-bname">{s}</span><span className="rail-bcount">{c}</span></button></li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+        <div className="shell-stage">
+          <div className="toolbar">
+            <span className="filter-chip"><span className="k">board</span> <span className="v">evaluations</span></span>
+            <span className="filter-chip"><span className="k">status</span> <span className="v">unanswered</span></span>
+            <span className="filter-chip"><span className="k">sort</span> <span className="v">oldest first</span></span>
+            <span className="toolbar-spacer" />
+            <div className="save-feed-wrap">
+              <Button variant={open ? 'primary' : 'outline'} size="sm" onClick={() => setOpen((o) => !o)}>
+                {I('plus', 13)}&nbsp; Save as feed
+              </Button>
+              {open && (
+                <div className="feed-pop" role="dialog" aria-label="Save feed">
+                  <p className="feed-pop-title">Save this view as a feed</p>
+                  <input className="name" value={name} onChange={(e) => setName(e.target.value)} autoFocus
+                    onKeyDown={(e) => { if (e.key === 'Enter') save(); }} />
+                  <label>Mark</label>
+                  <div className="icon-swatches">
+                    {FEED_ICONS.map((ic) => (
+                      <button key={ic} className={'icon-swatch' + (icon === ic ? ' on' : '')} onClick={() => setIcon(ic)} aria-label={ic}>{I(ic, 16)}</button>
+                    ))}
+                  </div>
+                  <div className="feed-pop-foot">
+                    <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+                    <Button variant="primary" size="sm" onClick={save}>Save feed</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="ghost-card"><div className="gline" style={{ width: '68%', marginBottom: 9 }} /><div className="gline" style={{ width: '90%', height: 8 }} /></div>
+          <div className="ghost-card"><div className="gline" style={{ width: '52%', marginBottom: 9 }} /><div className="gline" style={{ width: '84%', height: 8 }} /></div>
+          <div className="ghost-card"><div className="gline" style={{ width: '60%', marginBottom: 9 }} /><div className="gline" style={{ width: '76%', height: 8 }} /></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 03 · bookmark_folders — organize stars into folders ════════ */
+const BM_FOLDERS = [
+  { id: 'all', name: 'All bookmarks', icon: 'bookmark' },
+  { id: 'answer', name: 'To answer', icon: 'star' },
+  { id: 'reference', name: 'Reference', icon: 'folder' },
+  { id: 'later', name: 'Read later', icon: 'clock' },
+];
+function BookmarkFolders() {
+  const [active, setActive] = useState('all');
+  const [menuFor, setMenuFor] = useState(null);
+  const [items, setItems] = useState([
+    { id: 1, title: 'Evaluations as ritual, not gate', board: 'evaluations', author: 'galadriel', folder: 'reference' },
+    { id: 2, title: 'Who changed what — prove the rollback?', board: 'audit-trails', author: 'erestor', folder: 'answer' },
+    { id: 3, title: 'On exposing capability before we are asked', board: 'capability-disclosure', author: 'elrond', folder: 'reference' },
+    { id: 4, title: 'Reading attention as a map, not a verdict', board: 'interpretability', author: 'arwen', folder: 'later' },
+    { id: 5, title: 'The hall reopens — read this first', board: 'announcements', author: 'elrond', folder: 'answer' },
+  ]);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [extra, setExtra] = useState([]);
+  const addRef = useRef(null);
+  useEffect(() => { if (adding && addRef.current) addRef.current.focus(); }, [adding]);
+
+  const allFolders = [...BM_FOLDERS, ...extra];
+  const counts = (fid) => fid === 'all' ? items.length : items.filter((it) => it.folder === fid).length;
+  const shown = active === 'all' ? items : items.filter((it) => it.folder === active);
+  const fname = (fid) => (allFolders.find((f) => f.id === fid) || {}).name || '—';
+  const move = (id, folder) => { setItems((its) => its.map((it) => it.id === id ? { ...it, folder } : it)); setMenuFor(null); };
+  const commit = () => {
+    const n = draft.trim();
+    if (n) { const id = 'x' + Date.now(); setExtra((e) => [...e, { id, name: n, icon: 'folder' }]); }
+    setDraft(''); setAdding(false);
+  };
+
+  return (
+    <div className="frame" onClick={() => setMenuFor(null)}>
+      <div className="bm">
+        <nav className="bm-folders" aria-label="Bookmark folders" onClick={(e) => e.stopPropagation()}>
+          <p className="bm-folders-label">Bookmarks</p>
+          {allFolders.map((f) => (
+            <button key={f.id} className={'bm-folder' + (active === f.id ? ' active' : '')} onClick={() => setActive(f.id)}>
+              <span className="bm-folder-ic">{I(f.icon, 15)}</span>
+              <span className="bm-folder-name">{f.name}</span>
+              <span className="bm-folder-count">{counts(f.id)}</span>
+            </button>
+          ))}
+          {adding ? (
+            <div className="rail-newfolder" style={{ margin: '4px 0 0' }}>
+              <input ref={addRef} value={draft} placeholder="Folder name"
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { setAdding(false); setDraft(''); } }}
+                onBlur={commit} />
+            </div>
+          ) : (
+            <button className="rail-add" style={{ margin: '8px 0 0 6px' }} onClick={() => setAdding(true)}>{I('plus', 12)} New folder</button>
+          )}
+        </nav>
+        <div className="bm-list" onClick={(e) => e.stopPropagation()}>
+          <div className="bm-list-head">
+            <h3 className="bm-list-title">{fname(active === 'all' ? 'all' : active)}</h3>
+            <span className="bm-list-sub">{shown.length} {shown.length === 1 ? 'topic' : 'topics'}</span>
+          </div>
+          {shown.length === 0 ? (
+            <div className="bm-empty">Nothing filed here yet.</div>
+          ) : shown.map((it) => (
+            <div className="bm-item" key={it.id}>
+              <span className="bm-item-star">{I('star', 16)}</span>
+              <span className="bm-item-main">
+                <span className="bm-item-title">{it.title}</span>
+                <span className="bm-item-meta">#{it.board} · {it.author}</span>
+              </span>
+              {active === 'all' && <span className="bm-item-tag">{I('folder', 11)} {fname(it.folder)}</span>}
+              <span className="bm-move">
+                <button className={'bm-move-btn' + (menuFor === it.id ? ' on' : '')} aria-label="Move to folder"
+                  onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === it.id ? null : it.id); }}>{I('dots', 18)}</button>
+                {menuFor === it.id && (
+                  <div className="bm-menu" onClick={(e) => e.stopPropagation()}>
+                    <p className="bm-menu-label">Move to folder</p>
+                    {allFolders.filter((f) => f.id !== 'all').map((f) => (
+                      <button key={f.id} className={'bm-menu-item' + (it.folder === f.id ? ' current' : '')} onClick={() => move(it.id, f.id)}>
+                        <span className="ic">{I(f.icon, 14)}</span>{f.name}
+                        {it.folder === f.id ? <span style={{ marginLeft: 'auto' }}>{I('check', 14)}</span> : null}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 04 · expanded_feeds — a saved feed, read expanded ════════ */
+const FEED_ITEMS = [
+  { id: 1, title: 'Who changed what — prove the rollback?', board: 'audit-trails', tags: ['audit-trails', 'rollback'], replies: 41, unread: 3,
+    excerpt: 'We can roll forward all day. The question the auditors actually ask is whether we can prove a rollback happened — and who signed for it.',
+    participants: ['Erestor', 'Glorfindel', 'Elrond', 'Arwen'],
+    latest: { author: 'Glorfindel', time: '2h', text: 'Proposal: a signed rollback receipt appended to the trail, not just a log line.' } },
+  { id: 2, title: 'Evaluations as ritual, not gate', board: 'evaluations', tags: ['evaluations', 'decision'], replies: 23, unread: 0,
+    excerpt: 'We keep treating the eval suite as a turnstile — pass and forget. I want to argue it should be a rite the whole council performs and remembers.',
+    participants: ['Galadriel', 'Elrond', 'Arwen'],
+    latest: { author: 'Arwen', time: '22h', text: 'Every run resolves into a short written verdict, linked from the topic. The rite is reading the last three.' } },
+  { id: 3, title: 'On exposing capability before we are asked', board: 'capability-disclosure', tags: ['capability-disclosure', 'governance'], replies: 12, unread: 1,
+    excerpt: 'There is a difference between hiding a capability and simply not having published it yet. Where the council draws that line is the whole question.',
+    participants: ['Elrond', 'Erestor'],
+    latest: { author: 'Erestor', time: '5h', text: 'Draft: a disclosure window measured from first reliable internal demonstration.' } },
+];
+function ExpandedFeeds() {
+  const [density, setDensity] = useState('expanded');
+  const [open, setOpen] = useState({});
+  const lit = (id) => density === 'compact' && open[id];
+  const shown = (id) => density === 'expanded' || open[id];
+  const toggle = (id) => setOpen((o) => ({ ...o, [id]: !o[id] }));
+  return (
+    <div className="frame">
+      <FrameBar route={<span><span className="seg-strong">Inbox</span> / feeds / Unanswered in evaluations</span>} />
+      <div>
+        <div className="ef-toolbar">
+          <span className="ef-feed-ic">{I('filter', 15)}</span>
+          <span className="ef-feedname">Unanswered in evaluations</span>
+          <span className="ef-feed-count">{FEED_ITEMS.length} topics</span>
+          <span style={{ flex: 1 }} />
+          <span className="demo-controls-label">View</span>
+          <Segmented value={density} onChange={setDensity} options={[{ value: 'compact', label: 'Compact' }, { value: 'expanded', label: 'Expanded' }]} />
+        </div>
+        <div className={'ef-list ' + density}>
+          {FEED_ITEMS.map((it) => (
+            <div className={'ef-row' + (lit(it.id) ? ' lit' : '')} key={it.id}>
+              <button className="ef-head" onClick={() => density === 'compact' && toggle(it.id)}>
+                {density === 'compact' ? <span className={'ef-chevron' + (open[it.id] ? ' open' : '')}>{I('chevronR', 14)}</span> : null}
+                <span className="ef-head-main">
+                  <span className="ef-title">{it.title}</span>
+                  <span className="ef-meta">#{it.board} · {it.replies} replies{it.unread ? ' · ' + it.unread + ' new' : ''}</span>
+                </span>
+                {it.unread ? <span className="ef-unread">{it.unread}</span> : null}
+              </button>
+              {shown(it.id) ? (
+                <div className="ef-body">
+                  <p className="ef-excerpt">{it.excerpt}</p>
+                  <div className="ef-reply">
+                    <Monogram name={it.latest.author} username={it.latest.author.toLowerCase()} size="sm" gilt />
+                    <span className="ef-reply-main">
+                      <span className="ef-reply-by"><b>{it.latest.author}</b> · {it.latest.time} · latest reply</span>
+                      <span className="ef-reply-text">{it.latest.text}</span>
+                    </span>
+                  </div>
+                  <div className="ef-foot">
+                    <span className="ef-parts">
+                      {it.participants.slice(0, 4).map((p, i) => (
+                        <span className="ef-part" key={p} style={{ marginLeft: i ? -9 : 0, zIndex: 10 - i }}>
+                          <Monogram name={p} username={p.toLowerCase()} size="sm" />
+                        </span>
+                      ))}
+                      <span className="ef-part-n">{it.participants.length} in the room</span>
+                    </span>
+                    <span className="ef-tags">{it.tags.map((t) => <span className="ef-tag" key={t}>#{t}</span>)}</span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ Page ════════ */
+function Page() {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div>
+      <Topbar eyebrow="Feature activation · the rail"
+        flags={[{ name: 'board_folders', blocked: true }, { name: 'saved_feeds', blocked: true }, { name: 'expanded_feeds' }, { name: 'bookmark_folders' }]}
+        theme={theme} setTheme={setTheme} />
+      <div className="fa-doc">
+        <Lede eyebrow="Built · awaiting a surface" title="Organizing the rail"
+          ledger={[
+            { flag: 'board_folders', desc: 'group boards into folders' },
+            { flag: 'saved_feeds', desc: 'save a filter as a feed' },
+            { flag: 'expanded_feeds', desc: 'read a feed expanded' },
+            { flag: 'bookmark_folders', desc: 'file your stars' },
+          ]}>
+          Three flags share one home — the left rail — and one job: letting a member <b>shape their own view of the hall</b>. The data models shipped; what was missing is the place to touch them. Each is designed here in the parchment register, live and clickable.
+        </Lede>
+
+        <Spec num="01" label="board_folders" title="Boards, gathered into folders"
+          note="The rail groups boards into named, collapsible folders. In Browse, click a folder to fold it away. Switch to Organize to drag boards and folders, rename them, and add new folders — the create-folder affordance writes straight to the model the flag already exposes.">
+          <BoardFolders />
+        </Spec>
+
+        <Spec num="02" label="saved_feeds" title="A filter, kept as a feed"
+          note="Any view you can filter to — a board, a status, a sort — can be named and pinned to the rail as a feed. Open “Save as feed”, name it, choose a mark, and it joins “Your feeds” at the top. The next visit, it is one click away.">
+          <SavedFeeds />
+        </Spec>
+
+        <Spec num="03" label="expanded_feeds" title="A feed you can read expanded"
+          note="A saved feed is a filter; expanded_feeds is how you read one. Toggle Compact to scan titles and expand any row on click, or Expanded to read every topic in place — excerpt, latest reply, who is in the room, and its tags. It is the same feed, at the depth you want it.">
+          <ExpandedFeeds />
+        </Spec>
+
+        <Spec num="04" label="bookmark_folders" title="Stars, filed where you'll find them"
+          note="Bookmarks were a single flat list. Folders give them order: file each star under “To answer”, “Reference”, “Read later”, or a folder of your own. Use the move menu on any bookmark to refile it; “All bookmarks” shows everything with its folder tag.">
+          <BookmarkFolders />
+        </Spec>
+
+        <div className="fa-callout">
+          <span className="fa-callout-icon">{I('check', 18)}</span>
+          <p><b>expanded_feeds</b> extends saved_feeds with a read view and is <b>flipping on now</b>. <b>bookmark_folders</b> is a browser/a11y capture from flipping. <b>board_folders</b> and <b>saved_feeds</b> the audit places in the do-not-activate tier: designed here, but ahead of an incomplete build.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

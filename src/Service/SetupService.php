@@ -11,6 +11,7 @@ use App\Domain\User;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\ProtectedOwnerRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\Session;
@@ -49,6 +50,7 @@ final class SetupService
         private BoardRepository $boards,
         private ModerationLogRepository $log,
         private Session $session,
+        private ?ProtectedOwnerRepository $protectedOwners = null,
     ) {
     }
 
@@ -73,6 +75,7 @@ final class SetupService
             $admin = $this->auth->register($input, 'admin');
             // The site operator owns the install — no email round-trip needed.
             $this->users->markEmailVerified($admin->id());
+            $this->protectedOwners?->designateOrReactivate($admin->id(), null);
 
             $this->settings->set('site_name', $siteName);
             $this->settings->set('registration_mode', 'open');

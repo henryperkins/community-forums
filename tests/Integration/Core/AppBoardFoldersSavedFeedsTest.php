@@ -17,22 +17,33 @@ final class AppBoardFoldersSavedFeedsTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
-    public function test_personal_organization_routes_are_dark_by_default(): void
+    public function test_personal_organization_routes_are_available_by_default_and_can_be_disabled(): void
     {
         $this->makeAdmin();
-        $user = $this->makeUser(['username' => 'orgdark']);
-        $board = $this->makeBoard($this->makeCategory('Org Dark'));
-        $thread = $this->makeThread($board, $user, 'Dark bookmark', 'Body');
+        $user = $this->makeUser(['username' => 'orgdefault']);
+        $board = $this->makeBoard($this->makeCategory('Org Default'));
+        $thread = $this->makeThread($board, $user, 'Default bookmark', 'Body');
+        (new ThreadUserRepository($this->db))->setStar((int) $user['id'], (int) $thread['thread_id'], true);
         $this->actingAs($user);
 
-        $this->assertStatus(404, $this->post('/settings/board-folders', ['name' => 'Work']));
-        $this->assertStatus(404, $this->post('/settings/board-folders/1/boards', ['board_id' => (int) $board['id']]));
-        $this->assertStatus(404, $this->post('/settings/saved-feeds', ['name' => 'Mine', 'board_id' => (int) $board['id']]));
-        $this->assertStatus(404, $this->post('/settings/bookmark-folders', ['name' => 'Read later']));
-        $this->assertStatus(404, $this->post('/settings/bookmark-folders/1/threads', ['thread_id' => (int) $thread['thread_id']]));
+        $this->assertRedirect($this->post('/settings/board-folders', ['name' => 'Work']), '/settings/boards');
+        $folderId = (int) $this->db->fetchValue('SELECT id FROM board_folders WHERE user_id = ? AND name = ?', [(int) $user['id'], 'Work']);
+        $this->assertRedirect($this->post('/settings/board-folders/' . $folderId . '/boards', ['board_id' => (int) $board['id']]), '/settings/boards');
+        $this->assertRedirect($this->post('/settings/saved-feeds', ['name' => 'Mine', 'board_id' => (int) $board['id']]), '/settings/boards');
+        $this->assertRedirect($this->post('/settings/bookmark-folders', ['name' => 'Read later']), '/settings/boards');
+        $bookmarkFolderId = (int) $this->db->fetchValue('SELECT id FROM thread_bookmark_folders WHERE user_id = ? AND name = ?', [(int) $user['id'], 'Read later']);
+        $this->assertRedirect($this->post('/settings/bookmark-folders/' . $bookmarkFolderId . '/threads', ['thread_id' => (int) $thread['thread_id']]), '/settings/boards');
+
+        $this->setFlags(['board_folders' => false, 'saved_feeds' => false, 'bookmark_folders' => false]);
+
+        $this->assertStatus(404, $this->post('/settings/board-folders', ['name' => 'Hidden']));
+        $this->assertStatus(404, $this->post('/settings/board-folders/' . $folderId . '/boards', ['board_id' => (int) $board['id']]));
+        $this->assertStatus(404, $this->post('/settings/saved-feeds', ['name' => 'Hidden', 'board_id' => (int) $board['id']]));
+        $this->assertStatus(404, $this->post('/settings/bookmark-folders', ['name' => 'Hidden']));
+        $this->assertStatus(404, $this->post('/settings/bookmark-folders/' . $bookmarkFolderId . '/threads', ['thread_id' => (int) $thread['thread_id']]));
     }
 
-    public function test_board_settings_page_stays_available_without_personal_organization_flags(): void
+    public function test_board_settings_page_shows_personal_organization_by_default_and_hides_when_disabled(): void
     {
         $this->makeAdmin();
         $user = $this->makeUser(['username' => 'orgshell']);
@@ -43,10 +54,19 @@ final class AppBoardFoldersSavedFeedsTest extends TestCase
 
         $this->assertStatus(200, $page);
         self::assertStringContainsString('Organize your boards', $page->body());
-        self::assertStringNotContainsString('personal-org-grid', $page->body());
-        self::assertStringNotContainsString('board-folder-card', $page->body());
-        self::assertStringNotContainsString('saved-feed-card', $page->body());
-        self::assertStringNotContainsString('bookmark-folder-card', $page->body());
+        self::assertStringContainsString('personal-org-grid', $page->body());
+        self::assertStringContainsString('board-folder-card', $page->body());
+        self::assertStringContainsString('saved-feed-card', $page->body());
+        self::assertStringContainsString('bookmark-folder-card', $page->body());
+
+        $this->setFlags(['board_folders' => false, 'saved_feeds' => false, 'bookmark_folders' => false]);
+        $disabled = $this->get('/settings/boards');
+        $this->assertStatus(200, $disabled);
+        self::assertStringContainsString('Organize your boards', $disabled->body());
+        self::assertStringNotContainsString('personal-org-grid', $disabled->body());
+        self::assertStringNotContainsString('board-folder-card', $disabled->body());
+        self::assertStringNotContainsString('saved-feed-card', $disabled->body());
+        self::assertStringNotContainsString('bookmark-folder-card', $disabled->body());
     }
 
     public function test_user_creates_private_folder_and_saved_feed_filter(): void

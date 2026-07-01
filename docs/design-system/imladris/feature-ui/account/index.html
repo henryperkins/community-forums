@@ -1,0 +1,379 @@
+<!-- @dsCard group="Feature activation" viewport="980x860" name="Account & identity" subtitle="custom_profile_fields · server_drafts — your own stuff" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account &amp; identity — feature design · RetroBoards</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../shared/chrome.css">
+<style>
+  .pane { background: var(--surface-raised); padding: 22px 24px; }
+
+  /* ── custom_profile_fields ─────────────────────────────────── */
+  /* twilight identity cover (echoes the real profile) */
+  .id-cover { position: relative; overflow: hidden; display: flex; align-items: center; gap: 16px; background: var(--surface-inverse); color: var(--text-inverse); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 18px 20px; margin-bottom: 16px; }
+  .id-cover-star { position: absolute; top: -26px; right: -20px; color: var(--gold-500); opacity: .13; pointer-events: none; }
+  .id-name { font-family: var(--font-display), serif; font-weight: 500; font-size: 22px; line-height: 1.1; color: var(--text-inverse); margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .id-tier { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 10px; color: var(--gold-700); background: var(--gold-100); border: 1px solid var(--gold-200); border-radius: var(--radius-pill); padding: 2px 9px; }
+  .id-handle { font-family: var(--font-mono), monospace; font-size: 12px; color: var(--mist-200, #C7D0CB); margin: 5px 0 0; }
+  .id-rep { margin-left: auto; text-align: right; align-self: flex-start; position: relative; }
+  .id-rep-val { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-display), serif; font-weight: 600; font-size: 24px; color: var(--text-inverse); }
+  .id-rep-star { color: var(--gold-400); display: inline-flex; }
+  .id-rep-label { display: block; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 9px; color: var(--mist-200, #C7D0CB); margin-top: 3px; }
+
+  /* details — the custom fields as shown */
+  .details { border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); overflow: hidden; }
+  .details-head { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border-hair); background: var(--surface-sunken); }
+  .details-head-title { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; color: var(--gold-ink); }
+  .details-list { list-style: none; margin: 0; padding: 4px 0; }
+  .details-row { display: flex; align-items: center; gap: 13px; padding: 11px 16px; }
+  .details-row + .details-row { border-top: 1px solid var(--border-hair); }
+  .details-ic { flex: none; width: 30px; height: 30px; border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--gold-ink); display: grid; place-items: center; }
+  .details-k { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; color: var(--text-muted); width: 132px; flex: none; }
+  .details-v { font-family: var(--font-body), serif; font-size: 16px; color: var(--text-strong); min-width: 0; }
+  .details-v.empty { color: var(--text-faint); font-style: italic; }
+  .details-v.link { color: var(--info); }
+
+  /* edit form */
+  .pf-form { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-inset); padding: 18px 20px; }
+  .pf-form-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .pf-form-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 18px; color: var(--text-strong); margin: 0; }
+  .pf-steward { font-family: var(--font-body), serif; font-style: italic; font-size: 13px; color: var(--text-muted); }
+  .pf-field { margin-top: 16px; }
+  .pf-label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .pf-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--text-muted); }
+  .pf-type { font-family: var(--font-mono), monospace; font-size: 10px; color: var(--text-faint); background: var(--surface-sunken); border-radius: var(--radius-pill); padding: 2px 8px; }
+  .acc-select { width: 100%; font-family: var(--font-body), serif; font-size: 15px; color: var(--text-strong); background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-md); padding: 9px 32px 9px 12px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23515C52' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 15px; }
+  .pf-help { font-family: var(--font-body), serif; font-size: 12.5px; color: var(--text-faint); margin: 5px 0 0; }
+  .pf-form-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-hair); }
+
+  /* ── server_drafts ─────────────────────────────────────────── */
+  .drafts { border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); overflow: hidden; }
+  .drafts-head { display: flex; align-items: center; gap: 11px; padding: 14px 18px; border-bottom: 1px solid var(--border-hair); }
+  .drafts-head-ic { flex: none; width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--gold-ink); display: grid; place-items: center; }
+  .drafts-head-text { min-width: 0; flex: 1; }
+  .drafts-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 18px; color: var(--text-strong); line-height: 1.1; }
+  .drafts-sync { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--success); margin-top: 2px; }
+  .draft-list { list-style: none; margin: 0; padding: 0; }
+  .draft-row { display: flex; align-items: flex-start; gap: 14px; padding: 15px 18px; transition: background var(--dur-fast) var(--ease-calm); }
+  .draft-row + .draft-row { border-top: 1px solid var(--border-hair); }
+  .draft-row:hover { background: var(--surface-sunken); }
+  .draft-main { min-width: 0; flex: 1; }
+  .draft-dest { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .draft-dest .to { color: var(--text-faint); }
+  .draft-dest .where { color: var(--gold-ink); }
+  .draft-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 16px; color: var(--text-strong); margin: 3px 0; line-height: 1.2; }
+  .draft-snippet { font-family: var(--font-body), serif; font-size: 14.5px; line-height: 1.5; color: var(--text-body); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .draft-foot { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; margin-top: 8px; }
+  .draft-saved { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .draft-device { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .05em; font-size: 9.5px; color: var(--on-info); background: var(--surface-info); border: 1px solid var(--river-200); border-radius: var(--radius-pill); padding: 2px 8px; white-space: nowrap; }
+  .draft-actions { display: flex; align-items: center; gap: 6px; flex: none; }
+  .draft-empty { padding: 36px 20px; text-align: center; font-family: var(--font-body), serif; font-style: italic; color: var(--text-muted); font-size: 15px; }
+
+  /* autosave indicator in a faux composer */
+  .as-composer { margin-top: 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-inset); padding: 14px 16px; }
+  .as-area { font-family: var(--font-body), serif; font-size: 16px; line-height: 1.55; color: var(--text-body); min-height: 40px; }
+  .as-foot { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-hair); }
+  .as-state { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); }
+  .as-state .leaf { color: var(--success); display: inline-flex; transition: opacity var(--dur-fast) var(--ease-calm); }
+  .as-state.saving .leaf { opacity: .4; }
+  .as-spacer { flex: 1; }
+
+  /* ── reputation_ledger — how the commends were earned ───── */
+  .rl { border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); overflow: hidden; }
+  .rl-head { display: flex; align-items: center; gap: 14px; padding: 15px 18px; border-bottom: 1px solid var(--border-hair); background: var(--surface-sunken); flex-wrap: wrap; }
+  .rl-total { display: flex; align-items: baseline; gap: 8px; }
+  .rl-total-star { color: var(--star); align-self: center; display: inline-flex; }
+  .rl-total-n { font-family: var(--font-display), serif; font-weight: 600; font-size: 27px; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .rl-total-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; color: var(--text-muted); }
+  .rl-trend { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono), monospace; font-size: 12px; color: var(--on-done); background: var(--surface-done); border: 1px solid var(--green-200); border-radius: var(--radius-pill); padding: 3px 10px; }
+  .rl-filter { margin-left: auto; }
+  .rl-list { list-style: none; margin: 0; padding: 0; }
+  .rl-row { display: flex; align-items: center; gap: 13px; padding: 13px 18px; transition: background var(--dur-fast) var(--ease-calm); }
+  .rl-row + .rl-row { border-top: 1px solid var(--border-hair); }
+  .rl-row.milestone { background: color-mix(in srgb, var(--gold-soft) 32%, var(--surface-raised)); }
+  .rl-med { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+  .rl-med.commend, .rl-med.illuminating { background: var(--gold-soft); color: var(--gold-ink); }
+  .rl-med.accepted, .rl-med.decision { background: var(--surface-done); color: var(--success); }
+  .rl-med.milestone { background: var(--gold-100); color: var(--gold-600); box-shadow: var(--gilt); }
+  .rl-main { min-width: 0; flex: 1; }
+  .rl-desc { font-family: var(--font-body), serif; font-size: 15px; color: var(--text-body); line-height: 1.32; }
+  .rl-desc b { font-weight: 600; color: var(--text-strong); }
+  .rl-sub { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); margin-top: 2px; display: block; }
+  .rl-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: none; }
+  .rl-delta { font-family: var(--font-mono), monospace; font-weight: 600; font-size: 14px; color: var(--success); font-variant-numeric: tabular-nums; }
+  .rl-delta.zero { color: var(--text-faint); font-weight: 400; }
+  .rl-time { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react" src="../shared/chrome.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+const DS = window.ImladrisDesignSystem_c3e027;
+const { Button, Input, Monogram } = DS;
+const { Icons, EightStar, CommendStar, Segmented, useTheme, Topbar, Lede, Spec } = window.FA;
+const I = (name, s) => Icons[name](s);
+
+/* ════════ 01 · custom_profile_fields ════════ */
+const FIELDS = [
+  { id: 'pronouns', label: 'Pronouns', type: 'text', value: 'she / her', icon: 'user' },
+  { id: 'location', label: 'Location', type: 'text', value: 'Lothlórien', icon: 'pin' },
+  { id: 'study', label: 'Field of study', type: 'select', value: 'Interpretability', options: ['Interpretability', 'Evaluations', 'Capability disclosure', 'Audit trails'], icon: 'star' },
+  { id: 'home', label: 'Homepage', type: 'url', value: 'galadriel.vale', icon: 'link' },
+];
+function CustomProfileFields() {
+  const [mode, setMode] = useState('show');
+  return (
+    <div>
+      <div className="demo-controls">
+        <span className="demo-controls-label">View</span>
+        <Segmented value={mode} onChange={setMode} options={[{ value: 'show', label: 'On the profile' }, { value: 'edit', label: 'Editing' }]} />
+        <span className="demo-controls-spacer" />
+        <span className="demo-hint">{mode === 'show' ? 'How filled fields read' : 'The form a member fills in settings'}</span>
+      </div>
+
+      <div className="frame">
+        <div className="pane">
+          <div className="id-cover">
+            <span className="id-cover-star"><EightStar size={150} /></span>
+            <Monogram name="Galadriel" username="galadriel" size="xl" gilt presence="online" />
+            <div>
+              <h3 className="id-name">Galadriel <span className="id-tier">Loremaster</span></h3>
+              <p className="id-handle">@galadriel · Lady of the Wood</p>
+            </div>
+            <div className="id-rep">
+              <span className="id-rep-val"><span className="id-rep-star">{I('star', 18)}</span>5,120</span>
+              <span className="id-rep-label">Commends</span>
+            </div>
+          </div>
+
+          {mode === 'show' ? (
+            <div className="details">
+              <div className="details-head">
+                <span style={{ display: 'inline-flex', color: 'var(--gold-ink)' }}>{I('user', 14)}</span>
+                <span className="details-head-title">Details</span>
+              </div>
+              <ul className="details-list">
+                {FIELDS.map((f) => (
+                  <li className="details-row" key={f.id}>
+                    <span className="details-ic">{I(f.icon, 15)}</span>
+                    <span className="details-k">{f.label}</span>
+                    <span className={'details-v' + (f.type === 'url' ? ' link' : '')}>{f.type === 'url' ? f.value : f.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <form className="pf-form" onSubmit={(e) => e.preventDefault()}>
+              <div className="pf-form-head">
+                <p className="pf-form-title">Profile details</p>
+                <span className="pf-steward">Fields defined by the stewards</span>
+              </div>
+              {FIELDS.map((f) => (
+                <div className="pf-field" key={f.id}>
+                  <div className="pf-label-row">
+                    <span className="pf-label">{f.label}</span>
+                    <span className="pf-type">{f.type}</span>
+                  </div>
+                  {f.type === 'select' ? (
+                    <select className="acc-select" defaultValue={f.value}>
+                      {f.options.map((o) => <option key={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <Input defaultValue={f.value} prefix={f.type === 'url' ? 'https://' : undefined} />
+                  )}
+                  {f.type === 'url' ? <p className="pf-help">Shown as a link on your profile.</p> : null}
+                </div>
+              ))}
+              <div className="pf-form-foot">
+                <Button variant="ghost" size="sm">Cancel</Button>
+                <Button variant="primary" size="sm">Save details</Button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 02 · server_drafts ════════ */
+const SEED_DRAFTS = [
+  { id: 1, to: 'Reply to', title: 'Evaluations as ritual, not gate', board: 'evaluations', snippet: 'The rite framing lands for me. One worry: if every run must resolve into a written verdict, who keeps the verdicts readable a year on?', saved: '2 minutes ago', device: 'this device' },
+  { id: 2, to: 'New topic in', title: null, board: 'audit-trails', snippet: 'Proposal: a weekly rollback drill, logged and signed, so the trail proves itself before we need it in anger.', saved: 'yesterday', device: 'on your phone' },
+  { id: 3, to: 'Reply to', title: 'Reading attention as a map, not a verdict', board: 'interpretability', snippet: 'Annotating the heatmap so the caveat travels with the image — here is a sketch of how the overlay could read.', saved: '3 days ago', device: 'this device' },
+];
+function ServerDrafts() {
+  const [drafts, setDrafts] = useState(SEED_DRAFTS);
+  const [saved, setSaved] = useState(true);
+  const tRef = useRef(null);
+  const discard = (id) => setDrafts((d) => d.filter((x) => x.id !== id));
+  const type = () => {
+    setSaved(false);
+    clearTimeout(tRef.current);
+    tRef.current = setTimeout(() => setSaved(true), 900);
+  };
+  useEffect(() => () => clearTimeout(tRef.current), []);
+
+  return (
+    <div className="frame">
+      <div className="pane">
+        <div className="drafts">
+          <div className="drafts-head">
+            <span className="drafts-head-ic">{I('history', 17)}</span>
+            <span className="drafts-head-text">
+              <span className="drafts-title">Drafts</span>
+              <span className="drafts-sync">{I('check', 12)} Saved to your account · syncs across devices</span>
+            </span>
+            <span className="draft-count" style={{ fontFamily: 'var(--font-mono), monospace', fontSize: 12, color: 'var(--text-muted)' }}>{drafts.length}</span>
+          </div>
+          {drafts.length === 0 ? (
+            <div className="draft-empty">No drafts. Anything you start writing is kept here automatically.</div>
+          ) : (
+            <ul className="draft-list">
+              {drafts.map((d) => (
+                <li className="draft-row" key={d.id}>
+                  <span className="draft-main">
+                    <span className="draft-dest">
+                      <span className="to">{d.to}</span>
+                      <span className="where">#{d.board}</span>
+                    </span>
+                    <span className="draft-title">{d.title ? 'Re: ' + d.title : 'Untitled topic'}</span>
+                    <span className="draft-snippet">{d.snippet}</span>
+                    <span className="draft-foot">
+                      <span className="draft-saved">{I('clock', 12)} saved {d.saved}</span>
+                      <span className="draft-device">{I('history', 10)} {d.device}</span>
+                    </span>
+                  </span>
+                  <span className="draft-actions">
+                    <Button variant="outline" size="sm">Resume</Button>
+                    <Button variant="ghost" size="sm" onClick={() => discard(d.id)}>Discard</Button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="as-composer">
+          <div className="as-area" contentEditable suppressContentEditableWarning onInput={type}
+            style={{ outline: 'none' }}>The rite framing lands for me. One worry: if every run must resolve into a written verdict…</div>
+          <div className="as-foot">
+            <span className={'as-state' + (saved ? '' : ' saving')}>
+              <span className="leaf">{I(saved ? 'check' : 'history', 13)}</span>
+              {saved ? 'Draft saved · on your account' : 'Saving…'}
+            </span>
+            <span className="as-spacer" />
+            <Button variant="primary" size="sm">Post reply</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 02 · reputation_ledger — how the commends were earned ════════ */
+const LEDGER = [
+  { id: 1, kind: 'commend', delta: 5, desc: 'Commended on', title: 'Reading attention as a map, not a verdict', sub: 'from Erestor', board: 'interpretability', time: '2h ago' },
+  { id: 2, kind: 'accepted', delta: 15, desc: 'Answer accepted on', title: 'Evaluations as ritual, not gate', sub: 'marked by Galadriel', board: 'evaluations', time: 'yesterday' },
+  { id: 3, kind: 'illuminating', delta: 2, desc: 'Called illuminating on', title: 'Who changed what — prove the rollback?', sub: 'from Arwen', board: 'audit-trails', time: '2 days ago' },
+  { id: 4, kind: 'milestone', delta: 0, desc: 'Reached', title: 'Loremaster', sub: 'crossed 5,000 commends', time: '3 days ago', milestone: true },
+  { id: 5, kind: 'decision', delta: 10, desc: 'Credited on the decision', title: 'Adopt written verdicts for eval runs', sub: 'resolved from your proposal', board: 'evaluations', time: '4 days ago' },
+  { id: 6, kind: 'commend', delta: 5, desc: 'Commended on', title: 'On exposing capability before we are asked', sub: 'from Glorfindel', board: 'capability-disclosure', time: '5 days ago' },
+];
+function ReputationLedger() {
+  const [filter, setFilter] = useState('all');
+  const rows = LEDGER.filter((e) => filter === 'all' ? true : filter === 'commends' ? (e.kind === 'commend' || e.kind === 'illuminating') : e.milestone);
+  return (
+    <div className="frame">
+      <div className="pane">
+        <div className="rl">
+          <div className="rl-head">
+            <span className="rl-total">
+              <span className="rl-total-star"><CommendStar size={20} /></span>
+              <span className="rl-total-n">5,120</span>
+              <span className="rl-total-label">Commends</span>
+            </span>
+            <span className="rl-trend">{I('escalate', 12)} +37 this week</span>
+            <span className="rl-filter">
+              <Segmented value={filter} onChange={setFilter}
+                options={[{ value: 'all', label: 'All' }, { value: 'commends', label: 'Commends' }, { value: 'milestones', label: 'Milestones' }]} />
+            </span>
+          </div>
+          <ul className="rl-list">
+            {rows.map((e) => (
+              <li className={'rl-row' + (e.milestone ? ' milestone' : '')} key={e.id}>
+                <span className={'rl-med ' + e.kind}>
+                  {e.milestone ? <EightStar size={17} /> : (e.kind === 'commend' || e.kind === 'illuminating') ? <CommendStar size={15} /> : I('check', 16)}
+                </span>
+                <span className="rl-main">
+                  <span className="rl-desc">{e.desc} <b>{e.title}</b></span>
+                  <span className="rl-sub">{e.sub}{e.board ? ' · #' + e.board : ''}</span>
+                </span>
+                <span className="rl-right">
+                  <span className={'rl-delta' + (e.delta === 0 ? ' zero' : '')}>{e.delta > 0 ? '+' + e.delta : '—'}</span>
+                  <span className="rl-time">{e.time}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ Page ════════ */
+function Page() {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div>
+      <Topbar eyebrow="Feature activation · account & identity"
+        flags={[{ name: 'custom_profile_fields' }, { name: 'reputation_ledger' }, { name: 'server_drafts', blocked: true }]}
+        theme={theme} setTheme={setTheme} />
+      <div className="fa-doc">
+        <Lede eyebrow="Built · awaiting a surface" title="Account & identity"
+          ledger={[
+            { flag: 'custom_profile_fields', desc: 'steward-defined profile fields' },
+            { flag: 'reputation_ledger', desc: 'how you earned your commends' },
+            { flag: 'server_drafts', desc: 'drafts kept on your account' },
+          ]}>
+          Three features about <b>your own things</b> — who you are in the hall, how you earned your standing, and the half-written words you leave behind. Each stores data the backend already holds; none had a place to show it. Designed here, live and clickable.
+        </Lede>
+
+        <Spec num="01" label="custom_profile_fields" title="The fields the stewards define"
+          note="Stewards define a set of profile fields — a text line, a choice, a link. Members fill them in settings, and they read as a tidy “Details” block on the profile. Toggle between how the filled fields appear and the form a member edits.">
+          <CustomProfileFields />
+        </Spec>
+
+        <Spec num="02" label="reputation_ledger" title="How the commends were earned"
+          note="A member's commend count is a number until you can see where it came from. The ledger records each event — a commend, an accepted answer, a decision credited, a milestone crossed — with what it was for and what it was worth. Filter to commends or milestones alone.">
+          <ReputationLedger />
+        </Spec>
+
+        <Spec num="03" label="server_drafts" title="Drafts kept on your account"
+          note="Start a reply, close the tab, open your phone — the draft is there. Drafts save to the account, not the browser, and gather in one list you can resume or discard. The composer shows the save state as you type.">
+          <ServerDrafts />
+        </Spec>
+
+        <div className="fa-callout">
+          <span className="fa-callout-icon">{I('check', 18)}</span>
+          <p><b>custom_profile_fields</b> renders on the existing profile and settings screens — a browser/a11y capture from flipping it. <b>reputation_ledger</b>, with the read-gate fix landed, is <b>flipping on now</b>. <b>server_drafts</b> still sits behind a pending security review (draft ownership across devices), so it waits in the blocked tier.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

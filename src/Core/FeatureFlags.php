@@ -12,8 +12,8 @@ use App\Repository\SettingRepository;
  *
  * Each subsystem is gated so it can be enabled independently and rolled back
  * without a data change. Phase 2/3 defaults are ON so a fresh install is fully
- * functional; Phase 4 Gate A defaults are OFF for the planned deploy-dark
- * rollout until each workstream has acceptance evidence. The `features` setting
+ * functional; Phase 4 Gate A defaults are mixed: graduated workstreams default
+ * ON, while unaccepted workstreams stay deploy-dark. The `features` setting
  * (a JSON object of flag => bool) overrides defaults per flag.
  *
  * Note: a Phase 3 flag only gates feature *availability*. The conservative
@@ -51,9 +51,9 @@ final class FeatureFlags
         // ── Phase 4 Gate A ───────────────────────────────────────────────
         'topic_workflow' => true,     // canonical status, history, snooze, assignment — GA default-on (2026-07-01; reversible via features override)
         'group_dms' => false,         // group conversation creation/invites
-        'tags' => false,              // curated tag catalogue + thread tagging
-        'expanded_feeds' => false,    // board/tag follows, Following + Latest feeds
-        'reputation_ledger' => false, // idempotent reputation events + windowed ranks
+        'tags' => true,               // curated tag catalogue + thread tagging — GA default-on (2026-07-01; reversible via features override)
+        'expanded_feeds' => true,     // board/tag follows, Following + Latest feeds — GA default-on (2026-07-01; reversible via features override)
+        'reputation_ledger' => true,  // idempotent reputation events + windowed ranks — GA default-on (2026-07-01; reversible via features override)
         'badge_rules' => false,       // custom badge rules/backfill/revoke history
         'community_memory' => false,  // summaries, related topics, wiki revisions
         'content_references' => false,// persisted board/thread/post references + read-gated cards
@@ -66,9 +66,9 @@ final class FeatureFlags
         'slash_giphy' => false,        // PE slash inserts + client-side GIPHY picker config
         'split_merge' => false,        // moderator split/merge dry-run/apply/repair operations
         'profile_media' => false,      // avatar upload/signature moderation surfaces
-        'board_folders' => false,      // private personal board folders
-        'bookmark_folders' => false,   // private folders for starred/bookmarked threads
-        'saved_feeds' => false,        // private saved feed filters/digest composition
+        'board_folders' => true,       // private personal board folders — GA default-on (2026-07-01; reversible via features override)
+        'bookmark_folders' => true,    // private folders for starred/bookmarked threads — GA default-on (2026-07-01; reversible via features override)
+        'saved_feeds' => true,         // private saved feed filters/digest composition — GA default-on (2026-07-01; reversible via features override)
         'custom_profile_fields' => false, // bounded extra public profile fields
         'account_lifecycle' => false,  // self-serve export/deactivate/reactivate/30-day-grace delete (ADR 0006; deploy-dark)
         'automated_context' => false,  // since-last-read context + suggested related topics

@@ -1,0 +1,146 @@
+<!-- @dsCard group="Document" viewport="880x1240" name="Document — cover, sections, figures, callouts, tables" subtitle="The long-form reference layer · Parchment / Twilight" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { margin: 0; padding: 30px; background: var(--surface-page); transition: background var(--dur-base) var(--ease-calm); }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  .specimen { margin-bottom: 30px; }
+  .cap {
+    font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em;
+    font-size: 10px; color: var(--gold-ink); margin: 0 0 11px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border-hair);
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 11px; align-items: stretch; }
+  .row > * { flex: 1 1 230px; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 26px; }
+  .toolbar .lede { font-family: var(--font-display); font-style: italic; font-size: 15px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+const { DocCover, SectionHeader, Figure, Callout, SpecTable } = window.ImladrisDesignSystem_c3e027;
+
+function ThemeToggle() {
+  const [theme, setTheme] = React.useState('parchment');
+  React.useEffect(() => {
+    const el = document.documentElement;
+    if (theme === 'twilight') el.setAttribute('data-theme', 'dark');
+    else el.removeAttribute('data-theme');
+  }, [theme]);
+  return (
+    <div className="segmented" role="tablist" aria-label="Theme">
+      {['parchment', 'twilight'].map((t) => (
+        <button key={t} role="tab" aria-selected={theme === t}
+          className={'segmented-item' + (theme === t ? ' is-active' : '')}
+          onClick={() => setTheme(t)} style={{ textTransform: 'capitalize' }}>{t}</button>
+      ))}
+    </div>
+  );
+}
+
+function Demo() {
+  return (
+    <div className="wrap">
+      <div className="toolbar">
+        <span className="lede">The patterns that turn the primitives into a printed reference.</span>
+        <ThemeToggle />
+      </div>
+
+      <div className="specimen">
+        <p className="cap">Cover</p>
+        <DocCover
+          kicker="Engineering Handoff · Design Reference"
+          title="RetroBoards"
+          subtitle="The Community Inbox — information architecture & key flows."
+          lede="The reference an engineer reads before touching the screens: how the product is organised, how a person moves through it, and what each surface owes the next."
+          meta={[
+            { label: 'Source of truth', value: 'DESIGN.md · v0.11' },
+            { label: 'Stack', value: 'PHP 8 + MySQL' },
+            { label: 'Build status', value: 'Phase 4 · 456 tests green' },
+            { label: 'Prepared for', value: 'Engineering' },
+          ]}
+          contents={['01 Overview', '02 The shell', '03 Architecture', '04 Data model', '05 Status']}
+        />
+      </div>
+
+      <div className="specimen">
+        <p className="cap">Section header — section &amp; sub</p>
+        <SectionHeader number="§5" kicker="Screens & flows"
+          title="Reading, posting, and proving who you are"
+          dek="Each surface is given the same way: what it is for, the parts it is built from, and the flow that runs through it." />
+        <div style={{ height: 18 }} />
+        <SectionHeader level="sub" number="5.1" kicker="Pane 3"
+          title="The conversation"
+          dek="A thread opens as a chat-style message stream with the composer pinned to the bottom." />
+      </div>
+
+      <div className="specimen">
+        <p className="cap">Figure — drop-in slot + caption</p>
+        <Figure label="FIG 3" slotHint="Drop a screenshot here"
+          caption="Route /t/{id}-{slug}, signed in. The sticky composer reads “Posting as …”." />
+      </div>
+
+      <div className="specimen">
+        <p className="cap">Callout — tones &amp; the panel variant</p>
+        <div className="row">
+          <Callout label="Note" tone="note">
+            <strong>Status, stated plainly.</strong> Where a surface is mock-only or planned, the text says so rather than implying it ships.
+          </Callout>
+          <Callout label="Sessions" tone="info">
+            Opaque tokens in a <span className="doc-code">sessions</span> table; a guest is simply a request with no valid session.
+          </Callout>
+        </div>
+        <div className="row" style={{ marginTop: 11 }}>
+          <Callout label="Needs answer" tone="warn">Twelve topics await a first reply in <span className="doc-code">#help</span>.</Callout>
+          <Callout label="Destructive" tone="danger">Deletes are soft — the audit trail is preserved.</Callout>
+          <Callout label="Deferred" tone="quiet">Composer previews, polls, custom emoji.</Callout>
+        </div>
+        <div style={{ marginTop: 11 }}>
+          <Callout variant="panel" label="Flow — reply with a quote">
+            Hover a post → <strong>Quote</strong> → the composer pre-fills a quote block (<span className="doc-code">parent_post_id</span>) → <strong>Enter</strong> sends and the count increments.
+          </Callout>
+        </div>
+      </div>
+
+      <div className="specimen">
+        <p className="cap">Spec table — data &amp; a permissions matrix</p>
+        <SpecTable
+          caption="The durable spine"
+          columns={[{ key: 'table', label: 'Table' }, { key: 'holds', label: 'Holds' }, { key: 'powers', label: 'Powers' }]}
+          rows={[
+            { table: <span className="doc-code">threads</span>, holds: 'Title, slug, pinned / locked, reply_count', powers: 'Inbox rows, thread header' },
+            { table: <span className="doc-code">posts</span>, holds: 'Raw + sanitised body, parent_post_id, is_op', powers: 'Conversation, search' },
+            { table: <span className="doc-code">reactions</span>, holds: 'One per (user, post, emoji)', powers: 'Post reactions, regard' },
+          ]}
+        />
+        <div style={{ height: 14 }} />
+        <SpecTable
+          columns={[
+            { key: 'can', label: 'Can…' },
+            { key: 'guest', label: 'Guest', align: 'center' },
+            { key: 'user', label: 'User', align: 'center' },
+            { key: 'mod', label: 'Mod', align: 'center' },
+            { key: 'admin', label: 'Admin', align: 'center' },
+          ]}
+          rows={[
+            { can: 'Read all public content', guest: <span className="doc-yes">✓</span>, user: <span className="doc-yes">✓</span>, mod: <span className="doc-yes">✓</span>, admin: <span className="doc-yes">✓</span> },
+            { can: 'Post, reply, react, star', guest: <span className="doc-no">—</span>, user: <span className="doc-yes">✓</span>, mod: <span className="doc-yes">✓</span>, admin: <span className="doc-yes">✓</span> },
+            { can: 'Pin / lock / move any', guest: <span className="doc-no">—</span>, user: <span className="doc-no">—</span>, mod: <span className="doc-scoped">scoped</span>, admin: <span className="doc-yes">✓</span> },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>
+</body>
+</html>

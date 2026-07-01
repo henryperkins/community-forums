@@ -1,0 +1,489 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris Design System — component styles
+   The reusable primitives' CSS, lifted verbatim (values unchanged) from the
+   live RetroBoards app.css Imladris layers. Components render these classNames;
+   everything paints from the tokens, so the twilight register flips cleanly.
+   Shipped to consumers as part of the styles.css closure.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Buttons ──────────────────────────────────────────────────────────────
+   Labels are lapidary Marcellus, lightly tracked, sentence case. */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    background: var(--accent); color: var(--accent-contrast);
+    border: 1px solid transparent; border-radius: var(--radius-md);
+    padding: 9px 17px;
+    font-family: var(--font-label); font-size: .9rem; letter-spacing: .03em;
+    cursor: pointer; text-align: center; text-decoration: none;
+    box-shadow: var(--shadow-xs);
+    transition: background var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
+}
+.btn:hover { text-decoration: none; background: var(--brand-hover); }
+.btn:active { transform: translateY(0.5px) scale(.995); }
+.btn-small { padding: 6px 13px; font-size: .82rem; }
+.btn-secondary {
+    background: var(--surface-raised); color: var(--text);
+    border: 1.5px solid var(--border-soft); box-shadow: none;
+}
+.btn-secondary:hover { background: var(--surface-sunken); border-color: var(--border-strong); }
+.btn-ghost { background: transparent; color: var(--text-body); border: 1.5px solid transparent; box-shadow: none; }
+.btn-ghost:hover { background: var(--surface-sunken); }
+.btn-accent { background: var(--gold-500); color: var(--ink-900); }
+.btn-accent:hover { background: var(--gold-600); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: color-mix(in srgb, var(--danger) 82%, #000); }
+.btn[disabled], .btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--accent); }
+.btn-icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+
+.linkbtn { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font: inherit; }
+.linkbtn.danger { color: var(--danger); }
+
+/* ── Pills & tags ─────────────────────────────────────────────────────────
+   Pill = a lapidary caps status token. Tag = the smaller board / meta token. */
+.pill {
+    display: inline-flex; align-items: center;
+    background: var(--surface-sunken); color: var(--text-muted);
+    border-radius: var(--radius-pill); padding: 2px 10px;
+    font-family: var(--font-label); letter-spacing: .04em; text-transform: uppercase; font-size: .72rem;
+}
+.pill-admin  { background: var(--accent); color: var(--accent-contrast); }
+.pill-online { background: var(--surface-done); color: var(--on-done); }
+.tag {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-label); font-size: .6rem; letter-spacing: .08em; text-transform: uppercase;
+    background: var(--surface-sunken); color: var(--text-muted);
+    border-radius: var(--radius-pill); padding: 2px 8px;
+}
+
+/* ── Badges (role) & chips (topic status) — lapidary Marcellus pills ─────── */
+.badge, .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-label); font-size: .62rem; letter-spacing: .1em;
+    text-transform: uppercase; line-height: 1;
+    padding: 3px 9px; border-radius: var(--radius-pill);
+    background: var(--brand-subtle); color: var(--on-brand-subtle);
+    border: 1px solid var(--green-200); vertical-align: middle;
+}
+.badge svg, .chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Role badges */
+.badge-staff  { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
+.badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
+.badge-solved { color: var(--on-done); background: var(--surface-raised); border-color: var(--green-200); }
+/* Status chips */
+.chip-solved        { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
+.chip-needs         { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
+.chip-decision_made { color: var(--green-800); background: var(--brand-subtle);   border-color: var(--green-200); }
+.chip-pinned,
+.chip-locked        { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
+.chip-archived      { color: var(--ink-400); background: transparent; border-style: dashed; border-color: var(--border-strong); }
+
+/* ── Generic card ─────────────────────────────────────────────────────────── */
+.card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow-xs);
+}
+
+/* ── Monogram avatars ─────────────────────────────────────────────────────
+   A tinted ground + legible dark ink, rotating through green/river/gold/mist.
+   The gilt ring marks "precious" avatars (OP, accepted answer, profile). */
+.monogram {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 50%;
+    font-family: var(--font-label); font-weight: var(--weight-medium);
+    font-size: .8rem; letter-spacing: .02em;
+    color: var(--green-800); background: var(--green-100); flex: 0 0 auto;
+}
+.monogram-gilt { box-shadow: var(--gilt); }
+.monogram.avatar-img { object-fit: cover; background: var(--surface-raised); }
+.mono-0 { background: var(--green-100);     color: var(--green-800); }
+.mono-1 { background: var(--river-100);     color: var(--river-700); }
+.mono-2 { background: var(--gold-100);      color: var(--gold-700); }
+.mono-3 { background: var(--mist-200);      color: var(--ink-700); }
+.mono-4 { background: var(--green-200);     color: var(--green-900); }
+.mono-5 { background: var(--river-200);     color: var(--river-900); }
+.mono-6 { background: var(--gold-200);      color: var(--gold-700); }
+.mono-7 { background: var(--parchment-200); color: var(--ink-700); }
+.mono-8 { background: var(--green-050);     color: var(--green-700); }
+.mono-9 { background: var(--river-100);     color: var(--river-700); }
+/* Sizes */
+.monogram-sm { width: 28px; height: 28px; font-size: .72rem; }
+.monogram-lg { width: 44px; height: 44px; font-size: .95rem; }
+.monogram-xl { width: 64px; height: 64px; font-size: 1.5rem; }
+/* Presence */
+.avatar-wrap { position: relative; display: inline-flex; }
+.avatar-wrap .presence-dot {
+    position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px;
+    border-radius: 50%; background: var(--presence);
+    box-shadow: 0 0 0 2px var(--surface-raised);
+}
+
+/* ── Star button (pill) + esteem star marker ──────────────────────────────── */
+.star-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
+    background: var(--surface-raised); color: var(--text-body);
+    border: 1.5px solid var(--border-soft); border-radius: var(--radius-md);
+    padding: 6px 13px; cursor: pointer;
+}
+.star-btn:hover { border-color: var(--border-strong); background: var(--surface-sunken); text-decoration: none; }
+.star-btn.star-on { color: var(--gold-700); border-color: var(--gold-200); background: var(--gold-100); }
+.star-marker { color: var(--star); }
+
+/* ── Reactions — "✦ name · count"; on-state warms to gold ──────────────────── */
+.reaction {
+    display: inline-flex; align-items: center; gap: 5px;
+    font: inherit; font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; line-height: 1;
+    padding: 5px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill);
+    background: var(--surface-raised); color: var(--text-body); cursor: pointer;
+}
+.reaction:hover { background: var(--surface-sunken); }
+.reaction-on { border-color: var(--gold-500); background: var(--gold-soft); color: var(--gold-700); }
+.reaction-static { cursor: default; }
+.reaction-glyph { color: var(--star); }
+.reaction-on .reaction-glyph { color: var(--gold-700); }
+.reaction-n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+.reaction-n::before { content: "· "; opacity: .7; }
+.reaction-on .reaction-n { color: var(--gold-700); }
+
+/* ── Inputs / textarea — serif, gold focus halo ───────────────────────────── */
+.input, .textarea {
+    width: 100%; padding: 9px 11px;
+    font: inherit; font-family: var(--font-body);
+    color: var(--text); background: var(--surface-raised);
+    border: 1.5px solid var(--border-soft); border-radius: var(--radius-md);
+    box-shadow: var(--shadow-inset);
+}
+.textarea { resize: vertical; min-height: 90px; line-height: 1.55; }
+.input::placeholder, .textarea::placeholder { color: var(--text-faint); }
+.input:focus, .textarea:focus, select.input:focus {
+    border-color: var(--gold-400);
+    outline: 2px solid var(--accent); outline-offset: 1px;
+    box-shadow: var(--shadow-inset), inset 0 0 0 1px var(--gold-200), 0 0 0 3px var(--focus-ring);
+}
+.input-pill { border-radius: var(--radius-pill); background: var(--surface-page); padding: 8px 15px; }
+
+/* Engraved field — a chamfered parchment well with a doubled gold rule; the
+   lapidary register of .input / .textarea (see "Lapidary register" below). */
+.input-engraved, .textarea-engraved {
+    border: 0; background: var(--surface-page);
+    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);
+    clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+}
+.input-engraved:focus, .textarea-engraved:focus {
+    outline: 0; border-color: transparent;
+    box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500);
+}
+.field { display: block; margin-bottom: 14px; }
+.field > .field-label { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .82rem; color: var(--text-muted); margin-bottom: 5px; }
+
+/* ── Switch (toggle) — a set-gem knob on a beveled parchment track ───────────────────────── */
+.switchline { display: inline-flex; align-items: center; gap: 11px; cursor: pointer; }
+.switch-text { font-family: var(--font-body); color: var(--text-body); }
+.switch {
+    appearance: none; -webkit-appearance: none; flex: 0 0 auto; position: relative;
+    width: 42px; height: 24px; border-radius: var(--radius-pill);
+    background: var(--surface-page); border: 1.5px solid var(--border-strong);
+    box-shadow: var(--shadow-inset); cursor: pointer;
+    transition: background var(--dur-base) var(--ease-calm), border-color var(--dur-base) var(--ease-calm);
+}
+.switch::before {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--parchment-50);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--gold-200);
+    transition: transform var(--dur-base) var(--ease-calm), background var(--dur-base) var(--ease-calm), box-shadow var(--dur-base) var(--ease-calm);
+}
+.switch:checked { background: var(--accent); border-color: var(--brand-press); }
+.switch:checked::before { transform: translateX(18px); background: var(--gold-200); box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--gold-500); }
+.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Choice card (theme / density radio) ─────────────────────────────────── */
+.choice-card {
+    position: relative; display: block; border: 0;
+    background: var(--surface-raised); padding: 13px 15px; cursor: pointer;
+    box-shadow: inset 0 0 0 1.5px var(--border-soft);
+    clip-path: polygon(11px 0, calc(100% - 11px) 0, 100% 11px, 100% calc(100% - 11px), calc(100% - 11px) 100%, 11px 100%, 0 calc(100% - 11px), 0 11px);
+    transition: box-shadow var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+}
+.choice-card:hover { box-shadow: inset 0 0 0 1.5px var(--border-strong); }
+.choice-card input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.choice-card::after {
+    content: ""; position: absolute; top: 11px; right: 12px; width: 7px; height: 7px;
+    background: var(--gold-400); transform: rotate(45deg); opacity: .3;
+    transition: opacity var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+}
+.choice-card:has(input:checked) { background: var(--brand-subtle); box-shadow: inset 0 0 0 2px var(--accent); }
+.choice-card:has(input:checked)::after { opacity: 1; background: var(--gold-500); }
+.choice-card:focus-within { box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 3px var(--focus-ring); }
+.choice-card-title { display: block; font-family: var(--font-label); letter-spacing: .04em; font-size: .82rem; color: var(--text-strong); }
+.choice-card-desc { display: block; font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+.theme-swatch { display: flex; height: 30px; border-radius: var(--radius-sm); overflow: hidden; box-shadow: inset 0 0 0 1px var(--border-hair); margin-bottom: 9px; }
+.theme-swatch span { flex: 1; }
+.theme-swatch .sw-accent { flex: 0 0 8px; }
+.swatch-parchment .sw-bg { background: var(--parchment-200); } .swatch-parchment .sw-card { background: var(--parchment-50); } .swatch-parchment .sw-accent { background: var(--gold-500); }
+.swatch-twilight .sw-bg { background: var(--twilight-900); } .swatch-twilight .sw-card { background: var(--twilight-700); } .swatch-twilight .sw-accent { background: var(--gold-400); }
+.swatch-system .sw-bg { background: var(--parchment-200); } .swatch-system .sw-card { background: var(--twilight-800); } .swatch-system .sw-accent { background: var(--gold-400); }
+
+/* ══ Lapidary register — the council's engraved console ══════════════════
+   An ornamented form treatment drawn from the stone-and-gold control panels of
+   the inspiration boards: chamfered parchment frames with a doubled gold rule,
+   diamond bullets, and set-gem checks. For ceremonial surfaces (settings
+   covers, seals); the plain controls above remain the everyday default. */
+
+/* Engraved panel — a chamfered parchment frame with a doubled gold rule. */
+.scribe-panel {
+    position: relative;
+    background: var(--surface-raised); padding: 22px 24px;
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+    box-shadow: inset 0 0 0 1.5px var(--gold-400), inset 0 0 0 4.5px var(--surface-raised), inset 0 0 0 5.5px var(--gold-200);
+}
+.scribe-panel-head {
+    display: flex; align-items: center; gap: 11px; margin: 0 0 15px;
+    font-family: var(--font-label); text-transform: uppercase; letter-spacing: .14em;
+    font-size: .72rem; color: var(--gold-ink);
+}
+.scribe-panel-head::after { content: ""; height: 1px; background: var(--gold-200); flex: 1; }
+
+/* Engraved field row — a chamfered inset well with a diamond bullet. */
+.field-row {
+    display: flex; align-items: center; gap: 11px;
+    padding: 10px 14px; background: var(--surface-page);
+    box-shadow: var(--shadow-inset), inset 0 0 0 1px var(--gold-200);
+    clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+    transition: box-shadow var(--dur-fast) var(--ease-calm);
+}
+.field-row + .field-row { margin-top: 9px; }
+.field-row:focus-within { box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500); }
+.field-row .row-bullet { flex: 0 0 auto; width: 8px; height: 8px; background: var(--gold-500); transform: rotate(45deg); }
+.field-row .row-input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-family: var(--font-body); color: var(--text); outline: none; }
+.field-row .row-input::placeholder { color: var(--text-faint); }
+.field-row .row-mark { flex: 0 0 auto; color: var(--gold-ink); display: inline-flex; }
+
+/* Set-gem checks & radios — incised square (four-point star) / circle (gem). */
+.gem-field { display: inline-flex; align-items: center; gap: 11px; cursor: pointer; font-family: var(--font-body); color: var(--text-body); }
+.gem-check, .gem-radio {
+    appearance: none; -webkit-appearance: none; flex: 0 0 auto; position: relative;
+    width: 24px; height: 24px; cursor: pointer;
+    background: var(--surface-page); border: 1.5px solid var(--border-strong);
+    box-shadow: var(--shadow-inset); display: inline-grid; place-content: center;
+    transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm);
+}
+.gem-check { border-radius: var(--radius-sm); }
+.gem-radio { border-radius: 50%; }
+.gem-check::before {
+    content: ""; width: 11px; height: 11px; background: var(--gold-600);
+    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+    transform: scale(0); transition: transform var(--dur-base) var(--ease-calm);
+}
+.gem-radio::before {
+    content: ""; width: 10px; height: 10px; background: var(--gold-600);
+    transform: rotate(45deg) scale(0); transition: transform var(--dur-base) var(--ease-calm);
+}
+.gem-check:checked, .gem-radio:checked { border-color: var(--gold-500); background: var(--gold-100); }
+.gem-check:checked::before { transform: scale(1); }
+.gem-radio:checked::before { transform: rotate(45deg) scale(1); }
+.gem-check:focus-visible, .gem-radio:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Jewel tones (the vials) — recolour the gem, its rim and its checked wash. */
+.gem-leaf::before  { background: var(--leaf); }
+.gem-leaf:checked  { border-color: var(--green-500); background: var(--green-050); }
+.gem-river::before { background: var(--river-500); }
+.gem-river:checked { border-color: var(--river-400); background: var(--river-100); }
+.gem-rust::before  { background: var(--rust); }
+.gem-rust:checked  { border-color: #C06A52; background: #F3E2DC; }
+.gem-gold::before  { background: var(--gold-600); }
+.gem-gold:checked  { border-color: var(--gold-500); background: var(--gold-100); }
+
+/* ── Segmented control (Hall / Watch) ────────────────────────────────────── */
+.segmented { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-sunken); border-radius: var(--radius-pill); border: 1px solid var(--border-hair); }
+.segmented-item {
+    appearance: none; border: 0; cursor: pointer;
+    font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
+    color: var(--text-muted); background: transparent;
+    border-radius: var(--radius-pill); padding: 5px 15px;
+}
+.segmented-item.is-active { background: var(--brand); color: var(--parchment-50); }
+
+/* ── Inbox filter tabs (Marcellus pills) ─────────────────────────────────── */
+.inbox-tabs { display: inline-flex; gap: 6px; }
+.inbox-tab {
+    flex: none; white-space: nowrap; border-radius: var(--radius-pill);
+    padding: 6px 13px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;
+    color: var(--text-muted); border: 1px solid transparent; cursor: pointer; background: transparent;
+}
+.inbox-tab:hover { background: var(--surface-sunken); text-decoration: none; }
+.inbox-tab.is-active { background: var(--brand); color: var(--parchment-50); font-weight: var(--weight-medium); border-color: var(--brand); }
+/* Underline-style tabs (sort / profile) */
+.text-tabs { display: inline-flex; gap: 4px; }
+.text-tab { font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted); padding: 8px 14px; cursor: pointer; background: none; border: 0; }
+.text-tab:hover { color: var(--text-strong); }
+.text-tab.is-active { color: var(--text-strong); font-weight: var(--weight-semibold); box-shadow: inset 0 -2px 0 var(--accent-2); }
+
+/* ── Identity decorations — tier pill, regard stat, author byline ─────────────
+   The person is a first-class object in the council: every byline pairs a
+   gilt-ringed avatar with a name, a tier, and a regard (commends earned). */
+.tier {
+    display: inline-flex; align-items: center; flex: 0 0 auto;
+    font-family: var(--font-label); font-size: .58rem; letter-spacing: .11em;
+    text-transform: uppercase; line-height: 1; padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken); color: var(--text-muted); border: 1px solid var(--border-hair);
+}
+.tier-legend     { color: var(--gold-700);  background: var(--gold-100);    border-color: var(--gold-200); }
+.tier-loremaster { color: var(--green-800); background: var(--brand-subtle); border-color: var(--green-200); }
+.tier-veteran    { color: var(--river-700); background: var(--river-100);   border-color: var(--river-200); }
+.tier-member     { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
+
+/* Inline regard — "✦ 5.1k" in gold mono. */
+.regard { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--gold-ink); font-size: .76rem; line-height: 1; }
+.regard svg { color: var(--star); flex: 0 0 auto; }
+
+/* Stacked regard stat — the avatar's plinth in a post / leaderboard. */
+.regard-block { display: flex; flex-direction: column; align-items: center; gap: 1px; margin-top: 8px; text-align: center; }
+.regard-block .regard-n { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.1rem; color: var(--text-strong); font-variant-numeric: tabular-nums; line-height: 1; display: inline-flex; align-items: center; gap: 4px; }
+.regard-block .regard-n .star-marker { color: var(--star); font-size: .85rem; }
+.regard-block .regard-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: .53rem; color: var(--text-faint); }
+
+/* ── Thread row (inbox) — parchment card with a status left-rule ──────────── */
+.thread-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.thread-row {
+    position: relative; display: flex; gap: 13px; align-items: flex-start;
+    padding: 14px 16px; border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg); background: var(--surface-raised);
+    box-shadow: var(--shadow-xs); overflow: hidden;
+    transition: box-shadow var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
+}
+.thread-row::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; }
+.thread-row:hover { box-shadow: var(--shadow-md); border-color: var(--green-200); transform: translateY(-1px); }
+.thread-pinned::before              { background: var(--gold-400); }
+.thread-status-solved::before       { background: var(--leaf); }
+.thread-status-needs_answer::before { background: var(--amber); }
+.thread-status-decision_made::before { background: var(--green-600); }
+.thread-unread { border-color: var(--green-200); }
+.thread-row.is-active { border-color: var(--green-200); box-shadow: var(--shadow-sm); background: var(--brand-subtle); }
+.thread-row.is-active::before { background: var(--leaf); }
+.thread-row > .monogram, .thread-row > .avatar-wrap > .monogram { width: 44px; height: 44px; font-size: .92rem; }
+.thread-row-main { min-width: 0; flex: 1; }
+.thread-byline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.thread-author { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.02rem; line-height: 1.05; color: var(--text-strong); text-decoration: none; }
+.thread-author:hover { color: var(--brand); text-decoration: none; }
+.thread-byline-sep { color: var(--border-strong); }
+.thread-meta-author { display: none; }
+.thread-row-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.thread-row-chips:empty { display: none; }
+.thread-title {
+    display: block; font-family: var(--font-display); font-weight: var(--weight-medium);
+    font-size: 1.2rem; line-height: 1.2; color: var(--text-strong); letter-spacing: -0.01em; text-decoration: none;
+}
+.thread-title:hover { text-decoration: none; color: var(--brand); }
+.thread-unread .thread-title { font-weight: var(--weight-semibold); }
+.thread-snippet { color: var(--text-muted); margin: 5px 0 0; font-size: .98rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.thread-meta { font-family: var(--font-label); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint); margin-top: 7px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.thread-board, .thread-board .hash { color: var(--gold-ink); text-decoration: none; }
+.thread-meta .reaction-n { font-size: .75rem; }
+.unread-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-2); flex: 0 0 auto; align-self: center;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-2) 22%, transparent);
+}
+.thread-star { margin-left: auto; align-self: flex-start; flex: 0 0 auto; padding-left: 8px; font-size: 1rem; line-height: 1; color: var(--accent-2); }
+
+/* Compact ("Watch") density — one scannable line, status on the left rule. */
+.thread-list.is-compact { gap: 0; }
+.thread-list.is-compact .thread-row {
+    flex-direction: row; align-items: center; gap: 10px;
+    border: 0; border-bottom: 1px solid var(--border-hair); border-radius: 0;
+    box-shadow: none; background: transparent; padding: 9px 16px;
+}
+.thread-list.is-compact .thread-row:hover { box-shadow: none; transform: none; background: var(--surface-raised); }
+.thread-list.is-compact .thread-row-main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.thread-list.is-compact .thread-title { order: 1; flex: 1; min-width: 0; font-size: 1rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thread-list.is-compact .thread-row-chips { order: 2; flex: 0 0 auto; margin-bottom: 0; }
+.thread-list.is-compact .thread-meta { order: 3; flex: 0 0 auto; margin-top: 0; white-space: nowrap; }
+.thread-list.is-compact .thread-snippet { display: none; }
+/* Author shows as a prominent byline in comfortable density, and folds into the
+   meta line in compact — so the person is present at both densities. */
+.thread-list.is-compact .thread-byline { display: none; }
+.thread-list.is-compact .thread-meta-author { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); }
+.thread-list.is-compact .thread-row > .monogram, .thread-list.is-compact .thread-row > .avatar-wrap > .monogram { width: 26px; height: 26px; font-size: .68rem; }
+
+/* ── Post (message card) ──────────────────────────────────────────────────── */
+.post {
+    display: flex; gap: 16px; background: var(--surface-raised);
+    border: 1px solid var(--border-hair); border-radius: var(--radius-lg);
+    padding: 18px 20px; box-shadow: var(--shadow-xs);
+}
+.post-main { min-width: 0; flex: 1; }
+.post-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+.post-author { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.2rem; color: var(--text-strong); text-decoration: none; letter-spacing: -0.005em; }
+.post-author:hover { color: var(--brand); text-decoration: none; }
+.post-sign { margin: 0 0 9px; font-size: .8rem; color: var(--text-muted); line-height: 1.3; }
+.post-sign .sign-handle { font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
+.post-sign .sign-title { font-family: var(--font-body); font-style: italic; color: var(--text-muted); }
+.post-time { font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); margin-left: auto; }
+.post-rep { font-family: var(--font-mono); font-size: .72rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
+.post-rep .star-marker { font-size: .8rem; }
+.post-body { font-size: 1.0625rem; line-height: 1.62; color: var(--text-body); }
+.post-body > :first-child { margin-top: 0; }
+.post-body > :last-child { margin-bottom: 0; }
+.post-body blockquote { margin: 8px 0; padding: 4px 14px; border-left: 2px solid var(--rule-gold); color: var(--text-strong); font-style: italic; }
+.post-body code { background: var(--surface-sunken); padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); font-size: .9em; }
+.post-op .monogram, .post-accepted .monogram { box-shadow: var(--gilt); }
+.post-avatar { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 0 0 auto; width: 56px; }
+.post-avatar > .monogram, .post-avatar > .avatar-wrap > .monogram { width: 56px; height: 56px; font-size: 1.25rem; }
+.post-avatar .avatar-wrap .presence-dot { width: 12px; height: 12px; right: 1px; bottom: 1px; box-shadow: 0 0 0 2.5px var(--surface-raised); }
+.post-accepted {
+    border: 1px solid var(--green-200); border-left: 3px solid var(--success);
+    background: var(--surface-done); box-shadow: var(--shadow-sm);
+}
+.accepted-flag {
+    display: inline-flex; align-items: center; gap: 6px; margin: 0 0 8px;
+    font-family: var(--font-label); text-transform: uppercase; letter-spacing: .09em;
+    font-size: .64rem; color: var(--on-done);
+}
+.accepted-flag svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.post-grouped { box-shadow: none; border-color: transparent; background: transparent; }
+.post-avatar-spacer { flex: 0 0 56px; width: 56px; }
+.reactions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; align-items: center; }
+
+/* ── Composer card ────────────────────────────────────────────────────────── */
+.composer {
+    background: var(--surface-raised); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-inset); padding: 14px 16px;
+}
+.composer-id { display: flex; align-items: center; gap: 8px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 10px; }
+.composer-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; margin-bottom: 8px; }
+.composer-toolbar button {
+    font-family: var(--font-label); font-size: .72rem; letter-spacing: .02em;
+    background: var(--surface-raised); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-sm); padding: 4px 9px; cursor: pointer; color: var(--text-muted);
+}
+.composer-toolbar button:hover, .composer-toolbar button[aria-pressed="true"] { background: var(--surface-sunken); color: var(--text-strong); }
+.composer-toolbar button[aria-pressed="true"] { border-color: var(--accent-2); color: var(--gold-700); }
+.composer-toolbar-sep { width: 1px; align-self: stretch; margin: 1px 3px; background: var(--border-hair); }
+.composer-actions { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 10px; }
+.composer-count { font-family: var(--font-mono); color: var(--text-muted); font-size: .8em; margin-left: auto; }
+
+/* ── Guest join-bar — the open hall ───────────────────────────────────────── */
+.joinbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    background: var(--brand-subtle); border: 1px solid var(--green-200);
+    border-radius: var(--radius-lg); padding: 14px 16px; color: var(--text-body);
+}
+.joinbar > span { min-width: 0; }
+.joinbar em { font-style: italic; color: var(--text-strong); }
+.joinbar .btn { flex: 0 0 auto; }
+.joinbar-archived { background: var(--surface-sunken); border-color: var(--border-hair); }
+
+/* ── Participant avatar stack ─────────────────────────────────────────────── */
+.participant-stack { display: inline-flex; align-items: center; }
+.participant-stack .avatar-wrap, .participant-stack .monogram { margin-left: -8px; box-shadow: 0 0 0 2px var(--surface-page); border-radius: 50%; }
+.participant-stack > :first-child { margin-left: 0; }
+.participant-more { margin-left: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-muted); }
+
+/* ── Shared bits ──────────────────────────────────────────────────────────── */
+.hash { color: var(--gold-ink); font-weight: var(--weight-medium); }
+.muted { color: var(--text-muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }

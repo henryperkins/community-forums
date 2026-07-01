@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\ProtectedOwnerRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -37,6 +38,8 @@ final class AppSetupTest extends TestCase
 
         // Setup is now locked.
         $this->assertRedirect($this->get('/setup'), '/');
+        $adminId = (int) $this->db->fetchValue('SELECT id FROM users WHERE username = ?', ['founder']);
+        self::assertTrue((new ProtectedOwnerRepository($this->db))->isActiveOwner($adminId));
 
         // Community name and starter boards are live.
         $home = $this->get('/');

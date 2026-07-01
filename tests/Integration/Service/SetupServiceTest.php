@@ -6,6 +6,7 @@ namespace Tests\Integration\Service;
 
 use App\Core\ForbiddenException;
 use App\Core\ValidationException;
+use App\Repository\ProtectedOwnerRepository;
 use App\Repository\SettingRepository;
 use App\Security\Session;
 use App\Service\SetupService;
@@ -24,6 +25,7 @@ final class SetupServiceTest extends TestCase
             new \App\Repository\BoardRepository($this->db),
             new \App\Repository\ModerationLogRepository($this->db),
             new Session(new \App\Repository\SessionRepository($this->db), $this->users(), $this->config->get('session')),
+            new ProtectedOwnerRepository($this->db),
         );
     }
 
@@ -45,6 +47,7 @@ final class SetupServiceTest extends TestCase
         self::assertSame('admin', $admin->role());
         // The operator account is auto-verified (owns the install, no email round-trip).
         self::assertNotNull($this->db->fetchValue('SELECT email_verified_at FROM users WHERE id = ?', [$admin->id()]));
+        self::assertTrue((new ProtectedOwnerRepository($this->db))->isActiveOwner($admin->id()));
         self::assertTrue($this->service()->isInitialized());
         self::assertSame('My Community', (new SettingRepository($this->db))->getString('site_name'));
 

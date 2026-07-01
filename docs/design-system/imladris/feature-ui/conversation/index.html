@@ -1,0 +1,379 @@
+<!-- @dsCard group="Feature activation" viewport="980x820" name="In the conversation" subtitle="content_references · link_previews · community_memory — the reading-pane surfaces" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In the conversation — feature design · RetroBoards</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../shared/chrome.css">
+<style>
+  /* reading pane inside a frame */
+  .reading { background: var(--surface-raised); padding: 22px 26px 26px; }
+  .reading-wrap { max-width: 680px; margin: 0 auto; }
+  .read-crumb { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); margin: 0 0 6px; }
+  .read-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 24px; line-height: 1.15; color: var(--text-strong); margin: 0 0 18px; }
+  .post-stream { display: flex; flex-direction: column; gap: 14px; }
+  .post-body p { margin: 0 0 12px; }
+
+  /* ── community_memory — the catch-up panel ─────────────────── */
+  .mem { border: 1px solid var(--border-hair); border-left: 3px solid var(--rule-gold); border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--shadow-xs); padding: 15px 17px; }
+  .mem-head { display: flex; align-items: center; gap: 11px; }
+  .mem-ic { flex: none; width: 32px; height: 32px; border-radius: var(--radius-md); background: var(--gold-soft); color: var(--gold-ink); display: grid; place-items: center; }
+  .mem-headtext { min-width: 0; flex: 1; }
+  .mem-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 18px; line-height: 1.1; color: var(--text-strong); }
+  .mem-since { font-family: var(--font-mono), monospace; font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+  .mem-toggle { flex: none; }
+  .mem-body { overflow: hidden; transition: max-height var(--dur-slow) var(--ease-calm), opacity var(--dur-base) var(--ease-calm); }
+  .mem-body.open { max-height: 320px; opacity: 1; margin-top: 13px; }
+  .mem-body.shut { max-height: 0; opacity: 0; }
+  .mem-summary { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .mem-summary li { position: relative; padding-left: 20px; font-family: var(--font-body), serif; font-size: 15.5px; line-height: 1.5; color: var(--text-body); }
+  .mem-summary li::before { content: ""; position: absolute; left: 4px; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); }
+  .mem-summary b { font-weight: 600; color: var(--text-strong); }
+  .mem-summary .ans { color: var(--success); font-weight: 600; font-style: normal; }
+  .mem-foot { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border-hair); }
+  .mem-related-label { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .09em; font-size: 10px; color: var(--text-muted); }
+  .mem-chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .mem-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill); background: var(--surface-sunken); font-family: var(--font-body), serif; font-size: 13px; color: var(--text-body); cursor: pointer; text-decoration: none; transition: border-color var(--dur-fast) var(--ease-calm), background var(--dur-fast) var(--ease-calm); }
+  .mem-chip:hover { border-color: var(--green-200); background: var(--brand-subtle); }
+  .mem-chip .hash { color: var(--gold-ink); }
+
+  /* unread divider */
+  .unread-div { display: flex; align-items: center; gap: 14px; margin: 4px 2px; }
+  .unread-div::before, .unread-div::after { content: ""; height: 1px; background: var(--accent-2); opacity: .55; }
+  .unread-div::before { width: 14px; flex: none; }
+  .unread-div::after { flex: 1; }
+  .unread-div span { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .1em; font-size: 10.5px; color: var(--gold-ink); white-space: nowrap; }
+  .unread-div .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); }
+
+  /* ── content_references — the reference card ───────────────── */
+  .ref-card { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--border-hair); border-left: 3px solid var(--accent-2); border-radius: var(--radius-md); background: var(--surface-sunken); padding: 12px 14px; margin: 13px 0; text-decoration: none; transition: border-color var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm); cursor: pointer; }
+  .ref-card:hover { border-color: var(--green-200); border-left-color: var(--accent-2); box-shadow: var(--shadow-xs); }
+  .ref-card-ic { flex: none; color: var(--gold-ink); margin-top: 2px; }
+  .ref-card-main { min-width: 0; flex: 1; }
+  .ref-card-kicker { font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; color: var(--gold-ink); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ref-card-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 16px; line-height: 1.2; color: var(--text-strong); margin: 3px 0 2px; }
+  .ref-card-snippet { font-family: var(--font-body), serif; font-style: italic; font-size: 14px; line-height: 1.45; color: var(--text-muted); }
+  .ref-card-by { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-faint); margin-top: 5px; }
+
+  /* ── link_previews — the preview card ──────────────────────── */
+  .lp-card { position: relative; display: flex; border: 1px solid var(--border-hair); border-radius: var(--radius-md); overflow: hidden; background: var(--surface-raised); margin: 13px 0; transition: border-color var(--dur-fast) var(--ease-calm), box-shadow var(--dur-fast) var(--ease-calm); }
+  .lp-card.linky { cursor: pointer; }
+  .lp-card.linky:hover { border-color: var(--green-200); box-shadow: var(--shadow-xs); }
+  .lp-thumb { flex: none; width: 116px; background: var(--surface-sunken); display: grid; place-items: center; color: var(--text-faint); border-right: 1px solid var(--border-hair); }
+  .lp-main { padding: 12px 15px; min-width: 0; }
+  .lp-source { display: flex; align-items: center; gap: 7px; font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lp-favicon { width: 15px; height: 15px; border-radius: 4px; background: var(--brand); color: var(--accent-contrast); display: grid; place-items: center; font-family: var(--font-display), serif; font-weight: 700; font-size: 10px; flex: none; }
+  .lp-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 16px; line-height: 1.2; color: var(--text-strong); margin: 4px 0 3px; }
+  .lp-desc { font-family: var(--font-body), serif; font-size: 13.5px; line-height: 1.45; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .lp-remove { position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--border-hair); background: color-mix(in srgb, var(--surface-raised) 88%, transparent); border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; transition: background var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm); }
+  .lp-remove:hover { background: var(--surface-sunken); color: var(--danger); }
+  .lp-card.resolving .lp-thumb, .lp-card.resolving .shim { position: relative; overflow: hidden; }
+  .shim { height: 11px; border-radius: 5px; background: var(--surface-sunken); }
+  .lp-card.resolving::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--gold-soft) 60%, transparent) 50%, transparent 70%); animation: shimmer 1.1s var(--ease-calm) infinite; }
+  @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+  /* ── faux composer (shared) ────────────────────────────────── */
+  .fc { background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-inset); padding: 14px 16px; position: relative; }
+  .fc-id { display: flex; align-items: center; gap: 8px; font-family: var(--font-label), serif; font-size: 12px; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 10px; }
+  .fc-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 10px; }
+  .fc-tool { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label), serif; font-size: 11.5px; letter-spacing: .02em; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-sm); padding: 5px 10px; cursor: pointer; color: var(--text-muted); transition: background var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm); }
+  .fc-tool:hover, .fc-tool.on { background: var(--surface-sunken); color: var(--text-strong); }
+  .fc-tool.on { border-color: var(--accent-2); color: var(--gold-700); }
+  .fc-tool-sep { width: 1px; align-self: stretch; margin: 1px 4px; background: var(--border-hair); }
+  .fc-area { min-height: 64px; font-family: var(--font-body), serif; font-size: 16px; line-height: 1.55; color: var(--text-body); padding: 4px 2px; }
+  .fc-area .ph { color: var(--text-faint); }
+  .fc-url { font-family: var(--font-mono), monospace; font-size: 14px; color: var(--info); }
+  .fc-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-hair); }
+  .fc-count { margin-left: auto; font-family: var(--font-mono), monospace; font-size: 12px; color: var(--text-muted); }
+
+  /* reference picker popover */
+  .pick { position: absolute; left: 16px; top: 76px; z-index: 20; width: 340px; max-width: calc(100% - 32px); background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+  .pick-search { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-bottom: 1px solid var(--border-hair); color: var(--text-muted); }
+  .pick-search input { flex: 1; border: 0; background: none; outline: none; font-family: var(--font-body), serif; font-size: 15px; color: var(--text-strong); }
+  .pick-list { max-height: 230px; overflow-y: auto; padding: 6px; }
+  .pick-item { display: block; width: 100%; text-align: left; padding: 9px 11px; border: 0; background: none; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--dur-fast) var(--ease-calm); }
+  .pick-item:hover { background: var(--surface-sunken); }
+  .pick-item-title { font-family: var(--font-display), serif; font-weight: 600; font-size: 14.5px; color: var(--text-strong); }
+  .pick-item-meta { font-family: var(--font-mono), monospace; font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .pick-empty { padding: 22px; text-align: center; font-family: var(--font-body), serif; font-style: italic; color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react" src="../shared/chrome.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+const DS = window.ImladrisDesignSystem_c3e027;
+const { Button, Post, Reaction } = DS;
+const { Icons, EightStar, Segmented, useTheme, Topbar, Lede, Spec, FrameBar } = window.FA;
+const I = (name, s) => Icons[name](s);
+
+/* ── reusable cards ─────────────────────────────────────────── */
+function RefCard() {
+  return (
+    <a className="ref-card" onClick={(e) => e.preventDefault()} href="#">
+      <span className="ref-card-ic">{I('quote', 18)}</span>
+      <span className="ref-card-main">
+        <span className="ref-card-kicker">{I('hash', 11)} interpretability · referenced</span>
+        <span className="ref-card-title">Reading attention as a map, not a verdict</span>
+        <span className="ref-card-snippet">“Attention tells you where the model looked, not what it concluded.”</span>
+        <span className="ref-card-by">Arwen · 17 replies</span>
+      </span>
+    </a>
+  );
+}
+function LinkPreview({ onRemove, linky }) {
+  return (
+    <div className={'lp-card' + (linky ? ' linky' : '')}>
+      <div className="lp-thumb">{I('link', 26)}</div>
+      <div className="lp-main">
+        <div className="lp-source"><span className="lp-favicon">R</span> retroboards.dev · the-charter</div>
+        <div className="lp-title">A charter for keeping counsel</div>
+        <div className="lp-desc">Status is verified, not asserted. Outcomes resolve into artifacts. Testimony never outranks the work.</div>
+      </div>
+      {onRemove ? <button className="lp-remove" onClick={onRemove} aria-label="Remove preview">{I('x', 13)}</button> : null}
+    </div>
+  );
+}
+
+/* ════════ 01 · community_memory ════════ */
+function CommunityMemory() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="frame">
+      <FrameBar route={<span><span className="seg-strong">Inbox</span> / #evaluations / Evaluations as ritual, not gate</span>} />
+      <div className="reading">
+        <div className="reading-wrap">
+          <div className="mem">
+            <div className="mem-head">
+              <span className="mem-ic">{I('history', 17)}</span>
+              <span className="mem-headtext">
+                <span className="mem-title">Catch me up</span>
+                <span className="mem-since">12 new replies since you last read · 2 days ago</span>
+              </span>
+              <span className="mem-toggle">
+                <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
+                  {open ? 'Hide' : 'Show'} summary
+                </Button>
+              </span>
+            </div>
+            <div className={'mem-body ' + (open ? 'open' : 'shut')}>
+              <ul className="mem-summary">
+                <li><b>Galadriel</b> reframed the eval suite as a rite the council keeps, not a turnstile to pass.</li>
+                <li><b>Elrond</b> seconded, drawing the line between “may this pass?” and “what did we learn?”</li>
+                <li><span className="ans">Now the answer:</span> <b>Arwen</b> proposed every run resolve into a short written verdict, linked from the topic.</li>
+              </ul>
+              <div className="mem-foot">
+                <span className="mem-related-label">Related</span>
+                <div className="mem-chips">
+                  <a className="mem-chip" href="#" onClick={(e) => e.preventDefault()}><span className="hash">#</span>reading attention as a map</a>
+                  <a className="mem-chip" href="#" onClick={(e) => e.preventDefault()}><span className="hash">#</span>prove the rollback</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="post-stream" style={{ marginTop: 16 }}>
+            <Post author="Galadriel" handle="galadriel" authorTitle="Lady of the Wood" authorTier="Loremaster" presence="online" time="2 days ago" op rep={5120}
+              reactions={<><Reaction name="Commend" count={31} active /><Reaction name="Illuminating" count={9} icon={I('star', 13)} /></>}>
+              <p>We keep treating the eval suite as a turnstile — pass and forget. I want to argue it should be a rite: something the whole council performs, reads, and remembers.</p>
+            </Post>
+
+            <div className="unread-div"><span><span className="dot" />New since you last read · 12 replies</span></div>
+
+            <Post author="Arwen" handle="arwen" authorTitle="Evenstar" authorTier="Veteran" presence="online" time="22h" accepted rep={1760}
+              reactions={<><Reaction name="Commend" count={26} active /><Reaction name="Kindled" count={7} icon={I('star', 13)} /></>}>
+              <p>Here is the shape that worked for us: every eval run resolves into an artifact — a short written verdict, linked from the topic. The rite is reading the last three before you open a new one.</p>
+            </Post>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 02 · content_references ════════ */
+const TOPICS = [
+  { id: 1, title: 'Reading attention as a map, not a verdict', board: 'interpretability', by: 'Arwen · 17 replies' },
+  { id: 2, title: 'Who changed what — prove the rollback?', board: 'audit-trails', by: 'Erestor · 41 replies' },
+  { id: 3, title: 'On exposing capability before we are asked', board: 'capability-disclosure', by: 'Elrond · 12 replies' },
+  { id: 4, title: 'The hall reopens — read this first', board: 'announcements', by: 'Elrond · 8 replies' },
+];
+function ContentReferences() {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState('');
+  const [inserted, setInserted] = useState(false);
+  const matches = TOPICS.filter((t) => (t.title + ' ' + t.board).toLowerCase().includes(q.toLowerCase()));
+  const insert = () => { setInserted(true); setOpen(false); setQ(''); };
+
+  return (
+    <div>
+      <div className="demo-controls">
+        <span className="demo-controls-label">As it reads in a post</span>
+        <span className="demo-controls-spacer" />
+        <span className="demo-hint">Below: build one in the composer</span>
+      </div>
+
+      <div className="frame" style={{ marginBottom: 18 }}>
+        <div className="reading"><div className="reading-wrap">
+          <Post author="Erestor" handle="erestor" authorTitle="Loremaster of Imladris" authorTier="Legend" presence="online" time="1 day ago" rep={3985}
+            reactions={<Reaction name="Seconded" count={14} icon={I('check', 13)} />}>
+            <p>Arwen's framing settles it for me — and it answers a worry raised earlier in the vale:</p>
+            <RefCard />
+            <p>The map-versus-verdict distinction is exactly why the written artifact matters. Let's adopt it.</p>
+          </Post>
+        </div></div>
+      </div>
+
+      <div className="fc">
+        <div className="fc-id">{I('quote', 14)} Replying to Evaluations as ritual, not gate</div>
+        <div className="fc-toolbar">
+          <button className="fc-tool">B</button>
+          <button className="fc-tool" style={{ fontStyle: 'italic' }}>i</button>
+          <span className="fc-tool-sep" />
+          <button className={'fc-tool' + (open ? ' on' : '')} onClick={() => setOpen((o) => !o)}>{I('quote', 13)} Reference a post</button>
+          <button className="fc-tool">{I('link', 13)} Link</button>
+        </div>
+        <div className="fc-area">
+          {inserted ? (
+            <div>
+              <span>Arwen's framing settles it — see the thread it answers:</span>
+              <RefCard />
+            </div>
+          ) : (
+            <span className="ph">Write your reply, or reference another topic…</span>
+          )}
+        </div>
+        {open && (
+          <div className="pick" role="dialog" aria-label="Reference a post">
+            <div className="pick-search">
+              {I('search', 16)}
+              <input autoFocus placeholder="Search topics to reference…" value={q} onChange={(e) => setQ(e.target.value)} />
+            </div>
+            <div className="pick-list">
+              {matches.length ? matches.map((t) => (
+                <button className="pick-item" key={t.id} onClick={insert}>
+                  <span className="pick-item-title">{t.title}</span>
+                  <span className="pick-item-meta">#{t.board} · {t.by}</span>
+                </button>
+              )) : <div className="pick-empty">No topics match “{q}”.</div>}
+            </div>
+          </div>
+        )}
+        <div className="fc-actions">
+          {inserted && <Button variant="ghost" size="sm" onClick={() => setInserted(false)}>Clear</Button>}
+          <span className="fc-count">{inserted ? 'reference attached' : 'draft'}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ 03 · link_previews ════════ */
+function LinkPreviews() {
+  const [state, setState] = useState('empty'); // empty | resolving | resolved
+  const paste = () => {
+    setState('resolving');
+    setTimeout(() => setState('resolved'), 1000);
+  };
+  useEffect(() => () => {}, []);
+
+  return (
+    <div>
+      <div className="demo-controls">
+        <span className="demo-controls-label">As it reads in a post</span>
+        <span className="demo-controls-spacer" />
+        <span className="demo-hint">Below: paste a link in the composer</span>
+      </div>
+
+      <div className="frame" style={{ marginBottom: 18 }}>
+        <div className="reading"><div className="reading-wrap">
+          <Post author="Elrond" handle="elrond" authorTitle="Master of the House" authorTier="Legend" presence="online" time="5 days ago" op staff rep={8740}
+            reactions={<Reaction name="Commend" count={64} />}>
+            <p>Welcome back. The charter we keep counsel by is pinned below — star the topic; we amend it as the council grows.</p>
+            <LinkPreview linky />
+          </Post>
+        </div></div>
+      </div>
+
+      <div className="fc">
+        <div className="fc-id">{I('link', 14)} New reply</div>
+        <div className="fc-area">
+          {state === 'empty' && <span className="ph">Paste a link and it resolves into a preview…</span>}
+          {state !== 'empty' && <span className="fc-url">https://retroboards.dev/the-charter</span>}
+          {state === 'resolving' && (
+            <div className="lp-card resolving" aria-hidden="true">
+              <div className="lp-thumb" />
+              <div className="lp-main" style={{ flex: 1 }}>
+                <div className="shim" style={{ width: '40%', marginBottom: 9 }} />
+                <div className="shim" style={{ width: '75%', height: 13, marginBottom: 8 }} />
+                <div className="shim" style={{ width: '90%' }} />
+              </div>
+            </div>
+          )}
+          {state === 'resolved' && <LinkPreview onRemove={() => setState('empty')} />}
+        </div>
+        <div className="fc-actions">
+          {state === 'empty'
+            ? <Button variant="outline" size="sm" onClick={paste}>{I('link', 13)}&nbsp; Paste a link</Button>
+            : <Button variant="ghost" size="sm" onClick={() => setState('empty')}>Start over</Button>}
+          <span className="fc-count">{state === 'resolving' ? 'reading link…' : state === 'resolved' ? 'preview attached' : 'draft'}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ════════ Page ════════ */
+function Page() {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div>
+      <Topbar eyebrow="Feature activation · the conversation"
+        flags={[{ name: 'community_memory' }, { name: 'content_references' }, { name: 'link_previews', blocked: true }]}
+        theme={theme} setTheme={setTheme} />
+      <div className="fa-doc">
+        <Lede eyebrow="Built · awaiting a surface" title="In the conversation"
+          ledger={[
+            { flag: 'community_memory', desc: 'catch me up + related' },
+            { flag: 'content_references', desc: 'quote another topic' },
+            { flag: 'link_previews', desc: 'links as cards' },
+          ]}>
+          These three live in the reading pane — the place a member spends almost all their time. Each turns something the backend already produces (a since-last-read diff, a cross-reference, a fetched link) into <b>a card you can actually see</b>. Designed in context below, live and clickable.
+        </Lede>
+
+        <Spec num="01" label="community_memory" title="Catch me up, then mark what's new"
+          note="Return after two days and the council remembers for you: a short summary of what changed, the topics it relates to, and a clear rule across the stream marking everything new since your last visit. Toggle the summary — it stays out of the way once you're caught up.">
+          <CommunityMemory />
+        </Spec>
+
+        <Spec num="02" label="content_references" title="Quote another topic, in place"
+          note="A reference is more than a link — it's a card that carries the other topic's title, a line of its substance, and who wrote it, rendered inline. Open “Reference a post” in the composer, search, and pick; the card attaches to your draft.">
+          <ContentReferences />
+        </Spec>
+
+        <Spec num="03" label="link_previews" title="Links resolve into cards"
+          note="Paste a URL and it unfurls: source, title, description, and room for a thumbnail — instead of a bare blue link. The composer shows the resolve in progress and lets the author drop the preview if they'd rather keep the raw link.">
+          <LinkPreviews />
+        </Spec>
+
+        <div className="fa-callout">
+          <span className="fa-callout-icon">{I('check', 18)}</span>
+          <p>All three render inside the existing post and composer — <b>no new routes</b>. link_previews carries a fetch/SSRF surface, so its flip waits on the server-side review; community_memory and content_references need only the browser/a11y capture of these cards.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

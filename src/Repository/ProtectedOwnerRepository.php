@@ -57,12 +57,40 @@ final class ProtectedOwnerRepository
         );
     }
 
+    /** @return list<int> active owner user ids, locked for the current transaction */
+    public function activeOwnerIdsForUpdate(): array
+    {
+        $rows = $this->db->fetchAll(
+            "SELECT po.user_id
+             FROM protected_owners po
+             JOIN users u ON u.id = po.user_id
+             WHERE po.is_active = 1 AND u.status = 'active'
+             ORDER BY po.user_id ASC
+             FOR UPDATE",
+        );
+        return array_map(static fn (array $r): int => (int) $r['user_id'], $rows);
+    }
+
     public function designate(int $userId, ?int $designatedBy = null): bool
     {
         return $this->db->run(
             'INSERT IGNORE INTO protected_owners (user_id, is_active, designated_by, designated_at, created_at)
              VALUES (?, 1, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
             [$userId, $designatedBy],
+        )->rowCount() > 0;
+    }
+
+    public function designateOrReactivate(int $userId, ?int $designatedBy = null): bool
+    {
+        if ($this->designate($userId, $designatedBy)) {
+            return true;
+        }
+
+        return $this->db->run(
+            'UPDATE protected_owners
+                SET is_active = 1, designated_by = ?, designated_at = UTC_TIMESTAMP()
+              WHERE user_id = ? AND is_active = 0',
+            [$designatedBy, $userId],
         )->rowCount() > 0;
     }
 }

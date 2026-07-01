@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.25 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-01
+**Status:** v1.26 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-01
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -148,15 +148,17 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > ledger; `ping` remains an admin test event.
 >
 > Tables 84–92 and the reconciled `attachments`/`users`/`reactions` deltas are
-> the **Phase 4 carryover foundation** (migration `0058`): additive, feature-flag
-> dark shapes for previews, expanded files, polls, custom emoji, personal board
-> organization, saved feeds, profile moderation, and since-last-read context.
+> the **Phase 4 carryover foundation** (migration `0058`): additive,
+> feature-flag-controlled shapes for previews, expanded files, polls, custom
+> emoji, personal board organization, saved feeds, profile moderation, and
+> since-last-read context.
 >
 > Tables 93–99 and the reconciled `users.status` / `email_deliveries.payload`
 > deltas are the **Phase 2–4 carryover completion** (migrations `0059`–`0062`):
-> additive, deploy-dark account-lifecycle, moderation-appeals, email-domain, and
-> bookmark/profile-field shapes (see §4B). `account_lifecycle` and `appeals`
-> default dark; `bookmark_folders` and `custom_profile_fields` were already dark.
+> additive account-lifecycle, moderation-appeals, email-domain, and
+> bookmark/profile-field shapes (see §4B). `account_lifecycle`, `appeals`, and
+> `custom_profile_fields` default dark; `bookmark_folders` graduated to
+> default-on on 2026-07-01.
 >
 > Migration `0063` adds email retry/backoff columns to `email_deliveries`.
 > Table 100 is deploy-dark server draft sync (`0064`, `server_drafts` flag).
@@ -207,6 +209,7 @@ CREATE TABLE users (
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_username (username),
   UNIQUE KEY uq_users_email (email),
+  KEY idx_users_role_status_id (role, status, id),
   KEY idx_users_last_seen (last_seen_at),
   KEY idx_users_signature_removed_by (signature_removed_by),
   KEY idx_users_avatar_removed_by (avatar_removed_by)
@@ -897,9 +900,9 @@ are implemented in application code.
 ## 4A. Phase 4 carryover foundation (migration 0058)
 
 Migration `0058` adds the ADR 0003 carryover shapes that were still missing from
-the consolidated schema after Phase 4 Gate A. These tables are additive and
-feature-flag dark by default; behavior must still be proved by service/controller
-tests before un-darkening.
+the consolidated schema after Phase 4 Gate A. These tables are additive and were
+introduced behind feature flags; behavior must still be proved by
+service/controller tests before broad enablement.
 
 Modified existing tables:
 
@@ -922,11 +925,12 @@ New tables:
 Carryover implementation note (2026-06-29): the `0058` shapes are no longer all
 inert. Link previews, expanded files, polls, custom emoji, board folders, saved
 feed filters, since-last-read context, related-topic refresh, profile media, and
-the existing `0048` content-reference and badge-rule shapes have deploy-dark
+the existing `0048` content-reference and badge-rule shapes have
 service/controller/worker evidence. Appeals, account lifecycle/export/delete,
 bookmark folders, custom profile fields, email retry/backoff, server drafts,
-and scoped split/merge counter maintenance now have deploy-dark implementation
-evidence too (migrations `0059`–`0064`, see §4B/§4C). Split/merge keeps the
+and scoped split/merge counter maintenance now have implementation evidence too
+(migrations `0059`–`0064`, see §4B/§4C). Polls, board folders, bookmark folders,
+and saved feed filters have since graduated to default-on; split/merge keeps the
 global repair command as rehearsal/repair tooling, not as the normal operation
 path.
 
@@ -936,9 +940,9 @@ path.
 
 Migrations `0059`–`0062` add the remaining ADR 0006/0007 and P2-04 carryover
 shapes that PR #26 implemented. All are additive; the member-facing surfaces are
-feature-flag dark (`account_lifecycle`, `appeals` default off; `bookmark_folders`,
-`custom_profile_fields` were already dark) until each has browser/a11y/runbook
-acceptance evidence. "Inert schema is not evidence" (DESIGN §13).
+feature-flag controlled (`account_lifecycle`, `appeals`, and
+`custom_profile_fields` default off; `bookmark_folders` graduated to default-on
+on 2026-07-01). "Inert schema is not evidence" (DESIGN §13).
 
 Modified existing tables:
 
@@ -1166,9 +1170,10 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.26 | 2026-07-01 | Added owner-lifecycle locking support migration `0067`: `users` now has `idx_users_role_status_id (role, status, id)` so last-owner/admin `FOR UPDATE` guards can lock active admins through a narrow ordered index. |
 | v1.25 | 2026-07-01 | Phase 5 Foundation F3/F5 seed migration `0066` (seed-only): populated the `0050` `capabilities` catalogue (54 core keys) + `role_capabilities` (cumulative system.guest/user/moderator/admin) from the code-owned `CapabilityCatalog`, and backfilled `protected_owners` from existing active admins. Deploy-dark behind `capabilities`; no shape change. |
 | v1.24 | 2026-06-30 | Reconciled the Phase 2-4 completion pull-forward migrations `0063`-`0065`: email retry/backoff columns and retry index, deploy-dark `server_drafts`, and deploy-dark Phase 5 Gate B server-extension runtime tables (`server_extension_handlers`, `server_extension_jobs`, `server_extension_runs`, `server_extension_kv`). Updated the phase map and removed server drafts from foreshadowed gaps. |
-| v1.23 | 2026-06-30 | Reconciled the **Phase 2–4 carryover completion** migrations `0059`–`0062` in new **§4B**: widened `users.status` ENUM (`deactivated`/`pending_deletion`/`deleted`), added `email_deliveries.payload JSON`, and new tables `account_deletion_requests` (`0059`), `moderation_appeals`/`moderation_appeal_events` (`0060`), `email_domain_status` (`0061`), `thread_bookmark_folders`/`thread_bookmark_folder_threads`/`user_profile_fields` (`0062`). Added table-index rows 93–99. Additive + deploy-dark (`account_lifecycle`/`appeals` default off; `bookmark_folders`/`custom_profile_fields` already dark). |
+| v1.23 | 2026-06-30 | Reconciled the **Phase 2–4 carryover completion** migrations `0059`–`0062` in new **§4B**: widened `users.status` ENUM (`deactivated`/`pending_deletion`/`deleted`), added `email_deliveries.payload JSON`, and new tables `account_deletion_requests` (`0059`), `moderation_appeals`/`moderation_appeal_events` (`0060`), `email_domain_status` (`0061`), `thread_bookmark_folders`/`thread_bookmark_folder_threads`/`user_profile_fields` (`0062`). Added table-index rows 93–99. Additive and feature-flag controlled. |
 | v1.22 | 2026-06-29 | Reconciled Phase 4 carryover behavior notes after deploy-dark implementation evidence for content references, automated context, related-topic refresh, profile media/signature hardening, and the earlier `0058` carryover slices; no schema shape change. |
 | v1.21 | 2026-06-29 | Added Phase 4 carryover migration `0058`: `link_previews`, expanded-file scanner/quarantine columns on `attachments`, polls, `custom_emoji`, personal `board_folders`/`saved_feed_filters`, since-last-read context, profile-moderation audit columns on `users`, and widened `reactions.emoji`. |
 | v1.20 | 2026-06-29 | Documented B2 SP4 as code-only schema-neutral work: `first_party_hooks` gates first-party domain producers that enqueue public-board events through the existing webhook ledger; no plugin manifests, lifecycle tables, sandbox, service principals, or third-party PHP execution are added. |

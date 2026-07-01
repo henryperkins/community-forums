@@ -118,6 +118,20 @@ final class UserRepository
         );
     }
 
+    public function activeAdminCountExcludingForUpdate(int $userId): int
+    {
+        $rows = $this->db->fetchAll(
+            "SELECT id FROM users WHERE role = 'admin' AND status = 'active' ORDER BY id ASC FOR UPDATE",
+        );
+        $count = 0;
+        foreach ($rows as $row) {
+            if ((int) $row['id'] !== $userId) {
+                $count++;
+            }
+        }
+        return $count;
+    }
+
     /** @return list<int> ids of all admins (for staff notifications) */
     public function adminIds(): array
     {

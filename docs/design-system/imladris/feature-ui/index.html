@@ -1,0 +1,134 @@
+<!-- @dsCard group="Feature activation" viewport="980x900" name="Activation index" subtitle="The fourteen done-but-no-UI flags, their designed surfaces, and honest tier status" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feature activation — designed surfaces · RetroBoards</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="shared/chrome.css">
+<style>
+  .idx-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 26px; padding: 14px 16px; border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); }
+  .idx-legend-item { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body), serif; font-size: 13.5px; color: var(--text-body); white-space: nowrap; }
+  .idx-legend-item b { font-weight: 600; color: var(--text-strong); }
+  .st-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .st-dot.ready { background: var(--success); box-shadow: 0 0 0 3px var(--surface-done); }
+  .st-dot.near { background: var(--accent-2); box-shadow: 0 0 0 3px var(--gold-soft); }
+  .st-dot.blocked { background: var(--warning); box-shadow: 0 0 0 3px var(--surface-review); }
+  .st-dot.ahead { background: var(--pending); box-shadow: 0 0 0 3px var(--surface-sunken); }
+
+  .area-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 30px; }
+  @media (max-width: 720px) { .area-grid { grid-template-columns: 1fr; } }
+
+  .area-card { display: flex; flex-direction: column; gap: 0; padding: 20px 21px 18px; border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); text-decoration: none; color: inherit; position: relative; overflow: hidden; transition: transform var(--dur-fast) var(--ease-calm), box-shadow var(--dur-base) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm); }
+  .area-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--green-200); }
+  .area-card.flip { border-color: var(--green-200); }
+  .area-card-star { position: absolute; right: -22px; top: -26px; color: var(--gold-500); opacity: .06; pointer-events: none; transition: opacity var(--dur-base) var(--ease-calm); }
+  .area-card:hover .area-card-star { opacity: .11; }
+  .area-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .area-num { font-family: var(--font-mono), monospace; font-size: 12px; color: var(--gold-ink); }
+  .area-summary { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; padding: 4px 11px; border-radius: var(--radius-pill); border: 1px solid var(--border-hair); }
+  .area-summary.flip { color: var(--on-done); background: var(--surface-done); border-color: var(--green-200); }
+  .area-summary.mixed { color: var(--text-muted); background: var(--surface-sunken); }
+  .area-title { font-family: var(--font-display), serif; font-weight: 500; font-size: 23px; line-height: 1.08; color: var(--text-strong); margin: 0 0 7px; }
+  .area-desc { font-family: var(--font-body), serif; font-size: 15px; line-height: 1.5; color: var(--text-body); margin: 0 0 15px; }
+  .area-flags { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+  .fl { display: flex; align-items: center; gap: 9px; }
+  .fl-name { font-family: var(--font-mono), monospace; font-size: 12.5px; color: var(--text-strong); }
+  .fl-tag { margin-left: auto; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .06em; font-size: 9.5px; color: var(--text-muted); white-space: nowrap; }
+  .area-open { margin-top: auto; display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label), serif; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--brand); white-space: nowrap; }
+  .area-card:hover .area-open .arrow { transform: translateX(3px); }
+  .area-open .arrow { display: inline-flex; transition: transform var(--dur-fast) var(--ease-calm); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../_ds_bundle.js"></script>
+<script type="text/babel" data-presets="react" src="shared/chrome.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const DS = window.ImladrisDesignSystem_c3e027;
+const { Icons, EightStar, useTheme, Topbar, Lede } = window.FA;
+const I = (name, s) => Icons[name](s);
+
+const TAG = { ready: 'Flip now', near: 'Capture away', blocked: 'Blocked · review', ahead: 'Build incomplete' };
+const AREAS = [
+  { num: '01', href: 'polls/', title: 'Polls', summary: 'flip', summaryLabel: 'Flip-ready',
+    desc: 'A votable poll in a topic and the builder that replaces the raw text outline.',
+    flags: [['polls', 'ready']] },
+  { num: '02', href: 'tags/', title: 'Tags', summary: 'flip', summaryLabel: 'Flipping now',
+    desc: 'How a tag reads on a topic, the composer tag input, and browsing the hall by tag.',
+    flags: [['tags', 'ready']] },
+  { num: '03', href: 'rail/', title: 'Organizing the rail',
+    desc: 'Boards in folders, filters saved as feeds, a feed read expanded, and folders for your bookmarks.',
+    flags: [['expanded_feeds', 'ready'], ['bookmark_folders', 'near'], ['board_folders', 'ahead'], ['saved_feeds', 'ahead']] },
+  { num: '04', href: 'conversation/', title: 'In the conversation',
+    desc: 'Catch-up memory, inline topic references, and links that unfurl into cards.',
+    flags: [['community_memory', 'near'], ['content_references', 'near'], ['link_previews', 'blocked']] },
+  { num: '05', href: 'moderation/', title: "The moderator's tools",
+    desc: 'A workflow bar to assign, snooze and escalate; tools to split and merge topics.',
+    flags: [['topic_workflow', 'near'], ['split_merge', 'ahead']] },
+  { num: '06', href: 'account/', title: 'Account & identity',
+    desc: 'Steward-defined profile fields, a ledger of earned commends, and drafts on your account.',
+    flags: [['custom_profile_fields', 'near'], ['reputation_ledger', 'ready'], ['server_drafts', 'blocked']] },
+];
+
+function Card({ a }) {
+  const flip = a.summary === 'flip';
+  return (
+    <a className={'area-card' + (flip ? ' flip' : '')} href={a.href}>
+      <span className="area-card-star"><EightStar size={120} /></span>
+      <div className="area-card-top">
+        <span className="area-num">{a.num}</span>
+        <span className={'area-summary ' + (flip ? 'flip' : 'mixed')}>
+          {flip ? a.summaryLabel : a.flags.length + ' flags'}
+        </span>
+      </div>
+      <h3 className="area-title">{a.title}</h3>
+      <p className="area-desc">{a.desc}</p>
+      <div className="area-flags">
+        {a.flags.map(([name, st]) => (
+          <span className="fl" key={name}>
+            <span className={'st-dot ' + st} />
+            <span className="fl-name">{name}</span>
+            <span className="fl-tag">{TAG[st]}</span>
+          </span>
+        ))}
+      </div>
+      <span className="area-open">Open the design <span className="arrow">{I('arrowRight', 14)}</span></span>
+    </a>
+  );
+}
+
+function Page() {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div>
+      <Topbar eyebrow="Feature activation" flags={[]} theme={theme} setTheme={setTheme} />
+      <div className="fa-doc">
+        <Lede eyebrow="Designed surfaces · 14 flags" title="The UI that was missing">
+          Fourteen features are built behind the scenes but dark — not for want of code, but for want of a place to touch them. These are the designed surfaces, native to Imladris and live. Each flag is marked with its honest status from the audit, so the design never outruns the truth of the build.
+        </Lede>
+
+        <div className="idx-legend">
+          <span className="idx-legend-item"><span className="st-dot ready" /><b>Flip now</b> — evidence on disk</span>
+          <span className="idx-legend-item"><span className="st-dot near" /><b>Capture away</b> — a browser/a11y pass</span>
+          <span className="idx-legend-item"><span className="st-dot blocked" /><b>Blocked</b> — a dependency / review</span>
+          <span className="idx-legend-item"><span className="st-dot ahead" /><b>Design-ahead</b> — build reported incomplete</span>
+        </div>
+
+        <div className="area-grid">
+          {AREAS.map((a) => <Card key={a.num} a={a} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+</script>
+</body>
+</html>

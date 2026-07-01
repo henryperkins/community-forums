@@ -1,0 +1,157 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Reading-surfaces UI kit — the public & member reading routes
+   Home (board index), the Following feed, search, the tag directory + a single
+   tag, notifications, full-page compose, and profile connections. Shares the
+   Imladris shell chrome with RetroBoards (topbar + sidebar are loaded from
+   ../retroboards/kit.css) and the global thread-row / chip / inbox-tab
+   primitives from components.css; this file is only the per-surface layout.
+   Faithful to templates/{home,feed,search,notifications,compose}.php,
+   tags/{index,show}.php, and profile/connections.php.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Main content column inside .app-shell's 1fr track. */
+.read-main { min-width: 0; }
+.read-pad { max-width: 880px; padding: 28px 34px 64px; }
+
+/* Section header (the product's .board-header) */
+.board-header { margin-bottom: 18px; }
+.board-header h1 { font-size: 1.95rem; margin: 0 0 4px; line-height: 1.1; }
+.board-header > .muted { margin: 0; max-width: 70ch; line-height: 1.5; }
+.board-header .breadcrumb { font-family: var(--font-mono); font-size: .8rem; color: var(--text-faint); margin: 0 0 8px; }
+.board-header .breadcrumb a { color: var(--text-muted); text-decoration: none; }
+.board-header .breadcrumb a:hover { color: var(--brand); }
+.board-header .header-follow { display: inline-flex; align-items: center; gap: 12px; margin-top: 12px; }
+.board-header .header-follow .linkbtn { white-space: nowrap; }
+.board-header .header-follow .muted { font-family: var(--font-mono); font-size: .74rem; white-space: nowrap; }
+.page-title { font-size: 2.1rem; margin: 0 0 22px; }
+.empty { padding: 28px 0; }
+
+/* ── Home — board index ─────────────────────────────────────────────────── */
+.cat-block { margin-bottom: 30px; }
+.cat-title { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .74rem; color: var(--gold-ink); margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-hair); }
+.board-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.board-row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 16px; border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); transition: box-shadow var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm); }
+.board-row:hover { box-shadow: var(--shadow-md); border-color: var(--green-200); transform: translateY(-1px); }
+.board-link { display: flex; flex-direction: column; gap: 3px; text-decoration: none; min-width: 0; flex: 1; }
+.board-name { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.18rem; color: var(--text-strong); }
+.board-name .hash { color: var(--gold-ink); font-weight: var(--weight-regular); }
+.board-link:hover .board-name { color: var(--brand); }
+.board-desc { font-family: var(--font-body); font-size: .95rem; color: var(--text-muted); line-height: 1.45; }
+.board-stats { font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint); white-space: nowrap; flex: 0 0 auto; }
+
+/* ── Feed ───────────────────────────────────────────────────────────────── */
+.feed-tabs { margin: 0 0 18px; }
+.feed-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.feed-item { padding: 15px 17px; border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); }
+.feed-meta { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.feed-meta .post-author { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.02rem; color: var(--text-strong); text-decoration: none; }
+.feed-meta .post-author:hover { color: var(--brand); }
+.feed-meta .muted { font-family: var(--font-body); font-style: italic; font-size: .9rem; }
+.feed-meta .post-time { margin-left: auto; font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
+.feed-thread { display: block; font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.22rem; color: var(--text-strong); text-decoration: none; line-height: 1.25; }
+.feed-thread:hover { color: var(--brand); }
+.feed-item > .muted { display: block; margin-top: 3px; font-family: var(--font-mono); font-size: .76rem; }
+.feed-item > .muted .hash { color: var(--gold-ink); }
+.feed-meta .post-author, .feed-meta > .muted { white-space: nowrap; }
+.feed-excerpt { margin: 8px 0 0; font-family: var(--font-body); font-size: 1rem; line-height: 1.6; color: var(--text-body); }
+
+/* ── Search ─────────────────────────────────────────────────────────────── */
+.search-form { display: flex; gap: 10px; margin-top: 14px; max-width: 560px; }
+.search-form .input { flex: 1; }
+.search-results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.search-result { padding-bottom: 14px; border-bottom: 1px solid var(--border-hair); }
+.search-title { display: inline-flex; align-items: baseline; gap: 9px; font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.2rem; color: var(--brand); text-decoration: none; line-height: 1.3; }
+.search-title:hover { text-decoration: underline; }
+.search-board { display: block; margin: 4px 0 6px; font-family: var(--font-mono); font-size: .76rem; }
+.search-board a { color: var(--gold-ink); text-decoration: none; }
+.search-board .hash { color: var(--gold-ink); }
+.search-snippet { margin: 0; font-family: var(--font-body); font-size: 1rem; line-height: 1.6; color: var(--text-muted); }
+.search-snippet mark { background: var(--gold-100); color: var(--text-strong); border-radius: 2px; padding: 0 2px; }
+
+/* ── Tags ───────────────────────────────────────────────────────────────── */
+.tag-cloud { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.tag-cloud li { min-width: 0; }
+.tag-card { display: flex; flex-direction: column; gap: 4px; text-decoration: none; padding: 12px 15px; border: 1px solid var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-xs); width: 240px; transition: box-shadow var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm); }
+.tag-card:hover { box-shadow: var(--shadow-md); border-color: var(--green-200); transform: translateY(-1px); }
+.tag-card .tag-name { display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.1rem; color: var(--text-strong); }
+.tag-card .tag-name::before { content: '#'; color: var(--gold-ink); }
+.tag-card .tag-count { font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
+.tag-card .tag-desc { font-family: var(--font-body); font-size: .9rem; color: var(--text-muted); line-height: 1.45; }
+
+/* ── Notifications ──────────────────────────────────────────────────────── */
+.notifications-view .board-header h1 { display: inline-flex; align-items: center; gap: 12px; }
+.notif-actions { display: flex; gap: 18px; margin-top: 12px; }
+.notif-actions .linkbtn { white-space: nowrap; }
+.notif-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.notif-row { border-bottom: 1px solid var(--border-hair); }
+.notif-link { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; background: none; border: 0; cursor: pointer; padding: 13px 12px; border-radius: var(--radius-md); font: inherit; }
+.notif-link:hover { background: var(--surface-sunken); }
+.notif-icon { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-sunken); color: var(--text-muted); border: 1px solid var(--border-hair); }
+.notif-icon svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.notif-unread .notif-icon { background: var(--brand-subtle); color: var(--brand); border-color: var(--green-200); }
+.notif-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.notif-text { font-family: var(--font-body); font-size: 1rem; color: var(--text-body); }
+.notif-unread .notif-text { font-weight: var(--weight-semibold); color: var(--text-strong); }
+.notif-thread { font-family: var(--font-body); font-style: italic; font-size: .92rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-time { flex: 0 0 auto; font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
+.notif-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); }
+.notif-dot.is-read { background: transparent; }
+
+/* ── Connections (followers / following) ────────────────────────────────── */
+.conn-tabs { margin: 0 0 16px; }
+.people-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.person-row { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: var(--radius-md); }
+.person-row:hover { background: var(--surface-sunken); }
+.person-row .monogram { width: 40px; height: 40px; font-size: .86rem; flex: 0 0 auto; }
+.person-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.08rem; color: var(--text-strong); text-decoration: none; }
+.person-name:hover { color: var(--brand); }
+.person-row .handle { font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); }
+.person-rep { margin-left: auto; font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint); white-space: nowrap; }
+.person-row .btn, .person-row .linkbtn { flex: 0 0 auto; }
+
+/* ── Compose (full-page new topic) ──────────────────────────────────────── */
+.compose-page { max-width: 720px; }
+.compose-page h1 { font-size: 1.9rem; margin: 0 0 6px; }
+.compose-page .composer.stacked { display: flex; flex-direction: column; gap: 15px; align-items: stretch; }
+.compose-page .field { width: 100%; max-width: none; }
+.compose-page .field > span:first-child { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .8rem; color: var(--text-muted); margin-bottom: 6px; }
+.compose-page .composer-input, .compose-page textarea.input { width: 100%; resize: vertical; }
+.compose-page .checkline { display: flex; align-items: flex-start; gap: 9px; font-family: var(--font-body); font-size: .92rem; color: var(--text-body); line-height: 1.5; }
+.compose-page .checkline input { margin-top: 4px; flex: 0 0 auto; }
+.compose-page .md-hint { font-family: var(--font-body); font-size: .9rem; color: var(--text-faint); line-height: 1.5; margin: 0; }
+.compose-page .md-hint code { font-family: var(--font-mono); font-size: .85em; background: var(--surface-sunken); padding: 1px 5px; border-radius: 4px; }
+
+/* ── Pager ──────────────────────────────────────────────────────────────── */
+.pager { display: flex; gap: 10px; margin-top: 22px; }
+
+/* The tag-show / feed reuse the global .thread-list + .thread-row primitives. */
+.read-pad .thread-list { margin-top: 4px; }
+.thread-star { margin-left: auto; color: var(--gold-500); font-size: 1.1rem; align-self: center; }
+
+@media (max-width: 900px) {
+    .read-pad { padding: 22px 18px 48px; }
+    .tag-card { width: 100%; }
+}
+
+/* ── Kit chrome extras (a few classes the shared retroboards kit.css omits) ─ */
+/* Keep sidebar labels, board names, and status chips on one line. */
+.sidebar .sidebar-home > span, .sidebar .rail-filter > span { white-space: nowrap; }
+.sidebar .nav-boards button { white-space: nowrap; }
+.read-pad .chip { white-space: nowrap; }
+.nav-toggle { display: none; background: none; border: 0; cursor: pointer; color: var(--text-muted); padding: 0; }
+.nav-toggle-ic { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.input-pill { border-radius: var(--radius-pill); }
+.topbar-cta { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label); letter-spacing: .03em; font-size: .82rem; color: var(--on-brand); background: var(--brand); border: 0; border-radius: var(--radius-pill); padding: 7px 14px; cursor: pointer; }
+.topbar-cta:hover { background: var(--brand-strong, var(--green-700)); }
+.topbar-cta svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.topbar-link { display: inline-flex; align-items: center; font-family: var(--font-label); letter-spacing: .03em; font-size: .85rem; color: var(--text-muted); background: none; border: 0; cursor: pointer; text-decoration: none; }
+.topbar-link:hover, .topbar-link[aria-current="page"] { color: var(--brand); }
+.bell { position: relative; }
+.bell-count { position: absolute; top: -5px; right: -7px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: var(--radius-pill); background: var(--accent-2); color: #fff; font-family: var(--font-mono); font-size: .62rem; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px var(--surface-raised); }
+.rail-filters-nav { width: 100%; }
+.sidebar .rail-filter { text-decoration: none; }
+
+@media (max-width: 900px) {
+    .nav-toggle { display: inline-flex; }
+    .topbar-cta span, .topbar-name { display: none; }
+}
