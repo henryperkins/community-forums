@@ -6,11 +6,12 @@
     "require": {
         "php": ">=8.2",
         "ext-curl": "*",
-        "ext-pdo": "*",
-        "ext-mbstring": "*",
         "ext-dom": "*",
-        "ext-json": "*",
         "ext-gd": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-sodium": "*",
         "league/commonmark": "^2.4"
     },
     "require-dev": {
