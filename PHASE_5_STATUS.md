@@ -3,7 +3,7 @@
 **Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation authorization spine F3 (capability catalogue + coverage) and F5 (protected-owner seed + `LastOwnerGuard`) landed deploy-dark behind `capabilities`.** Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The remaining §2 entry-gate artifacts (A1/A4/A5/A8) are recorded with owner sign-offs and **accepted 2026-07-01** in ADR 0012; the Foundation increment (F1–F11) is underway — **F3 + F5 landed 2026-07-01**.
 **Last updated:** 2026-07-01
 **Branch:** `main`
-**Suite:** `./vendor/bin/phpunit` → **853 tests / 4447 assertions, green** (post-F3/F5; +24 tests over the prior 829 baseline; verified on two consecutive plain runs — both the fresh-migrate and the reused-schema `composer test` path). Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile (F3/F5 add no UI surface — PHPUnit + `verify:upgrade` only). Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`), and the Foundation F3/F5 suite (`CapabilityCatalogTest`, `CapabilityInventoryCoverageTest`, `AppPhase5CapabilitySeedTest`, `ProtectedOwnerRepositoryTest`, `RepairProtectedOwnersTest`, `AppProtectedOwnerTest`).
+**Suite:** `./vendor/bin/phpunit` → **857 tests / 4456 assertions, green** (post-F3/F5; +28 tests over the prior 829 baseline, incl. the owner-status adversarial-review regression; verified on two consecutive plain runs — both the fresh-migrate and the reused-schema `composer test` path). Browser evidence `npm run evidence` → **14/14 Playwright checks, green** across desktop + mobile (F3/F5 add no UI surface — PHPUnit + `verify:upgrade` only). Focused Phase 5 prerequisite checks are included: `TotpTest`, `AppMfaTest`, `AppUserSettingsTest`, `AuthControllerTest`, `AppFeatureFlagTest`, `AppPhase5FoundationSchemaTest`, `AppServiceSecretsSchemaTest`, `SecretVaultTest`, the B2 API-token suite (`AppApiTokensSchemaTest`, `ApiScopesTest`, `ApiTokenServiceTest`, `ApiReadEndpointsTest`, `AdminApiTokenTest`), the B2 webhook-delivery suite (`AppWebhooksSchemaTest`, `WebhookEventsTest`, `EgressGuardTest`, `WebhookSignerTest`, `WebhookTransportTest`, `WebhookRepositoryTest`, `WebhookDeliveryRepositoryTest`, `WebhookServiceTest`, `WebhookDeliveryWorkerTest`, `AdminWebhookTest`), the B2 hook/producer suite (`FirstPartyHookRegistryTest`, `DomainWebhookProducerTest`), and the Foundation F3/F5 suite (`CapabilityCatalogTest`, `CapabilityInventoryCoverageTest`, `AppPhase5CapabilitySeedTest`, `ProtectedOwnerRepositoryTest`, `RepairProtectedOwnersTest`, `AppProtectedOwnerTest`).
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -176,6 +176,14 @@ still proves every Phase 5 flag dark.
   cannot show): `0066` applied on a seeded Phase-1 DB → catalogue = 54, role maps
   1/15/28/49, 0 protected keys role-mapped, and the pre-existing `legacy_admin` backfilled
   as an active protected owner; `bin/console repair` designated 1 owner then 0 (idempotent).
+- **Adversarial review + fix** (commit `35dcd39`): a post-implementation review of the F5
+  owner spine found a reachable fail-open — `ProtectedOwnerRepository` derived owner
+  activeness from the write-once `protected_owners.is_active` flag, so a deactivated
+  co-owner's stale row still counted as a live owner and the deactivate path returned 303
+  instead of 422 for the last recoverable owner. Fixed by deriving activeness from
+  `users.status='active'` (JOIN `users`) in the repository reads and the repair check;
+  four TDD regression tests (red→green) pin it. Details in
+  `docs/evidence/phase5/foundation-f3-f5.md`.
 
 ## Product-owner approvals recorded
 

@@ -27,9 +27,9 @@ the coverage/invariant tests fail and the taxonomy wins.
 | `tests/Unit/Security/CapabilityCatalogTest.php` | Catalogue has exactly **54** keys; every key is `core.*` with a valid scope/risk; the `risk='protected' ⇔ is_protected ⇔ ¬delegable` invariant; every non-protected key has a non-empty consent string and protected keys have none; role maps are cumulative with counts **1 / 15 / 28 / 49** and never map a protected key. (5 tests, 534 assertions) |
 | `tests/Integration/Core/CapabilityInventoryCoverageTest.php` | Every non-protected catalogued key has ≥1 authoritative call-site anchor in the golden matrix; the matrix references no uncatalogued/protected key; exclusions use only the recorded §8 reason codes — the catalogue⟺matrix parity that enforces A1. (3 tests) |
 | `tests/Integration/Core/AppPhase5CapabilitySeedTest.php` | Migration `0066` seeds all 54 rows matching `CapabilityCatalog` (scope/risk/delegable/protected); `role_capabilities` reproduces the cumulative 1/15/28/49; no protected capability is role-mapped; seeding does **not** enable the `capabilities` flag. (4 tests) |
-| `tests/Integration/Repository/ProtectedOwnerRepositoryTest.php` | `ProtectedOwnerRepository` designate/query/exclude-count behavior + `INSERT IGNORE` idempotency on the unique `user_id`. (2 tests) |
-| `tests/Integration/Service/RepairProtectedOwnersTest.php` | `RepairService::repairProtectedOwners()` designates the earliest active admin when admins exist but no owner is designated; is idempotent once an owner exists; is a no-op with no active admin; and `repairAll()` includes a `protected_owners` key. (4 tests) |
-| `tests/Integration/Core/AppProtectedOwnerTest.php` | `LastOwnerGuard` parity fallback (blocks last admin when owner set empty; allows when another admin exists) and owner-set logic (blocks sole active owner even when another *admin* exists; allows when a second owner exists); wired through the account-lifecycle path — **capabilities dark → legacy behavior unchanged (422 from the legacy check)**, **capabilities on → `LastOwnerGuard` enforces the owner invariant** on deactivate (422 when sole owner; 3xx once a second owner is designated). (6 tests) |
+| `tests/Integration/Repository/ProtectedOwnerRepositoryTest.php` | `ProtectedOwnerRepository` designate/query/exclude-count behavior + `INSERT IGNORE` idempotency on the unique `user_id`; **and that owner activeness derives from `users.status='active'`, not the write-once `is_active` flag** — a deactivated co-owner stops counting as recoverable. (3 tests) |
+| `tests/Integration/Service/RepairProtectedOwnersTest.php` | `RepairService::repairProtectedOwners()` designates the earliest active admin when admins exist but no owner is designated; is idempotent once an owner exists; is a no-op with no active admin; `repairAll()` includes a `protected_owners` key; **and it reconciles when the only owner row is a deactivated account** (the stale row does not mask a lost invariant). (5 tests) |
+| `tests/Integration/Core/AppProtectedOwnerTest.php` | `LastOwnerGuard` parity fallback (blocks last admin when owner set empty; allows when another admin exists) and owner-set logic (blocks sole active owner even when another *admin* exists; allows when a second owner exists); wired through the account-lifecycle path — **capabilities dark → legacy behavior unchanged (422 from the legacy check)**, **capabilities on → `LastOwnerGuard` enforces the owner invariant** on deactivate (422 when sole owner; 3xx once a second owner is designated); **and the deactivated-co-owner regression** — with a stale owner row present the guard still blocks the last recoverable owner (both guard-direct and via the 422 lifecycle path). (8 tests) |
 
 Stale-assertion reconciliation: `tests/Integration/Core/AppPhase5FoundationSchemaTest.php`
 `test_capability_catalogue_is_not_seeded` (asserted `capabilities = 0`) was renamed to
@@ -39,10 +39,11 @@ the catalogue by design. `test_system_roles_seeded_as_protected_anchors` is unaf
 
 ## Full suite
 
-`./vendor/bin/phpunit` → **853 tests / 4447 assertions, green** (+24 over the 829
-post-`topic_workflow` baseline), verified on **two consecutive plain runs** — both the
-fresh-`migrate:fresh` bootstrap path *and* the reused-schema path that `composer test`
-takes when the migration fingerprint is unchanged.
+`./vendor/bin/phpunit` → **857 tests / 4456 assertions, green** (+28 over the 829
+post-`topic_workflow` baseline; the last +4 are the owner-status regression tests below),
+verified on **two consecutive plain runs** — both the fresh-`migrate:fresh` bootstrap path
+*and* the reused-schema path that `composer test` takes when the migration fingerprint is
+unchanged.
 `AppFeatureFlagTest::test_phase5_foundation_flags_default_dark` still proves `capabilities`
 (and every Phase 5 flag) dark.
 
@@ -99,6 +100,33 @@ Documented future hooks (public API present, one-line `assertNotLastOwner($user,
 at each mutation site when its subsystem lands): **role revoke/demote** (Increment 6),
 **passkey removal** (Increment 7), **sole-provider unlink** (Increment 8, alongside
 `OAuthService::unlink`'s existing login-method guard), **invitations** (Increment 9).
+
+## Adversarial review (post-implementation)
+
+After the nine plan tasks landed, the full ~1,000-line F3/F5 diff was put through a
+three-lens adversarial review (guard live-path · migration/repair durability · catalogue
+invariant-test strength). The catalogue enforcement tests were mutation-tested and **bite**
+(adding a key without the matrix, mis-tagging a protected key, dropping/duplicating a role
+mapping, or emptying a consent string each turn the suite red); the migration is idempotent
+with WHERE-parity across seed/repair/guard, UTC-clean, and free of `EMULATE_PREPARES`
+hazards.
+
+One **substantive, reachable** defect surfaced and was fixed (commit `35dcd39`):
+`ProtectedOwnerRepository` judged owner activeness from the write-once
+`protected_owners.is_active` flag alone, which no path clears. Since `users.status` gained
+`deactivated/pending_deletion/deleted` states (migration `0059`), a designated owner who
+later deactivated left a stale row that still counted as a live owner — so with a third
+active admin satisfying the legacy last-admin check, the account-lifecycle path returned
+**303 (allowed) instead of 422** when the last *recoverable* owner deactivated, violating
+decision #27, and `repairProtectedOwners()` shared the blind spot. Fixed by deriving owner
+activeness from `users.status='active'` (JOIN `users`) in all three read methods and the
+repair EXISTS check, mirroring the legacy `activeAdminCountExcluding` predicate; four TDD
+regression tests (red→green) now pin it. Two lower-severity items were reviewed and
+consciously **not** changed: `0066` `down()` over-deletes `designated_by IS NULL` owners
+(self-capped — migrations are forward-only and `migrate:rollback` is greenfield-only, where
+`0050`'s `down()` drops the table wholesale), and the coverage test cross-checks the matrix
+but not the role map (the unit `CapabilityCatalogTest` covers role↔catalogue parity, so
+`composer test` enforces it in aggregate).
 
 ## Schema doc
 
