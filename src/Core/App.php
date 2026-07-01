@@ -103,6 +103,7 @@ use App\Repository\UserPreferenceRepository;
 use App\Repository\UserProfileFieldRepository;
 use App\Repository\UsernameHistoryRepository;
 use App\Repository\VerificationRepository;
+use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
@@ -111,6 +112,7 @@ use App\Security\ClientIdentifier;
 use App\Security\Csrf;
 use App\Security\EgressGuard;
 use App\Security\FileRateLimiter;
+use App\Security\LastOwnerGuard;
 use App\Security\PasswordHasher;
 use App\Security\RateLimiter;
 use App\Security\SecurityHeaders;
@@ -1033,6 +1035,13 @@ final class App
             $c->get(FeatureFlags::class),
             $c->get(UserProfileFieldRepository::class),
         ));
+        $c->bind(ProtectedOwnerRepository::class, fn (Container $c) => new ProtectedOwnerRepository(
+            $c->get(Database::class),
+        ));
+        $c->bind(LastOwnerGuard::class, fn (Container $c) => new LastOwnerGuard(
+            $c->get(ProtectedOwnerRepository::class),
+            $c->get(UserRepository::class),
+        ));
         $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
             $c->get(Database::class),
             $c->get(UserRepository::class),
@@ -1041,6 +1050,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(ServerDraftRepository::class),
             $c->get(PasswordHasher::class),
+            $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(LastOwnerGuard::class) : null,
         ));
         $c->bind(MfaService::class, fn (Container $c) => new MfaService(
             $c->get(MfaRepository::class),

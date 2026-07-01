@@ -57,4 +57,41 @@ final class AppProtectedOwnerTest extends TestCase
         $this->guard()->assertNotLastOwner($this->userEntity($aRow), 'current_password'); // no throw
         $this->addToAssertionCount(1);
     }
+
+    public function test_capabilities_dark_leaves_account_lifecycle_behavior_unchanged(): void
+    {
+        // With capabilities dark (default), the guard is not wired: the legacy
+        // last-admin rule alone governs, so a lone admin is blocked by the
+        // existing check — proving Foundation added no new live behavior.
+        $this->setFlags(['account_lifecycle' => true]); // capabilities stays dark
+        $admin = $this->makeAdmin(['username' => 'dark_lone_admin']);
+        $this->actingAs($admin);
+
+        // Sole admin cannot deactivate (legacy assertNotFinalActiveAdmin fires) -> 422.
+        $this->assertStatus(422, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+    }
+
+    public function test_capabilities_on_enforces_owner_invariant_on_deactivate(): void
+    {
+        // Two admins (legacy last-admin rule passes), but only A is a designated
+        // owner. With capabilities on, LastOwnerGuard blocks A's deactivation.
+        $this->setFlags(['account_lifecycle' => true, 'capabilities' => true]);
+        $a = $this->makeAdmin(['username' => 'wired_owner_a']);
+        $b = $this->makeAdmin(['username' => 'wired_admin_b']);
+        $repo = new ProtectedOwnerRepository($this->db);
+        $repo->designate((int) $a['id'], null);
+
+        $this->actingAs($a);
+        $this->assertStatus(422, $this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+
+        // Designate B too -> A is no longer the last owner -> allowed (redirect).
+        $repo->designate((int) $b['id'], (int) $a['id']);
+        $this->assertRedirect($this->post('/settings/account/deactivate', ['current_password' => 'password123']));
+    }
+
+    /** @param array<string,bool> $flags */
+    private function setFlags(array $flags): void
+    {
+        (new SettingRepository($this->db))->set('features', $flags);
+    }
 }

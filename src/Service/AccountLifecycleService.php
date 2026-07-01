@@ -12,6 +12,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
+use App\Security\LastOwnerGuard;
 use App\Security\PasswordHasher;
 
 /**
@@ -28,6 +29,7 @@ final class AccountLifecycleService
         private ModerationLogRepository $logs,
         private ServerDraftRepository $serverDrafts,
         private PasswordHasher $hasher,
+        private ?LastOwnerGuard $ownerGuard = null,
     ) {
     }
 
@@ -91,6 +93,7 @@ final class AccountLifecycleService
     {
         $this->assertPassword($user, $currentPassword);
         $this->assertNotFinalActiveAdmin($user);
+        $this->ownerGuard?->assertNotLastOwner($user, 'current_password');
 
         $before = $this->users->find($user->id());
         $this->db->transaction(function () use ($user, $before, $currentSessionId): void {
@@ -133,6 +136,7 @@ final class AccountLifecycleService
     {
         $this->assertPassword($user, $currentPassword);
         $this->assertNotFinalActiveAdmin($user);
+        $this->ownerGuard?->assertNotLastOwner($user, 'current_password');
 
         if ($this->deletions->pendingForUser($user->id()) !== null) {
             return;
