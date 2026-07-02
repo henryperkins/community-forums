@@ -119,16 +119,19 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/roles'));
     }
 
-    public function test_package_registry_flag_gates_catalog_routes(): void
+    public function test_package_registry_flag_gates_catalog_and_registry_routes(): void
     {
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/packages'));
+        $this->assertStatus(404, $this->get('/admin/registries'));
 
         $this->setFlags(['package_registry' => true]);
         self::assertNotSame(404, $this->get('/admin/packages')->status());
+        self::assertNotSame(404, $this->get('/admin/registries')->status());
 
         $this->setFlags(['package_registry' => false]);
         $this->assertStatus(404, $this->get('/admin/packages'));
+        $this->assertStatus(404, $this->get('/admin/registries'));
     }
 
     public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void
