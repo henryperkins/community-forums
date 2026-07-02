@@ -7,6 +7,9 @@ namespace App\Service;
 use App\Core\Database;
 use App\Security\CapabilityResolver;
 use App\Security\Registry\TrustChainVerifier;
+use App\Service\Packages\PackageArtifactStore;
+use App\Service\Packages\PackageLifecycleService;
+use App\Service\Packages\PackageUpdateService;
 use App\Support\Phase5Budgets;
 
 /**
@@ -22,11 +25,15 @@ final class Phase5BudgetReportService
     private ?array $baseline = null;
     private ?array $resolverSample = null;
     private ?array $signatureSample = null;
+    private ?array $packageSample = null;
 
     public function __construct(
         private Database $db,
         private ?CapabilityResolver $resolver = null,
         private ?TrustChainVerifier $trustVerifier = null,
+        private ?PackageLifecycleService $packageLifecycle = null,
+        private ?PackageUpdateService $packageUpdates = null,
+        private ?PackageArtifactStore $packageStore = null,
     )
     {
     }
@@ -54,6 +61,20 @@ final class Phase5BudgetReportService
         return $this->signatureSample ??= (new BaselineMetricsService($this->db))->measureSignatureVerify($this->trustVerifier);
     }
 
+    private function packageSample(): ?array
+    {
+        if ($this->packageLifecycle === null || $this->packageUpdates === null || $this->packageStore === null) {
+            return null;
+        }
+
+        return $this->packageSample ??= (new BaselineMetricsService($this->db))->measureInstallUpdate(
+            $this->packageLifecycle,
+            $this->packageUpdates,
+            $this->db,
+            $this->packageStore,
+        );
+    }
+
     /** @return array<int,array{key:string,metric:string,target:string,measured:string,status:string}> */
     public function rows(): array
     {
@@ -77,6 +98,12 @@ final class Phase5BudgetReportService
                 $sample = $this->signatureSample();
                 if ($sample !== null) {
                     $measured = $sample['p95'] . ' ms verify (' . $sample['data_fixture'] . ')';
+                    $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+                }
+            } elseif ($key === 'package.install_update_p95') {
+                $sample = $this->packageSample();
+                if ($sample !== null) {
+                    $measured = $sample['p95'] . ' ms install/update (' . $sample['samples'] . ' samples)';
                     $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
                 }
             } elseif ($key === 'registry.snapshot_freshness') {
@@ -115,6 +142,11 @@ final class Phase5BudgetReportService
         if ($signatureSample !== null) {
             $out .= '- Signature verify p50/p95/p99 (ms): ' . $signatureSample['p50'] . ' / ' . $signatureSample['p95'] . ' / ' . $signatureSample['p99']
                 . ' · route/job: `' . $signatureSample['route_or_job'] . "`\n";
+        }
+        $packageSample = $this->packageSample();
+        if ($packageSample !== null) {
+            $out .= '- Package install/update p50/p95/p99 (ms): ' . $packageSample['p50'] . ' / ' . $packageSample['p95'] . ' / ' . $packageSample['p99']
+                . ' · route/job: `' . $packageSample['route_or_job'] . '` · samples: ' . $packageSample['samples'] . "\n";
         }
         $out .= '- Queries: ' . $env['query_count'] . ' · query time (ms): ' . $env['query_time_ms']
              . ' · peak mem (bytes): ' . $env['peak_memory_bytes'] . ' · error rate: ' . $env['error_rate'] . "\n\n";

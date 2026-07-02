@@ -28,6 +28,7 @@ use App\Repository\PackageHistoryRepository;
 use App\Repository\PackagePublisherRepository;
 use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
+use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PackageRepository;
 use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\RegistrySnapshotRepository;
@@ -47,6 +48,8 @@ use App\Repository\WebhookRepository;
 use App\Security\EgressGuard;
 use App\Security\BoardPolicy;
 use App\Security\CapabilityResolver;
+use App\Security\Packages\ManifestValidator;
+use App\Security\Packages\PackageSecurityGate;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
 use App\Security\Registry\TrustChainVerifier;
@@ -54,8 +57,12 @@ use App\Security\SecretBox;
 use App\Security\WriteGate;
 use App\Service\AccountLifecycleService;
 use App\Service\LinkPreviewService;
+use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
+use App\Service\Packages\PackageLifecycleService;
+use App\Service\Packages\PackageUpdateService;
+use App\Service\Registry\ArrayRegistryTransport;
 use App\Service\Registry\CurlRegistryTransport;
 use App\Service\Registry\RegistryAdvisoryService;
 use App\Service\Registry\RegistrySnapshotService;
@@ -552,35 +559,93 @@ try {
                 new BoardPolicy(),
                 new WriteGate(),
             );
-            $report = new Phase5BudgetReportService($db, $resolver, new TrustChainVerifier());
+            PasswordHasher::setDefaultOptions(['memory_cost' => 8, 'time_cost' => 1, 'threads' => 1]);
+            $benchDir = sys_get_temp_dir() . '/rb-budget-packages-' . bin2hex(random_bytes(4));
+            $benchStore = new PackageArtifactStore($benchDir);
+            $acquisition = new PackageAcquisitionService(
+                $db,
+                new TrustChainVerifier(),
+                new RegistryTrustKeyRepository($db),
+                new PackageReleaseRepository($db),
+                new PackageReviewDecisionRepository($db),
+                new PackageTransparencyLogRepository($db),
+                $benchStore,
+                new ManifestValidator(),
+                new ArrayRegistryTransport([]),
+            );
+            $securityGate = new PackageSecurityGate(
+                new LocalPackageBlockRepository($db),
+                new PackageAdvisoryRepository($db),
+            );
+            $lifecycle = new PackageLifecycleService(
+                $db,
+                new PackageRepository($db),
+                new PackageReleaseRepository($db),
+                new PackageRegistryRepository($db),
+                new InstalledPackageRepository($db),
+                new InstalledPackagePermissionRepository($db),
+                new PackageHistoryRepository($db),
+                new PackageTransparencyLogRepository($db),
+                new PackageReviewDecisionRepository($db),
+                $acquisition,
+                $securityGate,
+                $benchStore,
+                new ReauthGate(new PasswordHasher()),
+                new WriteGate(),
+                new ModerationLogRepository($db),
+                (int) $config->get('packages.retention_days', 30),
+            );
+            $updates = new PackageUpdateService(
+                $db,
+                new PackageRepository($db),
+                new PackageReleaseRepository($db),
+                new PackageRegistryRepository($db),
+                new InstalledPackageRepository($db),
+                new InstalledPackagePermissionRepository($db),
+                new PackageHistoryRepository($db),
+                new PackageTransparencyLogRepository($db),
+                $acquisition,
+                $securityGate,
+                $benchStore,
+                new ReauthGate(new PasswordHasher()),
+                new WriteGate(),
+                new ModerationLogRepository($db),
+            );
+            $report = new Phase5BudgetReportService($db, $resolver, new TrustChainVerifier(), $lifecycle, $updates, $benchStore);
             $path = $root . '/docs/evidence/phase5/performance-budgets.md';
-
-            // Non-mutating: seed + measure inside a transaction that is always
-            // rolled back, so the target DB (including a shared
-            // retroboards_test) is left byte-for-byte unchanged. The report is
-            // written from the in-memory, memoized sample after rollback.
-            $pdo = $db->pdo();
-            $pdo->beginTransaction();
-            $reportRows = [];
             try {
-                if (!in_array('--no-seed', $argv, true)) {
-                    $summary = (new Phase5FixtureSeeder($db, new SettingRepository($db), $env))->seed(true);
-                    $log($summary['skipped']
-                        ? 'Fixture already seeded.'
-                        : sprintf('Seeded fixture (throwaway tx): %d users, %d boards, %d assignments, %d owner(s).',
-                            $summary['users'], $summary['boards'], $summary['assignments'], $summary['owners']));
+                // Non-mutating: seed + measure inside a transaction that is always
+                // rolled back, so the target DB (including a shared
+                // retroboards_test) is left byte-for-byte unchanged. The report is
+                // written from the in-memory, memoized sample after rollback.
+                $pdo = $db->pdo();
+                $pdo->beginTransaction();
+                $reportRows = [];
+                try {
+                    if (!in_array('--no-seed', $argv, true)) {
+                        $summary = (new Phase5FixtureSeeder($db, new SettingRepository($db), $env))->seed(true);
+                        $log($summary['skipped']
+                            ? 'Fixture already seeded.'
+                            : sprintf('Seeded fixture (throwaway tx): %d users, %d boards, %d assignments, %d owner(s).',
+                                $summary['users'], $summary['boards'], $summary['assignments'], $summary['owners']));
+                    }
+                    $reportRows = $report->rows(); // measures the baseline INSIDE the tx (seeded rows visible) and memoizes it
+                } finally {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
                 }
-                $reportRows = $report->rows(); // measures the baseline INSIDE the tx (seeded rows visible) and memoizes it
+                $report->write($path); // reuses the memoized in-tx sample; no DB access, so the file is written after rollback
+                foreach ($reportRows as $r) {
+                    $log(sprintf('  [%-20s] %s -> %s', $r['status'], $r['key'], $r['measured']));
+                }
+                $log('Wrote ' . $path);
             } finally {
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
+                foreach (glob($benchDir . '/*') ?: [] as $artifact) {
+                    @unlink($artifact);
                 }
+                @rmdir($benchDir);
             }
-            $report->write($path); // reuses the memoized in-tx sample; no DB access, so the file is written after rollback
-            foreach ($reportRows as $r) {
-                $log(sprintf('  [%-20s] %s -> %s', $r['status'], $r['key'], $r['measured']));
-            }
-            $log('Wrote ' . $path);
             break;
 
         case 'verify:resolver-parity':

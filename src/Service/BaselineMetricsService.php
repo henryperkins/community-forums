@@ -6,7 +6,12 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Domain\User;
+use App\Repository\UserRepository;
 use App\Security\CapabilityResolver;
+use App\Security\PasswordHasher;
+use App\Service\Packages\PackageArtifactStore;
+use App\Service\Packages\PackageLifecycleService;
+use App\Service\Packages\PackageUpdateService;
 
 /**
  * Foundation F9 — measures baseline metrics on the Phase5FixtureSeeder corpus,
@@ -14,7 +19,9 @@ use App\Security\CapabilityResolver;
  * measurable at Foundation is the legacy authorization read (user role/status +
  * board-moderator membership + board posting floor) — the exact path Increment
  * 1's capability resolver replaces, so its p50/p95/p99 is the baseline the `5ms`
- * resolver budget must beat. Read-only; no writes, no flag flips.
+ * resolver budget must beat. The legacy/resolver/signature samplers are
+ * read-only; later package lifecycle samplers seed synthetic rows and are
+ * intended to run inside the caller's rollback transaction.
  */
 final class BaselineMetricsService
 {
@@ -201,6 +208,187 @@ final class BaselineMetricsService
             'queue_age' => null,
             'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
         ];
+    }
+
+    /** @return array<string,mixed> */
+    public function measureInstallUpdate(
+        PackageLifecycleService $lifecycle,
+        PackageUpdateService $updates,
+        Database $db,
+        PackageArtifactStore $store,
+        int $samples = 8,
+    ): array {
+        $samples = max(1, $samples);
+        $prefix = 'bench' . bin2hex(random_bytes(4));
+        $pair = sodium_crypto_sign_keypair();
+        $publicKey = sodium_crypto_sign_publickey($pair);
+        $secretKey = sodium_crypto_sign_secretkey($pair);
+        $keyId = $prefix . '-root';
+        $admin = $this->benchAdmin($db, $prefix);
+
+        $durations = [];
+        for ($i = 0; $i < $samples; $i++) {
+            $seeded = $this->seedBenchPackage($db, $store, $prefix, $i, $keyId, $publicKey, $secretKey);
+
+            $t0 = hrtime(true);
+            $installedId = $lifecycle->install($admin, 'password123', $seeded['package_id'], $seeded['release_v1_id']);
+            $lifecycle->consent($admin, 'password123', $installedId);
+            $lifecycle->enable($admin, 'password123', $installedId);
+            $updates->update($admin, 'password123', $installedId, $seeded['release_v2_id']);
+            $durations[] = (hrtime(true) - $t0) / 1_000_000;
+        }
+
+        return [
+            'route_or_job' => 'package_install_update',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'synthetic rb-release.v1 package lifecycle samples',
+            'role_assignment_count' => 0,
+            'installed_package_count' => $samples,
+            'concurrency' => 1,
+            'cache_state' => 'warm artifact cache',
+            'window' => $samples . ' samples',
+            'samples' => $samples,
+            'p50' => self::percentile($durations, 50),
+            'p95' => self::percentile($durations, 95),
+            'p99' => self::percentile($durations, 99),
+            'query_count' => null,
+            'query_time_ms' => round(array_sum($durations), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => 0.0,
+        ];
+    }
+
+    private function benchAdmin(Database $db, string $prefix): User
+    {
+        $users = new UserRepository($db);
+        $id = $users->create([
+            'username' => $prefix . '_admin',
+            'email' => $prefix . '_admin@example.test',
+            'password_hash' => (new PasswordHasher())->hash('password123'),
+            'display_name' => 'Package Budget Admin',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+        $admin = $users->findEntity($id);
+        if ($admin === null) {
+            throw new \RuntimeException('Unable to create package budget admin.');
+        }
+
+        return $admin;
+    }
+
+    /**
+     * @return array{package_id:int,release_v1_id:int,release_v2_id:int}
+     */
+    private function seedBenchPackage(
+        Database $db,
+        PackageArtifactStore $store,
+        string $prefix,
+        int $i,
+        string $keyId,
+        string $publicKey,
+        string $secretKey,
+    ): array {
+        $uid = 'bench/pkg-' . $prefix . '-' . $i;
+        $registryId = $db->insert(
+            'INSERT INTO package_registries (source_id, display_name, base_url, is_enabled) VALUES (?, ?, ?, 0)',
+            [$prefix . '-registry-' . $i, 'Budget Registry ' . $i, 'https://registry.invalid'],
+        );
+        $db->insert(
+            'INSERT INTO registry_trust_keys (registry_id, key_id, algorithm, public_key, status, valid_from) VALUES (?, ?, ?, ?, \'active\', UTC_TIMESTAMP())',
+            [$registryId, $keyId, 'ed25519', $publicKey],
+        );
+        $publisherId = $db->insert(
+            'INSERT INTO package_publishers (publisher_uid, display_name, verified_at) VALUES (?, ?, UTC_TIMESTAMP())',
+            [$prefix . '-publisher-' . $i, 'Budget Publisher ' . $i],
+        );
+        $packageId = $db->insert(
+            'INSERT INTO packages (package_uid, registry_id, publisher_id, name, type, trust_class) VALUES (?, ?, ?, ?, ?, ?)',
+            [$uid, $registryId, $publisherId, 'Budget Package ' . $i, 'theme', 'reviewed_declarative'],
+        );
+
+        $v1 = $this->mintBenchRelease($uid, '1.0.0', 'Budget Package ' . $i, $keyId, $secretKey);
+        $v1Id = $this->insertBenchRelease($db, $packageId, $v1);
+        $store->put($v1['digest'], $v1['json']);
+
+        $v2 = $this->mintBenchRelease($uid, '1.1.0', 'Budget Package ' . $i, $keyId, $secretKey);
+        $v2Id = $this->insertBenchRelease($db, $packageId, $v2);
+        $store->put($v2['digest'], $v2['json']);
+
+        $db->run('UPDATE packages SET latest_release_id = ? WHERE id = ?', [$v2Id, $packageId]);
+
+        return ['package_id' => (int) $packageId, 'release_v1_id' => (int) $v1Id, 'release_v2_id' => (int) $v2Id];
+    }
+
+    /**
+     * @return array{json:string,signature:string,key_id:string,digest:string,manifest:array<string,mixed>,manifest_json:string,version:string}
+     */
+    private function mintBenchRelease(string $uid, string $version, string $name, string $keyId, string $secretKey): array
+    {
+        $manifest = [
+            'format' => 'rb-manifest.v2',
+            'uid' => $uid,
+            'type' => 'theme',
+            'version' => $version,
+            'name' => $name,
+            'description' => 'Synthetic package lifecycle budget fixture.',
+            'license' => 'MIT',
+            'core' => ['min' => '0.1.0', 'max' => null],
+            'permissions' => [
+                'capabilities' => [],
+                'data_classes' => ['package.own_storage'],
+                'api_scopes' => [],
+                'events' => [],
+                'outbound_hosts' => [],
+                'jobs' => [],
+            ],
+            'storage_quota_kb' => 64,
+            'support' => ['homepage' => 'https://example.test/package-budget'],
+        ];
+        $json = json_encode([
+            'format' => 'rb-release.v1',
+            'uid' => $uid,
+            'version' => $version,
+            'review' => [
+                'status' => 'approved',
+                'decided_at' => '2026-07-01T00:00:00Z',
+            ],
+            'manifest' => $manifest,
+        ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+        return [
+            'json' => $json,
+            'signature' => sodium_crypto_sign_detached($json, $secretKey),
+            'key_id' => $keyId,
+            'digest' => hash('sha256', $json),
+            'manifest' => $manifest,
+            'manifest_json' => json_encode($manifest, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+            'version' => $version,
+        ];
+    }
+
+    /** @param array{json:string,signature:string,key_id:string,digest:string,manifest:array<string,mixed>,manifest_json:string,version:string} $release */
+    private function insertBenchRelease(Database $db, int $packageId, array $release): int
+    {
+        return $db->insert(
+            'INSERT INTO package_releases (package_id, version, digest, source_url, license, core_min, core_max, manifest_json, signature, signed_key_id, review_status, channel, advisory_status, published_at)'
+            . ' VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, \'approved\', \'stable\', \'none\', UTC_TIMESTAMP())',
+            [
+                $packageId,
+                $release['version'],
+                $release['digest'],
+                $release['manifest']['license'] ?? null,
+                $release['manifest']['core']['min'] ?? null,
+                $release['manifest']['core']['max'] ?? null,
+                $release['manifest_json'],
+                $release['signature'],
+                $release['key_id'],
+            ],
+        );
     }
 
     /** @param list<float> $samples */
