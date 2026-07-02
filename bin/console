@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Core\Env;
 use App\Core\FeatureFlags;
 use App\Core\Migrator;
+use App\Core\Telemetry;
 use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
@@ -435,6 +436,10 @@ try {
 
         case 'worker:registry-refresh':
             $db = $database();
+            // Telemetry is dark unless telemetry.enabled, but wiring it here is
+            // what makes the registry.refresh/snapshot/advisory events the
+            // runbook points operators at actually fire on the (only) fetch path.
+            $telemetry = new Telemetry($config);
             $snapshotService = new RegistrySnapshotService(
                 $db,
                 new TrustChainVerifier(),
@@ -444,6 +449,7 @@ try {
                 new PackagePublisherRepository($db),
                 new PackageRepository($db),
                 new PackageReleaseRepository($db),
+                $telemetry,
             );
             $advisoryService = new RegistryAdvisoryService(
                 $db,
@@ -453,6 +459,7 @@ try {
                 new PackageRepository($db),
                 new PackageReleaseRepository($db),
                 new ModerationLogRepository($db),
+                $telemetry,
             );
             $stats = (new RegistryRefreshWorker(
                 new PackageRegistryRepository($db),
@@ -467,6 +474,7 @@ try {
                     (int) $config->get('registry.fetch_timeout_seconds', 10),
                 ),
                 (new FeatureFlags(new SettingRepository($db)))->enabled('package_registry'),
+                $telemetry,
             ))->run();
             $log(sprintf(
                 'Registry refresh: refreshed=%d unchanged=%d advisories=%d failed=%d skipped=%d',

@@ -80,7 +80,7 @@ final class Phase5BudgetReportService
                     $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
                 }
             } elseif ($key === 'registry.snapshot_freshness') {
-                $measured = '86400 s enforced fail-closed (RegistrySnapshotService expired_snapshot refusal)';
+                $measured = '86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal)';
                 $status = 'CONFIG';
             } elseif ($key === 'webhook.delivery_timeout') {
                 $measured = '5000 ms configured';

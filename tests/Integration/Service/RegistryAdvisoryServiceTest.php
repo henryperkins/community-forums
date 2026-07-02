@@ -9,9 +9,11 @@ use App\Domain\User;
 use App\Repository\LocalPackageBlockRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PackageAdvisoryRepository;
+use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageRepository;
 use App\Repository\RegistryTrustKeyRepository;
+use App\Security\Registry\RegistryVerificationException;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
 use App\Security\Registry\TrustChainVerifier;
@@ -169,5 +171,39 @@ final class RegistryAdvisoryServiceTest extends TestCase
         self::assertSame($this->ids['release_id'], (int) $pkg['latest_release_id']);
         self::assertSame('blocked', $pkg['advisory_status']);
         self::assertSame('blocked', (new PackageReleaseRepository($this->db))->find($this->ids['release_id'])['advisory_status']);
+    }
+
+    public function test_a_second_registry_cannot_overwrite_or_target_another_registrys_advisory(): void
+    {
+        // rb-test owns RB-TEST-0001 with action=revoke.
+        $owned = $this->root->mintAdvisory(['action' => 'revoke', 'severity' => 'critical']);
+        $this->advisories()->ingest($this->ids['registry_id'], $owned['json'], $owned['signature'], $owned['key_id']);
+        self::assertSame('revoked', (new PackageRepository($this->db))->find($this->ids['package_id'])['advisory_status']);
+
+        // A second, independently-trusted registry.
+        $evilRoot = SigningHarness::generate('evil-root');
+        $evilRegistryId = (new PackageRegistryRepository($this->db))->create('rb-evil', 'Evil Mirror', 'https://mirror.invalid');
+        (new RegistryTrustKeyRepository($this->db))->pin($evilRegistryId, 'evil-root', $evilRoot->publicKey(), null, null);
+
+        // (a) Re-signing the SAME advisory_uid to de-escalate is refused.
+        $downgrade = $evilRoot->mintAdvisory(['action' => 'warn', 'severity' => 'low']);
+        try {
+            $this->advisories()->ingest($evilRegistryId, $downgrade['json'], $downgrade['signature'], 'evil-root');
+            self::fail('expected advisory_registry_conflict');
+        } catch (RegistryVerificationException $e) {
+            self::assertSame('advisory_registry_conflict', $e->code);
+        }
+
+        // (b) A fresh advisory_uid targeting rb-test's package is also refused.
+        $grief = $evilRoot->mintAdvisory(['advisory_uid' => 'RB-EVIL-0001', 'action' => 'revoke']);
+        try {
+            $this->advisories()->ingest($evilRegistryId, $grief['json'], $grief['signature'], 'evil-root');
+            self::fail('expected advisory_package_conflict');
+        } catch (RegistryVerificationException $e) {
+            self::assertSame('advisory_package_conflict', $e->code);
+        }
+
+        // rb-test's revoke status is untouched by either attempt.
+        self::assertSame('revoked', (new PackageRepository($this->db))->find($this->ids['package_id'])['advisory_status']);
     }
 }

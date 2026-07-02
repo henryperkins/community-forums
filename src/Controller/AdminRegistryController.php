@@ -166,6 +166,8 @@ final class AdminRegistryController extends Controller
                 $document,
                 $signature,
                 $keyId,
+                null,
+                $admin->id(),
             );
             return $this->noindex($this->redirectWithFlash('/admin/registries', 'Advisory ingested (action: ' . $out['action'] . ').'));
         } catch (ValidationException $e) {

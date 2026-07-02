@@ -176,4 +176,27 @@ final class RegistrySnapshotServiceTest extends TestCase
         self::assertNull((new PackageRepository($this->db))->findByUid('acme/sneaky'));
         self::assertNull((new PackageRepository($this->db))->findByUid('acme/odd'));
     }
+
+    public function test_offset_timestamps_are_refused_not_reinterpreted_as_utc(): void
+    {
+        // A timestamp carrying a tz offset would, under a lenient parse, be
+        // stored as wall-clock and corrupt the anti-replay watermark. It must
+        // fail closed.
+        $offset = $this->snapshot(['generated_at' => '2026-07-02T00:00:00-12:00']);
+        $this->expectCode('malformed_snapshot', fn () => $this->service()->applySnapshot(
+            $this->ids['registry_id'], $offset['json'], $offset['signature'], $offset['key_id'],
+        ));
+    }
+
+    public function test_over_long_freshness_window_is_refused_at_ingest(): void
+    {
+        // generated=now, expires=now+30 days → window far exceeds the 24h D2 max.
+        $stale = $this->snapshot([
+            'generated_at' => gmdate('Y-m-d\TH:i:s\Z'),
+            'expires_at' => gmdate('Y-m-d\TH:i:s\Z', time() + 30 * 86400),
+        ]);
+        $this->expectCode('freshness_window', fn () => $this->service()->applySnapshot(
+            $this->ids['registry_id'], $stale['json'], $stale['signature'], $stale['key_id'],
+        ));
+    }
 }

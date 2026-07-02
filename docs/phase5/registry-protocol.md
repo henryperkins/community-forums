@@ -52,18 +52,30 @@ Every failure refuses the document.
    `active` or `rotated` within its validity window; never `revoked`.
 2. Detached signature must verify over the exact document bytes.
 3. `format` must equal the expected format.
-4. Snapshots: `expires_at > now` (24h freshness, D2), `generated_at <= now+300s`,
-   and `generated_at` strictly greater than the last applied snapshot
-   (anti-replay); a byte-identical re-fetch is an idempotent no-op.
-5. Identity: `package_uid` matches `publisher/name` (lowercase); a uid already
+4. Timestamps (`generated_at`, `expires_at`, advisory `issued_at`) are UTC
+   instants in strict `YYYY-MM-DDTHH:MM:SSZ` form (what `gmdate()` emits). A
+   value carrying a timezone offset is refused (`malformed_snapshot`) rather
+   than reinterpreted — a lenient parse would store the offset's wall-clock as
+   UTC and corrupt the anti-replay watermark.
+5. Snapshots: `expires_at > now` (not expired), `generated_at <= now+300s`
+   (skew), `expires_at <= generated_at + 86400s` (the 24h freshness window, D2,
+   is enforced at ingest — a longer declared window is refused
+   `freshness_window`), and `generated_at` strictly greater than the last
+   applied snapshot (anti-replay); a byte-identical re-fetch is an idempotent
+   no-op.
+6. Identity: `package_uid` matches `publisher/name` (lowercase); a uid already
    owned by another registry refuses the whole snapshot (source pinning /
    dependency-confusion refusal).
-6. Releases are immutable: a known `(package, version)` presenting a different
+7. Releases are immutable: a known `(package, version)` presenting a different
    digest refuses the whole snapshot. A changed byte is a new release.
-7. Registries cannot assert local trust: `trust_class` of `first_party` or
+8. Registries cannot assert local trust: `trust_class` of `first_party` or
    `vetted` in a snapshot entry refuses.
-8. Rotations must be signed by a currently active pinned key naming itself as
-   `old_key_id` and a distinct successor with valid 32-byte key material.
+9. Advisories: a registry may only ingest advisories it owns — re-signing
+   another registry's `advisory_uid` (`advisory_registry_conflict`) or targeting
+   a package pinned to another registry (`advisory_package_conflict`) refuses,
+   so a second registry cannot overwrite or de-escalate another's advisory.
+10. Rotations must be signed by a currently active pinned key naming itself as
+    `old_key_id` and a distinct successor with valid 32-byte key material.
 
 Machine-readable refusal codes are exposed via `$e->code` on
 `RegistryVerificationException` (`bad_signature`, `unknown_key`, `revoked_key`,

@@ -29,6 +29,9 @@ final class RegistrySnapshotService
     private const REGISTRY_TRUST_CLASSES = ['reviewed_declarative', 'reviewed_remote', 'isolated_server', 'local_dev'];
     private const CHANNELS = ['stable', 'beta', 'dev'];
 
+    /** Maximum snapshot freshness window (D2: 24h). A longer declared window is refused at ingest. */
+    private const MAX_FRESHNESS_SECONDS = 86400;
+
     public function __construct(
         private Database $db,
         private TrustChainVerifier $verifier,
@@ -125,6 +128,14 @@ final class RegistrySnapshotService
         $latest = $this->snapshots->latestFor($registryId);
         if ($latest !== null && $generatedAt <= new \DateTimeImmutable((string) $latest['generated_at'], new \DateTimeZone('UTC'))) {
             throw new RegistryVerificationException('replayed_snapshot', 'Snapshot is not newer than the last applied snapshot.');
+        }
+
+        // Enforce the 24h freshness budget (D2) at ingest, not just at read: a
+        // registry declaring an over-long window would otherwise grant itself an
+        // arbitrarily long staleness tolerance. Checked after anti-replay so a
+        // stale re-presentation is reported as replayed, not as a window error.
+        if ($expiresAt > $generatedAt->modify('+' . self::MAX_FRESHNESS_SECONDS . ' seconds')) {
+            throw new RegistryVerificationException('freshness_window', 'Snapshot freshness window exceeds the ' . self::MAX_FRESHNESS_SECONDS . 's (24h) maximum (D2).');
         }
 
         return $this->db->transaction(function () use ($registryId, $documentJson, $signature, $keyId, $digest, $generatedAt, $expiresAt, $entries): array {
@@ -238,9 +249,17 @@ final class RegistrySnapshotService
         return $best === null ? null : (int) $best['id'];
     }
 
+    /**
+     * Strict UTC-instant parse for the security-critical snapshot timestamps.
+     * Only the canonical `YYYY-MM-DDTHH:MM:SSZ` form (what the protocol contract
+     * and gmdate() emit) is accepted; any other form — notably a timestamp
+     * carrying a timezone offset — FAILS CLOSED. A lenient parse would store the
+     * offset's wall-clock as if it were UTC, corrupting the anti-replay
+     * watermark and the freshness window.
+     */
     private function parseUtc(mixed $value): ?\DateTimeImmutable
     {
-        if (!is_string($value) || trim($value) === '') {
+        if (!is_string($value) || preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $value) !== 1) {
             return null;
         }
 

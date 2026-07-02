@@ -235,7 +235,11 @@ final class RegistryTrustService
         }
 
         try {
-            return (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+            // setTimezone before format so an operator who pastes an offset
+            // datetime still stores the correct UTC instant, not wall-clock.
+            return (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))
+                ->setTimezone(new \DateTimeZone('UTC'))
+                ->format('Y-m-d H:i:s');
         } catch (\Exception) {
             $errors[$field] = 'Use a UTC datetime (YYYY-MM-DD HH:MM:SS) or leave blank.';
 

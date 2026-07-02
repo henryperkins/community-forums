@@ -191,7 +191,7 @@ final class RepairService
         $changed = 0;
         foreach ($this->db->fetchAll('SELECT id, latest_release_id FROM packages') as $package) {
             $best = null;
-            foreach ($this->db->fetchAll("SELECT id, version FROM package_releases WHERE package_id = ? AND channel = 'stable'", [(int) $package['id']]) as $release) {
+            foreach ($this->db->fetchAll("SELECT id, version FROM package_releases WHERE package_id = ? AND channel = 'stable' ORDER BY id DESC", [(int) $package['id']]) as $release) {
                 if ($best === null || version_compare((string) $release['version'], (string) $best['version'], '>')) {
                     $best = $release;
                 }

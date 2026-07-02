@@ -76,13 +76,20 @@ final class RegistryAdvisoryService
         };
     }
 
-    /** @return array{advisory_id:int,action:string} */
+    /**
+     * @param ?int $operatorId non-null only on the manual admin-console path,
+     *   which writes an `advisory_ingest` audit row; the worker fetch path
+     *   passes null (the signature itself is the authorization, and per-fetch
+     *   auditing would flood the log).
+     * @return array{advisory_id:int,action:string}
+     */
     public function ingest(
         int $registryId,
         string $documentJson,
         string $signature,
         string $keyId,
         ?\DateTimeImmutable $now = null,
+        ?int $operatorId = null,
     ): array {
         $now ??= new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $doc = $this->verifier->verify(
@@ -101,14 +108,27 @@ final class RegistryAdvisoryService
             throw new RegistryVerificationException('malformed_advisory', 'Advisory must carry advisory_uid, a known action, and a known severity.');
         }
 
+        // Source pinning for advisories (mirrors the snapshot uid_conflict rule):
+        // a registry may only touch advisories/packages it already owns, so a
+        // second pinned registry cannot overwrite or de-escalate another
+        // registry's advisory by re-signing the same advisory_uid.
+        $existing = $this->advisories->findByUid($advisoryUid);
+        if ($existing !== null && $existing['registry_id'] !== null && (int) $existing['registry_id'] !== $registryId) {
+            throw new RegistryVerificationException('advisory_registry_conflict', "Advisory $advisoryUid is owned by another registry; refusing cross-registry overwrite.");
+        }
+
         $packageUid = trim((string) ($doc->payload['package_uid'] ?? ''));
         $package = $packageUid === '' ? null : $this->packages->findByUid($packageUid);
+        if ($package !== null && $package['registry_id'] !== null && (int) $package['registry_id'] !== $registryId) {
+            throw new RegistryVerificationException('advisory_package_conflict', "Advisory targets '$packageUid', which is pinned to another registry.");
+        }
+
         $range = isset($doc->payload['affected_version_range']) ? (string) $doc->payload['affected_version_range'] : null;
         $affectedDigest = isset($doc->payload['affected_digest']) ? strtolower((string) $doc->payload['affected_digest']) : null;
         $affectedDigest = $affectedDigest === '' ? null : $affectedDigest;
         $issuedAt = $this->parseIssuedAt($doc->payload['issued_at'] ?? null);
 
-        $result = $this->db->transaction(function () use ($registryId, $advisoryUid, $package, $range, $affectedDigest, $severity, $action, $doc, $documentJson, $issuedAt): array {
+        $result = $this->db->transaction(function () use ($registryId, $advisoryUid, $package, $range, $affectedDigest, $severity, $action, $doc, $documentJson, $issuedAt, $operatorId): array {
             $advisoryId = $this->advisories->upsert([
                 'advisory_uid' => $advisoryUid,
                 'registry_id' => $registryId,
@@ -124,6 +144,16 @@ final class RegistryAdvisoryService
 
             if ($package !== null) {
                 $this->evaluatePackage((int) $package['id']);
+            }
+
+            if ($operatorId !== null) {
+                $this->audit->log([
+                    'actor_id' => $operatorId,
+                    'action' => 'advisory_ingest',
+                    'target_type' => 'package',
+                    'target_id' => $package === null ? 0 : (int) $package['id'],
+                    'reason' => $advisoryUid,
+                ]);
             }
 
             return ['advisory_id' => $advisoryId, 'action' => $action];
@@ -191,7 +221,12 @@ final class RegistryAdvisoryService
         }
 
         try {
-            return (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+            // setTimezone before format: an embedded offset (e.g. "...-12:00")
+            // is honored by the constructor and would otherwise be stored as
+            // wall-clock, not UTC.
+            return (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))
+                ->setTimezone(new \DateTimeZone('UTC'))
+                ->format('Y-m-d H:i:s');
         } catch (\Exception) {
             return null;
         }
