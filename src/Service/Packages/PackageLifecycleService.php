@@ -336,6 +336,54 @@ final class PackageLifecycleService
         ]);
     }
 
+    public function setPinned(User $admin, int $installedId, bool $pinned): void
+    {
+        $this->writeGate->assertCanWrite($admin);
+
+        $install = $this->requireInstall($installedId);
+        $this->assertState($install, ['installed', 'enabled', 'disabled', 'quarantined']);
+
+        $this->db->transaction(function () use ($install, $installedId, $pinned, $admin): void {
+            $this->installs->setPinned($installedId, $pinned);
+            $this->history->record([
+                'package_id' => (int) $install['package_id'],
+                'installed_package_id' => $installedId,
+                'event' => $pinned ? 'pin' : 'unpin',
+                'actor_id' => $admin->id(),
+                'new_version' => $this->versionOf($install),
+                'new_digest' => (string) $install['digest'],
+            ]);
+            $this->audit->log([
+                'actor_id' => $admin->id(),
+                'action' => $pinned ? 'package_pin' : 'package_unpin',
+                'target_type' => 'package',
+                'target_id' => (int) $install['package_id'],
+            ]);
+        });
+    }
+
+    public function setUpdatePolicy(User $admin, int $installedId, string $policy): void
+    {
+        $this->writeGate->assertCanWrite($admin);
+        if (!in_array($policy, ['manual', 'notify'], true)) {
+            throw new PackagePolicyException('update_policy', 'Update policy must be manual or notify.');
+        }
+
+        $install = $this->requireInstall($installedId);
+        $this->assertState($install, ['installed', 'enabled', 'disabled', 'quarantined']);
+
+        $this->db->transaction(function () use ($install, $installedId, $policy, $admin): void {
+            $this->installs->setUpdatePolicy($installedId, $policy);
+            $this->audit->log([
+                'actor_id' => $admin->id(),
+                'action' => 'package_update_policy',
+                'target_type' => 'package',
+                'target_id' => (int) $install['package_id'],
+                'after' => ['policy' => $policy],
+            ]);
+        });
+    }
+
     /** @return array{0:array<string,mixed>,1:array<string,mixed>,2:?array<string,mixed>} package, release, registry */
     private function resolveTarget(int $packageId, ?int $releaseId): array
     {

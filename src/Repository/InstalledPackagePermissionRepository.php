@@ -17,7 +17,9 @@ final class InstalledPackagePermissionRepository
     public function forInstall(int $installedId): array
     {
         return $this->db->fetchAll(
-            'SELECT * FROM installed_package_permissions WHERE installed_package_id = ? ORDER BY kind, permission_key',
+            'SELECT * FROM installed_package_permissions
+             WHERE installed_package_id = ?
+             ORDER BY CAST(kind AS CHAR), permission_key',
             [$installedId],
         );
     }
