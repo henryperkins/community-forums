@@ -254,13 +254,21 @@ final class AdminPackageLifecycleController extends Controller
     /** @param array<string,string> $params */
     public function reverify(Request $request, array $params): Response
     {
-        return $this->simpleAction(
-            $request,
-            $params,
-            'reverify',
-            fn (User $admin, array $install): mixed =>
-                $this->lifecycle()->reverify($admin, (int) $install['id']),
-        );
+        $admin = $this->requireAdmin();
+        $this->gate();
+        $packageId = (int) ($params['id'] ?? 0);
+        $install = $this->requireInstallRow($packageId);
+
+        try {
+            if (!$this->lifecycle()->reverify($admin, (int) $install['id'])) {
+                return $this->detailView($packageId, [
+                    'reverify' => 'Re-verification failed: the installed bytes still do not match the reviewed digest.',
+                ], 422);
+            }
+            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+        } catch (PackagePolicyException | RegistryVerificationException $e) {
+            return $this->detailView($packageId, ['reverify' => $this->policyMessage($e)], 422);
+        }
     }
 
     private function gate(): void

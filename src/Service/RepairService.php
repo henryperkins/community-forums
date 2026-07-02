@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Repository\LocalPackageBlockRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
 use App\Service\Registry\RegistryAdvisoryService;
@@ -255,7 +256,7 @@ final class RepairService
     {
         $fixed = 0;
         $installs = $this->db->fetchAll(
-            "SELECT ip.id, ip.package_id, ip.state, ip.digest, ip.source_registry_id, ip.staged_release_id, ip.staged_digest,
+            "SELECT ip.id, ip.package_id, ip.state, ip.digest, ip.staged_release_id, ip.staged_digest,
                     p.package_uid, r.version AS release_version, sr.version AS staged_version
              FROM installed_packages ip
              JOIN packages p ON p.id = ip.package_id
@@ -264,14 +265,10 @@ final class RepairService
              WHERE ip.state <> 'uninstalled'",
         );
 
-        $isBlocked = function (string $digest, string $uid): bool {
-            return (int) $this->db->fetchValue(
-                'SELECT COUNT(*) FROM local_package_blocks
-                 WHERE (digest IS NOT NULL AND digest = :digest)
-                    OR (package_uid IS NOT NULL AND package_uid = :package_uid)',
-                ['digest' => $digest, 'package_uid' => $uid],
-            ) > 0;
-        };
+        // Reuse the runtime enforcement helpers so repair never drifts from the
+        // health worker's block/advisory matching (LocalBlocklistService/
+        // PackageHealthService share the same repository and reason logic).
+        $blocks = new LocalPackageBlockRepository($this->db);
         $advisoriesFor = function (int $packageId): array {
             return $this->db->fetchAll(
                 'SELECT advisory_uid, action, affected_digest, affected_version_range
@@ -279,20 +276,12 @@ final class RepairService
                 [$packageId],
             );
         };
-        $matchReason = function (array $advisories, array $actions, string $digest, string $version, string $uid) use ($isBlocked): ?string {
-            if ($isBlocked($digest, $uid)) {
+        $matchReason = function (array $advisories, array $actions, string $digest, string $version, string $uid) use ($blocks): ?string {
+            if ($blocks->isBlocked($digest, $uid)) {
                 return 'local blocklist';
             }
-            foreach ($advisories as $advisory) {
-                if (!in_array((string) $advisory['action'], $actions, true)) {
-                    continue;
-                }
-                if (RegistryAdvisoryService::affectsRelease($advisory, $digest, $version)) {
-                    return 'advisory ' . (string) $advisory['advisory_uid'] . ' (' . (string) $advisory['action'] . ')';
-                }
-            }
 
-            return null;
+            return RegistryAdvisoryService::blockingAdvisoryReason($advisories, $actions, $digest, $version);
         };
 
         foreach ($installs as $install) {
@@ -306,21 +295,23 @@ final class RepairService
                     (string) $install['package_uid'],
                 );
                 if ($reason !== null) {
+                    $version = $install['release_version'] !== null ? (string) $install['release_version'] : null;
                     $this->db->run("UPDATE installed_packages SET state = 'disabled' WHERE id = ?", [(int) $install['id']]);
+                    // Mirror PackageHealthService::securityDisable exactly: disable
+                    // history carries new_version; transparency leaves registry_id NULL.
                     $this->db->run(
-                        "INSERT INTO package_history (package_id, installed_package_id, event, new_digest, detail)
-                         VALUES (?, ?, 'disable', ?, ?)",
-                        [(int) $install['package_id'], (int) $install['id'], (string) $install['digest'], 'repair reconcile: ' . $reason],
+                        "INSERT INTO package_history (package_id, installed_package_id, event, new_version, new_digest, detail)
+                         VALUES (?, ?, 'disable', ?, ?, ?)",
+                        [(int) $install['package_id'], (int) $install['id'], $version, (string) $install['digest'], 'repair reconcile: ' . $reason],
                     );
                     $this->db->run(
                         "INSERT INTO package_transparency_log
-                            (package_uid, version, digest, event, source, registry_id, detail)
-                         VALUES (?, ?, ?, 'force_disable', 'local', ?, ?)",
+                            (package_uid, version, digest, event, source, detail)
+                         VALUES (?, ?, ?, 'force_disable', 'local', ?)",
                         [
                             (string) $install['package_uid'],
-                            $install['release_version'] !== null ? (string) $install['release_version'] : null,
+                            $version,
                             (string) $install['digest'],
-                            $install['source_registry_id'] !== null ? (int) $install['source_registry_id'] : null,
                             'repair reconcile: ' . $reason,
                         ],
                     );

@@ -17,6 +17,7 @@ const PORT = Number(process.env.E2E_PORT ?? 8011);
 const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}`;
 const database = process.env.DB_DATABASE ?? 'retroboards_e2e';
 const rateLimitPath = process.env.RATELIMIT_PATH ?? path.join(repoRoot, 'storage', 'ratelimit-e2e');
+const packagesPath = process.env.PACKAGES_STORAGE_PATH ?? path.join(repoRoot, 'storage', 'packages-e2e');
 const skipWebServer = process.env.E2E_SKIP_WEBSERVER === '1';
 
 function shellQuote(value: string): string {
@@ -39,7 +40,7 @@ export default defineConfig({
   // The app uses HTTP locally, so the session cookie must not require Secure; mail
   // is captured in-memory. The DB is already migrated + seeded by prepare.sh.
   webServer: skipWebServer ? undefined : {
-    command: `DB_DATABASE=${shellQuote(database)} RATELIMIT_PATH=${shellQuote(rateLimitPath)} SESSION_SECURE=false MAIL_DRIVER=array APP_URL=${shellQuote(baseURL)} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 php -S 127.0.0.1:${PORT} -t public public/index.php`,
+    command: `DB_DATABASE=${shellQuote(database)} RATELIMIT_PATH=${shellQuote(rateLimitPath)} PACKAGES_STORAGE_PATH=${shellQuote(packagesPath)} SESSION_SECURE=false MAIL_DRIVER=array APP_URL=${shellQuote(baseURL)} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 php -S 127.0.0.1:${PORT} -t public public/index.php`,
     cwd: repoRoot,
     url: baseURL,
     reuseExistingServer: !process.env.CI,

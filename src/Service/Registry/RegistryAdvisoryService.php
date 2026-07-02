@@ -78,6 +78,28 @@ final class RegistryAdvisoryService
         };
     }
 
+    /**
+     * Shared reason string for the first advisory whose action is in $actions and
+     * that affects the given release. Callers (health worker + repair mirror) must
+     * produce identical enforcement decisions and reason text.
+     *
+     * @param list<array<string,mixed>> $advisories
+     * @param list<string> $actions
+     */
+    public static function blockingAdvisoryReason(array $advisories, array $actions, string $digest, ?string $version): ?string
+    {
+        foreach ($advisories as $advisory) {
+            if (!in_array((string) $advisory['action'], $actions, true)) {
+                continue;
+            }
+            if (self::affectsRelease($advisory, $digest, $version)) {
+                return 'advisory ' . (string) $advisory['advisory_uid'] . ' (' . (string) $advisory['action'] . ')';
+            }
+        }
+
+        return null;
+    }
+
     /** @param array<string,mixed> $advisory */
     public static function affectsRelease(array $advisory, string $digest, ?string $version): bool
     {
@@ -104,6 +126,10 @@ final class RegistryAdvisoryService
      *   which writes an `advisory_ingest` audit row; the worker fetch path
      *   passes null (the signature itself is the authorization, and per-fetch
      *   auditing would flood the log).
+     * @param bool $enforce true (default) reconciles installed policy inline for
+     *   the single-advisory admin path; the worker passes false and calls
+     *   reconcileInstalledPolicies() once after a whole batch instead of paying
+     *   an O(installs) scan per advisory.
      * @return array{advisory_id:int,action:string}
      */
     public function ingest(
@@ -113,6 +139,7 @@ final class RegistryAdvisoryService
         string $keyId,
         ?\DateTimeImmutable $now = null,
         ?int $operatorId = null,
+        bool $enforce = true,
     ): array {
         $now ??= new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $doc = $this->verifier->verify(
@@ -189,9 +216,21 @@ final class RegistryAdvisoryService
             'package' => $packageUid !== '' ? $packageUid : null,
             'resolved' => $package !== null,
         ]);
-        $this->enforcement?->enforcePolicy();
+        if ($enforce) {
+            $this->enforcement?->enforcePolicy();
+        }
 
         return $result;
+    }
+
+    /**
+     * Reconcile every installed package against the current advisory/blocklist
+     * state in one pass. Callers that ingest a batch (the refresh worker) defer
+     * per-advisory enforcement and invoke this once.
+     */
+    public function reconcileInstalledPolicies(): int
+    {
+        return $this->enforcement?->enforcePolicy() ?? 0;
     }
 
     public function evaluatePackage(int $packageId): void

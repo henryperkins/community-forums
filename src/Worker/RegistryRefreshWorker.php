@@ -56,6 +56,12 @@ final class RegistryRefreshWorker
             }
         }
 
+        // Ingest deferred per-advisory enforcement; reconcile installed policy
+        // once for the whole batch instead of O(advisories) scans.
+        if ($stats['advisories'] > 0) {
+            $this->advisories->reconcileInstalledPolicies();
+        }
+
         return $stats;
     }
 
@@ -103,7 +109,13 @@ final class RegistryRefreshWorker
             if (!is_string($envelope['document'] ?? null) || $signature === false) {
                 continue;
             }
-            $this->advisories->ingest($registryId, (string) $envelope['document'], $signature, (string) ($envelope['key_id'] ?? ''));
+            $this->advisories->ingest(
+                $registryId,
+                (string) $envelope['document'],
+                $signature,
+                (string) ($envelope['key_id'] ?? ''),
+                enforce: false,
+            );
             $ingested++;
         }
 

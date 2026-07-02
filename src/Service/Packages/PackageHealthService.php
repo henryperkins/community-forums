@@ -124,7 +124,7 @@ final class PackageHealthService
         $purged = 0;
 
         foreach ($this->installs->purgeable($now->format('Y-m-d H:i:s')) as $install) {
-            $digest = (string) $install['digest'];
+            $packageId = (int) $install['package_id'];
             $this->db->transaction(function () use ($install): void {
                 $this->permissions->deleteFor((int) $install['id']);
                 $this->history->record([
@@ -135,7 +135,17 @@ final class PackageHealthService
                 ]);
                 $this->installs->delete((int) $install['id']);
             });
-            $this->artifacts->remove($digest);
+            // Reclaim every artifact cached for this package's releases - the
+            // installed digest plus superseded rollback targets. Digests are
+            // package-unique and this was the package's only install row, so
+            // nothing else references them; remove() no-ops on uncached digests.
+            $digests = [(string) $install['digest']];
+            foreach ($this->releases->forPackage($packageId) as $release) {
+                $digests[] = (string) $release['digest'];
+            }
+            foreach (array_unique($digests) as $digest) {
+                $this->artifacts->remove($digest);
+            }
             $purged++;
         }
 
@@ -149,16 +159,7 @@ final class PackageHealthService
             return 'local blocklist';
         }
 
-        foreach ($this->advisories->forPackage($packageId) as $advisory) {
-            if (!in_array((string) $advisory['action'], $actions, true)) {
-                continue;
-            }
-            if (RegistryAdvisoryService::affectsRelease($advisory, $digest, $version)) {
-                return 'advisory ' . (string) $advisory['advisory_uid'] . ' (' . (string) $advisory['action'] . ')';
-            }
-        }
-
-        return null;
+        return RegistryAdvisoryService::blockingAdvisoryReason($this->advisories->forPackage($packageId), $actions, $digest, $version);
     }
 
     /** @param array<string,mixed> $install */

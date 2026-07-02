@@ -406,10 +406,12 @@ final class PackageLifecycleService
                 ]);
             }
 
-            $export = $this->buildExport($install, $package);
-            $this->installs->storeExport($installedId, json_encode($export, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
             $retainUntil = gmdate('Y-m-d H:i:s', time() + ($retentionDays * 86_400));
             $this->installs->markUninstalled($installedId, $retainUntil);
+            // Snapshot after the transitions so the retained evidence records the
+            // uninstalled state/retain_until, not the pre-uninstall row.
+            $export = $this->buildExport($this->requireInstall($installedId), $package);
+            $this->installs->storeExport($installedId, json_encode($export, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
             $this->history->record([
                 'package_id' => (int) $install['package_id'],
                 'installed_package_id' => $installedId,

@@ -15,9 +15,13 @@ ROOT_PASSWORD="${DB_ROOT_PASSWORD:-rootpw}"
 DB_USER="${DB_USERNAME:-retro}"
 MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
 RATE_LIMIT_PATH="${RATELIMIT_PATH:-$PWD/storage/ratelimit-e2e}"
+PACKAGES_PATH="${PACKAGES_STORAGE_PATH:-$PWD/storage/packages-e2e}"
 
 if [[ "$RATE_LIMIT_PATH" != /* ]]; then
   RATE_LIMIT_PATH="$PWD/$RATE_LIMIT_PATH"
+fi
+if [[ "$PACKAGES_PATH" != /* ]]; then
+  PACKAGES_PATH="$PWD/$PACKAGES_PATH"
 fi
 
 case "$RATE_LIMIT_PATH" in
@@ -31,6 +35,21 @@ case "$RATE_LIMIT_PATH" in
     mkdir -p "$RATE_LIMIT_PATH"
     ;;
 esac
+
+# Isolate the content-addressed package artifact store from the developer's real
+# storage/packages, mirroring the rate-limit store above.
+case "$PACKAGES_PATH" in
+  "$PWD"/storage/packages-e2e*)
+    echo "==> Resetting browser-evidence package artifact store"
+    rm -rf "$PACKAGES_PATH"
+    mkdir -p "$PACKAGES_PATH"
+    ;;
+  *)
+    echo "==> Using package artifact store '$PACKAGES_PATH' (not clearing outside storage/packages-e2e)"
+    mkdir -p "$PACKAGES_PATH"
+    ;;
+esac
+export PACKAGES_STORAGE_PATH="$PACKAGES_PATH"
 
 if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$RESET_CONTAINER"; then
   # rootpw is the fixed local rb-mariadb dev-container password (see project README);

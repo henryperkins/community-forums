@@ -145,4 +145,39 @@ final class RepairInstalledPackagesTest extends TestCase
         self::assertSame(0, $repair->repairInstalledPackageStates(), 'idempotent');
         self::assertArrayHasKey('installed_packages', $repair->repairAll());
     }
+
+    public function test_repair_force_disable_records_match_the_worker_record_shape(): void
+    {
+        (new PackageAdvisoryRepository($this->db))->upsert([
+            'advisory_uid' => 'RB-REPAIR-SHAPE',
+            'registry_id' => $this->seeded['registry_id'],
+            'package_id' => $this->seeded['package_id'],
+            'affected_version_range' => '<=1.0.0',
+            'affected_digest' => null,
+            'severity' => 'critical',
+            'action' => 'force_disable',
+            'summary' => 'incident',
+            'signed_evidence' => null,
+            'issued_at' => '2026-07-01 00:00:00',
+        ]);
+
+        (new RepairService($this->db))->repairInstalledPackageStates();
+
+        // PackageHealthService::securityDisable records new_version on the disable
+        // history row; the repair mirror must not drift by omitting it.
+        $history = $this->db->fetch(
+            "SELECT new_version, new_digest FROM package_history
+             WHERE installed_package_id = ? AND event = 'disable' ORDER BY id DESC LIMIT 1",
+            [$this->installedId],
+        );
+        self::assertSame('1.0.0', $history['new_version'], 'repair disable history carries the version like the worker');
+        self::assertSame($this->seeded['release_digest'], $history['new_digest']);
+
+        // The worker leaves transparency registry_id NULL; the repair mirror must too.
+        $transparency = $this->db->fetch(
+            "SELECT registry_id FROM package_transparency_log
+             WHERE package_uid = 'acme/midnight-theme' AND event = 'force_disable' ORDER BY id DESC LIMIT 1",
+        );
+        self::assertNull($transparency['registry_id'], 'repair matches the worker: transparency registry_id stays NULL');
+    }
 }

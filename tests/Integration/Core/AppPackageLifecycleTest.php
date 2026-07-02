@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\InstalledPackageRepository;
+use App\Repository\PackageRegistryRepository;
 use App\Repository\SettingRepository;
 use Tests\Support\Phase5\RegistryFixtures;
 use Tests\Support\Phase5\SigningHarness;
@@ -287,6 +288,29 @@ final class AppPackageLifecycleTest extends TestCase
             'value="' . (int) $mid['release_id'] . '" selected',
             $response->body(),
             'the failed update form must keep the operator\'s chosen target, not reset to latest',
+        );
+    }
+
+    public function test_failed_reverify_renders_422_instead_of_a_success_redirect(): void
+    {
+        $this->actingAs($this->admin);
+        $this->post($this->detailPath() . '/install', ['current_password' => 'password123']);
+        $installed = (new InstalledPackageRepository($this->db))->findByPackage((int) $this->seeded['package_id']);
+        $installedId = (int) $installed['id'];
+
+        // Quarantine it, drop the reviewed bytes, and disable the source so the
+        // re-fetch restore path cannot recover them: reverify must return false.
+        $this->db->run("UPDATE installed_packages SET state = 'quarantined' WHERE id = ?", [$installedId]);
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], false);
+        @unlink($this->artifactDir . '/' . $this->seeded['release_digest'] . '.json');
+
+        $response = $this->post($this->detailPath() . '/reverify', []);
+
+        $this->assertStatus(422, $response);
+        self::assertSame(
+            'quarantined',
+            (new InstalledPackageRepository($this->db))->find($installedId)['state'],
+            'a failed re-verify leaves the package quarantined, not a success-looking redirect',
         );
     }
 

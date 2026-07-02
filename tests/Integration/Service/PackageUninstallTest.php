@@ -164,6 +164,23 @@ final class PackageUninstallTest extends TestCase
         );
     }
 
+    public function test_uninstall_export_records_the_post_transition_state_not_the_stale_row(): void
+    {
+        $service = $this->service();
+        $installedId = $service->install($this->admin, 'password123', (int) $this->seeded['package_id']);
+        $service->consent($this->admin, 'password123', $installedId);
+        $service->enable($this->admin, 'password123', $installedId);
+
+        $export = $service->uninstall($this->admin, 'password123', $installedId);
+
+        self::assertSame('uninstalled', $export['install']['state'], 'the retained export must reflect the uninstall it documents, not the enabled row it started from');
+        self::assertNotNull($export['install']['uninstalled_at']);
+        self::assertNotNull($export['install']['retain_until']);
+
+        $stored = json_decode((string) (new InstalledPackageRepository($this->db))->find($installedId)['export_json'], true);
+        self::assertSame('uninstalled', $stored['install']['state'], 'the persisted export_json matches the returned export');
+    }
+
     public function test_export_is_available_standalone_and_records_history(): void
     {
         $service = $this->service();

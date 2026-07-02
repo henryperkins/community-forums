@@ -315,6 +315,24 @@ final class PackageHealthWorkerTest extends TestCase
         self::assertContains('purge', $events, 'history survives the purge');
     }
 
+    public function test_retention_purge_reclaims_superseded_release_artifacts_too(): void
+    {
+        // A second cached release beyond the installed one (a prior rollback target).
+        $superseded = RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, ['version' => '1.1.0'], $this->artifactDir);
+        self::assertTrue($this->store->has($this->seeded['release_digest']));
+        self::assertTrue($this->store->has($superseded['digest']));
+
+        $this->lifecycle()->uninstall($this->admin, 'password123', $this->installedId);
+        $this->db->run(
+            "UPDATE installed_packages SET retain_until = '2020-01-01 00:00:00' WHERE id = ?",
+            [$this->installedId],
+        );
+
+        self::assertSame(1, (new PackageHealthWorker($this->health(), true))->run()['purged']);
+        self::assertFalse($this->store->has($this->seeded['release_digest']), 'installed digest artifact removed');
+        self::assertFalse($this->store->has($superseded['digest']), 'superseded release artifact reclaimed too');
+    }
+
     public function test_notify_policy_counts_available_updates(): void
     {
         RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, ['version' => '1.1.0'], $this->artifactDir);
@@ -339,5 +357,25 @@ final class PackageHealthWorkerTest extends TestCase
         $this->blocklistServiceWithEnforcement()->block($this->admin, $this->seeded['release_digest'], null, 'incident');
 
         self::assertSame('disabled', (new InstalledPackageRepository($this->db))->find($this->installedId)['state']);
+    }
+
+    public function test_ingest_can_defer_enforcement_for_batched_worker_runs(): void
+    {
+        $minted = $this->root->mintAdvisory(['action' => 'force_disable', 'affected_version_range' => '<=1.0.0']);
+        $service = $this->advisoryServiceWithEnforcement();
+
+        $service->ingest((int) $this->seeded['registry_id'], $minted['json'], $minted['signature'], $minted['key_id'], enforce: false);
+        self::assertSame(
+            'enabled',
+            (new InstalledPackageRepository($this->db))->find($this->installedId)['state'],
+            'deferred ingest does not run a per-advisory enforcement scan',
+        );
+
+        $service->reconcileInstalledPolicies();
+        self::assertSame(
+            'disabled',
+            (new InstalledPackageRepository($this->db))->find($this->installedId)['state'],
+            'one batched reconcile enforces the whole refresh',
+        );
     }
 }
