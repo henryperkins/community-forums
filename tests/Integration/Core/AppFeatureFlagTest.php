@@ -134,6 +134,9 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/registries'));
         // A mutation route must also be dark (404, not 403/405) when the flag is off.
         $this->assertStatus(404, $this->post('/admin/blocklist', ['digest' => str_repeat('a', 64)]));
+        $this->assertStatus(404, $this->post('/admin/packages/1/plan', []));
+        $this->assertStatus(404, $this->get('/admin/packages/1/consent'));
+        $this->assertStatus(404, $this->post('/admin/packages/1/install', ['current_password' => 'password123']));
     }
 
     public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void

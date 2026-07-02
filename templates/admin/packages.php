@@ -15,7 +15,7 @@ $this->section('title', 'Package catalogue');
     </nav>
 
     <div class="admin-pane">
-    <p class="muted">Read-only staff browse of signed registry metadata. <strong>Install does not exist yet</strong>; a signature proves byte provenance under a pinned key, not safety or review.</p>
+    <p class="muted">Staff browse of signed registry metadata. A signature proves byte provenance under a pinned key; install and enable still require review, consent, and local policy checks.</p>
 
     <?php foreach ($data['registries'] as $registry): ?>
         <?php if (!$registry['fresh']): ?>
@@ -33,9 +33,10 @@ $this->section('title', 'Package catalogue');
         <?php else: ?>
         <div class="table-scroll">
         <table class="audit">
-            <thead><tr><th>Package</th><th>Type</th><th>Trust class</th><th>Latest</th><th>Compatibility</th><th>Advisory</th><th></th></tr></thead>
+            <thead><tr><th>Package</th><th>Type</th><th>Install</th><th>Trust class</th><th>Latest</th><th>Compatibility</th><th>Advisory</th><th></th></tr></thead>
             <tbody>
             <?php foreach ($data['packages'] as $p): ?>
+                <?php $state = $data['installed_states'][(int) $p['id']] ?? null; ?>
                 <tr>
                     <td>
                         <strong><?= $e($p['name']) ?></strong><br>
@@ -43,6 +44,12 @@ $this->section('title', 'Package catalogue');
                         <span class="muted">via <?= $e($p['registry_source_id'] ?? 'local') ?> · <?= $e($p['publisher_name'] ?? 'unknown publisher') ?></span>
                     </td>
                     <td class="nowrap"><?= $e($p['type']) ?></td>
+                    <td class="nowrap">
+                        <?php if ($state === null): ?><span class="muted">-</span>
+                        <?php elseif ($state === 'enabled'): ?><span class="pill">Enabled</span>
+                        <?php elseif ($state === 'installed'): ?><span class="pill">Installed</span>
+                        <?php else: ?><span class="pill"><?= $e(ucfirst((string) $state)) ?></span><?php endif; ?>
+                    </td>
                     <td class="nowrap"><code><?= $e($p['trust_class']) ?></code></td>
                     <td class="nowrap"><?= $p['latest'] !== null ? $e($p['latest']['version']) : '<span class="muted">none stable</span>' ?></td>
                     <td class="nowrap">

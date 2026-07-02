@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Service\Registry;
 
 use App\Repository\PackageAdvisoryRepository;
+use App\Repository\InstalledPackagePermissionRepository;
+use App\Repository\InstalledPackageRepository;
+use App\Repository\PackageHistoryRepository;
 use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageRepository;
@@ -23,12 +26,20 @@ final class RegistryCatalogService
         private PackageRegistryRepository $registries,
         private RegistrySnapshotService $snapshots,
         private LocalBlocklistService $blocklist,
+        private InstalledPackageRepository $installs,
+        private InstalledPackagePermissionRepository $installPermissions,
+        private PackageHistoryRepository $packageHistory,
     ) {
     }
 
-    /** @return array{registries:list<array<string,mixed>>,packages:list<array<string,mixed>>} */
+    /** @return array{registries:list<array<string,mixed>>,packages:list<array<string,mixed>>,installed_states:array<int,string>} */
     public function overview(?\DateTimeImmutable $now = null): array
     {
+        $installedStates = [];
+        foreach ($this->installs->all() as $installed) {
+            $installedStates[(int) $installed['package_id']] = (string) $installed['state'];
+        }
+
         $registries = [];
         foreach ($this->registries->all() as $registry) {
             $registry['fresh'] = $this->snapshots->isFresh($registry, $now);
@@ -52,11 +63,11 @@ final class RegistryCatalogService
             $packages[] = $package;
         }
 
-        return ['registries' => $registries, 'packages' => $packages];
+        return ['registries' => $registries, 'packages' => $packages, 'installed_states' => $installedStates];
     }
 
     /**
-     * @return array{package:array<string,mixed>,registry:?array<string,mixed>,releases:list<array<string,mixed>>,advisories:list<array<string,mixed>>,blocked:bool}|null
+     * @return array{package:array<string,mixed>,registry:?array<string,mixed>,releases:list<array<string,mixed>>,advisories:list<array<string,mixed>>,blocked:bool,installed:?array<string,mixed>,installed_permissions:list<array<string,mixed>>,history:list<array<string,mixed>>}|null
      */
     public function detail(int $packageId): ?array
     {
@@ -75,12 +86,17 @@ final class RegistryCatalogService
             $releases[] = $release;
         }
 
+        $installed = $this->installs->findByPackage($packageId);
+
         return [
             'package' => $package,
             'registry' => $package['registry_id'] === null ? null : $this->registries->find((int) $package['registry_id']),
             'releases' => $releases,
             'advisories' => $this->advisories->forPackage($packageId),
             'blocked' => $this->blocklist->isBlocked(null, (string) $package['package_uid']),
+            'installed' => $installed,
+            'installed_permissions' => $installed !== null ? $this->installPermissions->forInstall((int) $installed['id']) : [],
+            'history' => $this->packageHistory->forPackage($packageId, 50),
         ];
     }
 }

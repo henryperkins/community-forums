@@ -8,6 +8,8 @@ use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Security\Packages\PermissionDiff;
+use App\Service\Packages\PackageUpdateService;
 use App\Service\Registry\RegistryCatalogService;
 
 /**
@@ -50,6 +52,33 @@ final class AdminPackagesController extends Controller
             throw new NotFoundException('Package not found.');
         }
 
+        $installed = $detail['installed'];
+        $detail['rollback_targets'] = $installed !== null
+            ? $this->container->get(PackageUpdateService::class)->rollbackTargets((int) $installed['id'])
+            : [];
+        $detail['permission_labels'] = $this->permissionRows($detail['installed_permissions']);
+
         return $this->noindex($this->view('admin/package_detail', $detail));
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     * @return list<array<string,mixed>>
+     */
+    private function permissionRows(array $rows): array
+    {
+        return array_map(
+            static function (array $row): array {
+                $key = (string) ($row['permission_key'] ?? '');
+                $label = PermissionDiff::describe((string) $row['kind'], $key);
+
+                return $row + [
+                    'permission_key' => $key,
+                    'risk_class' => $row['risk_class'] ?? $label['risk'],
+                    'label' => $label['label'],
+                ];
+            },
+            $rows,
+        );
     }
 }

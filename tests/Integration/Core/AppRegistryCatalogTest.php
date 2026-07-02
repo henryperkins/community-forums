@@ -9,7 +9,7 @@ use Tests\Support\Phase5\RegistryFixtures;
 use Tests\Support\Phase5\SigningHarness;
 use Tests\Support\TestCase;
 
-/** Inc 2 exit gate: staff browse renders; install is absent. */
+/** Staff catalogue renders signed registry metadata and the dark-gated lifecycle entry point. */
 final class AppRegistryCatalogTest extends TestCase
 {
     /** @param array<string,bool> $flags */
@@ -67,15 +67,17 @@ final class AppRegistryCatalogTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/packages/999999'));
     }
 
-    public function test_install_is_absent_everywhere(): void
+    public function test_install_plan_affordance_is_present_for_admins(): void
     {
         $ids = $this->seedCatalog();
         $this->actingAs($this->makeAdmin());
 
-        $page = $this->get('/admin/packages/' . $ids['package_id'])->body();
-        self::assertStringNotContainsStringIgnoringCase('install', $page, 'no install affordance may render in Inc 2');
+        $page = $this->get('/admin/packages/' . $ids['package_id']);
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'Install plan');
+        $this->assertDontSeeText($page, 'Install does not exist yet');
 
-        $this->assertStatus(404, $this->post('/admin/packages/' . $ids['package_id'] . '/install', []));
+        $this->assertStatus(200, $this->post('/admin/packages/' . $ids['package_id'] . '/plan', []));
         $this->assertStatus(405, $this->post('/admin/packages/' . $ids['package_id'], []));
     }
 }

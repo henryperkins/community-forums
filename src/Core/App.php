@@ -13,6 +13,7 @@ use App\Controller\AdminCustomEmojiController;
 use App\Controller\AdminEmailController;
 use App\Controller\AdminExtensionController;
 use App\Controller\AdminLinkPreviewController;
+use App\Controller\AdminPackageLifecycleController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
 use App\Controller\AdminRoleController;
@@ -97,6 +98,7 @@ use App\Repository\PackageHistoryRepository;
 use App\Repository\PackagePublisherRepository;
 use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
+use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PackageRepository;
 use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\PostRepository;
@@ -138,6 +140,8 @@ use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
 use App\Security\RateLimiter;
 use App\Security\Registry\TrustChainVerifier;
+use App\Security\Packages\ManifestValidator;
+use App\Security\Packages\PackageSecurityGate;
 use App\Security\SecurityHeaders;
 use App\Security\SecretBox;
 use App\Security\Session;
@@ -175,8 +179,11 @@ use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
 use App\Service\OAuth\ProviderRegistry;
+use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
+use App\Service\Packages\PackageLifecycleService;
+use App\Service\Packages\PackageUpdateService;
 use App\Service\PostingService;
 use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
@@ -188,9 +195,11 @@ use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
 use App\Service\Registry\LocalBlocklistService;
+use App\Service\Registry\CurlRegistryTransport;
 use App\Service\Registry\RegistryAdvisoryService;
 use App\Service\Registry\RegistryCatalogService;
 use App\Service\Registry\RegistrySnapshotService;
+use App\Service\Registry\RegistryTransport;
 use App\Service\Registry\RegistryTrustService;
 use App\Service\ResolverShadow;
 use App\Service\ReputationLedgerService;
@@ -1141,12 +1150,74 @@ final class App
         $c->bind(PackageRepository::class, fn (Container $c) => new PackageRepository($c->get(Database::class)));
         $c->bind(PackageReleaseRepository::class, fn (Container $c) => new PackageReleaseRepository($c->get(Database::class)));
         $c->bind(PackageAdvisoryRepository::class, fn (Container $c) => new PackageAdvisoryRepository($c->get(Database::class)));
+        $c->bind(PackageReviewDecisionRepository::class, fn (Container $c) => new PackageReviewDecisionRepository($c->get(Database::class)));
         $c->bind(LocalPackageBlockRepository::class, fn (Container $c) => new LocalPackageBlockRepository($c->get(Database::class)));
         $c->bind(InstalledPackageRepository::class, fn (Container $c) => new InstalledPackageRepository($c->get(Database::class)));
         $c->bind(InstalledPackagePermissionRepository::class, fn (Container $c) => new InstalledPackagePermissionRepository($c->get(Database::class)));
         $c->bind(PackageHistoryRepository::class, fn (Container $c) => new PackageHistoryRepository($c->get(Database::class)));
         $c->bind(PackageTransparencyLogRepository::class, fn (Container $c) => new PackageTransparencyLogRepository($c->get(Database::class)));
+        $c->bind(ManifestValidator::class, fn () => new ManifestValidator());
+        $c->bind(PackageSecurityGate::class, fn (Container $c) => new PackageSecurityGate(
+            $c->get(LocalPackageBlockRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+        ));
+        $c->bind(RegistryTransport::class, fn () => new CurlRegistryTransport(
+            new EgressGuard(
+                (bool) $config->get('registry.allow_http', false),
+                (array) $config->get('registry.allowed_private_cidrs', []),
+            ),
+            (int) $config->get('registry.max_snapshot_bytes', 1_048_576),
+            (int) $config->get('registry.fetch_timeout_seconds', 10),
+        ));
         $c->bind(PackageArtifactStore::class, fn () => new PackageArtifactStore((string) $config->get('packages.storage_path')));
+        $c->bind(PackageAcquisitionService::class, fn (Container $c) => new PackageAcquisitionService(
+            $c->get(Database::class),
+            $c->get(TrustChainVerifier::class),
+            $c->get(RegistryTrustKeyRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageReviewDecisionRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(PackageArtifactStore::class),
+            $c->get(ManifestValidator::class),
+            $c->get(RegistryTransport::class),
+            $c->get(Telemetry::class),
+        ));
+        $c->bind(PackageLifecycleService::class, fn (Container $c) => new PackageLifecycleService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageRegistryRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackagePermissionRepository::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(PackageReviewDecisionRepository::class),
+            $c->get(PackageAcquisitionService::class),
+            $c->get(PackageSecurityGate::class),
+            $c->get(PackageArtifactStore::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+            (int) $config->get('packages.retention_days', 30),
+            $c->get(Telemetry::class),
+        ));
+        $c->bind(PackageUpdateService::class, fn (Container $c) => new PackageUpdateService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageRegistryRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackagePermissionRepository::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(PackageAcquisitionService::class),
+            $c->get(PackageSecurityGate::class),
+            $c->get(PackageArtifactStore::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Telemetry::class),
+        ));
         $c->bind(PackageHealthService::class, fn (Container $c) => new PackageHealthService(
             $c->get(Database::class),
             $c->get(InstalledPackageRepository::class),
@@ -1208,6 +1279,9 @@ final class App
             $c->get(PackageRegistryRepository::class),
             $c->get(RegistrySnapshotService::class),
             $c->get(LocalBlocklistService::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackagePermissionRepository::class),
+            $c->get(PackageHistoryRepository::class),
         ));
         $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
             $c->get(Database::class),
@@ -1507,6 +1581,20 @@ final class App
         $r->post('/admin/roles/{id}/clone', [AdminRoleController::class, 'clone']);
         $r->get('/admin/packages', [AdminPackagesController::class, 'index']);
         $r->get('/admin/packages/{id}', [AdminPackagesController::class, 'show']);
+        $r->post('/admin/packages/{id}/plan', [AdminPackageLifecycleController::class, 'plan']);
+        $r->post('/admin/packages/{id}/install', [AdminPackageLifecycleController::class, 'install']);
+        $r->get('/admin/packages/{id}/consent', [AdminPackageLifecycleController::class, 'consentForm']);
+        $r->post('/admin/packages/{id}/consent', [AdminPackageLifecycleController::class, 'consent']);
+        $r->post('/admin/packages/{id}/enable', [AdminPackageLifecycleController::class, 'enable']);
+        $r->post('/admin/packages/{id}/disable', [AdminPackageLifecycleController::class, 'disable']);
+        $r->post('/admin/packages/{id}/pin', [AdminPackageLifecycleController::class, 'pin']);
+        $r->post('/admin/packages/{id}/update-policy', [AdminPackageLifecycleController::class, 'updatePolicy']);
+        $r->post('/admin/packages/{id}/update', [AdminPackageLifecycleController::class, 'update']);
+        $r->post('/admin/packages/{id}/update/cancel', [AdminPackageLifecycleController::class, 'cancelUpdate']);
+        $r->post('/admin/packages/{id}/rollback', [AdminPackageLifecycleController::class, 'rollback']);
+        $r->post('/admin/packages/{id}/uninstall', [AdminPackageLifecycleController::class, 'uninstall']);
+        $r->post('/admin/packages/{id}/export', [AdminPackageLifecycleController::class, 'export']);
+        $r->post('/admin/packages/{id}/reverify', [AdminPackageLifecycleController::class, 'reverify']);
         $r->get('/admin/registries', [AdminRegistryController::class, 'index']);
         $r->post('/admin/registries', [AdminRegistryController::class, 'create']);
         $r->post('/admin/registries/{id}/enabled', [AdminRegistryController::class, 'setEnabled']);
