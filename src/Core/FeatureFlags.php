@@ -56,8 +56,8 @@ final class FeatureFlags
         'expanded_feeds' => true,     // board/tag follows, Following + Latest feeds — GA default-on (2026-07-01; reversible via features override)
         'reputation_ledger' => true,  // idempotent reputation events + windowed ranks — GA default-on (2026-07-01; reversible via features override)
         'badge_rules' => true,        // custom badge rules/backfill/revoke history — GA default-on (2026-07-02; reversible via features override)
-        'community_memory' => false,  // summaries, related topics, wiki revisions
-        'content_references' => false,// persisted board/thread/post references + read-gated cards
+        'community_memory' => false,   // summaries, related topics, wiki revisions
+        'content_references' => true,  // persisted board/thread/post references + read-gated cards — GA default-on (2026-07-02; reversible via features override)
 
         // ── Phase 4 carryover completion (deploy-dark, independently reversible)
         'link_previews' => false,      // allowlisted server-fetched URL metadata + purge/refresh

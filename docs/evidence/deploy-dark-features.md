@@ -54,7 +54,7 @@ Audited 2026-07-02 against `src/Core/FeatureFlags.php` and literal
 | `reputation_ledger` | Reputation-event ledger and windowed rankings | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppLeaderboardTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `badge_rules` | Custom badge rules, preview, backfill, revoke history | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppAdminBadgeRulesTest` (available-by-default + flag-rollback-with-history-intact), `AppFeatureFlagTest`, browser `32-badge-rules`/`33-badge-rule-preview`/`34-badge-rule-backfilled`, `/admin/badge-rules` axe pass, runbook `docs/runbooks/badge_rules.md`. Retained here for traceability. |
 | `community_memory` | Summaries, related topics, wiki revisions | Accepted Gate A engineering baseline; default-dark until intentional enablement |
-| `content_references` | Persisted board/thread/post/DM/summary references and read-gated cards | Deploy-dark carryover; awaiting browser/no-JS and inaccessible-target evidence |
+| `content_references` | Persisted board/thread/post/DM/summary references and read-gated cards | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest` (default-on + operator rollback), `AppContentReferenceTest` (post/DM/summary/tag references through read gate), `AppPhase4CarryoverFoundationTest` (default posture), browser `43-content-references-redacted`, `.reference-cards` axe pass. Retained here for traceability. |
 
 ## Phase 4 Carryover Completion
 
@@ -166,14 +166,19 @@ still listed as "Need: runbook" do not yet.
 
 ### Tier 3 — small surfaces, but evidence must be captured from scratch
 
-6. **`content_references`** — board/thread/post/DM/summary references persisted
-   at write time and rendered as reference cards only when the viewer can read
-   the target; inaccessible targets are redacted.
-   - Have: `AppContentReferenceTest`; DM and summary references share the same
-     read-gated path.
-   - Need: browser/no-JS capture + the inaccessible-target redaction proof (no
-     runbook demanded). The e2e seed's private-board fixture
-     (`14-private-board-member.png`) already supports the redaction scenario.
+6. **`content_references`** — ✓ **Graduated 2026-07-02 (default-ON).**
+   Board/thread/post/DM/summary references persisted at write time and rendered
+   as reference cards only when the viewer can read the target; inaccessible
+   targets are redacted.
+   - Evidence completed: `AppFeatureFlagTest`
+     (`test_content_references_are_available_by_default_and_can_be_disabled`
+     asserts default-on + operator rollback), `AppContentReferenceTest` (post,
+     DM, summary, and tag reference persistence + read-gate), and
+     `AppPhase4CarryoverFoundationTest` (default posture); the e2e private-board
+     fixture (`14-private-board-member.png`) was reused to capture desktop+mobile
+     `43-content-references-redacted` showing a public target card rendered while
+     the private-board target is redacted for a non-member; `.reference-cards`
+     scoped axe pass added to `tests/browser/a11y.spec.ts`.
 7. **`custom_emoji`** — operator-managed static PNG/WebP shortcode assets
    rendered through the server Markdown sanitizer, optionally usable as
    reactions.
@@ -331,6 +336,10 @@ as of 2026-07-02.
   `FeatureFlags` default is now `true`. It is retained here for traceability and
   remains reversible via the `features` override; the purge worker keeps its
   `pending_deletion` guard when the feature is enabled.
+- `content_references` graduated out of deploy-dark on 2026-07-02: its
+  `FeatureFlags` default is now `true`. It is retained here for traceability and
+  remains reversible via the `features` override; persisted reference rows stay
+  intact when the flag is rolled back and cards simply stop rendering.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
   decision. `group_dms` and `community_memory` additionally require an

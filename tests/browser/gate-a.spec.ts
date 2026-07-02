@@ -483,6 +483,66 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await expect(page.locator('[data-drafts-list]')).toContainText('No server drafts yet.');
 });
 
+test('phase 4 content references render read-gated cards for public targets and redact private targets', async ({ page }, info) => {
+  // content_references graduated to default-on (GA 2026-07-02). Drive the
+  // no-JS server-rendered path: create a thread in #general that links to a
+  // public thread and to the private #staff-room, then assert the public target
+  // renders as a card while the private target is redacted for a non-member.
+  // The seeded private-board fixture already has bob as a member (see the
+  // "private board access for a member" journey), so we view as carol, who is
+  // not a member of #staff-room.
+  const author = info.project.name === 'mobile' ? 'carol@retro.test' : 'bob@retro.test';
+  const viewer = 'carol@retro.test';
+  const publicTargetTitle = 'Public reference target';
+
+  await login(page, author);
+
+  // Create a stable public target thread in #general.
+  await openNewTopicComposer(page);
+  const authorTextarea = page.locator('form.composer textarea.composer-input').first();
+  await page.locator('form.composer input[name="title"]').first().fill(publicTargetTitle);
+  await authorTextarea.fill('This is the public target for reference cards.');
+  await page.locator('form.composer button[type="submit"]').first().click();
+  await page.waitForURL(/\/t\/\d+-/);
+  const publicTargetUrl = new URL(page.url()).pathname;
+
+  // Create the source thread linking to the public target and the private board.
+  await visit(page, '/c/general');
+  await openNewTopicComposer(page);
+  const sourceTitle = `Reference source ${Date.now()}`;
+  await page.locator('form.composer input[name="title"]').first().fill(sourceTitle);
+  await page.locator('form.composer textarea.composer-input').first().fill(
+    `See the [public target](${publicTargetUrl}) and the [private board](/c/staff-room).`,
+  );
+  await page.locator('form.composer button[type="submit"]').first().click();
+  await page.waitForURL(/\/t\/\d+-/);
+
+  // Reload the source page as the author to confirm both cards render for a
+  // privileged viewer (bob is a member of #staff-room; carol only sees public).
+  const sourceUrl = new URL(page.url()).pathname;
+  await page.goto(sourceUrl);
+  await expect(page.locator('.reference-cards')).toContainText(publicTargetTitle);
+  if (author === 'bob@retro.test') {
+    await expect(page.locator('.reference-cards')).toContainText('Staff Room');
+  }
+
+  // View as a non-member: the public card is present, the private one is absent.
+  // Navigate by opening a new tab because session cookies are scoped to the
+  // current browser context; logging in again from the same page can race the
+  // server-rendered redirect and the previous composer state.
+  const viewerContext = await page.context().browser()?.newContext({ viewport: page.viewportSize() ?? undefined });
+  if (viewerContext === undefined) {
+    throw new Error('Could not create viewer context for content-reference evidence');
+  }
+  const viewerPage = await viewerContext.newPage();
+  await login(viewerPage, viewer);
+  await viewerPage.goto(sourceUrl);
+  await expect(viewerPage.locator('.reference-cards')).toContainText(publicTargetTitle);
+  await expect(viewerPage.locator('.reference-cards')).not.toContainText('Staff Room');
+  await shot(viewerPage, info, '43-content-references-redacted');
+  await viewerContext.close();
+});
+
 test('phase 4 slash menu inserts approved snippets and GIPHY media', async ({ page }, info) => {
   await page.route('https://api.giphy.com/v1/gifs/search**', async (route) => {
     await route.fulfill({

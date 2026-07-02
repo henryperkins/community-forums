@@ -14,7 +14,7 @@
 
 - **Deploy-dark.** `passkeys` stays **default `false`** in `FeatureFlags::DEFAULTS` (it already is at `src/Core/FeatureFlags.php:86` — do not touch the map). Every new route throws `NotFoundException` when the flag is off, with regressions in `tests/Integration/Core/AppFeatureFlagTest.php`. Gate order is the house order: `requireUser()`/`requireAdmin()` **then** the flag gate (302/403 resolve before the dark 404); guest login-ceremony routes gate first (there is nothing else to resolve).
 - **No new migration.** `0051_phase5_webauthn.php` already defines both tables (post-`credential_id VARBINARY(1023)` widen). Privileged-MFA policy (the conditional `0074`) does **not** ship — Gate A boundary is "enrollment + step-up only; NO privileged-MFA enforcement" (program plan §D Inc 7; ADR 0012 A7 default-off). `tests/Unit/Core/MigrationLedgerTest.php` stays untouched.
-- **PUBLIC key material only (decision #28/`0051` header).** The server stores raw COSE **public** keys and raw credential-id bytes. No code path generates, stores, or logs private-key material. Test private keys exist only inside `Tests\Support\Phase5\WebAuthnHarness`.
+- **PUBLIC key material only (decision #28/`0051` header).** The server stores raw COSE **public** keys and raw credential-id bytes. No production/runtime `src/` code path generates, stores, or logs private-key material. Test/budget private keys exist only inside `Tests\Support\Phase5\WebAuthnHarness`; committed performance fixtures contain public keys, challenges, authenticator data, and signatures only.
 - **Fail closed.** Every ceremony failure is a thrown, coded `WebAuthnException`; no default-allow branch. Tampered clientData, wrong type, wrong origin, wrong rpIdHash, missing UP, missing-required UV, stale/reused/cross-user/cross-session challenge, unknown credential, altered signature, unsupported algorithm, and malformed CBOR all refuse.
 - **Origin/RP-ID come from config, never the request (A5 §3).** Derive from `app.url` (`APP_URL`); never read `Host`/`X-Forwarded-*` for ceremony validation. Production non-HTTPS non-localhost ⇒ **hard-refuse** all ceremonies (`insecure_origin`), per the A5 owner sign-off.
 - **Attestation is not trusted (decision #29).** Request `attestation: 'none'`; accept any well-formed `fmt`/`attStmt` without verifying attestation chains; retain AAGUID as informational only.
@@ -24,8 +24,9 @@
 - **PDO `EMULATE_PREPARES=false`:** never bind `LIMIT`/`OFFSET`; never reuse a named placeholder; `UTC_TIMESTAMP()`/`gmdate()` everywhere; binary columns take raw bytes.
 - **Strict CSP / PE.** No inline `<script>`/`<style>`; all JS in `public/assets/passkeys.js`, included from `templates/layout.php` only when the flag is on; hooks via `data-*`; every non-ceremony flow (rename, revoke-with-password, fallback sign-in) works as server-rendered forms without JS.
 - **CSRF on every POST.** Ceremony fetches append `_token` (read from `input[name="_token"]`) to `FormData` exactly like `public/assets/composer.js`. No new CSRF exemptions.
-- **Rate limits (P5-11 requirement).** New named policies `passkey_login` `[10, 900]` and `passkey_challenge` `[30, 900]` in `config/config.php`; management mutations consume the existing (currently unused) `mfa_settings` `[10, 900]`. Login policies key per-subject (lowercased email) via `enforceSubject` — never raw PII in keys.
+- **Rate limits (P5-11 requirement).** New named policies `passkey_login` `[10, 900]` and `passkey_challenge` `[30, 900]` in `config/config.php`; management mutations consume the existing (currently unused) `mfa_settings` `[10, 900]`. Login policies key per-subject (lowercased email) via `enforceSubject` — never raw PII in keys — and successful passkey login clears the `passkey_login` subject window. JSON ceremony endpoints catch `HttpException` thrown by `RateLimitService` and return the same JSON error envelope as validation failures (`{"ok":false,"errors":...}`) with status 429; later service `HttpException`s must be rendered as JSON/form errors with their real status and **not** as `rate_limit` (e.g. `WriteGate` 403 remains a 403). No passkey fetch endpoint may fall through to the app-level HTML error renderer.
 - **Audit.** Every credential mutation and every passkey sign-in writes `moderation_log` (`target_type='user'`, `reason='account security'`) mirroring `MfaService::log`: `passkey_registered`, `passkey_renamed`, `passkey_revoked`, `passkey_login`, `passkey_counter_anomaly`. Add/remove also send a best-effort, fail-closed security-notification email via the `Mailer` seam (mirror `EmailVerificationService::sendEmail`).
+- **Session invalidation after credential changes.** Adding or revoking a passkey is an account credential change: after a successful mutation, call `Controller::revokeOtherSessionsFor($user)` so every parallel session is revoked while the current session survives (USER §3.3 / CLAUDE.md invariant). Rename is metadata only and does not revoke sessions. Cover add and revoke with explicit two-session regressions.
 - **Evidence (DESIGN §13; PHASE_5_PLAN §10.2 "mocked cryptography alone is insufficient"; §F distributed discipline):** real-crypto unit fixtures (openssl-signed, via `WebAuthnHarness`), the four spec-pinned test files (`tests/Unit/Auth/WebAuthnPolicyTest.php`, `tests/Integration/Core/AppPasskeyRegistrationTest.php`, `AppPasskeyLoginTest.php`, `AppPasskeyRecoveryTest.php`), CDP virtual-authenticator browser journey + axe on desktop+mobile, the `webauthn.ceremony_p95` D11 budget measured (target 2000 ms), TM-ID-05…09 flipped to `implemented` with real test paths, runbook, and the ledger row `GA-DOD-13` advanced in the same commits that land its evidence.
 - **Strict PHPUnit:** every test ≥1 assertion; no output; no warnings. Per-test isolation is one rolled-back transaction — **no savepoints**: code under test that opens its own transaction does not really roll back in tests; assert observable HTTP/DB behavior, not rollback effects.
 - **Never `git add -A` / `git add .`** — the working tree may still carry another session's files. Stage explicit paths in every commit. End every commit message with `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
@@ -62,7 +63,7 @@
 3. **User-verification policy:** ceremonies request `userVerification:'preferred'`; the server **requires** UV for `step_up`; for `login`, UV is required iff the account has TOTP enrolled (see #4); `register` records the UV bit as reported. UP is always required.
 4. **TOTP × passkey sign-in:** a UV-verified passkey assertion is multi-factor by itself and signs the user straight in (no TOTP interstitial). If the account has TOTP enrolled and the assertion lacks UV, the sign-in refuses with guidance ("use a passkey with a screen lock, or sign in with your password and code") — this avoids splicing a JSON ceremony into the HTML interstitial and never weakens a TOTP-enrolled account.
 5. **Fresh-factor scope:** credential **add** and **revoke** require a present factor (password or passkey step-up assertion); **rename** requires only session + CSRF.
-6. **TM-ID-09 clause 2** ("provider disable lists sole-method accounts"): no provider-disable surface exists until Inc 8. This increment ships the tested capability `PasskeyService::soleProviderAccounts(string $provider)` and records an explicit Inc 8 handoff (wire it into the provider-disable UI) in PHASE_5_STATUS; the fixture flips to `implemented` on the strength of the removal-block + detector tests.
+6. **TM-ID-09 clause 2** ("provider disable lists sole-method accounts"): no provider-disable surface exists until Inc 8. This increment ships the tested capability `OAuthIdentityRepository::soleMethodAccounts(string $provider)` and records an explicit Inc 8 handoff (wire it into the provider-disable UI) in PHASE_5_STATUS; the fixture flips to `implemented` on the strength of the removal-block + detector tests.
 7. **No `0074`, no privileged-MFA policy scaffolding, no enrollment-audience config.** The §13.1 step-9 staff pilot is an operational procedure (enable the flag for the pilot window; runbook documents it), not a code gate.
 8. **`ext-openssl`** is added to `composer.json` `require` (it was undeclared; ES256/RS256 verification now depends on it).
 
@@ -94,13 +95,13 @@ App\Repository\WebAuthnCredentialRepository __construct(Database) · activeForUs
                                             countActiveForUser(int): int · findActiveByCredentialId(string $rawId): ?array
                                             findForUser(int $userId, int $id): ?array · create(array $row): int
                                             rename(int $userId, int $id, string $nickname): bool · revoke(int $userId, int $id): bool
-                                            updateOnUse(int $id, int $signCount): void
+                                            updateOnUse(int $id, int $signCount): void   # refreshes last_used_at and only raises stored sign_count
 App\Repository\WebAuthnChallengeRepository  __construct(Database) · mint(?int $userId, string $sessionHash, string $purpose,
                                             string $challenge, int $ttlSeconds): int
                                             consume(string $challenge, string $sessionHash, string $purpose, ?int $userId): bool
                                             purgeExpired(): int
 
-App\Security\ReauthGate (additions)         const FACTOR_PASSWORD = 'password' · const FACTOR_PASSKEY = 'passkey'
+App\Security\ReauthGate (additions)         const FACTOR_PASSKEY = 'passkey'   # const FACTOR_PASSWORD = 'password' ALREADY EXISTS (line 21) — do NOT re-declare
                                             requireFactor(User $actor, ?string $currentPassword, ?\Closure $passkeyProbe = null,
                                                           string $field = 'current_password'): string
 
@@ -114,7 +115,7 @@ App\Service\PasskeyService
   status(User $user): array                             # {supported: bool, credentials: list<row>}
   beginRegistration(User $user, string $sessionHash): array          # PublicKeyCredentialCreationOptions (JSON-ready)
   completeRegistration(User $user, string $sessionHash, string $credentialJson, ?string $nickname): array
-  beginLogin(?string $email, string $sessionHash): array             # PublicKeyCredentialRequestOptions (JSON-ready; enumeration-safe)
+  beginLogin(?string $email, string $sessionHash): array             # PublicKeyCredentialRequestOptions (JSON-ready; fixed-shape enumeration-safe)
   completeLogin(string $credentialJson, string $sessionHash): array  # {user: \App\Domain\User, used_uv: bool}
   beginStepUp(User $user, string $sessionHash): array
   verifyStepUp(User $user, string $sessionHash, string $credentialJson): void
@@ -159,7 +160,7 @@ POST /settings/security/passkeys/step-up-challenge   body: _token
   → {"ok":true,"options":{challenge,rpId,timeout:300000,allowCredentials:[...],userVerification:'required'}}
 POST /login/passkey/challenge                body: _token, email
   → {"ok":true,"options":{challenge,rpId,timeout:300000,allowCredentials:[...],userVerification:'preferred'}}   (identical shape for unknown emails)
-POST /login/passkey                          body: _token, credential (JSON string), next?
+POST /login/passkey                          body: _token, email, credential (JSON string), next?
   → {"ok":true,"redirect":"/..."}
 ```
 
@@ -227,7 +228,10 @@ import * as crypto from 'node:crypto';
 
 test.use({ javaScriptEnabled: false });
 
-const BASE = process.env.RB_BASE_URL ?? 'http://127.0.0.1:8010';
+// Empty string lets Playwright resolve relative paths against use.baseURL.
+// E2E_BASE_URL matches tests/browser/playwright.config.ts; RB_BASE_URL is a
+// legacy/manual override for ad-hoc runs. Do not hard-code the server port.
+const BASE = process.env.E2E_BASE_URL ?? process.env.RB_BASE_URL ?? '';
 
 function b32decode(s: string): Buffer {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -274,7 +278,7 @@ test('TOTP enroll, second-factor login, and disable all work without JavaScript'
   await page.screenshot({ path: shot('totp-01-enroll', testInfo.project.name), fullPage: true });
 
   await page.fill('form[action="/settings/security/totp/confirm"] input[name="current_password"]', 'password123');
-  await page.fill('form[action="/settings/security/totp/confirm"] input[name="code"]', totp(cleaned));
+  await page.fill('form[action="/settings/security/totp/confirm"] input[name="totp_code"]', totp(cleaned));
   await page.click('form[action="/settings/security/totp/confirm"] button[type="submit"]');
   await expect(page.locator('body')).toContainText(/recovery code/i);
   await page.screenshot({ path: shot('totp-02-recovery-codes', testInfo.project.name), fullPage: true });
@@ -294,13 +298,13 @@ test('TOTP enroll, second-factor login, and disable all work without JavaScript'
   // Disable so the seed state stays reusable for other specs in the same run.
   await page.goto(`${BASE}/settings/security`);
   await page.fill('form[action="/settings/security/totp/disable"] input[name="current_password"]', 'password123');
-  await page.fill('form[action="/settings/security/totp/disable"] input[name="code"]', totp(cleaned));
+  await page.fill('form[action="/settings/security/totp/disable"] input[name="disable_code"]', totp(cleaned));
   await page.click('form[action="/settings/security/totp/disable"] button[type="submit"]');
   await expect(page.locator('form[action="/settings/security/totp/enroll"]')).toBeVisible();
 });
 ```
 
-Before finalizing selectors, open `templates/account/security.php` and `templates/auth/mfa.php` and adjust the three locators (`data-totp-secret` fallback chain, the interstitial `code` field, the disable form) to the real markup — the spec must target what the templates actually render, and the secret-extraction line should collapse to one selector once checked.
+The field names above are pinned to the current templates: enrollment confirmation uses `totp_code`, login interstitial uses `code`, and disable uses `disable_code`. Keep those names exact; a generic `code` field on the settings forms will silently fail the no-JS proof.
 
 - [ ] **Step 2: Run it to make sure it fails usefully (before selector fixes) then passes**
 
@@ -390,6 +394,8 @@ final class Base64UrlTest extends TestCase
         self::assertNull(Base64Url::decode('Zg=='));       // padding not accepted
         self::assertNull(Base64Url::decode('Zg+/'));       // standard-alphabet chars
         self::assertNull(Base64Url::decode("Zg\n"));       // whitespace
+        self::assertNull(Base64Url::decode('AB'));         // non-zero pad bits; canonical form for "\0" is "AA"
+        self::assertNull(Base64Url::decode('Zh'));         // non-zero pad bits; canonical form for "f" is "Zg"
     }
 }
 ```
@@ -441,7 +447,10 @@ final class Base64Url
             $b64 .= str_repeat('=', 4 - $remainder);
         }
         $decoded = base64_decode($b64, true);
-        return $decoded === false ? null : $decoded;
+        if ($decoded === false) {
+            return null;
+        }
+        return self::encode($decoded) === $encoded ? $decoded : null;
     }
 }
 ```
@@ -467,7 +476,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task 3: `WebAuthnException` + `CborDecoder`
 
-The attestation object and COSE keys are CBOR. This is a deliberately minimal RFC 8949 subset decoder: definite lengths only, integers/byte-strings/text-strings/arrays/maps/false/true/null, hard caps on depth (8), container size (1024) and string length (1 MiB), duplicate-map-key refusal (including int-vs-string aliasing like `1` vs `"1"`), and no floats/tags/indefinite forms — everything a WebAuthn payload legitimately needs and nothing more. All failures throw the increment's coded exception type.
+The attestation object and COSE keys are CBOR. This is a deliberately minimal RFC 8949 subset decoder: definite lengths only, integers/byte-strings/text-strings/arrays/maps/false/true/null, hard caps on depth (8), container size (1024) and string length (1 MiB), duplicate-map-key refusal, numeric-string map-key refusal (so PHP can never collapse CBOR `1` and `"1"` into the same array slot), and no floats/tags/indefinite forms — everything a WebAuthn payload legitimately needs and nothing more. All failures throw the increment's coded exception type.
 
 **Files:**
 - Create: `src/Security/WebAuthn/WebAuthnException.php`
@@ -527,7 +536,7 @@ final class CborDecoderTest extends TestCase
 
     public function test_rejects_duplicate_map_keys_including_int_string_aliasing(): void
     {
-        // {1: 0, "1": 0} — PHP would silently merge these array slots.
+        // {1: 0, "1": 0} — PHP would silently merge these array slots, so numeric-string keys are malformed.
         $bytes = "\xa2\x01\x00" . "\x611" . "\x00";
         $this->expectException(WebAuthnException::class);
         CborDecoder::decode($bytes);
@@ -722,6 +731,9 @@ final class CborDecoder
             if (!is_int($key) && !is_string($key)) {
                 throw new WebAuthnException('malformed_cbor', 'CBOR map key must be an integer or string.');
             }
+            if (is_string($key) && preg_match('/^-?(?:0|[1-9][0-9]*)$/', $key) === 1) {
+                throw new WebAuthnException('malformed_cbor', 'Numeric-string CBOR map keys are not accepted.');
+            }
             $tag = (is_int($key) ? 'i:' : 's:') . $key;
             if (isset($seen[$tag])) {
                 throw new WebAuthnException('malformed_cbor', 'Duplicate CBOR map key.');
@@ -837,6 +849,24 @@ final class CoseKeyTest extends TestCase
             self::assertSame('malformed_key', $e->code);
         }
 
+        // EC2 point with valid lengths but not a valid P-256 public point.
+        $offCurve = self::coseMap([1 => 2, 3 => -7, -1 => 1, -2 => str_repeat("\0", 32), -3 => str_repeat("\0", 32)]);
+        try {
+            CoseKey::fromCbor($offCurve);
+            self::fail('Off-curve point must be refused before storage');
+        } catch (WebAuthnException $e) {
+            self::assertSame('malformed_key', $e->code);
+        }
+
+        // RSA key with valid byte lengths but an unusable public exponent.
+        $badRsa = self::coseMap([1 => 3, 3 => -257, -1 => "\x80" . str_repeat("\0", 255), -2 => "\x02"]);
+        try {
+            CoseKey::fromCbor($badRsa);
+            self::fail('Even RSA exponent must be refused before storage');
+        } catch (WebAuthnException $e) {
+            self::assertSame('malformed_key', $e->code);
+        }
+
         $this->expectException(WebAuthnException::class);
         CoseKey::fromCbor("\x01"); // not a map
     }
@@ -936,18 +966,31 @@ final class CoseKey
             if ($crv !== 1 || !is_string($x) || !is_string($y) || strlen($x) !== 32 || strlen($y) !== 32) {
                 throw new WebAuthnException('malformed_key', 'COSE EC2 key is not a valid P-256 point encoding.');
             }
-            return new self(self::ALG_ES256, self::pem(self::EC_P256_SPKI_PREFIX . "\x04" . $x . $y));
+            $pem = self::pem(self::EC_P256_SPKI_PREFIX . "\x04" . $x . $y);
+            self::assertOpenSslAccepts($pem);
+            return new self(self::ALG_ES256, $pem);
         }
 
         if ($kty === 3 && $alg === self::ALG_RS256) {
             $n = $map[-1] ?? null;
             $e = $map[-2] ?? null;
-            if (!is_string($n) || !is_string($e) || strlen($n) < 256 || strlen($n) > 512 || strlen($e) < 1 || strlen($e) > 8) {
+            if (!is_string($n) || !is_string($e)) {
                 throw new WebAuthnException('malformed_key', 'COSE RSA key has an unsupported modulus or exponent size.');
+            }
+            $n = ltrim($n, "\0");
+            $e = ltrim($e, "\0");
+            if (strlen($n) < 256 || strlen($n) > 512 || strlen($e) < 1 || strlen($e) > 4) {
+                throw new WebAuthnException('malformed_key', 'COSE RSA key has an unsupported modulus or exponent size.');
+            }
+            $exp = self::decodeSmallUint($e);
+            if ($exp < 3 || ($exp & 1) === 0) {
+                throw new WebAuthnException('malformed_key', 'COSE RSA key has an unusable public exponent.');
             }
             $rsa = self::derSequence(self::derUint($n) . self::derUint($e));
             $spki = self::derSequence(self::RSA_ALGORITHM_IDENTIFIER . self::derBitString($rsa));
-            return new self(self::ALG_RS256, self::pem($spki));
+            $pem = self::pem($spki);
+            self::assertOpenSslAccepts($pem);
+            return new self(self::ALG_RS256, $pem);
         }
 
         throw new WebAuthnException('unsupported_algorithm', 'Only ES256 and RS256 credentials are accepted.');
@@ -976,6 +1019,22 @@ final class CoseKey
     private static function pem(string $der): string
     {
         return "-----BEGIN PUBLIC KEY-----\n" . chunk_split(base64_encode($der), 64, "\n") . "-----END PUBLIC KEY-----\n";
+    }
+
+    private static function assertOpenSslAccepts(string $pem): void
+    {
+        if (openssl_pkey_get_public($pem) === false) {
+            throw new WebAuthnException('malformed_key', 'COSE key does not decode to a usable OpenSSL public key.');
+        }
+    }
+
+    private static function decodeSmallUint(string $bytes): int
+    {
+        $value = 0;
+        foreach (unpack('C*', $bytes) as $byte) {
+            $value = ($value << 8) | $byte;
+        }
+        return $value;
     }
 
     private static function derLength(int $len): string
@@ -1203,6 +1262,9 @@ final class AuthenticatorData
             }
             $aaguid = substr($rest, 0, 16);
             $idLen = unpack('n', substr($rest, 16, 2))[1];
+            // §6.5.2 caps credential ids at 1023 bytes and sets no floor; the 16-byte
+            // minimum is a deliberate hardening choice (every real authenticator issues
+            // >=16-byte random ids) that rejects trivially short / degenerate ids.
             if ($idLen < 16 || $idLen > 1023 || strlen($rest) < 18 + $idLen) {
                 throw new WebAuthnException('malformed_authenticator_data', 'Credential id length out of range.');
             }
@@ -2195,6 +2257,9 @@ final class WebAuthnRepositoriesTest extends TestCase
         self::assertSame('Work laptop', $row['nickname']);
         self::assertSame(7, (int) $row['sign_count']);
         self::assertNotNull($row['last_used_at']);
+        $repo->updateOnUse($id, 3);
+        $lowered = $repo->findForUser((int) $user['id'], $id);
+        self::assertSame(7, (int) $lowered['sign_count'], 'counter anomalies must not lower the stored high-water mark');
 
         self::assertTrue($repo->revoke((int) $user['id'], $id));
         self::assertFalse($repo->revoke((int) $user['id'], $id), 'second revoke is a no-op');
@@ -2315,7 +2380,7 @@ final class WebAuthnCredentialRepository
     public function updateOnUse(int $id, int $signCount): void
     {
         $this->db->run(
-            'UPDATE webauthn_credentials SET sign_count = ?, last_used_at = UTC_TIMESTAMP() WHERE id = ?',
+            'UPDATE webauthn_credentials SET sign_count = GREATEST(sign_count, ?), last_used_at = UTC_TIMESTAMP() WHERE id = ?',
             [$signCount, $id],
         );
     }
@@ -2422,8 +2487,8 @@ The F7 gate grows the reserved second factor: a caller may now offer a passkey-a
 - Test: `tests/Integration/Security/ReauthGateFactorTest.php`
 
 **Interfaces:**
-- Consumes: existing `requirePassword`.
-- Produces: `ReauthGate::FACTOR_PASSWORD`, `ReauthGate::FACTOR_PASSKEY`, `requireFactor(User $actor, ?string $currentPassword, ?\Closure $passkeyProbe = null, string $field = 'current_password'): string`. Contract: a non-null probe that returns `true` wins as `FACTOR_PASSKEY` (a probe that fails must **throw**, not return false); otherwise a non-empty password is verified via `requirePassword`; otherwise `ValidationException` on `$field`.
+- Consumes: existing `requirePassword`; the existing `ReauthGate::FACTOR_PASSWORD` constant (already declared on line 21 — do **not** re-declare it, PHP fatals with "Cannot redeclare").
+- Produces: `ReauthGate::FACTOR_PASSKEY` (new constant, added beside the existing `FACTOR_PASSWORD`), `requireFactor(User $actor, ?string $currentPassword, ?\Closure $passkeyProbe = null, string $field = 'current_password'): string`. Contract: a non-null probe that returns `true` wins as `FACTOR_PASSKEY` (a probe that fails must **throw**, not return false); otherwise a non-empty password is verified via `requirePassword`; otherwise `ValidationException` on `$field`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2481,14 +2546,15 @@ Check `makeUser`'s password knob in `tests/Support/TestCase.php` first — if se
 vendor/bin/phpunit tests/Integration/Security/ReauthGateFactorTest.php
 ```
 
-Expected: FAIL — `Undefined constant ReauthGate::FACTOR_PASSWORD` / unknown method `requireFactor`.
+Expected: FAIL — unknown method `requireFactor` (the `FACTOR_PASSWORD` constant already exists on the class from Foundation, so only the method is missing).
 
 - [ ] **Step 3: Implement**
 
-Add to `src/Security/ReauthGate.php` (constants at the top of the class, method after `requirePassword`):
+Add to `src/Security/ReauthGate.php` the new `FACTOR_PASSKEY` constant beside the existing `FACTOR_PASSWORD` (**already declared on line 21 — do NOT re-add it, or PHP fatals with "Cannot redeclare App\Security\ReauthGate::FACTOR_PASSWORD"**), and the `requireFactor()` method after `requirePassword`:
 
 ```php
-    public const FACTOR_PASSWORD = 'password';
+    // NOTE: `public const FACTOR_PASSWORD = 'password';` already exists (line 21) — leave it.
+    // Add ONLY the new constant beside it:
     public const FACTOR_PASSKEY = 'passkey';
 
     /**
@@ -2583,6 +2649,19 @@ final class AppPasskeyRegistrationTest extends TestCase
         return $json;
     }
 
+    private function createExtraSessionFor(array $user): string
+    {
+        $id = hash('sha256', 'extra-session-' . bin2hex(random_bytes(16)));
+        (new \App\Repository\SessionRepository($this->db))->create([
+            'id' => $id,
+            'user_id' => (int) $user['id'],
+            'csrf_secret' => bin2hex(random_bytes(32)),
+            'user_agent' => 'phpunit-other-session',
+            'expires_at' => gmdate('Y-m-d H:i:s', time() + 86400),
+        ]);
+        return $id;
+    }
+
     public function test_user_enrolls_a_passkey_end_to_end_and_duplicates_are_refused(): void
     {
         $user = $this->makeUser();
@@ -2617,6 +2696,24 @@ final class AppPasskeyRegistrationTest extends TestCase
         $this->assertStatus(422, $dup);
     }
 
+    public function test_enrolling_a_passkey_revokes_other_sessions_but_keeps_current_session(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $otherSession = $this->createExtraSessionFor($user);
+        self::assertNull($this->db->fetchValue('SELECT revoked_at FROM sessions WHERE id = ?', [$otherSession]));
+
+        $challenge = (string) Base64Url::decode($this->mintChallenge()['options']['challenge']);
+        $cred = $this->harness->createCredential();
+        $this->assertStatus(200, $this->post('/settings/security/passkeys', [
+            'credential' => $this->harness->registrationPayload($cred, $challenge),
+        ]));
+
+        self::assertNotNull($this->db->fetchValue('SELECT revoked_at FROM sessions WHERE id = ?', [$otherSession]));
+        $current = $this->get('/settings/security');
+        $this->assertStatus(200, $current); // current session survives the credential-change revocation
+    }
+
     public function test_challenge_requires_a_fresh_factor(): void // TM-ID-06
     {
         $this->actingAs($this->makeUser());
@@ -2626,6 +2723,19 @@ final class AppPasskeyRegistrationTest extends TestCase
 
         $wrong = $this->post('/settings/security/passkeys/challenge', ['current_password' => 'not-it']);
         $this->assertStatus(422, $wrong);
+    }
+
+    public function test_management_rate_limit_keeps_the_json_error_contract(): void
+    {
+        $this->actingAs($this->makeUser());
+        for ($i = 0; $i < 10; $i++) {
+            $this->assertStatus(422, $this->post('/settings/security/passkeys/challenge', []));
+        }
+        $limited = $this->post('/settings/security/passkeys/challenge', []);
+        $this->assertStatus(429, $limited);
+        $json = json_decode($limited->body(), true);
+        self::assertFalse($json['ok']);
+        self::assertArrayHasKey('rate_limit', $json['errors']);
     }
 
     public function test_challenge_is_single_use(): void // TM-ID-05 (replay)
@@ -2744,6 +2854,7 @@ use App\Security\LastOwnerGuard;
 use App\Security\ReauthGate;
 use App\Security\Session;
 use App\Security\WebAuthn\RelyingParty;
+use App\Security\WebAuthn\WebAuthnException;
 use App\Security\WebAuthn\WebAuthnVerifier;
 use App\Security\WriteGate;
 use App\Support\Base64Url;
@@ -2757,6 +2868,7 @@ use App\Support\Base64Url;
 final class PasskeyService
 {
     public const CHALLENGE_TTL = 300;
+    public const MAX_ACTIVE_CREDENTIALS = 8; // keeps email-first login allowCredentials fixed-shape without excluding real keys
 
     public function __construct(
         private readonly WebAuthnCredentialRepository $credentials,
@@ -2869,6 +2981,9 @@ final class PasskeyService
             if (!$this->challenges->consume($challenge, $sessionHash, 'register', $user->id())) {
                 throw new ValidationException(['passkey' => 'This passkey request expired or was already used — try again.']);
             }
+            if ($this->credentials->countActiveForUser($user->id()) >= self::MAX_ACTIVE_CREDENTIALS) {
+                throw new ValidationException(['passkey' => 'Remove an old passkey before adding another one.']);
+            }
             $verified = $this->verifier->verifyRegistration($payload, $challenge);
             if ($this->credentials->findActiveByCredentialId($verified->credentialId) !== null) {
                 throw new ValidationException(['passkey' => 'This passkey is already registered.']);
@@ -2924,7 +3039,7 @@ final class PasskeyService
             throw new ValidationException(['passkey' => 'The passkey confirmation expired — try again.']);
         }
         $result = $this->verifier->verifyAssertion($payload, $challenge, (string) $row['public_key'], (int) $row['sign_count'], true);
-        $this->credentials->updateOnUse((int) $row['id'], $result->signCount);
+        $this->credentials->updateOnUse((int) $row['id'], $result->signCount); // high-water sign_count only; last_used_at always refreshes
         if ($result->counterAnomaly) {
             $this->recordAnomaly($user->id(), (int) $row['id']);
         }
@@ -3020,6 +3135,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
+use App\Core\HttpException;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
@@ -3034,12 +3150,18 @@ final class PasskeyController extends Controller
     {
         $user = $this->requireUser();
         $this->gate();
-        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
         $svc = $this->container->get(PasskeyService::class);
         $binding = PasskeyService::sessionBinding($this->session());
         try {
+            $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        } catch (HttpException $e) {
+            return $this->jsonRateLimit($e);
+        }
+        try {
             $svc->assertFreshFactor($user, $this->str($request, 'current_password'), $this->str($request, 'passkey_assertion'), $binding);
             $options = $svc->beginRegistration($user, $binding);
+        } catch (HttpException $e) {
+            return Response::json(['ok' => false, 'errors' => ['passkey' => $e->getMessage()]], $e->statusCode());
         } catch (ValidationException $e) {
             return Response::json(['ok' => false, 'errors' => $e->errors], 422);
         } catch (WebAuthnException $e) {
@@ -3052,7 +3174,11 @@ final class PasskeyController extends Controller
     {
         $user = $this->requireUser();
         $this->gate();
-        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        try {
+            $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        } catch (HttpException $e) {
+            return $this->jsonRateLimit($e);
+        }
         try {
             $this->container->get(PasskeyService::class)->completeRegistration(
                 $user,
@@ -3060,11 +3186,14 @@ final class PasskeyController extends Controller
                 (string) ($this->str($request, 'credential') ?? ''),
                 $this->str($request, 'nickname'),
             );
+        } catch (HttpException $e) {
+            return Response::json(['ok' => false, 'errors' => ['passkey' => $e->getMessage()]], $e->statusCode());
         } catch (ValidationException $e) {
             return Response::json(['ok' => false, 'errors' => $e->errors], 422);
         } catch (WebAuthnException $e) {
             return Response::json(['ok' => false, 'errors' => ['passkey' => $e->getMessage()], 'code' => $e->code], 422);
         }
+        $this->revokeOtherSessionsFor($user);
         return Response::json(['ok' => true]);
     }
 
@@ -3072,9 +3201,15 @@ final class PasskeyController extends Controller
     {
         $user = $this->requireUser();
         $this->gate();
-        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        try {
+            $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        } catch (HttpException $e) {
+            return $this->jsonRateLimit($e);
+        }
         try {
             $options = $this->container->get(PasskeyService::class)->beginStepUp($user, PasskeyService::sessionBinding($this->session()));
+        } catch (HttpException $e) {
+            return Response::json(['ok' => false, 'errors' => ['passkey' => $e->getMessage()]], $e->statusCode());
         } catch (WebAuthnException $e) {
             return Response::json(['ok' => false, 'errors' => ['passkey' => $e->getMessage()], 'code' => $e->code], 422);
         }
@@ -3085,6 +3220,11 @@ final class PasskeyController extends Controller
     {
         $value = $request->post($key);
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    private function jsonRateLimit(HttpException $e): Response
+    {
+        return Response::json(['ok' => false, 'errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
     }
 
     private function gate(): void
@@ -3138,7 +3278,7 @@ $c->bind(PasskeyService::class, fn (Container $c) => new PasskeyService(
 vendor/bin/phpunit tests/Integration/Core/AppPasskeyRegistrationTest.php tests/Integration/Core/AppFeatureFlagTest.php
 ```
 
-Expected: PASS (7 new + all existing flag tests).
+Expected: PASS (9 new + all existing flag tests).
 
 - [ ] **Step 6: Commit**
 
@@ -3153,7 +3293,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task 12: Credential management — security-page panel, rename/revoke, last-method + final-owner blocks (SP2 part 2)
 
-The user-visible management surface: a Passkeys panel on `/settings/security` (server-rendered list; add-flow revealed by JS; rename/revoke are plain forms that work without JS), and the removal invariants — TM-ID-09's "last usable method" block for everyone, `LastOwnerGuard` wiring (the F5 Inc-7 path) for owners, plus the `soleProviderAccounts` detector that Inc 8's provider-disable UI will consume.
+The user-visible management surface: a Passkeys panel on `/settings/security` (server-rendered list; add-flow revealed by JS; rename/revoke are plain forms that work without JS), and the removal invariants — TM-ID-09's "last usable method" block for everyone, `LastOwnerGuard` wiring (the F5 Inc-7 path) for owners, plus the `OAuthIdentityRepository::soleMethodAccounts` detector that Inc 8's provider-disable UI will consume.
 
 **Files:**
 - Modify: `src/Service/PasskeyService.php` (add `rename`, `remove`)
@@ -3167,7 +3307,7 @@ The user-visible management surface: a Passkeys panel on `/settings/security` (s
 
 **Interfaces:**
 - Consumes: `LastOwnerGuard::assertNotLastOwnerForUpdate(User, string $field)`, `OAuthIdentityRepository::countForUser`, `UserRepository::findEntity`.
-- Produces: `PasskeyService::rename/remove/soleProviderAccounts`; routes `POST /settings/security/passkeys/{id}/rename`, `POST /settings/security/passkeys/{id}/revoke`; template hooks `data-passkey-panel`, `data-passkey-add-form` (hidden until JS reveals), `data-passkey-stepup-btn`.
+- Produces: `PasskeyService::rename/remove`; `OAuthIdentityRepository::soleMethodAccounts`; routes `POST /settings/security/passkeys/{id}/rename`, `POST /settings/security/passkeys/{id}/revoke`; template hooks `data-passkey-panel`, `data-passkey-add-form` (hidden until JS reveals), `data-passkey-stepup-btn`.
 
 - [ ] **Step 1: Write the failing tests** (append to `AppPasskeyRegistrationTest`)
 
@@ -3214,6 +3354,24 @@ The user-visible management surface: a Passkeys panel on `/settings/security` (s
             'passkey_assertion' => $this->harness->assertionPayload($cred, $stepChallenge, 3),
         ]);
         $this->assertRedirect($revoke, '/settings/security');
+    }
+
+    public function test_revoking_a_passkey_revokes_other_sessions_but_keeps_current_session(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        [, $id] = $this->enroll('Session key');
+        $otherSession = $this->createExtraSessionFor($user);
+        self::assertNull($this->db->fetchValue('SELECT revoked_at FROM sessions WHERE id = ?', [$otherSession]));
+
+        $this->assertRedirect(
+            $this->post("/settings/security/passkeys/{$id}/revoke", ['current_password' => 'password123']),
+            '/settings/security',
+        );
+
+        self::assertNotNull($this->db->fetchValue('SELECT revoked_at FROM sessions WHERE id = ?', [$otherSession]));
+        $current = $this->get('/settings/security');
+        $this->assertStatus(200, $current); // current session survives the credential-change revocation
     }
 
     public function test_removing_the_last_sign_in_method_is_blocked(): void // TM-ID-09
@@ -3268,8 +3426,15 @@ The user-visible management surface: a Passkeys panel on `/settings/security` (s
         self::assertContains((int) $user['id'], array_column($hits, 'id'));
 
         // A passkey (or a password, or a second provider) takes the account off the list.
-        $this->actingAs($user);
-        $this->enroll('Rescue key');
+        // Seed the detector row directly: OAuth-only accounts cannot start passkey
+        // enrollment without first proving a password or existing passkey factor.
+        $this->db->run(
+            'INSERT INTO webauthn_credentials
+                (user_id, credential_id, public_key, sign_count, aaguid, transports,
+                 is_discoverable, is_backup_eligible, is_backed_up, nickname, created_at)
+             VALUES (?, ?, ?, 0, ?, ?, 0, 0, 0, ?, UTC_TIMESTAMP())',
+            [(int) $user['id'], random_bytes(32), "\xa1\x01\x02", str_repeat("\0", 16), 'internal', 'Rescue key'],
+        );
         $again = (new \App\Repository\OAuthIdentityRepository($this->db))->soleMethodAccounts('github');
         self::assertNotContains((int) $user['id'], array_column($again, 'id'));
     }
@@ -3376,9 +3541,15 @@ And in `src/Repository/OAuthIdentityRepository.php` (cross-table reads in a repo
     {
         $user = $this->requireUser();
         $this->gate();
-        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        try {
+            $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
         try {
             $this->container->get(PasskeyService::class)->rename($user, (int) $params['id'], (string) ($this->str($request, 'nickname') ?? ''));
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['passkey' => $e->getMessage()]], $e->statusCode());
         } catch (ValidationException $e) {
             return $this->securityPage($user, ['passkey_errors' => $e->errors], 422);
         }
@@ -3389,7 +3560,11 @@ And in `src/Repository/OAuthIdentityRepository.php` (cross-table reads in a repo
     {
         $user = $this->requireUser();
         $this->gate();
-        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        try {
+            $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
         try {
             $this->container->get(PasskeyService::class)->remove(
                 $user,
@@ -3398,21 +3573,24 @@ And in `src/Repository/OAuthIdentityRepository.php` (cross-table reads in a repo
                 $this->str($request, 'passkey_assertion'),
                 PasskeyService::sessionBinding($this->session()),
             );
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['passkey' => $e->getMessage()]], $e->statusCode());
         } catch (ValidationException $e) {
             return $this->securityPage($user, ['passkey_errors' => $e->errors], 422);
         } catch (WebAuthnException $e) {
             return $this->securityPage($user, ['passkey_errors' => ['passkey' => $e->getMessage()]], 422);
         }
+        $this->revokeOtherSessionsFor($user);
         return $this->redirectWithFlash('/settings/security', 'Passkey removed.');
     }
 
     private function securityPage(\App\Domain\User $user, array $extra, int $status): Response
     {
-        return $this->container->get(AccountController::class)->securityView($user, $extra, $status);
+        return (new AccountController($this->container))->securityView($user, $extra, $status);
     }
 ```
 
-(If `AccountController` isn't container-bound or `securityView` isn't public, replicate the render the way other controllers re-render foreign views — read how `AccountController` actions call `securityView` and match visibility accordingly; making `securityView` public is acceptable and minimal.)
+Change `AccountController::securityView` from `private` to `public` in this same task. Controllers in this app are instantiated directly in `App::process()` and are not container-bound, so instantiate `AccountController` directly with the current container for this re-render path.
 
 Routes:
 
@@ -3475,6 +3653,7 @@ Register these **before** `POST /settings/security/passkeys` if the router would
           data-store-url="/settings/security/passkeys"
           data-stepup-url="/settings/security/passkeys/step-up-challenge">
         <?= $this->csrfField() ?>
+        <input type="hidden" name="passkey_assertion" value="">
         <?php if ($passkeys['has_password']): ?>
             <input type="password" name="current_password" placeholder="Current password" autocomplete="current-password" aria-label="Current password">
         <?php endif; ?>
@@ -3513,7 +3692,7 @@ Expected: PASS (including the untouched owner-guard suite).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/Service/PasskeyService.php src/Controller/PasskeyController.php src/Controller/AccountController.php templates/account/security.php src/Core/App.php tests/Integration/Core/AppPasskeyRegistrationTest.php tests/Integration/Core/AppFeatureFlagTest.php
+git add src/Service/PasskeyService.php src/Repository/OAuthIdentityRepository.php src/Controller/PasskeyController.php src/Controller/AccountController.php templates/account/security.php src/Core/App.php tests/Integration/Core/AppPasskeyRegistrationTest.php tests/Integration/Core/AppFeatureFlagTest.php
 git commit -m "feat(passkeys): credential management panel with last-method + final-owner blocks (TM-ID-09, F5 Inc-7 path)
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
@@ -3523,7 +3702,7 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 
 ### Task 13: Sign-in vertical — email-first passkey login integrated with `AuthController` (SP3)
 
-Email-first challenge (`allowCredentials`), enumeration-safe decoys for unknown accounts, one-time consumption keyed to the credential's owner (TM-ID-05's cross-account guard on the login side), counter anomalies as pure risk signals (TM-ID-08), banned-account refusal with the house's generic copy, and the decision-#4 TOTP interaction: UV-verified assertions are multi-factor and sign straight in; TOTP-enrolled accounts refuse non-UV assertions with actionable guidance.
+Email-first challenge (`allowCredentials`), fixed-shape enumeration-safe decoys for unknown/passkeyless accounts, one-time consumption keyed to the credential's owner (TM-ID-05's cross-account guard on the login side), counter anomalies as pure risk signals (TM-ID-08), banned-account refusal with the house's generic copy, and the decision-#4 TOTP interaction: UV-verified assertions are multi-factor and sign straight in; TOTP-enrolled accounts refuse non-UV assertions with actionable guidance.
 
 **Files:**
 - Modify: `src/Service/PasskeyService.php` (add `beginLogin`, `completeLogin`, private `LOGIN_FAILED` const)
@@ -3596,9 +3775,11 @@ final class AppPasskeyLoginTest extends TestCase
         $this->logoutClient();
 
         $c = $this->loginChallenge((string) $user['email']);
-        self::assertSame(Base64Url::encode($cred['credentialId']), $c['options']['allowCredentials'][0]['id']);
+        self::assertContains(Base64Url::encode($cred['credentialId']), array_column($c['options']['allowCredentials'], 'id'));
+        self::assertCount(8, $c['options']['allowCredentials'], 'real and decoy responses use the same fixed slot count');
 
         $res = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
             'credential' => $this->harness->assertionPayload($cred, $c['challenge'], 1),
             'next' => '/settings/security',
         ]);
@@ -3609,15 +3790,75 @@ final class AppPasskeyLoginTest extends TestCase
         $this->assertStatus(200, $this->get('/settings/security')); // authenticated, no login redirect
     }
 
-    public function test_unknown_email_gets_an_identically_shaped_decoy_and_never_signs_in(): void
+    public function test_unknown_or_passkeyless_email_gets_fixed_shape_decoys_and_never_signs_in(): void
     {
         $c = $this->loginChallenge('nobody@retro.test');
-        self::assertTrue(json_decode($this->post('/login/passkey/challenge', ['email' => 'nobody@retro.test'])->body(), true)['ok']);
-        self::assertCount(1, $c['options']['allowCredentials']); // decoy entry, same shape as a real account
+        $secondUnknown = json_decode($this->post('/login/passkey/challenge', ['email' => 'nobody@retro.test'])->body(), true);
+        self::assertTrue($secondUnknown['ok']);
+        self::assertCount(8, $c['options']['allowCredentials']); // fixed decoy slots, same count as a real account
+        self::assertSame(
+            array_column($c['options']['allowCredentials'], 'id'),
+            array_column($secondUnknown['options']['allowCredentials'], 'id'),
+            'decoys must be stable across challenge requests so real IDs are not identifiable by set-diffing',
+        );
+        foreach ($c['options']['allowCredentials'] as $entry) {
+            self::assertSame(['internal', 'hybrid', 'usb', 'nfc', 'ble'], $entry['transports']);
+        }
+        $knownNoPasskey = $this->makeUser(['username' => 'known_no_pk']);
+        $knownNoPk = $this->loginChallenge((string) $knownNoPasskey['email']);
+        self::assertCount(8, $knownNoPk['options']['allowCredentials']);
         $cred = $this->harness->createCredential();
-        $res = $this->post('/login/passkey', ['credential' => $this->harness->assertionPayload($cred, $c['challenge'], 1)]);
+        $res = $this->post('/login/passkey', [
+            'email' => 'nobody@retro.test',
+            'credential' => $this->harness->assertionPayload($cred, $c['challenge'], 1),
+        ]);
         $this->assertStatus(422, $res);
         self::assertStringNotContainsString('nobody', $res->body()); // no account information leaks (§9)
+    }
+
+    public function test_login_challenge_rate_limit_keeps_the_json_error_contract(): void
+    {
+        for ($i = 0; $i < 30; $i++) {
+            $this->assertStatus(200, $this->post('/login/passkey/challenge', ['email' => 'rate-limit@example.test']));
+        }
+        $limited = $this->post('/login/passkey/challenge', ['email' => 'rate-limit@example.test']);
+        $this->assertStatus(429, $limited);
+        $json = json_decode($limited->body(), true);
+        self::assertFalse($json['ok']);
+        self::assertArrayHasKey('rate_limit', $json['errors']);
+    }
+
+    public function test_passkey_login_rate_limit_is_subject_keyed_and_cleared_after_success(): void
+    {
+        $user = $this->makeUser(['username' => 'pk_rate_clear']);
+        $this->actingAs($user);
+        $cred = $this->enroll($user);
+        $this->logoutClient();
+
+        for ($i = 0; $i < 9; $i++) {
+            $c = $this->loginChallenge((string) $user['email']);
+            $bad = $this->harness->createCredential();
+            $this->assertStatus(422, $this->post('/login/passkey', [
+                'email' => (string) $user['email'],
+                'credential' => $this->harness->assertionPayload($bad, $c['challenge'], $i + 1),
+            ]));
+        }
+
+        $c = $this->loginChallenge((string) $user['email']);
+        $success = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
+            'credential' => $this->harness->assertionPayload($cred, $c['challenge'], 10),
+        ]);
+        $this->assertStatus(200, $success); // the tenth subject-keyed attempt succeeds and must clear the window
+        $this->post('/logout', []);
+
+        $next = $this->loginChallenge((string) $user['email']);
+        $badAgain = $this->harness->createCredential();
+        $afterClear = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
+            'credential' => $this->harness->assertionPayload($badAgain, $next['challenge'], 11),
+        ]);
+        self::assertSame(422, $afterClear->status(), 'without clearSubject this would be a 429 after the successful tenth attempt');
     }
 
     public function test_assertion_replay_is_rejected(): void // TM-ID-05
@@ -3629,9 +3870,9 @@ final class AppPasskeyLoginTest extends TestCase
 
         $c = $this->loginChallenge((string) $user['email']);
         $payload = $this->harness->assertionPayload($cred, $c['challenge'], 1);
-        $this->assertStatus(200, $this->post('/login/passkey', ['credential' => $payload]));
+        $this->assertStatus(200, $this->post('/login/passkey', ['email' => (string) $user['email'], 'credential' => $payload]));
         $this->post('/logout', []);
-        $this->assertStatus(422, $this->post('/login/passkey', ['credential' => $payload]));
+        $this->assertStatus(422, $this->post('/login/passkey', ['email' => (string) $user['email'], 'credential' => $payload]));
     }
 
     public function test_challenge_minted_for_one_account_rejects_another_accounts_credential(): void // TM-ID-05
@@ -3647,7 +3888,10 @@ final class AppPasskeyLoginTest extends TestCase
         $this->logoutClient();
 
         $c = $this->loginChallenge((string) $alice['email']); // challenge bound to alice
-        $res = $this->post('/login/passkey', ['credential' => $this->harness->assertionPayload($bobCred, $c['challenge'], 1)]);
+        $res = $this->post('/login/passkey', [
+            'email' => (string) $alice['email'],
+            'credential' => $this->harness->assertionPayload($bobCred, $c['challenge'], 1),
+        ]);
         $this->assertStatus(422, $res);
     }
 
@@ -3659,6 +3903,7 @@ final class AppPasskeyLoginTest extends TestCase
         $this->logoutClient();
         $c = $this->loginChallenge((string) $user['email']);
         $res = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
             'credential' => $this->harness->assertionPayload($cred, $c['challenge'], 1, ['tamperSignature' => true]),
         ]);
         $this->assertStatus(422, $res);
@@ -3672,7 +3917,10 @@ final class AppPasskeyLoginTest extends TestCase
         $this->logoutClient();
         $c = $this->loginChallenge((string) $user['email']);
         $this->db->run("UPDATE users SET status = 'banned' WHERE id = ?", [(int) $user['id']]);
-        $res = $this->post('/login/passkey', ['credential' => $this->harness->assertionPayload($cred, $c['challenge'], 1)]);
+        $res = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
+            'credential' => $this->harness->assertionPayload($cred, $c['challenge'], 1),
+        ]);
         $this->assertStatus(422, $res);
         self::assertStringContainsString('not permitted', $res->body());
     }
@@ -3685,16 +3933,26 @@ final class AppPasskeyLoginTest extends TestCase
         $this->logoutClient();
 
         $c1 = $this->loginChallenge((string) $user['email']);
-        $this->assertStatus(200, $this->post('/login/passkey', ['credential' => $this->harness->assertionPayload($cred, $c1['challenge'], 5)]));
+        $this->assertStatus(200, $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
+            'credential' => $this->harness->assertionPayload($cred, $c1['challenge'], 5),
+        ]));
         $this->post('/logout', []);
 
         $c2 = $this->loginChallenge((string) $user['email']);
-        $res = $this->post('/login/passkey', ['credential' => $this->harness->assertionPayload($cred, $c2['challenge'], 5)]);
-        $this->assertStatus(200, $res, 'anomaly must NOT block sign-in (decision #30)');
+        $res = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
+            'credential' => $this->harness->assertionPayload($cred, $c2['challenge'], 5),
+        ]);
+        self::assertSame(200, $res->status(), 'anomaly must NOT block sign-in (decision #30)');
         self::assertSame(1, (int) $this->db->fetchValue(
             "SELECT COUNT(*) FROM moderation_log WHERE action = 'passkey_counter_anomaly' AND target_id = ?",
             [(int) $user['id']],
         ));
+        self::assertSame(5, (int) $this->db->fetchValue(
+            'SELECT sign_count FROM webauthn_credentials WHERE user_id = ?',
+            [(int) $user['id']],
+        ), 'stored sign_count remains a high-water mark after an anomaly');
     }
 
     public function test_totp_enrolled_account_requires_a_uv_assertion(): void // decision #4
@@ -3707,14 +3965,18 @@ final class AppPasskeyLoginTest extends TestCase
 
         $c1 = $this->loginChallenge((string) $user['email']);
         $noUv = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
             'credential' => $this->harness->assertionPayload($cred, $c1['challenge'], 1, ['flags' => 0x01]), // UP only
         ]);
         $this->assertStatus(422, $noUv);
         self::assertStringContainsString('two-factor', strtolower($noUv->body()));
 
         $c2 = $this->loginChallenge((string) $user['email']);
-        $withUv = $this->post('/login/passkey', ['credential' => $this->harness->assertionPayload($cred, $c2['challenge'], 2)]);
-        $this->assertStatus(200, $withUv, 'UV assertion is multi-factor and bypasses the TOTP interstitial');
+        $withUv = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
+            'credential' => $this->harness->assertionPayload($cred, $c2['challenge'], 2),
+        ]);
+        self::assertSame(200, $withUv->status(), 'UV assertion is multi-factor and bypasses the TOTP interstitial');
         self::assertNotEmpty($secret);
     }
 
@@ -3729,7 +3991,7 @@ final class AppPasskeyLoginTest extends TestCase
         $secret = $m[1];
         $confirm = $this->post('/settings/security/totp/confirm', [
             'current_password' => $password,
-            'code' => (new Totp())->code($secret),
+            'totp_code' => (new Totp())->code($secret),
         ]);
         self::assertContains($confirm->status(), [200, 302], 'confirm must succeed');
         return $secret;
@@ -3744,7 +4006,7 @@ Extend `test_passkeys_flag_gates_ceremony_routes` in `AppFeatureFlagTest`:
 ```php
         // dark section additions:
         $this->assertStatus(404, $this->post('/login/passkey/challenge', ['email' => 'x@example.test']));
-        $this->assertStatus(404, $this->post('/login/passkey', ['credential' => '{}']));
+        $this->assertStatus(404, $this->post('/login/passkey', ['email' => 'x@example.test', 'credential' => '{}']));
         $login = $this->get('/login');
         $this->assertStatus(200, $login);
         self::assertStringNotContainsString('data-passkey-signin', $login->body());
@@ -3764,11 +4026,15 @@ Append to `PasskeyService`:
 
 ```php
     private const LOGIN_FAILED = 'That passkey could not be used to sign in.';
+    private const LOGIN_ALLOW_CREDENTIAL_SLOTS = self::MAX_ACTIVE_CREDENTIALS;
+    private const LOGIN_TRANSPORT_HINTS = ['internal', 'hybrid', 'usb', 'nfc', 'ble'];
 
     /**
      * Email-first login options. Unknown/passkey-less accounts get an identically
-     * shaped response with a deterministic decoy credential id and an unstored
-     * challenge — no account enumeration, and completion can only fail generically.
+     * shaped response: exactly LOGIN_ALLOW_CREDENTIAL_SLOTS allowCredentials entries,
+     * normalized transport hints, deterministic decoys, and an unstored challenge.
+     * Real accounts get the same count/transport shape (real ids padded with decoys).
+     * Completion can only succeed for a real stored challenge + real credential.
      * @return array<string,mixed>
      */
     public function beginLogin(?string $email, string $sessionHash): array
@@ -3782,14 +4048,48 @@ Append to `PasskeyService`:
         $credentials = $userRow !== null ? $this->credentials->activeForUser((int) $userRow['id']) : [];
 
         if ($userRow === null || $credentials === []) {
-            $decoyId = hash_hmac('sha256', 'passkey-decoy:' . $email, (string) $this->config->get('app.key', ''), true);
-            return $this->requestOptions($challenge, [
-                ['credential_id' => $decoyId, 'transports' => 'internal'],
-            ], 'preferred');
+            return $this->loginRequestOptions($challenge, [], $email);
         }
 
         $this->challenges->mint((int) $userRow['id'], $sessionHash, 'login', $challenge, self::CHALLENGE_TTL);
-        return $this->requestOptions($challenge, $credentials, 'preferred');
+        return $this->loginRequestOptions($challenge, $credentials, $email);
+    }
+
+    /** @param list<array<string,mixed>> $credentialRows */
+    private function loginRequestOptions(string $challenge, array $credentialRows, string $email): array
+    {
+        $key = (string) $this->config->get('app.key', '');
+        if ($key === '') {
+            throw new WebAuthnException('missing_app_key', 'APP_KEY is required for enumeration-safe passkey login decoys.');
+        }
+        $allow = [];
+        foreach (array_slice($credentialRows, 0, self::LOGIN_ALLOW_CREDENTIAL_SLOTS) as $row) {
+            $allow[] = [
+                'type' => 'public-key',
+                'id' => Base64Url::encode((string) $row['credential_id']),
+                'transports' => self::LOGIN_TRANSPORT_HINTS,
+            ];
+        }
+        for ($i = count($allow); $i < self::LOGIN_ALLOW_CREDENTIAL_SLOTS; $i++) {
+            $allow[] = [
+                'type' => 'public-key',
+                'id' => Base64Url::encode(hash_hmac('sha256', 'passkey-decoy:' . $email . ':' . $i, $key, true)),
+                'transports' => self::LOGIN_TRANSPORT_HINTS,
+            ];
+        }
+        usort($allow, static function (array $a, array $b) use ($key, $email): int {
+            $ha = hash_hmac('sha256', 'passkey-slot:' . $email . ':' . (string) $a['id'], $key);
+            $hb = hash_hmac('sha256', 'passkey-slot:' . $email . ':' . (string) $b['id'], $key);
+            return $ha <=> $hb;
+        });
+
+        return [
+            'challenge' => Base64Url::encode($challenge),
+            'rpId' => $this->rp->rpId(),
+            'timeout' => self::CHALLENGE_TTL * 1000,
+            'allowCredentials' => $allow,
+            'userVerification' => 'preferred',
+        ];
     }
 
     /** @return array{user: User, used_uv: bool} */
@@ -3822,7 +4122,7 @@ Append to `PasskeyService`:
             throw new ValidationException(['passkey' => self::LOGIN_FAILED]); // no protocol detail leaks
         }
 
-        $this->credentials->updateOnUse((int) $row['id'], $result->signCount);
+        $this->credentials->updateOnUse((int) $row['id'], $result->signCount); // high-water sign_count only; last_used_at always refreshes
         if ($result->counterAnomaly) {
             $this->recordAnomaly($userId, (int) $row['id']); // TM-ID-08: signal, never block
         }
@@ -3835,7 +4135,7 @@ Append to `PasskeyService`:
 
 (`$this->mfaService` — the constructor collaborator; see the Locked interfaces. `UserRepository::findByEmail` — confirm the exact name from `AuthService::attempt`.)
 
-`AuthController` additions:
+`AuthController` additions (add imports for `FeatureFlags`, `HttpException`, `NotFoundException`, `PasskeyService`, and `WebAuthnException` at the top of the existing class):
 
 ```php
     public function passkeyChallenge(Request $request, array $params = []): Response
@@ -3845,8 +4145,12 @@ Append to `PasskeyService`:
             return Response::json(['ok' => false, 'errors' => ['email' => 'Already signed in.']], 422);
         }
         $email = strtolower(trim((string) ($request->post('email') ?? '')));
-        $this->container->get(RateLimitService::class)
-            ->enforceSubject('passkey_challenge', $request, $email !== '' ? $email : 'anonymous');
+        try {
+            $this->container->get(RateLimitService::class)
+                ->enforceSubject('passkey_challenge', $request, $email !== '' ? $email : 'anonymous');
+        } catch (HttpException $e) {
+            return Response::json(['ok' => false, 'errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
         try {
             $options = $this->container->get(PasskeyService::class)
                 ->beginLogin($email, PasskeyService::sessionBinding($this->session()));
@@ -3862,7 +4166,14 @@ Append to `PasskeyService`:
         if ($this->session()->user() !== null) {
             return Response::json(['ok' => false, 'errors' => ['passkey' => 'Already signed in.']], 422);
         }
-        $this->container->get(RateLimitService::class)->enforce('passkey_login', $request);
+        $email = strtolower(trim((string) ($request->post('email') ?? '')));
+        $subject = $email !== '' ? $email : 'anonymous';
+        $limiter = $this->container->get(RateLimitService::class);
+        try {
+            $limiter->enforceSubject('passkey_login', $request, $subject);
+        } catch (HttpException $e) {
+            return Response::json(['ok' => false, 'errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
         try {
             $result = $this->container->get(PasskeyService::class)->completeLogin(
                 (string) ($request->post('credential') ?? ''),
@@ -3873,6 +4184,7 @@ Append to `PasskeyService`:
         } catch (WebAuthnException $e) {
             return Response::json(['ok' => false, 'errors' => ['passkey' => 'That passkey could not be used to sign in.']], 422);
         }
+        $limiter->clearSubject('passkey_login', $request, $subject);
         $this->session()->login($result['user']);
         return Response::json(['ok' => true, 'redirect' => $this->safeNext((string) ($request->post('next') ?? '/'))]);
     }
@@ -3918,7 +4230,7 @@ $r->post('/login/passkey', [AuthController::class, 'passkeyLogin']);
 vendor/bin/phpunit tests/Integration/Core/AppPasskeyLoginTest.php tests/Integration/Core/AppFeatureFlagTest.php tests/Integration/Controller/AuthControllerTest.php
 ```
 
-Expected: PASS — 9 new login tests, extended flag test, and the untouched password-login suite.
+Expected: PASS — 11 new login tests, extended flag test, and the untouched password-login suite.
 
 - [ ] **Step 5: Commit**
 
@@ -3941,7 +4253,7 @@ Vanilla, CSP-clean (external file, no inline anything), decorates the three `dat
 - Modify: `tests/Integration/Core/AppFeatureFlagTest.php` (script-tag gating assertions)
 
 **Interfaces:**
-- Consumes: the wire contract; hooks `data-passkey-add-form`/`data-passkey-add-btn`/`data-passkey-add-error`, `data-passkey-revoke-form`/`data-passkey-stepup-btn`/`data-passkey-needs-stepup`, `data-passkey-signin`/`data-passkey-signin-btn`/`data-passkey-signin-error`; URLs from `data-challenge-url`/`data-store-url`/`data-stepup-url`/`data-login-url`.
+- Consumes: the wire contract; hooks `data-passkey-add-form`/`data-passkey-add-btn`/`data-passkey-add-error` plus hidden `input[name="passkey_assertion"]` for passwordless add-step-up, `data-passkey-revoke-form`/`data-passkey-stepup-btn`/`data-passkey-needs-stepup`, `data-passkey-signin`/`data-passkey-signin-btn`/`data-passkey-signin-error`; URLs from `data-challenge-url`/`data-store-url`/`data-stepup-url`/`data-login-url`.
 - Produces: nothing for later tasks except the working browser flow Task 16 records.
 
 - [ ] **Step 1: Write the failing gating test** (extend `AppFeatureFlagTest`)
@@ -4078,10 +4390,29 @@ In `templates/layout.php`, beside the other flag-conditional scripts:
         addForm.hidden = false;
         var addBtn = addForm.querySelector('[data-passkey-add-btn]');
         var addErr = addForm.querySelector('[data-passkey-add-error]');
+        function beginRegistrationChallenge() {
+            var pw = addForm.querySelector('input[name="current_password"]');
+            var assertion = addForm.querySelector('input[name="passkey_assertion"]');
+            if (!pw && assertion && !assertion.value) {
+                return post(addForm.getAttribute('data-stepup-url'), {}, addForm)
+                    .then(function (json) {
+                        if (!json.ok) { throw new Error(firstError(json, 'Confirm with an existing passkey before adding another one.')); }
+                        return navigator.credentials.get({ publicKey: prepGetOptions(json.options) });
+                    })
+                    .then(function (cred) {
+                        if (!cred) { throw new Error(CANCELLED); }
+                        assertion.value = serializeAssertion(cred);
+                        return beginRegistrationChallenge();
+                    });
+            }
+            return post(addForm.getAttribute('data-challenge-url'), {
+                current_password: pw ? pw.value : null,
+                passkey_assertion: assertion ? assertion.value : null
+            }, addForm);
+        }
         addBtn.addEventListener('click', function () {
             if (addErr) { addErr.hidden = true; }
-            var pw = addForm.querySelector('input[name="current_password"]');
-            post(addForm.getAttribute('data-challenge-url'), { current_password: pw ? pw.value : null }, addForm)
+            beginRegistrationChallenge()
                 .then(function (json) {
                     if (!json.ok) { throw new Error(firstError(json, 'Could not start the passkey setup.')); }
                     return navigator.credentials.create({ publicKey: prepCreateOptions(json.options) });
@@ -4148,6 +4479,7 @@ In `templates/layout.php`, beside the other flag-conditional scripts:
                 .then(function (cred) {
                     if (!cred) { throw new Error(CANCELLED); }
                     return post(signin.getAttribute('data-login-url'), {
+                        email: emailInput ? emailInput.value : '',
                         credential: serializeAssertion(cred),
                         next: nextInput ? nextInput.value : null
                     }, document);
@@ -4241,7 +4573,10 @@ final class AppPasskeyRecoveryTest extends TestCase
         $res = $this->post('/login/passkey/challenge', ['email' => $email]);
         $this->assertStatus(200, $res);
         $challenge = (string) Base64Url::decode(json_decode($res->body(), true)['options']['challenge']);
-        return $this->post('/login/passkey', ['credential' => $this->harness->assertionPayload($cred, $challenge, $signCount)]);
+        return $this->post('/login/passkey', [
+            'email' => $email,
+            'credential' => $this->harness->assertionPayload($cred, $challenge, $signCount),
+        ]);
     }
 
     public function test_password_totp_and_recovery_paths_survive_passkey_enrollment(): void
@@ -4256,7 +4591,7 @@ final class AppPasskeyRecoveryTest extends TestCase
         $secret = $sm[1];
         $confirm = $this->post('/settings/security/totp/confirm', [
             'current_password' => 'password123',
-            'code' => (new Totp())->code($secret),
+            'totp_code' => (new Totp())->code($secret),
         ]);
         preg_match_all('#<code>([A-F0-9-]{11})</code>#', $confirm->body() . $this->get('/settings/security')->body(), $rm);
         self::assertNotEmpty($rm[1], 'recovery codes are shown once — pin to AppMfaTest::extractRecoveryCodes');
@@ -4413,7 +4748,10 @@ The evidence rule is explicit: *"Passkey completion requires real supported-brow
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const BASE = process.env.RB_BASE_URL ?? 'http://127.0.0.1:8010';
+// Empty string lets Playwright resolve relative paths against use.baseURL.
+// E2E_BASE_URL matches tests/browser/playwright.config.ts; RB_BASE_URL is a
+// legacy/manual override for ad-hoc runs. Do not hard-code the server port.
+const BASE = process.env.E2E_BASE_URL ?? process.env.RB_BASE_URL ?? '';
 
 // Copy runPhp()/flag-setter helpers from wysiwyg-composer.spec.ts, adapted:
 // setPasskeys(true|false|null) merges/unsets features.passkeys via SettingRepository.
@@ -4531,14 +4869,58 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ADR 0004 D11 approved **2000 ms p95 server time (excluding authenticator UX)** for WebAuthn/TOTP ceremonies; the row sits `PENDING (inc7)` in `docs/evidence/phase5/performance-budgets.md`. Wire a measurement probe into the existing budget plumbing and flip the row to MEASURED.
 
 **Files:**
+- Create: `docs/evidence/phase5/webauthn-budget-fixture.json` (public-only committed fixture: COSE public key + challenges + signed payloads; no private key bytes)
 - Modify: the measurement service behind `bin/console verify:phase5-budgets` — read `src/Service/Phase5BudgetReportService.php` and `src/Service/BaselineMetricsService.php` first and mirror **exactly** how `resolver.p95` was measured and reported in Inc 1 (same plumbing, one new probe).
 - Regenerate: `docs/evidence/phase5/performance-budgets.md` (via the console command, never by hand).
 
 **Interfaces:**
-- Consumes: `WebAuthnVerifier`, `RelyingParty`, `CoseKey` — the probe measures the full server-side assertion verification (base64url decode → CBOR/COSE → openssl verify).
+- Consumes: `WebAuthnVerifier`, `RelyingParty`, `CoseKey`, public-only fixture JSON — the probe measures the full server-side assertion verification (base64url decode → CBOR/COSE → openssl verify) without generating private keys in `src/`.
 - Produces: `webauthn.ceremony_p95` → `MEASURED (PASS)`.
 
-- [ ] **Step 1: Add the probe** (method body for wherever the Inc 1 resolver probe lives; the probe is self-contained — it builds its own real keypair, because `Tests\Support\` classes are not autoloadable from `bin/console`):
+- [ ] **Step 1: Generate the public-only budget fixture**
+
+Run this from the repo root. The private key exists only inside `Tests\Support\Phase5\WebAuthnHarness` during fixture generation; the committed JSON contains only the COSE public key, challenges, authenticator/client data, signatures, and stored counter inputs:
+
+```bash
+php <<'PHP'
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/vendor/autoload.php';
+
+use App\Support\Base64Url;
+use Tests\Support\Phase5\WebAuthnHarness;
+
+$h = new WebAuthnHarness();
+$cred = $h->createCredential();
+$samples = [];
+for ($i = 0; $i < 200; $i++) {
+    $challenge = random_bytes(32);
+    $samples[] = [
+        'challenge' => Base64Url::encode($challenge),
+        'payload' => json_decode($h->assertionPayload($cred, $challenge, $i + 1), true, flags: JSON_THROW_ON_ERROR),
+        'stored_sign_count' => $i,
+    ];
+}
+
+file_put_contents(
+    __DIR__ . '/docs/evidence/phase5/webauthn-budget-fixture.json',
+    json_encode([
+        'rp_id' => 'localhost',
+        'origin' => 'http://localhost:8000',
+        'public_key_cose' => Base64Url::encode($cred['coseKey']),
+        'samples' => $samples,
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
+);
+PHP
+grep '"public_key_cose"' docs/evidence/phase5/webauthn-budget-fixture.json
+! grep -Ei 'private|BEGIN|END|privateKey|private_key' docs/evidence/phase5/webauthn-budget-fixture.json
+```
+
+Expected: the first `grep` prints the public-key field and the second prints nothing; the fixture must not contain PEM blocks, private-key fields, or `BEGIN`/`END` markers.
+
+- [ ] **Step 2: Add the probe** (method body for wherever the Inc 1 resolver probe lives; the probe is self-contained from a public-only fixture so production/runtime `src/` code never generates private keys):
 
 ```php
     /** p95 of 200 full assertion verifications (server side only), in ms. */
@@ -4547,30 +4929,22 @@ ADR 0004 D11 approved **2000 ms p95 server time (excluding authenticator UX)** f
         $rp = new RelyingParty('http://localhost:8000', null, 'testing');
         $verifier = new WebAuthnVerifier($rp);
 
-        $key = openssl_pkey_new(['curve_name' => 'prime256v1', 'private_key_type' => OPENSSL_KEYTYPE_EC]);
-        $d = openssl_pkey_get_details($key);
-        $pad = static fn (string $b): string => str_pad(ltrim($b, "\0"), 32, "\0", STR_PAD_LEFT);
-        // COSE map {1:2, 3:-7, -1:1, -2:x, -3:y} — hand-encoded like Tests\Support\Phase5\WebAuthnHarness.
-        $cose = "\xa5\x01\x02\x03\x26\x20\x01"
-            . "\x21\x58\x20" . $pad($d['ec']['x'])
-            . "\x22\x58\x20" . $pad($d['ec']['y']);
+        $path = dirname(__DIR__, 2) . '/docs/evidence/phase5/webauthn-budget-fixture.json';
+        $fixture = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+        $cose = Base64Url::decode((string) ($fixture['public_key_cose'] ?? ''));
+        if ($cose === null || $cose === '') {
+            throw new \RuntimeException('Invalid public_key_cose in WebAuthn budget fixture.');
+        }
 
         $samples = [];
-        for ($i = 0; $i < 200; $i++) {
-            $challenge = random_bytes(32);
-            $clientData = json_encode(['type' => 'webauthn.get', 'challenge' => Base64Url::encode($challenge), 'origin' => 'http://localhost:8000', 'crossOrigin' => false]);
-            $authData = hash('sha256', 'localhost', true) . chr(0x05) . pack('N', $i + 1);
-            openssl_sign($authData . hash('sha256', $clientData, true), $sig, $key, OPENSSL_ALGO_SHA256);
-            $payload = [
-                'id' => Base64Url::encode('x'), 'rawId' => Base64Url::encode('x'), 'type' => 'public-key',
-                'response' => [
-                    'clientDataJSON' => Base64Url::encode($clientData),
-                    'authenticatorData' => Base64Url::encode($authData),
-                    'signature' => Base64Url::encode($sig),
-                ],
-            ];
+        foreach ((array) ($fixture['samples'] ?? []) as $sample) {
+            $challenge = Base64Url::decode((string) ($sample['challenge'] ?? ''));
+            $payload = $sample['payload'] ?? null;
+            if ($challenge === null || $challenge === '' || !is_array($payload)) {
+                throw new \RuntimeException('Invalid WebAuthn budget sample.');
+            }
             $t = hrtime(true);
-            $verifier->verifyAssertion($payload, $challenge, $cose, $i, false);
+            $verifier->verifyAssertion($payload, $challenge, $cose, (int) ($sample['stored_sign_count'] ?? 0), false);
             $samples[] = (hrtime(true) - $t) / 1e6;
         }
         sort($samples);
@@ -4578,27 +4952,28 @@ ADR 0004 D11 approved **2000 ms p95 server time (excluding authenticator UX)** f
     }
 ```
 
-(Verify the hand-encoded COSE header bytes against `CborDecoderTest`'s vectors when transcribing: `\xa5` = map(5), `\x21/\x22` = -2/-3, `\x58\x20` = bstr(32). Hook the probe into the report exactly like the resolver row — including how PASS/FAIL is decided against `Phase5Budgets`.)
+Hook the probe into the report exactly like the resolver row — including how PASS/FAIL is decided against `Phase5Budgets`. Do not call `openssl_pkey_new`, `openssl_sign`, or any private-key generation/signing API from the measurement service.
 
-- [ ] **Step 2: Regenerate and verify**
+- [ ] **Step 3: Regenerate and verify**
 
 ```bash
 APP_ENV=testing php bin/console verify:phase5-budgets
 grep 'webauthn.ceremony_p95' docs/evidence/phase5/performance-budgets.md
+! grep -rn "openssl_pkey_new\|openssl_sign\|privateKey\|private_key" src/Service/Phase5BudgetReportService.php src/Service/BaselineMetricsService.php
 ```
 
-Expected: the row now reads `… ms MEASURED (PASS)` (single-digit ms is typical for ES256 verify; budget is 2000 ms).
+Expected: the row now reads `… ms MEASURED (PASS)` (single-digit ms is typical for ES256 verify; budget is 2000 ms). The final `grep` prints no lines from `src/Service`.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add src/Service/ docs/evidence/phase5/performance-budgets.md
+git add docs/evidence/phase5/webauthn-budget-fixture.json src/Service/Phase5BudgetReportService.php docs/evidence/phase5/performance-budgets.md
 git commit -m "perf(passkeys): measure webauthn.ceremony_p95 against the D11 2s budget (PASS)
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ```
 
-(Stage the exact service file you edited — the `src/Service/` path above is a stand-in; never `git add` a directory containing another session's files.)
+(Stage the exact service file you edited if the report probe lives elsewhere; never `git add` a directory containing another session's files.)
 
 ---
 
@@ -4621,7 +4996,7 @@ Evidence bookkeeping, enforced by tests: `ThreatModelIndexTest` requires every `
 { "id": "TM-ID-09", "model": "identity-account-takeover.md", "fixture": "last-usable-method removal blocked; provider disable lists sole-method accounts", "owner": "Inc7", "status": "implemented", "test": "tests/Integration/Core/AppPasskeyRegistrationTest.php" }
 ```
 
-(Preserve the file's exact existing key order/format — edit only `status` and add `test`. TM-ID-09's second clause is capability-tested via `soleProviderAccounts`; the Inc 8 UI handoff is recorded in Task 19's status update.)
+(Preserve the file's exact existing key order/format — edit only `status` and add `test`. TM-ID-09's second clause is capability-tested via `OAuthIdentityRepository::soleMethodAccounts`; the Inc 8 UI handoff is recorded in Task 19's status update.)
 
 - [ ] **Step 2: Advance `GA-DOD-13`** in the foundation-remainder ledger — replace the `"state": "R1", "evidence": []` row with:
 
@@ -4641,7 +5016,7 @@ Recorded <date of landing>. Flag `passkeys` remains **default OFF**; enablement 
 | §9 scenario / requirement | Evidence |
 | --- | --- |
 | Registration validates challenge/origin/RP/signature/UP/UV; replay, cross-account, wrong origin/RP, duplicate, stale rejected | `WebAuthnPolicyTest` (protocol negatives), `AppPasskeyRegistrationTest` (TM-ID-05/06/07 over HTTP) |
-| Sign-in: correct account; unknown credential/altered signature fail without account info | `AppPasskeyLoginTest` (decoy shape, generic errors) |
+| Sign-in: correct account; unknown credential/altered signature fail without account info | `AppPasskeyLoginTest` (fixed 8-slot decoy shape, stable decoys, generic errors) |
 | Synced counter → risk signal, no auto-ban (TM-ID-08, decision #30) | `AppPasskeyLoginTest::test_non_increasing_counter_signs_in_and_writes_a_risk_audit_row` |
 | Removal: last-usable-method + final-owner blocked (TM-ID-09, F5 Inc-7 path) | `AppPasskeyRegistrationTest` last-method/owner tests |
 | Fallback: password/TOTP/recovery journeys with passkeys enrolled; lost-authenticator recovery | `AppPasskeyRecoveryTest`; no-JS TOTP journey `tests/browser/totp.spec.ts` |
@@ -4730,7 +5105,8 @@ ceremonies hard-refuse a non-localhost `http://` APP_URL.
 - Audit actions: passkey_registered / passkey_renamed / passkey_revoked /
   passkey_login / passkey_counter_anomaly (moderation_log, target_type user).
 - Rate limits: passkey_challenge 30/15 min (per email), passkey_login 10/15 min
-  (per client), management via mfa_settings 10/15 min.
+  (per email subject, cleared on successful passkey login), management via
+  mfa_settings 10/15 min.
 - Accounts with TOTP enrolled require user-verified (screen-lock) assertions.
 - Usernameless/discoverable sign-in and privileged-MFA enforcement are Gate B.
 - Inc 8 handoff: before disabling an OAuth provider, list sole-method accounts
@@ -4805,7 +5181,7 @@ Follow `superpowers:finishing-a-development-branch` for the merge decision. The 
 | LastOwnerGuard final-method block (F5 Inc-7 path) + last-usable-method (TM-ID-09) | 12 |
 | Synced-counter anomaly = risk signal, never lockout (TM-ID-08, #30) | 8, 13 |
 | Attestation accepted but never trusted (#29) | 8 |
-| Rate limits + audit + security notifications | 11, 12, 13 |
+| Rate limits + audit + security notifications; revoke other sessions after add/remove credential changes | 11, 12, 13 |
 | Deploy-dark flag + route 404 regressions + JS asset gating | 11, 12, 13, 14 |
 | CDP virtual-authenticator browser evidence + axe (desktop+mobile) | 16 |
 | D11 `webauthn.ceremony_p95` budget | 17 |
@@ -4815,8 +5191,3 @@ Follow `superpowers:finishing-a-development-branch` for the merge decision. The 
 | Out (Gate B, asserted absent): usernameless, passkey-first, privileged-MFA enforcement, migration 0074 | header |
 
 Known intentional deviations are the eight "Decisions to record" items in the header; the executor surfaces them via Task 19.
-
-
-
-
-

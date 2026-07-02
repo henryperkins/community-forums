@@ -22,6 +22,11 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
 
+        foreach (['content_references'] as $flag) {
+            self::assertArrayHasKey($flag, $flags->all(), "$flag must be declared, not merely unknown");
+            self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
+        }
+
         $carryovers = [
             'link_previews',
             'expanded_files',
@@ -29,7 +34,6 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
             'split_merge',
             'profile_media',
             'automated_context',
-            'content_references',
         ];
 
         foreach ($carryovers as $flag) {

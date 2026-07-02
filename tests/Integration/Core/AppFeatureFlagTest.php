@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Core\FeatureFlags;
+use App\Repository\BoardMemberRepository;
 use App\Repository\SettingRepository;
 use App\Repository\TagRepository;
 use Tests\Support\TestCase;
@@ -33,11 +34,11 @@ final class AppFeatureFlagTest extends TestCase
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
         $defaults = $flags->all();
-        foreach (['tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules'] as $flag) {
+        foreach (['tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'content_references'] as $flag) {
             self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
-        foreach (['group_dms', 'community_memory', 'content_references'] as $flag) {
+        foreach (['group_dms', 'community_memory'] as $flag) {
             self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
         }
@@ -297,6 +298,49 @@ final class AppFeatureFlagTest extends TestCase
             (int) $this->db->fetchValue("SELECT COUNT(*) FROM conversations WHERE kind = 'group'"),
             'enabling group_dms permits group creation',
         );
+    }
+
+    public function test_content_references_are_available_by_default_and_can_be_disabled(): void
+    {
+        // content_references graduated to default-on (GA 2026-07-02): persisted
+        // internal links render as read-gated cards without any override, and an
+        // operator can roll the card rendering back via the features setting.
+        $author = $this->makeUser(['username' => 'ref_default_author']);
+        $member = $this->makeUser(['username' => 'ref_default_member']);
+        $category = $this->makeCategory('Reference Default');
+        $publicBoard = $this->makeBoard($category, ['slug' => 'ref-public-board', 'name' => 'Public refs']);
+        $privateBoard = $this->makeBoard($category, ['slug' => 'ref-private-board', 'name' => 'Private refs', 'visibility' => 'private']);
+        (new BoardMemberRepository($this->db))->add((int) $privateBoard['id'], (int) $member['id'], null);
+
+        $publicTarget = $this->makeThread($publicBoard, $author, 'Public Reference Target', 'public body');
+        $privateTarget = $this->makeThread($privateBoard, $member, 'Private Reference Target', 'private body');
+
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $publicBoard['id'],
+            'title' => 'Source with references',
+            'body' => 'See [public](/t/' . $publicTarget['thread_id'] . '-' . $publicTarget['slug'] . ') and [private](/t/' . $privateTarget['thread_id'] . '-' . $privateTarget['slug'] . ').',
+        ]));
+        $source = $this->db->fetch("SELECT id, slug FROM threads WHERE title = 'Source with references' ORDER BY id DESC LIMIT 1");
+        self::assertIsArray($source);
+        $sourcePath = '/t/' . (int) $source['id'] . '-' . (string) $source['slug'];
+
+        // Default-on: a guest sees the public target card and no private leakage.
+        $this->logoutClient();
+        $guestPage = $this->get($sourcePath);
+        $this->assertStatus(200, $guestPage);
+        self::assertStringContainsString('Public Reference Target', $guestPage->body());
+        self::assertStringNotContainsString('Private Reference Target', $guestPage->body());
+
+        // Operator rollback: disabling the flag suppresses all reference cards.
+        $this->setFlags(['content_references' => false]);
+        $rolledBack = $this->get($sourcePath);
+        $this->assertStatus(200, $rolledBack);
+        self::assertStringNotContainsString('Public Reference Target', $rolledBack->body());
+        self::assertStringNotContainsString('Private Reference Target', $rolledBack->body());
+
+        // Core thread rendering survives the rollback.
+        self::assertStringContainsString('Source with references', $rolledBack->body());
     }
 
     public function test_tags_flag_gates_public_and_admin_tag_routes(): void

@@ -310,6 +310,26 @@ test('wysiwyg composer toolbar and reference picker have no serious axe violatio
   }
 });
 
+test('phase 4 content reference cards have no serious axe violations', async ({ page }, info) => {
+  // content_references graduated to default-on (GA 2026-07-02). The card panel
+  // is rendered server-side from persisted internal links; scope the scan to it
+  // so this gate is not blocked by unrelated thread-page issues.
+  await login(page, 'bob@retro.test');
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+  await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
+  await page.locator('form.composer input[name="title"]').first().fill('A11y reference source');
+  await page.locator('form.composer textarea.composer-input').first().fill(
+    'See [the general board](/c/general) for context.',
+  );
+  await page.locator('form.composer button[type="submit"]').first().click();
+  await page.waitForURL(/\/t\/\d+-/);
+
+  await expect(page.locator('.reference-cards')).toBeVisible();
+  await expect(page.locator('.reference-cards')).toContainText('general');
+  await expectNoSeriousA11yViolations(page, info, '.reference-cards');
+});
+
 test('phase 4 slash combobox has no serious axe violations and is keyboard operable', async ({ page }, info) => {
   // slash_giphy graduated to default-on (GA 2026-07-02). The composer slash
   // inserts + GIPHY picker are an APG combobox (textarea = combobox, popup =
