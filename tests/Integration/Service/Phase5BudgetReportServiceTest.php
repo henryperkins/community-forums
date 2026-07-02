@@ -46,4 +46,29 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertStringContainsString('resolver.p95', (string) file_get_contents($path));
         unlink($path);
     }
+
+    public function test_resolver_row_is_measured_when_a_resolver_is_supplied(): void
+    {
+        (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed(true);
+        $resolver = new \App\Security\CapabilityResolver(
+            new \App\Repository\RoleCapabilityRepository($this->db),
+            new \App\Repository\RoleAssignmentRepository($this->db),
+            new \App\Service\LegacyAuthorityProjection(new \App\Repository\BoardModeratorRepository($this->db)),
+            new \App\Repository\ProtectedOwnerRepository($this->db),
+            new \App\Repository\BoardRepository($this->db),
+            new \App\Repository\BoardMemberRepository($this->db),
+            new \App\Security\BoardPolicy(),
+            new \App\Security\WriteGate(),
+        );
+        $report = new Phase5BudgetReportService($this->db, $resolver);
+        $rows = [];
+        foreach ($report->rows() as $row) {
+            $rows[$row['key']] = $row;
+        }
+
+        self::assertStringStartsWith('MEASURED', $rows['resolver.p95']['status']);
+        self::assertStringContainsString('ms resolver', $rows['resolver.p95']['measured']);
+        self::assertStringContainsString('legacy', $rows['resolver.p95']['measured']);
+        self::assertStringContainsString('Resolver p50/p95/p99', $report->render());
+    }
 }

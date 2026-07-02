@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Domain\User;
+use App\Security\CapabilityResolver;
 
 /**
  * Foundation F9 — measures baseline metrics on the Phase5FixtureSeeder corpus,
@@ -65,6 +67,58 @@ final class BaselineMetricsService
             'p95' => self::percentile($samples, 95),
             'p99' => self::percentile($samples, 99),
             'query_count' => $queryCount,
+            'query_time_ms' => round(array_sum($samples), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
+        ];
+    }
+
+    /**
+     * Measures the new resolver on the same fixture envelope as the legacy
+     * baseline. Each sample is one board-target write capability decision.
+     *
+     * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
+     */
+    public function measureResolver(CapabilityResolver $resolver, int $iterations = 200): array
+    {
+        $iterations = max(1, $iterations);
+        $users = $this->db->fetchAll("SELECT * FROM users WHERE username LIKE 'p5fix\\_%' ORDER BY id ASC");
+        $boards = $this->db->fetchAll("SELECT id FROM boards WHERE slug LIKE 'p5fix\\_%' ORDER BY id ASC");
+
+        $samples = [];
+        $errors = 0;
+
+        if ($users !== [] && $boards !== []) {
+            for ($i = 0; $i < $iterations; $i++) {
+                $user = User::fromRow($users[$i % count($users)]);
+                $boardId = (int) $boards[$i % count($boards)]['id'];
+                $t0 = hrtime(true);
+                try {
+                    $resolver->can($user, 'core.thread.create', ['board_id' => $boardId]);
+                } catch (\Throwable) {
+                    $errors++;
+                }
+                $samples[] = (hrtime(true) - $t0) / 1_000_000;
+            }
+        }
+
+        return [
+            'route_or_job' => 'capability_resolver_can',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($this->db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'phase5_fixture_v' . Phase5FixtureSeeder::FIXTURE_VERSION,
+            'role_assignment_count' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM role_assignments'),
+            'installed_package_count' => 0,
+            'concurrency' => 1,
+            'cache_state' => 'cold',
+            'window' => $iterations . ' iterations',
+            'p50' => self::percentile($samples, 50),
+            'p95' => self::percentile($samples, 95),
+            'p99' => self::percentile($samples, 99),
+            'query_count' => count($samples) * 5,
             'query_time_ms' => round(array_sum($samples), 4),
             'peak_memory_bytes' => memory_get_peak_usage(true),
             'queue_age' => null,

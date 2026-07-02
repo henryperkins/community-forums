@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Security\CapabilityResolver;
 use App\Support\Phase5Budgets;
 
 /**
@@ -18,14 +19,24 @@ use App\Support\Phase5Budgets;
 final class Phase5BudgetReportService
 {
     private ?array $baseline = null;
+    private ?array $resolverSample = null;
 
-    public function __construct(private Database $db)
+    public function __construct(private Database $db, private ?CapabilityResolver $resolver = null)
     {
     }
 
     private function baseline(): array
     {
         return $this->baseline ??= (new BaselineMetricsService($this->db))->measureLegacyAuthorityRead();
+    }
+
+    private function resolverSample(): ?array
+    {
+        if ($this->resolver === null) {
+            return null;
+        }
+
+        return $this->resolverSample ??= (new BaselineMetricsService($this->db))->measureResolver($this->resolver);
     }
 
     /** @return array<int,array{key:string,metric:string,target:string,measured:string,status:string}> */
@@ -39,8 +50,14 @@ final class Phase5BudgetReportService
             $status = 'PENDING (' . $b['measurable_at'] . ')';
 
             if ($key === 'resolver.p95') {
-                $measured = $baseline['p95'] . ' ms legacy';
-                $status = 'BASELINE';
+                $resolverSample = $this->resolverSample();
+                if ($resolverSample !== null) {
+                    $measured = $resolverSample['p95'] . ' ms resolver (baseline ' . $baseline['p95'] . ' ms legacy)';
+                    $status = ((float) $resolverSample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+                } else {
+                    $measured = $baseline['p95'] . ' ms legacy';
+                    $status = 'BASELINE';
+                }
             } elseif ($key === 'webhook.delivery_timeout') {
                 $measured = '5000 ms configured';
                 $status = 'CONFIG';
@@ -65,6 +82,11 @@ final class Phase5BudgetReportService
         $out .= '- Fixture: ' . $env['data_fixture'] . ' · role assignments: ' . $env['role_assignment_count'] . "\n";
         $out .= '- Window: ' . $env['window'] . ' · concurrency: ' . $env['concurrency'] . ' · cache: ' . $env['cache_state'] . "\n";
         $out .= '- Legacy read p50/p95/p99 (ms): ' . $env['p50'] . ' / ' . $env['p95'] . ' / ' . $env['p99'] . "\n";
+        $resolverSample = $this->resolverSample();
+        if ($resolverSample !== null) {
+            $out .= '- Resolver p50/p95/p99 (ms): ' . $resolverSample['p50'] . ' / ' . $resolverSample['p95'] . ' / ' . $resolverSample['p99']
+                . ' · route/job: `' . $resolverSample['route_or_job'] . "`\n";
+        }
         $out .= '- Queries: ' . $env['query_count'] . ' · query time (ms): ' . $env['query_time_ms']
              . ' · peak mem (bytes): ' . $env['peak_memory_bytes'] . ' · error rate: ' . $env['error_rate'] . "\n\n";
         $out .= "## Budgets vs D11 targets (ADR 0004 D11)\n\n";

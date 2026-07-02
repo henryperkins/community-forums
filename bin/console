@@ -12,12 +12,18 @@ use App\Mail\ArrayMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
 use App\Repository\AccountDeletionRepository;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
 use App\Repository\EmailDomainStatusRepository;
 use App\Repository\BadgeRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\SessionRepository;
 use App\Repository\PostRepository;
+use App\Repository\ProtectedOwnerRepository;
+use App\Repository\RoleAssignmentRepository;
+use App\Repository\RoleCapabilityRepository;
 use App\Repository\ServiceSecretRepository;
 use App\Repository\ServerDraftRepository;
 use App\Repository\ServerExtensionRepository;
@@ -26,8 +32,11 @@ use App\Repository\UserRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\EgressGuard;
+use App\Security\BoardPolicy;
+use App\Security\CapabilityResolver;
 use App\Security\PasswordHasher;
 use App\Security\SecretBox;
+use App\Security\WriteGate;
 use App\Service\AccountLifecycleService;
 use App\Service\LinkPreviewService;
 use App\Service\Webhook\CurlWebhookTransport;
@@ -41,8 +50,10 @@ use App\Service\AttachmentService;
 use App\Service\AttachmentScanService;
 use App\Service\EmailDomainVerifier;
 use App\Service\Extension\BubblewrapSandboxAdapter;
+use App\Service\LegacyAuthorityProjection;
 use App\Service\Phase5BudgetReportService;
 use App\Service\Phase5FixtureSeeder;
+use App\Service\ResolverParityService;
 use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
 use App\Worker\ServerExtensionWorker;
@@ -420,7 +431,17 @@ try {
                 exit(1);
             }
             $db = $database();
-            $report = new Phase5BudgetReportService($db);
+            $resolver = new CapabilityResolver(
+                new RoleCapabilityRepository($db),
+                new RoleAssignmentRepository($db),
+                new LegacyAuthorityProjection(new BoardModeratorRepository($db)),
+                new ProtectedOwnerRepository($db),
+                new BoardRepository($db),
+                new BoardMemberRepository($db),
+                new BoardPolicy(),
+                new WriteGate(),
+            );
+            $report = new Phase5BudgetReportService($db, $resolver);
             $path = $root . '/docs/evidence/phase5/performance-budgets.md';
 
             // Non-mutating: seed + measure inside a transaction that is always
@@ -449,6 +470,73 @@ try {
                 $log(sprintf('  [%-20s] %s -> %s', $r['status'], $r['key'], $r['measured']));
             }
             $log('Wrote ' . $path);
+            break;
+
+        case 'verify:resolver-parity':
+            // Increment 1 (P5-08): archive the old-vs-new parity corpus on the
+            // F9 fixture. Seed and compare inside a rolled-back transaction; the
+            // markdown is written from the in-memory result after rollback.
+            $env = (string) $config->get('app.env', 'production');
+            if ($env === 'production') {
+                $log('Refusing: verify:resolver-parity seeds a fixture and must not run with app.env=production.');
+                exit(1);
+            }
+            $db = $database();
+            $resolver = new CapabilityResolver(
+                new RoleCapabilityRepository($db),
+                new RoleAssignmentRepository($db),
+                new LegacyAuthorityProjection(new BoardModeratorRepository($db)),
+                new ProtectedOwnerRepository($db),
+                new BoardRepository($db),
+                new BoardMemberRepository($db),
+                new BoardPolicy(),
+                new WriteGate(),
+            );
+            $parity = new ResolverParityService(
+                $db,
+                $resolver,
+                new BoardModeratorRepository($db),
+                new BoardMemberRepository($db),
+                new ProtectedOwnerRepository($db),
+                new BoardPolicy(),
+                new WriteGate(),
+                new SettingRepository($db),
+            );
+            $pdo = $db->pdo();
+            $pdo->beginTransaction();
+            try {
+                if (!in_array('--no-seed', $argv, true)) {
+                    $summary = (new Phase5FixtureSeeder($db, new SettingRepository($db), $env))->seed(true);
+                    $log($summary['skipped']
+                        ? 'Fixture already seeded.'
+                        : sprintf('Seeded fixture (throwaway tx): %d users, %d boards, %d assignments, %d owner(s).',
+                            $summary['users'], $summary['boards'], $summary['assignments'], $summary['owners']));
+                }
+                $result = $parity->run();
+            } finally {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+            }
+            $commit = trim((string) shell_exec('git -C ' . escapeshellarg($root) . ' rev-parse --short HEAD'));
+            $path = $root . '/docs/evidence/phase5/resolver-parity.md';
+            file_put_contents($path, $parity->render($result, $commit !== '' ? $commit : 'unknown'));
+            $log(sprintf('Parity: %d tuples, %d agreed, %d mismatches.', $result['tuples'], $result['agreed'], count($result['mismatches'])));
+            $log('Wrote ' . $path);
+            if ($result['mismatches'] !== []) {
+                foreach (array_slice($result['mismatches'], 0, 10) as $mismatch) {
+                    $log(sprintf(
+                        '  MISMATCH %s actor=%s target=%s legacy=%s resolver=%s (%s)',
+                        $mismatch['capability'],
+                        $mismatch['actor'],
+                        $mismatch['target'],
+                        $mismatch['legacy'] ? 'allow' : 'deny',
+                        $mismatch['resolver'] ? 'allow' : 'deny',
+                        $mismatch['source'],
+                    ));
+                }
+                exit(1);
+            }
             break;
 
         case 'help':
@@ -481,6 +569,7 @@ try {
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
             $log('  verify:phase5-budgets   Seed the F9 fixture and write the D11 budget report (A3)');
+            $log('  verify:resolver-parity  Archive the Inc-1 resolver parity corpus (exit 1 on mismatch)');
             break;
     }
 } catch (Throwable $e) {
