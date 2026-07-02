@@ -120,13 +120,16 @@ final class PackageThemeRepository
     public function setState(?int $activeBuildId, ?int $lkgBuildId, ?int $actorId): void
     {
         $this->db->run(
-            'UPDATE theme_state
-             SET active_build_id = :active_build_id,
-                 lkg_build_id = :lkg_build_id,
-                 activated_by = :activated_by,
-                 activated_at = UTC_TIMESTAMP(),
-                 updated_at = UTC_TIMESTAMP()
-             WHERE id = 1',
+            'INSERT INTO theme_state
+                (id, active_build_id, lkg_build_id, activated_by, activated_at, updated_at)
+             VALUES
+                (1, :active_build_id, :lkg_build_id, :activated_by, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+             ON DUPLICATE KEY UPDATE
+                active_build_id = VALUES(active_build_id),
+                lkg_build_id = VALUES(lkg_build_id),
+                activated_by = VALUES(activated_by),
+                activated_at = UTC_TIMESTAMP(),
+                updated_at = UTC_TIMESTAMP()',
             [
                 'active_build_id' => $activeBuildId,
                 'lkg_build_id' => $lkgBuildId,
@@ -141,6 +144,20 @@ final class PackageThemeRepository
         return $this->db->fetchAll(
             'SELECT * FROM package_theme_builds WHERE installed_package_id = ? ORDER BY id DESC',
             [$installedId],
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function themeInstalls(): array
+    {
+        return $this->db->fetchAll(
+            "SELECT ip.*, p.package_uid, p.name AS package_name, p.type AS package_type,
+                    r.version AS release_version
+             FROM installed_packages ip
+             JOIN packages p ON p.id = ip.package_id
+             LEFT JOIN package_releases r ON r.id = ip.release_id
+             WHERE p.type = 'theme' AND ip.state IN ('installed','enabled','disabled')
+             ORDER BY p.package_uid",
         );
     }
 }

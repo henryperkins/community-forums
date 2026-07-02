@@ -17,6 +17,7 @@ use App\Controller\AdminPackageLifecycleController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
 use App\Controller\AdminRoleController;
+use App\Controller\AdminThemeController;
 use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
@@ -494,7 +495,7 @@ final class App
         // safe mode and admin-only preview kept outside the DB-backed session.
         $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
         try {
-            if (!empty($features['package_themes'])) {
+            if (!empty($features['package_themes']) && $request->path() !== '/admin/themes/safe-mode') {
                 $themeState = $container->get(ThemeStateService::class);
                 $user = $session->user();
                 if ($user !== null && $user->isAdmin()) {
@@ -1666,6 +1667,13 @@ final class App
         $r->get('/admin/roles/{id}', [AdminRoleController::class, 'edit']);
         $r->post('/admin/roles/{id}', [AdminRoleController::class, 'update']);
         $r->post('/admin/roles/{id}/clone', [AdminRoleController::class, 'clone']);
+        $r->get('/admin/themes', [AdminThemeController::class, 'index']);
+        $r->get('/admin/themes/safe-mode', [AdminThemeController::class, 'safeModeForm']);
+        $r->post('/admin/themes/safe-mode', [AdminThemeController::class, 'safeMode']);
+        $r->post('/admin/themes/preview/clear', [AdminThemeController::class, 'clearPreview']);
+        $r->post('/admin/themes/rollback', [AdminThemeController::class, 'rollback']);
+        $r->post('/admin/themes/{id}/preview', [AdminThemeController::class, 'preview']);
+        $r->post('/admin/themes/{id}/activate', [AdminThemeController::class, 'activate']);
         $r->get('/admin/packages', [AdminPackagesController::class, 'index']);
         $r->get('/admin/packages/{id}', [AdminPackagesController::class, 'show']);
         $r->post('/admin/packages/{id}/plan', [AdminPackageLifecycleController::class, 'plan']);

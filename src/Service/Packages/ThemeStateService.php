@@ -99,7 +99,16 @@ final class ThemeStateService
     {
         $this->writeGate->assertCanWrite($admin);
 
-        return $this->buildForInstall($admin, $installedId);
+        $build = $this->buildForInstall($admin, $installedId);
+        $this->audit->log([
+            'actor_id' => $admin->id(),
+            'action' => 'theme_preview',
+            'target_type' => 'setting',
+            'target_id' => 0,
+            'after' => ['build_id' => (int) $build['id'], 'package_id' => (int) $build['package_id']],
+        ]);
+
+        return $build;
     }
 
     /** @return array<string,mixed> */
@@ -154,7 +163,7 @@ final class ThemeStateService
         $state = $this->themes->state();
         $targetId = $state['lkg_build_id'];
         if ($targetId === null) {
-            throw new PackagePolicyException('theme_lkg_missing', 'No last-known-good theme build is available.');
+            throw new PackagePolicyException('theme_no_lkg', 'No last-known-good theme build is available.');
         }
 
         $target = $this->serveableBuild($targetId);
@@ -216,7 +225,7 @@ final class ThemeStateService
         $this->telemetry?->emit('theme.lifecycle', ['action' => 'deactivate']);
     }
 
-    public function onInstallIneligible(int $installedId, ?int $actorId = null, string $reason = 'install_ineligible'): void
+    public function onInstallIneligible(int $installedId, string $reason, ?int $actorId = null): bool
     {
         $state = $this->themes->state();
         $active = $state['active_build_id'] !== null ? $this->themes->findBuild($state['active_build_id']) : null;
@@ -224,29 +233,43 @@ final class ThemeStateService
 
         if ($active !== null && (int) $active['installed_package_id'] === $installedId) {
             $next = $lkg !== null && (int) $lkg['installed_package_id'] !== $installedId ? (int) $lkg['id'] : null;
-            $this->themes->setState($next, null, $actorId);
-            $this->history->record([
-                'package_id' => (int) $active['package_id'],
-                'installed_package_id' => $installedId,
-                'event' => 'theme_deactivate',
-                'actor_id' => $actorId,
-                'prior_digest' => (string) $active['css_digest'],
-                'new_digest' => $next !== null && $lkg !== null ? (string) $lkg['css_digest'] : null,
-                'detail' => $reason,
-            ]);
+            $this->db->transaction(function () use ($active, $installedId, $next, $lkg, $actorId, $reason): void {
+                $this->themes->setState($next, null, $actorId);
+                $this->history->record([
+                    'package_id' => (int) $active['package_id'],
+                    'installed_package_id' => $installedId,
+                    'event' => 'theme_deactivate',
+                    'actor_id' => $actorId,
+                    'prior_digest' => (string) $active['css_digest'],
+                    'new_digest' => $next !== null && $lkg !== null ? (string) $lkg['css_digest'] : null,
+                    'detail' => $reason,
+                ]);
+                $this->audit->log([
+                    'actor_id' => $actorId,
+                    'action' => 'theme_deactivate',
+                    'target_type' => 'package',
+                    'target_id' => (int) $active['package_id'],
+                    'reason' => $reason,
+                ]);
+            });
+            $this->telemetry?->emit('theme.lifecycle', ['action' => 'deactivate', 'reason' => $reason]);
+            return true;
         } elseif ($lkg !== null && (int) $lkg['installed_package_id'] === $installedId) {
             $this->themes->setState($state['active_build_id'], null, $actorId);
+            return true;
         }
+
+        return false;
     }
 
-    /** @return array{cleared_active:bool,cleared_lkg:bool} */
+    /** @return array{cleared_active:int,cleared_lkg:int} */
     public function repair(): array
     {
         $state = $this->themes->state();
         $activeOk = $state['active_build_id'] === null || $this->serveableBuild($state['active_build_id']) !== null;
         $lkgOk = $state['lkg_build_id'] === null || $this->serveableBuild($state['lkg_build_id']) !== null;
         if ($activeOk && $lkgOk) {
-            return ['cleared_active' => false, 'cleared_lkg' => false];
+            return ['cleared_active' => 0, 'cleared_lkg' => 0];
         }
 
         $this->themes->setState(
@@ -255,7 +278,7 @@ final class ThemeStateService
             null,
         );
 
-        return ['cleared_active' => !$activeOk, 'cleared_lkg' => !$lkgOk];
+        return ['cleared_active' => $activeOk ? 0 : 1, 'cleared_lkg' => $lkgOk ? 0 : 1];
     }
 
     /** @return array<string,mixed> */

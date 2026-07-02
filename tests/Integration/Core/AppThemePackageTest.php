@@ -33,6 +33,8 @@ final class AppThemePackageTest extends TestCase
 {
     private string $artifactDir;
     private int $fixtureCounter = 0;
+    /** @var list<string> */
+    private array $appArtifactFiles = [];
 
     protected function setUp(): void
     {
@@ -48,6 +50,11 @@ final class AppThemePackageTest extends TestCase
                 @unlink($path);
             }
             @rmdir($this->artifactDir);
+        }
+        foreach ($this->appArtifactFiles as $path) {
+            if (is_file($path)) {
+                @unlink($path);
+            }
         }
         parent::tearDown();
     }
@@ -152,6 +159,136 @@ final class AppThemePackageTest extends TestCase
         self::assertSame($matches[1], hash('sha256', $asset->body()));
     }
 
+    public function test_admin_theme_routes_require_admin_and_are_noindexed(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme();
+
+        $this->actingAs($this->makeUser());
+        $this->assertStatus(403, $this->get('/admin/themes'));
+        $this->assertStatus(403, $this->post('/admin/themes/' . $installedId . '/preview'));
+
+        $this->actingAs($this->makeAdmin());
+        $index = $this->get('/admin/themes');
+        $this->assertStatus(200, $index);
+        self::assertSame('noindex', $index->getHeader('x-robots-tag'));
+        self::assertStringContainsString('Midnight Theme', $index->body());
+
+        $packages = $this->get('/admin/packages');
+        $this->assertStatus(200, $packages);
+        self::assertStringContainsString('/admin/themes', $packages->body());
+    }
+
+    public function test_preview_is_isolated_per_admin_session(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme();
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+        self::assertStringContainsString('/theme/preview.css', $this->get('/')->body());
+
+        $this->actingAs($this->makeUser());
+        $memberShell = $this->get('/');
+        self::assertStringNotContainsString('/theme/preview.css', $memberShell->body());
+        self::assertStringNotContainsString('/theme/', $memberShell->body());
+        $this->assertStatus(404, $this->get('/theme/preview.css'));
+
+        $this->logoutClient();
+        $this->assertStatus(404, $this->get('/theme/preview.css'));
+    }
+
+    public function test_admin_activation_route_serves_immutable_digest_addressed_css(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/activate', [
+            'current_password' => 'password123',
+        ]), '/admin/themes');
+
+        $this->logoutClient();
+        $home = $this->get('/');
+        $this->assertStatus(200, $home);
+        $digest = $this->themeDigestFrom($home->body());
+        $css = $this->get('/theme/' . $digest . '.css');
+        $this->assertStatus(200, $css);
+        self::assertSame($digest, hash('sha256', $css->body()));
+        self::assertStringContainsString('immutable', (string) $css->getHeader('cache-control'));
+    }
+
+    public function test_admin_safe_mode_route_serves_system_theme_while_theme_active(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme();
+        $admin = $this->makeAdmin(['password' => 'password123']);
+        $this->actingAs($admin);
+        $this->post('/admin/themes/' . $installedId . '/activate', ['current_password' => 'password123']);
+        $digest = $this->themeDigestFrom($this->get('/')->body());
+
+        $safeForm = $this->get('/admin/themes/safe-mode');
+        $this->assertStatus(200, $safeForm);
+        self::assertSame('noindex', $safeForm->getHeader('x-robots-tag'));
+        self::assertStringNotContainsString('/theme/', $safeForm->body());
+
+        $this->assertRedirect($this->post('/admin/themes/safe-mode'), '/admin/themes/safe-mode');
+        self::assertStringNotContainsString('/theme/', $this->get('/')->body());
+        $this->assertStatus(404, $this->get('/theme/' . $digest . '.css'));
+
+        $missingPassword = $this->post('/admin/themes/safe-mode', ['exit' => '1']);
+        $this->assertStatus(422, $missingPassword);
+        self::assertStringContainsString('current password', strtolower($missingPassword->body()));
+
+        $this->assertRedirect($this->post('/admin/themes/safe-mode', [
+            'exit' => '1',
+            'current_password' => 'password123',
+        ]), '/admin/themes/safe-mode');
+        self::assertStringContainsString('/theme/' . $digest . '.css', $this->get('/')->body());
+    }
+
+    public function test_admin_rollback_serves_exactly_the_lkg_bytes(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $fixture = $this->installedThemeFixture();
+        $admin = $this->makeAdmin(['password' => 'password123']);
+        $this->actingAs($admin);
+
+        $this->post('/admin/themes/' . $fixture['installed_id'] . '/activate', ['current_password' => 'password123']);
+        $first = $this->themeDigestFrom($this->get('/')->body());
+
+        $this->activateSecondThemeVersion($fixture);
+        $this->assertRedirect($this->post('/admin/themes/' . $fixture['installed_id'] . '/activate', [
+            'current_password' => 'password123',
+        ]), '/admin/themes');
+        $second = $this->themeDigestFrom($this->get('/')->body());
+        self::assertNotSame($first, $second);
+
+        $this->assertRedirect($this->post('/admin/themes/rollback', [
+            'current_password' => 'password123',
+        ]), '/admin/themes');
+        $after = $this->themeDigestFrom($this->get('/')->body());
+        self::assertSame($first, $after);
+        self::assertSame($after, hash('sha256', $this->get('/theme/' . $after . '.css')->body()));
+    }
+
+    public function test_admin_activation_requires_password_and_enabled_install(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+
+        $wrong = $this->post('/admin/themes/' . $installedId . '/activate', ['current_password' => 'wrong']);
+        $this->assertStatus(422, $wrong);
+        self::assertStringContainsString('current password', strtolower($wrong->body()));
+
+        (new InstalledPackageRepository($this->db))->setState($installedId, 'disabled');
+        $disabled = $this->post('/admin/themes/' . $installedId . '/activate', ['current_password' => 'password123']);
+        $this->assertStatus(422, $disabled);
+        self::assertStringContainsString('invalid_state', $disabled->body());
+    }
+
     public function test_package_themes_flag_gates_public_theme_routes(): void
     {
         $this->setFlags(['package_registry' => true, 'package_themes' => false]);
@@ -163,6 +300,15 @@ final class AppThemePackageTest extends TestCase
 
     /** @param array{with_asset?:bool} $options */
     private function installedTheme(array $options = []): int
+    {
+        return $this->installedThemeFixture($options)['installed_id'];
+    }
+
+    /**
+     * @param array{with_asset?:bool} $options
+     * @return array{installed_id:int,package_id:int,uid:string,root:SigningHarness,seeded:array<string,mixed>}
+     */
+    private function installedThemeFixture(array $options = []): array
     {
         $this->fixtureCounter++;
         $uid = 'acme/theme-' . $this->fixtureCounter;
@@ -180,12 +326,14 @@ final class AppThemePackageTest extends TestCase
             ];
         }
 
-        $seeded = RegistryFixtures::seed($this->db, SigningHarness::generate(), $this->artifactDir, [
+        $root = SigningHarness::generate();
+        $seeded = RegistryFixtures::seed($this->db, $root, $this->artifactDir, [
             'source_id' => 'rb-test-theme-' . $this->fixtureCounter,
             'publisher_uid' => 'acme-theme-' . $this->fixtureCounter,
             'package_uid' => $uid,
             'release' => ['manifest' => ['theme' => $theme]],
         ]);
+        $this->writeAppArtifact((string) $seeded['release_digest'], (string) $seeded['release_document']);
         $installedId = (new InstalledPackageRepository($this->db))->create([
             'package_id' => $seeded['package_id'],
             'release_id' => $seeded['release_id'],
@@ -200,7 +348,34 @@ final class AppThemePackageTest extends TestCase
         ]);
         (new InstalledPackageRepository($this->db))->setState($installedId, 'enabled');
 
-        return $installedId;
+        return [
+            'installed_id' => $installedId,
+            'package_id' => (int) $seeded['package_id'],
+            'uid' => $uid,
+            'root' => $root,
+            'seeded' => $seeded,
+        ];
+    }
+
+    /** @param array{installed_id:int,uid:string,root:SigningHarness,seeded:array<string,mixed>} $fixture */
+    private function activateSecondThemeVersion(array $fixture): void
+    {
+        $second = RegistryFixtures::seedRelease($this->db, $fixture['root'], $fixture['seeded'], [
+            'uid' => $fixture['uid'],
+            'version' => '1.1.0',
+            'manifest' => ['theme' => ['tokens' => ['--accent' => '#1f4fbf']]],
+        ], $this->artifactDir);
+        $this->writeAppArtifact((string) $second['digest'], (string) $second['document']);
+        $release = (new PackageReleaseRepository($this->db))->find((int) $second['release_id']);
+        self::assertNotNull($release);
+        (new InstalledPackageRepository($this->db))->activateRelease(
+            $fixture['installed_id'],
+            (int) $second['release_id'],
+            (string) $second['digest'],
+            $release['core_min'] !== null ? (string) $release['core_min'] : null,
+            $release['core_max'] !== null ? (string) $release['core_max'] : null,
+            (string) $release['review_status'],
+        );
     }
 
     private function adminEntity(): User
@@ -210,6 +385,17 @@ final class AppThemePackageTest extends TestCase
         self::assertNotNull($entity);
 
         return $entity;
+    }
+
+    private function writeAppArtifact(string $digest, string $document): void
+    {
+        $dir = (string) $this->config->get('packages.storage_path');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        $path = rtrim($dir, '/') . '/' . $digest . '.json';
+        file_put_contents($path, $document);
+        $this->appArtifactFiles[] = $path;
     }
 
     private function themeState(): ThemeStateService
