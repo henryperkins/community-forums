@@ -25,3 +25,20 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.composer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-strong);
+  padding: 1px 7px;
+  line-height: 1.5;
+}
+
+.composer-chip.is-muted {
+  color: var(--text-muted);
+  border-style: dashed;
+}

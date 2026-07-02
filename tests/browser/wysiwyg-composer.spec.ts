@@ -177,6 +177,41 @@ test('source mode edits canonical Markdown and switches back', async ({ page }) 
   await expect(page.locator('.post-op .post-body input[type="checkbox"]')).toBeChecked();
 });
 
+test('wysiwyg reference selections become chips and serialize to markdown', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+
+  await editor.fill('#gen');
+  await expect(page.locator('.composer-reference-menu[role="listbox"]')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(form.locator('.composer-chip')).toContainText('#general');
+
+  await form.getByRole('button', { name: 'Source' }).click();
+  await expect(form.locator('textarea.composer-input')).toHaveValue('[#general](/c/general)');
+});
+
+test('pasted internal topic url becomes canonical markdown chip', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const firstTopic = await page.locator('a[href^="/t/"]').first().getAttribute('href');
+  expect(firstTopic).not.toBeNull();
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+
+  await editor.click();
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(page.url()).origin });
+  await page.evaluate(async (text) => navigator.clipboard.writeText(`${location.origin}${text}`), firstTopic);
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+V' : 'Control+V');
+  await expect(form.locator('.composer-chip')).toBeVisible();
+
+  await form.getByRole('button', { name: 'Source' }).click();
+  await expect(form.locator('textarea.composer-input')).toHaveValue(/\/t\/\d+-/);
+});
+
 test('no-op edit does not rewrite body', async ({ page }) => {
   setWysiwygComposer(false);
   await login(page, 'bob@retro.test');

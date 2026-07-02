@@ -1291,8 +1291,48 @@
             + '&target_id=' + encodeURIComponent(form.getAttribute('data-composer-target-id') || '0');
     }
 
+    function referenceTargets(adapter, ta) {
+        if (typeof adapter.referenceTargets === 'function') {
+            try {
+                var targets = adapter.referenceTargets();
+                if (targets && typeof targets.length === 'number') {
+                    var out = [];
+                    for (var i = 0; i < targets.length; i++) {
+                        if (targets[i] && typeof targets[i].addEventListener === 'function') {
+                            out.push(targets[i]);
+                        }
+                    }
+                    if (out.length) { return out; }
+                }
+            } catch (e) {}
+        }
+        return [ta];
+    }
+
+    function currentReferenceState(adapter, ta) {
+        if (typeof adapter.referenceState === 'function') {
+            try {
+                return adapter.referenceState();
+            } catch (e) {
+                return null;
+            }
+        }
+        return referenceState(ta);
+    }
+
+    function replaceReferenceSelection(adapter, ta, state, item, markdown) {
+        if (typeof adapter.replaceReferenceSelection === 'function') {
+            try {
+                adapter.replaceReferenceSelection(state, item);
+                return;
+            } catch (e) {}
+        }
+        replaceRange(ta, state.start, state.end, markdown);
+    }
+
     function wireReferencePickers(form, adapter) {
         var ta = adapter.ta;
+        var targets = referenceTargets(adapter, ta);
         var menu = document.createElement('div');
         var menuId = 'composer-reference-menu-' + (++referenceMenuSeq);
         var optionSeq = 0;
@@ -1355,11 +1395,11 @@
             active.scrollIntoView({ block: 'nearest' });
         }
         function selectItem(item) {
-            var state = activeState || referenceState(ta);
+            var state = activeState || currentReferenceState(adapter, ta);
             if (!state) { hide(); return; }
             var markdown = item.markdown || item.token || item.label || '';
             if (markdown === '') { hide(); return; }
-            replaceRange(adapter.ta, state.start, state.end, markdown);
+            replaceReferenceSelection(adapter, ta, state, item, markdown);
             hide();
         }
         function renderItems(items, state, key) {
@@ -1401,7 +1441,7 @@
             highlight(0);
         }
         function render() {
-            var state = referenceState(ta);
+            var state = currentReferenceState(adapter, ta);
             if (!state) { hide(); return; }
             var key = state.trigger + '|' + state.query + '|'
                 + (form.getAttribute('data-composer-context') || '') + '|'
@@ -1423,41 +1463,46 @@
             });
         }
 
-        ta.addEventListener('input', render);
-        ta.addEventListener('keyup', function (e) {
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter'
-                || e.key === 'Tab' || e.key === 'Escape') { return; }
-            render();
-        });
-        ta.addEventListener('click', render);
-        ta.addEventListener('keydown', function (e) {
-            if (menu.hidden) {
-                if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && referenceState(ta)) {
-                    lastRenderKey = null;
-                    render();
-                    if (!menu.hidden) { e.preventDefault(); }
+        targets.forEach(function (target) {
+            target.addEventListener('input', render);
+            target.addEventListener('keyup', function (e) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter'
+                    || e.key === 'Tab' || e.key === 'Escape') { return; }
+                render();
+            });
+            target.addEventListener('click', render);
+            target.addEventListener('keydown', function (e) {
+                if (menu.hidden) {
+                    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && currentReferenceState(adapter, ta)) {
+                        lastRenderKey = null;
+                        render();
+                        if (!menu.hidden) { e.preventDefault(); }
+                    }
+                    return;
                 }
-                return;
-            }
-            switch (e.key) {
-                case 'ArrowDown': e.preventDefault(); highlight(activeIndex + 1); break;
-                case 'ArrowUp': e.preventDefault(); highlight(activeIndex - 1); break;
-                case 'Enter':
-                case 'Tab':
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    if (activeIndex >= 0 && options.length) { options[activeIndex].click(); }
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    hide();
-                    break;
-                default: break;
-            }
+                switch (e.key) {
+                    case 'ArrowDown': e.preventDefault(); highlight(activeIndex + 1); break;
+                    case 'ArrowUp': e.preventDefault(); highlight(activeIndex - 1); break;
+                    case 'Enter':
+                    case 'Tab':
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        if (activeIndex >= 0 && options.length) { options[activeIndex].click(); }
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        hide();
+                        break;
+                    default: break;
+                }
+            }, target !== ta);
         });
         document.addEventListener('click', function (e) {
-            if (e.target === ta || menu.contains(e.target)) { return; }
+            if (menu.contains(e.target)) { return; }
+            for (var i = 0; i < targets.length; i++) {
+                if (e.target === targets[i] || (targets[i].contains && targets[i].contains(e.target))) { return; }
+            }
             hide();
         });
     }
