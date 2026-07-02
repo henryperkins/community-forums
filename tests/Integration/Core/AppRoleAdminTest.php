@@ -61,6 +61,7 @@ final class AppRoleAdminTest extends TestCase
             'current_password' => 'password123',
         ]);
         $this->assertRedirectContains($resp, '/admin/roles');
+        self::assertSame('noindex', $resp->getHeader('x-robots-tag'), 'redirects carry noindex too');
 
         $role = (new RoleRepository($this->db))->findByKey('custom.board_helper');
         self::assertNotNull($role);

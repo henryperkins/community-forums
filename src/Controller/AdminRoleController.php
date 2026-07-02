@@ -64,7 +64,7 @@ final class AdminRoleController extends Controller
                 $request->str('description') !== '' ? $request->str('description') : null,
                 $this->inputCapabilities($request),
             );
-            return $this->redirectWithFlash('/admin/roles', 'Role created.');
+            return $this->noindex($this->redirectWithFlash('/admin/roles', 'Role created.'));
         } catch (ValidationException $e) {
             return $this->rolesView($e->errors, $this->oldDefinition($request, $e), 422);
         }
@@ -128,7 +128,7 @@ final class AdminRoleController extends Controller
                 $request->str('description') !== '' ? $request->str('description') : null,
                 $this->inputCapabilities($request),
             );
-            return $this->redirectWithFlash('/admin/roles', 'Role updated.');
+            return $this->noindex($this->redirectWithFlash('/admin/roles', 'Role updated.'));
         } catch (ValidationException $e) {
             return $this->roleEditView($roleId, $e->errors, $this->oldDefinition($request, $e), 422);
         }
@@ -148,10 +148,10 @@ final class AdminRoleController extends Controller
                 $roleId,
                 $request->str('name'),
             );
-            return $this->redirectWithFlash('/admin/roles', 'Role cloned as an editable custom role.');
+            return $this->noindex($this->redirectWithFlash('/admin/roles', 'Role cloned as an editable custom role.'));
         } catch (ValidationException $e) {
             $this->flash()->add('Clone failed: ' . implode(' ', array_map('strval', $e->errors)));
-            return $this->redirect('/admin/roles/' . $roleId);
+            return $this->noindex($this->redirect('/admin/roles/' . $roleId));
         }
     }
 

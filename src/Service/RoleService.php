@@ -42,7 +42,7 @@ final class RoleService
         [$name, $description, $keys, $ids] = $this->validateDefinition($name, $description, $capabilityKeys);
         $roleKey = $this->newRoleKey($name);
 
-        return $this->db->transaction(function () use ($admin, $name, $description, $keys, $ids, $roleKey): int {
+        return $this->insertGuarded($name, $description, $keys, function () use ($admin, $name, $description, $keys, $ids, $roleKey): int {
             $roleId = $this->roles->create([
                 'role_key' => $roleKey,
                 'name' => $name,
@@ -104,7 +104,7 @@ final class RoleService
         [$name, , $keys, $ids] = $this->validateDefinition($name, null, $sourceKeys);
         $roleKey = $this->newRoleKey($name);
 
-        return $this->db->transaction(function () use ($admin, $source, $name, $keys, $ids, $roleKey): int {
+        return $this->insertGuarded($name, null, $keys, function () use ($admin, $source, $name, $keys, $ids, $roleKey): int {
             $roleId = $this->roles->create([
                 'role_key' => $roleKey,
                 'name' => $name,
@@ -157,6 +157,31 @@ final class RoleService
         }
 
         return $role;
+    }
+
+    /**
+     * Run an insert transaction, translating a `uq_role_key` violation (a
+     * concurrent create/clone that won the race past validateDefinition's
+     * read-check) into the same 422 the pre-check produces. The only unique key
+     * reachable inside these transactions is roles.uq_role_key: role_capabilities
+     * uses INSERT IGNORE and every FK id was resolved from live rows.
+     *
+     * @param list<string> $keys
+     * @param callable():int $tx
+     */
+    private function insertGuarded(string $name, ?string $description, array $keys, callable $tx): int
+    {
+        try {
+            return $this->db->transaction($tx);
+        } catch (\PDOException $e) {
+            if ((string) $e->getCode() === '23000') {
+                throw new ValidationException(
+                    ['name' => 'A role with this name already exists.'],
+                    ['name' => $name, 'description' => (string) $description, 'capabilities' => $keys],
+                );
+            }
+            throw $e;
+        }
     }
 
     /**

@@ -37,8 +37,8 @@ final class RoleRepository
     public function create(array $data): int
     {
         return $this->db->insert(
-            "INSERT INTO roles (role_key, name, kind, is_protected, role_rank, version, description, created_by)
-             VALUES (?, ?, 'custom', 0, 0, 1, ?, ?)",
+            "INSERT INTO roles (role_key, name, kind, is_protected, role_rank, version, description, created_by, created_at)
+             VALUES (?, ?, 'custom', 0, 0, 1, ?, ?, UTC_TIMESTAMP())",
             [$data['role_key'], $data['name'], $data['description'] ?? null, $data['created_by'] ?? null],
         );
     }
