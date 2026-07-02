@@ -15,7 +15,7 @@ $this->section('title', 'Package catalogue');
     </nav>
 
     <div class="admin-pane">
-    <p class="muted">Read-only staff browse of signed registry metadata. A signature proves byte provenance under a pinned key, not safety or review.</p>
+    <p class="muted">Read-only staff browse of signed registry metadata. <strong>Install does not exist yet</strong>; a signature proves byte provenance under a pinned key, not safety or review.</p>
 
     <?php foreach ($data['registries'] as $registry): ?>
         <?php if (!$registry['fresh']): ?>
@@ -31,6 +31,7 @@ $this->section('title', 'Package catalogue');
         <?php if ($data['packages'] === []): ?>
             <p class="muted">No packages yet. Pin a trust key, enable the registry, and run the refresh worker.</p>
         <?php else: ?>
+        <div class="table-scroll">
         <table class="audit">
             <thead><tr><th>Package</th><th>Type</th><th>Trust class</th><th>Latest</th><th>Compatibility</th><th>Advisory</th><th></th></tr></thead>
             <tbody>
@@ -41,24 +42,25 @@ $this->section('title', 'Package catalogue');
                         <code><?= $e($p['package_uid']) ?></code>
                         <span class="muted">via <?= $e($p['registry_source_id'] ?? 'local') ?> · <?= $e($p['publisher_name'] ?? 'unknown publisher') ?></span>
                     </td>
-                    <td><?= $e($p['type']) ?></td>
-                    <td><code><?= $e($p['trust_class']) ?></code></td>
-                    <td><?= $p['latest'] !== null ? $e($p['latest']['version']) : '<span class="muted">none stable</span>' ?></td>
-                    <td>
+                    <td class="nowrap"><?= $e($p['type']) ?></td>
+                    <td class="nowrap"><code><?= $e($p['trust_class']) ?></code></td>
+                    <td class="nowrap"><?= $p['latest'] !== null ? $e($p['latest']['version']) : '<span class="muted">none stable</span>' ?></td>
+                    <td class="nowrap">
                         <?php if ($p['compatible'] === null): ?><span class="muted">n/a</span>
                         <?php elseif ($p['compatible']): ?><span class="pill">compatible</span>
                         <?php else: ?><span class="pill">incompatible with this core</span><?php endif; ?>
                     </td>
-                    <td>
+                    <td class="nowrap">
                         <?php if ($p['blocked']): ?><span class="pill">locally blocked</span><?php endif; ?>
                         <?php if ($p['advisory_status'] !== 'none'): ?><span class="pill"><?= $e($p['advisory_status']) ?></span>
                         <?php elseif (!$p['blocked']): ?><span class="muted">none</span><?php endif; ?>
                     </td>
-                    <td><a href="/admin/packages/<?= (int) $p['id'] ?>">Details</a></td>
+                    <td class="action-cell"><a href="/admin/packages/<?= (int) $p['id'] ?>">Details</a></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <?php endif; ?>
     </section>
     </div>

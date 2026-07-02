@@ -2157,6 +2157,17 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     font-size: .88rem;
     table-layout: auto;
 }
+.admin .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.admin .table-scroll > .audit {
+    min-width: 760px;
+}
+.admin .table-scroll.table-scroll-wide > .audit {
+    min-width: 940px;
+}
 .admin .audit th {
     text-align: left;
     padding: 8px 10px;
@@ -2176,6 +2187,14 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     vertical-align: top;
     color: var(--text-body);
     overflow-wrap: anywhere;
+}
+.admin .audit .nowrap,
+.admin .audit .action-cell {
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+.admin .audit .form-cell {
+    min-width: 360px;
 }
 .admin .audit tr:hover td {
     background: var(--surface-sunken);

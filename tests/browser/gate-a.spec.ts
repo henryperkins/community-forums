@@ -246,6 +246,25 @@ test('role editor: create a custom role and simulate a decision (no-JS forms)', 
   await shot(page, info, '31-admin-role-simulator');
 });
 
+test('package registry: staff-only read-only catalogue browse (Inc 2)', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  await visit(page, '/admin/packages');
+  await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
+  await expect(page.locator('code', { hasText: 'acme/midnight-theme' }).first()).toBeVisible();
+  await expect(page.getByText('Install does not exist yet')).toBeVisible();
+  await shot(page, info, '32-admin-package-catalogue');
+
+  await page.getByRole('link', { name: 'Details' }).first().click();
+  await expect(page.getByRole('heading', { name: /Releases \(immutable/ })).toBeVisible();
+  await shot(page, info, '33-admin-package-detail');
+
+  await visit(page, '/admin/registries');
+  await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
+  await expect(page.getByText('Local blocklist', { exact: false }).first()).toBeVisible();
+  await shot(page, info, '34-admin-registry-trust');
+});
+
 test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
 

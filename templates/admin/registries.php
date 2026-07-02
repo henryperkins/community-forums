@@ -26,16 +26,17 @@ $this->section('title', 'Registry trust');
                 Last verified snapshot <?= $e($reg['latest_snapshot']['generated_at']) ?> UTC; expires <?= $e($reg['latest_snapshot']['expires_at']) ?> UTC.
             <?php else: ?>No verified snapshot yet.<?php endif; ?></p>
 
+        <div class="table-scroll table-scroll-wide">
         <table class="audit">
             <thead><tr><th>Key id</th><th>Status</th><th>Window</th><th>Fingerprint</th><th></th></tr></thead>
             <tbody>
             <?php foreach ($reg['keys'] as $key): ?>
                 <tr>
-                    <td><code><?= $e($key['key_id']) ?></code></td>
+                    <td class="nowrap"><code><?= $e($key['key_id']) ?></code></td>
                     <td><?= $e($key['status']) ?><?= $key['revoked_reason'] !== null ? ' - ' . $e($key['revoked_reason']) : '' ?></td>
                     <td><?= $e($key['valid_from'] ?? 'inf') ?> to <?= $e($key['valid_until'] ?? 'inf') ?></td>
-                    <td><code><?= $e(substr(hash('sha256', (string) $key['public_key']), 0, 16)) ?></code></td>
-                    <td>
+                    <td class="nowrap"><code><?= $e(substr(hash('sha256', (string) $key['public_key']), 0, 16)) ?></code></td>
+                    <td class="form-cell">
                         <?php if ($key['status'] !== 'revoked'): ?>
                         <form method="post" action="/admin/registry-keys/<?= (int) $key['id'] ?>/revoke" class="inline-form">
                             <?= $this->csrfField() ?>
@@ -49,6 +50,7 @@ $this->section('title', 'Registry trust');
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
 
         <details>
             <summary>Pin a new public key</summary>
@@ -128,6 +130,7 @@ $this->section('title', 'Registry trust');
 
     <section class="card">
         <h2>Local blocklist (registry-independent)</h2>
+        <div class="table-scroll table-scroll-wide">
         <table class="audit">
             <thead><tr><th>Digest</th><th>Package uid</th><th>Reason</th><th></th></tr></thead>
             <tbody>
@@ -136,7 +139,7 @@ $this->section('title', 'Registry trust');
                     <td><?= $block['digest'] !== null ? '<code>' . $e(substr((string) $block['digest'], 0, 16)) . '...</code>' : '-' ?></td>
                     <td><?= $block['package_uid'] !== null ? '<code>' . $e($block['package_uid']) . '</code>' : '-' ?></td>
                     <td><?= $e($block['reason'] ?? '') ?></td>
-                    <td>
+                    <td class="form-cell">
                         <form method="post" action="/admin/blocklist/<?= (int) $block['id'] ?>/remove" class="inline-form">
                             <?= $this->csrfField() ?>
                             <input type="password" name="current_password" placeholder="Your password" autocomplete="current-password" required>
@@ -147,6 +150,7 @@ $this->section('title', 'Registry trust');
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <form method="post" action="/admin/blocklist" class="stacked">
             <?= $this->csrfField() ?>
             <label>Release digest (sha256 hex, optional) <input type="text" name="digest" value="<?= $e($old['digest'] ?? '') ?>"></label>
@@ -161,6 +165,7 @@ $this->section('title', 'Registry trust');
     <section class="card">
         <h2>Advisories</h2>
         <?php if ($advisories === []): ?><p class="muted">None ingested.</p><?php else: ?>
+        <div class="table-scroll">
         <table class="audit">
             <thead><tr><th>Advisory</th><th>Package</th><th>Severity</th><th>Action</th><th>Acknowledged</th><th></th></tr></thead>
             <tbody>
@@ -183,6 +188,7 @@ $this->section('title', 'Registry trust');
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <?php endif; ?>
     </section>
     </div>

@@ -29,7 +29,8 @@ $this->section('title', 'Package: ' . $package['name']);
     </section>
 
     <section class="card">
-        <h2>Releases</h2>
+        <h2>Releases (immutable: any changed byte is a new release)</h2>
+        <div class="table-scroll">
         <table class="audit">
             <thead><tr><th>Version</th><th>Channel</th><th>Digest (sha256)</th><th>Signed by</th><th>Review</th><th>Core range</th><th>Advisory</th></tr></thead>
             <tbody>
@@ -49,6 +50,7 @@ $this->section('title', 'Package: ' . $package['name']);
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </section>
 
     <section class="card">
@@ -56,6 +58,7 @@ $this->section('title', 'Package: ' . $package['name']);
         <?php if ($advisories === []): ?>
             <p class="muted">No advisories recorded for this package.</p>
         <?php else: ?>
+        <div class="table-scroll">
         <table class="audit">
             <thead><tr><th>Advisory</th><th>Severity</th><th>Action</th><th>Affected</th><th>Acknowledged</th></tr></thead>
             <tbody>
@@ -70,6 +73,7 @@ $this->section('title', 'Package: ' . $package['name']);
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <?php endif; ?>
     </section>
     </div>

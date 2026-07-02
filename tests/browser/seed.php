@@ -63,6 +63,7 @@ $evidenceFeatures = [
     'server_drafts' => true, // GA default-on (2026-07-02); listed explicitly so the conflict journey is captured as a standard (non-dark) surface
     'account_lifecycle' => true, // GA default-on (2026-07-02; ADR 0006); listed explicitly so the member self-serve export/deactivate/delete surface is captured
     'capabilities' => true, // Inc 1 (P5-08): role editor + simulator browser evidence (shadow-only)
+    'package_registry' => true, // Inc 2 (P5-01): staff catalogue browse evidence (read-only)
 ];
 if ($includeDarkSurfaceFixtures) {
     $evidenceFeatures['appeals'] = true;
@@ -208,15 +209,49 @@ $ensureShortcutPoll = static function () use ($db, $users): bool {
 
     return true;
 };
+$ensureRegistryFixtures = static function () use ($db): bool {
+    $db->transaction(function () use ($db): void {
+        $db->run("DELETE FROM package_advisories WHERE advisory_uid LIKE 'RB-TEST-%'");
+        $db->run("DELETE FROM local_package_blocks WHERE reason = 'Evidence blocklist entry'");
+        $db->run("DELETE FROM packages WHERE package_uid LIKE 'acme/%'");
+        $db->run("DELETE FROM package_publishers WHERE publisher_uid = 'acme'");
+        $db->run("DELETE FROM package_registries WHERE source_id = 'rb-test'");
+    });
+
+    $registryRoot = \Tests\Support\Phase5\SigningHarness::generate('root-1');
+    $registryIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot);
+    (new \App\Repository\PackageRegistryRepository($db))->setEnabled($registryIds['registry_id'], true);
+    (new \App\Repository\PackageRepository($db))->setLatestRelease($registryIds['package_id'], $registryIds['release_id']);
+
+    $advisory = $registryRoot->mintAdvisory([
+        'action' => 'warn',
+        'summary' => 'Evidence advisory: upgrade past 1.0.0',
+    ]);
+    (new \App\Service\Registry\RegistryAdvisoryService(
+        $db,
+        new \App\Security\Registry\TrustChainVerifier(),
+        new \App\Repository\RegistryTrustKeyRepository($db),
+        new \App\Repository\PackageAdvisoryRepository($db),
+        new \App\Repository\PackageRepository($db),
+        new \App\Repository\PackageReleaseRepository($db),
+        new \App\Repository\ModerationLogRepository($db),
+    ))->ingest($registryIds['registry_id'], $advisory['json'], $advisory['signature'], $advisory['key_id']);
+    (new \App\Repository\LocalPackageBlockRepository($db))->add(null, 'acme/legacy-widget', 'Evidence blocklist entry', null);
+
+    return true;
+};
 if ($users->adminCount() > 0) {
     $settings->set('features', $evidenceFeatures);
     $settings->set('giphy_public_key', 'browser-evidence-key');
     $settings->set('giphy_rating', 'pg');
     $pollReady = $ensureShortcutPoll();
+    $registryReady = $ensureRegistryFixtures();
     $newSurfaceFixturesReady = $includeDarkSurfaceFixtures ? $ensureNewSurfaceFixtures() : false;
     fwrite(STDOUT, $pollReady
-        ? ($newSurfaceFixturesReady
-            ? "Already seeded (admin exists); refreshed feature flags, poll fixture, and dark-surface fixtures.\n"
+        ? ($registryReady
+            ? ($newSurfaceFixturesReady
+                ? "Already seeded (admin exists); refreshed feature flags, poll fixture, registry fixtures, and dark-surface fixtures.\n"
+                : "Already seeded (admin exists); refreshed feature flags, poll fixture, and registry fixtures.\n")
             : "Already seeded (admin exists); refreshed feature flags and poll fixture.\n")
         : "Already seeded (admin exists); refreshed feature flags.\n");
     exit(0);
@@ -332,6 +367,8 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
         'body' => 'Tested on my phone today — tap targets are comfortable and nothing overflows.',
     ]);
 });
+
+$ensureRegistryFixtures();
 
 if ($includeDarkSurfaceFixtures) {
     $ensureNewSurfaceFixtures();

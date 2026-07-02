@@ -96,6 +96,14 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.getByRole('heading', { name: 'Roles & capabilities' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
+  await visit(page, '/admin/packages');
+  await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/registries');
+  await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
   await visit(page, '/admin/roles/simulator');
   await expect(page.getByRole('heading', { name: 'Permission simulator' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
