@@ -33,11 +33,11 @@ final class AppFeatureFlagTest extends TestCase
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
         $defaults = $flags->all();
-        foreach (['tags', 'expanded_feeds', 'reputation_ledger'] as $flag) {
+        foreach (['tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules'] as $flag) {
             self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
-        foreach (['group_dms', 'badge_rules', 'community_memory', 'content_references'] as $flag) {
+        foreach (['group_dms', 'community_memory', 'content_references'] as $flag) {
             self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
         }
@@ -119,16 +119,15 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/roles'));
     }
 
-    public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void
+    public function test_appeals_carryover_defaults_dark(): void
     {
-        // ADR 0007 (appeals) + ADR 0006 (account lifecycle/export/delete) ship as
-        // deploy-dark carryovers: their routes must be offline by default until
-        // browser/a11y/runbook acceptance evidence is attached.
+        // ADR 0007 appeals still ships as a deploy-dark carryover: its member and
+        // staff routes must be offline by default until acceptance evidence lands.
+        // (account_lifecycle, its former co-carryover, graduated on 2026-07-02 and
+        // is now covered by test_account_lifecycle_carryover_defaults_on below.)
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        foreach (['appeals', 'account_lifecycle'] as $flag) {
-            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
-            self::assertArrayHasKey($flag, $flags->all(), "$flag must be a declared flag, not an unknown-key false");
-        }
+        self::assertFalse($flags->enabled('appeals'), 'appeals should deploy dark by default');
+        self::assertArrayHasKey('appeals', $flags->all(), 'appeals must be a declared flag, not an unknown-key false');
 
         $member = $this->makeUser(['username' => 'darkcarryovermember']);
         $this->actingAs($member);
@@ -138,21 +137,40 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/appeals/posts/1', ['reason' => 'x']));
         $this->assertStatus(404, $this->get('/mod/appeals'));
 
-        // Account lifecycle/export/delete routes are 404 while the flag is dark…
-        $this->assertStatus(404, $this->post('/settings/account/export'));
+        // The override seam still re-enables appeals on its own.
+        $this->setFlags(['appeals' => true]);
+        self::assertNotSame(404, $this->get('/appeals')->status());
+    }
+
+    public function test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible(): void
+    {
+        // ADR 0006 account lifecycle/export/delete graduated to default-on
+        // (GA 2026-07-02) with browser/a11y/runbook acceptance evidence. The
+        // self-serve surface is live out of the box but stays operator-reversible
+        // via the features override (the deploy-dark rollback path).
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($flags->enabled('account_lifecycle'), 'account_lifecycle graduated to default-on');
+        self::assertArrayHasKey('account_lifecycle', $flags->all(), 'account_lifecycle must be a declared flag');
+
+        $member = $this->makeUser(['username' => 'lifecycledefaultmember']);
+        $this->actingAs($member);
+
+        // Default-on: the self-serve lifecycle surface answers without any override.
+        self::assertNotSame(404, $this->get('/settings/account/lifecycle')->status());
+
+        // Operator rollback: disabling re-gates every lifecycle route to 404…
+        $this->setFlags(['account_lifecycle' => false]);
         $this->assertStatus(404, $this->get('/settings/account/lifecycle'));
+        $this->assertStatus(404, $this->post('/settings/account/export'));
         $this->assertStatus(404, $this->post('/settings/account/deactivate', ['current_password' => 'x']));
         $this->assertStatus(404, $this->post('/settings/account/reactivate'));
         $this->assertStatus(404, $this->post('/settings/account/delete/request', ['current_password' => 'x']));
         $this->assertStatus(404, $this->post('/settings/account/delete/cancel'));
 
-        // …but core profile editing is NOT part of the dark slice and stays up.
+        // …but core profile editing is NOT part of the lifecycle slice and stays
+        // up, and the still-dark appeals flag is not surfaced by the rollback.
         self::assertNotSame(404, $this->get('/settings/account')->status(), 'core profile editing must stay available');
-
-        // The override seam still re-enables each carryover independently.
-        $this->setFlags(['account_lifecycle' => true]);
-        self::assertNotSame(404, $this->get('/settings/account/lifecycle')->status());
-        $this->assertStatus(404, $this->get('/appeals'), 'enabling account_lifecycle must not enable appeals');
+        $this->assertStatus(404, $this->get('/appeals'), 'disabling account_lifecycle must not surface the still-dark appeals flag');
     }
 
     public function test_group_dms_flag_gates_group_creation_and_management(): void

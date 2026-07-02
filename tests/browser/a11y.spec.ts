@@ -24,6 +24,49 @@ async function dismissTour(page: Page): Promise<void> {
   }
 }
 
+function serverDraftKey(context: string): string {
+  return encodeURIComponent(context).replace(/%/g, '~');
+}
+
+async function postServerDraft(page: Page, key: string, revision: number, body: string): Promise<void> {
+  const token = await page.locator('input[name="_token"]').first().inputValue();
+  const status = await page.evaluate(
+    async ({ key, revision, body, token }) => {
+      const data = new FormData();
+      data.append('_token', token);
+      data.append('revision', String(revision));
+      data.append('title', 'Remote draft');
+      data.append('body', body);
+      data.append('metadata', JSON.stringify({ context: '/threads', source: 'playwright-a11y' }));
+      const response = await fetch(`/api/drafts/${key}`, {
+        method: 'POST',
+        body: data,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      return response.status;
+    },
+    { key, revision, body, token },
+  );
+  expect(status).toBe(200);
+}
+
+async function discardServerDraft(page: Page, key: string): Promise<void> {
+  const token = await page.locator('input[name="_token"]').first().inputValue();
+  await page.evaluate(
+    async ({ key, token }) => {
+      const data = new FormData();
+      data.append('_token', token);
+      await fetch(`/api/drafts/${key}/discard`, {
+        method: 'POST',
+        body: data,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      localStorage.removeItem('rb-draft:bob:/threads');
+    },
+    { key, token },
+  );
+}
+
 async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include?: string): Promise<void> {
   let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']);
   // Scope the scan to one surface when given, so a feature's acceptance gate
@@ -56,6 +99,12 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await visit(page, '/admin/roles/simulator');
   await expect(page.getByRole('heading', { name: 'Permission simulator' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
+
+  // badge_rules graduated to default-on (GA 2026-07-02): the admin create-rule
+  // form + rule list is the operator surface.
+  await visit(page, '/admin/badge-rules');
+  await expect(page.getByRole('heading', { name: 'Badge rules' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
 });
 
 test('member appeal and server-draft pages have no serious axe violations', async ({ page }, info) => {
@@ -68,6 +117,42 @@ test('member appeal and server-draft pages have no serious axe violations', asyn
   await visit(page, '/drafts');
   await expect(page.getByText('Saved reply draft')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
+
+  // account_lifecycle graduated to default-on (GA 2026-07-02, ADR 0006): the
+  // member self-serve export/deactivate/delete surface must clear a11y. Scan the
+  // rendered page read-only (no destructive action) — the shell is already clean
+  // for the appeal/draft member pages above, so this is an unscoped full-page scan.
+  await visit(page, '/settings/account/lifecycle');
+  await expect(page.getByRole('heading', { name: 'Delete account' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+});
+
+test('server-draft conflict panel has no serious axe violations', async ({ page }, info) => {
+  // server_drafts graduated to default-on (GA 2026-07-02, ADR 0010). The
+  // feature's interactive surface is the composer's conflict panel (keep local /
+  // keep server / save local as next revision); scope the scan to it so this
+  // gate isn't blocked by unrelated pre-existing composer issues, mirroring the
+  // polls (.poll-panel) and topic_workflow (.wf-actions) axe precedent.
+  await login(page, 'bob@retro.test');
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+  const body = page.locator('form.composer textarea.composer-input').first();
+  await expect(body).toBeVisible();
+
+  const key = serverDraftKey('/threads');
+  await discardServerDraft(page, key);
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+  await expect(body).toBeVisible();
+
+  await body.fill('Local first draft for the a11y conflict scan');
+  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+  await postServerDraft(page, key, 1, 'Remote draft from another device');
+  await body.fill('Local second draft that collides');
+
+  await expect(page.locator('.composer-draft-sync.is-conflict')).toBeVisible({ timeout: 5000 });
+  await expect(page.getByRole('button', { name: 'Save local as next revision' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.composer-draft-sync');
 });
 
 test('phase 4 poll panel has no serious axe violations (vote form and results)', async ({ page }, info) => {
@@ -122,4 +207,39 @@ test('phase 4 topic workflow bar has no serious axe violations (actions and summ
   await page.locator('.wf-history > summary').click();
   await expect(page.locator('.wf-history-list')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '.wf-history');
+});
+
+test('phase 4 slash combobox has no serious axe violations and is keyboard operable', async ({ page }, info) => {
+  // slash_giphy graduated to default-on (GA 2026-07-02). The composer slash
+  // inserts + GIPHY picker are an APG combobox (textarea = combobox, popup =
+  // role=listbox of role=option). Scope the axe scan to the listbox surface per
+  // the scoped-scan precedent, and assert the keyboard contract that graduation
+  // required: default active option, arrow navigation via aria-activedescendant,
+  // and Escape-to-close.
+  await login(page, 'bob@retro.test');
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+  const body = page.locator('form.composer textarea.composer-input').first();
+  await expect(body).toBeVisible();
+
+  await body.fill('/');
+  await expect(page.locator('.composer-slash-menu[role="listbox"]').first()).toBeVisible();
+  await expect(body).toHaveAttribute('aria-expanded', 'true');
+
+  const firstOption = page.getByRole('option', { name: 'Insert table' });
+  await expect(firstOption).toHaveAttribute('aria-selected', 'true');
+  const activeId = await firstOption.getAttribute('id');
+  expect(activeId, 'active option should have an id for aria-activedescendant').toBeTruthy();
+  await expect(body).toHaveAttribute('aria-activedescendant', activeId!);
+
+  // Certify the listbox + options are free of serious/critical violations.
+  await expectNoSeriousA11yViolations(page, info, '.composer-slash-menu');
+
+  await body.press('ArrowDown');
+  await expect(page.getByRole('option', { name: 'Insert task list' })).toHaveAttribute('aria-selected', 'true');
+  await expect(firstOption).toHaveAttribute('aria-selected', 'false');
+
+  await body.press('Escape');
+  await expect(body).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('.composer-slash-menu')).toBeHidden();
 });

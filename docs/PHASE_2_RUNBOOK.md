@@ -98,8 +98,11 @@ never touches an account whose status is no longer `pending_deletion`.
   php bin/console worker:purge-accounts [limit]   # default 100; idempotent + audited
   ```
 - The `account_lifecycle` flag gates the member-facing export/deactivate/delete
-  routes. It ships **deploy-dark**; enable it per operator once acceptance
-  evidence lands. With the worker unscheduled, deletion requests never complete.
+  routes. It **graduated to default-on on 2026-07-02** (reversible via the
+  `features` override); see `docs/runbooks/account_lifecycle.md`. With the worker
+  unscheduled, deletion requests never complete. Note the worker itself does
+  **not** read the flag, so disabling the flag does not stop in-flight purges —
+  pause this cron to halt them.
 
 ## 4. Counter & reputation reconciliation
 

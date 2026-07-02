@@ -30,7 +30,7 @@ Written to `docs/evidence/browser/<viewport>/<page>.png`:
 | 13 | Search |
 | 14 | Private board, viewed by a member |
 | 15 | Reading preferences default selects |
-| 16 | Drafts view with a browser-local draft |
+| 16 | Drafts view with server and browser-local draft lists |
 | 17 | Composer upload tray with thumbnail/alt controls |
 | 18 | Branding live preview |
 | 19 | Product-tour replay dialog |
@@ -47,7 +47,7 @@ harness grows. The current branch also captures:
 - `22-admin-email-dashboard`, `23-admin-email-suppressed`, `24-admin-email-test-sent`
 - `25-poll-voted` (Phase 4 carryover poll no-JS vote/result flow)
 - `26-slash-menu`, `27-giphy-inserted` (Phase 4 carryover slash menu and direct GIPHY insertion)
-- `28-server-draft-conflict` (`server_drafts` dark-surface cross-device conflict controls)
+- `28-server-draft-conflict` (`server_drafts` cross-device conflict controls; graduated to default-on 2026-07-02, now captured in the standard `evidence` run)
 
 ## Run it locally
 
@@ -58,7 +58,7 @@ Node 20+, and Chromium for Playwright (`npx playwright install --with-deps chrom
 cd tests/browser
 npm install
 npm run evidence       # prepare.sh resets+seeds retroboards_e2e, then runs Playwright
-npm run evidence:dark  # opts into dark surfaces and captures server-draft conflict evidence
+npm run evidence:dark  # legacy focused server-draft regression run with dark fixtures enabled
 npm run a11y           # prepare.sh resets+seeds retroboards_e2e, then runs axe checks
 ```
 
@@ -105,8 +105,9 @@ environment.
 
 `npm run a11y` runs `a11y.spec.ts` with `@axe-core/playwright` across the same
 desktop and mobile projects. It opts into `RB_BROWSER_DARK_SURFACES=1` during
-seeding so the otherwise-dark appeal, server-draft, and server-extension pages
-are available without changing screenshot evidence's browser-local draft mode.
-It currently checks the new admin email/admin extension surfaces and the member
-appeals/server-drafts surfaces for serious or critical WCAG 2A/2AA axe
-violations.
+seeding so still-dark appeal and server-extension pages are available while the
+now-default-on server-draft, badge-rules, slash/GIPHY, and account-lifecycle
+surfaces are also scanned. It currently checks the admin extension/badge-rules
+surfaces, member appeals/drafts/account-lifecycle surfaces, and scoped
+server-draft conflict plus slash-combobox widgets for serious or critical WCAG
+2A/2AA axe violations.

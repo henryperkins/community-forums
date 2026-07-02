@@ -39,7 +39,7 @@ final class FeatureFlags
         // ── Phase 3 (Gate A) ─────────────────────────────────────────────
         'rich_composer' => true,     // shared composer toolbar + server preview (P3-02); textarea always works
         'drafts' => true,            // local autosave drafts + Drafts view (P3-03)
-        'server_drafts' => false,    // authenticated cross-device draft sync (ADR 0010 pull-forward; deploy-dark)
+        'server_drafts' => true,     // authenticated cross-device draft sync — GA default-on (2026-07-02; ADR 0010; reversible via features override)
         'uploads' => true,           // image upload/paste/drop + private delivery (P3-04)
         'anti_abuse' => true,        // central limiter, content filters, holds, audit (P3-05)
         'appeals' => false,          // self-service moderation appeals + staff queue (ADR 0007 carryover; deploy-dark)
@@ -54,7 +54,7 @@ final class FeatureFlags
         'tags' => true,               // curated tag catalogue + thread tagging — GA default-on (2026-07-01; reversible via features override)
         'expanded_feeds' => true,     // board/tag follows, Following + Latest feeds — GA default-on (2026-07-01; reversible via features override)
         'reputation_ledger' => true,  // idempotent reputation events + windowed ranks — GA default-on (2026-07-01; reversible via features override)
-        'badge_rules' => false,       // custom badge rules/backfill/revoke history
+        'badge_rules' => true,        // custom badge rules/backfill/revoke history — GA default-on (2026-07-02; reversible via features override)
         'community_memory' => false,  // summaries, related topics, wiki revisions
         'content_references' => false,// persisted board/thread/post references + read-gated cards
 
@@ -63,14 +63,14 @@ final class FeatureFlags
         'expanded_files' => false,     // PDF/text-family uploads behind scanner/quarantine gates
         'polls' => true,               // one poll per thread, no-JS vote/result flows — GA default-on (2026-06-30; reversible via features override)
         'custom_emoji' => false,       // operator-managed static PNG/WebP shortcode assets
-        'slash_giphy' => false,        // PE slash inserts + client-side GIPHY picker config
+        'slash_giphy' => true,         // PE slash inserts + client-side GIPHY picker — GA default-on (2026-07-02; inert until giphy_public_key is set; reversible via features override)
         'split_merge' => false,        // moderator split/merge dry-run/apply/repair operations
         'profile_media' => false,      // avatar upload/signature moderation surfaces
         'board_folders' => true,       // private personal board folders — GA default-on (2026-07-01; reversible via features override)
         'bookmark_folders' => true,    // private folders for starred/bookmarked threads — GA default-on (2026-07-01; reversible via features override)
         'saved_feeds' => true,         // private saved feed filters/digest composition — GA default-on (2026-07-01; reversible via features override)
         'custom_profile_fields' => false, // bounded extra public profile fields
-        'account_lifecycle' => false,  // self-serve export/deactivate/reactivate/30-day-grace delete (ADR 0006; deploy-dark)
+        'account_lifecycle' => true,   // self-serve export/deactivate/reactivate/30-day-grace delete — GA default-on (2026-07-02; ADR 0006; reversible via features override)
         'automated_context' => false,  // since-last-read context + suggested related topics
 
         // ── Phase 5 Gate A (deploy-dark foundation/workstreams) ─────────────

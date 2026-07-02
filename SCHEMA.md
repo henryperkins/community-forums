@@ -156,12 +156,14 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > Tables 93–99 and the reconciled `users.status` / `email_deliveries.payload`
 > deltas are the **Phase 2–4 carryover completion** (migrations `0059`–`0062`):
 > additive account-lifecycle, moderation-appeals, email-domain, and
-> bookmark/profile-field shapes (see §4B). `account_lifecycle`, `appeals`, and
+> bookmark/profile-field shapes (see §4B). `appeals` and
 > `custom_profile_fields` default dark; `bookmark_folders` graduated to
-> default-on on 2026-07-01.
+> default-on on 2026-07-01 and `account_lifecycle` on 2026-07-02 (both
+> reversible via the `features` override).
 >
 > Migration `0063` adds email retry/backoff columns to `email_deliveries`.
-> Table 100 is deploy-dark server draft sync (`0064`, `server_drafts` flag).
+> Table 100 is server draft sync (`0064`, `server_drafts` flag; graduated to
+> default-on 2026-07-02, reversible via the `features` override).
 > Tables 101–104 are the deploy-dark Phase 5 Gate B server-extension runtime
 > evidence harness (`0065`, `server_extensions` flag).
 
@@ -786,7 +788,7 @@ CREATE TABLE submission_idempotency (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-> **Phase-3 build note (reconciled 2026-06-28).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Webhook delivery is built deploy-dark by migration `0057`. Still **not built** (Gate B / later): `plugins`, appeals, automation-rule, server-`drafts`, bookmark-folder, and custom-profile-field tables.
+> **Phase-3 build note (reconciled 2026-06-28; updated 2026-07-02).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Webhook delivery is built deploy-dark by migration `0057`. Later carryover migrations now build the account-lifecycle, appeals, bookmark-folder, custom-profile-field, and server-draft shapes (`0059`-`0064`; see §4B/§4C). Still **not built** from the original Phase 3 gaps: the automation-rule table and public/untrusted plugin runtime tables.
 
 ---
 
@@ -930,7 +932,8 @@ service/controller/worker evidence. Appeals, account lifecycle/export/delete,
 bookmark folders, custom profile fields, email retry/backoff, server drafts,
 and scoped split/merge counter maintenance now have implementation evidence too
 (migrations `0059`–`0064`, see §4B/§4C). Polls, board folders, bookmark folders,
-and saved feed filters have since graduated to default-on; split/merge keeps the
+saved feed filters, slash/GIPHY insertion, badge rules, and account
+lifecycle/export/delete have since graduated to default-on; split/merge keeps the
 global repair command as rehearsal/repair tooling, not as the normal operation
 path.
 
@@ -940,9 +943,10 @@ path.
 
 Migrations `0059`–`0062` add the remaining ADR 0006/0007 and P2-04 carryover
 shapes that PR #26 implemented. All are additive; the member-facing surfaces are
-feature-flag controlled (`account_lifecycle`, `appeals`, and
-`custom_profile_fields` default off; `bookmark_folders` graduated to default-on
-on 2026-07-01). "Inert schema is not evidence" (DESIGN §13).
+feature-flag controlled (`appeals` and `custom_profile_fields` default off;
+`bookmark_folders` and `account_lifecycle` graduated to default-on on 2026-07-01
+and 2026-07-02 respectively, both reversible via the `features` override).
+"Inert schema is not evidence" (DESIGN §13).
 
 Modified existing tables:
 
@@ -981,9 +985,11 @@ Migration `0064` implements ADR 0010's deploy-dark server draft sync shape:
 
 - `server_drafts(id, user_id, context_key, revision, title, body, metadata, updated_at, expires_at)` with unique `(user_id, context_key)`, user-updated and expiry indexes, and user FK (CASCADE).
 
-`server_drafts` defaults dark. The app enforces 90-day retention, a 50-draft
-per-user quota, optimistic revision conflicts (`409`), no-JS listing/discard on
-`/drafts`, account export inclusion, and account-deletion purge.
+`server_drafts` graduated to default-on on 2026-07-02 (reversible via the
+`features` override; runbook `docs/runbooks/server_drafts.md`). The app enforces
+90-day retention, a 50-draft per-user quota, optimistic revision conflicts
+(`409`), no-JS listing/discard on `/drafts`, account export inclusion, and
+account-deletion purge.
 
 ---
 
@@ -1170,6 +1176,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.27 | 2026-07-02 | Documentation-only reconciliation after default-on graduations for `server_drafts`, `badge_rules`, `slash_giphy`, and `account_lifecycle`; no schema shape change. Updated stale Phase 3 build notes to point at the existing carryover migrations (`0059`-`0064`) instead of listing server drafts/bookmark/profile/appeal tables as not built. |
 | v1.26 | 2026-07-01 | Added owner-lifecycle locking support migration `0067`: `users` now has `idx_users_role_status_id (role, status, id)` so last-owner/admin `FOR UPDATE` guards can lock active admins through a narrow ordered index. |
 | v1.25 | 2026-07-01 | Phase 5 Foundation F3/F5 seed migration `0066` (seed-only): populated the `0050` `capabilities` catalogue (54 core keys) + `role_capabilities` (cumulative system.guest/user/moderator/admin) from the code-owned `CapabilityCatalog`, and backfilled `protected_owners` from existing active admins. Deploy-dark behind `capabilities`; no shape change. |
 | v1.24 | 2026-06-30 | Reconciled the Phase 2-4 completion pull-forward migrations `0063`-`0065`: email retry/backoff columns and retry index, deploy-dark `server_drafts`, and deploy-dark Phase 5 Gate B server-extension runtime tables (`server_extension_handlers`, `server_extension_jobs`, `server_extension_runs`, `server_extension_kv`). Updated the phase map and removed server drafts from foreshadowed gaps. |

@@ -62,7 +62,9 @@ The following must be accepted by the appropriate owner before a production Phas
 
 ## Boundary Decisions
 
-- Server-side draft sync is implemented deploy-dark under ADR 0010. Closeout
-  evidence treats it as a dark surface, not an always-on Phase 3 launch default.
+- Server-side draft sync originally closed Phase 3 as a deploy-dark ADR 0010
+  carryover. It graduated to default-on on 2026-07-02 after focused PHPUnit,
+  standard-run browser conflict evidence, axe coverage, and the operator runbook
+  landed; the `server_drafts` flag remains the rollback control.
 - Public/untrusted plugin runtime is not a Phase 3 deliverable. ADR 0011 keeps it
   behind the Phase 5 Gate B sandbox/security boundary.

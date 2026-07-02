@@ -111,9 +111,11 @@ final class BadgeRuleService
         $rule = $this->ruleOrFail($ruleId);
         $revoked = 0;
         $this->db->transaction(function () use ($actor, $rule, &$revoked): void {
-            foreach ($this->badges->awardHistoryUserIds((int) $rule['id']) as $userId) {
-                $key = $this->achievementKey($rule, $userId);
-                if ($this->badges->revokeRuleBadge($userId, (int) $rule['badge_id'], (int) $rule['id'], $actor->id(), $key)) {
+            foreach ($this->badges->activeRuleAwards((int) $rule['id']) as $award) {
+                $userId = (int) $award['user_id'];
+                $key = (string) $award['achievement_key'];
+                $removeBadge = !$this->ensureOtherEnabledRuleOwnsBadge($rule, $userId, $actor->id(), (int) $award['id']);
+                if ($this->badges->revokeRuleBadge($userId, (int) $rule['badge_id'], (int) $rule['id'], $actor->id(), $key, $removeBadge)) {
                     $revoked++;
                 }
             }
@@ -171,6 +173,60 @@ final class BadgeRuleService
                 LIMIT " . $limit;
 
         return $this->db->fetchAll($sql, array_merge($params, [$badgeId, $threshold]));
+    }
+
+    /** @param array<string,mixed> $currentRule */
+    private function ensureOtherEnabledRuleOwnsBadge(array $currentRule, int $userId, int $actorId, int $currentAwardId): bool
+    {
+        if ($this->db->fetchValue("SELECT 1 FROM users WHERE id = ? AND status = 'active' LIMIT 1", [$userId]) === false) {
+            return false;
+        }
+
+        $rules = $this->db->fetchAll(
+            'SELECT * FROM badge_rules
+             WHERE badge_id = ? AND id <> ? AND is_enabled = 1
+             ORDER BY id ASC',
+            [(int) $currentRule['badge_id'], (int) $currentRule['id']],
+        );
+        $badgeId = (int) $currentRule['badge_id'];
+        foreach ($rules as $rule) {
+            if ($this->metricForUser($rule, $userId) < (int) $rule['threshold']) {
+                continue;
+            }
+
+            $ruleId = (int) $rule['id'];
+            $key = $this->achievementKey($rule, $userId);
+            if ($this->badges->hasActiveRuleAward($userId, $badgeId, $ruleId, $key)) {
+                return true;
+            }
+            if ($this->badges->recordRuleBadgeAwardHistory($userId, $badgeId, $ruleId, $actorId, $key, 'badge_rule_overlap', $currentAwardId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param array<string,mixed> $rule */
+    private function metricForUser(array $rule, int $userId): int
+    {
+        $boardId = $rule['board_id'] === null ? null : (int) $rule['board_id'];
+        [$sql, $params] = match ((string) $rule['rule_type']) {
+            'post_count' => $boardId === null
+                ? ['SELECT COUNT(*) FROM posts p WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_pending = 0', [$userId]]
+                : ['SELECT COUNT(*) FROM posts p JOIN threads t ON t.id = p.thread_id WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_pending = 0 AND t.board_id = ?', [$userId, $boardId]],
+            'thread_count' => $boardId === null
+                ? ['SELECT COUNT(*) FROM threads t WHERE t.user_id = ? AND t.is_deleted = 0 AND t.is_pending = 0', [$userId]]
+                : ['SELECT COUNT(*) FROM threads t WHERE t.user_id = ? AND t.is_deleted = 0 AND t.is_pending = 0 AND t.board_id = ?', [$userId, $boardId]],
+            'reputation' => $boardId === null
+                ? ['SELECT reputation FROM users WHERE id = ?', [$userId]]
+                : ["SELECT COALESCE(SUM(re.applied_delta), 0) FROM reputation_events re WHERE re.user_id = ? AND re.board_id = ? AND re.reversed_at IS NULL", [$userId, $boardId]],
+            'solved_count' => $boardId === null
+                ? ['SELECT COUNT(*) FROM threads t JOIN posts p ON p.id = t.accepted_answer_post_id WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_pending = 0', [$userId]]
+                : ['SELECT COUNT(*) FROM threads t JOIN posts p ON p.id = t.accepted_answer_post_id WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_pending = 0 AND t.board_id = ?', [$userId, $boardId]],
+            default => ['SELECT 0', []],
+        };
+
+        return (int) $this->db->fetchValue($sql, $params);
     }
 
     /** @param array<string,mixed> $rule */

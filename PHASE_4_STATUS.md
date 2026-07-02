@@ -40,9 +40,10 @@ explicit carryovers, not shipped behavior.
 The following remain not accepted for broad rollout:
 
 - 2026-06-30 carryover implementations for moderation appeals, moderator
-  split/merge, account lifecycle/export/delete, advanced theming, email
-  domain/broadcast, and limited custom profile fields still need
-  browser/a11y/runbook evidence before broad enablement.
+  split/merge, advanced theming, email domain/broadcast, and limited custom
+  profile fields still need browser/a11y/runbook evidence before broad
+  enablement. (Account lifecycle/export/delete graduated to default-on on
+  2026-07-02 — see Operating Notes.)
 - Production rollout/a11y/load/SEO artifacts beyond the local automated suite,
   Playwright browser capture, and backup/restore rehearsal.
 
@@ -54,8 +55,10 @@ Implementation gates are now recorded for policy-heavy carryovers:
 `docs/adr/0010-server-draft-sync-scope.md`, and
 `docs/adr/0011-public-plugin-runtime-scope.md`.
 
-2026-06-30 review-hardening pass: `appeals` and `account_lifecycle` default
-deploy-dark and are route-gated with dark-assertion coverage; account lifecycle
+2026-06-30 review-hardening pass: `appeals` and `account_lifecycle` shipped
+deploy-dark and route-gated with dark-assertion coverage (`account_lifecycle`
+has since graduated to default-on on 2026-07-02 — see Operating Notes; `appeals`
+remains dark); account lifecycle
 request/deactivate/reactivate/cancel and profile updates run inside
 `$db->transaction()`; the deletion purge is wired to
 `php bin/console worker:purge-accounts` and refuses to anonymize any account no
@@ -72,9 +75,10 @@ upload/removal, signature hardening, moderation appeals, moderator split/merge,
 account lifecycle/export/delete, email domain/broadcast, advanced theming,
 bookmark folders, and bounded custom profile fields. These remain behind flags
 or operator gates where applicable until the missing browser/a11y/upgrade/worker
-runbook evidence is attached, except for polls plus the personal-organization
-slice (`board_folders`, `bookmark_folders`, `saved_feeds`) that have graduated to
-default-on.
+runbook evidence is attached, except for polls, slash/GIPHY insertion, badge
+rules, account lifecycle/export/delete, plus the personal-organization slice
+(`board_folders`, `bookmark_folders`, `saved_feeds`) that have graduated to
+default-on (`slash_giphy` stays inert until an operator sets `giphy_public_key`).
 
 Deploy-dark defaults are inventoried in
 `docs/evidence/deploy-dark-features.md`; `src/Core/FeatureFlags.php` remains the
@@ -86,7 +90,7 @@ runtime source of truth.
 - Deferral ADR: `docs/adr/0003-phase-4-closeout-deferrals.md`.
 - Carryover ledger: `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
 - Current carryover stopping point: `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
-- Full suite: `composer test` → 866 tests / 4519 assertions.
+- Full suite: `composer test` → 984 tests / 5213 assertions.
 - Current Phase 4 focused spine: `AppPhase4GateATest`, `AppPhase4CarryoverFoundationTest`, `AppAdminBadgeRulesTest`, `AppExpandedFilesTest`, `AppLinkPreviewTest`, `AppPollTest`, `AppCustomEmojiGiphyTest`, `AppContentReferenceTest`, `AppAutomatedContextTest`, `RelatedTopicRefreshWorkerTest`, `AppProfileMediaTest`, `AppThreadSplitMergeTest`, `AppBoardFoldersSavedFeedsTest` → 83 tests / 546 assertions.
 - Later carryover-adjacent focused suite: `AppModerationAppealsTest`, `AppAccountLifecycleTest`, `AppBrandingThemeTest`, `AppAdminEmailTest` → 36 tests / 218 assertions.
 - Focused Phase 4 regressions: `tests/Integration/Core/AppPhase4GateATest.php`.
@@ -95,12 +99,15 @@ runtime source of truth.
   `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`,
   `AppLeaderboardTest` → 47 tests / 286 assertions.
 - Markdown sanitizer regression: `tests/Unit/SanitizationTest.php`.
-- Browser evidence: `cd tests/browser && npm run evidence` → 29 passed / 1
-  skipped across 30 Playwright tests, refreshing
+- Browser evidence: `cd tests/browser && npm run evidence` → 41 passed / 1
+  skipped across 42 Playwright tests, refreshing
   `docs/evidence/browser/{desktop,mobile}`.
-- Accessibility: `cd tests/browser && npm run a11y` → 8 passed.
-- Slash/GIPHY browser evidence: focused desktop + mobile `slash menu` Playwright
-  runs generated `26-slash-menu` and `27-giphy-inserted`.
+- Accessibility: `cd tests/browser && npm run a11y` → 12 passed.
+- Slash/GIPHY browser + a11y evidence: the `phase 4 slash menu` journey (now part
+  of the standard `npm run evidence` run) drives `26-slash-menu` and
+  `27-giphy-inserted` and asserts the ARIA combobox roles / arrow-key selection /
+  Enter-insert / Escape-close; `a11y.spec.ts` adds a `.composer-slash-menu` scoped
+  axe + keyboard-operability check.
 - Backup/restore evidence: `tests/backup/rehearse.sh` → latest saved closeout log
   `docs/evidence/backup-restore/prodlike-rehearsal-2026-06-30.log`, current
   result 105 tables / 116 rows.
@@ -109,8 +116,11 @@ runtime source of truth.
 ## Operating Notes
 
 - `php bin/console repair:reputation`, `repair:reputation-ledger`, and `reputation:reconcile` now rebuild `reputation_events` from canonical reactions/accepted answers, reverse stale events, and reconcile `users.reputation`.
-- Phase 4 Gate A feature flags still default `false`: `group_dms`, `badge_rules`, `community_memory`, `content_references`.
+- Phase 4 Gate A feature flags still default `false`: `group_dms`, `community_memory`, `content_references`.
 - `topic_workflow` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppFeatureFlagTest::test_topic_workflow_is_available_by_default_and_can_be_disabled`, browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, `docs/runbooks/topic_workflow.md`). Reversible via the `features` override.
 - `tags`, `expanded_feeds`, and `reputation_ledger` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`, `AppLeaderboardTest`, `docs/runbooks/phase4-tags-feeds-reputation.md`, and `docs/design-system/imladris/ACTIVATED_FEATURES.md`). Reversible via the `features` override.
 - `board_folders`, `bookmark_folders`, and `saved_feeds` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, and `docs/design-system/imladris/ACTIVATED_FEATURES.md`). Reversible via the `features` override.
+- `slash_giphy` graduated to default-ON on 2026-07-02 (acceptance evidence: `AppCustomEmojiGiphyTest` incl. `test_slash_giphy_is_default_on_and_operator_rollback_regates_route_and_csp`, `AppPhase4CarryoverFoundationTest`, browser `26-slash-menu`/`27-giphy-inserted`, `.composer-slash-menu` axe + keyboard pass, `docs/runbooks/slash_giphy.md`). **Inert until an operator sets `giphy_public_key`** (the picker config 404s and the composer slash menu does not render without a key); reversible via the `features` override or by clearing the key.
+- `badge_rules` graduated to default-ON on 2026-07-02 (acceptance evidence: `AppAdminBadgeRulesTest` incl. `test_badge_rule_admin_routes_are_available_by_default_and_can_be_disabled` and `test_badge_rules_flag_rollback_preserves_award_history`, `AppFeatureFlagTest`, browser `32-badge-rules`/`33-badge-rule-preview`/`34-badge-rule-backfilled`, `/admin/badge-rules` axe pass, `docs/runbooks/badge_rules.md`). Awards happen only on an explicit Backfill (no cron); reversible via the `features` override.
+- `account_lifecycle` graduated to default-ON on 2026-07-02 (acceptance evidence: `AppAccountLifecycleTest` against the shipped default, `AppFeatureFlagTest` incl. `test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible`, browser `35-account-lifecycle`/`36-account-deletion-scheduled` no-JS member journey, `/settings/account/lifecycle` axe pass, `docs/runbooks/account_lifecycle.md`). Deletion is a 30-day grace + scheduled anonymizing purge (`worker:purge-accounts`, which ignores the flag — pause the cron to halt purges); reversible via the `features` override. Graduation also fixed the `worker:purge-accounts` `ReauthGate` construction bug in `bin/console`.
 - All-time leaderboard remains governed by the existing `community` flag; windowed/board leaderboard modes require `reputation_ledger`, which is now default-on.

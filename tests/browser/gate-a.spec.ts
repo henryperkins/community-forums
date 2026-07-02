@@ -284,19 +284,30 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await textarea.fill('Browser evidence **bold** :smile:');
   await expect(page.locator('.composer-preview strong').first()).toHaveText('bold');
   await expect(page.locator('.composer-preview').first()).toContainText('😄');
+  // server_drafts graduated to default-on: the composer now syncs to the server.
+  // Wait for the confirmed save before reloading so the debounced POST is not lost.
+  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
 
   await page.reload();
   await openNewTopicComposer(page);
   await expect(textarea).toHaveValue(/Browser evidence/);
 
+  // The Drafts view is now the server-owned list (data-server-drafts): the draft
+  // persisted above is titled from the composer label and shows its body excerpt.
   await visit(page, '/drafts');
-  await expect(page.locator('[data-drafts-list] article')).toContainText('New topic');
-  await expect(page.locator('[data-drafts-list] article')).toContainText('Browser evidence');
+  const draftsList = page.locator('[data-drafts-list][data-server-drafts]');
+  const serverDraftRows = draftsList.locator('.report-row:not([data-local-draft-row])');
+  await expect(serverDraftRows).toContainText('New topic');
+  await expect(serverDraftRows).toContainText('Browser evidence');
+  await expect(page.getByRole('heading', { name: 'Saved in this browser' })).toBeVisible();
+  await expect(draftsList.locator('[data-local-draft-row]')).toContainText('Browser evidence');
   await shot(page, info, '16-drafts-view');
   const discard = page.getByRole('button', { name: 'Discard' });
   await discard.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'nearest' }));
   await discard.click();
-  await expect(page.locator('[data-drafts-list]')).toContainText('No saved drafts');
+  await expect(page.locator('[data-drafts-list]')).toContainText('No server drafts yet.');
+  // Clear the browser-local mirror so the upload sub-journey opens an empty composer.
+  await page.evaluate(() => { try { localStorage.removeItem('rb-draft:bob:/threads'); } catch (e) {} });
 
   await openNewTopicComposer(page);
   await dropTinyPng(page);
@@ -309,8 +320,9 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await page.locator('form.composer input[name="title"]').first().fill('Browser upload evidence');
   await page.locator('form.composer button[type="submit"]').first().click();
   await page.waitForURL(/\/t\/\d+-/);
+  // A successful submit clears the synced server draft on the next navigation.
   await visit(page, '/drafts');
-  await expect(page.locator('[data-drafts-list]')).toContainText('No saved drafts');
+  await expect(page.locator('[data-drafts-list]')).toContainText('No server drafts yet.');
 });
 
 test('phase 4 slash menu inserts approved snippets and GIPHY media', async ({ page }, info) => {
@@ -345,20 +357,41 @@ test('phase 4 slash menu inserts approved snippets and GIPHY media', async ({ pa
   const form = page.locator('form.composer').first();
   const textarea = form.locator('textarea.composer-input');
 
+  // The menu is an ARIA combobox: the textarea drives a role=listbox of
+  // role=option items, navigable entirely from the keyboard.
   await textarea.fill('/');
-  await expect(page.getByRole('button', { name: 'Insert table' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Insert task list' })).toBeVisible();
+  await expect(page.locator('form.composer .composer-slash-menu[role="listbox"]').first()).toBeVisible();
+  await expect(textarea).toHaveAttribute('aria-expanded', 'true');
+  const tableOption = page.getByRole('option', { name: 'Insert table' });
+  const taskOption = page.getByRole('option', { name: 'Insert task list' });
+  await expect(tableOption).toBeVisible();
+  await expect(taskOption).toBeVisible();
+  // First option is active by default; Arrow keys move the active descendant.
+  await expect(tableOption).toHaveAttribute('aria-selected', 'true');
   await shot(page, info, '26-slash-menu');
 
-  await page.getByRole('button', { name: 'Insert table' }).click();
+  await textarea.press('ArrowDown');
+  await expect(taskOption).toHaveAttribute('aria-selected', 'true');
+  await expect(tableOption).toHaveAttribute('aria-selected', 'false');
+  await textarea.press('ArrowUp');
+  await expect(tableOption).toHaveAttribute('aria-selected', 'true');
+  // Enter inserts the active option (not a newline / form submit) and closes.
+  await textarea.press('Enter');
   await expect(textarea).toHaveValue(/\| Heading \| Heading \|/);
-  await expect(page.getByRole('button', { name: 'Insert table' })).toHaveCount(0);
+  await expect(page.getByRole('option', { name: 'Insert table' })).toHaveCount(0);
+  await expect(textarea).toHaveAttribute('aria-expanded', 'false');
 
   await textarea.fill('/gif cat');
-  await page.getByRole('button', { name: 'Search GIPHY' }).click();
-  await expect(page.getByRole('button', { name: 'Insert GIF Evidence cat' })).toBeVisible();
-  await page.getByRole('button', { name: 'Insert GIF Evidence cat' }).click();
+  await page.getByRole('option', { name: 'Search GIPHY' }).click();
+  await expect(page.getByRole('option', { name: 'Insert GIF Evidence cat' })).toBeVisible();
+  await page.getByRole('option', { name: 'Insert GIF Evidence cat' }).click();
   await expect(textarea).toHaveValue('![Evidence cat](https://media4.giphy.com/media/cat/giphy.gif)');
+  // Escape closes the menu without disturbing the composed value.
+  await textarea.fill('/');
+  await expect(textarea).toHaveAttribute('aria-expanded', 'true');
+  await textarea.press('Escape');
+  await expect(textarea).toHaveAttribute('aria-expanded', 'false');
+  await textarea.fill('![Evidence cat](https://media4.giphy.com/media/cat/giphy.gif)');
   await shot(page, info, '27-giphy-inserted');
 
   const topicTitle = `Slash GIPHY evidence ${Date.now()}`;
@@ -366,6 +399,35 @@ test('phase 4 slash menu inserts approved snippets and GIPHY media', async ({ pa
   await form.locator('button[type="submit"]').click();
   await page.waitForURL(/\/t\/\d+-/);
   await expect(page.locator('.post-body img[src="https://media4.giphy.com/media/cat/giphy.gif"]')).toBeVisible();
+});
+
+test('phase 4 slash status rows consume Enter when enter-to-send is enabled', async ({ page }) => {
+  await login(page, 'bob@retro.test');
+
+  await visit(page, '/settings/composing');
+  await page.locator('input[name="enter_to_send"]').check();
+  await page.locator('form[action="/settings/composing"] button[type="submit"]').click();
+  await page.waitForURL(/\/settings\/composing$/);
+
+  await openNewTopicComposer(page);
+  const form = page.locator('form.composer').first();
+  const textarea = form.locator('textarea.composer-input');
+  await form.locator('input[name="title"]').fill('Do not submit slash status');
+
+  await textarea.fill('/gif');
+  await textarea.press('Enter');
+  await expect(page.getByRole('option', { name: 'Type a search after /gif.' })).toBeVisible();
+
+  const submitted = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return request.method() === 'POST' && url.pathname === '/threads';
+  }, { timeout: 500 }).then(() => true).catch(() => false);
+
+  await textarea.press('Enter');
+
+  expect(await submitted).toBe(false);
+  await expect(textarea).toHaveValue('/gif');
+  await expect(page).toHaveURL(/\/c\/general$/);
 });
 
 test('phase 3 branding preview and product-tour replay', async ({ page }, info) => {
@@ -553,6 +615,111 @@ test('admin per-user record: badges + title', async ({ page }, info) => {
   await page.locator('form.inline-form[action$="/title"] button[type="submit"]').click();
   await page.waitForURL(/\/admin\/users\/\d+$/);
   await expect(page.locator('form.stacked[action$="/title"] input[name="title"]')).toHaveValue('');
+});
+
+test('phase 4 badge rules: create, preview, enable, backfill, disable, revoke', async ({ page }, info) => {
+  // badge_rules graduated to default-on (GA 2026-07-02). Admin-only operator
+  // surface; the dashboard has no link to it, so navigate directly (the app only
+  // links to it from within the badge-rules screens themselves).
+  await login(page, 'admin@retro.test');
+
+  await visit(page, '/admin/badge-rules');
+  await expect(page.getByRole('heading', { name: 'Badge rules' })).toBeVisible();
+  // The run is serial against a shared DB, so a prior (desktop) pass may have left
+  // a rule behind; assert the create form is present rather than an empty list.
+  await expect(page.getByRole('button', { name: 'Create rule' })).toBeVisible();
+
+  // Create a post-count rule (threshold 1, all boards) through the no-JS form.
+  // Rules list newest-first, so the rule created here is always the first row.
+  const form = page.locator('form.stacked[action="/admin/badge-rules"]');
+  await form.locator('select[name="badge_id"]').selectOption({ index: 0 });
+  await form.locator('select[name="rule_type"]').selectOption('post_count');
+  await form.locator('input[name="threshold"]').fill('1');
+  await form.getByRole('button', { name: 'Create rule' }).click();
+  await page.waitForURL(/\/admin\/badge-rules$/);
+  await expect(page.getByText('Badge rule created.')).toBeVisible();
+
+  // The new rule lists as Disabled (new rules start disabled).
+  const ruleRow = page.locator('ul.link-list > li').first();
+  await expect(ruleRow.getByText('Disabled')).toBeVisible();
+  await shot(page, info, '32-badge-rules');
+
+  // Preview eligible users — works even while the rule is disabled.
+  await ruleRow.getByRole('link', { name: 'Preview' }).click();
+  await page.waitForURL(/\/admin\/badge-rules\/\d+\/preview$/);
+  await expect(page.getByRole('heading', { name: 'Badge rule preview' })).toBeVisible();
+  await expect(page.getByText(/Metric:/).first()).toBeVisible();
+  await shot(page, info, '33-badge-rule-preview');
+
+  // Enable, then backfill: awards happen only on this explicit action, and the
+  // flash reports the award count. Scope every action to the test's own row (the
+  // first, newest, row) — a prior serial pass may have left other rules present.
+  await visit(page, '/admin/badge-rules');
+  await ruleRow.locator('form[action$="/enable"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/badge-rules$/);
+  await expect(ruleRow.getByText('Enabled')).toBeVisible();
+
+  await ruleRow.locator('form[action$="/backfill"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/badge-rules$/);
+  await expect(page.getByText(/Badge rule backfilled \d+ awards\./)).toBeVisible();
+  await shot(page, info, '34-badge-rule-backfilled');
+
+  // Disable, then revoke the rule's awards: the flash reports the revoke count.
+  await ruleRow.locator('form[action$="/disable"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/badge-rules$/);
+  await expect(ruleRow.getByText('Disabled')).toBeVisible();
+
+  await ruleRow.locator('form[action$="/revoke"] button[type="submit"]').click();
+  await page.waitForURL(/\/admin\/badge-rules$/);
+  await expect(page.getByText(/Badge rule revoked \d+ awards\./)).toBeVisible();
+});
+
+test('phase 4 account lifecycle: export, deactivate/reactivate, request/cancel deletion', async ({ page }, info) => {
+  // account_lifecycle graduated to default-on (GA 2026-07-02, ADR 0006). Drive the
+  // whole member self-serve slice as a no-JS form journey. Uses the dedicated
+  // `dana` account (not bob/carol) because deactivate/delete are destructive; the
+  // journey self-restores to `active` so the serial desktop→mobile re-run is safe.
+  await login(page, 'dana@retro.test');
+
+  // The lifecycle surface is reached through the settings rail, which only renders
+  // the "Account" link when the flag is live — so this also proves the gated nav.
+  await visit(page, '/settings/account');
+  await page.getByRole('link', { name: 'Account', exact: true }).click();
+  await page.waitForURL(/\/settings\/account\/lifecycle$/);
+  await expect(page.getByRole('heading', { name: 'Delete account' })).toBeVisible();
+  await shot(page, info, '35-account-lifecycle');
+
+  // Export is a CSRF-protected POST that streams a JSON attachment: assert the
+  // download fires (the page must NOT navigate away) rather than a page load.
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('form[action="/settings/account/export"] button[type="submit"]').click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('retroboards-account-export.json');
+
+  // Deactivate (reversible) → the section flips to the reactivate control…
+  await page.locator('form[action="/settings/account/deactivate"] input[name="current_password"]').fill('password123');
+  await page.locator('form[action="/settings/account/deactivate"] button[type="submit"]').click();
+  await page.waitForURL(/\/settings\/account\/lifecycle$/);
+  await expect(page.getByRole('button', { name: 'Reactivate account' })).toBeVisible();
+
+  // …then reactivate restores write access (the deactivate form returns).
+  await page.locator('form[action="/settings/account/reactivate"] button[type="submit"]').click();
+  await page.waitForURL(/\/settings\/account\/lifecycle$/);
+  await expect(page.getByRole('button', { name: 'Deactivate account' })).toBeVisible();
+
+  // Request deletion → the danger zone shows the 30-day grace + cancel control.
+  await page.locator('form[action="/settings/account/delete/request"] input[name="current_password"]').fill('password123');
+  await page.locator('form[action="/settings/account/delete/request"] button[type="submit"]').click();
+  await page.waitForURL(/\/settings\/account\/lifecycle$/);
+  await expect(page.getByRole('button', { name: 'Cancel deletion request' })).toBeVisible();
+  await expect(page.getByText(/Deletion is scheduled after the grace period/)).toBeVisible();
+  await shot(page, info, '36-account-deletion-scheduled');
+
+  // Cancel during grace restores the account to active (leaves dana reusable).
+  await page.locator('form[action="/settings/account/delete/cancel"] button[type="submit"]').click();
+  await page.waitForURL(/\/settings\/account\/lifecycle$/);
+  await expect(page.getByRole('button', { name: 'Request account deletion' })).toBeVisible();
 });
 
 test('admin can reorder and archive boards', async ({ page }, info) => {

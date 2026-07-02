@@ -24,12 +24,28 @@ final class AppServerDraftsTest extends TestCase
         );
     }
 
-    public function test_server_draft_endpoints_are_dark_by_default(): void
+    public function test_server_draft_endpoints_are_available_by_default_and_can_be_disabled(): void
     {
-        $this->actingAs($this->makeUser(['username' => 'darkdrafts']));
+        // server_drafts graduated to default-on (GA 2026-07-02, ADR 0010): with
+        // no features override the JSON sync endpoints are live for an
+        // authenticated member, mirroring the polls/topic_workflow graduations.
+        $this->actingAs($this->makeUser(['username' => 'defaultdrafts']));
 
-        $this->assertStatus(404, $this->get('/api/drafts/thread-1'));
-        $this->assertStatus(404, $this->post('/api/drafts/thread-1', ['revision' => '0', 'body' => 'Hidden']));
+        $saved = $this->post('/api/drafts/thread-default', [
+            'revision' => '0',
+            'title' => 'Default-on draft',
+            'body' => 'Available without an override',
+        ]);
+        $this->assertStatus(200, $saved);
+        self::assertNotSame(404, $this->get('/api/drafts/thread-default')->status());
+        self::assertTrue((new \App\Core\FeatureFlags(new \App\Repository\SettingRepository($this->db)))->enabled('server_drafts'));
+
+        // Operator rollback: disabling the flag takes every server-draft route
+        // offline (404) — the local-only draft fallback keeps working.
+        $this->setFlags(['server_drafts' => false]);
+        $this->assertStatus(404, $this->get('/api/drafts/thread-default'));
+        $this->assertStatus(404, $this->post('/api/drafts/thread-default', ['revision' => '0', 'body' => 'Hidden']));
+        $this->assertStatus(404, $this->post('/drafts/1/discard'));
     }
 
     public function test_save_load_and_conflict_response(): void

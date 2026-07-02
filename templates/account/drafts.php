@@ -32,7 +32,14 @@
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
-            <p class="muted">Browser-local drafts remain available offline in this browser.</p>
+            <div class="local-drafts" aria-labelledby="local-drafts-heading">
+                <h2 id="local-drafts-heading">Saved in this browser</h2>
+                <p class="muted">Device-local drafts can include offline edits or work that has not synced yet.</p>
+                <div data-local-drafts-list>
+                    <p class="muted" data-drafts-empty>No browser-local drafts in this browser.</p>
+                </div>
+                <noscript><p class="muted">Browser-local drafts require JavaScript to list or discard.</p></noscript>
+            </div>
         <?php else: ?>
             <p class="muted" data-drafts-empty>Your saved drafts are stored in this browser. They will appear here when JavaScript is enabled.</p>
             <noscript><p class="muted">Drafts are browser-local and require JavaScript to list or discard.</p></noscript>

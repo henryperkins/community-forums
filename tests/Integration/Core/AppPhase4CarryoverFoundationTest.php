@@ -14,9 +14,10 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
         // `polls` graduated to default-on (GA 2026-06-30); the personal
-        // organization slice graduated to default-on on 2026-07-01. The rest
-        // stay dark until their own rollout evidence lands.
-        foreach (['board_folders', 'bookmark_folders', 'saved_feeds'] as $flag) {
+        // organization slice graduated to default-on on 2026-07-01; `slash_giphy`
+        // graduated on 2026-07-02 (inert until an operator sets giphy_public_key).
+        // The rest stay dark until their own rollout evidence lands.
+        foreach (['board_folders', 'bookmark_folders', 'saved_feeds', 'slash_giphy'] as $flag) {
             self::assertArrayHasKey($flag, $flags->all(), "$flag must be declared, not merely unknown");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
@@ -25,7 +26,6 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
             'link_previews',
             'expanded_files',
             'custom_emoji',
-            'slash_giphy',
             'split_merge',
             'profile_media',
             'automated_context',

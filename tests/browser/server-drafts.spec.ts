@@ -139,6 +139,26 @@ test('server draft validation errors replace stale success status', async ({ pag
   await expect(page.getByText('Draft body must be 20000 characters or fewer.')).toBeVisible({ timeout: 5000 });
 });
 
+test('drafts page keeps browser-local drafts visible while server drafts are enabled', async ({ page }) => {
+  await login(page, 'bob@retro.test');
+  await page.evaluate(() => {
+    localStorage.setItem('rb-draft:bob:/threads', 'Browser-only draft that has not synced');
+  });
+
+  await visit(page, '/drafts');
+
+  const localDrafts = page.locator('[data-local-drafts-list]');
+  await expect(page.locator('[data-drafts-list][data-server-drafts]')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Saved in this browser' })).toBeVisible();
+  await expect(localDrafts).toContainText('Browser-only draft that has not synced');
+  await expect(localDrafts.getByRole('link', { name: 'Resume' })).toHaveAttribute('href', '/');
+
+  await localDrafts.getByRole('button', { name: 'Remove local copy' }).click();
+  await expect(localDrafts).toContainText('No browser-local drafts in this browser.');
+  const remaining = await page.evaluate(() => localStorage.getItem('rb-draft:bob:/threads'));
+  expect(remaining).toBeNull();
+});
+
 test('failed submits keep server drafts and successful submits clear them after navigation', async ({ page }) => {
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
@@ -181,4 +201,30 @@ test('failed submits keep server drafts and successful submits clear them after 
     return response.json();
   }, { key });
   expect(afterSuccess.draft).toBeNull();
+});
+
+test('composer discard button immediately removes the matching server draft', async ({ page }) => {
+  await login(page, 'bob@retro.test');
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+
+  const title = page.locator('form.composer input[name="title"]').first();
+  const body = page.locator('form.composer textarea.composer-input').first();
+  const key = serverDraftKey('/threads');
+  await discardServerDraft(page, key);
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+
+  await title.fill('Discard synced draft');
+  await body.fill('This draft should disappear from both stores');
+  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+
+  await page.getByRole('button', { name: 'Discard draft' }).click();
+
+  const afterDiscard = await page.evaluate(async ({ key }) => {
+    const response = await fetch(`/api/drafts/${key}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    return response.json();
+  }, { key });
+  expect(afterDiscard.draft).toBeNull();
+  expect(await body.inputValue()).toBe('');
 });

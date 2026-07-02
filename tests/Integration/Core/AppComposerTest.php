@@ -171,6 +171,10 @@ final class AppComposerTest extends TestCase
 
     public function test_drafts_route_renders_browser_local_shell(): void
     {
+        // With server_drafts graduated to default-on, the server-owned list is
+        // exercised by AppServerDraftsTest; disable the flag here to assert the
+        // browser-local fallback shell operators keep after a rollback.
+        (new SettingRepository($this->db))->set('features', ['server_drafts' => false]);
         $user = $this->makeUser(['username' => 'draftshell']);
         $this->actingAs($user);
 

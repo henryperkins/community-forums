@@ -477,7 +477,7 @@
             }
         } catch (e) {}
     }
-    function buildDiscard(form, ta, key) {
+    function buildDiscard(form, ta, key, discardRemote) {
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'btn btn-secondary btn-small composer-discard';
@@ -490,6 +490,7 @@
         b.addEventListener('click', function () {
             try { localStorage.removeItem(key); } catch (e) {}
             ta.value = '';
+            if (typeof discardRemote === 'function') { discardRemote(); }
             ta.dispatchEvent(new Event('input', { bubbles: true }));
             update();
         });
@@ -506,8 +507,12 @@
             var saved = localStorage.getItem(key);
             if (saved && !ta.value) { ta.value = saved; ta.dispatchEvent(new Event('input', { bubbles: true })); }
         } catch (e) {}
-        var updateDiscard = buildDiscard(form, ta, key);
+        var remoteDiscard = null;
+        var updateDiscard = buildDiscard(form, ta, key, function () {
+            if (remoteDiscard) { remoteDiscard(); }
+        });
         var serverDrafts = serverDraftsEnabled() ? wireServerDrafts(form, ta, key, context, updateDiscard) : null;
+        if (serverDrafts) { remoteDiscard = serverDrafts.discard; }
         ta.addEventListener('input', function () {
             try { ta.value ? localStorage.setItem(key, ta.value) : localStorage.removeItem(key); } catch (e) {}
             if (serverDrafts) { serverDrafts.input(); }
@@ -540,9 +545,13 @@
         return context;
     }
     function renderDraftsPage() {
-        var host = document.querySelector('[data-drafts-list]');
+        var host = document.querySelector('[data-local-drafts-list]');
+        var embedded = !!host;
+        if (!host) {
+            host = document.querySelector('[data-drafts-list]');
+            if (host && host.hasAttribute('data-server-drafts')) { return; }
+        }
         if (!host || !draftsEnabled()) { return; }
-        if (host.hasAttribute('data-server-drafts')) { return; }
         var who = draftUser();
         migrateAnonDrafts(who);
         var prefix = 'rb-draft:' + who + ':';
@@ -561,21 +570,46 @@
         if (!drafts.length) {
             var empty = document.createElement('p');
             empty.className = 'muted empty';
-            empty.textContent = 'No saved drafts in this browser.';
+            empty.textContent = embedded ? 'No browser-local drafts in this browser.' : 'No saved drafts in this browser.';
             host.appendChild(empty);
             return;
         }
+        var list = host;
+        if (embedded) {
+            list = document.createElement('ul');
+            list.className = 'report-list';
+            host.appendChild(list);
+        }
         drafts.forEach(function (d) {
-            var card = document.createElement('article');
-            card.className = 'card';
+            var card = document.createElement(embedded ? 'li' : 'article');
+            card.className = embedded ? 'report-row' : 'card';
+            card.setAttribute('data-local-draft-row', '1');
+            if (embedded) {
+                var head = document.createElement('div');
+                head.className = 'report-head';
+                var badge = document.createElement('span');
+                badge.className = 'badge';
+                badge.textContent = 'Local';
+                var context = document.createElement('span');
+                context.className = 'muted';
+                context.textContent = d.context;
+                head.appendChild(badge);
+                head.appendChild(context);
+                card.appendChild(head);
+            }
             var h = document.createElement('h2');
             h.textContent = draftLabel(d.context);
-            var p = document.createElement('p');
-            p.className = 'muted';
-            p.textContent = d.context;
-            var pre = document.createElement('pre');
-            pre.className = 'draft-preview';
-            pre.textContent = d.body.length > 500 ? d.body.slice(0, 500) + '...' : d.body;
+            var p = null;
+            if (!embedded) {
+                p = document.createElement('p');
+                p.className = 'muted';
+                p.textContent = d.context;
+            }
+            var pre = document.createElement(embedded ? 'blockquote' : 'pre');
+            pre.className = embedded ? 'report-excerpt' : 'draft-preview';
+            pre.textContent = d.body.length > (embedded ? 240 : 500)
+                ? d.body.slice(0, embedded ? 240 : 500) + '...'
+                : d.body;
             var actions = document.createElement('p');
             actions.className = 'form-actions';
             var href = draftResumeHref(d.context);
@@ -589,18 +623,18 @@
             var discard = document.createElement('button');
             discard.type = 'button';
             discard.className = 'btn btn-secondary btn-small';
-            discard.textContent = 'Discard';
+            discard.textContent = embedded ? 'Remove local copy' : 'Discard';
             discard.addEventListener('click', function () {
                 try { localStorage.removeItem(d.key); } catch (e) {}
                 card.remove();
-                if (!host.querySelector('article')) { renderDraftsPage(); }
+                if (!host.querySelector('[data-local-draft-row]')) { renderDraftsPage(); }
             });
             actions.appendChild(discard);
             card.appendChild(h);
-            card.appendChild(p);
+            if (p) { card.appendChild(p); }
             card.appendChild(pre);
             card.appendChild(actions);
-            host.appendChild(card);
+            list.appendChild(card);
         });
     }
 
@@ -907,21 +941,105 @@
             ? item.images.original.url
             : '';
     }
+    // A combobox needs an accessible name. Most composer textareas rely on a
+    // placeholder (which is not a name), so give them a label before we upgrade
+    // them — only when one is missing, never overriding an explicit label.
+    function ensureAccessibleName(el) {
+        var label = el.getAttribute('aria-label');
+        if (label && label.trim() !== '') { return; }
+        if (el.getAttribute('aria-labelledby')) { return; }
+        var id = el.getAttribute('id');
+        if (id) {
+            var selector = window.CSS && CSS.escape ? CSS.escape(id) : id;
+            try { if (document.querySelector('label[for="' + selector + '"]')) { return; } } catch (e) {}
+        }
+        if (el.closest && el.closest('label')) { return; }
+        var placeholder = (el.getAttribute('placeholder') || '').trim();
+        el.setAttribute('aria-label', placeholder !== '' ? placeholder : 'Message composer');
+    }
+    var slashMenuSeq = 0;
+    // Slash inserts + GIPHY are surfaced as an APG combobox: the textarea is the
+    // combobox, the popup is a listbox of role=option items, selection is tracked
+    // with aria-activedescendant (focus stays in the textarea so typing keeps
+    // filtering), and Arrow/Home/End/Enter/Escape drive it from the keyboard.
     function wireSlashMenu(form, ta) {
         var menu = document.createElement('div');
+        var menuId = 'composer-slash-menu-' + (++slashMenuSeq);
+        var optionSeq = 0;
+        menu.id = menuId;
         menu.className = 'composer-slash-menu';
-        menu.setAttribute('aria-label', 'Composer insert commands');
         menu.hidden = true;
         ta.parentNode.insertBefore(menu, ta.nextSibling);
 
         var config = null;
         var ready = false;
         var activeState = null;
+        var options = [];
+        var activeIndex = -1;
+        var lastRenderKey = null;
 
+        function comboboxReady() { return ta.getAttribute('role') === 'combobox'; }
+        function setExpanded(open) {
+            if (!comboboxReady()) { return; }
+            ta.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (!open) { ta.removeAttribute('aria-activedescendant'); }
+        }
+        function openMenu() { menu.hidden = false; setExpanded(true); }
         function hide() {
             activeState = null;
+            options = [];
+            activeIndex = -1;
+            lastRenderKey = null;
             menu.hidden = true;
             menu.innerHTML = '';
+            setExpanded(false);
+        }
+        function highlight(index) {
+            if (!options.length) {
+                activeIndex = -1;
+                ta.removeAttribute('aria-activedescendant');
+                return;
+            }
+            if (index < 0) { index = options.length - 1; }
+            if (index >= options.length) { index = 0; }
+            activeIndex = index;
+            for (var i = 0; i < options.length; i++) {
+                options[i].setAttribute('aria-selected', i === index ? 'true' : 'false');
+            }
+            var active = options[activeIndex];
+            if (comboboxReady()) { ta.setAttribute('aria-activedescendant', active.id); }
+            active.scrollIntoView({ block: 'nearest' });
+        }
+        function collectOptions() {
+            options = [];
+            var nodes = menu.querySelectorAll('.composer-slash-command, .composer-slash-gif');
+            for (var i = 0; i < nodes.length; i++) {
+                var node = nodes[i];
+                if (node.getAttribute('aria-disabled') === 'true') { continue; }
+                if (!node.id) { node.id = menuId + '-opt-' + (++optionSeq); }
+                node.setAttribute('role', 'option');
+                node.setAttribute('tabindex', '-1');
+                node.setAttribute('aria-selected', 'false');
+                options.push(node);
+            }
+            highlight(options.length ? 0 : -1);
+        }
+        function showStatus(text) {
+            // A visible listbox needs at least one option child (aria-required-
+            // children); render transient GIPHY status as a single disabled,
+            // non-selectable option so the combobox stays valid.
+            menu.innerHTML = '';
+            var status = document.createElement('div');
+            status.className = 'composer-slash-status';
+            status.setAttribute('role', 'option');
+            status.setAttribute('aria-disabled', 'true');
+            status.setAttribute('aria-selected', 'false');
+            status.textContent = text;
+            menu.appendChild(status);
+            options = [];
+            activeIndex = -1;
+            ta.removeAttribute('aria-activedescendant');
+            openMenu();
         }
         function renderButtons(commands) {
             menu.innerHTML = '';
@@ -944,7 +1062,8 @@
                 });
                 menu.appendChild(b);
             });
-            menu.hidden = false;
+            openMenu();
+            collectOptions();
         }
         function render() {
             if (!ready || config === null) { return; }
@@ -953,16 +1072,17 @@
             activeState = state;
             var commands = slashCommands(config, state.query);
             if (commands.length === 0) { hide(); return; }
+            var key = state.query + '|' + commands.map(function (c) { return c.key; }).join(',');
+            // Preserve the active option while only the caret moves (Arrow keys
+            // also fire keyup); rebuild only when the slash query itself changes.
+            if (key === lastRenderKey && !menu.hidden) { return; }
+            lastRenderKey = key;
             renderButtons(commands);
         }
         function searchGiphy(state, term) {
-            if (!term) {
-                menu.innerHTML = '<p class="muted">Type a search after /gif.</p>';
-                menu.hidden = false;
-                return;
-            }
-            menu.innerHTML = '<p class="muted">Searching GIPHY...</p>';
-            menu.hidden = false;
+            lastRenderKey = null;
+            if (!term) { showStatus('Type a search after /gif.'); return; }
+            showStatus('Searching GIPHY...');
             var url = 'https://api.giphy.com/v1/gifs/search'
                 + '?api_key=' + encodeURIComponent(config.public_key)
                 + '&q=' + encodeURIComponent(term)
@@ -973,10 +1093,7 @@
             }).then(function (j) {
                 var items = j && Array.isArray(j.data) ? j.data : [];
                 menu.innerHTML = '';
-                if (items.length === 0) {
-                    menu.innerHTML = '<p class="muted">No GIFs found.</p>';
-                    return;
-                }
+                if (items.length === 0) { showStatus('No GIFs found.'); return; }
                 items.forEach(function (item) {
                     var mediaUrl = giphyResultUrl(item);
                     if (!mediaUrl) { return; }
@@ -1003,26 +1120,69 @@
                     });
                     menu.appendChild(b);
                 });
-                if (!menu.childNodes.length) {
-                    menu.innerHTML = '<p class="muted">No GIFs found.</p>';
-                }
+                if (!menu.childNodes.length) { showStatus('No GIFs found.'); return; }
+                openMenu();
+                collectOptions();
             }).catch(function () {
-                menu.innerHTML = '<p class="muted">GIPHY search is unavailable.</p>';
+                showStatus('GIPHY search is unavailable.');
             });
         }
 
         loadSlashConfig().then(function (j) {
             config = j;
             ready = true;
+            if (config === null) { return; }
+            // Upgrade to a combobox only when the picker can actually open (flag on
+            // + provider key configured), so composers elsewhere are unchanged.
+            ensureAccessibleName(ta);
+            menu.setAttribute('role', 'listbox');
+            menu.setAttribute('aria-label', 'Composer insert commands');
+            ta.setAttribute('role', 'combobox');
+            ta.setAttribute('aria-expanded', 'false');
+            ta.setAttribute('aria-controls', menuId);
+            ta.setAttribute('aria-haspopup', 'listbox');
+            ta.setAttribute('aria-autocomplete', 'list');
             render();
         });
         ta.addEventListener('input', render);
-        ta.addEventListener('keyup', render);
+        ta.addEventListener('keyup', function (e) {
+            // Navigation/activation keys are handled on keydown; their keyup must
+            // not rebuild the menu and reset the active option.
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter'
+                || e.key === 'Home' || e.key === 'End' || e.key === 'Escape') { return; }
+            render();
+        });
         ta.addEventListener('click', render);
         ta.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && !menu.hidden) {
-                e.preventDefault();
-                hide();
+            if (menu.hidden) {
+                if (e.key === 'ArrowDown' && !e.altKey && !e.ctrlKey && !e.metaKey && ready && config !== null) {
+                    if (slashState(ta)) {
+                        lastRenderKey = null;
+                        render();
+                        if (!menu.hidden) { e.preventDefault(); }
+                    }
+                }
+                return;
+            }
+            switch (e.key) {
+                case 'ArrowDown': e.preventDefault(); highlight(activeIndex + 1); break;
+                case 'ArrowUp': e.preventDefault(); highlight(activeIndex - 1); break;
+                case 'Home': if (options.length) { e.preventDefault(); highlight(0); } break;
+                case 'End': if (options.length) { e.preventDefault(); highlight(options.length - 1); } break;
+                case 'Enter':
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    if (activeIndex >= 0 && options.length) {
+                        options[activeIndex].click();
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    hide();
+                    break;
+                case 'Tab': hide(); break;
+                default: break;
             }
         });
         document.addEventListener('click', function (e) {
@@ -1091,6 +1251,10 @@
         buildToolbar(ta);
         buildCounter(ta);
         if (prefs.showPreview) { buildPreview(form, ta); }
+        // Wire the slash combobox before wireKeys so its keydown listener runs
+        // first: when the menu is open it consumes Enter/Escape (via
+        // stopImmediatePropagation) before enter-to-send / list-continuation see it.
+        wireSlashMenu(form, ta);
         wireKeys(form, ta, prefs);
         stampIdempotency(form);
         // A form may opt out of local draft autosave (data-no-draft). The inline
@@ -1100,7 +1264,6 @@
         // leave a misleading, unrecoverable draft that the next load discards.
         if (draftsEnabled() && !form.hasAttribute('data-no-draft')) { wireDrafts(form, ta); }
         wireUploads(form, ta);
-        wireSlashMenu(form, ta);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

@@ -161,52 +161,168 @@ final class BadgeRepository
         )->rowCount() === 1;
 
         if ($inserted) {
-            $this->db->run(
-                "INSERT IGNORE INTO badge_award_history
-                    (user_id, badge_id, badge_rule_id, achievement_key, action, actor_id, reason, created_at)
-                 VALUES (?, ?, ?, ?, 'award', ?, 'badge_rule_backfill', UTC_TIMESTAMP())",
-                [$userId, $badgeId, $ruleId, $achievementKey, $actorId],
-            );
+            $this->recordRuleBadgeAwardHistory($userId, $badgeId, $ruleId, $actorId, $achievementKey, 'badge_rule_backfill');
         }
 
         return $inserted;
     }
 
+    public function recordRuleBadgeAwardHistory(int $userId, int $badgeId, int $ruleId, int $actorId, string $achievementKey, string $reason, ?int $revokedBeforeHistoryId = null): bool
+    {
+        if ($this->insertRuleBadgeAwardHistory($userId, $badgeId, $ruleId, $actorId, $achievementKey, $reason)) {
+            return true;
+        }
+
+        if ($this->hasActiveRuleAward($userId, $badgeId, $ruleId, $achievementKey)) {
+            return false;
+        }
+
+        $latestRevokeId = $this->latestRevokedRuleAwardId($userId, $badgeId, $ruleId, $achievementKey);
+        if ($latestRevokeId === null) {
+            return false;
+        }
+        if ($revokedBeforeHistoryId !== null && $latestRevokeId >= $revokedBeforeHistoryId) {
+            return false;
+        }
+
+        return $this->insertRuleBadgeAwardHistory(
+            $userId,
+            $badgeId,
+            $ruleId,
+            $actorId,
+            $this->nextRuleAwardCycleKey($userId, $badgeId, $ruleId, $achievementKey),
+            $reason,
+        );
+    }
+
+    private function insertRuleBadgeAwardHistory(int $userId, int $badgeId, int $ruleId, int $actorId, string $achievementKey, string $reason): bool
+    {
+        return $this->db->run(
+            "INSERT IGNORE INTO badge_award_history
+                (user_id, badge_id, badge_rule_id, achievement_key, action, actor_id, reason, created_at)
+             VALUES (?, ?, ?, ?, 'award', ?, ?, UTC_TIMESTAMP())",
+            [$userId, $badgeId, $ruleId, $achievementKey, $actorId, $reason],
+        )->rowCount() === 1;
+    }
+
+    public function hasActiveRuleAward(int $userId, int $badgeId, int $ruleId, string $achievementKey): bool
+    {
+        return $this->db->fetchValue(
+            "SELECT 1 FROM badge_award_history h
+             WHERE h.user_id = ?
+               AND h.badge_id = ?
+               AND h.badge_rule_id = ?
+               AND (h.achievement_key = ? OR h.achievement_key LIKE ?)
+               AND h.action = 'award'
+               AND NOT EXISTS (
+                 SELECT 1 FROM badge_award_history r
+                 WHERE r.user_id = h.user_id
+                   AND r.badge_id = h.badge_id
+                   AND r.badge_rule_id = h.badge_rule_id
+                   AND r.achievement_key = h.achievement_key
+                   AND r.action = 'revoke'
+               )
+             LIMIT 1",
+            [$userId, $badgeId, $ruleId, $achievementKey, $achievementKey . ':cycle:%'],
+        ) !== false;
+    }
+
+    private function latestRevokedRuleAwardId(int $userId, int $badgeId, int $ruleId, string $achievementKey): ?int
+    {
+        $id = $this->db->fetchValue(
+            "SELECT id FROM badge_award_history
+             WHERE user_id = ?
+               AND badge_id = ?
+               AND badge_rule_id = ?
+               AND (achievement_key = ? OR achievement_key LIKE ?)
+               AND action = 'revoke'
+             ORDER BY id DESC
+             LIMIT 1",
+            [$userId, $badgeId, $ruleId, $achievementKey, $achievementKey . ':cycle:%'],
+        );
+        return $id === false ? null : (int) $id;
+    }
+
+    private function nextRuleAwardCycleKey(int $userId, int $badgeId, int $ruleId, string $achievementKey): string
+    {
+        $prefix = $achievementKey . ':cycle:';
+        $rows = $this->db->fetchAll(
+            "SELECT achievement_key FROM badge_award_history
+             WHERE user_id = ?
+               AND badge_id = ?
+               AND badge_rule_id = ?
+               AND action = 'award'
+               AND (achievement_key = ? OR achievement_key LIKE ?)",
+            [$userId, $badgeId, $ruleId, $achievementKey, $prefix . '%'],
+        );
+
+        $max = 0;
+        foreach ($rows as $row) {
+            $key = (string) $row['achievement_key'];
+            if ($key === $achievementKey) {
+                continue;
+            }
+            if (str_starts_with($key, $prefix)) {
+                $max = max($max, (int) substr($key, strlen($prefix)));
+            }
+        }
+
+        return $prefix . ($max + 1);
+    }
+
+    /** @return list<array{id:int,user_id:int,achievement_key:string}> */
+    public function activeRuleAwards(int $ruleId): array
+    {
+        $rows = $this->db->fetchAll(
+            "SELECT h.id, h.user_id, h.achievement_key
+             FROM badge_award_history h
+             WHERE h.badge_rule_id = ? AND h.action = 'award'
+               AND NOT EXISTS (
+                 SELECT 1 FROM badge_award_history r
+                 WHERE r.badge_rule_id = h.badge_rule_id
+                   AND r.user_id = h.user_id
+                   AND r.badge_id = h.badge_id
+                   AND r.achievement_key = h.achievement_key
+                   AND r.action = 'revoke'
+               )
+             ORDER BY h.user_id ASC, h.id ASC",
+            [$ruleId],
+        );
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => (int) $row['id'],
+                'user_id' => (int) $row['user_id'],
+                'achievement_key' => (string) $row['achievement_key'],
+            ],
+            $rows,
+        );
+    }
+
     /** @return list<int> */
     public function awardHistoryUserIds(int $ruleId): array
     {
-        $rows = $this->db->fetchAll(
-            "SELECT user_id FROM badge_award_history
-             WHERE badge_rule_id = ? AND action = 'award'
-               AND NOT EXISTS (
-                 SELECT 1 FROM badge_award_history r
-                 WHERE r.badge_rule_id = badge_award_history.badge_rule_id
-                   AND r.user_id = badge_award_history.user_id
-                   AND r.achievement_key = badge_award_history.achievement_key
-                   AND r.action = 'revoke'
-               )
-             ORDER BY user_id ASC",
-            [$ruleId],
-        );
-        return array_map(static fn (array $row): int => (int) $row['user_id'], $rows);
+        $seen = [];
+        foreach ($this->activeRuleAwards($ruleId) as $row) {
+            $seen[(int) $row['user_id']] = true;
+        }
+        return array_keys($seen);
     }
 
-    public function revokeRuleBadge(int $userId, int $badgeId, int $ruleId, int $actorId, string $achievementKey): bool
+    public function revokeRuleBadge(int $userId, int $badgeId, int $ruleId, int $actorId, string $achievementKey, bool $removeBadge = true): bool
     {
-        $removed = $this->db->run(
-            'DELETE FROM user_badges WHERE user_id = ? AND badge_id = ?',
-            [$userId, $badgeId],
-        )->rowCount() > 0;
-
-        if ($removed) {
+        if ($removeBadge) {
             $this->db->run(
-                "INSERT IGNORE INTO badge_award_history
-                    (user_id, badge_id, badge_rule_id, achievement_key, action, actor_id, reason, created_at)
-                 VALUES (?, ?, ?, ?, 'revoke', ?, 'badge_rule_revoke', UTC_TIMESTAMP())",
-                [$userId, $badgeId, $ruleId, $achievementKey, $actorId],
+                'DELETE FROM user_badges WHERE user_id = ? AND badge_id = ?',
+                [$userId, $badgeId],
             );
         }
 
-        return $removed;
+        return $this->db->run(
+            "INSERT IGNORE INTO badge_award_history
+                (user_id, badge_id, badge_rule_id, achievement_key, action, actor_id, reason, created_at)
+             VALUES (?, ?, ?, ?, 'revoke', ?, 'badge_rule_revoke', UTC_TIMESTAMP())",
+            [$userId, $badgeId, $ruleId, $achievementKey, $actorId],
+        )->rowCount() === 1;
     }
 }

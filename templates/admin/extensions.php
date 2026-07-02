@@ -44,7 +44,7 @@
             'num' => '05',
             'title' => 'Account & identity',
             'desc' => 'Steward-defined profile fields, and drafts that live on your account.',
-            'flags' => [['custom_profile_fields', 'Capture away'], ['server_drafts', 'Blocked']],
+            'flags' => [['custom_profile_fields', 'Capture away'], ['server_drafts', 'Flip now']],
             'summary' => '2 flags',
         ],
     ];

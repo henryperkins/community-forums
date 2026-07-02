@@ -9,7 +9,6 @@ use App\Repository\AccountDeletionRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
-use App\Repository\SettingRepository;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
 use Tests\Support\TestCase;
@@ -19,8 +18,10 @@ final class AppAccountLifecycleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Account lifecycle/export/delete ships deploy-dark (ADR 0006); enable it.
-        (new SettingRepository($this->db))->set('features', ['account_lifecycle' => true]);
+        // Account lifecycle/export/delete graduated to default-on (GA 2026-07-02,
+        // ADR 0006). These behavioral tests deliberately run against the shipped
+        // default with no features override — the default-on posture + operator
+        // rollback are asserted in AppFeatureFlagTest.
     }
 
     private function lifecycleService(): AccountLifecycleService

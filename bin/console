@@ -35,6 +35,7 @@ use App\Security\EgressGuard;
 use App\Security\BoardPolicy;
 use App\Security\CapabilityResolver;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\SecretBox;
 use App\Security\WriteGate;
 use App\Service\AccountLifecycleService;
@@ -278,7 +279,7 @@ try {
                 new SessionRepository($db),
                 new ModerationLogRepository($db),
                 new ServerDraftRepository($db),
-                new PasswordHasher(),
+                new ReauthGate(new PasswordHasher()),
             ))->purgeDue((int) ($argv[2] ?? 100));
             $log(sprintf('Account purge: anonymised %d due deletion(s).', $stats['purged']));
             break;

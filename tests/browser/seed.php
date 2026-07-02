@@ -58,12 +58,14 @@ $evidenceFeatures = [
     'announcements' => true,
     'polls' => true,
     'slash_giphy' => true,
+    'badge_rules' => true, // GA default-on (2026-07-02); listed explicitly so the admin badge-rules operator surface is captured
     'topic_workflow' => true, // GA default-on (2026-07-01); listed explicitly so the workflow bar is captured regardless of the DEFAULTS map
+    'server_drafts' => true, // GA default-on (2026-07-02); listed explicitly so the conflict journey is captured as a standard (non-dark) surface
+    'account_lifecycle' => true, // GA default-on (2026-07-02; ADR 0006); listed explicitly so the member self-serve export/deactivate/delete surface is captured
     'capabilities' => true, // Inc 1 (P5-08): role editor + simulator browser evidence (shadow-only)
 ];
 if ($includeDarkSurfaceFixtures) {
     $evidenceFeatures['appeals'] = true;
-    $evidenceFeatures['server_drafts'] = true;
     $evidenceFeatures['server_extensions'] = true;
 }
 $ensureNewSurfaceFixtures = static function () use ($db, $users): bool {
@@ -265,6 +267,10 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
     $aliceId = $makeUser('alice', 'Alice Avery', 'user');
     $bobId   = $makeUser('bob', 'Bob Brooks', 'user');
     $carolId = $makeUser('carol', 'Carol Chen', 'user');
+    // Dedicated non-admin used only by the account-lifecycle journey: deactivate/
+    // reactivate/delete-request/cancel are destructive, so isolate them from bob
+    // (staff-room/drafts/appeal fixtures) and carol (mobile poll voter).
+    $makeUser('dana', 'Dana Diaz', 'user');
 
     // Categories + boards (one private board to exercise membership).
     $welcome = $categories->create('Welcome', 0);

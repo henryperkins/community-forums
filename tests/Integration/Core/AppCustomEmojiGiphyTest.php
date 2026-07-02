@@ -131,4 +131,21 @@ final class AppCustomEmojiGiphyTest extends TestCase
         self::assertStringContainsString("connect-src 'self' https://api.giphy.com", $enabled);
         self::assertStringContainsString("img-src 'self' data: https://*.giphy.com", $enabled);
     }
+
+    public function test_slash_giphy_is_default_on_and_operator_rollback_regates_route_and_csp(): void
+    {
+        // Graduated to default-on (GA 2026-07-02): with a provider key configured
+        // the picker config is live and the CSP is relaxed without any override.
+        $settings = new SettingRepository($this->db);
+        $settings->set('giphy_public_key', 'public-test-key');
+
+        $this->assertStatus(200, $this->get('/composer/giphy-config'));
+        self::assertStringContainsString('api.giphy.com', (string) $this->get('/')->getHeader('content-security-policy'));
+
+        // Operator rollback: disabling the flag re-gates the route (404) and drops
+        // the GIPHY CSP sources even though the key remains configured.
+        $settings->set('features', ['slash_giphy' => false]);
+        $this->assertStatus(404, $this->get('/composer/giphy-config'));
+        self::assertStringNotContainsString('api.giphy.com', (string) $this->get('/')->getHeader('content-security-policy'));
+    }
 }
