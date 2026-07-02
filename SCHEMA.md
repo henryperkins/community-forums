@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.26 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-01
+**Status:** v1.27 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-02
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -122,6 +122,7 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 102 | `server_extension_jobs` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
 | 103 | `server_extension_runs` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
 | 104 | `server_extension_kv` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
+| 105 | `registry_snapshots` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #1 (offline snapshot cache, migration 0068) |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -460,7 +461,7 @@ CREATE TABLE moderation_log (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   actor_id    BIGINT UNSIGNED NULL,                         -- NULL = system/automated action (ADMIN §3.8/§10.2)
   action      VARCHAR(40)     NOT NULL,                     -- pin, lock, delete_post, ban, anon_reveal, ...
-  target_type ENUM('thread','post','user','board','category','setting','service_secret') NOT NULL,
+  target_type ENUM('thread','post','user','board','category','setting','service_secret','api_token','webhook','registry','package') NOT NULL,
   target_id   BIGINT UNSIGNED NOT NULL,
   reason      VARCHAR(255)    NULL,
   before_json JSON            NULL,                         -- ADMIN §10.2 (edit snapshot)
@@ -1014,6 +1015,7 @@ New tables — **ecosystem / packages** (`0049`, §8.2 #1–5):
 
 - `package_registries(id, source_id, display_name, base_url, is_enabled, last_snapshot_digest, last_snapshot_at, snapshot_expires_at, created_at, updated_at)` with unique `source_id`; canonical, globally-namespaced registry sources with snapshot freshness/expiry.
 - `registry_trust_keys(id, registry_id, key_id, algorithm, public_key, status, valid_from, valid_until, revoked_at, revoked_reason, created_at)` with unique `(registry_id, key_id)` and registry FK; **PUBLIC** signing-key material only, with rotation/revocation.
+- `registry_snapshots(id, registry_id, digest, document, signature, key_id, generated_at, expires_at, applied_at)` with unique `(registry_id, digest)` and registry FK; verified-snapshot offline cache and anti-replay watermark (`0068`).
 - `package_publishers(id, publisher_uid, display_name, verified_at, status, created_at, updated_at)` with unique `publisher_uid`.
 - `packages(id, package_uid, registry_id, publisher_id, name, type, trust_class, advisory_status, latest_release_id, created_at, updated_at)` with unique `package_uid`, registry/publisher FKs; registry identity, trust class never implied by installability. `latest_release_id` is a denormalised pointer (no FK — avoids a cycle with releases).
 - `package_releases(id, package_id, version, digest, source_url, license, core_min, core_max, manifest_json, dependency_json, signature, signed_key_id, review_status, channel, advisory_status, published_at, created_at)` with unique `(package_id, version)`, digest index, package FK; **immutable** releases, review bound to an exact digest.
@@ -1176,6 +1178,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.28 | 2026-07-02 | Phase 5 Increment 2 migration `0068`: added `registry_snapshots` (verified-snapshot offline cache / anti-replay watermark for P5-01) and widened `moderation_log.target_type` with `registry` and `package` for trust-root, blocklist, and advisory audit rows. |
 | v1.27 | 2026-07-02 | Documentation-only reconciliation after default-on graduations for `server_drafts`, `badge_rules`, `slash_giphy`, and `account_lifecycle`; no schema shape change. Updated stale Phase 3 build notes to point at the existing carryover migrations (`0059`-`0064`) instead of listing server drafts/bookmark/profile/appeal tables as not built. |
 | v1.26 | 2026-07-01 | Added owner-lifecycle locking support migration `0067`: `users` now has `idx_users_role_status_id (role, status, id)` so last-owner/admin `FOR UPDATE` guards can lock active admins through a narrow ordered index. |
 | v1.25 | 2026-07-01 | Phase 5 Foundation F3/F5 seed migration `0066` (seed-only): populated the `0050` `capabilities` catalogue (54 core keys) + `role_capabilities` (cumulative system.guest/user/moderator/admin) from the code-owned `CapabilityCatalog`, and backfilled `protected_owners` from existing active admins. Deploy-dark behind `capabilities`; no shape change. |
