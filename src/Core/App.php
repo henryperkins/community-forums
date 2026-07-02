@@ -57,6 +57,7 @@ use App\Controller\SetupController;
 use App\Controller\SolvedController;
 use App\Controller\SubscriptionController;
 use App\Controller\TagController;
+use App\Controller\ThemeController;
 use App\Controller\UserModerationController;
 use App\Controller\ThreadController;
 use App\Controller\ThreadWorkflowController;
@@ -100,6 +101,7 @@ use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PackageRepository;
+use App\Repository\PackageThemeRepository;
 use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
@@ -185,6 +187,9 @@ use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
+use App\Service\Packages\ThemeAssetScanner;
+use App\Service\Packages\ThemeBuildService;
+use App\Service\Packages\ThemeStateService;
 use App\Service\PostingService;
 use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
@@ -485,6 +490,36 @@ final class App
         // Branding (P3-07): operator name/logo/favicon/colors with safe fallbacks.
         $branding = $this->branding($container, $siteName, $appearance);
 
+        // Declarative package themes (P5-03): external CSS only, with emergency
+        // safe mode and admin-only preview kept outside the DB-backed session.
+        $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
+        try {
+            if (!empty($features['package_themes'])) {
+                $themeState = $container->get(ThemeStateService::class);
+                $user = $session->user();
+                if ($user !== null && $user->isAdmin()) {
+                    $previewId = $session->get('theme_preview_build');
+                    $previewBuild = $themeState->previewBuildFor(is_int($previewId) ? $previewId : null);
+                    if ($previewBuild !== null) {
+                        $packageTheme['preview_css_digest'] = (string) $previewBuild['css_digest'];
+                    } elseif ($previewId !== null) {
+                        $session->forget('theme_preview_build');
+                    }
+                } elseif ($session->get('theme_preview_build') !== null) {
+                    $session->forget('theme_preview_build');
+                }
+
+                if ($packageTheme['preview_css_digest'] === null) {
+                    $activeBuild = $themeState->activeBuild();
+                    if ($activeBuild !== null) {
+                        $packageTheme['active_css_digest'] = (string) $activeBuild['css_digest'];
+                    }
+                }
+            }
+        } catch (Throwable) {
+            $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
+        }
+
         // Configured OAuth providers power the "Sign in with …" buttons.
         $oauthProviders = [];
         try {
@@ -534,6 +569,7 @@ final class App
             'appearance' => $appearance,
             'composing' => $composing,
             'branding' => $branding,
+            'package_theme' => $packageTheme,
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
             'site_announcement' => $siteAnnouncement,
@@ -1175,6 +1211,7 @@ final class App
         $c->bind(InstalledPackageRepository::class, fn (Container $c) => new InstalledPackageRepository($c->get(Database::class)));
         $c->bind(InstalledPackagePermissionRepository::class, fn (Container $c) => new InstalledPackagePermissionRepository($c->get(Database::class)));
         $c->bind(PackageHistoryRepository::class, fn (Container $c) => new PackageHistoryRepository($c->get(Database::class)));
+        $c->bind(PackageThemeRepository::class, fn (Container $c) => new PackageThemeRepository($c->get(Database::class)));
         $c->bind(PackageTransparencyLogRepository::class, fn (Container $c) => new PackageTransparencyLogRepository($c->get(Database::class)));
         $c->bind(ManifestValidator::class, fn () => new ManifestValidator());
         $c->bind(PackageSecurityGate::class, fn (Container $c) => new PackageSecurityGate(
@@ -1190,6 +1227,31 @@ final class App
             (int) $config->get('registry.fetch_timeout_seconds', 10),
         ));
         $c->bind(PackageArtifactStore::class, fn () => new PackageArtifactStore((string) $config->get('packages.storage_path')));
+        $c->bind(ThemeAssetScanner::class, fn () => new ThemeAssetScanner());
+        $c->bind(ThemeBuildService::class, fn (Container $c) => new ThemeBuildService(
+            $c->get(Database::class),
+            $c->get(PackageThemeRepository::class),
+            $c->get(ManifestValidator::class),
+            $c->get(ThemeAssetScanner::class),
+            $c->get(Telemetry::class),
+        ));
+        $c->bind(ThemeStateService::class, fn (Container $c) => new ThemeStateService(
+            $c->get(Database::class),
+            $c->get(PackageThemeRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageArtifactStore::class),
+            $c->get(PackageSecurityGate::class),
+            $c->get(ThemeBuildService::class),
+            $c->get(WriteGate::class),
+            $c->get(ReauthGate::class),
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(Telemetry::class),
+            (bool) $config->get('theme.safe_mode', false),
+        ));
         $c->bind(PackageAcquisitionService::class, fn (Container $c) => new PackageAcquisitionService(
             $c->get(Database::class),
             $c->get(TrustChainVerifier::class),
@@ -1540,6 +1602,9 @@ final class App
 
         // Operator branding (P3-07): dynamic brand stylesheet + admin controls.
         $r->get('/brand.css', [BrandingController::class, 'css']);
+        $r->get('/theme/preview.css', [ThemeController::class, 'previewCss']);
+        $r->get('/theme/{digest}.css', [ThemeController::class, 'css']);
+        $r->get('/theme/asset/{digest}', [ThemeController::class, 'asset']);
         $r->get('/admin/branding', [BrandingController::class, 'form']);
         $r->post('/admin/branding', [BrandingController::class, 'update']);
         $r->get('/admin/tags', [TagController::class, 'admin']);

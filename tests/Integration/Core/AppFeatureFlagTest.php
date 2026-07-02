@@ -173,6 +173,15 @@ final class AppFeatureFlagTest extends TestCase
         }
     }
 
+    public function test_package_themes_flag_gates_public_theme_routes(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => false]);
+
+        $this->assertStatus(404, $this->get('/theme/' . str_repeat('a', 64) . '.css'));
+        $this->assertStatus(404, $this->get('/theme/preview.css'));
+        $this->assertStatus(404, $this->get('/theme/asset/' . str_repeat('a', 64)));
+    }
+
     public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void
     {
         // ADR 0007 appeals still ships as a deploy-dark carryover: its member and

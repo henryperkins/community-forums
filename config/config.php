@@ -255,6 +255,11 @@ return [
         'retention_days' => (int) Env::get('PACKAGES_RETENTION_DAYS', '30'),
     ],
 
+    'theme' => [
+        // Emergency recovery: force the built-in system theme without mutating DB state.
+        'safe_mode' => Env::bool('THEME_SAFE_MODE', false),
+    ],
+
     'giphy' => [
         // Public browser API key only. The app never proxies, caches, rewrites, or
         // downloads GIPHY media; the picker uses GIPHY Search/Trending directly.
