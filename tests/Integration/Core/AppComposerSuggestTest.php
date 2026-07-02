@@ -45,7 +45,7 @@ final class AppComposerSuggestTest extends TestCase
         // auto-commits, so wiping these would leak empty seeds into later tests.
         $preserve = [
             'schema_migrations', 'badges', 'roles', 'identity_providers', 'provider_aliases',
-            'capabilities', 'role_capabilities',
+            'capabilities', 'role_capabilities', 'theme_state',
         ];
         $this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');
         foreach ($this->pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) as $t) {

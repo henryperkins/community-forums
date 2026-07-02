@@ -91,6 +91,10 @@ final class ThemeStateService
     /** @return array<string,mixed>|null */
     public function previewBuildFor(?int $buildId): ?array
     {
+        if ($this->safeMode()) {
+            return null;
+        }
+
         return $buildId !== null ? $this->serveableBuild($buildId) : null;
     }
 

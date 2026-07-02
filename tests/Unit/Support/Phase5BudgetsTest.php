@@ -12,9 +12,9 @@ final class Phase5BudgetsTest extends TestCase
     private const STATISTICS = ['p50', 'p95', 'p99', 'max'];
     private const PHASES = ['foundation', 'inc1', 'inc2', 'inc3', 'inc4', 'inc5', 'inc7', 'inc8', 'inc9', 'gate_b', 'staged-enablement'];
 
-    public function test_catalogue_encodes_all_eleven_d11_budgets(): void
+    public function test_catalogue_encodes_all_d11_budgets_plus_theme_build_apply_derivative(): void
     {
-        self::assertCount(11, Phase5Budgets::all(), 'ADR 0004 D11 lists 11 numeric budgets');
+        self::assertCount(12, Phase5Budgets::all(), 'ADR 0004 D11 lists 11 numeric budgets plus the Inc 4 theme build/apply measurement under the declarative-package umbrella');
     }
 
     public function test_key_targets_match_adr_0004_d11(): void
@@ -26,6 +26,7 @@ final class Phase5BudgetsTest extends TestCase
         self::assertSame(86400, Phase5Budgets::target('registry.snapshot_freshness'));
         self::assertSame(2000, Phase5Budgets::target('registry.fetch_p95'));
         self::assertSame(10000, Phase5Budgets::target('package.install_update_p95'));
+        self::assertSame(10000, Phase5Budgets::target('theme.build_apply_p95'));
         self::assertSame(2000, Phase5Budgets::target('webauthn.ceremony_p95'));
         self::assertSame(2000, Phase5Budgets::target('oidc.discovery_p95_cached'));
         self::assertSame(5000, Phase5Budgets::target('oidc.discovery_p95_cold'));

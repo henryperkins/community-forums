@@ -96,10 +96,16 @@ final class AppThemePackageTest extends TestCase
     {
         $this->setFlags(['package_registry' => true, 'package_themes' => true]);
         $installedId = $this->installedTheme();
-        $admin = $this->adminEntity();
+        $adminRow = $this->makeAdmin(['password' => 'password123']);
+        $admin = $this->userEntity($adminRow);
         $service = $this->themeState();
         $build = $service->activate($admin, 'password123', $installedId);
         $digest = (string) $build['css_digest'];
+
+        $this->actingAs($adminRow);
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+        self::assertStringContainsString('/theme/preview.css', $this->get('/')->body());
+        $this->assertStatus(200, $this->get('/theme/preview.css'));
 
         $service->setSafeMode($admin, true);
 
@@ -107,6 +113,8 @@ final class AppThemePackageTest extends TestCase
         $this->assertStatus(200, $home);
         self::assertStringNotContainsString('/theme/', $home->body());
         $this->assertStatus(404, $this->get('/theme/' . $digest . '.css'));
+        $this->assertStatus(404, $this->get('/theme/preview.css'));
+        $this->assertStatus(404, $this->get('/theme/asset/' . str_repeat('a', 64)));
 
         try {
             $service->setSafeMode($admin, false);

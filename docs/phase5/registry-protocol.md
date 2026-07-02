@@ -1,10 +1,12 @@
-# RetroBoards registry protocol v1 (P5-01/P5-02, Increment 3)
+# RetroBoards registry protocol v1 (P5-01/P5-02/P5-03, Increment 4)
 
-**Status:** Landed 2026-07-02, deploy-dark behind `package_registry`.
+**Status:** Landed 2026-07-02, deploy-dark behind `package_registry` and
+`package_themes`.
 **Scope:** wire contract and verification rules for signed catalogue snapshots,
 advisories, key rotation, release documents, manifest validation, and the
-deploy-dark install/update lifecycle. Enabled packages do not execute until the
-theme and integration runtimes land in later increments.
+deploy-dark install/update lifecycle. Inc 4 adds the declarative theme runtime:
+verified theme packages can build deterministic token-only stylesheets and serve
+them only after explicit operator activation.
 **Authority:** subordinate to `DECISIONS.md` -> `DESIGN.md` -> ADR 0004 (D1-D3)
 -> `docs/phase5/registry-signing-key-custody.md` (A4).
 
@@ -114,6 +116,7 @@ snapshot with `risk` and consent label.
 | `license` | Optional string, max 190 chars. |
 | `core` | Object with `min` and optional `max`; values use `CoreVersion` syntax. Compatibility is enforced during install/update. |
 | `permissions` | Object of permission-kind lists; duplicate `(kind,key)` declarations refuse. |
+| `theme` | Required iff `type` is `theme`; forbidden for every other type. See [Theme Manifest Block](#theme-manifest-block-inc-4). |
 | `settings_schema` | Optional `{"fields":[...]}`; non-empty when present. Field keys are lowercase identifiers; types are `string`, `boolean`, `integer`, or `select`; `required` is boolean; only `select` may declare non-empty string `options`. |
 | `storage_quota_kb` | Integer `0..10240`. |
 | `install.retention_days` | Optional integer `1..365`; otherwise the operator default `PACKAGES_RETENTION_DAYS` applies. |
@@ -130,6 +133,45 @@ Permission vocabulary:
 | `outbound_hosts[]` | `outbound_host` | Explicit lowercase hostnames only; no scheme, wildcard, localhost, or bare label. |
 | `jobs[]` | `job` | Objects with lowercase `name` and schedule `hourly`, `daily`, or `weekly`; declared/consented only until runtime consumers land. |
 
+### Theme Manifest Block (Inc 4)
+
+Theme packages are Gate A declarative packages only: closed design-token
+assignments plus approved local raster assets. They cannot ship selectors,
+stylesheet modules, remote fonts, remote images, JavaScript, PHP, templates, or
+raw CSS.
+
+```json
+{
+  "theme": {
+    "schema_version": 1,
+    "tokens": {"--accent": "#8f3d12", "--radius": "7px", "--surface-texture": "parchment"},
+    "dark_tokens": {"--surface": "#141210"},
+    "assets": [{"name": "parchment", "kind": "png", "sha256": "<hex64>", "data_base64": "..."}]
+  }
+}
+```
+
+Rules:
+
+- `schema_version` must be `1`.
+- `tokens` is required and non-empty; `dark_tokens` is optional. Keys must be in
+  `ThemeTokenPolicy::TOKENS`. Values are capped at 256 bytes and every grammar
+  refuses declaration/selector escapes (`{}`, `;`, `@`, comments, `url(...)`,
+  `expression(...)`, `javascript:`, `data:`, and `!important`).
+- Color tokens are 6-digit hex values. Length tokens are `0` or bounded
+  `px`/`rem`/`em` values. Font tokens are local font-family stacks made from
+  quoted family names and generic CSS family keywords only. Asset tokens must
+  name a declared asset.
+- Assets are optional, max 4 per theme, max 128 KiB decoded per asset and
+  256 KiB total after neutralization. Kinds are `png`, `jpeg`, `gif`, and
+  `webp`; `sha256` is checked against decoded manifest bytes before build.
+- `ThemeAssetScanner` sniffs with `finfo`, decodes with GD, and re-encodes the
+  raster bytes before storage. SVG, kind mismatches, decode failures, and
+  polyglots refuse with `theme_asset`.
+- Contrast is evaluated for light and dark variants against the app.css
+  baseline for partial token sets. Every policy pair must meet 4.5:1 or the
+  build refuses with `theme_contrast`.
+
 Package-policy refusal codes exposed via `PackagePolicyException::$code`:
 
 | Area | Codes |
@@ -138,6 +180,58 @@ Package-policy refusal codes exposed via `PackagePolicyException::$code`:
 | Manifest shape | `manifest_format`, `unknown_field`, `manifest_identity`, `manifest_type`, `manifest_name`, `manifest_field`, `manifest_core`, `settings_schema`, `storage_quota`, `install_policy`, `support_link` |
 | Permission vocabulary | `unknown_capability`, `protected_capability`, `unknown_data_class`, `protected_data_class`, `unknown_api_scope`, `unknown_event`, `outbound_host`, `job_declaration` |
 | Gate policy | `type_forbidden`, `trust_class_forbidden`, `locally_blocked`, `advisory_blocked`, `advisory_revoked`, `review_not_approved` |
+| Theme policy | `theme_missing`, `theme_forbidden`, `theme_schema`, `theme_token`, `theme_asset`, `theme_contrast`, `theme_no_lkg`, `theme_lkg_invalid`, `artifact_tampered`, `invalid_state` |
+
+## Theme Builds & Serving (Inc 4)
+
+Theme builds are content-addressed by deterministic CSS bytes. The cache key is
+`(installed_package_id, source_digest)` where `source_digest` is the verified
+signed `rb-release.v1` digest on the installed package row. The emitted CSS is
+ordered by the code-owned token catalogue and contains no timestamps, locale
+formatting, random IDs, or network references.
+
+Emission format:
+
+```css
+:root{--token:value;}
+[data-theme="dark"]{--token:value;}
+@media (prefers-color-scheme: dark){:root[data-theme="system"]{--token:value;}}
+```
+
+Asset token values are rewritten to same-origin immutable asset URLs:
+`url("/theme/asset/{digest}")`, where `digest` is the sha256 of the neutralized
+stored bytes. `css_digest` is `sha256` of the final CSS bytes.
+
+Activation is transactional. A theme becomes active only after the installed
+package is still enabled, package policy permits enablement, cached release
+bytes exist and hash to the reviewed digest, the manifest validates, the build
+and all assets are stored, and the last-known-good pointer is captured. Any
+failure leaves the prior active theme unchanged.
+
+Cascade precedence is:
+
+1. `/assets/app.css` baseline.
+2. Active or preview package theme stylesheet.
+3. Operator `/brand.css` overrides.
+
+When a package theme is active, `/brand.css` suppresses the built-in retro preset
+layer but still serves operator color overrides and custom CSS, so local
+operator configuration wins over package themes.
+
+Serving contract:
+
+| Route | Success | Cache | 404 conditions |
+|---|---|---|---|
+| `GET /theme/{css_digest}.css` | Active build CSS only, `text/css`, `ETag: "{css_digest}"` | `public, max-age=31536000, immutable` | `package_themes` off; safe mode on; digest malformed; no active build; digest does not equal the active build; active build bytes fail their digest check; owning install no longer `enabled` |
+| `GET /theme/preview.css` | Current admin session preview CSS only, `text/css`, `ETag` of preview digest | `private, no-store` | `package_themes` off; safe mode on; no admin session; no session preview; preview build no longer serveable |
+| `GET /theme/asset/{digest}` | Asset bytes for the current active build only, stored `image/*` MIME, `ETag: "{digest}"` | `public, max-age=31536000, immutable` | `package_themes` off; safe mode on; digest malformed; no active build; asset digest unknown; asset belongs to a non-active build |
+
+Safe mode is independent of `package_themes`. The recovery page
+`/admin/themes/safe-mode` remains available while the flag is off and renders
+with the plain layout, never with package theme CSS. Safe mode can be entered
+from the admin UI without password reauthentication, exited only with password
+reauthentication, and forced by `THEME_SAFE_MODE=1`. While safe mode is on, all
+public theme routes fail dark and the shell links no package theme stylesheet.
 
 ## Verification Rules (Fail Closed)
 
