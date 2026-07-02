@@ -86,15 +86,19 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\FollowRepository;
 use App\Repository\IdempotencyRepository;
+use App\Repository\InstalledPackagePermissionRepository;
+use App\Repository\InstalledPackageRepository;
 use App\Repository\LocalPackageBlockRepository;
 use App\Repository\MfaRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\OAuthIdentityRepository;
 use App\Repository\PackageAdvisoryRepository;
+use App\Repository\PackageHistoryRepository;
 use App\Repository\PackagePublisherRepository;
 use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageRepository;
+use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
@@ -171,6 +175,8 @@ use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
 use App\Service\OAuth\ProviderRegistry;
+use App\Service\Packages\PackageArtifactStore;
+use App\Service\Packages\PackageHealthService;
 use App\Service\PostingService;
 use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
@@ -1136,6 +1142,25 @@ final class App
         $c->bind(PackageReleaseRepository::class, fn (Container $c) => new PackageReleaseRepository($c->get(Database::class)));
         $c->bind(PackageAdvisoryRepository::class, fn (Container $c) => new PackageAdvisoryRepository($c->get(Database::class)));
         $c->bind(LocalPackageBlockRepository::class, fn (Container $c) => new LocalPackageBlockRepository($c->get(Database::class)));
+        $c->bind(InstalledPackageRepository::class, fn (Container $c) => new InstalledPackageRepository($c->get(Database::class)));
+        $c->bind(InstalledPackagePermissionRepository::class, fn (Container $c) => new InstalledPackagePermissionRepository($c->get(Database::class)));
+        $c->bind(PackageHistoryRepository::class, fn (Container $c) => new PackageHistoryRepository($c->get(Database::class)));
+        $c->bind(PackageTransparencyLogRepository::class, fn (Container $c) => new PackageTransparencyLogRepository($c->get(Database::class)));
+        $c->bind(PackageArtifactStore::class, fn () => new PackageArtifactStore((string) $config->get('packages.storage_path')));
+        $c->bind(PackageHealthService::class, fn (Container $c) => new PackageHealthService(
+            $c->get(Database::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackagePermissionRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+            $c->get(LocalPackageBlockRepository::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(PackageArtifactStore::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Telemetry::class),
+        ));
         $c->bind(RegistrySnapshotRepository::class, fn (Container $c) => new RegistrySnapshotRepository($c->get(Database::class)));
         $c->bind(RegistrySnapshotService::class, fn (Container $c) => new RegistrySnapshotService(
             $c->get(Database::class),
@@ -1166,6 +1191,7 @@ final class App
             $c->get(PackageReleaseRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(Telemetry::class),
+            $c->get(PackageHealthService::class),
         ));
         $c->bind(LocalBlocklistService::class, fn (Container $c) => new LocalBlocklistService(
             $c->get(LocalPackageBlockRepository::class),
@@ -1173,6 +1199,7 @@ final class App
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(PackageHealthService::class),
         ));
         $c->bind(RegistryCatalogService::class, fn (Container $c) => new RegistryCatalogService(
             $c->get(PackageRepository::class),

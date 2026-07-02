@@ -255,6 +255,102 @@ final class RepairService
         return $changed;
     }
 
+    public function repairInstalledPackageStates(): int
+    {
+        $fixed = 0;
+        $installs = $this->db->fetchAll(
+            "SELECT ip.id, ip.package_id, ip.state, ip.digest, ip.staged_release_id, ip.staged_digest,
+                    p.package_uid, r.version AS release_version, sr.version AS staged_version
+             FROM installed_packages ip
+             JOIN packages p ON p.id = ip.package_id
+             LEFT JOIN package_releases r ON r.id = ip.release_id
+             LEFT JOIN package_releases sr ON sr.id = ip.staged_release_id
+             WHERE ip.state <> 'uninstalled'",
+        );
+
+        $isBlocked = function (string $digest, string $uid): bool {
+            return (int) $this->db->fetchValue(
+                'SELECT COUNT(*) FROM local_package_blocks
+                 WHERE (digest IS NOT NULL AND digest = :digest)
+                    OR (package_uid IS NOT NULL AND package_uid = :package_uid)',
+                ['digest' => $digest, 'package_uid' => $uid],
+            ) > 0;
+        };
+        $advisoriesFor = function (int $packageId): array {
+            return $this->db->fetchAll(
+                'SELECT advisory_uid, action, affected_digest, affected_version_range
+                 FROM package_advisories WHERE package_id = ?',
+                [$packageId],
+            );
+        };
+        $matchReason = function (array $advisories, array $actions, string $digest, string $version, string $uid) use ($isBlocked): ?string {
+            if ($isBlocked($digest, $uid)) {
+                return 'local blocklist';
+            }
+            foreach ($advisories as $advisory) {
+                if (!in_array((string) $advisory['action'], $actions, true)) {
+                    continue;
+                }
+                $matches = ($advisory['affected_digest'] !== null && $advisory['affected_digest'] !== '')
+                    ? hash_equals((string) $advisory['affected_digest'], $digest)
+                    : (($advisory['affected_version_range'] === null || $advisory['affected_version_range'] === '')
+                        ? true
+                        : ($version !== '' && RegistryAdvisoryService::affectsVersion((string) $advisory['affected_version_range'], $version)));
+                if ($matches) {
+                    return 'advisory ' . (string) $advisory['advisory_uid'] . ' (' . (string) $advisory['action'] . ')';
+                }
+            }
+
+            return null;
+        };
+
+        foreach ($installs as $install) {
+            $advisories = $advisoriesFor((int) $install['package_id']);
+            if ((string) $install['state'] === 'enabled') {
+                $reason = $matchReason(
+                    $advisories,
+                    ['force_disable', 'revoke'],
+                    (string) $install['digest'],
+                    (string) ($install['release_version'] ?? ''),
+                    (string) $install['package_uid'],
+                );
+                if ($reason !== null) {
+                    $this->db->run("UPDATE installed_packages SET state = 'disabled' WHERE id = ?", [(int) $install['id']]);
+                    $this->db->run(
+                        "INSERT INTO package_history (package_id, installed_package_id, event, new_digest, detail)
+                         VALUES (?, ?, 'disable', ?, ?)",
+                        [(int) $install['package_id'], (int) $install['id'], (string) $install['digest'], 'repair reconcile: ' . $reason],
+                    );
+                    $fixed++;
+                }
+            }
+
+            if ($install['staged_digest'] !== null) {
+                $reason = $matchReason(
+                    $advisories,
+                    ['block_new', 'force_disable', 'revoke'],
+                    (string) $install['staged_digest'],
+                    (string) ($install['staged_version'] ?? ''),
+                    (string) $install['package_uid'],
+                );
+                if ($reason !== null) {
+                    $this->db->run(
+                        'UPDATE installed_packages SET staged_release_id = NULL, staged_digest = NULL WHERE id = ?',
+                        [(int) $install['id']],
+                    );
+                    $this->db->run(
+                        "INSERT INTO package_history (package_id, installed_package_id, event, detail)
+                         VALUES (?, ?, 'update_staged', ?)",
+                        [(int) $install['package_id'], (int) $install['id'], 'cancelled: repair reconcile: ' . $reason],
+                    );
+                    $fixed++;
+                }
+            }
+        }
+
+        return $fixed;
+    }
+
     public function repairAll(): array
     {
         return $this->db->transaction(function (): array {
@@ -266,6 +362,7 @@ final class RepairService
                 'protected_owners' => $this->repairProtectedOwners(),
                 'package_latest' => $this->repairPackageLatestReleases(),
                 'package_advisory' => $this->repairPackageAdvisoryStatuses(),
+                'installed_packages' => $this->repairInstalledPackageStates(),
                 'reputation' => $this->repairReputation(),
             ];
             return $out;

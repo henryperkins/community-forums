@@ -15,6 +15,7 @@ use App\Repository\PackageRepository;
 use App\Repository\RegistryTrustKeyRepository;
 use App\Security\Registry\RegistryVerificationException;
 use App\Security\Registry\TrustChainVerifier;
+use App\Service\Packages\PackageHealthService;
 
 /**
  * Signed-advisory ingest and evaluation.
@@ -43,6 +44,7 @@ final class RegistryAdvisoryService
         private PackageReleaseRepository $releases,
         private ModerationLogRepository $audit,
         private ?Telemetry $telemetry = null,
+        private ?PackageHealthService $enforcement = null,
     ) {
     }
 
@@ -166,6 +168,7 @@ final class RegistryAdvisoryService
             'package' => $packageUid !== '' ? $packageUid : null,
             'resolved' => $package !== null,
         ]);
+        $this->enforcement?->enforcePolicy();
 
         return $result;
     }

@@ -11,6 +11,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PackageRepository;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
+use App\Service\Packages\PackageHealthService;
 
 /**
  * Registry-independent local emergency brake. Adding a block is deliberately
@@ -24,6 +25,7 @@ final class LocalBlocklistService
         private ReauthGate $reauth,
         private WriteGate $writeGate,
         private ModerationLogRepository $audit,
+        private ?PackageHealthService $enforcement = null,
     ) {
     }
 
@@ -61,6 +63,7 @@ final class LocalBlocklistService
             'after' => ['digest' => $digest, 'package_uid' => $packageUid],
             'reason' => $cleanReason,
         ]);
+        $this->enforcement?->enforcePolicy();
 
         return $blockId;
     }

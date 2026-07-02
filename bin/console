@@ -20,11 +20,16 @@ use App\Repository\EmailDomainStatusRepository;
 use App\Repository\BadgeRepository;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
+use App\Repository\InstalledPackagePermissionRepository;
+use App\Repository\InstalledPackageRepository;
+use App\Repository\LocalPackageBlockRepository;
 use App\Repository\PackageAdvisoryRepository;
+use App\Repository\PackageHistoryRepository;
 use App\Repository\PackagePublisherRepository;
 use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageRepository;
+use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\RegistrySnapshotRepository;
 use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\SessionRepository;
@@ -49,6 +54,8 @@ use App\Security\SecretBox;
 use App\Security\WriteGate;
 use App\Service\AccountLifecycleService;
 use App\Service\LinkPreviewService;
+use App\Service\Packages\PackageArtifactStore;
+use App\Service\Packages\PackageHealthService;
 use App\Service\Registry\CurlRegistryTransport;
 use App\Service\Registry\RegistryAdvisoryService;
 use App\Service\Registry\RegistrySnapshotService;
@@ -75,6 +82,7 @@ use App\Worker\WebhookDeliveryWorker;
 use App\Worker\IpRetentionPurger;
 use App\Worker\NotificationEmailWorker;
 use App\Worker\OrphanAttachmentCleaner;
+use App\Worker\PackageHealthWorker;
 use App\Worker\RelatedTopicRefreshWorker;
 
 $root = dirname(__DIR__);
@@ -94,6 +102,23 @@ $migrator = static function () use ($config): Migrator {
 
 /** A Database bound to the configured database. */
 $database = static fn (): Database => new Database($config->get('db'));
+
+$packageHealth = static function (Database $db, ?Telemetry $telemetry = null) use ($config): PackageHealthService {
+    return new PackageHealthService(
+        $db,
+        new InstalledPackageRepository($db),
+        new InstalledPackagePermissionRepository($db),
+        new PackageRepository($db),
+        new PackageReleaseRepository($db),
+        new PackageAdvisoryRepository($db),
+        new LocalPackageBlockRepository($db),
+        new PackageHistoryRepository($db),
+        new PackageTransparencyLogRepository($db),
+        new PackageArtifactStore((string) $config->get('packages.storage_path')),
+        new ModerationLogRepository($db),
+        $telemetry,
+    );
+};
 
 $domainVerifier = static fn (Database $db): EmailDomainVerifier => new EmailDomainVerifier(
     $config,
@@ -460,6 +485,7 @@ try {
                 new PackageReleaseRepository($db),
                 new ModerationLogRepository($db),
                 $telemetry,
+                $packageHealth($db, $telemetry),
             );
             $stats = (new RegistryRefreshWorker(
                 new PackageRegistryRepository($db),
@@ -482,6 +508,25 @@ try {
                 $stats['unchanged'],
                 $stats['advisories'],
                 $stats['failed'],
+                $stats['skipped'],
+            ));
+            break;
+
+        case 'worker:packages':
+            $db = $database();
+            $telemetry = new Telemetry($config);
+            $stats = (new PackageHealthWorker(
+                $packageHealth($db, $telemetry),
+                (new FeatureFlags(new SettingRepository($db)))->enabled('package_registry'),
+                $telemetry,
+            ))->run();
+            $log(sprintf(
+                'packages: checked=%d quarantined=%d disabled=%d purged=%d updates=%d skipped=%d',
+                $stats['checked'],
+                $stats['quarantined'],
+                $stats['disabled'],
+                $stats['purged'],
+                $stats['updates'],
                 $stats['skipped'],
             ));
             break;
@@ -635,6 +680,7 @@ try {
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
             $log('  worker:registry-refresh  Fetch + verify enabled package-registry snapshots/advisories (no-op while dark)');
+            $log('  worker:packages       Verify installed package digests, enforce advisories/blocklist, purge lapsed uninstalls');
             $log('  verify:phase5-budgets   Seed the F9 fixture and write the D11 budget report (A3)');
             $log('  verify:resolver-parity  Archive the Inc-1 resolver parity corpus (exit 1 on mismatch)');
             break;
