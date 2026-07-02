@@ -31,6 +31,27 @@ final class TagRepository
         );
     }
 
+    /** @return array<string,mixed>|null */
+    public function visiblePublicBySlug(string $slug): ?array
+    {
+        return $this->db->fetch(
+            "SELECT * FROM tags WHERE slug = ? AND is_enabled = 1 AND visibility = 'public'",
+            [$slug],
+        );
+    }
+
+    public function publicThreadCount(int $tagId): int
+    {
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*)
+             FROM thread_tags tt
+             JOIN threads t ON t.id = tt.thread_id AND t.is_deleted = 0 AND t.is_pending = 0
+             JOIN boards b ON b.id = t.board_id AND b.tags_enabled = 1 AND b.visibility = 'public'
+             WHERE tt.tag_id = ?",
+            [$tagId],
+        );
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function allEnabled(): array
     {

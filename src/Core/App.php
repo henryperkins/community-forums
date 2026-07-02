@@ -775,8 +775,10 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(ThreadRepository::class),
             $c->get(PostRepository::class),
+            $c->get(TagRepository::class),
             $c->get(BoardMemberRepository::class),
             $c->get(BoardPolicy::class),
+            $c->get(FeatureFlags::class)->enabled('tags'),
         ));
         $c->bind(LinkPreviewService::class, fn (Container $c) => new LinkPreviewService(
             $c->get(Database::class),
