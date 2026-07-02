@@ -170,6 +170,7 @@ use App\Service\RepairService;
 use App\Service\ReportService;
 use App\Service\ResolverShadow;
 use App\Service\ReputationLedgerService;
+use App\Service\RoleService;
 use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
 use App\Service\SolvedAnswerService;
@@ -1091,6 +1092,16 @@ final class App
         $c->bind(ResolverShadow::class, fn (Container $c) => new ResolverShadow(
             $c->get(CapabilityResolver::class),
             $c->get(Telemetry::class),
+        ));
+        $c->bind(RoleService::class, fn (Container $c) => new RoleService(
+            $c->get(Database::class),
+            $c->get(RoleRepository::class),
+            $c->get(RoleCapabilityRepository::class),
+            $c->get(CapabilityRepository::class),
+            $c->get(RoleAssignmentRepository::class),
+            $c->get(RoleAssignmentHistoryRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
             $c->get(Database::class),
