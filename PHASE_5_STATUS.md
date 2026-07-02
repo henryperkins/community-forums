@@ -27,8 +27,9 @@ final acceptance pass. The acceptance ADR is renumbered **0013**.
 
 Still dark/inert — no behavior enables. With the §2 entry-gate artifacts **accepted
 2026-07-01** (ADR 0012), the **Foundation increment (F1–F11)** may now proceed as an
-executable TDD plan — the next step. A2 (first named OIDC provider) is still required
-before P5-12 acceptance.
+executable TDD plan — the next step. A2 (first named OIDC provider) is **recorded** —
+GitLab.com, accepted by the owner 2026-07-02 (`docs/phase5/first-oidc-provider.md`);
+P5-12/Inc 8 is no longer decision-blocked.
 
 ## What this increment is (and is not)
 
@@ -265,6 +266,10 @@ This instruction accepts ADR 0004 as the Milestone-0 decision record using its
 recommended defaults unless a later owner scope-change record overrides them. It
 also accepts the Phase 4 engineering closeout and ADR 0003 deferrals as explicit
 carryovers, not shipped behavior.
+
+**A2 accepted 2026-07-02:** the owner named **GitLab.com** as the first
+additional OIDC provider (`docs/phase5/first-oidc-provider.md`) — the last open
+§2 entry-gate decision; P5-12/Inc 8 end-to-end acceptance is decision-unblocked.
 
 ## Blocking conflicts surfaced (R0 — need a Milestone-0 decision)
 
