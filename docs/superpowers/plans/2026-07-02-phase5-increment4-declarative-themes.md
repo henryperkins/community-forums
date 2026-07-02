@@ -392,7 +392,9 @@ final class ThemeTokenPolicy
             ['fg' => '--text', 'bg' => '--surface-2', 'min' => 4.5],
             ['fg' => '--text-muted', 'bg' => '--surface', 'min' => 4.5],
             ['fg' => '--accent-contrast', 'bg' => '--accent', 'min' => 4.5],
-            ['fg' => '--text-inverse', 'bg' => '--brand', 'min' => 4.5],
+            // Plan correction (Task 1 execution): --text-inverse on --brand mismodeled the palette
+            // (dark baseline itself fails 3.04:1); the real 'text on brand-tinted fill' pairing is:
+            ['fg' => '--on-brand-subtle', 'bg' => '--brand-subtle', 'min' => 4.5],
         ];
     }
 
