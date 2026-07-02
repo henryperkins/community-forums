@@ -7,6 +7,16 @@ async function visit(page: Page, url: string): Promise<void> {
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
+async function openPackageDetailByUid(page: Page, uid: string): Promise<string> {
+  await visit(page, '/admin/packages');
+  const row = page.locator('table.audit tbody tr').filter({ hasText: uid }).first();
+  await expect(row).toBeVisible();
+  await row.getByRole('link', { name: 'Details' }).click();
+  await page.waitForURL(/\/admin\/packages\/\d+$/);
+
+  return new URL(page.url()).pathname;
+}
+
 async function login(page: Page, email: string): Promise<void> {
   await page.goto('/login');
   await page.fill('input[name="email"]', email);
@@ -102,6 +112,16 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
 
   await visit(page, '/admin/registries');
   await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  const packageDetailPath = await openPackageDetailByUid(page, 'acme/consent-demo');
+  await expect(page.getByRole('heading', { name: 'Consent Demo Theme' })).toBeVisible();
+  await expect(page.getByText('permissions await consent')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, `${packageDetailPath}/consent`);
+  await expect(page.getByRole('heading', { name: 'Consent to permissions' })).toBeVisible();
+  await expect(page.getByText('Store its own settings and data', { exact: false })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/roles/simulator');

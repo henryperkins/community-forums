@@ -361,6 +361,12 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .field { display: block; margin-bottom: 14px; }
 .field > span { display: block; font-weight: 600; margin-bottom: 5px; font-size: .9rem; }
 .field-error { color: var(--danger); font-size: .85rem; margin: 4px 0; }
+.field-error a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: .08em;
+    text-underline-offset: .18em;
+}
 .stacked .field, .stacked label { display: block; margin-bottom: 14px; }
 .stacked input[type="email"],
 .stacked input[type="number"],
@@ -2161,6 +2167,10 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+.admin .table-scroll:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 .admin .table-scroll > .audit {
     min-width: 760px;

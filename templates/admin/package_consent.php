@@ -34,7 +34,7 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
             <?php if ($staged_plan['diff']['added'] === []): ?>
                 <p class="muted">No new permissions.</p>
             <?php else: ?>
-                <div class="table-scroll">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="New package permissions">
                 <table class="audit">
                     <thead><tr><th>Permission</th><th>Risk</th></tr></thead>
                     <tbody>
@@ -74,7 +74,7 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
             <?php if ($pending_permissions === []): ?>
                 <p class="muted">No pending grants.</p>
             <?php else: ?>
-                <div class="table-scroll">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="Pending package permissions">
                 <table class="audit">
                     <thead><tr><th>Permission</th><th>Risk</th></tr></thead>
                     <tbody>

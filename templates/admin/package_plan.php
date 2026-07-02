@@ -53,7 +53,7 @@ $this->section('title', 'Install plan: ' . $package['name']);
         <?php if ($plan['permissions'] === []): ?>
             <p class="muted">No permissions declared.</p>
         <?php else: ?>
-            <div class="table-scroll">
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Package permission preview">
             <table class="audit">
                 <thead><tr><th>Permission</th><th>Risk</th></tr></thead>
                 <tbody>

@@ -54,6 +54,18 @@ async function visit(page: Page, url: string): Promise<void> {
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
+function lifecyclePackageUid(info: TestInfo): string {
+  return info.project.name === 'mobile' ? 'acme/midnight-theme-mobile' : 'acme/midnight-theme';
+}
+
+async function openLifecyclePackageDetail(page: Page, info: TestInfo): Promise<void> {
+  await visit(page, '/admin/packages');
+  const row = page.locator('table.audit tbody tr').filter({ hasText: lifecyclePackageUid(info) }).first();
+  await expect(row).toBeVisible();
+  await row.getByRole('link', { name: 'Details' }).click();
+  await page.waitForURL(/\/admin\/packages\/\d+$/);
+}
+
 async function login(page: Page, email: string): Promise<void> {
   await page.goto('/login');
   await page.fill('input[name="email"]', email);
@@ -251,18 +263,53 @@ test('package registry: staff-only read-only catalogue browse (Inc 2)', async ({
 
   await visit(page, '/admin/packages');
   await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
-  await expect(page.locator('code', { hasText: 'acme/midnight-theme' }).first()).toBeVisible();
-  await expect(page.getByText('Install does not exist yet')).toBeVisible();
+  await expect(page.locator('code', { hasText: lifecyclePackageUid(info) }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Details' }).first()).toBeVisible();
   await shot(page, info, '32-admin-package-catalogue');
 
-  await page.getByRole('link', { name: 'Details' }).first().click();
+  await openLifecyclePackageDetail(page, info);
   await expect(page.getByRole('heading', { name: /Releases \(immutable/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Install plan' })).toBeVisible();
   await shot(page, info, '33-admin-package-detail');
 
   await visit(page, '/admin/registries');
   await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
   await expect(page.getByText('Local blocklist', { exact: false }).first()).toBeVisible();
   await shot(page, info, '34-admin-registry-trust');
+});
+
+test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  await openLifecyclePackageDetail(page, info);
+
+  await page.getByRole('button', { name: 'Install plan' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: /^Install plan - / })).toBeVisible();
+  await expect(page.getByText('Store its own settings and data', { exact: false })).toBeVisible();
+  await shot(page, info, '35-admin-package-install-plan');
+
+  await page.fill('input[name="current_password"]', 'password123');
+  await page.getByRole('button', { name: /Install/ }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Consent to permissions' })).toBeVisible();
+  await shot(page, info, '36-admin-package-consent');
+
+  await page.fill('input[name="current_password"]', 'password123');
+  await page.getByRole('button', { name: 'Grant and continue' }).click();
+
+  await page.fill('form[action$="/enable"] input[name="current_password"]', 'password123');
+  await page.locator('form[action$="/enable"] button[type="submit"]').click();
+  await expect(page.getByText('Enabled')).toBeVisible();
+  await shot(page, info, '37-admin-package-enabled');
+
+  await page.fill('form[action$="/update"] input[name="current_password"]', 'password123');
+  await page.locator('form[action$="/update"] button[type="submit"]').click();
+  await expect(page.getByRole('heading', { level: 1, name: /^Approve update to / })).toBeVisible();
+  await expect(page.getByText('api.example.com')).toBeVisible();
+  await shot(page, info, '38-admin-package-update-diff');
+
+  await page.fill('input[name="current_password"]', 'password123');
+  await page.getByRole('button', { name: 'Grant and continue' }).click();
+  await expect(page.getByRole('row', { name: /^Version 1\.1\.0$/ })).toBeVisible();
 });
 
 test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {

@@ -209,19 +209,87 @@ $ensureShortcutPoll = static function () use ($db, $users): bool {
 
     return true;
 };
-$ensureRegistryFixtures = static function () use ($db): bool {
+$ensureRegistryFixtures = static function () use ($db, $config, $users): bool {
     $db->transaction(function () use ($db): void {
         $db->run("DELETE FROM package_advisories WHERE advisory_uid LIKE 'RB-TEST-%'");
         $db->run("DELETE FROM local_package_blocks WHERE reason = 'Evidence blocklist entry'");
         $db->run("DELETE FROM packages WHERE package_uid LIKE 'acme/%'");
-        $db->run("DELETE FROM package_publishers WHERE publisher_uid = 'acme'");
-        $db->run("DELETE FROM package_registries WHERE source_id = 'rb-test'");
+        $db->run("DELETE FROM package_publishers WHERE publisher_uid LIKE 'acme%'");
+        $db->run("DELETE FROM package_registries WHERE source_id IN ('rb-test', 'rb-test-mobile', 'rb-consent')");
     });
 
+    $artifactDir = (string) $config->get('packages.storage_path');
     $registryRoot = \Tests\Support\Phase5\SigningHarness::generate('root-1');
-    $registryIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot);
-    (new \App\Repository\PackageRegistryRepository($db))->setEnabled($registryIds['registry_id'], true);
-    (new \App\Repository\PackageRepository($db))->setLatestRelease($registryIds['package_id'], $registryIds['release_id']);
+    $registries = new \App\Repository\PackageRegistryRepository($db);
+    $packages = new \App\Repository\PackageRepository($db);
+    $releases = new \App\Repository\PackageReleaseRepository($db);
+
+    $registryIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir);
+    $mobileIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir, [
+        'source_id' => 'rb-test-mobile',
+        'publisher_uid' => 'acme-mobile',
+        'package_uid' => 'acme/midnight-theme-mobile',
+        'name' => 'Midnight Theme Mobile',
+    ]);
+
+    foreach ([$registryIds, $mobileIds] as $ids) {
+        $registries->setEnabled($ids['registry_id'], true);
+        $packages->setLatestRelease($ids['package_id'], $ids['release_id']);
+    }
+
+    \Tests\Support\Phase5\RegistryFixtures::seedRelease($db, $registryRoot, $registryIds, [
+        'uid' => 'acme/midnight-theme',
+        'version' => '1.1.0',
+        'manifest' => ['permissions' => [
+            'data_classes' => ['package.own_storage'],
+            'outbound_hosts' => ['api.example.com'],
+        ]],
+    ], $artifactDir);
+    \Tests\Support\Phase5\RegistryFixtures::seedRelease($db, $registryRoot, $mobileIds, [
+        'uid' => 'acme/midnight-theme-mobile',
+        'version' => '1.1.0',
+        'manifest' => ['name' => 'Midnight Theme Mobile', 'permissions' => [
+            'data_classes' => ['package.own_storage'],
+            'outbound_hosts' => ['api.example.com'],
+        ]],
+    ], $artifactDir);
+    $packages->setLatestRelease($registryIds['package_id'], $registryIds['release_id']);
+    $packages->setLatestRelease($mobileIds['package_id'], $mobileIds['release_id']);
+
+    $consentIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir, [
+        'source_id' => 'rb-consent',
+        'publisher_uid' => 'acme-consent',
+        'package_uid' => 'acme/consent-demo',
+        'name' => 'Consent Demo Theme',
+    ]);
+    $registries->setEnabled($consentIds['registry_id'], true);
+    $packages->setLatestRelease($consentIds['package_id'], $consentIds['release_id']);
+
+    $admin = $users->findByUsername('admin');
+    if ($admin !== null) {
+        $package = $packages->find($consentIds['package_id']);
+        $release = $releases->find($consentIds['release_id']);
+        if ($package !== null && $release !== null) {
+            $installedId = (new \App\Repository\InstalledPackageRepository($db))->create([
+                'package_id' => (int) $package['id'],
+                'release_id' => (int) $release['id'],
+                'digest' => (string) $release['digest'],
+                'source_registry_id' => (int) $consentIds['registry_id'],
+                'publisher_id' => (int) $consentIds['publisher_id'],
+                'trust_class' => (string) $package['trust_class'],
+                'review_status' => (string) $release['review_status'],
+                'compat_min' => $release['core_min'] !== null ? (string) $release['core_min'] : null,
+                'compat_max' => $release['core_max'] !== null ? (string) $release['core_max'] : null,
+                'installed_by' => (int) $admin['id'],
+            ]);
+            $permission = \App\Security\Packages\PermissionDiff::describe('data_class', 'package.own_storage');
+            (new \App\Repository\InstalledPackagePermissionRepository($db))->replaceDeclared($installedId, [[
+                'kind' => 'data_class',
+                'key' => 'package.own_storage',
+                'risk' => $permission['risk'],
+            ]]);
+        }
+    }
 
     $advisory = $registryRoot->mintAdvisory([
         'action' => 'warn',

@@ -26,7 +26,7 @@ $this->section('title', 'Registry trust');
                 Last verified snapshot <?= $e($reg['latest_snapshot']['generated_at']) ?> UTC; expires <?= $e($reg['latest_snapshot']['expires_at']) ?> UTC.
             <?php else: ?>No verified snapshot yet.<?php endif; ?></p>
 
-        <div class="table-scroll table-scroll-wide">
+        <div class="table-scroll table-scroll-wide" tabindex="0" role="region" aria-label="<?= $e('Signing keys for ' . $reg['display_name']) ?>">
         <table class="audit">
             <thead><tr><th>Key id</th><th>Status</th><th>Window</th><th>Fingerprint</th><th></th></tr></thead>
             <tbody>
@@ -130,7 +130,7 @@ $this->section('title', 'Registry trust');
 
     <section class="card">
         <h2>Local blocklist (registry-independent)</h2>
-        <div class="table-scroll table-scroll-wide">
+        <div class="table-scroll table-scroll-wide" tabindex="0" role="region" aria-label="Local blocklist entries">
         <table class="audit">
             <thead><tr><th>Digest</th><th>Package uid</th><th>Reason</th><th></th></tr></thead>
             <tbody>
@@ -165,7 +165,7 @@ $this->section('title', 'Registry trust');
     <section class="card">
         <h2>Advisories</h2>
         <?php if ($advisories === []): ?><p class="muted">None ingested.</p><?php else: ?>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Registry advisories">
         <table class="audit">
             <thead><tr><th>Advisory</th><th>Package</th><th>Severity</th><th>Action</th><th>Acknowledged</th><th></th></tr></thead>
             <tbody>

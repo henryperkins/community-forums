@@ -16,12 +16,23 @@ use App\Core\Database;
  */
 final class RegistryFixtures
 {
-    /** @return array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int,release_digest:string,release_document:string} */
-    public static function seed(Database $db, SigningHarness $root, ?string $artifactDir = null): array
+    /**
+     * @param array<string,mixed> $overrides
+     * @return array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int,release_digest:string,release_document:string}
+     */
+    public static function seed(Database $db, SigningHarness $root, ?string $artifactDir = null, array $overrides = []): array
     {
+        $sourceId = (string) ($overrides['source_id'] ?? 'rb-test');
+        $publisherUid = (string) ($overrides['publisher_uid'] ?? 'acme');
+        $publisherName = (string) ($overrides['publisher_name'] ?? 'Acme Themes');
+        $packageUid = (string) ($overrides['package_uid'] ?? 'acme/midnight-theme');
+        $packageName = (string) ($overrides['name'] ?? 'Midnight Theme');
+        $packageType = (string) ($overrides['type'] ?? 'theme');
+        $trustClass = (string) ($overrides['trust_class'] ?? 'reviewed_declarative');
+
         $registryId = $db->insert(
             'INSERT INTO package_registries (source_id, display_name, base_url, is_enabled) VALUES (?, ?, ?, 0)',
-            ['rb-test', 'RB Test Registry', 'https://registry.invalid'],
+            [$sourceId, (string) ($overrides['display_name'] ?? 'RB Test Registry'), 'https://registry.invalid'],
         );
 
         $trustKeyId = $db->insert(
@@ -31,15 +42,23 @@ final class RegistryFixtures
 
         $publisherId = $db->insert(
             'INSERT INTO package_publishers (publisher_uid, display_name, verified_at) VALUES (?, ?, UTC_TIMESTAMP())',
-            ['acme', 'Acme Themes'],
+            [$publisherUid, $publisherName],
         );
 
         $packageId = $db->insert(
             'INSERT INTO packages (package_uid, registry_id, publisher_id, name, type, trust_class) VALUES (?, ?, ?, ?, ?, ?)',
-            ['acme/midnight-theme', $registryId, $publisherId, 'Midnight Theme', 'theme', 'reviewed_declarative'],
+            [$packageUid, $registryId, $publisherId, $packageName, $packageType, $trustClass],
         );
 
-        $release = $root->mintRelease();
+        $releaseOverrides = (array) ($overrides['release'] ?? []);
+        $manifestOverrides = (array) ($releaseOverrides['manifest'] ?? []);
+        $releaseOverrides['uid'] = $packageUid;
+        $releaseOverrides['manifest'] = $manifestOverrides + [
+            'uid' => $packageUid,
+            'name' => $packageName,
+            'type' => $packageType,
+        ];
+        $release = $root->mintRelease($releaseOverrides);
         $releaseId = $db->insert(
             'INSERT INTO package_releases (package_id, version, digest, source_url, license, core_min, core_max, manifest_json, signature, signed_key_id, review_status, channel, advisory_status, published_at)'
             . ' VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, \'approved\', \'stable\', \'none\', UTC_TIMESTAMP())',

@@ -60,7 +60,7 @@ foreach ($installed_permissions as $permission) {
 
     <section class="card">
         <h2>Releases (immutable: any changed byte is a new release)</h2>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Package releases">
         <table class="audit">
             <thead><tr><th>Version</th><th>Channel</th><th>Digest (sha256)</th><th>Signed by</th><th>Review</th><th>Core range</th><th>Advisory</th></tr></thead>
             <tbody>
@@ -222,7 +222,7 @@ foreach ($installed_permissions as $permission) {
             <?php if (($permission_labels ?? []) === []): ?>
                 <p class="muted">No permissions declared.</p>
             <?php else: ?>
-                <div class="table-scroll">
+                <div class="table-scroll" tabindex="0" role="region" aria-label="Installed package permissions">
                 <table class="audit">
                     <thead><tr><th>Permission</th><th>Risk</th><th>Granted</th></tr></thead>
                     <tbody>
@@ -245,7 +245,7 @@ foreach ($installed_permissions as $permission) {
         <?php if (($history ?? []) === []): ?>
             <p class="muted">No lifecycle history recorded for this package.</p>
         <?php else: ?>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Package lifecycle history">
         <table class="audit">
             <thead><tr><th>Event</th><th>Versions</th><th>Digest</th><th>Stage</th><th>Detail</th><th>When</th></tr></thead>
             <tbody>
@@ -270,7 +270,7 @@ foreach ($installed_permissions as $permission) {
         <?php if ($advisories === []): ?>
             <p class="muted">No advisories recorded for this package.</p>
         <?php else: ?>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Package advisories">
         <table class="audit">
             <thead><tr><th>Advisory</th><th>Severity</th><th>Action</th><th>Affected</th><th>Acknowledged</th></tr></thead>
             <tbody>

@@ -31,7 +31,7 @@ $this->section('title', 'Package catalogue');
         <?php if ($data['packages'] === []): ?>
             <p class="muted">No packages yet. Pin a trust key, enable the registry, and run the refresh worker.</p>
         <?php else: ?>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Package catalogue">
         <table class="audit">
             <thead><tr><th>Package</th><th>Type</th><th>Install</th><th>Trust class</th><th>Latest</th><th>Compatibility</th><th>Advisory</th><th></th></tr></thead>
             <tbody>
