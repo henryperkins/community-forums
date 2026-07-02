@@ -107,6 +107,18 @@ final class AppFeatureFlagTest extends TestCase
         self::assertFalse($overridden->enabled('passkeys'), 'enabling one Phase 5 flag must not enable others');
     }
 
+    public function test_capabilities_flag_gates_role_routes(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $this->assertStatus(404, $this->get('/admin/roles'));
+
+        $this->setFlags(['capabilities' => true]);
+        self::assertNotSame(404, $this->get('/admin/roles')->status());
+
+        $this->setFlags(['capabilities' => false]);
+        $this->assertStatus(404, $this->get('/admin/roles'));
+    }
+
     public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void
     {
         // ADR 0007 (appeals) + ADR 0006 (account lifecycle/export/delete) ship as
