@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Core\Database;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
+use App\Service\Registry\RegistryAdvisoryService;
 
 /**
  * Idempotent counter reconciliation / repair (PHASE_2_PLAN §2 "all denormalised
@@ -181,6 +182,79 @@ final class RepairService
         return (new ProtectedOwnerRepository($this->db))->designateOrReactivate((int) $adminId, null) ? 1 : 0;
     }
 
+    /**
+     * Recompute packages.latest_release_id: highest stable version per package,
+     * matching RegistrySnapshotService::latestStableId.
+     */
+    public function repairPackageLatestReleases(): int
+    {
+        $changed = 0;
+        foreach ($this->db->fetchAll('SELECT id, latest_release_id FROM packages') as $package) {
+            $best = null;
+            foreach ($this->db->fetchAll("SELECT id, version FROM package_releases WHERE package_id = ? AND channel = 'stable'", [(int) $package['id']]) as $release) {
+                if ($best === null || version_compare((string) $release['version'], (string) $best['version'], '>')) {
+                    $best = $release;
+                }
+            }
+
+            $target = $best === null ? null : (int) $best['id'];
+            $current = $package['latest_release_id'] === null ? null : (int) $package['latest_release_id'];
+            if ($target !== $current) {
+                $this->db->run('UPDATE packages SET latest_release_id = ? WHERE id = ?', [$target, (int) $package['id']]);
+                $changed++;
+            }
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Recompute package and release advisory_status from cached advisories,
+     * matching RegistryAdvisoryService's escalate-only fold.
+     */
+    public function repairPackageAdvisoryStatuses(): int
+    {
+        $changed = 0;
+        foreach ($this->db->fetchAll('SELECT id, advisory_status FROM packages') as $package) {
+            $packageId = (int) $package['id'];
+            $advisories = $this->db->fetchAll('SELECT * FROM package_advisories WHERE package_id = ?', [$packageId]);
+
+            $status = 'none';
+            foreach ($advisories as $advisory) {
+                $status = RegistryAdvisoryService::escalate(
+                    $status,
+                    RegistryAdvisoryService::ACTION_STATUS[(string) $advisory['action']] ?? 'none',
+                );
+            }
+            if ($status !== (string) $package['advisory_status']) {
+                $this->db->run('UPDATE packages SET advisory_status = ? WHERE id = ?', [$status, $packageId]);
+                $changed++;
+            }
+
+            foreach ($this->db->fetchAll('SELECT id, version, digest, advisory_status FROM package_releases WHERE package_id = ?', [$packageId]) as $release) {
+                $releaseStatus = 'none';
+                foreach ($advisories as $advisory) {
+                    $digest = $advisory['affected_digest'] ?? null;
+                    $hit = $digest !== null
+                        ? hash_equals((string) $digest, (string) $release['digest'])
+                        : RegistryAdvisoryService::affectsVersion($advisory['affected_version_range'] ?? null, (string) $release['version']);
+                    if ($hit) {
+                        $releaseStatus = RegistryAdvisoryService::escalate(
+                            $releaseStatus,
+                            RegistryAdvisoryService::ACTION_STATUS[(string) $advisory['action']] ?? 'none',
+                        );
+                    }
+                }
+                if ($releaseStatus !== (string) $release['advisory_status']) {
+                    $this->db->run('UPDATE package_releases SET advisory_status = ? WHERE id = ?', [$releaseStatus, (int) $release['id']]);
+                    $changed++;
+                }
+            }
+        }
+
+        return $changed;
+    }
+
     public function repairAll(): array
     {
         return $this->db->transaction(function (): array {
@@ -190,6 +264,8 @@ final class RepairService
                 'board_counters' => $this->repairBoardCounters(),
                 'thread_statuses' => $this->repairThreadStatuses(),
                 'protected_owners' => $this->repairProtectedOwners(),
+                'package_latest' => $this->repairPackageLatestReleases(),
+                'package_advisory' => $this->repairPackageAdvisoryStatuses(),
                 'reputation' => $this->repairReputation(),
             ];
             return $out;
