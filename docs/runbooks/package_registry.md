@@ -1,60 +1,107 @@
-# Runbook: `package_registry` (Phase 5 Increment 2, Deploy-Dark)
+# Runbook: `package_registry` (Phase 5 Increment 3, Deploy-Dark)
 
-**State:** default off. Enabling provides staff-only read-only catalogue browse,
-the registry trust console, and the refresh worker. Install does not exist until
-Inc 3.
+**State:** default off. Enabling provides staff-only catalogue browse, registry
+trust controls, signed release acquisition, install/consent/enable/update/
+rollback/uninstall/export flows, and the registry/package workers. Package rows
+remain inert: an enabled package is eligibility only and no theme/integration
+runtime executes until later increments.
 
 ## Enable / Disable / Rollback
 
-- Enable (staged section 13.1 step 3): set `features.package_registry=true` in
-  the settings `features` JSON. Surfaces: `/admin/packages`, `/admin/registries`;
-  worker `worker:registry-refresh` starts acting.
-- Rollback: set the flag false. Routes return 404, the worker no-ops, rows stay
-  inert. A registry rollback never rewrites recorded digests (section 13.2).
+- Enable: set `features.package_registry=true` in the settings `features` JSON.
+  Surfaces: `/admin/packages`, `/admin/registries`; workers
+  `worker:registry-refresh` and `worker:packages` start acting.
+- Rollback: set the flag false. Routes return 404, both workers no-op, verified
+  release bytes and install rows remain inert for investigation or later resume.
 - Independent of the flag: `package_registries.is_enabled=0` disables one source
-  without a password. The local blocklist always works.
+  without a password. The local blocklist and package disable/pin/export actions
+  stay the low-friction emergency controls.
 
 ## Cron
 
 ```cron
 */30 * * * * php bin/console worker:registry-refresh
+0 * * * * php bin/console worker:packages
 ```
 
-The freshness window is 24h (D2), so twice-hourly refresh gives headroom. The
-worker is idempotent: unchanged snapshots are no-ops.
+`worker:registry-refresh` fetches signed snapshots/advisories. `worker:packages`
+verifies installed release bytes, enforces local blocklist/advisories, reports
+notify-policy updates, and purges uninstalled rows after retention lapses. Both
+commands no-op while `package_registry` is dark.
 
-## Outage / Staleness
+## Install / Consent / Enable
 
-A stale snapshot (`Stale snapshot` banner on `/admin/packages`) blocks nothing in
-Inc 2 except freshness checks; cached signed metadata stays browsable from
-`registry_snapshots`. From Inc 3 onward, stale means no new install decisions.
+1. Open `/admin/packages`, choose a package, and review the pinned registry,
+   trust class, latest release, advisory state, and stale-snapshot banner.
+2. Choose **Review install plan**. This verifies or fetches the signed
+   `rb-release.v1` document, checks the snapshot-pinned digest, validates the
+   embedded `rb-manifest.v2`, and renders the permission/risk summary.
+3. Submit **Install** with password reauthentication. The row is written only
+   after validation succeeds; refusal tests depend on that validate-first rule.
+4. Review the consent page and submit **Grant permissions** with password
+   reauthentication.
+5. Submit **Enable** with password reauthentication. In Inc 3 this records
+   eligibility only; nothing executes.
 
-Diagnose by running the worker manually, checking telemetry `registry.refresh`
-events, and reading EgressGuard messages.
+`install`, `consent`, `enable`, `update`, `rollback`, and `uninstall` require
+password reauthentication. `disable`, `pin`, `export`, update-policy changes,
+cancel staged update, and `reverify` are reauth-free by design for emergency or
+low-friction operation.
 
-## Key Ceremonies
+## Updates
 
-Custody, rotation, and revocation procedures live in
-`docs/phase5/registry-signing-key-custody.md` section 5 (A4). Console mappings:
+- Update policy is `manual` or `notify` only; there is no auto-update in Gate A.
+- **Check for update / Update** verifies the target release. If permissions only
+  shrink, the update applies immediately. If permissions are added or risk
+  increases, the update is staged and the consent page shows the added/removed/
+  unchanged diff.
+- **Approve staged update** requires password reauthentication and re-checks the
+  digest before switching. **Cancel staged update** clears the stage without
+  reauth.
+- **Pin** blocks updates until unpinned.
 
-- Pin (initial setup section 5.1): `/admin/registries` -> "Pin a new public key"
-  (password required).
-- Rotate (section 5.3): paste the signed `rb-key-rotation.v1` envelope
-  (password required).
-- Revoke (section 5.4): per-key Revoke button (password and reason required).
-  Everything signed by the key immediately fails closed.
+## Rollback
+
+Rollback targets are only previously activated releases whose verified
+content-addressed bytes still exist locally. The service refuses a rollback to
+an unknown digest or a missing/tampered artifact. If rollback adds permissions it
+is staged for re-consent; otherwise it applies immediately after password
+reauthentication.
+
+## Uninstall / Export / Retention
+
+- **Export** downloads the install snapshot, permissions, package metadata, and
+  history as JSON without password reauthentication.
+- **Uninstall** requires password reauthentication, disables first, records an
+  export snapshot, removes permission grants, marks the row uninstalled, and sets
+  `retention_until` from manifest `install.retention_days` or
+  `PACKAGES_RETENTION_DAYS` (default 30).
+- `worker:packages` purges retained rows and removes cached release bytes after
+  the retention window lapses.
+
+## Quarantine Response
+
+1. Inspect the package detail page and history for the quarantine reason.
+2. Restore the exact signed release bytes at
+   `PACKAGES_STORAGE_PATH/{digest}.json` from the registry or backup.
+3. Use **Re-verify**. It only marks health OK when the cached bytes hash to the
+   installed digest.
+4. Re-enable manually if appropriate. Re-verify never auto-enables a package.
 
 ## Emergency Response
 
-1. Block first: `/admin/registries` -> Local blocklist -> digest or package uid.
-   No password is required because the brake must not wait. Applies regardless
-   of registry state.
-2. Then escalate: ingest or acknowledge advisories, revoke keys, disable the
-   registry source, or dark the flag in whatever order the incident needs.
-3. Unblocking requires reauthentication and is audited.
+1. Disable the installed package, pin it, or add a local blocklist row first.
+   These controls are reauth-free so the brake does not wait.
+2. Escalate as needed: acknowledge or ingest advisories, revoke keys, disable
+   the registry source, or dark the `package_registry` flag.
+3. `force_disable` and `revoke` advisories are enforced by `worker:packages` for
+   enabled installs. `block_new`, `force_disable`, and `revoke` cancel blocked
+   staged updates.
+4. Unblocking requires deliberate operator action and audited state changes.
 
 ## Repair
 
-`php bin/console repair` also reconciles `packages.latest_release_id` and
+`php bin/console repair` reconciles `packages.latest_release_id` and
 package/release `advisory_status` from authoritative rows (`package_latest`,
-`package_advisory` in the output).
+`package_advisory` in the output). Use it after manual DB repair or restored
+snapshots, then run `worker:packages` once to verify cached artifacts and policy.

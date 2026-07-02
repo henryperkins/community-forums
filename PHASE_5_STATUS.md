@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow) landed 2026-07-02: `CapabilityResolver` + legacy-authority projection behind the dark `capabilities` flag, fail-open `ResolverShadow` on `canModerate`/`canPost`, a ZERO-mismatch archived parity corpus (`docs/evidence/phase5/resolver-parity.md`), `resolver.p95` MEASURED vs the 5ms D11 budget, and the no-JS role editor + permission simulator with browser/axe evidence. Increment 2 (P5-01 registry protocol + package identity) landed 2026-07-02 behind the dark `package_registry` flag: signed registry metadata, staff read-only browse, trust console, refresh worker, advisory/blocklist response, and no install path until Inc 3. Increment 6 (enforcement cutover) stays blocked until shadow soak. Package install/manifest/lifecycle, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
+**Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow), Increment 2 (P5-01 registry protocol + package identity), and Increment 3 (P5-02 package install/manifest/lifecycle) landed 2026-07-02 behind dark flags. Inc 3 adds signed release acquisition, strict `rb-manifest.v2` validation, install/consent/enable/disable/update/rollback/uninstall/export, package health enforcement, and no-JS browser/axe evidence behind `package_registry`. It is still deploy-dark: enabled packages record eligibility only, execute nothing until Inc 4 themes/Inc 5 integrations, and the publisher console remains Inc 5. Increment 6 (enforcement cutover) stays blocked until shadow soak. Passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
 **Last updated:** 2026-07-02
-**Branch:** `phase5-inc2-registry-protocol`
-**Suite:** `composer test` -> **1032 tests / 5441 assertions, green** on two consecutive runs (fresh and reused-schema paths, 2026-07-02). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php` -> **3 tests / 25 assertions**, `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` -> **4 tests / 8 assertions**, `APP_ENV=testing php bin/console verify:resolver-parity` -> **1551 tuples / 0 mismatches**, `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 MEASURED (PASS) 0.5608 ms; registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**, `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** (local grants could not create `retroboards_upgrade_rehearsal`; `retroboards_e2e` was used as the throwaway DB), `tests/backup/rehearse.sh` host mode -> **106 tables / 273 rows / 169326-byte backup restored byte-for-byte and booted**. Browser evidence: `npm run evidence` -> **33 passed / 1 skipped**, focused registry journey -> **2 passed**, `npm run a11y` -> **8 passed** across desktop + mobile.
+**Branch:** `phase5-inc3-package-lifecycle`
+**Suite:** Closeout gates green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/MigrationLedgerTest.php` -> **12 tests / 53 assertions**. `RB_TEST_FRESH=1 composer test` -> **1170 tests / 6032 assertions**. `composer test` -> **1170 tests / 6032 assertions** on two consecutive reused-schema runs. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.5223 ms MEASURED (PASS); package.install_update_p95 47.1601 ms MEASURED (PASS); resolver.p95 3.4299 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0070`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 3: `npm run evidence` -> **51 passed / 1 skipped** and `npm run a11y` -> **12 passed** across desktop + mobile.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -260,6 +260,54 @@ behavior remain absent until Inc 3.
   `registry.signature_verify_p95` as **MEASURED (PASS)**, snapshot freshness as
   **CONFIG**, and `registry.fetch_p95` as staged-enablement pending.
 
+## Increment 3 landed (2026-07-02) - P5-02 package lifecycle, deploy-dark
+
+The package install and lifecycle increment is complete behind the dark
+`package_registry` flag. Staff can verify a signed release, install, consent,
+enable, disable, update, rollback, uninstall, export, and re-verify package
+state. Enabled packages execute nothing until Inc 4 declarative themes and Inc 5
+integrations provide runtimes; publisher console and credential minting remain
+Inc 5.
+
+- **Release acquisition + digest binding:** `PackageAcquisitionService` treats
+  the signed `rb-release.v1` document as the artifact. The snapshot-pinned
+  digest is `sha256` over exact signed bytes, review approval is inside those
+  bytes, `source_url` must be same-origin with the registry, and release-review
+  evidence is cached from the exact envelope. TM-SC-09 is implemented by
+  `tests/Integration/Service/PackageAcquisitionServiceTest.php`.
+- **Manifest v2 + permission vocabulary:** `ManifestValidator` validates strict
+  `rb-manifest.v2`, package type, core range, settings schema, storage quota,
+  retention, support links, and capability/data/api/event/outbound-host/job
+  declarations. `PermissionDiff` produces added/removed/unchanged consent
+  summaries with risk labels.
+- **Lifecycle services:** `PackageLifecycleService` and `PackageUpdateService`
+  implement validate-first install/consent/enable/disable, manual/notify update
+  policy, staged update re-consent, reduction-immediate updates, pinning,
+  verified-digest rollback, uninstall with disable-first + export snapshot +
+  retention, and quarantine re-verify. Password reauthentication is required for
+  install, consent, enable, update, rollback, and uninstall; disable, pin,
+  export, cancel staged update, update-policy changes, and re-verify are
+  deliberately low-friction.
+- **Security gate + worker enforcement:** `PackageSecurityGate` refuses blocked,
+  revoked, unreviewed, unsupported, locally blocked, and wrong-trust releases.
+  `worker:packages` verifies cached bytes, quarantines tamper, enforces
+  advisory/blocklist force-disable, cancels blocked staged updates, reports
+  notify-policy updates, and purges retained uninstalls. TM-SC-06 and TM-SC-07
+  are implemented by package lifecycle and health-worker tests.
+- **Admin surface + evidence:** `/admin/packages` is still staff-only,
+  noindexed, and no-JS. Browser evidence now includes shots 35-38 for install
+  plan, consent, enabled detail, and update diff on desktop + mobile; `npm run
+  evidence` and `npm run a11y` refreshed the package lifecycle coverage.
+- **Performance:** `docs/evidence/phase5/performance-budgets.md` records
+  `package.install_update_p95` as **MEASURED (PASS)** at 47.1601 ms on Inc 3
+  install/update samples against the 10000 ms D11 budget.
+- **Docs and ledger:** `docs/phase5/registry-protocol.md` now covers release
+  documents, artifact cache layout, manifest v2, refusal codes, and worker
+  enforcement. `docs/runbooks/package_registry.md` now covers install/update/
+  rollback/uninstall/export/quarantine/emergency operation. GA-DOD-05 and
+  GA-DOD-06 are R3; GA-DOD-09 is R2 for install-side exact-digest enforcement
+  while publisher-console review remains Inc 5.
+
 ## Product-owner approvals recorded
 
 This instruction accepts ADR 0004 as the Milestone-0 decision record using its
@@ -321,6 +369,9 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
 - **Capability resolver shadow (Inc 1, P5-08):** R3 — see
   `docs/phase5/requirement-ledger.json` (GA-DOD-10). Shadow-only: live
   authorization is unchanged; enforcement is Inc 6.
+- **Package lifecycle (Inc 3, P5-02):** R3 — see
+  `docs/phase5/requirement-ledger.json` (GA-DOD-05/06). Deploy-dark behind
+  `package_registry`; enabled packages execute nothing until Inc 4/5 runtimes.
 - **Fixture + baselines + budget harness (Foundation F9):** R2 (implemented,
   deploy-dark — no flag; the seeder refuses `app.env=production`) +
   **R3-partial** — `Phase5FixtureSeeder` (representative role/assignment/
@@ -329,19 +380,20 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   and `Phase5BudgetReportService` wired via `bin/console verify:phase5-budgets`
   are implemented with enforcing PHPUnit evidence. The **A3** entry-gate
   artifact (`docs/evidence/phase5/performance-budgets.md`) is generated and
-  measures `resolver.p95` as a real BASELINE number against the F9 fixture
-  (`webhook.delivery_timeout` reports its CONFIG cap); the remaining nine
-  D11 budgets stay **PENDING** until each owning increment measures them on
-  this same fixture — not R4/R5.
+  measures `resolver.p95`, `registry.signature_verify_p95`, and
+  `package.install_update_p95` as real numbers against the F9 fixture
+  (`registry.snapshot_freshness` and `webhook.delivery_timeout` report CONFIG
+  caps); the unowned future budgets stay **PENDING** until each owning increment
+  measures them on this same fixture — not R4/R5.
 - **Foundation remainder (F2/F4/F6/F7/F8/F10/F11):** R3 — see
   `docs/phase5/requirement-ledger.json`, now the machine-checked source of
   truth for states. This lands `CORE_VERSION`, `DataClasses`, the Ed25519
   signing harness + registry fixtures, `ReauthGate`, `Telemetry`/`LogRedactor`,
   the all-flags-off core-survival regression, and six recorded-pending-review
   threat-model dossiers.
-- **All other Phase 5 subsystems (registry, themes, passkeys,
-  providers, invitations, sandbox, governance, service principals, verified
-  links):** R0/R1 — pending implementation and workstream-specific evidence.
+- **All other Phase 5 subsystems (themes, passkeys, providers, invitations,
+  sandbox, governance, service principals, verified links):** R0/R1 — pending
+  implementation and workstream-specific evidence.
 
 ## Evidence index (this increment)
 

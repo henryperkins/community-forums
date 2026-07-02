@@ -12,10 +12,7 @@ use App\Security\Packages\PermissionDiff;
 use App\Service\Packages\PackageUpdateService;
 use App\Service\Registry\RegistryCatalogService;
 
-/**
- * Deploy-dark, read-only staff catalogue browse. Lifecycle actions arrive in
- * a later increment; this controller deliberately registers no POST actions.
- */
+/** Deploy-dark staff catalogue browse; lifecycle POSTs live in the paired controller. */
 final class AdminPackagesController extends Controller
 {
     private function gate(): void
