@@ -20,10 +20,15 @@ use App\Security\PasswordHasher;
  * Increment 10 (P5-16 perf) reuse. All rows are tagged `p5fix_` and the seed is
  * idempotent via a `settings` marker. Refuses production. Runtime tooling — no
  * migration (the tables exist from 0001..0050); nothing here flips a flag.
+ *
+ * v2 (Inc 1 review): adds the quirk-discriminating actors the parity corpus was
+ * blind without — a SUSPENDED global moderator (state axis), a plain-`user`
+ * board moderator (taxonomy §7 quirks 2/5: staff-any warn without the global
+ * posting-floor rank), and an ARCHIVED board (content-state closes).
  */
 final class Phase5FixtureSeeder
 {
-    public const FIXTURE_VERSION = 1;
+    public const FIXTURE_VERSION = 2;
     private const MARKER = 'phase5_fixture_version';
 
     public function __construct(
@@ -77,6 +82,8 @@ final class Phase5FixtureSeeder
             $mk('p5fix_user3', 'user', 'active');
             $mk('p5fix_user4', 'user', 'active');
             $mk('p5fix_susp', 'user', 'suspended');
+            $mk('p5fix_smod', 'moderator', 'suspended');
+            $bmod = $mk('p5fix_bmod', 'user', 'active');
 
             $catId = $cats->create('P5 Fixtures', 900);
             $bPublic = $boards->create([
@@ -91,8 +98,14 @@ final class Phase5FixtureSeeder
                 'category_id' => $catId, 'slug' => 'p5fix_private', 'name' => 'P5 Private',
                 'description' => null, 'visibility' => 'private', 'post_min_role' => 'user', 'allow_anonymous' => 0,
             ]);
+            $bArch = $boards->create([
+                'category_id' => $catId, 'slug' => 'p5fix_arch', 'name' => 'P5 Archived',
+                'description' => null, 'visibility' => 'public', 'post_min_role' => 'user', 'allow_anonymous' => 0,
+            ]);
+            $boards->setArchived($bArch, true);
 
             $mods->assign($bMod, $mod1);
+            $mods->assign($bPublic, $bmod);
             $owners->designate($admin, null);
 
             $roleId = function (string $key): int {
@@ -116,7 +129,7 @@ final class Phase5FixtureSeeder
 
             $this->settings->set(self::MARKER, self::FIXTURE_VERSION);
 
-            return ['users' => 8, 'boards' => 3, 'moderators' => 1, 'assignments' => 4, 'owners' => 1, 'skipped' => false];
+            return ['users' => 10, 'boards' => 4, 'moderators' => 2, 'assignments' => 4, 'owners' => 1, 'skipped' => false];
         });
     }
 

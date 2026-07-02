@@ -9,11 +9,11 @@
 - Route/job: `legacy_authority_read`
 - PHP: 8.3.6 · DB: 10.11.14-MariaDB-0ubuntu0.24.04.1
 - Hardware class: unknown · OS/isolation: Linux
-- Fixture: phase5_fixture_v1 · role assignments: 4
+- Fixture: phase5_fixture_v2 · role assignments: 4
 - Window: 200 iterations · concurrency: 1 · cache: cold
-- Legacy read p50/p95/p99 (ms): 0.7621 / 0.9364 / 1.0113
-- Resolver p50/p95/p99 (ms): 1.635 / 2.1204 / 2.3189 · route/job: `capability_resolver_can`
-- Queries: 600 · query time (ms): 155.8112 · peak mem (bytes): 4194304 · error rate: 0
+- Legacy read p50/p95/p99 (ms): 0.7634 / 1.0031 / 1.1525
+- Resolver p50/p95/p99 (ms): 1.5414 / 2.2876 / 2.9129 · route/job: `capability_resolver_can`
+- Queries: 600 · query time (ms): 156.8063 · peak mem (bytes): 4194304 · error rate: 0
 
 ## Budgets vs D11 targets (ADR 0004 D11)
 
@@ -23,7 +23,7 @@
 | `registry.fetch_p95` | Registry fetch duration | 2000 ms (p95) | — | PENDING (inc2) |
 | `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | — | PENDING (inc2) |
 | `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | — | PENDING (inc3) |
-| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 2.1204 ms resolver (baseline 0.9364 ms legacy) | MEASURED (PASS) |
+| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 2.2876 ms resolver (baseline 1.0031 ms legacy) | MEASURED (PASS) |
 | `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | — | PENDING (inc7) |
 | `oidc.discovery_p95_cached` | OIDC discovery/JWKS (cached) | 2000 ms (p95) | — | PENDING (inc8) |
 | `oidc.discovery_p95_cold` | OIDC discovery/JWKS (cold) | 5000 ms (p95) | — | PENDING (inc8) |

@@ -233,6 +233,31 @@ change is a separate, owner-approved decision after parity is clean.
 4. **Dual pending-view authority.** `core.content.view_pending` is gated by
    `canModerate` for threads but the global mod role for media — same conceptual
    decision, two authorities today; reproduced as-is.
+5. **Pending-content *views* skip the state gate.** *(Recorded 2026-07-02, Inc 1
+   review.)* The approval-queue view (`ApprovalController.php:29`) and
+   pending-media view (`MediaController.php:204`) gate on bare `isModerator()`
+   with no `WriteGate`, so a suspended global moderator (or suspended admin) can
+   still *view* pending content in production, while every pending *action*
+   runs through `canModerate` and is state-blocked. The capability model
+   applies "state beats role" uniformly, so the resolver — and the Inc-1 parity
+   oracle, deliberately — denies `core.content.view_pending` for suspended
+   staff. This is a **known divergence from production**, invisible to the
+   parity corpus because oracle and resolver agree with each other. Owner
+   decision at the Increment 6 route cutover: state-exempt the view paths to
+   preserve the quirk, or accept the (safer) tightening as an approved change.
+   Until then the routes keep their legacy gates and nothing changes.
+6. **Content-state closes are service-owned sub-rules, not capabilities.**
+   *(Recorded 2026-07-02, Inc 1 review.)* Archived-board freezes
+   (`ModerationService::assertNotArchived`, `ReactionService.php:78`,
+   `SolvedAnswerService.php:54`, `ThreadWorkflowService.php:52` — note
+   `PollService` has no archived close), locked-thread and deleted-target rules
+   live in the services and keep applying unchanged at and after the resolver
+   cutover. The resolver answers "is the capability held at this scope"; it
+   applies content-state narrowing only where the legacy *route gate* itself
+   was `BoardPolicy::canPost` (`core.thread.create`, `core.post.create`,
+   `core.thread.tag`). The Inc-1 parity oracle mirrors the same boundary, so
+   the corpus proves parity of capability-holding predicates; per-action
+   content-state behavior remains covered by the services' own tests.
 
 ## 8. Explicitly NOT capabilities (out of catalogue)
 

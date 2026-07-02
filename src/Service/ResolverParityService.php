@@ -234,6 +234,17 @@ final class ResolverParityService
         $out .= "## Coverage\n\n";
         $out .= "Every catalogued capability was compared for every fixture actor against the targets its scope calls for. ";
         $out .= "For example, `core.thread.lock` is checked per board per actor.\n\n";
+        $out .= "## Known divergences (recorded, not modeled)\n\n";
+        $out .= "Two production behaviors sit outside both the resolver and this oracle by design; they agree\n";
+        $out .= "with each other here and differ from live routes as documented in\n";
+        $out .= "`docs/phase5/capability-taxonomy.md` \u{a7}7 items 5-6:\n\n";
+        $out .= "1. Pending-content *views* (`ApprovalController.php:29`, `MediaController.php:204`) skip the\n";
+        $out .= "   state gate in production; the model applies state-beats-role uniformly. Owner decision at\n";
+        $out .= "   the Increment 6 route cutover (state-exempt the views vs accept the tightening).\n";
+        $out .= "2. Content-state closes (archived/locked/deleted sub-rules in ModerationService,\n";
+        $out .= "   ReactionService, SolvedAnswerService, ThreadWorkflowService) are service-owned and keep\n";
+        $out .= "   applying unchanged at and after cutover; the resolver models capability-holding only,\n";
+        $out .= "   narrowing by content state solely where the legacy route gate was BoardPolicy::canPost.\n\n";
 
         if ($result['mismatches'] === []) {
             $out .= "## Mismatches\n\nNone. **Exit-gate criterion met: zero parity mismatch for built-in roles on the critical fixtures.**\n";

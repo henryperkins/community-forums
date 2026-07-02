@@ -21,9 +21,9 @@ final class Phase5FixtureSeederTest extends TestCase
         $out = $this->seeder()->seed();
 
         self::assertFalse($out['skipped']);
-        self::assertSame(8, $out['users']);
-        self::assertSame(3, $out['boards']);
-        self::assertSame(1, $out['moderators']);
+        self::assertSame(10, $out['users']);
+        self::assertSame(4, $out['boards']);
+        self::assertSame(2, $out['moderators']);
         self::assertSame(4, $out['assignments']);
         self::assertSame(1, $out['owners']);
 
@@ -49,7 +49,7 @@ final class Phase5FixtureSeederTest extends TestCase
         $second = $s->seed();
         self::assertTrue($second['skipped']);
         self::assertSame(0, $second['users']);
-        self::assertSame(8, (int) $this->db->fetchValue("SELECT COUNT(*) FROM users WHERE username LIKE 'p5fix_%'"));
+        self::assertSame(10, (int) $this->db->fetchValue("SELECT COUNT(*) FROM users WHERE username LIKE 'p5fix_%'"));
     }
 
     public function test_seed_refuses_production(): void

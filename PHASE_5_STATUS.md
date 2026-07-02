@@ -3,7 +3,7 @@
 **Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow) landed 2026-07-02: `CapabilityResolver` + legacy-authority projection behind the dark `capabilities` flag, fail-open `ResolverShadow` on `canModerate`/`canPost`, a ZERO-mismatch archived parity corpus (`docs/evidence/phase5/resolver-parity.md`), `resolver.p95` MEASURED vs the 5ms D11 budget, and the no-JS role editor + permission simulator with browser/axe evidence. Increment 6 (enforcement cutover) stays blocked until shadow soak; Increment 2 (registry) remains unblocked. Package, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
 **Last updated:** 2026-07-02
 **Branch:** `phase5-inc1-resolver-shadow`
-**Suite:** `composer test` → **979 tests / 5179 assertions, green** on two consecutive Increment 1 exit-gate runs (fresh and reused-schema paths). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` → **4 tests / 8 assertions**, `vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php --filter test_phase5_foundation_flags_default_dark` → **1 test / 20 assertions**, `php bin/console verify:resolver-parity` → **1035 tuples / 0 mismatches**. Browser evidence: `npm run evidence` → **31 passed / 1 skipped**, `npm run a11y` → **8 passed** across desktop + mobile.
+**Suite:** `composer test` → **981 tests / 5188 assertions, green** on two consecutive runs (fresh and reused-schema paths; post-review hardening 2026-07-02). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` → **4 tests / 8 assertions**, `vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php --filter test_phase5_foundation_flags_default_dark` → **1 test / 20 assertions**, `php bin/console verify:resolver-parity` → **1551 tuples / 0 mismatches** (fixture v2). Browser evidence: `npm run evidence` → **31 passed / 1 skipped**, `npm run a11y` → **8 passed** across desktop + mobile.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -204,8 +204,12 @@ simulator.
   compares `canModerate`/`canPost` decisions fail-open; mismatches emit telemetry
   without changing the legacy answer.
 - **Parity corpus:** `php bin/console verify:resolver-parity` archived
-  `docs/evidence/phase5/resolver-parity.md` on fixture `phase5_fixture_v1` at
-  commit `697d700`: **1035 tuples, 1035 agreed, 0 mismatches**.
+  `docs/evidence/phase5/resolver-parity.md` on fixture `phase5_fixture_v2` (adds a
+  suspended global moderator, a plain-user board moderator, and an archived board
+  after the Inc 1 review): **1551 tuples, 1551 agreed, 0 mismatches**. Two known
+  legacy divergences are recorded, not modeled (capability-taxonomy.md §7 #5-#6):
+  pending-view state gate and service-owned content-state closes — owner decision
+  due at the Inc 6 cutover.
 - **Role editor + simulator:** no-JS admin routes are flag-gated and noindexed.
   `RoleService` creates/updates/clones custom roles with reauth, audit, protected
   anchor guards, `roles.version` bumps, and active-assignment impact counts.
@@ -321,7 +325,7 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   `tests/Integration/Service/ResolverShadowTest.php`, `tests/Integration/Service/ResolverParityTest.php` (zero-mismatch exit gate),
   `tests/Integration/Service/RoleServiceTest.php`, `tests/Integration/Service/PermissionSimulatorTest.php`,
   `tests/Integration/Core/AppRoleAdminTest.php`, `AppFeatureFlagTest::test_capabilities_flag_gates_role_routes`.
-- Parity corpus: `docs/evidence/phase5/resolver-parity.md` (1035 tuples, 0 mismatches, fixture+commit pinned).
+- Parity corpus: `docs/evidence/phase5/resolver-parity.md` (1551 tuples, 0 mismatches, fixture v2 + commit pinned).
 - Resolver budget: `docs/evidence/phase5/performance-budgets.md` — `resolver.p95` MEASURED (PASS) vs 5 ms.
 - Role editor/simulator browser evidence: `docs/evidence/browser/{desktop,mobile}/30-admin-role-created.png` + `31-admin-role-simulator.png` (+ axe green).
 - Requirement ledger: `docs/phase5/requirement-ledger.json` (R0-R5 states + per-flag rollback map, machine-checked).

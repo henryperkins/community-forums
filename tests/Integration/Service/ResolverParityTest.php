@@ -68,7 +68,10 @@ final class ResolverParityTest extends TestCase
         $this->seedFixture();
         $result = $this->service()->run();
 
-        self::assertGreaterThan(1000, $result['tuples']);
+        // v2 fixture: 20 board keys x 4 boards x 11 actors + 3 dual-path x 8
+        // owner-contexts x 11 + 6 self x 2 x 11 + 24 site x 11 + 1 category x 11
+        // = 1551. A shrink below 1500 means the corpus lost actors or boards.
+        self::assertGreaterThan(1500, $result['tuples']);
         self::assertSame(
             [],
             $result['mismatches'],
@@ -125,5 +128,7 @@ final class ResolverParityTest extends TestCase
         self::assertStringContainsString('Commit: `abc1234`', $md);
         self::assertStringContainsString('Mismatches: **0**', $md);
         self::assertStringContainsString('core.thread.lock', $md);
+        self::assertStringContainsString('Known divergences (recorded, not modeled)', $md);
+        self::assertStringContainsString('capability-taxonomy.md', $md);
     }
 }
