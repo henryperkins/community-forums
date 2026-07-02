@@ -53,6 +53,18 @@ final class TagRepository
     }
 
     /** @return array<int,array<string,mixed>> */
+    public function suggestByPrefix(string $query, int $limit): array
+    {
+        return $this->db->fetchAll(
+            "SELECT * FROM tags
+             WHERE is_enabled = 1 AND visibility = 'public' AND (slug LIKE ? OR name LIKE ?)
+             ORDER BY slug ASC
+             LIMIT " . max(1, min(25, $limit)),
+            [$query . '%', $query . '%'],
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> */
     public function allEnabled(): array
     {
         return $this->db->fetchAll(

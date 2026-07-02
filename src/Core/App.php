@@ -169,6 +169,7 @@ use App\Service\PasswordResetService;
 use App\Service\BadgeRuleService;
 use App\Service\BadgeService;
 use App\Service\CommunityMemoryService;
+use App\Service\ComposerSuggestionService;
 use App\Service\DirectMessageService;
 use App\Service\FeedService;
 use App\Service\FollowService;
@@ -870,6 +871,17 @@ final class App
             (int) $config->get('community.solved_bonus', 5),
         ));
         $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
+        $c->bind(ComposerSuggestionService::class, fn (Container $c) => new ComposerSuggestionService(
+            $c->get(UserRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(TagRepository::class),
+            $c->get(ThreadRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(SearchService::class),
+            $c->get(FeatureFlags::class),
+        ));
         $c->bind(Mailer::class, function (Container $c) use ($config): Mailer {
             $mail = (array) $config->get('mail', []);
             if (($mail['driver'] ?? 'sendmail') === 'array') {
@@ -1424,6 +1436,7 @@ final class App
 
         // Shared composer live preview (P3-02) — same render+sanitize pipeline.
         $r->post('/composer/preview', [ComposerController::class, 'preview']);
+        $r->get('/composer/suggest', [ComposerController::class, 'suggest']);
         $r->get('/composer/giphy-config', [SlashGiphyController::class, 'pickerConfig']);
         $r->get('/drafts', [DraftController::class, 'index']);
         $r->post('/drafts/{id}/discard', [DraftController::class, 'discardPage']);

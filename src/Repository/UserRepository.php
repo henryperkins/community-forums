@@ -84,6 +84,19 @@ final class UserRepository
         return $out;
     }
 
+    /** @return array<int,array{id:int,username:string,display_name:?string,role:string,status:string}> */
+    public function suggestByPrefix(string $query, int $limit): array
+    {
+        return $this->db->fetchAll(
+            "SELECT id, username, display_name, role, status
+             FROM users
+             WHERE status = 'active' AND (username LIKE ? OR display_name LIKE ?)
+             ORDER BY username ASC
+             LIMIT " . max(1, min(25, $limit)),
+            [$query . '%', $query . '%'],
+        );
+    }
+
     /**
      * @param list<int> $ids
      * @return array<int,array{email:string,status:string}> id => contact

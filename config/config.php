@@ -202,6 +202,7 @@ return [
         'dm_report' => [10, 600],
         'upload' => [40, 3600],
         'composer_preview' => [120, 600],
+        'composer_suggest' => [120, 60],
         'password_reset' => [5, 3600],
         'mfa_login' => [5, 900],
         'mfa_settings' => [10, 900],
