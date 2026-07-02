@@ -4,6 +4,7 @@ $variant = $this->block('variant', 'app');
 $appearance = $appearance ?? ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'reduced_motion' => false];
 $composing = $composing ?? ['enter_to_send' => false, 'show_preview' => true, 'smart_lists' => true];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
+$themePackage = $package_theme ?? ['active_css_digest' => null, 'preview_css_digest' => null];
 $appUrl = rtrim((string) ($app_url ?? ''), '/');
 $canonical = $this->block('canonical', '');
 $robots = $this->block('robots', '');
@@ -11,6 +12,8 @@ $ogType = $this->block('og_type', 'website');
 $ogImage = $this->block('og_image', '');
 $desc = $this->block('description', $brand['name'] . ' — a community forum.');
 $showChrome = $variant !== 'auth';
+$richComposerOn = !empty($features['rich_composer']);
+$wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
 ?>
 <!doctype html>
 <html lang="en"
@@ -35,9 +38,11 @@ $showChrome = $variant !== 'auth';
         <link rel="icon" href="<?= $e($brand['favicon_path']) ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="/assets/app.css">
+    <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="/assets/wysiwyg-composer.css"><?php endif; ?>
+    <?php if (!empty($themePackage['preview_css_digest'])): ?><link rel="stylesheet" href="/theme/preview.css?v=<?= $e($themePackage['preview_css_digest']) ?>"><?php elseif (!empty($themePackage['active_css_digest'])): ?><link rel="stylesheet" href="/theme/<?= $e($themePackage['active_css_digest']) ?>.css"><?php endif; ?>
     <?php if (!empty($brand['has_custom_colors'])): ?><link rel="stylesheet" href="/brand.css?v=<?= $e($brand['version'] ?: '1') ?>"><?php endif; ?>
 </head>
-<body class="variant-<?= $e($variant) ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>"<?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
+<body class="variant-<?= $e($variant) ?>" data-route="<?= $e($this->block('route', '')) ?>" data-drafts="<?= !empty($features['drafts']) ? '1' : '0' ?>" data-server-drafts="<?= !empty($features['server_drafts']) ? '1' : '0' ?>"<?= $wysiwygComposerOn ? ' data-wysiwyg-composer="1"' : '' ?><?php if (($current_user ?? null) !== null): ?> data-user="<?= $e($current_user->username()) ?>" data-enter-to-send="<?= !empty($composing['enter_to_send']) ? '1' : '0' ?>" data-show-preview="<?= !empty($composing['show_preview']) ? '1' : '0' ?>" data-smart-lists="<?= !empty($composing['smart_lists']) ? '1' : '0' ?>"<?php endif; ?><?php if (!empty($needs_tour)): ?> data-tour="1"<?php endif; ?>>
 <a class="skip-link" href="#main">Skip to content</a>
 <?php if ($showChrome): ?>
 <?= $this->partial('partials/topbar') ?>
@@ -72,7 +77,8 @@ $showChrome = $variant !== 'auth';
     </main>
 <?php endif; ?>
 <script src="/assets/app.js" defer></script>
-<?php if (!empty($features['rich_composer'])): ?><script src="/assets/composer.js" defer></script><?php endif; ?>
+<?php if ($richComposerOn): ?><script src="/assets/composer.js" defer></script><?php endif; ?>
+<?php if ($wysiwygComposerOn): ?><script type="module" src="/assets/wysiwyg-composer.js"></script><?php endif; ?>
 <?php if (!empty($features['product_tour']) && ($current_user ?? null) !== null): ?><script src="/assets/tour.js" defer></script><?php endif; ?>
 </body>
 </html>

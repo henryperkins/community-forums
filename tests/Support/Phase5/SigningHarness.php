@@ -106,8 +106,8 @@ final class SigningHarness
 
     /**
      * A valid rb-manifest.v2 array (P5-02). Top-level overrides replace; `core`
-     * and `permissions` merge one level deep with permission kind lists replaced
-     * wholesale.
+     * `permissions`, and `theme` merge one level deep with permission/token kind
+     * lists replaced wholesale. `theme => null` removes the theme block.
      *
      * @param array<string,mixed> $overrides
      * @return array<string,mixed>
@@ -133,14 +133,31 @@ final class SigningHarness
             ],
             'storage_quota_kb' => 64,
             'support' => ['homepage' => 'https://acme.example/midnight'],
+            'theme' => [
+                'schema_version' => 1,
+                'tokens' => ['--accent' => '#8f3d12', '--surface' => '#fff7dc', '--text' => '#241706'],
+                'dark_tokens' => ['--accent' => '#d2b062', '--surface' => '#283440', '--text' => '#ece4d2'],
+                'assets' => [],
+            ],
         ];
 
         foreach ($overrides as $key => $value) {
+            if ($key === 'theme') {
+                if ($value === null) {
+                    unset($base['theme']);
+                    continue;
+                }
+                $base['theme'] = is_array($value) ? array_replace($base['theme'], $value) : $value;
+                continue;
+            }
             if (in_array($key, ['core', 'permissions'], true) && is_array($value)) {
                 $base[$key] = array_replace($base[$key], $value);
                 continue;
             }
             $base[$key] = $value;
+        }
+        if (($base['type'] ?? 'theme') !== 'theme' && !array_key_exists('theme', $overrides)) {
+            unset($base['theme']);
         }
 
         return $base;

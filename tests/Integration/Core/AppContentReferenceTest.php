@@ -6,6 +6,7 @@ namespace Tests\Integration\Core;
 
 use App\Repository\BoardMemberRepository;
 use App\Repository\SettingRepository;
+use App\Repository\TagRepository;
 use Tests\Support\TestCase;
 
 final class AppContentReferenceTest extends TestCase
@@ -132,5 +133,57 @@ final class AppContentReferenceTest extends TestCase
         $this->assertStatus(200, $memberPage);
         self::assertStringContainsString('Summary Public Target', $memberPage->body());
         self::assertStringContainsString('Summary Private Target', $memberPage->body());
+    }
+
+    public function test_tag_references_are_persisted_and_rendered_when_flags_allow(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['content_references' => true, 'tags' => true]);
+        $author = $this->makeUser(['username' => 'tagrefauthor']);
+        $board = $this->makeBoard($this->makeCategory('Tag References'), ['slug' => 'tag-ref-board']);
+        $tagId = (new TagRepository($this->db))->create('release-notes', 'Release Notes', 'Shipping notes', (int) $author['id']);
+
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Tag source',
+            'body' => 'See [#release-notes](/tags/release-notes).',
+        ]));
+        $thread = $this->db->fetch("SELECT id, slug FROM threads WHERE title = 'Tag source' LIMIT 1");
+        self::assertIsArray($thread);
+        $threadId = (int) $thread['id'];
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$threadId]);
+
+        self::assertSame(1, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM content_references WHERE source_type = 'post' AND source_id = ? AND target_type = 'tag' AND target_id = ?",
+            [$postId, $tagId],
+        ));
+
+        $page = $this->get('/t/' . $threadId . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('Release Notes', $page->body());
+        self::assertStringContainsString('Shipping notes', $page->body());
+    }
+
+    public function test_tag_reference_cards_stay_dark_when_tags_flag_is_disabled(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['content_references' => true, 'tags' => false]);
+        $author = $this->makeUser(['username' => 'tagrefdark']);
+        $board = $this->makeBoard($this->makeCategory('Tag Dark'), ['slug' => 'tag-dark-board']);
+        (new TagRepository($this->db))->create('hidden-card', 'Hidden Card', 'Hidden description', (int) $author['id']);
+
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/threads', [
+            'board_id' => (int) $board['id'],
+            'title' => 'Tag dark source',
+            'body' => 'See [#hidden-card](/tags/hidden-card).',
+        ]));
+
+        $thread = $this->db->fetch("SELECT id, slug FROM threads WHERE title = 'Tag dark source' LIMIT 1");
+        self::assertIsArray($thread);
+        $page = $this->get('/t/' . (int) $thread['id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        self::assertStringNotContainsString('Hidden description', $page->body());
     }
 }

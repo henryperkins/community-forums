@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Repository\LocalPackageBlockRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
+use App\Service\Packages\ThemeStateService;
 use App\Service\Registry\RegistryAdvisoryService;
 
 /**
@@ -20,8 +21,11 @@ use App\Service\Registry\RegistryAdvisoryService;
  */
 final class RepairService
 {
-    public function __construct(private Database $db, private int $solvedBonus = 5)
-    {
+    public function __construct(
+        private Database $db,
+        private int $solvedBonus = 5,
+        private ?ThemeStateService $themes = null,
+    ) {
     }
 
     /** users.post_count = number of the user's non-deleted, non-held posts. */
@@ -350,6 +354,17 @@ final class RepairService
         return $fixed;
     }
 
+    public function repairThemeState(): int
+    {
+        if ($this->themes === null) {
+            return 0;
+        }
+
+        $stats = $this->themes->repair();
+
+        return $stats['cleared_active'] + $stats['cleared_lkg'];
+    }
+
     public function repairAll(): array
     {
         return $this->db->transaction(function (): array {
@@ -362,6 +377,7 @@ final class RepairService
                 'package_latest' => $this->repairPackageLatestReleases(),
                 'package_advisory' => $this->repairPackageAdvisoryStatuses(),
                 'installed_packages' => $this->repairInstalledPackageStates(),
+                'theme_state' => $this->repairThemeState(),
                 'reputation' => $this->repairReputation(),
             ];
             return $out;

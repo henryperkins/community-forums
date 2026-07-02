@@ -132,6 +132,26 @@ final class PostRepository
         );
     }
 
+    /** @return array<int,int> user_id => rank boost */
+    public function nonAnonymousParticipantRanks(int $threadId): array
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT user_id, MIN(created_at) AS first_at
+             FROM posts
+             WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0 AND is_anonymous = 0
+             GROUP BY user_id
+             ORDER BY first_at ASC',
+            [$threadId],
+        );
+        $rank = [];
+        $boost = 300;
+        foreach ($rows as $row) {
+            $rank[(int) $row['user_id']] = $boost;
+            $boost = max(100, $boost - 10);
+        }
+        return $rank;
+    }
+
     /**
      * 1-based page (at $perPage) on which a post appears in the public thread
      * render order — created_at ASC, id ASC over visible posts, matching

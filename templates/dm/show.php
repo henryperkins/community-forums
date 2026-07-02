@@ -170,7 +170,7 @@ $this->section('title', $title);
         </div>
 
         <?php if (!empty($can_reply)): ?>
-            <form class="dm-composer" method="post" action="/messages/<?= (int) $conversation_id ?>">
+            <form class="dm-composer composer" method="post" action="/messages/<?= (int) $conversation_id ?>" data-composer-context="dm" data-composer-target-id="<?= (int) $conversation_id ?>">
                 <?= $this->csrfField() ?>
                 <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
                 <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>

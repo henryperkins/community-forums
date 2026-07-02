@@ -87,11 +87,15 @@ reauthentication.
 3. Use **Re-verify**. It only marks health OK when the cached bytes hash to the
    installed digest.
 4. Re-enable manually if appropriate. Re-verify never auto-enables a package.
+   For theme packages, quarantine also deactivates or clears affected theme
+   pointers; see `docs/runbooks/package_themes.md`.
 
 ## Emergency Response
 
 1. Disable the installed package, pin it, or add a local blocklist row first.
    These controls are reauth-free so the brake does not wait.
+   If the package is an active theme, enter theme safe mode or deactivate/roll
+   back from `/admin/themes` as described in `docs/runbooks/package_themes.md`.
 2. Escalate as needed: acknowledge or ingest advisories, revoke keys, disable
    the registry source, or dark the `package_registry` flag.
 3. `force_disable` and `revoke` advisories are enforced by `worker:packages` for

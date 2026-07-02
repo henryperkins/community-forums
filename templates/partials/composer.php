@@ -1,5 +1,5 @@
 <?php /** @var \App\Core\View $this */ ?>
-<form method="post" action="/t/<?= (int) $thread['id'] ?>/reply" class="composer" id="reply">
+<form method="post" action="/t/<?= (int) $thread['id'] ?>/reply" class="composer" id="reply" data-composer-context="reply" data-composer-target-id="<?= (int) $thread['id'] ?>">
     <?= $this->csrfField() ?>
     <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
     <p class="composer-label">Posting as <strong><?= $e($current_user->displayName()) ?></strong></p>

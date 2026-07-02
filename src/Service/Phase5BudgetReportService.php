@@ -10,6 +10,7 @@ use App\Security\Registry\TrustChainVerifier;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
+use App\Service\Packages\ThemeStateService;
 use App\Support\Phase5Budgets;
 
 /**
@@ -26,6 +27,7 @@ final class Phase5BudgetReportService
     private ?array $resolverSample = null;
     private ?array $signatureSample = null;
     private ?array $packageSample = null;
+    private ?array $themeSample = null;
 
     public function __construct(
         private Database $db,
@@ -34,8 +36,8 @@ final class Phase5BudgetReportService
         private ?PackageLifecycleService $packageLifecycle = null,
         private ?PackageUpdateService $packageUpdates = null,
         private ?PackageArtifactStore $packageStore = null,
-    )
-    {
+        private ?ThemeStateService $themeState = null,
+    ) {
     }
 
     private function baseline(): array
@@ -75,6 +77,20 @@ final class Phase5BudgetReportService
         );
     }
 
+    private function themeSample(): ?array
+    {
+        if ($this->packageLifecycle === null || $this->themeState === null || $this->packageStore === null) {
+            return null;
+        }
+
+        return $this->themeSample ??= (new BaselineMetricsService($this->db))->measureThemeBuildApply(
+            $this->packageLifecycle,
+            $this->themeState,
+            $this->db,
+            $this->packageStore,
+        );
+    }
+
     /** @return array<int,array{key:string,metric:string,target:string,measured:string,status:string}> */
     public function rows(): array
     {
@@ -104,6 +120,12 @@ final class Phase5BudgetReportService
                 $sample = $this->packageSample();
                 if ($sample !== null) {
                     $measured = $sample['p95'] . ' ms install/update (' . $sample['samples'] . ' samples)';
+                    $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+                }
+            } elseif ($key === 'theme.build_apply_p95') {
+                $sample = $this->themeSample();
+                if ($sample !== null) {
+                    $measured = $sample['p95'] . ' ms theme build/apply (' . $sample['samples'] . ' samples)';
                     $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
                 }
             } elseif ($key === 'registry.snapshot_freshness') {
@@ -147,6 +169,11 @@ final class Phase5BudgetReportService
         if ($packageSample !== null) {
             $out .= '- Package install/update p50/p95/p99 (ms): ' . $packageSample['p50'] . ' / ' . $packageSample['p95'] . ' / ' . $packageSample['p99']
                 . ' · route/job: `' . $packageSample['route_or_job'] . '` · samples: ' . $packageSample['samples'] . "\n";
+        }
+        $themeSample = $this->themeSample();
+        if ($themeSample !== null) {
+            $out .= '- Theme build/apply p50/p95/p99 (ms): ' . $themeSample['p50'] . ' / ' . $themeSample['p95'] . ' / ' . $themeSample['p99']
+                . ' · route/job: `' . $themeSample['route_or_job'] . '` · samples: ' . $themeSample['samples'] . "\n";
         }
         $out .= '- Queries: ' . $env['query_count'] . ' · query time (ms): ' . $env['query_time_ms']
              . ' · peak mem (bytes): ' . $env['peak_memory_bytes'] . ' · error rate: ' . $env['error_rate'] . "\n\n";

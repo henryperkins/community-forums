@@ -63,6 +63,41 @@ final class UserRepository
     }
 
     /**
+     * @param list<string> $usernames
+     * @return array<string,array{id:int,username:string}> lower(username) => row
+     */
+    public function activeMentionTargets(array $usernames): array
+    {
+        $usernames = array_values(array_unique(array_filter($usernames, static fn ($u): bool => is_string($u) && $u !== '')));
+        if ($usernames === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($usernames), '?'));
+        $rows = $this->db->fetchAll(
+            "SELECT id, username FROM users WHERE LOWER(username) IN ($place) AND status = 'active'",
+            array_map('strtolower', $usernames),
+        );
+        $out = [];
+        foreach ($rows as $row) {
+            $out[strtolower((string) $row['username'])] = ['id' => (int) $row['id'], 'username' => (string) $row['username']];
+        }
+        return $out;
+    }
+
+    /** @return array<int,array{id:int,username:string,display_name:?string,role:string,status:string}> */
+    public function suggestByPrefix(string $query, int $limit): array
+    {
+        return $this->db->fetchAll(
+            "SELECT id, username, display_name, role, status
+             FROM users
+             WHERE status = 'active' AND (username LIKE ? OR display_name LIKE ?)
+             ORDER BY username ASC
+             LIMIT " . max(1, min(25, $limit)),
+            [$query . '%', $query . '%'],
+        );
+    }
+
+    /**
      * @param list<int> $ids
      * @return array<int,array{email:string,status:string}> id => contact
      */

@@ -11,6 +11,7 @@ $this->section('title', 'Package catalogue');
     <nav class="subnav">
         <a href="/admin">Dashboard</a>
         <a class="active" href="/admin/packages">Packages</a>
+        <?php if (!empty($features['package_themes'])): ?><a href="/admin/themes">Themes</a><?php endif; ?>
         <a href="/admin/registries">Registry trust</a>
     </nav>
 

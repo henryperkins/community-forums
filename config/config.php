@@ -202,6 +202,7 @@ return [
         'dm_report' => [10, 600],
         'upload' => [40, 3600],
         'composer_preview' => [120, 600],
+        'composer_suggest' => [120, 60],
         'password_reset' => [5, 3600],
         'mfa_login' => [5, 900],
         'mfa_settings' => [10, 900],
@@ -252,6 +253,11 @@ return [
         'storage_path' => Env::get('PACKAGES_STORAGE_PATH', dirname(__DIR__) . '/storage/packages'),
         // Default uninstall retention window when the manifest declares none.
         'retention_days' => (int) Env::get('PACKAGES_RETENTION_DAYS', '30'),
+    ],
+
+    'theme' => [
+        // Emergency recovery: force the built-in system theme without mutating DB state.
+        'safe_mode' => Env::bool('THEME_SAFE_MODE', false),
     ],
 
     'giphy' => [

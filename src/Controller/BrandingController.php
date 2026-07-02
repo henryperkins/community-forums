@@ -12,6 +12,7 @@ use App\Repository\AttachmentRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Service\AttachmentService;
+use App\Service\Packages\ThemeStateService;
 
 /**
  * Operator branding (P3-07): site name, light/dark logo, favicon, and primary/
@@ -42,7 +43,7 @@ final class BrandingController extends Controller
         $preset = $settings->getString('brand_theme_preset', 'classic');
 
         $css = ':root{';
-        if ($preset === 'retro') {
+        if ($preset === 'retro' && !$this->packageThemeActive()) {
             $css .= '--surface:#fff7dc;--surface-soft:#fff1bd;--text:#241706;--accent:#8f3d12;--accent-2:#d78322;--border:#c78b45;';
         }
         if (self::isHex($primary)) {
@@ -235,6 +236,16 @@ final class BrandingController extends Controller
     {
         if (!$this->container->get(FeatureFlags::class)->enabled('branding')) {
             throw new NotFoundException();
+        }
+    }
+
+    private function packageThemeActive(): bool
+    {
+        try {
+            return $this->container->get(FeatureFlags::class)->enabled('package_themes')
+                && $this->container->get(ThemeStateService::class)->activeBuild() !== null;
+        } catch (\Throwable) {
+            return false;
         }
     }
 

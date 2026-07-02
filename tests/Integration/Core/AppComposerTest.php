@@ -169,6 +169,30 @@ final class AppComposerTest extends TestCase
         self::assertSame(2, (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE thread_id = ?', [(int) $thread['thread_id']]));
     }
 
+    public function test_wysiwyg_flag_only_loads_editor_assets_when_rich_composer_is_enabled(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'wysiwyg-assets']);
+        $user = $this->makeUser(['username' => 'wysiwygassets']);
+        $this->actingAs($user);
+
+        $defaultPage = $this->get('/c/wysiwyg-assets');
+        self::assertStringContainsString('/assets/composer.js', $defaultPage->body());
+        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $defaultPage->body());
+
+        (new SettingRepository($this->db))->set('features', ['wysiwyg_composer' => true]);
+        $enabledPage = $this->get('/c/wysiwyg-assets');
+        self::assertStringContainsString('/assets/composer.js', $enabledPage->body());
+        self::assertStringContainsString('/assets/wysiwyg-composer.css', $enabledPage->body());
+        self::assertStringContainsString('<script type="module" src="/assets/wysiwyg-composer.js"></script>', $enabledPage->body());
+        self::assertStringContainsString('data-wysiwyg-composer="1"', $enabledPage->body());
+
+        (new SettingRepository($this->db))->set('features', ['rich_composer' => false, 'wysiwyg_composer' => true]);
+        $killedPage = $this->get('/c/wysiwyg-assets');
+        self::assertStringNotContainsString('/assets/composer.js', $killedPage->body());
+        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $killedPage->body());
+        self::assertStringNotContainsString('data-wysiwyg-composer="1"', $killedPage->body());
+    }
+
     public function test_drafts_route_renders_browser_local_shell(): void
     {
         // With server_drafts graduated to default-on, the server-owned list is
@@ -266,5 +290,26 @@ final class AppComposerTest extends TestCase
         self::assertSame(3, $repo->pageOfPost($threadId, $ids[5], 2));
         // A missing/hidden post falls back to page 1.
         self::assertSame(1, $repo->pageOfPost($threadId, 999999, 2));
+    }
+
+    public function test_composer_forms_expose_bridge_context_metadata(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'bridge-meta']);
+        $author = $this->makeUser(['username' => 'bridgemeta']);
+        $recipient = $this->makeUser(['username' => 'bridgedm']);
+        $thread = $this->makeThread($board, $author, 'Bridge meta', 'Opening');
+        $this->actingAs($author);
+
+        $boardPage = $this->get('/c/bridge-meta');
+        self::assertStringContainsString('data-composer-context="new_thread"', $boardPage->body());
+        self::assertStringContainsString('data-composer-target-id="' . (int) $board['id'] . '"', $boardPage->body());
+
+        $threadPage = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        self::assertStringContainsString('data-composer-context="reply"', $threadPage->body());
+        self::assertStringContainsString('data-composer-target-id="' . $thread['thread_id'] . '"', $threadPage->body());
+        self::assertStringContainsString('data-composer-context="edit"', $threadPage->body());
+
+        $newDm = $this->get('/messages/new');
+        self::assertStringContainsString('data-composer-context="dm"', $newDm->body());
     }
 }

@@ -41,6 +41,18 @@ final class BoardRepository
         return $this->db->fetch('SELECT * FROM boards WHERE slug = ?', [$slug]);
     }
 
+    /** @return array<int,array<string,mixed>> */
+    public function suggestByPrefix(string $query, int $limit): array
+    {
+        return $this->db->fetchAll(
+            "SELECT * FROM boards
+             WHERE is_archived = 0 AND (slug LIKE ? OR name LIKE ?)
+             ORDER BY slug ASC
+             LIMIT " . max(1, min(25, $limit)),
+            [$query . '%', $query . '%'],
+        );
+    }
+
     public function slugExists(string $slug): bool
     {
         if ($this->db->fetchValue('SELECT 1 FROM boards WHERE slug = ? LIMIT 1', [$slug]) !== false) {

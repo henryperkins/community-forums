@@ -32,6 +32,7 @@ final class PackageHealthService
         private PackageArtifactStore $artifacts,
         private ModerationLogRepository $audit,
         private ?Telemetry $telemetry = null,
+        private ?ThemeStateService $themes = null,
     ) {
     }
 
@@ -203,6 +204,7 @@ final class PackageHealthService
             'package' => (string) $install['package_uid'],
             'reason' => $reason,
         ]);
+        $this->themes?->onInstallIneligible((int) $install['id'], 'force_disabled: ' . $reason);
 
         return true;
     }
@@ -263,6 +265,7 @@ final class PackageHealthService
             'package' => (string) $install['package_uid'],
             'reason' => $reason,
         ]);
+        $this->themes?->onInstallIneligible((int) $install['id'], 'quarantined: ' . $reason);
 
         return true;
     }

@@ -57,6 +57,24 @@ final class MarkdownRoundTripTest extends TestCase
         self::assertSame($md->render($markdown), $md->render($markdown));
     }
 
+    public function test_supported_markdown_fixtures_render_semantically_after_editor_round_trip(): void
+    {
+        $markdown = implode("\n\n", [
+            '## Heading',
+            '**bold** *italic* ~~strike~~ `code`',
+            '> quote',
+            "- [x] task\n- item",
+            "| A | B |\n| - | - |\n| 1 | 2 |",
+            '||spoiler||',
+            '@alice',
+            '[#general](/c/general)',
+        ]);
+
+        $html = $this->md()->render($markdown);
+        self::assertStringContainsString('<table>', $html);
+        self::assertStringContainsString('class="spoiler"', $html);
+    }
+
     /** @return array<string,array{0:string}> */
     public static function xssCorpus(): array
     {

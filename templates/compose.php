@@ -2,7 +2,7 @@
 <?php $this->layout('layout'); $this->section('title', 'New topic'); ?>
 <div class="read-main read-pad compose-page">
     <h1>New topic</h1>
-    <form method="post" action="/threads" class="composer stacked">
+    <form method="post" action="/threads" class="composer stacked" data-composer-context="new_thread" data-composer-target-id="<?= (int) $selected_board ?>">
         <?= $this->csrfField() ?>
         <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
         <p class="muted">Markdown supported — <strong>**bold**</strong>, <em>*italic*</em>, <code>`code`</code>, <code>||spoiler||</code>, and <code>![alt](image)</code> after uploading.</p>

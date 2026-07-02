@@ -9,6 +9,7 @@ use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
+use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
 use App\Security\BoardPolicy;
 
@@ -19,8 +20,10 @@ final class ContentReferenceService
         private BoardRepository $boards,
         private ThreadRepository $threads,
         private PostRepository $posts,
+        private TagRepository $tags,
         private BoardMemberRepository $members,
         private BoardPolicy $policy,
+        private bool $tagsEnabled,
     ) {
     }
 
@@ -96,6 +99,11 @@ final class ContentReferenceService
                 $refs[] = ['target_type' => 'board', 'token' => (string) $m[1]];
             }
         }
+        if (preg_match_all('~(?:https?://[^\s)\]]+)?/tags/([A-Za-z0-9-]+)~', $body, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $refs[] = ['target_type' => 'tag', 'token' => (string) $m[1]];
+            }
+        }
 
         $seen = [];
         return array_values(array_filter($refs, static function (array $ref) use (&$seen): bool {
@@ -114,6 +122,7 @@ final class ContentReferenceService
             'board' => ($row = $this->boards->findBySlug($token)) !== null ? (int) $row['id'] : null,
             'thread' => ($row = $this->threads->find((int) $token)) !== null ? (int) $row['id'] : null,
             'post' => ($row = $this->posts->find((int) $token)) !== null ? (int) $row['id'] : null,
+            'tag' => ($row = $this->tags->visiblePublicBySlug($token)) !== null ? (int) $row['id'] : null,
             default => null,
         };
     }
@@ -125,6 +134,7 @@ final class ContentReferenceService
             'board' => $this->boardCard((int) $row['target_id'], $viewer),
             'thread' => $this->threadCard((int) $row['target_id'], $viewer),
             'post' => $this->postCard((int) $row['target_id'], $viewer),
+            'tag' => $this->tagCard((int) $row['target_id']),
             default => null,
         };
     }
@@ -184,6 +194,27 @@ final class ContentReferenceService
             'title' => 'Post in ' . (string) $post['thread_slug'],
             'url' => '/t/' . (int) $post['thread_id'] . '-' . (string) $post['thread_slug'] . '#p' . $postId,
             'meta' => mb_strimwidth($excerpt, 0, 120, '...'),
+        ];
+    }
+
+    /** @return array<string,mixed>|null */
+    private function tagCard(int $tagId): ?array
+    {
+        if (!$this->tagsEnabled) {
+            return null;
+        }
+        $tag = $this->tags->find($tagId);
+        if ($tag === null || (int) ($tag['is_enabled'] ?? 0) !== 1 || (string) ($tag['visibility'] ?? '') !== 'public') {
+            return null;
+        }
+        $description = trim((string) ($tag['description'] ?? ''));
+        $count = $this->tags->publicThreadCount($tagId);
+
+        return [
+            'type' => 'Tag',
+            'title' => (string) $tag['name'],
+            'url' => '/tags/' . (string) $tag['slug'],
+            'meta' => $description !== '' ? $description : ($count . ' visible topic' . ($count === 1 ? '' : 's')),
         ];
     }
 }

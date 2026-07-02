@@ -118,6 +118,7 @@ body {
     font-size: 1.0625rem;       /* book-like reading base for the serif body */
     color: var(--text);
     background: var(--surface-2);
+    background-image: var(--surface-texture, none);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -957,6 +958,44 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-slash-gif img {
     width: 56px; height: 56px; object-fit: cover;
     border-radius: 6px; border: 1px solid var(--border);
+}
+.composer-reference-menu {
+    border: 1px solid var(--border);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-lg);
+    border-radius: 8px;
+    margin-top: 6px;
+    max-height: 280px;
+    overflow: auto;
+    padding: 4px;
+}
+.composer-reference-menu[hidden] { display: none; }
+.composer-reference-option {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 8px;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+    padding: 7px 9px;
+    border-radius: 6px;
+}
+.composer-reference-option[aria-selected="true"],
+.composer-reference-option:hover { background: var(--surface-3); }
+.composer-reference-option .badge { grid-row: span 2; align-self: center; }
+.composer-reference-meta { color: var(--text-muted); font-size: .86rem; }
+@media (max-width: 640px) {
+    .composer-reference-menu {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 40;
+        max-height: 50vh;
+        border-radius: 8px 8px 0 0;
+    }
 }
 
 /* Uploaded media (P3-04). */

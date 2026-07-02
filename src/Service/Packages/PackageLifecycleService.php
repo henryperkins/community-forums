@@ -51,6 +51,7 @@ final class PackageLifecycleService
         private ModerationLogRepository $audit,
         private int $retentionDays = 30,
         private ?Telemetry $telemetry = null,
+        private ?ThemeStateService $themes = null,
     ) {
     }
 
@@ -330,6 +331,7 @@ final class PackageLifecycleService
             'action' => 'disable',
             'package' => (string) ($package['package_uid'] ?? ''),
         ]);
+        $this->themes?->onInstallIneligible($installedId, 'disabled', $admin->id());
     }
 
     public function setPinned(User $admin, int $installedId, bool $pinned): void
@@ -445,6 +447,7 @@ final class PackageLifecycleService
             'action' => 'uninstall',
             'package' => (string) $package['package_uid'],
         ]);
+        $this->themes?->onInstallIneligible($installedId, 'uninstalled', $admin->id());
 
         return $export;
     }
@@ -749,6 +752,7 @@ final class PackageLifecycleService
             'package' => (string) $package['package_uid'],
             'reason' => $reason,
         ]);
+        $this->themes?->onInstallIneligible($installedId, 'quarantined: ' . $reason, $actorId);
     }
 
     private function exceptionCode(PackagePolicyException | RegistryVerificationException $e): string

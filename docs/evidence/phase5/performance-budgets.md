@@ -11,11 +11,12 @@
 - Hardware class: unknown · OS/isolation: Linux
 - Fixture: phase5_fixture_v2 · role assignments: 4
 - Window: 200 iterations · concurrency: 1 · cache: cold
-- Legacy read p50/p95/p99 (ms): 0.9909 / 1.3822 / 1.8977
-- Resolver p50/p95/p99 (ms): 2.7069 / 3.4299 / 5.0566 · route/job: `capability_resolver_can`
-- Signature verify p50/p95/p99 (ms): 0.3953 / 0.5223 / 0.5455 · route/job: `registry_signature_verify`
-- Package install/update p50/p95/p99 (ms): 26.5695 / 47.1601 / 47.1601 · route/job: `package_install_update` · samples: 8
-- Queries: 600 · query time (ms): 206.0479 · peak mem (bytes): 4194304 · error rate: 0
+- Legacy read p50/p95/p99 (ms): 1.1417 / 1.4105 / 2.9775
+- Resolver p50/p95/p99 (ms): 2.5522 / 3.4057 / 4.4621 · route/job: `capability_resolver_can`
+- Signature verify p50/p95/p99 (ms): 0.4793 / 0.5491 / 0.5788 · route/job: `registry_signature_verify`
+- Package install/update p50/p95/p99 (ms): 33.9962 / 60.7351 / 60.7351 · route/job: `package_install_update` · samples: 8
+- Theme build/apply p50/p95/p99 (ms): 7.8833 / 11.3736 / 11.3736 · route/job: `theme_build_apply` · samples: 8
+- Queries: 600 · query time (ms): 239.8528 · peak mem (bytes): 4194304 · error rate: 0
 
 ## Budgets vs D11 targets (ADR 0004 D11)
 
@@ -23,9 +24,10 @@
 |---|---|---|---|---|
 | `registry.snapshot_freshness` | Registry snapshot freshness tolerance | 86400 s (max) | 86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal) | CONFIG |
 | `registry.fetch_p95` | Registry fetch duration | 2000 ms (p95) | — | PENDING (staged-enablement) |
-| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5223 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
-| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 47.1601 ms install/update (8 samples) | MEASURED (PASS) |
-| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 3.4299 ms resolver (baseline 1.3822 ms legacy) | MEASURED (PASS) |
+| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5491 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
+| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 60.7351 ms install/update (8 samples) | MEASURED (PASS) |
+| `theme.build_apply_p95` | Theme build + activate (declarative package) | 10000 ms (p95) | 11.3736 ms theme build/apply (8 samples) | MEASURED (PASS) |
+| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 3.4057 ms resolver (baseline 1.4105 ms legacy) | MEASURED (PASS) |
 | `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | — | PENDING (inc7) |
 | `oidc.discovery_p95_cached` | OIDC discovery/JWKS (cached) | 2000 ms (p95) | — | PENDING (inc8) |
 | `oidc.discovery_p95_cold` | OIDC discovery/JWKS (cold) | 5000 ms (p95) | — | PENDING (inc8) |

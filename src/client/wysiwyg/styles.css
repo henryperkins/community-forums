@@ -1,0 +1,44 @@
+.wysiwyg-composer {
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  border-radius: 8px;
+  min-height: 9rem;
+}
+
+.wysiwyg-composer .ProseMirror {
+  min-height: 9rem;
+  padding: 10px 12px;
+  outline: none;
+  white-space: pre-wrap;
+}
+
+.wysiwyg-source-toggle {
+  margin-top: 8px;
+}
+
+.composer-input.is-wysiwyg-source-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.composer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-3);
+  color: var(--text-strong);
+  padding: 1px 7px;
+  line-height: 1.5;
+}
+
+.composer-chip.is-muted {
+  color: var(--text-muted);
+  border-style: dashed;
+}

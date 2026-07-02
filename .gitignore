@@ -6,8 +6,12 @@ retroboards-project-knowledge.zip
 /vendor/
 composer.lock
 
+# JavaScript build tooling
+/node_modules/
+
 # App runtime
 /.env
+/storage/logs/
 /storage/cache/*
 /storage/ratelimit/*
 /storage/ratelimit-e2e/

@@ -21,12 +21,21 @@ use App\Repository\UserRepository;
 final class Session
 {
     private const GUEST_CSRF_COOKIE = 'rb_csrf';
+    private const PREVIEW_COOKIE = 'rb_theme_preview_build';
+    /** @var array<string,string> */
+    private const COOKIE_KEYS = [
+        'theme_preview_build' => self::PREVIEW_COOKIE,
+    ];
 
     private ?Request $request = null;
     /** @var array<string,mixed>|null */
     private ?array $sessionRow = null;
     private ?User $user = null;
     private ?string $guestSecret = null;
+    /** @var array<string,mixed> */
+    private array $cookieValues = [];
+    /** @var array<string,bool> */
+    private array $forgottenCookieValues = [];
 
     /** @var list<callable(Response):void> */
     private array $pending = [];
@@ -83,6 +92,56 @@ final class Session
     public function currentSessionId(): ?string
     {
         return isset($this->sessionRow['id']) ? (string) $this->sessionRow['id'] : null;
+    }
+
+    public function get(string $key): mixed
+    {
+        if (array_key_exists($key, $this->cookieValues)) {
+            return $this->cookieValues[$key];
+        }
+        if (isset($this->forgottenCookieValues[$key])) {
+            return null;
+        }
+        $cookie = self::COOKIE_KEYS[$key] ?? null;
+        if ($cookie === null) {
+            return null;
+        }
+
+        $value = $this->request?->cookie($cookie);
+        if ($key === 'theme_preview_build') {
+            return is_string($value) && ctype_digit($value) ? (int) $value : null;
+        }
+
+        return $value;
+    }
+
+    public function set(string $key, mixed $value): void
+    {
+        $cookie = self::COOKIE_KEYS[$key] ?? null;
+        if ($cookie === null) {
+            throw new \InvalidArgumentException('Unsupported session key: ' . $key);
+        }
+
+        $encoded = (string) $value;
+        $this->cookieValues[$key] = $value;
+        unset($this->forgottenCookieValues[$key]);
+        $this->pending[] = function (Response $r) use ($cookie, $encoded): void {
+            $r->setCookie($cookie, $encoded, 0, '/', $this->config['secure'], true, 'Lax');
+        };
+    }
+
+    public function forget(string $key): void
+    {
+        $cookie = self::COOKIE_KEYS[$key] ?? null;
+        if ($cookie === null) {
+            return;
+        }
+
+        unset($this->cookieValues[$key]);
+        $this->forgottenCookieValues[$key] = true;
+        $this->pending[] = function (Response $r) use ($cookie): void {
+            $r->forgetCookie($cookie, $this->config['secure']);
+        };
     }
 
     /** Create a session for the user and queue the cookie. Rotates the id. */

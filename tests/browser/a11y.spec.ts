@@ -1,5 +1,37 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+
+const repoRoot = path.resolve(__dirname, '..', '..');
+
+function runPhp(code: string): string {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$settings = new \\App\\Repository\\SettingRepository($db);
+${code}
+`;
+  return execFileSync('php', ['-r', php], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  }).toString();
+}
+
+function setWysiwygComposer(enabled: boolean): void {
+  runPhp(`
+$features = $settings->get('features', []);
+if (!is_array($features)) { $features = []; }
+$features['wysiwyg_composer'] = ${enabled ? 'true' : 'false'};
+$settings->set('features', $features);
+`);
+}
+
+test.beforeEach(() => {
+  setWysiwygComposer(false);
+});
 
 async function visit(page: Page, url: string): Promise<void> {
   const resp = await page.goto(url);
@@ -108,6 +140,14 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
 
   await visit(page, '/admin/packages');
   await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/themes');
+  await expect(page.getByRole('heading', { name: 'Themes' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/themes/safe-mode');
+  await expect(page.getByRole('heading', { name: 'Theme safe mode' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/registries');
@@ -235,6 +275,35 @@ test('phase 4 topic workflow bar has no serious axe violations (actions and summ
   await page.locator('.wf-history > summary').click();
   await expect(page.locator('.wf-history-list')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '.wf-history');
+});
+
+test('wysiwyg composer toolbar and reference picker have no serious axe violations', async ({ page }, info) => {
+  setWysiwygComposer(true);
+  try {
+    await login(page, 'bob@retro.test');
+    await visit(page, '/c/general');
+    await page.locator('details.composer-details > summary').click();
+    const form = page.locator('form.composer').first();
+    const editor = form.locator('.wysiwyg-composer .ProseMirror');
+    await expect(editor).toBeVisible();
+    await expect(editor).toHaveAttribute('aria-label', 'Composer body');
+    await expect(editor).toHaveAttribute('aria-multiline', 'true');
+    await expect(form.locator('.composer-toolbar')).toBeVisible();
+
+    await expectNoSeriousA11yViolations(page, info, '.composer-toolbar');
+    await expectNoSeriousA11yViolations(page, info, '.wysiwyg-composer');
+
+    await editor.fill('#gen');
+    await expect(page.locator('.composer-reference-menu[role="listbox"]')).toBeVisible();
+    await expectNoSeriousA11yViolations(page, info, '.composer-reference-menu');
+
+    await page.keyboard.press('Escape');
+    await form.getByRole('button', { name: 'Source' }).click();
+    await expect(form.locator('textarea.composer-input')).not.toHaveClass(/is-wysiwyg-source-hidden/);
+    await expectNoSeriousA11yViolations(page, info, 'form.composer');
+  } finally {
+    setWysiwygComposer(false);
+  }
 });
 
 test('phase 4 slash combobox has no serious axe violations and is keyboard operable', async ({ page }, info) => {

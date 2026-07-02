@@ -235,7 +235,7 @@ final class DirectMessageService
     private function deliver(User $sender, int $conversationId, string $body): int
     {
         $now = gmdate('Y-m-d H:i:s');
-        $messageId = $this->messages->create($conversationId, $sender->id(), $body, $this->markdown->render($body));
+        $messageId = $this->messages->create($conversationId, $sender->id(), $body, $this->markdown->render($body, ['link_mentions' => true]));
         // Bind any /media/{id} the message references to this DM (private). P3-04.
         if ($this->attachments !== null) {
             $ids = \App\Service\AttachmentService::referencedIds($body);

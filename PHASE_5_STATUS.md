@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow), Increment 2 (P5-01 registry protocol + package identity), and Increment 3 (P5-02 package install/manifest/lifecycle) landed 2026-07-02 behind dark flags. Inc 3 adds signed release acquisition, strict `rb-manifest.v2` validation, install/consent/enable/disable/update/rollback/uninstall/export, package health enforcement, and no-JS browser/axe evidence behind `package_registry`. It is still deploy-dark: enabled packages record eligibility only, execute nothing until Inc 4 themes/Inc 5 integrations, and the publisher console remains Inc 5. Increment 6 (enforcement cutover) stays blocked until shadow soak. Passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
+**Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow), Increment 2 (P5-01 registry protocol + package identity), Increment 3 (P5-02 package install/manifest/lifecycle), and Increment 4 (P5-03 declarative theme packages) landed 2026-07-02 behind dark flags. Inc 4 adds strict `theme` manifest validation, closed token/value grammars, contrast checks, raster-only asset neutralization, deterministic CSS builds, admin-only preview, password-reauth activation, LKG rollback, fail-safe deactivation, and emergency safe mode behind `package_themes`. It is still deploy-dark: only reviewed declarative theme packages can affect external CSS, no remote code executes, and integrations remain Inc 5. Increment 6 (enforcement cutover) stays blocked until shadow soak. Passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
 **Last updated:** 2026-07-02
-**Branch:** `phase5-inc3-package-lifecycle`
-**Suite:** Closeout gates green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/MigrationLedgerTest.php` -> **12 tests / 53 assertions**. `RB_TEST_FRESH=1 composer test` -> **1170 tests / 6032 assertions**. `composer test` -> **1170 tests / 6032 assertions** on two consecutive reused-schema runs. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.5223 ms MEASURED (PASS); package.install_update_p95 47.1601 ms MEASURED (PASS); resolver.p95 3.4299 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0070`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 3: `npm run evidence` -> **51 passed / 1 skipped** and `npm run a11y` -> **12 passed** across desktop + mobile.
+**Branch:** `phase5-inc4-declarative-themes`
+**Suite:** Closeout gates green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/Phase5EvidenceMapTest.php` -> **7 tests / 33 assertions**. `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php` -> **12 tests / 91 assertions**. Post-fix focused Phase 5/theme group -> **27 tests / 225 assertions**. `RB_TEST_FRESH=1 composer test` -> **1268 tests / 6619 assertions**. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.5491 ms MEASURED (PASS); package.install_update_p95 60.7351 ms MEASURED (PASS); theme.build_apply_p95 11.3736 ms MEASURED (PASS); resolver.p95 3.4057 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0072_phase5_theme_packages`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 4: `npm run evidence` -> **53 passed / 1 skipped** and `npm run a11y` -> **14 passed** across desktop + mobile.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -308,6 +308,41 @@ Inc 5.
   GA-DOD-06 are R3; GA-DOD-09 is R2 for install-side exact-digest enforcement
   while publisher-console review remains Inc 5.
 
+## Increment 4 landed (2026-07-02) - P5-03 declarative theme packages, deploy-dark
+
+The declarative theme runtime is complete behind the dark `package_themes` flag.
+Only enabled, reviewed `theme` packages can produce CSS; packages still execute
+no PHP or JavaScript, and integrations remain Inc 5.
+
+- **Manifest and token policy:** theme packages must include a strict `theme`
+  manifest block, non-theme packages must not, and `ThemeTokenPolicy` enforces a
+  closed allowlist of CSS custom properties, value grammars, asset references,
+  and contrast pairs. TM-TH-01 and TM-TH-02 point to
+  `ThemeTokenPolicyTest` and `ThemeBuildCssTest`.
+- **Asset scanning and deterministic builds:** `ThemeAssetScanner` accepts only
+  bounded raster assets, re-encodes them through GD, verifies declared digests,
+  and rejects SVG/HTML/script-capable media. `ThemeBuildService` emits
+  deterministic CSS, stores a `css_digest`, and serves only active package
+  assets through digest-addressed immutable routes. TM-TH-03 and TM-TH-04 point
+  to `ThemeAssetScannerTest` and `ThemeBuildServiceTest`.
+- **Admin state, preview, and safe mode:** `/admin/themes` is staff-only,
+  noindexed, and no-JS. Preview is isolated to the admin session, activation and
+  rollback require password reauth, LKG rollback serves exact prior bytes, and
+  `/admin/themes/safe-mode` remains flag-independent for emergency recovery.
+  Safe mode, including `THEME_SAFE_MODE`, suppresses active CSS, preview CSS, and
+  theme assets fail-dark. TM-TH-05, TM-TH-06, and TM-TH-07 point to
+  `AppThemePackageTest`.
+- **Lifecycle, repair, and evidence:** health-worker/quarantine/advisory
+  enforcement deactivates or rolls back active themes fail-safe, `bin/console repair`
+  clears invalid theme state, `theme.build_apply_p95` measured
+  **11.3736 ms MEASURED (PASS)** against the 10000 ms D11 budget, and browser
+  evidence covers preview, activate, safe mode, and rollback shots 39-42 on
+  desktop + mobile.
+- **Docs and ledger:** `docs/phase5/registry-protocol.md` documents the Inc 4
+  theme manifest/build/serving contract, `docs/runbooks/package_themes.md`
+  covers staged rollout and emergency operation, and GA-DOD-07 is R3 in
+  `docs/phase5/requirement-ledger.json`.
+
 ## Product-owner approvals recorded
 
 This instruction accepts ADR 0004 as the Milestone-0 decision record using its
@@ -371,7 +406,13 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   authorization is unchanged; enforcement is Inc 6.
 - **Package lifecycle (Inc 3, P5-02):** R3 — see
   `docs/phase5/requirement-ledger.json` (GA-DOD-05/06). Deploy-dark behind
-  `package_registry`; enabled packages execute nothing until Inc 4/5 runtimes.
+  `package_registry`; non-theme integrations still execute nothing until Inc 5
+  runtimes.
+- **Declarative themes (Inc 4, P5-03):** R3 — see
+  `docs/phase5/requirement-ledger.json` (GA-DOD-07). Deploy-dark behind
+  `package_themes`; theme packages can only emit deterministic external CSS and
+  sanitized raster assets, with preview/activation/safe-mode/LKG rollback
+  release evidence.
 - **Fixture + baselines + budget harness (Foundation F9):** R2 (implemented,
   deploy-dark — no flag; the seeder refuses `app.env=production`) +
   **R3-partial** — `Phase5FixtureSeeder` (representative role/assignment/
@@ -380,8 +421,9 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   and `Phase5BudgetReportService` wired via `bin/console verify:phase5-budgets`
   are implemented with enforcing PHPUnit evidence. The **A3** entry-gate
   artifact (`docs/evidence/phase5/performance-budgets.md`) is generated and
-  measures `resolver.p95`, `registry.signature_verify_p95`, and
-  `package.install_update_p95` as real numbers against the F9 fixture
+  measures `resolver.p95`, `registry.signature_verify_p95`,
+  `package.install_update_p95`, and `theme.build_apply_p95` as real numbers
+  against the F9 fixture
   (`registry.snapshot_freshness` and `webhook.delivery_timeout` report CONFIG
   caps); the unowned future budgets stay **PENDING** until each owning increment
   measures them on this same fixture — not R4/R5.
@@ -391,14 +433,18 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   signing harness + registry fixtures, `ReauthGate`, `Telemetry`/`LogRedactor`,
   the all-flags-off core-survival regression, and six recorded-pending-review
   threat-model dossiers.
-- **All other Phase 5 subsystems (themes, passkeys, providers, invitations,
-  sandbox, governance, service principals, verified links):** R0/R1 — pending
+- **All other Phase 5 subsystems (passkeys, providers, invitations, sandbox,
+  governance, service principals, verified links):** R0/R1 — pending
   implementation and workstream-specific evidence.
 
 ## Evidence index (this increment)
 
-- Migrations: `database/migrations/0049_phase5_registry_packages.php` … `0057_phase5_webhooks.php`.
-- Schema doc: `SCHEMA.md` §5A/§5B + §3 `api_tokens`/`webhooks`/`webhook_deliveries` + B2 hook-registry note + §9 changelog (v1.20).
+- Migrations: `database/migrations/0049_phase5_registry_packages.php` ...
+  `0057_phase5_webhooks.php`, plus `0066_phase5_seed_capabilities_owners.php`,
+  `0068_phase5_registry_snapshots.php`, `0069_phase5_package_lifecycle.php`,
+  `0070_phase5_publisher_review_security.php`, and
+  `0072_phase5_theme_packages.php`.
+- Schema doc: `SCHEMA.md` §5A/§5B + §3 `api_tokens`/`webhooks`/`webhook_deliveries` + B2 hook-registry note + package/theme table entries.
 - Flag-dark regression: `tests/Integration/Core/AppFeatureFlagTest.php`.
 - Schema-shape + secret/separation-invariant regression: `tests/Integration/Core/AppPhase5FoundationSchemaTest.php`.
 - Service-secret schema regression: `tests/Integration/Core/AppServiceSecretsSchemaTest.php`.
@@ -422,27 +468,47 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
 - Parity corpus: `docs/evidence/phase5/resolver-parity.md` (1551 tuples, 0 mismatches, fixture v2 + commit pinned).
 - Resolver budget: `docs/evidence/phase5/performance-budgets.md` — `resolver.p95` MEASURED (PASS) vs 5 ms.
 - Role editor/simulator browser evidence: `docs/evidence/browser/{desktop,mobile}/30-admin-role-created.png` + `31-admin-role-simulator.png` (+ axe green).
+- Increment 4 (P5-03 declarative themes): `tests/Unit/Security/Packages/ThemeTokenPolicyTest.php`,
+  `tests/Unit/Service/Packages/ThemeBuildCssTest.php`,
+  `tests/Unit/Service/Packages/ThemeAssetScannerTest.php`,
+  `tests/Integration/Service/ThemeBuildServiceTest.php`,
+  `tests/Integration/Service/ThemeLifecycleIntegrationTest.php`,
+  `tests/Integration/Service/ThemeBudgetTest.php`,
+  `tests/Integration/Worker/PackageHealthWorkerTest.php`,
+  `tests/Integration/Core/AppPhase5ThemeSchemaTest.php`,
+  `tests/Integration/Core/AppThemePackageTest.php`.
+- Theme browser evidence: `docs/evidence/browser/{desktop,mobile}/39-admin-themes-preview.png`,
+  `40-admin-theme-active.png`, `41-admin-theme-safe-mode.png`, and
+  `42-admin-theme-rollback.png` (+ axe green).
+- Theme operations docs: `docs/runbooks/package_themes.md`,
+  `docs/phase5/registry-protocol.md` (Inc 4 theme block/build/serving
+  contract), and `docs/evidence/phase5/performance-budgets.md`
+  (`theme.build_apply_p95` MEASURED (PASS)).
 - Requirement ledger: `docs/phase5/requirement-ledger.json` (R0-R5 states + per-flag rollback map, machine-checked).
-- Threat models: `docs/phase5/threat-models/` (6 dossiers + `fixtures.json`, 48 negative-fixture stubs; TM-SE-01 already implemented).
-- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **979 tests / 5179 assertions green** on two consecutive Increment 1 exit-gate runs.
-- **Browser evidence:** `npm run evidence` → **31 passed / 1 skipped** on desktop + mobile; includes admin API-token, domain webhook, role-editor, and permission-simulator no-JS journeys. `npm run a11y` → **8 passed**.
+- Threat models: `docs/phase5/threat-models/` (6 dossiers + `fixtures.json`, 48 negative-fixture stubs; TM-SE-01 and TM-TH-01..07 implemented).
+- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **1268 tests / 6619 assertions green** on the Inc 4 post-fix fresh-schema gate.
+- **Browser evidence:** `npm run evidence` -> **53 passed / 1 skipped** on desktop + mobile; includes admin API-token, domain webhook, role-editor, permission-simulator, package lifecycle, and theme preview/activate/safe-mode/rollback no-JS journeys. `npm run a11y` -> **14 passed**.
 - **Worker smoke:** `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 MAIL_DRIVER=array php bin/console worker:webhooks` → `delivered=0 retrying=0 dead=0 skipped=0`.
-- **Populated-upgrade rehearsal:** `APP_ENV=testing DB_DATABASE=retroboards_upgrade_verify php bin/console verify:upgrade --force` → **PASS 17/17** (`0049`–`0057` applied on seeded Phase-1 data; `oauth_identities` ENUM→VARCHAR widen included; 90 Phase-1 columns intact; zero data loss).
+- **Populated-upgrade rehearsal:** `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **PASS 17/17** (`0049`-`0072` applied on seeded Phase-1 data; `oauth_identities` ENUM->VARCHAR widen included; Phase-1 columns intact; zero data loss).
 - **Legacy ledger probe:** scratch `schema_migrations(version, applied_at)` normalized to `schema_migrations(name, applied_at)` and `Migrator::status()` reported `0001_users` as applied (`status-ok columns=name,applied_at`).
 - **Independent adversarial review:** 5-dimension review (DDL correctness, §8.2 completeness, security invariants, inertness, doc accuracy) with each finding re-verified against source. 5 findings confirmed / 10 rejected; all 5 resolved in this increment — `credential_id` widened to `VARBINARY(1023)` (WebAuthn L2 max), secret/separation invariants locked in the shape test, and two ADR-0004 wording fixes.
 - Entry/decision record: `docs/adr/0004-phase-5-entry-and-carryover.md`; carryover source `docs/adr/0003-phase-4-closeout-deferrals.md`.
 
-## Recommended next increments (after Milestone-0 approval)
+## Recommended next increments
 
-Per `PHASE_5_PLAN` §13.1 staged order — each behind its dark flag, with shadow/
+Per `PHASE_5_PLAN` §13.1 staged order - each behind its dark flag, with shadow/
 parity and adversarial evidence before enablement:
 
-1. **Registry + signed declarative themes** (P5-01/03): signature/digest/staleness
-   verification, isolated theme preview, safe mode.
-2. **Passkeys** (P5-11) on top of the TOTP/recovery fallback.
-3. **Generic OIDC + provider migration** (P5-12) and **invitations** (P5-13).
-4. **Resolver enforcement cutover** (P5-08/P5-09, Increment 6) after the shadow
-   parity soak stays clean.
+1. **Package integrations / publisher console** (Inc 5): consented integrations,
+   credential minting, endpoint-level data-class controls, and publisher review
+   evidence on top of the signed package lifecycle.
+2. **Resolver enforcement cutover** (P5-08/P5-09, Inc 6): turn the shadow-clean
+   resolver into live authorization, including the remaining protected-owner
+   loss paths.
+3. **Passkeys** (P5-11, Inc 7): WebAuthn ceremonies on top of the existing
+   TOTP/recovery fallback.
+4. **Generic OIDC + provider migration** (P5-12, Inc 8) and **invitations**
+   (P5-13, Inc 9).
 
 ## Operating note
 

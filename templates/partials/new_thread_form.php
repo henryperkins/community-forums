@@ -1,5 +1,5 @@
 <?php /** @var \App\Core\View $this */ ?>
-<form method="post" action="/threads" class="composer stacked">
+<form method="post" action="/threads" class="composer stacked" data-composer-context="new_thread" data-composer-target-id="<?= (int) $board['id'] ?>">
     <?= $this->csrfField() ?>
     <input type="hidden" name="board_id" value="<?= (int) $board['id'] ?>">
     <?php if (!empty($errors['title'])): ?><p class="field-error"><?= $e($errors['title']) ?></p><?php endif; ?>

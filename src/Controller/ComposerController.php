@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
+use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
+use App\Service\ComposerSuggestion;
+use App\Service\ComposerSuggestionService;
 use App\Service\RateLimitService;
 use App\Support\Markdown;
 
@@ -31,8 +34,35 @@ final class ComposerController extends Controller
         if (mb_strlen($body) > $max) {
             $body = mb_substr($body, 0, $max);
         }
-        $html = $this->container->get(Markdown::class)->render($body);
+        $html = $this->container->get(Markdown::class)->render($body, ['link_mentions' => true]);
 
         return Response::json(['ok' => true, 'html' => $html]);
+    }
+
+    public function suggest(Request $request): Response
+    {
+        $user = $this->requireUser();
+        $flags = $this->container->get(FeatureFlags::class);
+        if (!$flags->enabled('rich_composer')) {
+            throw new NotFoundException('Not found.');
+        }
+        $this->container->get(RateLimitService::class)->enforce('composer_suggest', $request, $user);
+
+        $trigger = (string) $request->query('trigger', '');
+        $q = (string) $request->query('q', '');
+        $context = (string) $request->query('context', '');
+        $targetId = (int) $request->query('target_id', 0);
+
+        if (!in_array($trigger, ['@', '#'], true)) {
+            return Response::json(['ok' => false, 'error' => 'Unsupported trigger.'], 422);
+        }
+
+        $items = $this->container->get(ComposerSuggestionService::class)
+            ->suggest($trigger, $q, $context, $targetId, $user);
+
+        return Response::json([
+            'ok' => true,
+            'items' => array_map(static fn (ComposerSuggestion $item): array => $item->toArray(), $items),
+        ]);
     }
 }

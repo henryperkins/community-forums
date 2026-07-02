@@ -17,6 +17,7 @@ use App\Controller\AdminPackageLifecycleController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
 use App\Controller\AdminRoleController;
+use App\Controller\AdminThemeController;
 use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
@@ -57,6 +58,7 @@ use App\Controller\SetupController;
 use App\Controller\SolvedController;
 use App\Controller\SubscriptionController;
 use App\Controller\TagController;
+use App\Controller\ThemeController;
 use App\Controller\UserModerationController;
 use App\Controller\ThreadController;
 use App\Controller\ThreadWorkflowController;
@@ -100,6 +102,7 @@ use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PackageRepository;
+use App\Repository\PackageThemeRepository;
 use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
@@ -169,6 +172,7 @@ use App\Service\PasswordResetService;
 use App\Service\BadgeRuleService;
 use App\Service\BadgeService;
 use App\Service\CommunityMemoryService;
+use App\Service\ComposerSuggestionService;
 use App\Service\DirectMessageService;
 use App\Service\FeedService;
 use App\Service\FollowService;
@@ -184,6 +188,9 @@ use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
+use App\Service\Packages\ThemeAssetScanner;
+use App\Service\Packages\ThemeBuildService;
+use App\Service\Packages\ThemeStateService;
 use App\Service\PostingService;
 use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
@@ -217,6 +224,7 @@ use App\Service\Webhook\WebhookTransport;
 use App\Service\WebhookService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
+use App\Support\MentionLinker;
 use Throwable;
 
 /**
@@ -483,6 +491,36 @@ final class App
         // Branding (P3-07): operator name/logo/favicon/colors with safe fallbacks.
         $branding = $this->branding($container, $siteName, $appearance);
 
+        // Declarative package themes (P5-03): external CSS only, with emergency
+        // safe mode and admin-only preview kept outside the DB-backed session.
+        $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
+        try {
+            if (!empty($features['package_themes']) && $request->path() !== '/admin/themes/safe-mode') {
+                $themeState = $container->get(ThemeStateService::class);
+                $user = $session->user();
+                if ($user !== null && $user->isAdmin()) {
+                    $previewId = $session->get('theme_preview_build');
+                    $previewBuild = $themeState->previewBuildFor(is_int($previewId) ? $previewId : null);
+                    if ($previewBuild !== null) {
+                        $packageTheme['preview_css_digest'] = (string) $previewBuild['css_digest'];
+                    } elseif ($previewId !== null) {
+                        $session->forget('theme_preview_build');
+                    }
+                } elseif ($session->get('theme_preview_build') !== null) {
+                    $session->forget('theme_preview_build');
+                }
+
+                if ($packageTheme['preview_css_digest'] === null) {
+                    $activeBuild = $themeState->activeBuild();
+                    if ($activeBuild !== null) {
+                        $packageTheme['active_css_digest'] = (string) $activeBuild['css_digest'];
+                    }
+                }
+            }
+        } catch (Throwable) {
+            $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
+        }
+
         // Configured OAuth providers power the "Sign in with …" buttons.
         $oauthProviders = [];
         try {
@@ -532,6 +570,7 @@ final class App
             'appearance' => $appearance,
             'composing' => $composing,
             'branding' => $branding,
+            'package_theme' => $packageTheme,
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
             'site_announcement' => $siteAnnouncement,
@@ -672,6 +711,11 @@ final class App
         $c->bind(Markdown::class, fn (Container $c) => new Markdown(
             $c->get(HtmlSanitizer::class),
             $c->get(FeatureFlags::class)->enabled('custom_emoji') ? $c->get(CustomEmojiService::class) : null,
+            $c->get(MentionLinker::class),
+        ));
+        $c->bind(MentionLinker::class, fn (Container $c) => new MentionLinker(
+            $c->get(UserRepository::class),
+            $c->get(FeatureFlags::class)->enabled('mentions'),
         ));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
         $c->bind(ReauthGate::class, fn (Container $c) => new ReauthGate($c->get(PasswordHasher::class)));
@@ -775,8 +819,10 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(ThreadRepository::class),
             $c->get(PostRepository::class),
+            $c->get(TagRepository::class),
             $c->get(BoardMemberRepository::class),
             $c->get(BoardPolicy::class),
+            $c->get(FeatureFlags::class)->enabled('tags'),
         ));
         $c->bind(LinkPreviewService::class, fn (Container $c) => new LinkPreviewService(
             $c->get(Database::class),
@@ -860,8 +906,20 @@ final class App
         $c->bind(RepairService::class, fn (Container $c) => new RepairService(
             $c->get(Database::class),
             (int) $config->get('community.solved_bonus', 5),
+            $c->get(ThemeStateService::class),
         ));
         $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
+        $c->bind(ComposerSuggestionService::class, fn (Container $c) => new ComposerSuggestionService(
+            $c->get(UserRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(TagRepository::class),
+            $c->get(ThreadRepository::class),
+            $c->get(PostRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(SearchService::class),
+            $c->get(FeatureFlags::class),
+        ));
         $c->bind(Mailer::class, function (Container $c) use ($config): Mailer {
             $mail = (array) $config->get('mail', []);
             if (($mail['driver'] ?? 'sendmail') === 'array') {
@@ -1155,6 +1213,7 @@ final class App
         $c->bind(InstalledPackageRepository::class, fn (Container $c) => new InstalledPackageRepository($c->get(Database::class)));
         $c->bind(InstalledPackagePermissionRepository::class, fn (Container $c) => new InstalledPackagePermissionRepository($c->get(Database::class)));
         $c->bind(PackageHistoryRepository::class, fn (Container $c) => new PackageHistoryRepository($c->get(Database::class)));
+        $c->bind(PackageThemeRepository::class, fn (Container $c) => new PackageThemeRepository($c->get(Database::class)));
         $c->bind(PackageTransparencyLogRepository::class, fn (Container $c) => new PackageTransparencyLogRepository($c->get(Database::class)));
         $c->bind(ManifestValidator::class, fn () => new ManifestValidator());
         $c->bind(PackageSecurityGate::class, fn (Container $c) => new PackageSecurityGate(
@@ -1170,6 +1229,31 @@ final class App
             (int) $config->get('registry.fetch_timeout_seconds', 10),
         ));
         $c->bind(PackageArtifactStore::class, fn () => new PackageArtifactStore((string) $config->get('packages.storage_path')));
+        $c->bind(ThemeAssetScanner::class, fn () => new ThemeAssetScanner());
+        $c->bind(ThemeBuildService::class, fn (Container $c) => new ThemeBuildService(
+            $c->get(Database::class),
+            $c->get(PackageThemeRepository::class),
+            $c->get(ManifestValidator::class),
+            $c->get(ThemeAssetScanner::class),
+            $c->get(Telemetry::class),
+        ));
+        $c->bind(ThemeStateService::class, fn (Container $c) => new ThemeStateService(
+            $c->get(Database::class),
+            $c->get(PackageThemeRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageArtifactStore::class),
+            $c->get(PackageSecurityGate::class),
+            $c->get(ThemeBuildService::class),
+            $c->get(WriteGate::class),
+            $c->get(ReauthGate::class),
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(Telemetry::class),
+            (bool) $config->get('theme.safe_mode', false),
+        ));
         $c->bind(PackageAcquisitionService::class, fn (Container $c) => new PackageAcquisitionService(
             $c->get(Database::class),
             $c->get(TrustChainVerifier::class),
@@ -1200,6 +1284,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             (int) $config->get('packages.retention_days', 30),
             $c->get(Telemetry::class),
+            $c->get(ThemeStateService::class),
         ));
         $c->bind(PackageUpdateService::class, fn (Container $c) => new PackageUpdateService(
             $c->get(Database::class),
@@ -1232,6 +1317,7 @@ final class App
             $c->get(PackageArtifactStore::class),
             $c->get(ModerationLogRepository::class),
             $c->get(Telemetry::class),
+            $c->get(ThemeStateService::class),
         ));
         $c->bind(RegistrySnapshotRepository::class, fn (Container $c) => new RegistrySnapshotRepository($c->get(Database::class)));
         $c->bind(RegistrySnapshotService::class, fn (Container $c) => new RegistrySnapshotService(
@@ -1416,6 +1502,7 @@ final class App
 
         // Shared composer live preview (P3-02) — same render+sanitize pipeline.
         $r->post('/composer/preview', [ComposerController::class, 'preview']);
+        $r->get('/composer/suggest', [ComposerController::class, 'suggest']);
         $r->get('/composer/giphy-config', [SlashGiphyController::class, 'pickerConfig']);
         $r->get('/drafts', [DraftController::class, 'index']);
         $r->post('/drafts/{id}/discard', [DraftController::class, 'discardPage']);
@@ -1519,6 +1606,9 @@ final class App
 
         // Operator branding (P3-07): dynamic brand stylesheet + admin controls.
         $r->get('/brand.css', [BrandingController::class, 'css']);
+        $r->get('/theme/preview.css', [ThemeController::class, 'previewCss']);
+        $r->get('/theme/{digest}.css', [ThemeController::class, 'css']);
+        $r->get('/theme/asset/{digest}', [ThemeController::class, 'asset']);
         $r->get('/admin/branding', [BrandingController::class, 'form']);
         $r->post('/admin/branding', [BrandingController::class, 'update']);
         $r->get('/admin/tags', [TagController::class, 'admin']);
@@ -1580,6 +1670,13 @@ final class App
         $r->get('/admin/roles/{id}', [AdminRoleController::class, 'edit']);
         $r->post('/admin/roles/{id}', [AdminRoleController::class, 'update']);
         $r->post('/admin/roles/{id}/clone', [AdminRoleController::class, 'clone']);
+        $r->get('/admin/themes', [AdminThemeController::class, 'index']);
+        $r->get('/admin/themes/safe-mode', [AdminThemeController::class, 'safeModeForm']);
+        $r->post('/admin/themes/safe-mode', [AdminThemeController::class, 'safeMode']);
+        $r->post('/admin/themes/preview/clear', [AdminThemeController::class, 'clearPreview']);
+        $r->post('/admin/themes/rollback', [AdminThemeController::class, 'rollback']);
+        $r->post('/admin/themes/{id}/preview', [AdminThemeController::class, 'preview']);
+        $r->post('/admin/themes/{id}/activate', [AdminThemeController::class, 'activate']);
         $r->get('/admin/packages', [AdminPackagesController::class, 'index']);
         $r->get('/admin/packages/{id}', [AdminPackagesController::class, 'show']);
         $r->post('/admin/packages/{id}/plan', [AdminPackageLifecycleController::class, 'plan']);

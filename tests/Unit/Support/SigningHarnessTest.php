@@ -95,6 +95,18 @@ final class SigningHarnessTest extends TestCase
         self::assertSame('rb-manifest.v2', $manifest['format']);
     }
 
+    public function test_mint_manifest_theme_block_merges_one_level_deep(): void
+    {
+        $root = SigningHarness::generate();
+        $manifest = $root->mintManifest(['theme' => ['tokens' => ['--accent' => '#112233']]]);
+
+        self::assertSame('#112233', $manifest['theme']['tokens']['--accent']);
+        self::assertSame(1, $manifest['theme']['schema_version']);
+
+        $auto = $root->mintManifest(['type' => 'automation', 'theme' => null]);
+        self::assertArrayNotHasKey('theme', $auto);
+    }
+
     public function test_mint_release_envelope_wraps_the_exact_document(): void
     {
         $root = SigningHarness::generate();

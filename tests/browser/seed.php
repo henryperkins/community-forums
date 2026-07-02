@@ -64,6 +64,7 @@ $evidenceFeatures = [
     'account_lifecycle' => true, // GA default-on (2026-07-02; ADR 0006); listed explicitly so the member self-serve export/deactivate/delete surface is captured
     'capabilities' => true, // Inc 1 (P5-08): role editor + simulator browser evidence (shadow-only)
     'package_registry' => true, // Inc 2 (P5-01): staff catalogue browse evidence (read-only)
+    'package_themes' => true, // Inc 4 (P5-03): package theme preview/activate/safe-mode/rollback evidence
 ];
 if ($includeDarkSurfaceFixtures) {
     $evidenceFeatures['appeals'] = true;
@@ -215,7 +216,7 @@ $ensureRegistryFixtures = static function () use ($db, $config, $users): bool {
         $db->run("DELETE FROM local_package_blocks WHERE reason = 'Evidence blocklist entry'");
         $db->run("DELETE FROM packages WHERE package_uid LIKE 'acme/%'");
         $db->run("DELETE FROM package_publishers WHERE publisher_uid LIKE 'acme%'");
-        $db->run("DELETE FROM package_registries WHERE source_id IN ('rb-test', 'rb-test-mobile', 'rb-consent')");
+        $db->run("DELETE FROM package_registries WHERE source_id IN ('rb-test', 'rb-test-mobile', 'rb-consent', 'rb-theme-evidence', 'rb-theme-evidence-alt')");
     });
 
     $artifactDir = (string) $config->get('packages.storage_path');
@@ -224,15 +225,87 @@ $ensureRegistryFixtures = static function () use ($db, $config, $users): bool {
     $packages = new \App\Repository\PackageRepository($db);
     $releases = new \App\Repository\PackageReleaseRepository($db);
 
-    $registryIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir);
+    $themePng = base64_decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC',
+        true,
+    );
+    if ($themePng === false) {
+        throw new RuntimeException('Unable to decode browser theme asset fixture.');
+    }
+    $asset = [
+        'name' => 'parchment',
+        'kind' => 'png',
+        'sha256' => hash('sha256', $themePng),
+        'data_base64' => base64_encode($themePng),
+    ];
+    $midnightTheme = [
+        'tokens' => [
+            '--surface' => '#1d232e',
+            '--surface-2' => '#252d3a',
+            '--surface-3' => '#2d3748',
+            '--text' => '#f4f7fb',
+            '--text-muted' => '#d7deea',
+            '--accent' => '#d2b062',
+            '--accent-contrast' => '#241706',
+            '--surface-texture' => 'parchment',
+        ],
+        'dark_tokens' => [
+            '--surface' => '#1d232e',
+            '--surface-2' => '#252d3a',
+            '--surface-3' => '#2d3748',
+            '--text' => '#f4f7fb',
+            '--text-muted' => '#d7deea',
+            '--accent' => '#d2b062',
+            '--accent-contrast' => '#241706',
+        ],
+        'assets' => [$asset],
+    ];
+    $lkgTheme = [
+        'tokens' => [
+            '--surface' => '#f7fbff',
+            '--surface-2' => '#ebf3fb',
+            '--text' => '#172033',
+            '--text-muted' => '#46556b',
+            '--accent' => '#1f4fbf',
+            '--accent-contrast' => '#ffffff',
+        ],
+        'dark_tokens' => [
+            '--surface' => '#172033',
+            '--surface-2' => '#202b40',
+            '--text' => '#f7fbff',
+            '--text-muted' => '#d5deec',
+            '--accent' => '#8fb7ff',
+            '--accent-contrast' => '#172033',
+        ],
+        'assets' => [],
+    ];
+
+    $registryIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir, [
+        'release' => ['manifest' => ['theme' => $midnightTheme]],
+    ]);
     $mobileIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir, [
         'source_id' => 'rb-test-mobile',
         'publisher_uid' => 'acme-mobile',
         'package_uid' => 'acme/midnight-theme-mobile',
         'name' => 'Midnight Theme Mobile',
+        'release' => ['manifest' => ['theme' => $midnightTheme]],
+    ]);
+    $showcaseIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir, [
+        'source_id' => 'rb-theme-evidence',
+        'publisher_uid' => 'acme-theme-evidence',
+        'package_uid' => 'acme/theme-evidence',
+        'name' => 'Theme Evidence',
+        'release' => ['manifest' => ['theme' => $midnightTheme]],
+    ]);
+    $showcaseAltIds = \Tests\Support\Phase5\RegistryFixtures::seed($db, $registryRoot, $artifactDir, [
+        'source_id' => 'rb-theme-evidence-alt',
+        'publisher_uid' => 'acme-theme-evidence-alt',
+        'package_uid' => 'acme/theme-evidence-alt',
+        'name' => 'Theme Evidence Alt',
+        'release' => ['manifest' => ['theme' => $lkgTheme]],
     ]);
 
-    foreach ([$registryIds, $mobileIds] as $ids) {
+    foreach ([$registryIds, $mobileIds, $showcaseIds, $showcaseAltIds] as $ids) {
         $registries->setEnabled($ids['registry_id'], true);
         $packages->setLatestRelease($ids['package_id'], $ids['release_id']);
     }
@@ -243,7 +316,7 @@ $ensureRegistryFixtures = static function () use ($db, $config, $users): bool {
         'manifest' => ['permissions' => [
             'data_classes' => ['package.own_storage'],
             'outbound_hosts' => ['api.example.com'],
-        ]],
+        ], 'theme' => $midnightTheme],
     ], $artifactDir);
     \Tests\Support\Phase5\RegistryFixtures::seedRelease($db, $registryRoot, $mobileIds, [
         'uid' => 'acme/midnight-theme-mobile',
@@ -251,7 +324,7 @@ $ensureRegistryFixtures = static function () use ($db, $config, $users): bool {
         'manifest' => ['name' => 'Midnight Theme Mobile', 'permissions' => [
             'data_classes' => ['package.own_storage'],
             'outbound_hosts' => ['api.example.com'],
-        ]],
+        ], 'theme' => $midnightTheme],
     ], $artifactDir);
     $packages->setLatestRelease($registryIds['package_id'], $registryIds['release_id']);
     $packages->setLatestRelease($mobileIds['package_id'], $mobileIds['release_id']);
@@ -267,6 +340,30 @@ $ensureRegistryFixtures = static function () use ($db, $config, $users): bool {
 
     $admin = $users->findByUsername('admin');
     if ($admin !== null) {
+        $installEnabledTheme = static function (array $ids) use ($db, $admin, $packages, $releases): void {
+            $package = $packages->find($ids['package_id']);
+            $release = $releases->find($ids['release_id']);
+            if ($package === null || $release === null) {
+                return;
+            }
+
+            $installedId = (new \App\Repository\InstalledPackageRepository($db))->create([
+                'package_id' => (int) $package['id'],
+                'release_id' => (int) $release['id'],
+                'digest' => (string) $release['digest'],
+                'source_registry_id' => (int) $ids['registry_id'],
+                'publisher_id' => (int) $ids['publisher_id'],
+                'trust_class' => (string) $package['trust_class'],
+                'review_status' => (string) $release['review_status'],
+                'compat_min' => $release['core_min'] !== null ? (string) $release['core_min'] : null,
+                'compat_max' => $release['core_max'] !== null ? (string) $release['core_max'] : null,
+                'installed_by' => (int) $admin['id'],
+            ]);
+            (new \App\Repository\InstalledPackageRepository($db))->setState($installedId, 'enabled');
+        };
+        $installEnabledTheme($showcaseIds);
+        $installEnabledTheme($showcaseAltIds);
+
         $package = $packages->find($consentIds['package_id']);
         $release = $releases->find($consentIds['release_id']);
         if ($package !== null && $release !== null) {
