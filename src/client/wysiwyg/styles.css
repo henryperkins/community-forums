@@ -9,6 +9,7 @@
   min-height: 9rem;
   padding: 10px 12px;
   outline: none;
+  white-space: pre-wrap;
 }
 
 .wysiwyg-source-toggle {

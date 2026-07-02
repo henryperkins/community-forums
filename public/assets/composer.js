@@ -67,6 +67,38 @@
     TextareaComposerAdapter.prototype.setDisabled = function (disabled) { this.ta.disabled = !!disabled; };
     TextareaComposerAdapter.prototype.destroy = function () {};
 
+    var wysiwygFactory = null;
+    window.RetroBoardsComposer = {
+        registerWysiwygAdapter: function (factory) {
+            wysiwygFactory = factory;
+            document.querySelectorAll('form.composer').forEach(function (form) {
+                if (form._rbComposerEnhance) { form._rbComposerEnhance(); }
+            });
+        }
+    };
+
+    function shouldUseWysiwyg(form) {
+        return document.body.getAttribute('data-wysiwyg-composer') === '1'
+            && wysiwygFactory
+            && !form.hasAttribute('data-no-wysiwyg');
+    }
+
+    function maybeUpgradeWysiwyg(form, ta, fallback) {
+        if (!shouldUseWysiwyg(form) || form._rbWysiwygAdapter || form._rbWysiwygAttempted) {
+            return form._rbComposerAdapter || fallback;
+        }
+        form._rbWysiwygAttempted = true;
+        try {
+            var rich = wysiwygFactory(form, ta, fallback);
+            if (rich) {
+                form._rbWysiwygAdapter = rich;
+                form._rbComposerAdapter = rich;
+                return rich;
+            }
+        } catch (e) {}
+        return form._rbComposerAdapter || fallback;
+    }
+
     // ---- Markdown toolbar -------------------------------------------------
     function wrapSelection(ta, before, after) {
         var s = ta.selectionStart, e = ta.selectionEnd;
@@ -1486,11 +1518,21 @@
 
     function enhance(form, prefs) {
         var ta = form.querySelector('.composer-input');
-        if (!ta || ta.getAttribute('data-rb-enhanced')) { return; }
+        if (!ta) { return; }
+        form._rbComposerEnhance = function () {
+            maybeUpgradeWysiwyg(form, ta, form._rbComposerFallbackAdapter || form._rbComposerAdapter);
+        };
+        if (ta.getAttribute('data-rb-enhanced')) {
+            form._rbComposerEnhance();
+            return;
+        }
         ta.setAttribute('data-rb-enhanced', '1');
         var adapter = new TextareaComposerAdapter(form, ta);
+        form._rbComposerFallbackAdapter = adapter;
+        form._rbComposerAdapter = adapter;
         buildToolbar(ta);
         buildCounter(ta);
+        adapter = maybeUpgradeWysiwyg(form, ta, adapter);
         if (prefs.showPreview) { buildPreview(form, adapter); }
         // Wire the slash combobox before wireKeys so its keydown listener runs
         // first: when the menu is open it consumes Enter/Escape (via
@@ -1498,6 +1540,15 @@
         wireSlashMenu(form, adapter);
         wireReferencePickers(form, adapter);
         wireKeys(form, adapter, prefs);
+        if (!form._rbComposerSubmitSync) {
+            form._rbComposerSubmitSync = true;
+            form.addEventListener('submit', function () {
+                var active = form._rbComposerAdapter;
+                if (active && typeof active.getMarkdown === 'function') {
+                    ta.value = active.getMarkdown();
+                }
+            });
+        }
         stampIdempotency(form);
         // A form may opt out of local draft autosave (data-no-draft). The inline
         // post-edit form does: its textarea is server-pre-filled with the current

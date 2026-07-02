@@ -183,6 +183,7 @@ final class AppComposerTest extends TestCase
         $enabledPage = $this->get('/c/wysiwyg-assets');
         self::assertStringContainsString('/assets/composer.js', $enabledPage->body());
         self::assertStringContainsString('/assets/wysiwyg-composer.css', $enabledPage->body());
+        self::assertStringContainsString('<script type="module" src="/assets/wysiwyg-composer.js"></script>', $enabledPage->body());
         self::assertStringContainsString('data-wysiwyg-composer="1"', $enabledPage->body());
 
         (new SettingRepository($this->db))->set('features', ['rich_composer' => false, 'wysiwyg_composer' => true]);
