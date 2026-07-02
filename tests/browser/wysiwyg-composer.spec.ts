@@ -19,11 +19,16 @@ ${code}
   }).toString();
 }
 
-function setWysiwygComposer(enabled: boolean): void {
+function setWysiwygComposer(enabled: boolean | null): void {
+  // null removes the override so the FeatureFlags DEFAULTS value applies —
+  // used to prove the GA default mounts Milkdown without any features row.
+  const mutation = enabled === null
+    ? "unset($features['wysiwyg_composer']);"
+    : `$features['wysiwyg_composer'] = ${enabled ? 'true' : 'false'};`;
   runPhp(`
 $features = $settings->get('features', []);
 if (!is_array($features)) { $features = []; }
-$features['wysiwyg_composer'] = ${enabled ? 'true' : 'false'};
+${mutation}
 $settings->set('features', $features);
 `);
 }
@@ -114,7 +119,7 @@ test('wysiwyg kill switch keeps textarea composer fallback', async ({ page }) =>
 });
 
 test('wysiwyg assets load under strict CSP without violations', async ({ page }) => {
-  setWysiwygComposer(true);
+  setWysiwygComposer(null); // no override: proves the GA default mounts Milkdown
   const violations: string[] = [];
   const pageErrors: string[] = [];
   const loadedAssets: string[] = [];
