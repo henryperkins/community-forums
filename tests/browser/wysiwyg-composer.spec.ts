@@ -103,6 +103,16 @@ test('textarea # picker inserts board reference and does not steal headings', as
   await expect(body).toHaveValue('[#general](/c/general)');
 });
 
+test('wysiwyg kill switch keeps textarea composer fallback', async ({ page }) => {
+  setWysiwygComposer(false);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+
+  await expect(page.locator('body')).not.toHaveAttribute('data-wysiwyg-composer', '1');
+  await expect(form.locator('.wysiwyg-composer')).toHaveCount(0);
+  await expect(form.locator('textarea.composer-input')).toBeVisible();
+});
+
 test('wysiwyg assets load under strict CSP without violations', async ({ page }) => {
   setWysiwygComposer(true);
   const violations: string[] = [];

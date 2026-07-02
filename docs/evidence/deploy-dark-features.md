@@ -20,6 +20,7 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
 | `server_drafts` | Authenticated cross-device draft sync, conflict handling, `/drafts` server list/discard | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppServerDraftsTest` (available-by-default + rollback), `AppAccountLifecycleTest` (export/purge), browser `28-server-draft-conflict`, `.composer-draft-sync` axe pass, runbook `docs/runbooks/server_drafts.md`, ADR 0010. Retained here for traceability. |
+| `wysiwyg_composer` | Optional Milkdown WYSIWYG layer over the canonical Markdown textarea | Deploy-dark; narrow flag under the `rich_composer` kill switch. Acceptance evidence: ADR 0013, runbook `docs/runbooks/wysiwyg_composer.md`, `AppComposerTest`, `AppComposerSuggestTest`, `AppMentionLinkRenderTest`, `MarkdownRoundTripTest`, `npm run check:wysiwyg`, browser `wysiwyg-composer.spec.ts` (CSP, source mode, no-op edit, preview parity, chips, internal URL paste, mobile smoke, textarea fallback), and `a11y.spec.ts` WYSIWYG toolbar/picker/source scans. Rollback is `wysiwyg_composer=false`; emergency rollback is `rich_composer=false`. |
 | `appeals` | Self-service moderation appeals and staff appeal queue | Deploy-dark; focused PHPUnit exists, awaiting browser/a11y/runbook evidence |
 | `custom_css` | Guarded raw CSS editor for trusted operators | Deploy-dark; awaiting safe-mode/mobile/operator evidence |
 

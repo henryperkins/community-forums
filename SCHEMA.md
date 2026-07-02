@@ -892,7 +892,7 @@ New tables:
 - `thread_summary_sources(summary_id, post_id)` with primary key `(summary_id, post_id)` and FKs to `thread_summaries`/`posts`.
 - `related_threads(id, source_thread_id, related_thread_id, relation_type, source, score, reason, status, curator_id, created_at)` with unique related-pair key, target index, and FKs.
 - `post_revisions(id, post_id, editor_id, body, body_html, reason, created_at)` with `(post_id, id)` index and FKs.
-- `content_references(id, source_type, source_id, target_type ENUM('board','thread','post','tag'), target_id, token, resolved_at, unavailable, created_at)` with source and target indexes; app logic resolves/authorizes targets.
+- `content_references(id, source_type, source_id, target_type ENUM('board','thread','post','tag'), target_id, token, resolved_at, unavailable, created_at)` with source and target indexes; app logic resolves/authorizes targets. Migration `0071_content_reference_tags` added `tag` for WYSIWYG/composer `/tags/{slug}` references.
 - `thread_operations(id, operation_type, actor_id, source_thread_id, destination_thread_id, status, dry_run_plan, before_snapshot, after_snapshot, failure_reason, created_at, applied_at)` with source index and FKs.
 - `thread_redirects(old_thread_id, canonical_thread_id, operation_id, created_at)` with primary key `old_thread_id`, canonical index, and FKs.
 

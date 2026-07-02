@@ -369,11 +369,22 @@ class MilkdownComposerAdapter {
       .use(richComposerPlugin(this))
       .use(listener);
 
-    return this.editor.create().then(() => undefined).catch((error) => {
+    return this.editor.create().then(() => {
+      this.labelEditor();
+    }).catch((error) => {
       this.failed = true;
       this.destroy();
       throw error;
     });
+  }
+
+  private labelEditor(): void {
+    const editor = this.host.querySelector<HTMLElement>('.ProseMirror');
+    if (!editor) {
+      return;
+    }
+    editor.setAttribute('aria-label', 'Composer body');
+    editor.setAttribute('aria-multiline', 'true');
   }
 
   private handleRichMarkdown(markdown: string): void {

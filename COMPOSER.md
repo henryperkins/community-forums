@@ -1,6 +1,6 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.3 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-26
+**Status:** v0.5 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-02
 **Companion to [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
@@ -13,13 +13,13 @@ One component, three mounts. The composer is used in exactly three places, and *
 
 Everything the input can do — formatting, shortcuts, mentions, media, drafts, validation — is **the same in all three**. The only differences are the thin wrapper around the input (a title field for New Thread, a recipient for DM) and a few context-scoped limits. This doc specifies the input itself, exhaustively, and defines that unified contract (§15).
 
-> **Editing model decision:** **Hybrid live-Markdown** — a rich surface that formats as you type, with Markdown as the canonical stored format (Notion/Slack-style). This resolves DESIGN.md open question #2.
+> **Editing model decision:** **WYSIWYG over canonical Markdown** — the enhanced surface is Milkdown, mounted only when `rich_composer` and `wysiwyg_composer` are both enabled. The server-rendered `<textarea>` remains the submit source, source-mode editor, and no-JS/kill-switch fallback. This resolves DESIGN.md open question #2 and is recorded in ADR 0013.
 
 ## Contents
 
 1. Overview & Principles
 2. The Three Contexts (one component, three mounts)
-3. Editing Model — Hybrid live-Markdown
+3. Editing Model — WYSIWYG over Canonical Markdown
 4. Toolbar & Formatting Controls
 5. Keyboard Shortcuts
 6. Mentions, Emoji & References
@@ -68,14 +68,15 @@ A single `Composer` component is mounted with a small **context config**; the in
 
 Everything in §3–§13 applies to **all three** unless a row above says otherwise. The same component is also reused for **editing** an existing post/message (§9.6).
 
-## 3. Editing Model — Hybrid live-Markdown
+## 3. Editing Model — WYSIWYG over Canonical Markdown
 
 ### 3.1 How it behaves
 
-- You type in a **rich surface**: `**bold**` becomes **bold** as you type, `## ` starts a heading, `- ` starts a list, `> ` a quote, ``` opens a code block, `:smile:` and `@name` trigger pickers.
-- The **toolbar and shortcuts** perform the same transforms (select text → **B** → it becomes bold).
-- Under the hood the document **is Markdown**. On submit we store the Markdown (`posts.body`) and a cached sanitised HTML render (`posts.body_html`). Editing later re-hydrates the rich surface from the stored Markdown.
-- This gives the *feel* of WYSIWYG with the *portability and safety* of Markdown — and it round-trips losslessly because Markdown is the source of truth, not the rendered HTML.
+- With `wysiwyg_composer` enabled, you type in a **Milkdown WYSIWYG surface**. Markdown shortcuts still work (`## ` for headings, `- ` for lists, `> ` for quotes), but the visible editor is rich text rather than a raw Markdown textarea.
+- The underlying `<textarea name="body">` stays in the form. Milkdown serializes back to that textarea after edits and before submit; source mode exposes the textarea directly and can switch back to rich text.
+- With no JavaScript, an unsupported adapter, `wysiwyg_composer=false`, or `rich_composer=false`, the same form remains a plain Markdown `<textarea>`. No post, draft, or upload path depends on the WYSIWYG bundle.
+- On submit we store Markdown (`posts.body`) and a cached sanitised HTML render (`posts.body_html`). Editing later re-hydrates from stored Markdown. A no-op edit must not rewrite legacy Markdown solely because an editor serializer would normalize it.
+- The round-trip contract is semantic parity against the server-rendered sanitized HTML. Byte-stable Markdown is required only for fixtures intentionally authored in the editor's canonical output form.
 
 ### 3.2 Supported syntax (the canonical Markdown set)
 
@@ -166,7 +167,11 @@ Identical in all three contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 
 ### 6.3 References (P2)
 
-- **`#board`** autocomplete to link a board; pasting a thread/post URL renders a tidy inline reference card. Nice-to-have, not core.
+- **`@`** opens the user suggestion picker and inserts canonical `@username` text. Server rendering links mentions when the `mentions` flag is enabled, respecting the cached HTML model.
+- **`#`** opens the reference picker for readable boards, visible tags, topics, and posts. Accepted suggestions insert canonical Markdown links such as `[#general](/c/general)`, `[#release-notes](/tags/release-notes)`, topic links, or post anchors.
+- In WYSIWYG mode, accepted `@`/`#` suggestions display as inline chips while still serializing to canonical Markdown/text in the textarea. The textarea adapter uses the same suggestion API and insertion contract.
+- Pasting a same-origin board/tag/topic/post URL into the WYSIWYG surface rewrites it to the same canonical Markdown link when it can be resolved; otherwise it remains a normal URL.
+- The `#` trigger intentionally ignores Markdown heading starts such as `# `.
 
 ## 7. Attachments, Images & Media
 
@@ -234,7 +239,7 @@ Editing an existing post or message mounts the **same** composer, pre-hydrated f
 
 ## 10. Preview
 
-The live formatting *is* the inline preview (that's the hybrid model). On top of that, an explicit **Preview toggle** renders the content **exactly as it will appear** once posted — final sanitised HTML, spoilers collapsed, mentions linked, emoji rendered, embeds shown. It uses the **same render path** as live posts (no "looked fine in preview, broke on post" surprises). Desktop: a toggle (optionally split-view); mobile: a full-screen preview.
+The WYSIWYG surface is the inline editing view, not the source of truth for final rendering. The explicit **Preview toggle** renders the content **exactly as it will appear** once posted — final sanitised HTML, spoilers collapsed, mentions linked, emoji rendered, embeds shown. It uses the same server render path as live posts and remains the final truth for parity checks. Desktop: a toggle (optionally split-view); mobile: a full-screen preview.
 
 ## 11. Validation, Limits & Safety
 
@@ -292,25 +297,23 @@ Composer({
 
 All feature logic (editing, toolbar, shortcuts, mentions, media, drafts, validation) lives **in the component** — contexts differ only by config. The component is also what powers **edit mode**.
 
-### 14.2 The hybrid editor — engine decision
+### 14.2 The WYSIWYG editor — engine decision
 
-**Recommended spike order:**
+ADR 0013 selects **Milkdown** for the optional WYSIWYG layer because it is Markdown-native while still providing a rich ProseMirror editing surface. The fallback ladder remains Tiptap/ProseMirror, then a CodeMirror/ink-mde-style live-Markdown surface, but those are no longer active implementation paths unless Milkdown fails future acceptance gates.
 
-1. **Milkdown (primary spike)** — Markdown-native with a WYSIWYG-like feel; the best conceptual match for content that must stay durable, portable, searchable, and renderable as Markdown while the writing experience feels modern.
-2. **Tiptap / ProseMirror (fallback)** — use only if Milkdown fights us on mentions, toolbar, mobile, or upload UX. Best interaction polish, but **Markdown round-tripping must be tested carefully.**
-3. **CodeMirror / ink-mde-style live-Markdown surface (fallback)** — use if raw Markdown source fidelity matters more than rich-interaction polish (Obsidian-style).
+Avoid heavy block-document editors — **the composer is an input system, not a mini document editor.**
 
-Avoid starting with heavy block-document editors — **the composer is an input system, not a mini document editor.**
-
-**Non-negotiables (whatever engine wins):**
+**Non-negotiables:**
 
 - **Markdown is the canonical document.** Serialize editor state → Markdown on every change (drafts) and on submit. **Reject editor-specific canonical storage** (never persist ProseMirror/Tiptap JSON as the source of truth) — storage stays portable.
-- **Markdown round-trip fixtures** are part of the acceptance tests: a corpus of documents must survive load → no-op edit → serialize **unchanged**.
-- The shared component, the no-JS `<textarea>` fallback, the server-side render/sanitise path, and idempotent submit (§14.1, §14.3) hold regardless of engine.
+- **Semantic round-trip fixtures** are part of the acceptance tests: authored Markdown loads in the editor, preview renders through the server pipeline, and submitted output matches final rendered HTML. No-op edit tests protect legacy Markdown from accidental serializer rewrites.
+- The shared component, the no-JS `<textarea>` fallback, the source-mode textarea, the server-side render/sanitise path, and idempotent submit (§14.1, §14.3) hold regardless of engine.
+- The committed `/assets/wysiwyg-composer.js` and `/assets/wysiwyg-composer.css` bundles are built from `src/client/wysiwyg/*` by `npm run build:wysiwyg`; deployment serves static files only.
 
 ### 14.3 Progressive enhancement & the submit path
 
-- Server renders a `<form>` with a `<textarea>` holding the Markdown; JS upgrades it to the rich surface and intercepts submit for the optimistic JSON path. **No JS → the textarea posts the form**; the server renders Markdown → sanitised HTML. One pipeline either way.
+- Server renders a `<form>` with a `<textarea>` holding the Markdown. `public/assets/composer.js` builds the shared bridge for toolbar, preview, drafts, uploads, slash inserts, and `@`/`#` suggestions. When both `rich_composer` and `wysiwyg_composer` are enabled, the committed Milkdown bundle registers a bridge adapter and hides the textarea behind the WYSIWYG surface.
+- **No JS, `wysiwyg_composer=false`, or adapter failure → the textarea posts the form**; the server renders Markdown → sanitised HTML. **`rich_composer=false`** is the broad emergency kill switch and prevents all enhanced composer assets from loading.
 - **Server submit:** validate → run content filters → persist `body` (Markdown) + cached `body_html` (sanitised) → update counters → fan out notifications (DESIGN.md §9.6) → parse mentions → notify. Wrapped in a transaction; returns the rendered post for the client to reconcile.
 - **Idempotency:** the client sends an idempotency key; the server applies a **short-lived/transient dedupe** (covers double-submit + brief client retries, not durable persistence). A durable post idempotency column is **foreshadowed in SCHEMA §8**, not yet committed.
 
@@ -324,7 +327,7 @@ The contract: the **input** is identical everywhere. ✓ = present and behaves t
 
 | Feature | New Thread | Reply | DM | Edit |
 |---|:--:|:--:|:--:|:--:|
-| Hybrid live-Markdown editing | ✓ | ✓ | ✓ | ✓ |
+| WYSIWYG/source-mode Markdown editing | ✓ | ✓ | ✓ | ✓ |
 | Full toolbar + active states | ✓ | ✓ | ✓ | ✓ |
 | All keyboard shortcuts | ✓ | ✓ | ✓ | ✓ |
 | @mentions / emoji | ✓ | ✓ | ✓ | ✓ |
@@ -342,7 +345,7 @@ If a future feature can't be offered identically in all three, that's a signal t
 
 ### 16.1 Changes to the other docs
 
-- **DESIGN.md** — this doc is the authoritative composer spec referenced by §6.5. Open question **#2 (post markup) is resolved: hybrid live-Markdown, Markdown canonical.** **@mentions** are promoted from "deferred" to **P1** (they live in the composer). The `Cmd/Ctrl+K` shortcut is reconciled (link inside the composer; search / `r` / `c` outside).
+- **DESIGN.md** — this doc is the authoritative composer spec referenced by §6.5. Open question **#2 (post markup) is resolved: WYSIWYG/source-mode editing over canonical Markdown.** **@mentions** are promoted from "deferred" to **P1** (they live in the composer). The `Cmd/Ctrl+K` shortcut is reconciled (link inside the composer; search / `r` / `c` outside).
 - **ADMIN.md** — the composer consumes ADMIN-owned controls: word/link **filters**, **attachment limits**, **edit window**, **approval hold**, and **new-user gates**; board settings (`allow images`, `post_min_role`, `allow_anonymous`, `edit_window`) gate it.
 - **USER.md** — composing preferences (§4.5: **Enter-to-send vs Cmd/Ctrl+Enter**, attach-signature default, draft behaviour) drive the composer's per-user defaults. The **Anonymous** posting mode (USER.md §2 / ADMIN.md §1.3) is a composer affordance where the board allows it.
 
@@ -373,14 +376,15 @@ CREATE TABLE attachments (
 - **`posts.body` already stores Markdown** (canonical) and **`posts.body_html`** the cached sanitised render (DESIGN.md §8) — no change needed; this doc just fixes the markup *flavour* as Markdown.
 - **Drafts** are local (`localStorage`) in v1; an optional **`drafts`** table (`user_id`, `context_type`, `context_id`, `title`, `body`, `updated_at`) backs cross-device sync at **P2**.
 - **Mentions** are parsed at submit; an optional `post_mentions` lookup table can speed "who was mentioned" queries if needed (P2).
+- **Content references** use `content_references.target_type ENUM('board','thread','post','tag')`; migration `0071_content_reference_tags` added `tag` so WYSIWYG `#` tag suggestions and `/tags/{slug}` links can resolve through the same read-gated reference-card path.
 
 ## 17. Phasing & Open Questions
 
 ### 17.1 Phasing
 
-> **Priority tier ≠ delivery phase (DECISIONS §2).** The P0/P1/P2 below are *priority* tiers. In **delivery** terms: **Phase 1** ships the no-JS `<textarea>` Markdown baseline (server-rendered + sanitised render, edit reuse); **Phase 2** adds **@mentions** (parse-on-submit notifications + autocomplete) and the **DM** mount; the **unified rich hybrid-Markdown `Composer`** (the Milkdown spike, toolbar, live formatting, optimistic send, localStorage Drafts/recovery, preview, and the §15 "identical everywhere" surface) is delivered in **Phase 3 Gate A** (PHASE_3_PLAN); **server-side draft sync** is Phase 3 Gate B. A P0-tier composer feature is therefore MVP-critical *in priority* but is delivered with the Phase 3 composer, not in Phase 1.
+> **Priority tier ≠ delivery phase (DECISIONS §2).** The P0/P1/P2 below are *priority* tiers. In **delivery** terms: **Phase 1** ships the no-JS `<textarea>` Markdown baseline (server-rendered + sanitised render, edit reuse); **Phase 2** adds **@mentions** (parse-on-submit notifications + autocomplete) and the **DM** mount; the **unified rich `Composer`** (toolbar, source mode, optimistic send, localStorage Drafts/recovery, preview, and the §15 "identical everywhere" surface) is delivered in **Phase 3 Gate A** (PHASE_3_PLAN); **server-side draft sync** is Phase 3 Gate B; the optional Milkdown WYSIWYG adapter is deploy-dark behind `wysiwyg_composer` per ADR 0013. A P0-tier composer feature is therefore MVP-critical *in priority* but may be delivered through staged flags rather than Phase 1.
 
-- **P0** — the shared `Composer` + hybrid live-Markdown core (bold/italic/strike/inline-code/quote/lists/links), Enter-to-send + core shortcuts, **drafts** (localStorage), validation + **optimistic send** + rollback, signed-out join-bar, **edit reuse**, the no-JS `<textarea>` fallback, and the accessibility baseline. (Resolves the markup decision.)
+- **P0** — the shared `Composer` + Markdown editing core (bold/italic/strike/inline-code/quote/lists/links), Enter-to-send + core shortcuts, **drafts** (localStorage), validation + **optimistic send** + rollback, signed-out join-bar, **edit reuse**, the no-JS/source-mode `<textarea>` fallback, and the accessibility baseline. (Resolves the markup decision.)
 - **P1** — @mentions + emoji picker, **image upload/paste/drag**, code blocks (+language), limited headings, spoilers, **preview toggle**, toolbar overflow, board-aware limits, character counter, content-filter integration.
 - **P2** — file attachments, link unfurl/embeds, tables, task lists, `#board` references, **server draft sync**, custom emoji, a slash-command (`/`) menu, GIFs/polls.
 
@@ -390,7 +394,7 @@ CREATE TABLE attachments (
 
 | # | Question | Owner | Blocking? |
 |---|---|---|---|
-| 1 | Editor library. **Recommended: spike Milkdown first** (→ Tiptap/ProseMirror → CodeMirror/ink-mde as fallbacks, §14.2); confirm after the spike. | Eng | Recommended |
+| 1 | Editor library. **Resolved:** Milkdown selected in ADR 0013 for the optional WYSIWYG layer; keep Tiptap/ProseMirror and CodeMirror/ink-mde as fallback options only if future acceptance gates fail. | Eng | No |
 | 2 | Global send default: Enter-to-send vs `Cmd/Ctrl+Enter` (user-overridable either way). | Product | P0 |
 | 3 | Heading levels allowed in posts: none / `##`–`###` only / all. | Product | P1 |
 | 4 | Tables in v1 or P2. | Product / Eng | P1 |
@@ -408,3 +412,4 @@ CREATE TABLE attachments (
 | v0.2 | 2026-06-19 | Framework integration: resolved the editor engine to a **spike ladder — Milkdown first**, then Tiptap/ProseMirror, then CodeMirror/ink-mde (§14.2). Added non-negotiables: **reject editor-specific canonical storage**, **Markdown round-trip fixtures** in acceptance tests, and "the composer is an input system, not a mini document editor." |
 | v0.3 | 2026-06-26 | Wording/citation fixes: corrected the **Drafts** sidebar quick-filter cross-ref **§6.2 → §5.2/§6.5** (§8); reframed post **idempotency** as a **short-lived/transient dedupe** (double-submit + brief client retries, not durable persistence), with a durable post-idempotency column **foreshadowed in SCHEMA §8, not yet committed** (§9.2/§11/§14.3). |
 | v0.4 | 2026-06-26 | Consistency fix: §17.1 now maps the P0/P1/P2 *priority* tiers to *delivery* phases — Phase 1 = no-JS Markdown baseline, Phase 2 = @mentions + DM, the unified rich `Composer` = Phase 3 Gate A, server draft sync = Phase 3 Gate B — resolving the "P0 composer vs Phase 3 delivery" ambiguity (DESIGN §13.1 / PHASE_3_PLAN). §6.1 @mentions clarified as priority P1 / delivery Phase 2. |
+| v0.5 | 2026-07-02 | WYSIWYG closeout: recorded ADR 0013's Milkdown selection, the `wysiwyg_composer` narrow flag under the `rich_composer` kill switch, source-mode textarea contract, adapter-based `@`/`#` pickers and chips, internal URL paste normalization, server-preview parity, no-op edit protection, committed static bundle, and `content_references.target_type='tag'` schema follow-up. |
