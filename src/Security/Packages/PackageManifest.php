@@ -13,6 +13,7 @@ final class PackageManifest
      * @param list<array{kind:string,key:string,risk:string,label:string}> $permissions
      * @param ?array{fields:list<array<string,mixed>>} $settingsSchema
      * @param array<string,string> $support
+     * @param ?array{schema_version:int,tokens:array<string,string>,dark_tokens:array<string,string>,assets:list<array{name:string,kind:string,sha256:string,bytes:string}>} $theme
      */
     public function __construct(
         public readonly string $uid,
@@ -28,6 +29,7 @@ final class PackageManifest
         public readonly int $storageQuotaKb,
         public readonly ?int $retentionDays,
         public readonly array $support,
+        public readonly ?array $theme = null,
     ) {
     }
 

@@ -89,6 +89,92 @@ final class ManifestValidatorTest extends TestCase
         self::assertFalse($manifest->coreCompatible());
     }
 
+    public function test_theme_manifest_requires_theme_block(): void
+    {
+        $manifest = $this->harness->mintManifest();
+        unset($manifest['theme']);
+
+        try {
+            $this->validator->validate($manifest, 'acme/midnight-theme', '1.0.0');
+            self::fail('expected refusal');
+        } catch (PackagePolicyException $e) {
+            self::assertSame('theme_missing', $e->code);
+        }
+    }
+
+    public function test_non_theme_manifest_refuses_theme_block(): void
+    {
+        $manifest = $this->harness->mintManifest(['type' => 'automation', 'uid' => 'acme/auto']);
+        $manifest['theme'] = ['schema_version' => 1, 'tokens' => ['--accent' => '#112233']];
+
+        try {
+            $this->validator->validate($manifest, 'acme/auto', '1.0.0');
+            self::fail('expected refusal');
+        } catch (PackagePolicyException $e) {
+            self::assertSame('theme_forbidden', $e->code);
+        }
+    }
+
+    public function test_theme_block_validates_tokens_schema_and_assets(): void
+    {
+        $bad = function (array $theme): string {
+            $manifest = $this->harness->mintManifest(['theme' => $theme]);
+            try {
+                $this->validator->validate($manifest, 'acme/midnight-theme', '1.0.0');
+
+                return 'PASSED';
+            } catch (PackagePolicyException $e) {
+                return $e->code;
+            }
+        };
+
+        self::assertSame('theme_schema', $bad(['schema_version' => 2]));
+        self::assertSame('theme_token', $bad(['tokens' => ['--nope' => '#112233']]));
+        self::assertSame('theme_token', $bad(['tokens' => ['--accent' => '#fff;}body{display:none']]));
+        self::assertSame('theme_token', $bad(['tokens' => []]));
+        self::assertSame('theme_token', $bad(['dark_tokens' => ['--accent' => 'url(https://x)']]));
+
+        $blob = base64_encode(str_repeat('x', 64));
+        self::assertSame('theme_asset', $bad(['assets' => [['name' => 'x', 'kind' => 'svg', 'sha256' => str_repeat('a', 64), 'data_base64' => $blob]]]));
+        self::assertSame('theme_asset', $bad(['assets' => [['name' => 'x', 'kind' => 'png', 'sha256' => str_repeat('a', 64), 'data_base64' => '!!!']]]));
+        self::assertSame('theme_asset', $bad(['assets' => [['name' => 'x', 'kind' => 'png', 'sha256' => str_repeat('a', 64), 'data_base64' => $blob]]]));
+
+        $bytes = str_repeat('p', 64);
+        $entry = ['name' => 'x', 'kind' => 'png', 'sha256' => hash('sha256', $bytes), 'data_base64' => base64_encode($bytes)];
+        self::assertSame('theme_asset', $bad(['assets' => [$entry, $entry]]));
+        self::assertSame('theme_asset', $bad(['assets' => array_map(
+            static fn (int $i): array => [
+                'name' => 'a' . $i,
+                'kind' => 'png',
+                'sha256' => hash('sha256', 'b' . $i),
+                'data_base64' => base64_encode('b' . $i),
+            ],
+            range(0, 4),
+        )]));
+        self::assertSame('theme_token', $bad(['tokens' => ['--accent' => '#112233', '--surface-texture' => 'ghost']]));
+    }
+
+    public function test_valid_theme_manifest_exposes_normalized_theme(): void
+    {
+        $bytes = str_repeat('p', 64);
+        $manifest = $this->harness->mintManifest(['theme' => [
+            'tokens' => ['--accent' => '#8F3D12', '--surface-texture' => 'parchment'],
+            'assets' => [[
+                'name' => 'parchment',
+                'kind' => 'png',
+                'sha256' => hash('sha256', $bytes),
+                'data_base64' => base64_encode($bytes),
+            ]],
+        ]]);
+
+        $validated = $this->validator->validate($manifest, 'acme/midnight-theme', '1.0.0');
+
+        self::assertNotNull($validated->theme);
+        self::assertSame('#8f3d12', $validated->theme['tokens']['--accent']);
+        self::assertSame($bytes, $validated->theme['assets'][0]['bytes']);
+        self::assertSame(1, $validated->theme['schema_version']);
+    }
+
     /** @param array<string,mixed> $overrides */
     #[DataProvider('providerRefusals')]
     public function test_malformed_manifests_refuse_with_the_exact_code(string $code, array $overrides): void

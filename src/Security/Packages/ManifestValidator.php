@@ -22,10 +22,15 @@ final class ManifestValidator
     public const MAX_STORAGE_QUOTA_KB = 10_240;
     private const MAX_CORE_VERSION_LENGTH = 32;
     private const MAX_PERMISSION_KEY_LENGTH = 190;
+    private const MAX_THEME_ASSETS = 4;
+    private const MAX_THEME_ASSET_BYTES = 131_072;
+    private const MAX_THEME_TOTAL_BYTES = 262_144;
+    private const THEME_ASSET_KINDS = ['png', 'jpeg', 'gif', 'webp'];
+    private const THEME_ASSET_NAME_PATTERN = '/\A[a-z0-9][a-z0-9-]{0,30}\z/';
 
     private const TOP_KEYS = [
         'format', 'uid', 'type', 'version', 'name', 'description', 'license',
-        'core', 'permissions', 'settings_schema', 'storage_quota_kb', 'install', 'support',
+        'core', 'permissions', 'settings_schema', 'storage_quota_kb', 'install', 'support', 'theme',
     ];
     private const PERMISSION_KINDS = [
         'capabilities' => 'capability',
@@ -81,6 +86,7 @@ final class ManifestValidator
         $storageQuotaKb = $this->storageQuota($manifest['storage_quota_kb'] ?? 0);
         $retentionDays = $this->installPolicy($manifest['install'] ?? null);
         $support = $this->support($manifest['support'] ?? []);
+        $theme = $this->theme($manifest['theme'] ?? null, $type);
 
         return new PackageManifest(
             $uid,
@@ -96,6 +102,7 @@ final class ManifestValidator
             $storageQuotaKb,
             $retentionDays,
             $support,
+            $theme,
         );
     }
 
@@ -333,6 +340,108 @@ final class ManifestValidator
                 $this->refuse('support_link', 'Support links must be https:// URLs.');
             }
             $out[(string) $key] = $url;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return ?array{schema_version:int,tokens:array<string,string>,dark_tokens:array<string,string>,assets:list<array{name:string,kind:string,sha256:string,bytes:string}>}
+     */
+    private function theme(mixed $theme, string $type): ?array
+    {
+        if ($type !== 'theme') {
+            if ($theme !== null) {
+                $this->refuse('theme_forbidden', 'Only theme packages may declare a theme block.');
+            }
+
+            return null;
+        }
+        if (!is_array($theme)) {
+            $this->refuse('theme_missing', 'Theme packages must declare a theme block.');
+        }
+        if ($this->unknownKeys($theme, ['schema_version', 'tokens', 'dark_tokens', 'assets']) !== []) {
+            $this->refuse('theme_schema', 'Theme block contains unknown fields.');
+        }
+        if (($theme['schema_version'] ?? null) !== ThemeTokenPolicy::SCHEMA_VERSION) {
+            $this->refuse('theme_schema', 'Theme schema_version ' . ThemeTokenPolicy::SCHEMA_VERSION . ' is required.');
+        }
+
+        $assets = [];
+        $names = [];
+        $total = 0;
+        $rawAssets = $theme['assets'] ?? [];
+        if (!is_array($rawAssets) || !array_is_list($rawAssets)) {
+            $this->refuse('theme_asset', 'Theme assets must be a list.');
+        }
+        if (count($rawAssets) > self::MAX_THEME_ASSETS) {
+            $this->refuse('theme_asset', 'Themes may declare at most ' . self::MAX_THEME_ASSETS . ' assets.');
+        }
+        foreach ($rawAssets as $asset) {
+            if (!is_array($asset) || $this->unknownKeys($asset, ['name', 'kind', 'sha256', 'data_base64']) !== []) {
+                $this->refuse('theme_asset', 'Theme asset entries allow only name/kind/sha256/data_base64.');
+            }
+            $name = is_string($asset['name'] ?? null) ? $asset['name'] : '';
+            if (preg_match(self::THEME_ASSET_NAME_PATTERN, $name) !== 1 || in_array($name, $names, true)) {
+                $this->refuse('theme_asset', 'Theme asset names must be unique lowercase slugs.');
+            }
+            $kind = is_string($asset['kind'] ?? null) ? $asset['kind'] : '';
+            if (!in_array($kind, self::THEME_ASSET_KINDS, true)) {
+                $this->refuse('theme_asset', 'Theme asset kind must be one of: ' . implode(', ', self::THEME_ASSET_KINDS) . '.');
+            }
+            $encoded = is_string($asset['data_base64'] ?? null) ? $asset['data_base64'] : '';
+            $bytes = base64_decode($encoded, true);
+            if ($bytes === false || $bytes === '') {
+                $this->refuse('theme_asset', 'Theme asset data must be valid base64.');
+            }
+            if (strlen($bytes) > self::MAX_THEME_ASSET_BYTES) {
+                $this->refuse('theme_asset', 'Theme assets are limited to ' . self::MAX_THEME_ASSET_BYTES . ' bytes each.');
+            }
+            $total += strlen($bytes);
+            if ($total > self::MAX_THEME_TOTAL_BYTES) {
+                $this->refuse('theme_asset', 'Theme assets are limited to ' . self::MAX_THEME_TOTAL_BYTES . ' bytes in total.');
+            }
+            $sha = is_string($asset['sha256'] ?? null) ? strtolower($asset['sha256']) : '';
+            if (!hash_equals(hash('sha256', $bytes), $sha)) {
+                $this->refuse('theme_asset', 'Theme asset sha256 does not match the decoded bytes.');
+            }
+            $names[] = $name;
+            $assets[] = ['name' => $name, 'kind' => $kind, 'sha256' => $sha, 'bytes' => $bytes];
+        }
+
+        $tokens = $this->themeTokens($theme['tokens'] ?? null, $names, true);
+        $darkTokens = $this->themeTokens($theme['dark_tokens'] ?? [], $names, false);
+
+        return [
+            'schema_version' => ThemeTokenPolicy::SCHEMA_VERSION,
+            'tokens' => $tokens,
+            'dark_tokens' => $darkTokens,
+            'assets' => $assets,
+        ];
+    }
+
+    /**
+     * @param list<string> $assetNames
+     * @return array<string,string>
+     */
+    private function themeTokens(mixed $tokens, array $assetNames, bool $required): array
+    {
+        if (!is_array($tokens) || ($required && $tokens === []) || (array_is_list($tokens) && $tokens !== [])) {
+            $this->refuse(
+                'theme_token',
+                $required ? 'Theme tokens must be a non-empty object.' : 'Theme dark_tokens must be an object.',
+            );
+        }
+
+        $out = [];
+        foreach ($tokens as $name => $value) {
+            if (!is_string($name) || !is_string($value) || !ThemeTokenPolicy::isKnown($name)) {
+                $this->refuse('theme_token', 'Unknown theme token: ' . (is_string($name) ? $name : '?') . '.');
+            }
+            if (($error = ThemeTokenPolicy::validateValue($name, $value, $assetNames)) !== null) {
+                $this->refuse('theme_token', 'Token ' . $name . ': ' . $error);
+            }
+            $out[$name] = ThemeTokenPolicy::type($name) === 'color' ? strtolower($value) : $value;
         }
 
         return $out;
