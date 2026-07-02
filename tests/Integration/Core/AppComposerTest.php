@@ -169,6 +169,29 @@ final class AppComposerTest extends TestCase
         self::assertSame(2, (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE thread_id = ?', [(int) $thread['thread_id']]));
     }
 
+    public function test_wysiwyg_flag_only_loads_editor_assets_when_rich_composer_is_enabled(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'wysiwyg-assets']);
+        $user = $this->makeUser(['username' => 'wysiwygassets']);
+        $this->actingAs($user);
+
+        $defaultPage = $this->get('/c/wysiwyg-assets');
+        self::assertStringContainsString('/assets/composer.js', $defaultPage->body());
+        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $defaultPage->body());
+
+        (new SettingRepository($this->db))->set('features', ['wysiwyg_composer' => true]);
+        $enabledPage = $this->get('/c/wysiwyg-assets');
+        self::assertStringContainsString('/assets/composer.js', $enabledPage->body());
+        self::assertStringContainsString('/assets/wysiwyg-composer.css', $enabledPage->body());
+        self::assertStringContainsString('data-wysiwyg-composer="1"', $enabledPage->body());
+
+        (new SettingRepository($this->db))->set('features', ['rich_composer' => false, 'wysiwyg_composer' => true]);
+        $killedPage = $this->get('/c/wysiwyg-assets');
+        self::assertStringNotContainsString('/assets/composer.js', $killedPage->body());
+        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $killedPage->body());
+        self::assertStringNotContainsString('data-wysiwyg-composer="1"', $killedPage->body());
+    }
+
     public function test_drafts_route_renders_browser_local_shell(): void
     {
         // With server_drafts graduated to default-on, the server-owned list is

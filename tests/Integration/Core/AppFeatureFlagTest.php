@@ -48,6 +48,24 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue($overridden->enabled('community'));
     }
 
+    public function test_wysiwyg_composer_defaults_dark_and_is_independently_reversible(): void
+    {
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertArrayHasKey('wysiwyg_composer', $flags->all());
+        self::assertFalse($flags->enabled('wysiwyg_composer'));
+        self::assertTrue($flags->enabled('rich_composer'));
+
+        $this->setFlags(['wysiwyg_composer' => true]);
+        $enabled = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($enabled->enabled('wysiwyg_composer'));
+        self::assertTrue($enabled->enabled('rich_composer'));
+
+        $this->setFlags(['rich_composer' => false, 'wysiwyg_composer' => true]);
+        $rolledBack = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($rolledBack->enabled('rich_composer'));
+        self::assertTrue($rolledBack->enabled('wysiwyg_composer'), 'the narrow flag may be true while the broad kill switch keeps assets dark');
+    }
+
     public function test_topic_workflow_is_available_by_default_and_can_be_disabled(): void
     {
         // topic_workflow graduated to default-on (GA 2026-07-01): with no

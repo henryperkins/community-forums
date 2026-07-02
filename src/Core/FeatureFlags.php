@@ -38,6 +38,7 @@ final class FeatureFlags
 
         // ── Phase 3 (Gate A) ─────────────────────────────────────────────
         'rich_composer' => true,     // shared composer toolbar + server preview (P3-02); textarea always works
+        'wysiwyg_composer' => false, // Milkdown WYSIWYG layer over canonical Markdown textarea; deploy-dark until evidence lands
         'drafts' => true,            // local autosave drafts + Drafts view (P3-03)
         'server_drafts' => true,     // authenticated cross-device draft sync — GA default-on (2026-07-02; ADR 0010; reversible via features override)
         'uploads' => true,           // image upload/paste/drop + private delivery (P3-04)
