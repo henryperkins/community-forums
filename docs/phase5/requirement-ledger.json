@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-07-01",
+  "updated": "2026-07-02",
   "notes": "Machine-checkable R0-R5 ledger for PHASE_5_PLAN section 11.1; enforced by tests/Unit/Core/Phase5EvidenceMapTest.php. GA-DOD-* rows mirror the section 14 Gate A checklist in order. Bump a state only in the commit that lands its evidence.",
   "requirements": [
     { "id": "GA-DOD-01", "gate": "A", "workstream": "P5-00", "title": "Phase 4 acceptance or explicit deferrals recorded", "state": "R5", "evidence": ["docs/adr/0003-phase-4-closeout-deferrals.md", "docs/adr/0004-phase-5-entry-and-carryover.md"] },
@@ -12,7 +12,7 @@
     { "id": "GA-DOD-07", "gate": "A", "workstream": "P5-03", "title": "Declarative themes: verification, asset scan, preview isolation, contrast/a11y, CSP/cache, safe mode, rollback", "state": "R1", "evidence": [] },
     { "id": "GA-DOD-08", "gate": "A", "workstream": "P5-04", "title": "Declarative/remote integration install, consent, pin/update/rollback, disable, export/uninstall, secrets, scope, outage", "state": "R1", "evidence": [] },
     { "id": "GA-DOD-09", "gate": "A", "workstream": "P5-07", "title": "Exact-digest maintainer review, automated evidence, manual approval, publication, advisory, emergency disable", "state": "R1", "evidence": [] },
-    { "id": "GA-DOD-10", "gate": "A", "workstream": "P5-08", "title": "Protected built-in roles/capabilities seeded; old-vs-new resolver parity complete", "state": "R1", "evidence": [], "notes": "Catalogue and seed landed in F3; resolver parity is Increment 1/6." },
+    { "id": "GA-DOD-10", "gate": "A", "workstream": "P5-08", "title": "Protected built-in roles/capabilities seeded; old-vs-new resolver parity complete", "state": "R3", "evidence": ["src/Security/CapabilityResolver.php", "src/Security/CapabilityRules.php", "src/Service/LegacyAuthorityProjection.php", "src/Service/ResolverParityService.php", "tests/Integration/Service/ResolverParityTest.php", "docs/evidence/phase5/resolver-parity.md"], "notes": "Inc 1 landed: shadow resolver + zero-mismatch parity corpus on the F9 fixture + role editor/simulator, all dark behind capabilities. Enforcement cutover, legacy assignment import, and cache/version invalidation remain Inc 6 (GA-DOD-11)." },
     { "id": "GA-DOD-11", "gate": "A", "workstream": "P5-09", "title": "Custom role creation, scope, grantor authority, expiry, cache invalidation, audit, simulator, fallback", "state": "R1", "evidence": [] },
     { "id": "GA-DOD-12", "gate": "A", "workstream": "P5-10", "title": "Protected owner/last-admin and recent-reauthentication safeguards", "state": "R1", "evidence": [], "notes": "LastOwnerGuard (F5) and ReauthGate (F7) landed; owner-loss paths 2-5 and high-impact wiring land in Inc 6-9." },
     { "id": "GA-DOD-13", "gate": "A", "workstream": "P5-11", "title": "Passkey registration/login/list/remove/step-up/fallback/recovery scenarios on supported browsers", "state": "R1", "evidence": [] },
@@ -20,7 +20,7 @@
     { "id": "GA-DOD-15", "gate": "A", "workstream": "P5-12", "title": "Selected additional provider works through the normalized identity contract", "state": "R0", "evidence": [], "notes": "A2 provider not yet named; owner decision required before P5-12 acceptance." },
     { "id": "GA-DOD-16", "gate": "A", "workstream": "P5-13", "title": "Invitation create/revoke/redeem/bind/expire/use-limit/abuse/no-privilege-escalation tests", "state": "R1", "evidence": [] },
     { "id": "GA-DOD-17", "gate": "A", "workstream": "P5-16", "title": "Accessibility, responsive, keyboard, screen-reader, no-JS evidence for Gate A surfaces", "state": "R1", "evidence": [] },
-    { "id": "GA-DOD-18", "gate": "A", "workstream": "P5-16", "title": "Registry/signature/install/theme/role/passkey/provider/invitation budgets pass on production-like fixtures", "state": "R1", "evidence": [], "notes": "Targets approved and resolver baseline measured; nine budgets are pending their increments." },
+    { "id": "GA-DOD-18", "gate": "A", "workstream": "P5-16", "title": "Registry/signature/install/theme/role/passkey/provider/invitation budgets pass on production-like fixtures", "state": "R1", "evidence": [], "notes": "Targets approved; resolver.p95 MEASURED on the real resolver (see docs/evidence/phase5/performance-budgets.md); eight budgets remain pending their increments." },
     { "id": "GA-DOD-19", "gate": "A", "workstream": "P5-16", "title": "Rotation, revoke/rollback, outage, safe mode, resolver fallback, owner/passkey recovery, provider disable, invitation pause, backup/restore runbooks rehearsed", "state": "R1", "evidence": [] },
     { "id": "GA-DOD-20", "gate": "A", "workstream": "P5-16", "title": "Full Phase 1-4 regression and route-permission matrix green with all public packages disabled", "state": "R1", "evidence": [] },
     { "id": "GA-DOD-21", "gate": "A", "workstream": "P5-16", "title": "No critical/high defects remain", "state": "R1", "evidence": [] },

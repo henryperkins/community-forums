@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** F2/F4/F6/F7/F8/F10/F11 landed 2026-07-01: `CORE_VERSION`, `DataClasses`, the Ed25519 signing harness + registry fixtures, `ReauthGate`, `Telemetry`/`LogRedactor`, the machine-checkable requirement ledger + all-flags-off regression, and six threat-model dossiers (recorded, pending owner review). Package, capability, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. Increments 1 (resolver shadow) and 2 (registry) are unblocked.
-**Last updated:** 2026-07-01
-**Branch:** `phase5-foundation-f9`
-**Suite:** `composer test` → **924 tests / 4927 assertions, green** on two consecutive closeout runs (fresh and reused-schema paths). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` → **4 tests / 8 assertions**, `vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php --filter test_phase5_foundation_flags_default_dark` → **1 test / 20 assertions**. Browser evidence remains **14/14 Playwright checks, green** across desktop + mobile; F2/F4/F6/F7/F8/F10/F11 add no UI surface.
+**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow) landed 2026-07-02: `CapabilityResolver` + legacy-authority projection behind the dark `capabilities` flag, fail-open `ResolverShadow` on `canModerate`/`canPost`, a ZERO-mismatch archived parity corpus (`docs/evidence/phase5/resolver-parity.md`), `resolver.p95` MEASURED vs the 5ms D11 budget, and the no-JS role editor + permission simulator with browser/axe evidence. Increment 6 (enforcement cutover) stays blocked until shadow soak; Increment 2 (registry) remains unblocked. Package, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
+**Last updated:** 2026-07-02
+**Branch:** `phase5-inc1-resolver-shadow`
+**Suite:** `composer test` → **979 tests / 5179 assertions, green** on two consecutive Increment 1 exit-gate runs (fresh and reused-schema paths). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` → **4 tests / 8 assertions**, `vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php --filter test_phase5_foundation_flags_default_dark` → **1 test / 20 assertions**, `php bin/console verify:resolver-parity` → **1035 tuples / 0 mismatches**. Browser evidence: `npm run evidence` → **31 passed / 1 skipped**, `npm run a11y` → **8 passed** across desktop + mobile.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -188,6 +188,36 @@ still proves every Phase 5 flag dark.
   four TDD regression tests (red→green) pin it. Details in
   `docs/evidence/phase5/foundation-f3-f5.md`.
 
+## Increment 1 landed (2026-07-02) — P5-08 resolver shadow, deploy-dark
+
+The capability resolver shadow increment is complete behind the dark `capabilities`
+flag. Live authorization remains legacy; the new resolver is used for parity
+measurement, shadow comparison, role definition workflows, and the permission
+simulator.
+
+- **Resolver core + projection:** `CapabilityRules` implements union-then-narrow
+  decisions, temporal assignment windows, protected-key fail-dark behavior, and
+  board/self/site/category scoping. `LegacyAuthorityProjection` maps accepted
+  `users.role`, `board_moderators`, `post_min_role`, and `protected_owners`
+  authority into resolver grants without changing live behavior.
+- **Shadow harness:** `ResolverShadow` is wired only when `capabilities` is on and
+  compares `canModerate`/`canPost` decisions fail-open; mismatches emit telemetry
+  without changing the legacy answer.
+- **Parity corpus:** `php bin/console verify:resolver-parity` archived
+  `docs/evidence/phase5/resolver-parity.md` on fixture `phase5_fixture_v1` at
+  commit `697d700`: **1035 tuples, 1035 agreed, 0 mismatches**.
+- **Role editor + simulator:** no-JS admin routes are flag-gated and noindexed.
+  `RoleService` creates/updates/clones custom roles with reauth, audit, protected
+  anchor guards, `roles.version` bumps, and active-assignment impact counts.
+  `PermissionSimulatorService` runs the real resolver and redacts target board
+  labels from viewers without read access.
+- **Performance:** `docs/evidence/phase5/performance-budgets.md` records
+  `resolver.p95` as **MEASURED (PASS)** at 2.1204 ms vs the 5 ms D11 target.
+- **Browser/a11y:** desktop + mobile evidence landed for role creation and the
+  simulator (`30-admin-role-created.png`, `31-admin-role-simulator.png`), and axe
+  found no serious/critical violations on `/admin/roles` or
+  `/admin/roles/simulator`.
+
 ## Product-owner approvals recorded
 
 This instruction accepts ADR 0004 as the Milestone-0 decision record using its
@@ -242,6 +272,9 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   **capability resolver (P5-08, Increment 1)** and the **remaining four
   owner-loss enforcement paths (Increment 6)** are not yet built, so this is not
   R4/R5. Deploy-dark; no live behavior.
+- **Capability resolver shadow (Inc 1, P5-08):** R3 — see
+  `docs/phase5/requirement-ledger.json` (GA-DOD-10). Shadow-only: live
+  authorization is unchanged; enforcement is Inc 6.
 - **Fixture + baselines + budget harness (Foundation F9):** R2 (implemented,
   deploy-dark — no flag; the seeder refuses `app.env=production`) +
   **R3-partial** — `Phase5FixtureSeeder` (representative role/assignment/
@@ -283,10 +316,18 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   `tests/Unit/Support/LogRedactorTest.php`, `tests/Unit/Core/TelemetryRedactionTest.php`,
   `tests/Unit/Core/Phase5EvidenceMapTest.php`, `tests/Unit/Core/ThreatModelIndexTest.php`,
   `AppFeatureFlagTest::test_core_forum_survives_with_every_feature_flag_disabled`.
+- Increment 1 (P5-08 resolver shadow): `tests/Unit/Security/CapabilityRulesTest.php`,
+  `tests/Integration/Security/CapabilityResolverTest.php`, `tests/Integration/Service/LegacyAuthorityProjectionTest.php`,
+  `tests/Integration/Service/ResolverShadowTest.php`, `tests/Integration/Service/ResolverParityTest.php` (zero-mismatch exit gate),
+  `tests/Integration/Service/RoleServiceTest.php`, `tests/Integration/Service/PermissionSimulatorTest.php`,
+  `tests/Integration/Core/AppRoleAdminTest.php`, `AppFeatureFlagTest::test_capabilities_flag_gates_role_routes`.
+- Parity corpus: `docs/evidence/phase5/resolver-parity.md` (1035 tuples, 0 mismatches, fixture+commit pinned).
+- Resolver budget: `docs/evidence/phase5/performance-budgets.md` — `resolver.p95` MEASURED (PASS) vs 5 ms.
+- Role editor/simulator browser evidence: `docs/evidence/browser/{desktop,mobile}/30-admin-role-created.png` + `31-admin-role-simulator.png` (+ axe green).
 - Requirement ledger: `docs/phase5/requirement-ledger.json` (R0-R5 states + per-flag rollback map, machine-checked).
 - Threat models: `docs/phase5/threat-models/` (6 dossiers + `fixtures.json`, 48 negative-fixture stubs; TM-SE-01 already implemented).
-- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **924 tests / 4927 assertions green**.
-- **Browser evidence:** `npm run evidence` → **14/14 Playwright checks green** on desktop + mobile; includes admin API-token and domain webhook no-JS journeys.
+- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **979 tests / 5179 assertions green** on two consecutive Increment 1 exit-gate runs.
+- **Browser evidence:** `npm run evidence` → **31 passed / 1 skipped** on desktop + mobile; includes admin API-token, domain webhook, role-editor, and permission-simulator no-JS journeys. `npm run a11y` → **8 passed**.
 - **Worker smoke:** `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 MAIL_DRIVER=array php bin/console worker:webhooks` → `delivered=0 retrying=0 dead=0 skipped=0`.
 - **Populated-upgrade rehearsal:** `APP_ENV=testing DB_DATABASE=retroboards_upgrade_verify php bin/console verify:upgrade --force` → **PASS 17/17** (`0049`–`0057` applied on seeded Phase-1 data; `oauth_identities` ENUM→VARCHAR widen included; 90 Phase-1 columns intact; zero data loss).
 - **Legacy ledger probe:** scratch `schema_migrations(version, applied_at)` normalized to `schema_migrations(name, applied_at)` and `Migrator::status()` reported `0001_users` as applied (`status-ok columns=name,applied_at`).
@@ -298,13 +339,12 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
 Per `PHASE_5_PLAN` §13.1 staged order — each behind its dark flag, with shadow/
 parity and adversarial evidence before enablement:
 
-1. **Capability resolver in shadow mode** (P5-08): seed the approved catalogue +
-   map system roles, run the new resolver beside the accepted one, archive a
-   parity corpus — no enforcement switch until parity is clean.
-2. **Registry + signed declarative themes** (P5-01/03): signature/digest/staleness
+1. **Registry + signed declarative themes** (P5-01/03): signature/digest/staleness
    verification, isolated theme preview, safe mode.
-3. **Passkeys** (P5-11) on top of the TOTP/recovery fallback.
-4. **Generic OIDC + provider migration** (P5-12) and **invitations** (P5-13).
+2. **Passkeys** (P5-11) on top of the TOTP/recovery fallback.
+3. **Generic OIDC + provider migration** (P5-12) and **invitations** (P5-13).
+4. **Resolver enforcement cutover** (P5-08/P5-09, Increment 6) after the shadow
+   parity soak stays clean.
 
 ## Operating note
 
