@@ -136,7 +136,7 @@ final class SigningHarness
             'theme' => [
                 'schema_version' => 1,
                 'tokens' => ['--accent' => '#8f3d12', '--surface' => '#fff7dc', '--text' => '#241706'],
-                'dark_tokens' => [],
+                'dark_tokens' => ['--accent' => '#d2b062', '--surface' => '#283440', '--text' => '#ece4d2'],
                 'assets' => [],
             ],
         ];
