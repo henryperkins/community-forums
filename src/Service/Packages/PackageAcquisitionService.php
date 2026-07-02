@@ -115,8 +115,10 @@ final class PackageAcquisitionService
         $needsHydration = $fetched
             || ($release['manifest_json'] ?? null) === null
             || ($release['review_status'] ?? '') !== $reviewStatus;
+        $needsReviewDecision = in_array($reviewStatus, ['approved', 'rejected'], true)
+            && $this->reviewDecisions->latestForDigest((int) $package['id'], $digest) === null;
 
-        if ($needsHydration) {
+        if ($needsHydration || $needsReviewDecision) {
             $manifestJson = json_encode($manifestPayload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
             $this->db->transaction(function () use (
                 $release,
@@ -130,13 +132,14 @@ final class PackageAcquisitionService
                 $digest,
                 $document,
                 $fetched,
+                $needsHydration,
+                $needsReviewDecision,
             ): void {
-                $this->releases->hydrateSignedMetadata((int) $release['id'], $manifestJson, $signature, $keyId, $reviewStatus);
+                if ($needsHydration) {
+                    $this->releases->hydrateSignedMetadata((int) $release['id'], $manifestJson, $signature, $keyId, $reviewStatus);
+                }
 
-                if (
-                    in_array($reviewStatus, ['approved', 'rejected'], true)
-                    && $this->reviewDecisions->latestForDigest((int) $package['id'], $digest) === null
-                ) {
+                if ($needsReviewDecision) {
                     $this->reviewDecisions->record([
                         'package_id' => (int) $package['id'],
                         'release_id' => (int) $release['id'],

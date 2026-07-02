@@ -384,6 +384,145 @@ final class PackageLifecycleService
         });
     }
 
+    /** @return array<string,mixed> */
+    public function uninstall(User $admin, string $currentPassword, int $installedId): array
+    {
+        $this->writeGate->assertCanWrite($admin);
+        $this->reauth->requirePassword($admin, $currentPassword);
+
+        $install = $this->requireInstall($installedId);
+        $this->assertState($install, ['installed', 'enabled', 'disabled', 'quarantined']);
+        $package = $this->packages->find((int) $install['package_id']);
+        if ($package === null) {
+            throw new PackagePolicyException('invalid_state', 'The installed package is no longer resolvable.');
+        }
+        $retentionDays = $this->retentionDaysFor($install);
+
+        $export = $this->db->transaction(function () use ($install, $installedId, $package, $admin, $retentionDays): array {
+            if ((string) $install['state'] === 'enabled') {
+                $this->installs->setState($installedId, 'disabled');
+                $this->history->record([
+                    'package_id' => (int) $install['package_id'],
+                    'installed_package_id' => $installedId,
+                    'event' => 'disable',
+                    'actor_id' => $admin->id(),
+                    'detail' => 'uninstall disables execution first',
+                ]);
+            }
+
+            $export = $this->buildExport($install, $package);
+            $this->installs->storeExport($installedId, json_encode($export, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $retainUntil = gmdate('Y-m-d H:i:s', time() + ($retentionDays * 86_400));
+            $this->installs->markUninstalled($installedId, $retainUntil);
+            $this->history->record([
+                'package_id' => (int) $install['package_id'],
+                'installed_package_id' => $installedId,
+                'event' => 'uninstall',
+                'actor_id' => $admin->id(),
+                'prior_version' => $this->versionOf($install),
+                'prior_digest' => (string) $install['digest'],
+                'permission_snapshot_json' => json_encode($this->permissions->forInstall($installedId), JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+                'detail' => 'retain until ' . $retainUntil,
+            ]);
+            $this->transparency->record([
+                'package_uid' => (string) $package['package_uid'],
+                'version' => $this->versionOf($install),
+                'digest' => (string) $install['digest'],
+                'event' => 'uninstall',
+                'source' => 'local',
+                'actor_id' => $admin->id(),
+            ]);
+            $this->audit->log([
+                'actor_id' => $admin->id(),
+                'action' => 'package_uninstall',
+                'target_type' => 'package',
+                'target_id' => (int) $install['package_id'],
+                'after' => ['retain_until' => $retainUntil],
+            ]);
+
+            return $export;
+        });
+
+        $this->telemetry?->emit('package.lifecycle', [
+            'action' => 'uninstall',
+            'package' => (string) $package['package_uid'],
+        ]);
+
+        return $export;
+    }
+
+    /** @return array<string,mixed> */
+    public function export(User $admin, int $installedId): array
+    {
+        $this->writeGate->assertCanWrite($admin);
+
+        $install = $this->requireInstall($installedId);
+        $package = $this->packages->find((int) $install['package_id']);
+        if ($package === null) {
+            throw new PackagePolicyException('invalid_state', 'The installed package is no longer resolvable.');
+        }
+        $export = $this->buildExport($install, $package);
+
+        $this->db->transaction(function () use ($install, $installedId, $admin, $export): void {
+            $this->installs->storeExport($installedId, json_encode($export, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+            $this->history->record([
+                'package_id' => (int) $install['package_id'],
+                'installed_package_id' => $installedId,
+                'event' => 'export',
+                'actor_id' => $admin->id(),
+            ]);
+            $this->audit->log([
+                'actor_id' => $admin->id(),
+                'action' => 'package_export',
+                'target_type' => 'package',
+                'target_id' => (int) $install['package_id'],
+            ]);
+        });
+
+        return $export;
+    }
+
+    public function reverify(User $admin, int $installedId): bool
+    {
+        $this->writeGate->assertCanWrite($admin);
+
+        $install = $this->requireInstall($installedId);
+        if ((string) $install['state'] !== 'quarantined') {
+            throw new PackagePolicyException('not_quarantined', 'Only quarantined installations can be re-verified.');
+        }
+        $package = $this->packages->find((int) $install['package_id']);
+
+        if (!$this->artifacts->verify((string) $install['digest'])) {
+            $this->installs->setHealth($installedId, 'failed', (string) $install['quarantine_reason']);
+            return false;
+        }
+
+        $this->db->transaction(function () use ($install, $installedId, $admin): void {
+            $this->installs->setState($installedId, 'disabled');
+            $this->installs->setHealth($installedId, 'ok', null);
+            $this->history->record([
+                'package_id' => (int) $install['package_id'],
+                'installed_package_id' => $installedId,
+                'event' => 'health',
+                'actor_id' => $admin->id(),
+                'detail' => 'reverified: digest matches again',
+            ]);
+            $this->audit->log([
+                'actor_id' => $admin->id(),
+                'action' => 'package_reverify',
+                'target_type' => 'package',
+                'target_id' => (int) $install['package_id'],
+            ]);
+        });
+
+        $this->telemetry?->emit('package.lifecycle', [
+            'action' => 'reverify',
+            'package' => (string) ($package['package_uid'] ?? ''),
+        ]);
+
+        return true;
+    }
+
     /** @return array{0:array<string,mixed>,1:array<string,mixed>,2:?array<string,mixed>} package, release, registry */
     private function resolveTarget(int $packageId, ?int $releaseId): array
     {
@@ -457,6 +596,82 @@ final class PackageLifecycleService
         $release = $install['release_id'] !== null ? $this->releases->find((int) $install['release_id']) : null;
 
         return $release !== null ? (string) $release['version'] : null;
+    }
+
+    /** @param array<string,mixed> $install */
+    private function retentionDaysFor(array $install): int
+    {
+        $release = $install['release_id'] !== null ? $this->releases->find((int) $install['release_id']) : null;
+        $manifest = $release !== null && $release['manifest_json'] !== null
+            ? json_decode((string) $release['manifest_json'], true)
+            : null;
+        $days = is_array($manifest) && is_int($manifest['install']['retention_days'] ?? null)
+            ? $manifest['install']['retention_days']
+            : $this->retentionDays;
+
+        return max(1, min(365, $days));
+    }
+
+    /**
+     * @param array<string,mixed> $install
+     * @param array<string,mixed> $package
+     * @return array<string,mixed>
+     */
+    private function buildExport(array $install, array $package): array
+    {
+        $installedId = (int) $install['id'];
+        $registry = $install['source_registry_id'] !== null ? $this->registries->find((int) $install['source_registry_id']) : null;
+        $review = null;
+        $decision = $this->reviewDecisions->latestForDigest((int) $install['package_id'], (string) $install['digest']);
+        if ($decision !== null) {
+            $review = [
+                'decision' => (string) $decision['decision'],
+                'digest' => (string) $decision['digest'],
+                'decided_at' => $decision['decided_at'],
+            ];
+        }
+
+        return [
+            'format' => 'rb-install-export.v1',
+            'exported_at' => gmdate('Y-m-d\TH:i:s\Z'),
+            'package' => [
+                'uid' => (string) $package['package_uid'],
+                'name' => (string) $package['name'],
+                'type' => (string) $package['type'],
+                'trust_class' => (string) $install['trust_class'],
+            ],
+            'install' => [
+                'version' => $this->versionOf($install),
+                'digest' => (string) $install['digest'],
+                'state' => (string) $install['state'],
+                'health' => (string) $install['health'],
+                'pinned' => (int) $install['pinned'] === 1,
+                'update_policy' => (string) $install['update_policy'],
+                'installed_at' => (string) $install['installed_at'],
+                'uninstalled_at' => $install['uninstalled_at'],
+                'retain_until' => $install['retain_until'],
+            ],
+            'provenance' => [
+                'registry_source_id' => $registry !== null ? (string) $registry['source_id'] : null,
+                'publisher_uid' => $this->publisherUid($package),
+                'review' => $review,
+            ],
+            'permissions' => $this->permissions->forInstall($installedId),
+            'history' => $this->history->forInstall($installedId, 100),
+            'settings' => null,
+        ];
+    }
+
+    /** @param array<string,mixed> $package */
+    private function publisherUid(array $package): ?string
+    {
+        if ($package['publisher_id'] === null) {
+            return null;
+        }
+
+        $uid = $this->db->fetchValue('SELECT publisher_uid FROM package_publishers WHERE id = ?', [(int) $package['publisher_id']]);
+
+        return $uid === false || $uid === null ? null : (string) $uid;
     }
 
     /**
