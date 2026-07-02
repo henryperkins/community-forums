@@ -42,6 +42,7 @@ final class NotificationService
         private UserRepository $users,
         private FeatureFlags $flags,
         private Mailer $mailer,
+        private ?EmailPreferenceService $emailPrefs = null,
     ) {
     }
 
@@ -249,6 +250,9 @@ final class NotificationService
 
     private function enqueueInstant(int $userId, string $email, int $postId): void
     {
+        if ($this->emailPrefs?->pauseAllEmail($userId) === true) {
+            return;
+        }
         if ($this->suppress->isSuppressed($email)) {
             return;
         }

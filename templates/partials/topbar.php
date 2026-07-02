@@ -1,4 +1,8 @@
 <?php /** @var \App\Core\View $this */ ?>
+<?php
+$moderationAccess = is_array($moderation_access ?? null) ? $moderation_access : [];
+$moderationReportCount = (int) ($moderationAccess['report_count'] ?? 0);
+?>
 <header class="topbar">
     <div class="topbar-inner">
         <button class="nav-toggle" type="button" data-nav-toggle aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar-nav">
@@ -31,6 +35,9 @@
                 </a>
                 <?php if ($current_user->isAdmin()): ?>
                     <a class="topbar-link" href="/admin">Admin</a>
+                <?php endif; ?>
+                <?php if (!$current_user->isAdmin() && !empty($moderationAccess['can_reports'])): ?>
+                    <a class="topbar-link" href="/mod/reports">Moderation <span class="mod-count"><?= $moderationReportCount ?></span></a>
                 <?php endif; ?>
                 <a class="topbar-link" href="/settings/account" title="Settings">
                     <svg class="topbar-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H2a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 3.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8a1.65 1.65 0 0 0 1-1.51V2a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V8a1.65 1.65 0 0 0 1.51 1H22a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>

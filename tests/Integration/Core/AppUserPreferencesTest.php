@@ -94,6 +94,38 @@ final class AppUserPreferencesTest extends TestCase
         self::assertSame(1, (int) (new UserBoardPrefRepository($this->db))->forUser((int) $user['id'])[(int) $board['id']]['is_favorite']);
     }
 
+    public function test_stale_board_preference_toggle_redirects_instead_of_500(): void
+    {
+        $user = $this->makeUser(['username' => 'stale_board_pref']);
+        $this->actingAs($user);
+
+        $res = $this->post('/settings/boards/toggle', ['board_id' => 999999, 'pref' => 'favorite']);
+
+        $this->assertRedirect($res, '/settings/boards');
+    }
+
+    public function test_malformed_board_preference_toggle_redirects_instead_of_500(): void
+    {
+        $user = $this->makeUser(['username' => 'malformed_board_pref']);
+        $this->actingAs($user);
+
+        $res = $this->post('/settings/boards/toggle', ['board_id' => 'abc', 'pref' => 'favorite']);
+
+        $this->assertRedirect($res, '/settings/boards');
+    }
+
+    public function test_invalid_board_preference_name_redirects_instead_of_500(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'invalid-pref-board']);
+        $user = $this->makeUser(['username' => 'invalid_board_pref']);
+        $this->actingAs($user);
+
+        $res = $this->post('/settings/boards/toggle', ['board_id' => (int) $board['id'], 'pref' => 'zzz']);
+
+        $this->assertRedirect($res, '/settings/boards');
+    }
+
     public function test_blocks_page_lists_blocked_users(): void
     {
         $me = $this->makeUser(['username' => 'blocker']);
@@ -117,6 +149,43 @@ final class AppUserPreferencesTest extends TestCase
         $row = $this->users()->find((int) $user['id']);
         self::assertSame('America/New_York', $row['timezone']);
         self::assertSame(8, (int) $row['digest_hour']);
+    }
+
+    public function test_digest_hour_label_names_effective_timezone(): void
+    {
+        $user = $this->makeUser(['username' => 'digest_label']);
+        $this->actingAs($user);
+
+        $res = $this->get('/settings/notifications');
+
+        $this->assertStatus(200, $res);
+        self::assertStringContainsString('Digest hour (selected timezone; UTC if unset)', $res->body());
+    }
+
+    public function test_pause_all_email_preference_persists_and_renders(): void
+    {
+        $user = $this->makeUser(['username' => 'email_pauser']);
+        $this->actingAs($user);
+
+        $paused = $this->post('/settings/notifications', [
+            'timezone' => 'UTC',
+            'digest_hour' => '9',
+            'pause_all_email' => '1',
+        ]);
+        $this->assertRedirect($paused, '/settings/notifications');
+
+        $prefs = (new UserPreferenceRepository($this->db))->get((int) $user['id']);
+        self::assertTrue($prefs['pause_all_email']);
+        self::assertStringContainsString('name="pause_all_email" value="1" checked', $this->get('/settings/notifications')->body());
+
+        $resumed = $this->post('/settings/notifications', [
+            'timezone' => 'UTC',
+            'digest_hour' => '9',
+        ]);
+        $this->assertRedirect($resumed, '/settings/notifications');
+
+        $prefs = (new UserPreferenceRepository($this->db))->get((int) $user['id']);
+        self::assertFalse($prefs['pause_all_email']);
     }
 
     public function test_guest_cannot_reach_member_controls(): void

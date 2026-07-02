@@ -9,6 +9,8 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
+use App\Repository\UserPreferenceRepository;
+use App\Service\EmailPreferenceService;
 use App\Worker\DailyDigestWorker;
 use Tests\Support\TestCase;
 
@@ -27,6 +29,8 @@ final class DailyDigestWorkerTest extends TestCase
             $mailer,
             $this->config,
             new SettingRepository($this->db),
+            null,
+            new EmailPreferenceService(new UserPreferenceRepository($this->db)),
         );
     }
 
@@ -133,5 +137,24 @@ final class DailyDigestWorkerTest extends TestCase
         self::assertSame(0, $stats['sent']);
         self::assertSame(1, $stats['skipped_empty']);
         self::assertSame(0, $mailer->count());
+    }
+
+    public function testPausedEmailUserDoesNotReceiveDigest(): void
+    {
+        $author = $this->makeUser();
+        $recipient = $this->makeDigestUser(9);
+        (new UserPreferenceRepository($this->db))->merge((int) $recipient['id'], ['pause_all_email' => true]);
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Paused digest', 'OP.');
+        $this->posting()->reply($this->userEntity($author), $thread['thread_id'], ['body' => 'Fresh reply.']);
+        (new SubscriptionRepository($this->db))->set((int) $recipient['id'], 'thread', $thread['thread_id'], true, true, 'daily');
+
+        $mailer = new ArrayMailer();
+        $stats = $this->worker($mailer)->run('2026-06-26 09:30:00');
+
+        self::assertSame(0, $stats['sent']);
+        self::assertSame(1, $stats['suppressed']);
+        self::assertSame(0, $mailer->count());
+        self::assertSame('2026-06-26 09:30:00', (string) $this->db->fetchValue('SELECT last_daily_digest_at FROM users WHERE id = ?', [(int) $recipient['id']]));
     }
 }

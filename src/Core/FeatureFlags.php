@@ -116,6 +116,12 @@ final class FeatureFlags
     }
 
     /** @return array<string,bool> */
+    public static function defaults(): array
+    {
+        return self::DEFAULTS;
+    }
+
+    /** @return array<string,bool> */
     public function all(): array
     {
         return $this->cache ??= $this->load();

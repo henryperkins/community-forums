@@ -1,7 +1,8 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-07-02 (`wysiwyg_composer` graduated; graduation readiness
-ranking added; Phase 5 rows reconciled with `PHASE_5_STATUS.md`)
+**Date:** 2026-07-02 (`FeatureFlags::DEFAULTS` source audit; 2026-07-02
+graduations reconciled; graduation readiness ranking added; Phase 5 rows
+reconciled with `PHASE_5_STATUS.md`)
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -14,6 +15,24 @@ The Phase 3/4 dark flags are additionally ranked in
 by how little evidence each still needs before it can graduate.
 
 Runtime source of truth: `src/Core/FeatureFlags.php`.
+
+## Source Code Audit
+
+Audited 2026-07-02 against `src/Core/FeatureFlags.php` and literal
+`FeatureFlags::enabled('...')` call sites in `src/`.
+
+- `FeatureFlags::DEFAULTS` declares 57 flags: 31 default `true`, 26 default
+  `false`.
+- This deploy-dark inventory has 39 table rows: all 26 current default-dark
+  flags, plus 13 retained graduated flags that are default-ON and
+  operator-reversible.
+- No table flag is absent from `FeatureFlags::DEFAULTS`; no current
+  default-dark flag is missing from these tables.
+- The default-ON baseline flags intentionally outside this deploy-dark inventory
+  are: `engagement`, `notifications`, `email`, `mentions`, `search`, `dms`,
+  `moderation_queue`, `community`, `oauth`, `presence`, `announcements`,
+  `rich_composer`, `drafts`, `uploads`, `anti_abuse`, `branding`, `seo`, and
+  `product_tour`.
 
 ## Phase 3 / Phase 3 Carryover
 
@@ -300,6 +319,18 @@ as of 2026-07-02.
   `docs/runbooks/server_drafts.md`. It is retained here for traceability and
   remains reversible via the `features` override; the browser-local `drafts`
   fallback is unaffected when it is disabled.
+- `slash_giphy` graduated out of deploy-dark on 2026-07-02: its `FeatureFlags`
+  default is now `true`, but it is inert until `giphy_public_key` is configured.
+  It is retained here for traceability and remains reversible either through the
+  `features` override or by clearing the GIPHY key.
+- `badge_rules` graduated out of deploy-dark on 2026-07-02: its `FeatureFlags`
+  default is now `true`. It is retained here for traceability, remains
+  reversible via the `features` override, and preserves award/revoke history
+  across rollback.
+- `account_lifecycle` graduated out of deploy-dark on 2026-07-02: its
+  `FeatureFlags` default is now `true`. It is retained here for traceability and
+  remains reversible via the `features` override; the purge worker keeps its
+  `pending_deletion` guard when the feature is enabled.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
   decision. `group_dms` and `community_memory` additionally require an

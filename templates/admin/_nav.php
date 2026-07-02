@@ -6,13 +6,14 @@ $disabledNote = 'Disabled until the feature flag is enabled';
 
 $always = [
     ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => '/admin'],
+    ['key' => 'features', 'label' => 'Feature flags', 'href' => '/admin/features'],
     ['key' => 'structure', 'label' => 'Boards & categories', 'href' => '/admin/structure'],
     ['key' => 'users', 'label' => 'Users', 'href' => '/admin/users'],
-    ['key' => 'branding', 'label' => 'Branding', 'href' => '/admin/branding'],
-    ['key' => 'tags', 'label' => 'Tags', 'href' => '/admin/tags'],
-    ['key' => 'badge_rules', 'label' => 'Badge rules', 'href' => '/admin/badge-rules'],
-    ['key' => 'email', 'label' => 'Email', 'href' => '/admin/email'],
-    ['key' => 'announcements', 'label' => 'Announcements', 'href' => '/admin/announcements'],
+    ['key' => 'branding', 'label' => 'Branding', 'href' => '/admin/branding', 'flag' => 'branding'],
+    ['key' => 'tags', 'label' => 'Tags', 'href' => '/admin/tags', 'flag' => 'tags'],
+    ['key' => 'badge_rules', 'label' => 'Badge rules', 'href' => '/admin/badge-rules', 'flag' => 'badge_rules'],
+    ['key' => 'email', 'label' => 'Email', 'href' => '/admin/email', 'flag' => 'email'],
+    ['key' => 'announcements', 'label' => 'Announcements', 'href' => '/admin/announcements', 'flag' => 'announcements'],
 ];
 
 $dark = [
@@ -27,7 +28,14 @@ $dark = [
 ?>
 <nav class="subnav admin-subnav" aria-label="Admin navigation">
     <?php foreach ($always as $item): ?>
-        <a href="<?= $e($item['href']) ?>"<?= $active === $item['key'] ? ' class="active" aria-current="page"' : '' ?>><?= $e($item['label']) ?></a>
+        <?php if (empty($item['flag']) || !empty($features[$item['flag']])): ?>
+            <a href="<?= $e($item['href']) ?>"<?= $active === $item['key'] ? ' class="active" aria-current="page"' : '' ?>><?= $e($item['label']) ?></a>
+        <?php else: ?>
+            <span class="subnav-action subnav-item is-disabled<?= $active === $item['key'] ? ' active' : '' ?>" aria-disabled="true"<?= $active === $item['key'] ? ' aria-current="page"' : '' ?>>
+                <span class="subnav-item-label"><?= $e($item['label']) ?></span>
+                <span class="subnav-item-note"><?= $e($disabledNote) ?></span>
+            </span>
+        <?php endif; ?>
     <?php endforeach; ?>
 
     <?php foreach ($dark as $item): ?>

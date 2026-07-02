@@ -27,13 +27,18 @@ $hour = $row['digest_hour'];
             </select>
         </label>
         <label class="field">
-            <span>Digest hour (local)</span>
+            <span>Digest hour (selected timezone; UTC if unset)</span>
             <select name="digest_hour" class="input">
                 <option value="">Off</option>
                 <?php for ($h = 0; $h < 24; $h++): ?>
                     <option value="<?= $h ?>"<?= ($hour !== null && (int) $hour === $h) ? ' selected' : '' ?>><?= sprintf('%02d:00', $h) ?></option>
                 <?php endfor; ?>
             </select>
+        </label>
+        <label class="checkline">
+            <input type="checkbox" name="pause_all_email" value="1" <?= !empty($pause_all_email) ? 'checked' : '' ?>>
+            Pause all email
+            <span class="muted">In-app notifications still arrive.</span>
         </label>
         <button class="btn" type="submit">Save digest settings</button>
     </form>

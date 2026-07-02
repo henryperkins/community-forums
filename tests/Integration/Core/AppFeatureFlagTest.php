@@ -486,6 +486,11 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/email/test', []));
         $this->assertStatus(404, $this->post('/admin/email/suppressions', ['email' => 'x@example.test']));
         $this->assertStatus(404, $this->post('/admin/email/suppressions/remove', ['email' => 'x@example.test']));
+
+        $dashboard = $this->get('/admin');
+        $this->assertStatus(200, $dashboard);
+        self::assertStringNotContainsString('href="/admin/email"', $dashboard->body());
+        self::assertStringContainsString('aria-disabled="true"', $dashboard->body());
     }
 
     public function test_core_forum_survives_with_every_feature_flag_disabled(): void

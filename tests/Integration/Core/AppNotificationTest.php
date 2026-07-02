@@ -13,6 +13,8 @@ use App\Repository\EmailSuppressionRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
+use App\Repository\UserPreferenceRepository;
+use App\Service\EmailPreferenceService;
 use App\Service\NotificationService;
 use Tests\Support\TestCase;
 
@@ -41,6 +43,7 @@ final class AppNotificationTest extends TestCase
             $this->users(),
             new FeatureFlags(new SettingRepository($this->db)),
             $mailer ?? new ArrayMailer(),
+            new EmailPreferenceService(new UserPreferenceRepository($this->db)),
         );
     }
 
@@ -127,6 +130,20 @@ final class AppNotificationTest extends TestCase
 
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM email_deliveries WHERE user_id = ?', [(int) $sub['id']]));
         self::assertSame(1, $this->notifCount((int) $sub['id']), 'in-app still delivered to a suppressed-email user');
+    }
+
+    public function testPausedEmailUserStillGetsInAppButNoInstantEmail(): void
+    {
+        $author = $this->makeUser();
+        [$ctx, $replyId] = $this->threadWithReply($author);
+        $sub = $this->makeUser(['email' => 'paused@example.test']);
+        (new SubscriptionRepository($this->db))->set((int) $sub['id'], 'thread', (int) $ctx['id'], true, true, 'instant');
+        (new UserPreferenceRepository($this->db))->merge((int) $sub['id'], ['pause_all_email' => true]);
+
+        $this->notifier()->fanOutNewPost((int) $author['id'], $ctx, $replyId, false, 'A reply.');
+
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM email_deliveries WHERE user_id = ?', [(int) $sub['id']]));
+        self::assertSame(1, $this->notifCount((int) $sub['id']), 'email pause must not disable in-app notifications');
     }
 
     public function testFailsClosedWhenMailUnconfiguredButInAppContinues(): void

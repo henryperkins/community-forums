@@ -7,7 +7,6 @@ namespace App\Controller;
 use App\Core\FeatureFlags;
 use App\Core\Request;
 use App\Core\Response;
-use App\Core\ValidationException;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\SessionRepository;
@@ -17,6 +16,7 @@ use App\Repository\UserPreferenceRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Service\AccountService;
+use App\Service\EmailPreferenceService;
 use App\Service\PersonalOrganizationService;
 use App\Service\PreferenceService;
 use App\Support\PreferenceSchema;
@@ -135,6 +135,7 @@ final class SettingsController extends Controller
             'row' => $row,
             'subscriptions' => $this->container->get(SubscriptionRepository::class)->listForUserWithContext($user->id()),
             'timezones' => \DateTimeZone::listIdentifiers(),
+            'pause_all_email' => $this->container->get(EmailPreferenceService::class)->pauseAllEmail($user->id()),
         ]);
     }
 
@@ -150,6 +151,7 @@ final class SettingsController extends Controller
         $hour = ($hourRaw === null || $hourRaw === '') ? null : max(0, min(23, (int) $hourRaw));
 
         $this->container->get(UserRepository::class)->updateDigest($user->id(), $tz !== '' ? $tz : null, $hour);
+        $this->container->get(EmailPreferenceService::class)->setPauseAllEmail($user->id(), $request->post('pause_all_email') === '1');
         return $this->redirectWithFlash('/settings/notifications', 'Notification settings saved.');
     }
 
@@ -238,7 +240,7 @@ final class SettingsController extends Controller
         $which = (string) $request->post('pref', '');
         $board = $this->container->get(BoardRepository::class)->find($boardId);
         if ($board === null || !in_array($which, ['favorite', 'mute'], true)) {
-            throw new ValidationException(['pref' => 'Invalid board preference.']);
+            return $this->redirectWithFlash('/settings/boards', 'Invalid board preference.');
         }
 
         $repo = $this->container->get(UserBoardPrefRepository::class);

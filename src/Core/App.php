@@ -12,6 +12,7 @@ use App\Controller\AdminController;
 use App\Controller\AdminCustomEmojiController;
 use App\Controller\AdminEmailController;
 use App\Controller\AdminExtensionController;
+use App\Controller\AdminFeatureController;
 use App\Controller\AdminLinkPreviewController;
 use App\Controller\AdminPackageLifecycleController;
 use App\Controller\AdminPackagesController;
@@ -165,6 +166,7 @@ use App\Service\AuthService;
 use App\Service\ContentReferenceService;
 use App\Service\CustomEmojiService;
 use App\Service\EmailDomainVerifier;
+use App\Service\EmailPreferenceService;
 use App\Service\EmailOpsService;
 use App\Service\Extension\BubblewrapSandboxAdapter;
 use App\Service\Extension\ExtensionSandbox;
@@ -558,6 +560,29 @@ final class App
             $siteAnnouncement = null;
         }
 
+        $moderationAccess = ['can_reports' => false, 'report_count' => 0];
+        try {
+            $user = $session->user();
+            if ($user !== null && !empty($features['moderation_queue'])) {
+                if ($user->isAdmin()) {
+                    $moderationAccess = [
+                        'can_reports' => true,
+                        'report_count' => $container->get(ReportRepository::class)->openCount(true, []),
+                    ];
+                } else {
+                    $boardIds = $container->get(BoardModeratorRepository::class)->boardsFor($user->id());
+                    if ($boardIds !== []) {
+                        $moderationAccess = [
+                            'can_reports' => true,
+                            'report_count' => $container->get(ReportRepository::class)->openCount(false, $boardIds),
+                        ];
+                    }
+                }
+            }
+        } catch (Throwable) {
+            $moderationAccess = ['can_reports' => false, 'report_count' => 0];
+        }
+
         $container->get(View::class)->share([
             'site_name' => $siteName,
             'app_name' => $appName,
@@ -575,6 +600,7 @@ final class App
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
             'site_announcement' => $siteAnnouncement,
+            'moderation_access' => $moderationAccess,
         ]);
     }
 
@@ -803,6 +829,7 @@ final class App
         $c->bind(BadgeRepository::class, fn (Container $c) => new BadgeRepository($c->get(Database::class)));
         $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
+        $c->bind(EmailPreferenceService::class, fn (Container $c) => new EmailPreferenceService($c->get(UserPreferenceRepository::class)));
         $c->bind(UserBoardPrefRepository::class, fn (Container $c) => new UserBoardPrefRepository($c->get(Database::class)));
         $c->bind(UserProfileFieldRepository::class, fn (Container $c) => new UserProfileFieldRepository($c->get(Database::class)));
         $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
@@ -946,6 +973,7 @@ final class App
             $c->get(UserRepository::class),
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
+            $c->get(EmailPreferenceService::class),
         ));
         $c->bind(EmailDomainVerifier::class, fn (Container $c) => new EmailDomainVerifier(
             $config,
@@ -1728,6 +1756,7 @@ final class App
         $r->post('/admin/email/deliveries/{id}/requeue', [AdminEmailController::class, 'requeue']);
         $r->post('/admin/email/suppressions', [AdminEmailController::class, 'suppress']);
         $r->post('/admin/email/suppressions/remove', [AdminEmailController::class, 'unsuppress']);
+        $r->get('/admin/features', [AdminFeatureController::class, 'index']);
         $r->get('/admin/extensions', [AdminExtensionController::class, 'index']);
         $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
         $r->post('/admin/announcements', [AdminAnnouncementController::class, 'save']);

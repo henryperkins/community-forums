@@ -44,6 +44,7 @@ use App\Repository\ServerDraftRepository;
 use App\Repository\ServerExtensionRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Repository\UserPreferenceRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\EgressGuard;
@@ -80,6 +81,7 @@ use App\Repository\ModerationLogRepository;
 use App\Service\AttachmentService;
 use App\Service\AttachmentScanService;
 use App\Service\EmailDomainVerifier;
+use App\Service\EmailPreferenceService;
 use App\Service\Extension\BubblewrapSandboxAdapter;
 use App\Service\LegacyAuthorityProjection;
 use App\Service\Phase5BudgetReportService;
@@ -273,6 +275,7 @@ try {
                 $config,
                 new SettingRepository($db),
                 $domainVerifier($db),
+                new EmailPreferenceService(new UserPreferenceRepository($db)),
             );
             $stats = $worker->run((int) ($argv[2] ?? 100));
             $log(sprintf('Instant email: sent=%d suppressed=%d retrying=%d failed=%d skipped=%d', $stats['sent'], $stats['suppressed'], $stats['retrying'], $stats['failed'], $stats['skipped']));
@@ -288,6 +291,7 @@ try {
                 $config,
                 new SettingRepository($db),
                 $domainVerifier($db),
+                new EmailPreferenceService(new UserPreferenceRepository($db)),
             );
             $stats = $worker->run(gmdate('Y-m-d H:i:s'));
             $log(sprintf('Daily digest: sent=%d skipped_empty=%d suppressed=%d', $stats['sent'], $stats['skipped_empty'], $stats['suppressed']));

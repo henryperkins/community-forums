@@ -101,6 +101,28 @@ final class ReportRepository
         );
     }
 
+    /** @param list<int> $boardIds */
+    public function openCount(bool $isAdmin, array $boardIds): int
+    {
+        if ($isAdmin) {
+            return (int) $this->db->fetchValue(
+                "SELECT COUNT(*) FROM reports WHERE status IN ('open','triaged')",
+            );
+        }
+        if ($boardIds === []) {
+            return 0;
+        }
+        $place = implode(',', array_fill(0, count($boardIds), '?'));
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*)
+             FROM reports r
+             JOIN posts p ON p.id = r.post_id
+             JOIN threads t ON t.id = p.thread_id
+             WHERE r.status IN ('open','triaged') AND t.board_id IN ($place)",
+            $boardIds,
+        );
+    }
+
     public function claim(int $id, int $modId): void
     {
         $this->db->run(

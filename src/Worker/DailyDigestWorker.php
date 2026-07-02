@@ -11,6 +11,7 @@ use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\SettingRepository;
+use App\Service\EmailPreferenceService;
 use App\Service\EmailDomainVerifier;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -35,6 +36,7 @@ final class DailyDigestWorker
         private Config $config,
         private ?SettingRepository $settings = null,
         private ?EmailDomainVerifier $domainVerifier = null,
+        private ?EmailPreferenceService $emailPrefs = null,
     ) {
     }
 
@@ -66,7 +68,7 @@ final class DailyDigestWorker
                 continue;
             }
             $email = (string) $u['email'];
-            if ($this->suppress->isSuppressed($email)) {
+            if ($this->emailPrefs?->pauseAllEmail((int) $u['id']) === true || $this->suppress->isSuppressed($email)) {
                 $this->advanceWatermark((int) $u['id'], $nowUtc);
                 $stats['suppressed']++;
                 continue;

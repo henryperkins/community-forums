@@ -13,6 +13,7 @@ use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Service\EmailPreferenceService;
 use App\Service\EmailDomainVerifier;
 use Throwable;
 
@@ -37,6 +38,7 @@ final class NotificationEmailWorker
         private Config $config,
         private ?SettingRepository $settings = null,
         private ?EmailDomainVerifier $domainVerifier = null,
+        private ?EmailPreferenceService $emailPrefs = null,
     ) {
     }
 
@@ -68,8 +70,9 @@ final class NotificationEmailWorker
             foreach ($this->deliveries->pending($limit) as $row) {
                 $id = (int) $row['id'];
                 $email = (string) $row['email'];
+                $userId = (int) ($row['user_id'] ?? 0);
 
-                if ($this->suppress->isSuppressed($email)) {
+                if ($this->emailPrefs?->pauseAllEmail($userId) === true || $this->suppress->isSuppressed($email)) {
                     $this->deliveries->markSuppressed($id);
                     $stats['suppressed']++;
                     continue;

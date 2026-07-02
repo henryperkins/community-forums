@@ -10,6 +10,8 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
+use App\Repository\UserPreferenceRepository;
+use App\Service\EmailPreferenceService;
 use App\Worker\NotificationEmailWorker;
 use Tests\Support\TestCase;
 
@@ -29,6 +31,8 @@ final class NotificationEmailWorkerTest extends TestCase
             $mailer,
             $this->config,
             new SettingRepository($this->db),
+            null,
+            new EmailPreferenceService(new UserPreferenceRepository($this->db)),
         );
     }
 
@@ -85,6 +89,19 @@ final class NotificationEmailWorkerTest extends TestCase
         self::assertSame(1, $stats['suppressed']);
         self::assertSame(0, $mailer->count());
         self::assertSame("suppressed", (string) $this->db->fetchValue("SELECT status FROM email_deliveries LIMIT 1"));
+    }
+
+    public function testPausedEmailUserQueuedRowIsDequeuedWithoutSending(): void
+    {
+        $d = $this->queuedDelivery();
+        (new UserPreferenceRepository($this->db))->merge((int) $d['user']['id'], ['pause_all_email' => true]);
+        $mailer = new ArrayMailer();
+
+        $stats = $this->worker($mailer)->run();
+
+        self::assertSame(1, $stats['suppressed']);
+        self::assertSame(0, $mailer->count());
+        self::assertSame('suppressed', (string) $this->db->fetchValue('SELECT status FROM email_deliveries LIMIT 1'));
     }
 
     public function testFailsClosedWhenTransportUnconfigured(): void

@@ -31,6 +31,31 @@ final class AppModeratorScopeTest extends TestCase
         (new BoardModeratorRepository($this->db))->assign((int) $this->boardA['id'], (int) $this->modA['id']);
     }
 
+    public function testBoardModeratorCanDiscoverModerationQueueFromChromeAndAdminDeadEnd(): void
+    {
+        $thread = $this->makeThread($this->boardA, $this->member, 'Reported in scope', 'needs review');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+        $reporter = $this->makeUser(['username' => 'queue_reporter']);
+        $this->db->run(
+            "INSERT INTO reports (reporter_id, post_id, reason_code, reason, status, notify_reporter, created_at)
+             VALUES (?, ?, 'spam', 'review this', 'open', 0, UTC_TIMESTAMP())",
+            [(int) $reporter['id'], $postId],
+        );
+
+        $this->actingAs($this->modA);
+
+        $home = $this->get('/');
+        $this->assertStatus(200, $home);
+        $this->assertSeeText($home, 'href="/mod/reports"');
+        $this->assertSeeText($home, 'Moderation');
+        $this->assertSeeText($home, '<span class="mod-count">1</span>');
+
+        $admin = $this->get('/admin');
+        $this->assertStatus(403, $admin);
+        $this->assertSeeText($admin, 'href="/mod/reports"');
+        $this->assertSeeText($admin, 'Moderation queue');
+    }
+
     public function testBoardModeratorCanActOnlyInTheirBoard(): void
     {
         $tA = $this->makeThread($this->boardA, $this->member, 'In A', 'x');

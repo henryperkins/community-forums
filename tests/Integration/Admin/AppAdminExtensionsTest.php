@@ -60,7 +60,7 @@ final class AppAdminExtensionsTest extends TestCase
         self::assertStringContainsString('Global emergency disable', $page->body());
     }
 
-    public function test_extensions_admin_page_renders_feature_activation_index(): void
+    public function test_extensions_admin_page_only_renders_server_extension_inventory(): void
     {
         $this->setFlags([
             'server_extensions' => true,
@@ -75,12 +75,13 @@ final class AppAdminExtensionsTest extends TestCase
         $page = $this->get('/admin/extensions');
 
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('feature-activation-index', $page->body());
-        self::assertStringContainsString('The UI that was missing', $page->body());
-        self::assertStringContainsString('feature-area-card', $page->body());
-        self::assertStringContainsString('polls', $page->body());
-        self::assertStringContainsString('bookmark_folders', $page->body());
-        self::assertStringContainsString('link_previews', $page->body());
-        self::assertStringContainsString('Design-ahead', $page->body());
+        self::assertStringContainsString('Sandbox probe', $page->body());
+        self::assertStringContainsString('Handlers', $page->body());
+        self::assertStringContainsString('Run history', $page->body());
+        self::assertStringContainsString('server_extensions', $page->body());
+        self::assertStringNotContainsString('feature-activation-index', $page->body());
+        self::assertStringNotContainsString('The UI that was missing', $page->body());
+        self::assertStringNotContainsString('Designed surfaces', $page->body());
+        self::assertStringNotContainsString('Design-ahead', $page->body());
     }
 }
