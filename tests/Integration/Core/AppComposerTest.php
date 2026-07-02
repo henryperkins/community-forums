@@ -169,24 +169,31 @@ final class AppComposerTest extends TestCase
         self::assertSame(2, (int) $this->db->fetchValue('SELECT COUNT(*) FROM posts WHERE thread_id = ?', [(int) $thread['thread_id']]));
     }
 
-    public function test_wysiwyg_flag_only_loads_editor_assets_when_rich_composer_is_enabled(): void
+    public function test_wysiwyg_editor_assets_load_by_default_and_honor_flag_and_kill_switch(): void
     {
         $board = $this->makeBoard($this->makeCategory(), ['slug' => 'wysiwyg-assets']);
         $user = $this->makeUser(['username' => 'wysiwygassets']);
         $this->actingAs($user);
 
+        // GA default-on (2026-07-02): with no features override the Milkdown
+        // bundle loads alongside the shared composer bridge.
         $defaultPage = $this->get('/c/wysiwyg-assets');
         self::assertStringContainsString('/assets/composer.js', $defaultPage->body());
-        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $defaultPage->body());
+        self::assertStringContainsString('/assets/wysiwyg-composer.css', $defaultPage->body());
+        self::assertStringContainsString('<script type="module" src="/assets/wysiwyg-composer.js"></script>', $defaultPage->body());
+        self::assertStringContainsString('data-wysiwyg-composer="1"', $defaultPage->body());
 
-        (new SettingRepository($this->db))->set('features', ['wysiwyg_composer' => true]);
-        $enabledPage = $this->get('/c/wysiwyg-assets');
-        self::assertStringContainsString('/assets/composer.js', $enabledPage->body());
-        self::assertStringContainsString('/assets/wysiwyg-composer.css', $enabledPage->body());
-        self::assertStringContainsString('<script type="module" src="/assets/wysiwyg-composer.js"></script>', $enabledPage->body());
-        self::assertStringContainsString('data-wysiwyg-composer="1"', $enabledPage->body());
+        // Operator rollback: the narrow flag removes only the WYSIWYG layer;
+        // the enhanced Markdown composer keeps loading.
+        (new SettingRepository($this->db))->set('features', ['wysiwyg_composer' => false]);
+        $disabledPage = $this->get('/c/wysiwyg-assets');
+        self::assertStringContainsString('/assets/composer.js', $disabledPage->body());
+        self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $disabledPage->body());
+        self::assertStringNotContainsString('data-wysiwyg-composer="1"', $disabledPage->body());
 
-        (new SettingRepository($this->db))->set('features', ['rich_composer' => false, 'wysiwyg_composer' => true]);
+        // Broad kill switch: rich_composer=false keeps every enhanced asset
+        // out even though wysiwyg_composer stays true by default.
+        (new SettingRepository($this->db))->set('features', ['rich_composer' => false]);
         $killedPage = $this->get('/c/wysiwyg-assets');
         self::assertStringNotContainsString('/assets/composer.js', $killedPage->body());
         self::assertStringNotContainsString('/assets/wysiwyg-composer.js', $killedPage->body());

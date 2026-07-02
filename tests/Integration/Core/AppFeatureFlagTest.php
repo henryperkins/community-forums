@@ -48,22 +48,41 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue($overridden->enabled('community'));
     }
 
-    public function test_wysiwyg_composer_defaults_dark_and_is_independently_reversible(): void
+    public function test_wysiwyg_composer_is_available_by_default_and_can_be_disabled(): void
     {
+        // wysiwyg_composer graduated to default-on (GA 2026-07-02): with no
+        // features override, the Milkdown layer loads wherever the composer
+        // renders (bundle tags + the body data attribute). An operator can
+        // still roll the layer back via the features setting, and
+        // rich_composer stays the broad kill switch (ADR 0013).
         $flags = new FeatureFlags(new SettingRepository($this->db));
         self::assertArrayHasKey('wysiwyg_composer', $flags->all());
-        self::assertFalse($flags->enabled('wysiwyg_composer'));
+        self::assertTrue($flags->enabled('wysiwyg_composer'));
         self::assertTrue($flags->enabled('rich_composer'));
 
-        $this->setFlags(['wysiwyg_composer' => true]);
-        $enabled = new FeatureFlags(new SettingRepository($this->db));
-        self::assertTrue($enabled->enabled('wysiwyg_composer'));
-        self::assertTrue($enabled->enabled('rich_composer'));
+        // Isolation: graduating wysiwyg_composer must not enable a dark neighbour.
+        self::assertFalse($flags->enabled('group_dms'));
 
-        $this->setFlags(['rich_composer' => false, 'wysiwyg_composer' => true]);
-        $rolledBack = new FeatureFlags(new SettingRepository($this->db));
-        self::assertFalse($rolledBack->enabled('rich_composer'));
-        self::assertTrue($rolledBack->enabled('wysiwyg_composer'), 'the narrow flag may be true while the broad kill switch keeps assets dark');
+        // Available by default on a real page for a signed-in member.
+        $this->makeBoard($this->makeCategory(), ['slug' => 'wysiwyg-default']);
+        $this->actingAs($this->makeUser(['username' => 'wysiwyg_default_user']));
+        $page = $this->get('/c/wysiwyg-default');
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('data-wysiwyg-composer="1"', $page->body());
+
+        // Operator rollback: disabling the narrow flag removes the layer.
+        $this->setFlags(['wysiwyg_composer' => false]);
+        $disabled = $this->get('/c/wysiwyg-default');
+        self::assertStringNotContainsString('data-wysiwyg-composer="1"', $disabled->body());
+
+        // Kill-switch interplay: rich_composer=false keeps assets dark while
+        // the narrow flag remains true by default (no wysiwyg key in the override).
+        $this->setFlags(['rich_composer' => false]);
+        $killed = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($killed->enabled('rich_composer'));
+        self::assertTrue($killed->enabled('wysiwyg_composer'), 'the narrow flag stays true while the broad kill switch keeps assets dark');
+        $killedPage = $this->get('/c/wysiwyg-default');
+        self::assertStringNotContainsString('data-wysiwyg-composer="1"', $killedPage->body());
     }
 
     public function test_topic_workflow_is_available_by_default_and_can_be_disabled(): void

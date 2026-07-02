@@ -1,7 +1,7 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-07-02 (graduation readiness ranking added; Phase 5 rows
-reconciled with `PHASE_5_STATUS.md`)
+**Date:** 2026-07-02 (`wysiwyg_composer` graduated; graduation readiness
+ranking added; Phase 5 rows reconciled with `PHASE_5_STATUS.md`)
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -20,7 +20,7 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
 | `server_drafts` | Authenticated cross-device draft sync, conflict handling, `/drafts` server list/discard | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppServerDraftsTest` (available-by-default + rollback), `AppAccountLifecycleTest` (export/purge), browser `28-server-draft-conflict`, `.composer-draft-sync` axe pass, runbook `docs/runbooks/server_drafts.md`, ADR 0010. Retained here for traceability. |
-| `wysiwyg_composer` | Optional Milkdown WYSIWYG layer over the canonical Markdown textarea | Deploy-dark; narrow flag under the `rich_composer` kill switch. Acceptance evidence: ADR 0013, runbook `docs/runbooks/wysiwyg_composer.md`, `AppComposerTest`, `AppComposerSuggestTest`, `AppMentionLinkRenderTest`, `MarkdownRoundTripTest`, `npm run check:wysiwyg`, browser `wysiwyg-composer.spec.ts` (CSP, source mode, no-op edit, preview parity, chips, internal URL paste, mobile smoke, textarea fallback), and `a11y.spec.ts` WYSIWYG toolbar/picker/source scans. Rollback is `wysiwyg_composer=false`; emergency rollback is `rich_composer=false`. |
+| `wysiwyg_composer` | Milkdown WYSIWYG layer over the canonical Markdown textarea | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override; `rich_composer=false` remains the emergency kill switch). Acceptance evidence: ADR 0013, runbook `docs/runbooks/wysiwyg_composer.md`, `AppComposerTest`, `AppComposerSuggestTest`, `AppMentionLinkRenderTest`, `MarkdownRoundTripTest`, `npm run check:wysiwyg`, browser `wysiwyg-composer.spec.ts` (CSP + GA-default mount with no override, source mode, no-op edit, preview parity, chips, internal URL paste, mobile smoke, textarea fallback), and `a11y.spec.ts` WYSIWYG toolbar/picker/source scans. Retained here for traceability. |
 | `appeals` | Self-service moderation appeals and staff appeal queue | Deploy-dark; focused PHPUnit exists, awaiting browser/a11y/runbook evidence |
 | `custom_css` | Guarded raw CSS editor for trusted operators | Deploy-dark; awaiting safe-mode/mobile/operator evidence |
 
@@ -286,6 +286,12 @@ as of 2026-07-02.
   deploy-dark on 2026-07-01: their `FeatureFlags` defaults are now `true`. They
   are retained here for traceability, remain reversible via the `features`
   override, and share the private personal-organization settings surface.
+- `wysiwyg_composer` graduated out of deploy-dark on 2026-07-02: its
+  `FeatureFlags` default is now `true` (its acceptance evidence had already
+  landed with PR #33). The browser-evidence seed intentionally pins it OFF so
+  the gate-a screenshot journeys keep capturing the textarea
+  progressive-enhancement baseline; `wysiwyg-composer.spec.ts` proves the GA
+  default mounts Milkdown with no features override.
 - `server_drafts` graduated out of deploy-dark on 2026-07-02 (the first Tier 1
   graduation from the readiness ranking): its `FeatureFlags` default is now
   `true`. Acceptance completed the ADR 0010 evidence list — the browser conflict

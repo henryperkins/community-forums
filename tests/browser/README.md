@@ -51,7 +51,7 @@ harness grows. The current branch also captures:
 
 Focused acceptance specs that do not write numbered screenshots:
 
-- `wysiwyg-composer.spec.ts` gates the deploy-dark WYSIWYG layer: strict CSP asset load, textarea fallback, new-topic submit, source-mode round trip, no-op edit preservation, server-preview parity, rich reference chips, internal URL paste normalization, and mobile smoke.
+- `wysiwyg-composer.spec.ts` gates the WYSIWYG layer (graduated to default-on 2026-07-02; the seed pins it off so gate-a keeps the textarea baseline): strict CSP asset load with no features override (proving the GA default mounts), textarea fallback, new-topic submit, source-mode round trip, no-op edit preservation, server-preview parity, rich reference chips, internal URL paste normalization, and mobile smoke.
 
 ## Run it locally
 
@@ -112,7 +112,7 @@ environment.
 desktop and mobile projects. It opts into `RB_BROWSER_DARK_SURFACES=1` during
 seeding so still-dark appeal and server-extension pages are available while the
 now-default-on server-draft, badge-rules, slash/GIPHY, account-lifecycle, and
-deploy-dark WYSIWYG composer surfaces are also scanned. It currently checks the
+WYSIWYG composer surfaces (default-on since 2026-07-02) are also scanned. It currently checks the
 admin extension/badge-rules surfaces, member appeals/drafts/account-lifecycle
 surfaces, scoped server-draft conflict and slash-combobox widgets, plus the
 WYSIWYG toolbar/reference-picker/source-mode surfaces for serious or critical
