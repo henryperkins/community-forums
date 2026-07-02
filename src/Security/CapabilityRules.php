@@ -18,6 +18,18 @@ final class CapabilityRules
     /** @var list<string> */
     private const DUAL_PATH = ['core.thread.mark_solved', 'core.poll.manage', 'core.thread.manage_workflow'];
 
+    /**
+     * Roles whose grants confer BOARD-WIDE dual-path authority (acting on other
+     * members' threads). Everything else — the baseline system.user/system.guest
+     * bundles and every custom role — confers only the author path (taxonomy
+     * §4.2: "board-wide use comes only through a board-scoped moderator
+     * assignment"). An allowlist, so a clone of system.user cannot silently
+     * carry board-wide authority once the resolver enforces (Inc 6).
+     *
+     * @var list<string>
+     */
+    private const DUAL_PATH_BOARD_AUTHORITY = ['system.moderator', 'system.admin'];
+
     /** @var list<string> */
     private const CAN_POST_GATED = ['core.thread.create', 'core.post.create', 'core.thread.tag'];
 
@@ -76,8 +88,12 @@ final class CapabilityRules
                 : CapabilityDecision::deny($capability, 'no_grant', 'No active grant provides this capability.');
         }
 
-        if (in_array($capability, self::DUAL_PATH, true) && $ctx['owner_id'] !== null) {
-            $rolesHoldingKey = array_values(array_diff($rolesHoldingKey, ['system.guest', 'system.user']));
+        // Non-owner dual-path resolution: the author branch above did not match,
+        // so only the moderation-tier roles may satisfy the key from here on —
+        // regardless of whether an owner context was supplied (a bare board
+        // target is a "held board-wide?" probe and must answer the same way).
+        if (in_array($capability, self::DUAL_PATH, true)) {
+            $rolesHoldingKey = array_values(array_intersect($rolesHoldingKey, self::DUAL_PATH_BOARD_AUTHORITY));
         }
 
         $g = self::firstQualifyingGrant($capability, $grants, $rolesHoldingKey, $meta['scope'], $ctx, $at);

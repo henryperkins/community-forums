@@ -7,6 +7,7 @@ namespace Tests\Integration\Security;
 use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
+use App\Repository\CapabilityRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
@@ -172,5 +173,42 @@ final class CapabilityResolverTest extends TestCase
         self::assertTrue($resolver->can(User::fromRow($author), 'core.post.edit_own', ['owner_id' => (int) $author['id']])->allowed);
         self::assertSame('scope', $resolver->can(User::fromRow($other), 'core.post.edit_own', ['owner_id' => (int) $author['id']])->source);
         self::assertGreaterThan(0, $thread['thread_id']);
+    }
+
+    public function test_custom_roles_confer_owner_path_only_for_dual_path_keys(): void
+    {
+        $cat = $this->makeCategory('DualCustom');
+        $board = $this->makeBoard($cat);
+        $author = $this->makeUser();
+        $helper = $this->makeUser();
+
+        // A custom role holding a dual-path key, assigned board-scoped: it must
+        // confer the author path only — board-wide authority over other members'
+        // threads stays moderation-tier (taxonomy §4.2).
+        $roles = new RoleRepository($this->db);
+        $roleId = $roles->create(['role_key' => 'custom.dualtest', 'name' => 'Dual Test', 'description' => null, 'created_by' => null]);
+        (new RoleCapabilityRepository($this->db))->replaceForRole(
+            $roleId,
+            array_values((new CapabilityRepository($this->db))->idsByKeys(['core.thread.mark_solved'])),
+        );
+        (new RoleAssignmentRepository($this->db))->create([
+            'subject_id' => (int) $helper['id'],
+            'role_id' => $roleId,
+            'scope_type' => 'board',
+            'scope_id' => (int) $board['id'],
+        ]);
+
+        $resolver = $this->resolver();
+        $othersThread = ['board_id' => (int) $board['id'], 'owner_id' => (int) $author['id']];
+        self::assertFalse(
+            $resolver->can(User::fromRow($helper), 'core.thread.mark_solved', $othersThread)->allowed,
+            'board-wide dual-path authority is moderation-tier only',
+        );
+
+        $ownThread = ['board_id' => (int) $board['id'], 'owner_id' => (int) $helper['id']];
+        self::assertTrue(
+            $resolver->can(User::fromRow($helper), 'core.thread.mark_solved', $ownThread)->allowed,
+            'the author path still works through a custom role',
+        );
     }
 }

@@ -251,6 +251,34 @@ final class CapabilityRulesTest extends TestCase
         self::assertTrue($this->decide('core.thread.mark_solved', $owner, true, 10, $modGrants, $holding, $otherCtx)->allowed);
     }
 
+    public function test_dual_path_board_authority_comes_only_from_moderation_tier_roles(): void
+    {
+        // A custom role holding a dual-path key confers the author path only:
+        // board-wide use over other members' threads is reserved to
+        // system.moderator/system.admin (taxonomy §4.2 — "board-wide use comes
+        // only through a board-scoped moderator assignment").
+        $u = $this->user(['id' => 7]);
+        $holding = ['system.user', 'system.moderator', 'system.admin', 'custom.helper'];
+        $customGrant = [$this->grant(['role_key' => 'custom.helper', 'scope_type' => 'board', 'scope_id' => 3, 'source' => 'assignment'])];
+        $otherCtx = $this->ctx(['board' => $this->board(['id' => 3]), 'board_readable' => true, 'owner_id' => 99]);
+
+        $d = $this->decide('core.thread.mark_solved', $u, true, 10, $customGrant, $holding, $otherCtx);
+        self::assertFalse($d->allowed, 'custom roles never grant board-wide dual-path authority');
+        self::assertSame('no_grant', $d->source);
+
+        $ownCtx = $this->ctx(['board' => $this->board(['id' => 3]), 'board_readable' => true, 'owner_id' => 7]);
+        self::assertTrue(
+            $this->decide('core.thread.mark_solved', $u, true, 10, $customGrant, $holding, $ownCtx)->allowed,
+            'the author path still works through a custom role',
+        );
+
+        // A held-anywhere probe (board target, no owner context) must not read
+        // the baseline bundle as board-wide authority either.
+        $userGrant = [$this->grant()];
+        $noOwnerCtx = $this->ctx(['board' => $this->board(['id' => 3]), 'board_readable' => true]);
+        self::assertFalse($this->decide('core.thread.mark_solved', $u, true, 10, $userGrant, $holding, $noOwnerCtx)->allowed);
+    }
+
     public function test_direct_capability_grant_satisfies_only_its_key(): void
     {
         $u = $this->user(['role' => 'moderator']);
