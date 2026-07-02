@@ -108,12 +108,14 @@ final class PackageUpdateService
 
         $install = $this->requireInstall($installedId);
         $this->assertUpdateState($install);
-        $this->assertNotPinned($install);
         if ($install['staged_release_id'] === null) {
             throw new PackagePolicyException('no_staged_update', 'There is no staged update to approve.');
         }
 
         [$package, $target, $registry, $current] = $this->resolveUpdateTarget($install, (int) $install['staged_release_id']);
+        if ((int) $install['pinned'] === 1 && !$this->isRollbackTarget($current, $target)) {
+            $this->assertNotPinned($install);
+        }
         $stagedDigest = $install['staged_digest'] !== null ? (string) $install['staged_digest'] : '';
         if ($stagedDigest === '' || !hash_equals($stagedDigest, (string) $target['digest'])) {
             throw new PackagePolicyException(
@@ -184,7 +186,6 @@ final class PackageUpdateService
 
         $install = $this->requireInstall($installedId);
         $this->assertUpdatable($install);
-        $this->assertNotPinned($install);
 
         $eligible = array_map('intval', array_column($this->rollbackTargets($installedId), 'id'));
         if (!in_array($targetReleaseId, $eligible, true)) {
@@ -282,7 +283,7 @@ final class PackageUpdateService
         }
 
         $priorVersion = $current !== null ? (string) $current['version'] : null;
-        $event = ($priorVersion !== null && version_compare((string) $target['version'], $priorVersion, '<')) ? 'rollback' : 'update';
+        $event = $this->isRollbackTarget($current, $target) ? 'rollback' : 'update';
 
         $declared = [];
         $previouslyGranted = [];
@@ -432,6 +433,15 @@ final class PackageUpdateService
         if ((int) $install['pinned'] === 1) {
             throw new PackagePolicyException('pinned', 'This installation is pinned; unpin it before updating.');
         }
+    }
+
+    /**
+     * @param ?array<string,mixed> $current
+     * @param array<string,mixed> $target
+     */
+    private function isRollbackTarget(?array $current, array $target): bool
+    {
+        return $current !== null && version_compare((string) $target['version'], (string) $current['version'], '<');
     }
 
     /**

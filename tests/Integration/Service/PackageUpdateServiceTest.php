@@ -407,15 +407,22 @@ final class PackageUpdateServiceTest extends TestCase
         );
     }
 
-    public function test_rollback_refuses_when_install_is_pinned(): void
+    public function test_rollback_is_allowed_when_install_is_pinned(): void
     {
         $updates = $this->updates();
         $updates->update($this->admin, 'password123', $this->installedId, (int) $this->reduced['release_id']);
         $this->lifecycle()->setPinned($this->admin, $this->installedId, true);
 
-        $this->assertPolicyRefusal(
-            'pinned',
-            fn () => $updates->rollback($this->admin, 'password123', $this->installedId, (int) $this->seeded['release_id']),
+        $result = $updates->rollback($this->admin, 'password123', $this->installedId, (int) $this->seeded['release_id']);
+        self::assertSame('staged', $result['status']);
+
+        $updates->applyStaged($this->admin, 'password123', $this->installedId);
+
+        $row = (new InstalledPackageRepository($this->db))->find($this->installedId);
+        self::assertSame($this->seeded['release_digest'], $row['digest']);
+        self::assertSame(
+            'rollback',
+            (new PackageHistoryRepository($this->db))->forInstall($this->installedId, 1)[0]['event'],
         );
     }
 
