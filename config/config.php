@@ -239,6 +239,14 @@ return [
             explode(',', (string) Env::get('LINK_PREVIEW_ALLOWED_PRIVATE_CIDRS', ''))))),
     ],
 
+    'registry' => [
+        'fetch_timeout_seconds' => (int) Env::get('REGISTRY_FETCH_TIMEOUT_SECONDS', '10'),
+        'max_snapshot_bytes' => (int) Env::get('REGISTRY_MAX_SNAPSHOT_BYTES', '1048576'),
+        'allow_http' => Env::bool('REGISTRY_ALLOW_HTTP', false),
+        'allowed_private_cidrs' => array_values(array_filter(array_map('trim',
+            explode(',', (string) Env::get('REGISTRY_ALLOWED_PRIVATE_CIDRS', ''))))),
+    ],
+
     'giphy' => [
         // Public browser API key only. The app never proxies, caches, rewrites, or
         // downloads GIPHY media; the picker uses GIPHY Search/Trending directly.
