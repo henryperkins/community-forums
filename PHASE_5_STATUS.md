@@ -3,7 +3,7 @@
 **Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow), Increment 2 (P5-01 registry protocol + package identity), Increment 3 (P5-02 package install/manifest/lifecycle), and Increment 4 (P5-03 declarative theme packages) landed 2026-07-02 behind dark flags. Inc 4 adds strict `theme` manifest validation, closed token/value grammars, contrast checks, raster-only asset neutralization, deterministic CSS builds, admin-only preview, password-reauth activation, LKG rollback, fail-safe deactivation, and emergency safe mode behind `package_themes`. It is still deploy-dark: only reviewed declarative theme packages can affect external CSS, no remote code executes, and integrations remain Inc 5. Increment 6 (enforcement cutover) stays blocked until shadow soak. Passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
 **Last updated:** 2026-07-02
 **Branch:** `phase5-inc4-declarative-themes`
-**Suite:** Closeout gates green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/Phase5EvidenceMapTest.php` -> **7 tests / 33 assertions**. `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php` -> **12 tests / 91 assertions**. Post-fix focused Phase 5/theme group -> **27 tests / 225 assertions**. `RB_TEST_FRESH=1 composer test` -> **1268 tests / 6619 assertions**. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.5491 ms MEASURED (PASS); package.install_update_p95 60.7351 ms MEASURED (PASS); theme.build_apply_p95 11.3736 ms MEASURED (PASS); resolver.p95 3.4057 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0072_phase5_theme_packages`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 4: `npm run evidence` -> **53 passed / 1 skipped** and `npm run a11y` -> **14 passed** across desktop + mobile.
+**Suite:** Closeout gates green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/Phase5EvidenceMapTest.php` -> **7 tests / 33 assertions**. `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php` -> **12 tests / 91 assertions**. Post-fix focused Phase 5/theme group -> **27 tests / 225 assertions**. `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions**. `vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions** on two consecutive reused-schema runs. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.5491 ms MEASURED (PASS); package.install_update_p95 60.7351 ms MEASURED (PASS); theme.build_apply_p95 11.3736 ms MEASURED (PASS); resolver.p95 3.4057 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0072_phase5_theme_packages`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 4: `npm run evidence` -> **53 passed / 1 skipped** and `npm run a11y` -> **14 passed** across desktop + mobile.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -265,9 +265,9 @@ behavior remain absent until Inc 3.
 The package install and lifecycle increment is complete behind the dark
 `package_registry` flag. Staff can verify a signed release, install, consent,
 enable, disable, update, rollback, uninstall, export, and re-verify package
-state. Enabled packages execute nothing until Inc 4 declarative themes and Inc 5
-integrations provide runtimes; publisher console and credential minting remain
-Inc 5.
+state. Theme packages now have the Inc 4 declarative CSS runtime behind
+`package_themes`; non-theme integrations still execute nothing until Inc 5.
+Publisher console and credential minting remain Inc 5.
 
 - **Release acquisition + digest binding:** `PackageAcquisitionService` treats
   the signed `rb-release.v1` document as the artifact. The snapshot-pinned
@@ -337,7 +337,8 @@ no PHP or JavaScript, and integrations remain Inc 5.
   clears invalid theme state, `theme.build_apply_p95` measured
   **11.3736 ms MEASURED (PASS)** against the 10000 ms D11 budget, and browser
   evidence covers preview, activate, safe mode, and rollback shots 39-42 on
-  desktop + mobile.
+  desktop + mobile. Post-fix focused browser rerun
+  `npx playwright test gate-a.spec.ts --grep "theme packages"` -> **2 passed**.
 - **Docs and ledger:** `docs/phase5/registry-protocol.md` documents the Inc 4
   theme manifest/build/serving contract, `docs/runbooks/package_themes.md`
   covers staged rollout and emergency operation, and GA-DOD-07 is R3 in
@@ -486,7 +487,7 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   (`theme.build_apply_p95` MEASURED (PASS)).
 - Requirement ledger: `docs/phase5/requirement-ledger.json` (R0-R5 states + per-flag rollback map, machine-checked).
 - Threat models: `docs/phase5/threat-models/` (6 dossiers + `fixtures.json`, 48 negative-fixture stubs; TM-SE-01 and TM-TH-01..07 implemented).
-- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **1268 tests / 6619 assertions green** on the Inc 4 post-fix fresh-schema gate.
+- **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **1268 tests / 6619 assertions green** on the Inc 4 post-fix fresh-schema gate, with two consecutive reused-schema runs also green.
 - **Browser evidence:** `npm run evidence` -> **53 passed / 1 skipped** on desktop + mobile; includes admin API-token, domain webhook, role-editor, permission-simulator, package lifecycle, and theme preview/activate/safe-mode/rollback no-JS journeys. `npm run a11y` -> **14 passed**.
 - **Worker smoke:** `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 MAIL_DRIVER=array php bin/console worker:webhooks` → `delivered=0 retrying=0 dead=0 skipped=0`.
 - **Populated-upgrade rehearsal:** `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **PASS 17/17** (`0049`-`0072` applied on seeded Phase-1 data; `oauth_identities` ENUM->VARCHAR widen included; Phase-1 columns intact; zero data loss).
