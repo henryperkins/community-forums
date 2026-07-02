@@ -24,6 +24,8 @@ final class PermissionDiffTest extends TestCase
         self::assertSame('medium', PermissionDiff::describe('outbound_host', 'api.example.com')['risk']);
         self::assertStringContainsString('api.example.com', PermissionDiff::describe('outbound_host', 'api.example.com')['label']);
         self::assertSame('low', PermissionDiff::describe('job', 'sync')['risk']);
+        self::assertSame('medium', PermissionDiff::describe('broker_service', 'search')['risk']);
+        self::assertStringContainsString('search', PermissionDiff::describe('broker_service', 'search')['label']);
     }
 
     public function test_protected_capability_clamps_to_high_and_never_yields_a_null_label(): void

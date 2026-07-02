@@ -33,6 +33,7 @@ final class PermissionDiff
             'event' => ['low', 'Receive webhook events: ' . (WebhookEvents::EVENTS[$key] ?? $key) . '.'],
             'outbound_host' => ['medium', 'Send outbound requests to ' . $key . '.'],
             'job' => ['low', 'Run the scheduled job "' . $key . '".'],
+            'broker_service' => ['medium', 'Use the broker service "' . $key . '".'],
             default => throw new PackagePolicyException('unknown_field', 'Unknown permission kind: ' . $kind . '.'),
         };
 

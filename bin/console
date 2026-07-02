@@ -606,6 +606,7 @@ try {
                 new PackageTransparencyLogRepository($db),
                 $acquisition,
                 $securityGate,
+                new ManifestValidator(),
                 $benchStore,
                 new ReauthGate(new PasswordHasher()),
                 new WriteGate(),

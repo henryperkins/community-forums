@@ -69,6 +69,25 @@ final class PackageInstallBudgetTest extends TestCase
         self::assertLessThan(10_000.0, $result['p95'], 'D11 target sanity on the test fixture');
     }
 
+    public function test_install_update_sampler_requires_caller_owned_rollback_transaction(): void
+    {
+        $this->pdo->rollBack();
+        try {
+            (new BaselineMetricsService($this->db))->measureInstallUpdate(
+                $this->lifecycle(),
+                $this->updates(),
+                $this->db,
+                $this->store,
+                samples: 1,
+            );
+            self::fail('expected sampler to refuse outside a rollback transaction');
+        } catch (\RuntimeException $e) {
+            self::assertStringContainsString('transaction', $e->getMessage());
+        } finally {
+            $this->pdo->beginTransaction();
+        }
+    }
+
     public function test_budget_report_marks_package_install_update_measured(): void
     {
         $report = new Phase5BudgetReportService(
@@ -124,6 +143,7 @@ final class PackageInstallBudgetTest extends TestCase
             new PackageTransparencyLogRepository($this->db),
             $this->acquisition(),
             new PackageSecurityGate(new LocalPackageBlockRepository($this->db), new PackageAdvisoryRepository($this->db)),
+            new ManifestValidator(),
             $this->store,
             new ReauthGate(new PasswordHasher()),
             new WriteGate(),

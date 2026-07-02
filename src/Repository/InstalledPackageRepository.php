@@ -108,6 +108,16 @@ final class InstalledPackageRepository
         $this->db->run('UPDATE installed_packages SET state = ? WHERE id = ?', [$state, $id]);
     }
 
+    public function setStateIfCurrent(int $id, string $expectedState, string $state): bool
+    {
+        $stmt = $this->db->run(
+            'UPDATE installed_packages SET state = :state WHERE id = :id AND state = :expected',
+            ['state' => $state, 'id' => $id, 'expected' => $expectedState],
+        );
+
+        return $stmt->rowCount() === 1;
+    }
+
     public function setHealth(int $id, string $health, ?string $quarantineReason, ?string $checkedAtUtc = null): void
     {
         $this->db->run(

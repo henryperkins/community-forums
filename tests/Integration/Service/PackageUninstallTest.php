@@ -29,6 +29,7 @@ use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Registry\ArrayRegistryTransport;
+use App\Service\Registry\RegistryFetchResult;
 use Tests\Support\Phase5\RegistryFixtures;
 use Tests\Support\Phase5\SigningHarness;
 use Tests\Support\TestCase;
@@ -53,6 +54,7 @@ final class PackageUninstallTest extends TestCase
         $this->artifactDir = sys_get_temp_dir() . '/rb-uninstall-' . bin2hex(random_bytes(4));
         $this->store = new PackageArtifactStore($this->artifactDir);
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);
 
         $adminRow = $this->makeAdmin(['password' => 'password123']);
         $admin = (new UserRepository($this->db))->findEntity((int) $adminRow['id']);
@@ -69,7 +71,8 @@ final class PackageUninstallTest extends TestCase
         parent::tearDown();
     }
 
-    private function service(): PackageLifecycleService
+    /** @param array<string,RegistryFetchResult> $responses */
+    private function service(array $responses = []): PackageLifecycleService
     {
         return new PackageLifecycleService(
             $this->db,
@@ -81,7 +84,7 @@ final class PackageUninstallTest extends TestCase
             new PackageHistoryRepository($this->db),
             new PackageTransparencyLogRepository($this->db),
             new PackageReviewDecisionRepository($this->db),
-            $this->acquisition(),
+            $this->acquisition($responses),
             new PackageSecurityGate(new LocalPackageBlockRepository($this->db), new PackageAdvisoryRepository($this->db)),
             $this->store,
             new ReauthGate(new PasswordHasher()),
@@ -91,7 +94,8 @@ final class PackageUninstallTest extends TestCase
         );
     }
 
-    private function acquisition(): PackageAcquisitionService
+    /** @param array<string,RegistryFetchResult> $responses */
+    private function acquisition(array $responses = []): PackageAcquisitionService
     {
         return new PackageAcquisitionService(
             $this->db,
@@ -102,7 +106,7 @@ final class PackageUninstallTest extends TestCase
             new PackageTransparencyLogRepository($this->db),
             $this->store,
             new ManifestValidator(),
-            new ArrayRegistryTransport([]),
+            new ArrayRegistryTransport($responses),
         );
     }
 
@@ -211,5 +215,34 @@ final class PackageUninstallTest extends TestCase
         self::assertNull($row['quarantine_reason']);
 
         $this->assertPolicyRefusal('not_quarantined', fn () => $service->reverify($this->admin, $installedId));
+    }
+
+    public function test_reverify_refetches_missing_artifact_for_the_installed_digest(): void
+    {
+        $service = $this->service();
+        $installedId = $service->install($this->admin, 'password123', (int) $this->seeded['package_id']);
+        $service->consent($this->admin, 'password123', $installedId);
+
+        $path = $this->store->pathFor($this->seeded['release_digest']);
+        file_put_contents($path, 'tampered');
+        $this->assertPolicyRefusal('artifact_tampered', fn () => $service->enable($this->admin, 'password123', $installedId));
+        unlink($path);
+
+        $release = (new PackageReleaseRepository($this->db))->find((int) $this->seeded['release_id']);
+        $body = json_encode([
+            'format' => 'rb-release-envelope.v1',
+            'document' => $this->seeded['release_document'],
+            'signature' => base64_encode((string) $release['signature']),
+            'key_id' => (string) $release['signed_key_id'],
+        ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        $repairingService = $this->service([
+            'https://registry.invalid/releases/acme/midnight-theme/1.0.0/rb-release-envelope.v1.json' => new RegistryFetchResult(200, $body, null),
+        ]);
+
+        self::assertTrue($repairingService->reverify($this->admin, $installedId));
+        $row = (new InstalledPackageRepository($this->db))->find($installedId);
+        self::assertSame('disabled', $row['state']);
+        self::assertSame('ok', $row['health']);
+        self::assertTrue($this->store->verify($this->seeded['release_digest']));
     }
 }

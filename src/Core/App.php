@@ -1212,6 +1212,7 @@ final class App
             $c->get(PackageTransparencyLogRepository::class),
             $c->get(PackageAcquisitionService::class),
             $c->get(PackageSecurityGate::class),
+            $c->get(ManifestValidator::class),
             $c->get(PackageArtifactStore::class),
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),

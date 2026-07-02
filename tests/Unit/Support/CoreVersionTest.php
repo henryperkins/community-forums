@@ -55,6 +55,8 @@ final class CoreVersionTest extends TestCase
         self::assertFalse(CoreVersion::satisfies(null, null, 'not-a-version'));
         self::assertFalse(CoreVersion::isValid('1.0'));
         self::assertFalse(CoreVersion::isValid('v1.0.0'));
+        self::assertFalse(CoreVersion::isValid("1.0.0\n"));
+        self::assertFalse(CoreVersion::isValid('1.0.0-' . str_repeat('a', 40)));
         self::assertTrue(CoreVersion::isValid('1.0.0-rc.1'));
     }
 

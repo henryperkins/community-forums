@@ -70,9 +70,7 @@ final class PackageLifecycleService
         $warnings = [];
 
         try {
-            if ($registry === null) {
-                throw new PackagePolicyException('source_mismatch', 'This package has no pinned registry source.');
-            }
+            $this->assertEnabledRegistry($registry);
             $manifest = $this->acquisition->ensureVerified($registry, $package, $release);
             $release = $this->releases->find((int) $release['id']) ?? $release;
             $this->gate->assertInstallable($package, $release);
@@ -110,9 +108,7 @@ final class PackageLifecycleService
 
         $stage = 'acquire';
         try {
-            if ($registry === null) {
-                throw new PackagePolicyException('source_mismatch', 'This package has no pinned registry source.');
-            }
+            $this->assertEnabledRegistry($registry);
 
             $manifest = $this->acquisition->ensureVerified($registry, $package, $release);
             $release = $this->releases->find((int) $release['id']) ?? $release;
@@ -493,8 +489,10 @@ final class PackageLifecycleService
         $package = $this->packages->find((int) $install['package_id']);
 
         if (!$this->artifacts->verify((string) $install['digest'])) {
-            $this->installs->setHealth($installedId, 'failed', (string) $install['quarantine_reason']);
-            return false;
+            if ($package === null || !$this->restoreInstalledArtifact($install, $package)) {
+                $this->installs->setHealth($installedId, 'failed', (string) $install['quarantine_reason']);
+                return false;
+            }
         }
 
         $this->db->transaction(function () use ($install, $installedId, $admin): void {
@@ -550,6 +548,17 @@ final class PackageLifecycleService
         $registry = $package['registry_id'] !== null ? $this->registries->find((int) $package['registry_id']) : null;
 
         return [$package, $release, $registry];
+    }
+
+    /** @param ?array<string,mixed> $registry */
+    private function assertEnabledRegistry(?array $registry): void
+    {
+        if ($registry === null) {
+            throw new PackagePolicyException('source_mismatch', 'This package has no pinned registry source.');
+        }
+        if ((int) ($registry['is_enabled'] ?? 0) !== 1) {
+            throw new PackagePolicyException('registry_disabled', 'This package registry is disabled.');
+        }
     }
 
     /** @return array<string,mixed> */
@@ -660,6 +669,28 @@ final class PackageLifecycleService
             'history' => $this->history->forInstall($installedId, 100),
             'settings' => null,
         ];
+    }
+
+    /**
+     * @param array<string,mixed> $install
+     * @param array<string,mixed> $package
+     */
+    private function restoreInstalledArtifact(array $install, array $package): bool
+    {
+        $release = $install['release_id'] !== null ? $this->releases->find((int) $install['release_id']) : null;
+        $registry = $install['source_registry_id'] !== null ? $this->registries->find((int) $install['source_registry_id']) : null;
+        if ($release === null || $registry === null) {
+            return false;
+        }
+
+        try {
+            $this->assertEnabledRegistry($registry);
+            $this->acquisition->ensureVerified($registry, $package, $release);
+        } catch (PackagePolicyException | RegistryVerificationException) {
+            return false;
+        }
+
+        return $this->artifacts->verify((string) $install['digest']);
     }
 
     /** @param array<string,mixed> $package */

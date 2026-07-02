@@ -218,6 +218,10 @@ final class BaselineMetricsService
         PackageArtifactStore $store,
         int $samples = 8,
     ): array {
+        if (!$db->pdo()->inTransaction()) {
+            throw new \RuntimeException('Package install/update sampling must run inside a caller-owned rollback transaction.');
+        }
+
         $samples = max(1, $samples);
         $prefix = 'bench' . bin2hex(random_bytes(4));
         $pair = sodium_crypto_sign_keypair();
@@ -295,7 +299,7 @@ final class BaselineMetricsService
     ): array {
         $uid = 'bench/pkg-' . $prefix . '-' . $i;
         $registryId = $db->insert(
-            'INSERT INTO package_registries (source_id, display_name, base_url, is_enabled) VALUES (?, ?, ?, 0)',
+            'INSERT INTO package_registries (source_id, display_name, base_url, is_enabled) VALUES (?, ?, ?, 1)',
             [$prefix . '-registry-' . $i, 'Budget Registry ' . $i, 'https://registry.invalid'],
         );
         $db->insert(

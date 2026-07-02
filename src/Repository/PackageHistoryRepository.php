@@ -64,10 +64,12 @@ final class PackageHistoryRepository
     {
         $rows = $this->db->fetchAll(
             "SELECT DISTINCT new_digest AS digest FROM package_history
-              WHERE package_id = :package_new AND event IN ('install','update','rollback') AND new_digest IS NOT NULL
+              WHERE package_id = :package_new AND event IN ('install','update','rollback')
+                AND failure_stage IS NULL AND new_digest IS NOT NULL
              UNION
              SELECT DISTINCT prior_digest AS digest FROM package_history
-              WHERE package_id = :package_prior AND event IN ('install','update','rollback') AND prior_digest IS NOT NULL",
+              WHERE package_id = :package_prior AND event IN ('install','update','rollback')
+                AND failure_stage IS NULL AND prior_digest IS NOT NULL",
             ['package_new' => $packageId, 'package_prior' => $packageId],
         );
 

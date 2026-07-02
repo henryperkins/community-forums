@@ -11,8 +11,8 @@ namespace App\Security\Registry;
  */
 final class PackageIdentity
 {
-    private const UID = '/^[a-z0-9][a-z0-9\-_.]{0,92}\/[a-z0-9][a-z0-9\-_.]{0,92}$/';
-    private const SOURCE = '/^[a-z0-9][a-z0-9\-_.]{0,92}$/';
+    private const UID = '/\A[a-z0-9][a-z0-9\-_.]{0,92}\/[a-z0-9][a-z0-9\-_.]{0,92}\z/';
+    private const SOURCE = '/\A[a-z0-9][a-z0-9\-_.]{0,92}\z/';
 
     public static function isValidUid(string $uid): bool
     {

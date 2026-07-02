@@ -29,6 +29,7 @@ final class AppPackageLifecycleTest extends TestCase
         $this->artifactDir = sys_get_temp_dir() . '/rb-test-packages';
         $this->root = SigningHarness::generate();
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
+        (new \App\Repository\PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);
         (new SettingRepository($this->db))->set('features', ['package_registry' => true]);
         $this->admin = $this->makeAdmin(['password' => 'password123']);
     }
@@ -112,7 +113,7 @@ final class AppPackageLifecycleTest extends TestCase
         $this->post($this->detailPath() . '/install', ['current_password' => 'password123']);
         $this->post($this->detailPath() . '/consent', ['current_password' => 'password123']);
 
-        RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
+        $expanded = RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
             'version' => '1.1.0',
             'manifest' => ['permissions' => [
                 'data_classes' => ['package.own_storage'],
@@ -130,9 +131,163 @@ final class AppPackageLifecycleTest extends TestCase
         $this->assertSeeText($consentForm, 'New permissions');
         $this->assertSeeText($consentForm, 'api.example.com');
 
-        $apply = $this->post($this->detailPath() . '/consent', ['current_password' => 'password123']);
+        $apply = $this->post($this->detailPath() . '/consent', [
+            'intent' => 'approve_update',
+            'staged_release_id' => (string) $expanded['release_id'],
+            'current_password' => 'password123',
+        ]);
         $this->assertRedirectContains($apply, $this->detailPath());
         $this->assertSeeText($this->get($this->detailPath()), '1.1.0');
+    }
+
+    public function test_consent_intent_post_never_applies_a_staged_update(): void
+    {
+        $this->actingAs($this->admin);
+        $this->post($this->detailPath() . '/install', ['current_password' => 'password123']);
+        $this->post($this->detailPath() . '/consent', ['intent' => 'consent', 'current_password' => 'password123']);
+        RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
+            'version' => '1.1.0',
+            'manifest' => ['permissions' => [
+                'data_classes' => ['package.own_storage'],
+                'outbound_hosts' => ['api.example.com'],
+            ]],
+        ], $this->artifactDir);
+        $this->post($this->detailPath() . '/update', ['current_password' => 'password123']);
+
+        $response = $this->post($this->detailPath() . '/consent', ['intent' => 'consent', 'current_password' => 'password123']);
+
+        $this->assertStatus(422, $response);
+        $install = (new InstalledPackageRepository($this->db))->findByPackage((int) $this->seeded['package_id']);
+        self::assertIsArray($install);
+        self::assertSame($this->seeded['release_digest'], $install['digest'], 'a grant-intent POST must never activate a staged release');
+        self::assertNotNull($install['staged_release_id'], 'the staged update stays pending for an explicit approval');
+    }
+
+    public function test_stale_staged_approval_is_refused_when_the_stage_changed(): void
+    {
+        $this->actingAs($this->admin);
+        $this->post($this->detailPath() . '/install', ['current_password' => 'password123']);
+        $this->post($this->detailPath() . '/consent', ['intent' => 'consent', 'current_password' => 'password123']);
+        $expanded = RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
+            'version' => '1.1.0',
+            'manifest' => ['permissions' => [
+                'data_classes' => ['package.own_storage'],
+                'outbound_hosts' => ['api.example.com'],
+            ]],
+        ], $this->artifactDir);
+        $this->post($this->detailPath() . '/update', ['current_password' => 'password123']);
+
+        $response = $this->post($this->detailPath() . '/consent', [
+            'intent' => 'approve_update',
+            'staged_release_id' => (string) ((int) $expanded['release_id'] + 1),
+            'current_password' => 'password123',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $install = (new InstalledPackageRepository($this->db))->findByPackage((int) $this->seeded['package_id']);
+        self::assertIsArray($install);
+        self::assertSame($this->seeded['release_digest'], $install['digest'], 'an approval bound to a different stage must not activate the current one');
+        self::assertSame((int) $expanded['release_id'], (int) $install['staged_release_id'], 'the pending stage is left for a fresh review');
+    }
+
+    public function test_staged_consent_get_uses_hydrated_metadata_without_reverifying_or_mutating(): void
+    {
+        $this->actingAs($this->admin);
+        $this->post($this->detailPath() . '/install', ['current_password' => 'password123']);
+        $this->post($this->detailPath() . '/consent', ['current_password' => 'password123']);
+
+        $expanded = RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
+            'version' => '1.1.0',
+            'manifest' => ['permissions' => [
+                'data_classes' => ['package.own_storage'],
+                'outbound_hosts' => ['api.example.com'],
+            ]],
+        ], $this->artifactDir);
+        $this->post($this->detailPath() . '/update', ['current_password' => 'password123']);
+        $this->db->run('UPDATE package_releases SET manifest_json = NULL WHERE id = ?', [(int) $expanded['release_id']]);
+        $logCount = (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM package_transparency_log WHERE event = 'release_verified'",
+        );
+
+        $response = $this->get($this->detailPath() . '/consent');
+
+        $this->assertStatus(200, $response);
+        $this->assertSeeText($response, 'release_unverified');
+        self::assertNull(
+            $this->db->fetchValue('SELECT manifest_json FROM package_releases WHERE id = ?', [(int) $expanded['release_id']]),
+            'GET /consent must not hydrate release metadata',
+        );
+        self::assertSame(
+            $logCount,
+            (int) $this->db->fetchValue("SELECT COUNT(*) FROM package_transparency_log WHERE event = 'release_verified'"),
+            'GET /consent must not write transparency evidence',
+        );
+    }
+
+    public function test_staged_consent_get_renders_refusal_instead_of_500_when_source_is_unresolvable(): void
+    {
+        $this->actingAs($this->admin);
+        $this->post($this->detailPath() . '/install', ['current_password' => 'password123']);
+        $this->post($this->detailPath() . '/consent', ['current_password' => 'password123']);
+        RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
+            'version' => '1.1.0',
+            'manifest' => ['permissions' => [
+                'data_classes' => ['package.own_storage'],
+                'outbound_hosts' => ['api.example.com'],
+            ]],
+        ], $this->artifactDir);
+        $this->post($this->detailPath() . '/update', ['current_password' => 'password123']);
+        $this->db->run('UPDATE packages SET registry_id = NULL WHERE id = ?', [(int) $this->seeded['package_id']]);
+
+        $response = $this->get($this->detailPath() . '/consent');
+
+        $this->assertStatus(200, $response);
+        $this->assertSeeText($response, 'source_mismatch');
+    }
+
+    public function test_install_with_bad_release_and_wrong_password_renders_422_not_500(): void
+    {
+        $this->actingAs($this->admin);
+
+        $response = $this->post($this->detailPath() . '/install', [
+            'release_id' => '999999',
+            'current_password' => 'wrong-password',
+        ]);
+
+        $this->assertStatus(422, $response);
+        self::assertNull(
+            (new InstalledPackageRepository($this->db))->findByPackage((int) $this->seeded['package_id']),
+            'a failed reauth against an unresolvable release must never install',
+        );
+    }
+
+    public function test_failed_update_preserves_the_operator_selected_target_release(): void
+    {
+        $this->actingAs($this->admin);
+        $this->post($this->detailPath() . '/install', ['current_password' => 'password123']);
+        $this->post($this->detailPath() . '/consent', ['intent' => 'consent', 'current_password' => 'password123']);
+        $this->post($this->detailPath() . '/enable', ['current_password' => 'password123']);
+
+        $mid = RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
+            'version' => '1.1.0',
+            'manifest' => ['permissions' => ['data_classes' => ['package.own_storage']]],
+        ], $this->artifactDir);
+        RegistryFixtures::seedRelease($this->db, $this->root, $this->seeded, [
+            'version' => '1.2.0',
+            'manifest' => ['permissions' => ['data_classes' => ['package.own_storage']]],
+        ], $this->artifactDir);
+
+        $response = $this->post($this->detailPath() . '/update', [
+            'release_id' => (string) $mid['release_id'],
+            'current_password' => 'wrong-password',
+        ]);
+
+        $this->assertStatus(422, $response);
+        self::assertStringContainsString(
+            'value="' . (int) $mid['release_id'] . '" selected',
+            $response->body(),
+            'the failed update form must keep the operator\'s chosen target, not reset to latest',
+        );
     }
 
     public function test_refusals_render_422_with_the_coded_reason(): void

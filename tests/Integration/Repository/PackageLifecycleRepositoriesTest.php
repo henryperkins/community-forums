@@ -101,6 +101,17 @@ final class PackageLifecycleRepositoriesTest extends TestCase
         self::assertNull($repo->find($id));
     }
 
+    public function test_state_update_can_be_guarded_by_the_snapshot_state(): void
+    {
+        $repo = new InstalledPackageRepository($this->db);
+        $id = $this->makeInstall();
+
+        self::assertTrue($repo->setStateIfCurrent($id, 'installed', 'enabled'));
+        self::assertSame('enabled', $repo->find($id)['state']);
+        self::assertFalse($repo->setStateIfCurrent($id, 'installed', 'quarantined'));
+        self::assertSame('enabled', $repo->find($id)['state']);
+    }
+
     public function test_permission_snapshot_grant_flow(): void
     {
         $perms = new InstalledPackagePermissionRepository($this->db);

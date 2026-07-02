@@ -17,7 +17,7 @@ final class PackageIdentityTest extends TestCase
         foreach ([
             '', 'acme', '/theme', 'acme/', 'Acme/Theme', 'acme//theme',
             'acme/theme/extra', '-acme/theme', 'acme/-theme', "acme/th\u{00e9}me",
-            'acme/' . str_repeat('x', 94), '../etc/passwd',
+            'acme/' . str_repeat('x', 94), '../etc/passwd', "acme/theme\n",
         ] as $bad) {
             self::assertFalse(PackageIdentity::isValidUid($bad), "should reject: $bad");
         }
@@ -34,5 +34,6 @@ final class PackageIdentityTest extends TestCase
         self::assertFalse(PackageIdentity::isValidSourceId(''));
         self::assertFalse(PackageIdentity::isValidSourceId('RB Test'));
         self::assertFalse(PackageIdentity::isValidSourceId('-rb'));
+        self::assertFalse(PackageIdentity::isValidSourceId("rb-test\n"));
     }
 }

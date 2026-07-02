@@ -59,6 +59,7 @@ final class PackageHealthWorkerTest extends TestCase
         $this->artifactDir = sys_get_temp_dir() . '/rb-health-' . bin2hex(random_bytes(4));
         $this->store = new PackageArtifactStore($this->artifactDir);
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);
 
         $adminRow = $this->makeAdmin(['password' => 'password123']);
         $admin = (new UserRepository($this->db))->findEntity((int) $adminRow['id']);
@@ -205,6 +206,27 @@ final class PackageHealthWorkerTest extends TestCase
         );
     }
 
+    public function test_missing_artifact_marks_health_degraded_without_false_quarantine(): void
+    {
+        unlink($this->store->pathFor($this->seeded['release_digest']));
+
+        $stats = (new PackageHealthWorker($this->health(), true))->run();
+
+        self::assertSame(1, $stats['checked']);
+        self::assertSame(0, $stats['quarantined']);
+        $row = (new InstalledPackageRepository($this->db))->find($this->installedId);
+        self::assertSame('enabled', $row['state'], 'missing local storage is not proof of tampering');
+        self::assertSame('degraded', $row['health']);
+        self::assertSame('artifact missing during health check', $row['quarantine_reason']);
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue(
+                "SELECT COUNT(*) FROM package_history WHERE installed_package_id = ? AND event = 'quarantine'",
+                [$this->installedId],
+            ),
+        );
+    }
+
     public function test_healthy_bytes_mark_health_ok_and_touch_the_check_timestamp(): void
     {
         $stats = (new PackageHealthWorker($this->health(), true))->run();
@@ -238,6 +260,28 @@ final class PackageHealthWorkerTest extends TestCase
         $transparency = (new PackageTransparencyLogRepository($this->db))->forPackageUid('acme/midnight-theme');
         self::assertSame('force_disable', $transparency[0]['event']);
         self::assertSame(0, (new PackageHealthWorker($this->health(), true))->run()['disabled']);
+    }
+
+    public function test_version_range_advisory_disables_when_release_version_is_unresolvable(): void
+    {
+        $this->db->run('UPDATE installed_packages SET release_id = NULL WHERE id = ?', [$this->installedId]);
+        (new PackageAdvisoryRepository($this->db))->upsert([
+            'advisory_uid' => 'RB-FD-UNKNOWN-VERSION',
+            'registry_id' => $this->seeded['registry_id'],
+            'package_id' => $this->seeded['package_id'],
+            'affected_version_range' => '<=1.0.0',
+            'affected_digest' => null,
+            'severity' => 'critical',
+            'action' => 'force_disable',
+            'summary' => 'incident',
+            'signed_evidence' => null,
+            'issued_at' => '2026-07-01 00:00:00',
+        ]);
+
+        $stats = (new PackageHealthWorker($this->health(), true))->run();
+
+        self::assertSame(1, $stats['disabled']);
+        self::assertSame('disabled', (new InstalledPackageRepository($this->db))->find($this->installedId)['state']);
     }
 
     public function test_blocklist_hit_disables_and_cancels_a_matching_staged_target(): void

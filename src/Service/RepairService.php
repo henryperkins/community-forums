@@ -234,11 +234,7 @@ final class RepairService
             foreach ($this->db->fetchAll('SELECT id, version, digest, advisory_status FROM package_releases WHERE package_id = ?', [$packageId]) as $release) {
                 $releaseStatus = 'none';
                 foreach ($advisories as $advisory) {
-                    $digest = $advisory['affected_digest'] ?? null;
-                    $hit = $digest !== null
-                        ? hash_equals((string) $digest, (string) $release['digest'])
-                        : RegistryAdvisoryService::affectsVersion($advisory['affected_version_range'] ?? null, (string) $release['version']);
-                    if ($hit) {
+                    if (RegistryAdvisoryService::affectsRelease($advisory, (string) $release['digest'], (string) $release['version'])) {
                         $releaseStatus = RegistryAdvisoryService::escalate(
                             $releaseStatus,
                             RegistryAdvisoryService::ACTION_STATUS[(string) $advisory['action']] ?? 'none',
@@ -259,7 +255,7 @@ final class RepairService
     {
         $fixed = 0;
         $installs = $this->db->fetchAll(
-            "SELECT ip.id, ip.package_id, ip.state, ip.digest, ip.staged_release_id, ip.staged_digest,
+            "SELECT ip.id, ip.package_id, ip.state, ip.digest, ip.source_registry_id, ip.staged_release_id, ip.staged_digest,
                     p.package_uid, r.version AS release_version, sr.version AS staged_version
              FROM installed_packages ip
              JOIN packages p ON p.id = ip.package_id
@@ -291,12 +287,7 @@ final class RepairService
                 if (!in_array((string) $advisory['action'], $actions, true)) {
                     continue;
                 }
-                $matches = ($advisory['affected_digest'] !== null && $advisory['affected_digest'] !== '')
-                    ? hash_equals((string) $advisory['affected_digest'], $digest)
-                    : (($advisory['affected_version_range'] === null || $advisory['affected_version_range'] === '')
-                        ? true
-                        : ($version !== '' && RegistryAdvisoryService::affectsVersion((string) $advisory['affected_version_range'], $version)));
-                if ($matches) {
+                if (RegistryAdvisoryService::affectsRelease($advisory, $digest, $version)) {
                     return 'advisory ' . (string) $advisory['advisory_uid'] . ' (' . (string) $advisory['action'] . ')';
                 }
             }
@@ -320,6 +311,23 @@ final class RepairService
                         "INSERT INTO package_history (package_id, installed_package_id, event, new_digest, detail)
                          VALUES (?, ?, 'disable', ?, ?)",
                         [(int) $install['package_id'], (int) $install['id'], (string) $install['digest'], 'repair reconcile: ' . $reason],
+                    );
+                    $this->db->run(
+                        "INSERT INTO package_transparency_log
+                            (package_uid, version, digest, event, source, registry_id, detail)
+                         VALUES (?, ?, ?, 'force_disable', 'local', ?, ?)",
+                        [
+                            (string) $install['package_uid'],
+                            $install['release_version'] !== null ? (string) $install['release_version'] : null,
+                            (string) $install['digest'],
+                            $install['source_registry_id'] !== null ? (int) $install['source_registry_id'] : null,
+                            'repair reconcile: ' . $reason,
+                        ],
+                    );
+                    $this->db->run(
+                        "INSERT INTO moderation_log (actor_id, action, target_type, target_id, reason)
+                         VALUES (NULL, 'package_force_disable', 'package', ?, ?)",
+                        [(int) $install['package_id'], 'repair reconcile: ' . $reason],
                     );
                     $fixed++;
                 }

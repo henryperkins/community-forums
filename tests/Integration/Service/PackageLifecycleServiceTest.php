@@ -54,6 +54,7 @@ final class PackageLifecycleServiceTest extends TestCase
         $this->artifactDir = sys_get_temp_dir() . '/rb-lifecycle-' . bin2hex(random_bytes(4));
         $this->store = new PackageArtifactStore($this->artifactDir);
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);
 
         $adminRow = $this->makeAdmin(['password' => 'password123']);
         $admin = (new UserRepository($this->db))->findEntity((int) $adminRow['id']);
@@ -150,6 +151,20 @@ final class PackageLifecycleServiceTest extends TestCase
         $plan = $this->service()->plan($this->admin, (int) $this->seeded['package_id']);
 
         self::assertSame('locally_blocked', $plan['refusal']['code']);
+    }
+
+    public function test_disabled_registry_refuses_plan_and_install_without_live_acquisition(): void
+    {
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], false);
+
+        $plan = $this->service()->plan($this->admin, (int) $this->seeded['package_id']);
+        self::assertSame('registry_disabled', $plan['refusal']['code']);
+
+        $this->assertPolicyRefusal(
+            'registry_disabled',
+            fn () => $this->service()->install($this->admin, 'password123', (int) $this->seeded['package_id']),
+        );
+        self::assertNull((new InstalledPackageRepository($this->db))->findByPackage((int) $this->seeded['package_id']));
     }
 
     public function test_install_consent_enable_disable_happy_path(): void

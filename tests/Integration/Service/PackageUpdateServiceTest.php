@@ -62,6 +62,7 @@ final class PackageUpdateServiceTest extends TestCase
         $this->artifactDir = sys_get_temp_dir() . '/rb-update-' . bin2hex(random_bytes(4));
         $this->store = new PackageArtifactStore($this->artifactDir);
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);
 
         $adminRow = $this->makeAdmin(['password' => 'password123']);
         $admin = (new UserRepository($this->db))->findEntity((int) $adminRow['id']);
@@ -130,6 +131,7 @@ final class PackageUpdateServiceTest extends TestCase
             new PackageTransparencyLogRepository($this->db),
             $this->acquisition(),
             new PackageSecurityGate(new LocalPackageBlockRepository($this->db), new PackageAdvisoryRepository($this->db)),
+            new ManifestValidator(),
             $this->store,
             new ReauthGate(new PasswordHasher()),
             new WriteGate(),
@@ -221,6 +223,32 @@ final class PackageUpdateServiceTest extends TestCase
         self::assertSame('1.1.0', $history['new_version']);
     }
 
+    public function test_apply_staged_grants_only_the_staged_expansion_never_prior_unconsented_declarations(): void
+    {
+        $updates = $this->updates();
+        $this->lifecycle()->uninstall($this->admin, 'password123', $this->installedId);
+        $this->installedId = $this->lifecycle()->install(
+            $this->admin,
+            'password123',
+            (int) $this->seeded['package_id'],
+            (int) $this->seeded['release_id'],
+        );
+        self::assertSame(['data_class:package.own_storage' => 0], $this->grants(), 'reinstall starts unconsented');
+
+        $updates->update($this->admin, 'password123', $this->installedId, (int) $this->expanded['release_id']);
+        $updates->applyStaged($this->admin, 'password123', $this->installedId);
+
+        self::assertSame([
+            'api_scope:read:boards' => 1,
+            'data_class:package.own_storage' => 0,
+            'outbound_host:api.example.com' => 1,
+        ], $this->grants(), 'staged approval consents to the shown expansion only; never-consented declarations stay pending');
+        $this->assertPolicyRefusal(
+            'not_consented',
+            fn () => $this->lifecycle()->enable($this->admin, 'password123', $this->installedId),
+        );
+    }
+
     public function test_permission_reduction_applies_immediately_and_preserves_inherited_grants(): void
     {
         $result = $this->updates()->update($this->admin, 'password123', $this->installedId, (int) $this->reduced['release_id']);
@@ -292,6 +320,72 @@ final class PackageUpdateServiceTest extends TestCase
         self::assertSame($this->seeded['release_digest'], $row['digest'], 'prior version remains active');
     }
 
+    public function test_staged_target_blocked_for_new_installs_refuses_apply_too(): void
+    {
+        $updates = $this->updates();
+        $updates->update($this->admin, 'password123', $this->installedId, (int) $this->expanded['release_id']);
+
+        (new PackageAdvisoryRepository($this->db))->upsert([
+            'advisory_uid' => 'RB-BLOCK-STAGED',
+            'registry_id' => $this->seeded['registry_id'],
+            'package_id' => $this->seeded['package_id'],
+            'affected_version_range' => null,
+            'affected_digest' => $this->expanded['digest'],
+            'severity' => 'critical',
+            'action' => 'block_new',
+            'summary' => 'blocked pending investigation',
+            'signed_evidence' => null,
+            'issued_at' => '2026-07-01 00:00:00',
+        ]);
+
+        $this->assertPolicyRefusal('advisory_blocked', fn () => $updates->applyStaged($this->admin, 'password123', $this->installedId));
+        $row = (new InstalledPackageRepository($this->db))->find($this->installedId);
+        self::assertSame($this->seeded['release_digest'], $row['digest'], 'block_new gates the staged-approval path like update and rollback');
+        self::assertSame($this->expanded['digest'], $row['staged_digest'], 'the refused stage stays pending for cancel or reconciliation');
+    }
+
+    public function test_apply_staged_refuses_when_the_release_digest_no_longer_matches_the_staged_pin(): void
+    {
+        $updates = $this->updates();
+        $updates->update($this->admin, 'password123', $this->installedId, (int) $this->expanded['release_id']);
+
+        $this->db->run(
+            'UPDATE package_releases SET digest = ? WHERE id = ?',
+            [hash('sha256', 'drifted-bytes'), (int) $this->expanded['release_id']],
+        );
+
+        $this->assertPolicyRefusal(
+            'stage_digest_mismatch',
+            fn () => $updates->applyStaged($this->admin, 'password123', $this->installedId),
+        );
+        $row = (new InstalledPackageRepository($this->db))->find($this->installedId);
+        self::assertSame($this->seeded['release_digest'], $row['digest'], 'a release row that drifted after staging must never activate from the stale consent');
+        self::assertSame($this->expanded['digest'], $row['staged_digest'], 'the stale stage stays pending for an explicit cancel and restage');
+    }
+
+    public function test_apply_staged_refuses_when_install_becomes_quarantined_or_pinned(): void
+    {
+        $updates = $this->updates();
+        $updates->update($this->admin, 'password123', $this->installedId, (int) $this->expanded['release_id']);
+
+        (new InstalledPackageRepository($this->db))->setState($this->installedId, 'quarantined');
+        $this->assertPolicyRefusal(
+            'invalid_state',
+            fn () => $updates->applyStaged($this->admin, 'password123', $this->installedId),
+        );
+
+        (new InstalledPackageRepository($this->db))->setState($this->installedId, 'enabled');
+        $this->lifecycle()->setPinned($this->admin, $this->installedId, true);
+        $this->assertPolicyRefusal(
+            'pinned',
+            fn () => $updates->applyStaged($this->admin, 'password123', $this->installedId),
+        );
+
+        $row = (new InstalledPackageRepository($this->db))->find($this->installedId);
+        self::assertSame($this->seeded['release_digest'], $row['digest'], 'staged apply must not swap the active digest after refusal');
+        self::assertSame($this->expanded['digest'], $row['staged_digest']);
+    }
+
     public function test_rollback_targets_and_rollback_after_an_update(): void
     {
         $updates = $this->updates();
@@ -313,11 +407,43 @@ final class PackageUpdateServiceTest extends TestCase
         );
     }
 
+    public function test_rollback_refuses_when_install_is_pinned(): void
+    {
+        $updates = $this->updates();
+        $updates->update($this->admin, 'password123', $this->installedId, (int) $this->reduced['release_id']);
+        $this->lifecycle()->setPinned($this->admin, $this->installedId, true);
+
+        $this->assertPolicyRefusal(
+            'pinned',
+            fn () => $updates->rollback($this->admin, 'password123', $this->installedId, (int) $this->seeded['release_id']),
+        );
+    }
+
     public function test_rollback_to_a_never_verified_release_refuses(): void
     {
         $this->assertPolicyRefusal(
             'rollback_target',
             fn () => $this->updates()->rollback($this->admin, 'password123', $this->installedId, (int) $this->expanded['release_id']),
+        );
+    }
+
+    public function test_refused_install_history_does_not_make_a_release_rollback_eligible(): void
+    {
+        (new PackageHistoryRepository($this->db))->record([
+            'package_id' => (int) $this->seeded['package_id'],
+            'installed_package_id' => $this->installedId,
+            'event' => 'install',
+            'actor_id' => $this->admin->id(),
+            'new_version' => '1.1.0',
+            'new_digest' => $this->expanded['digest'],
+            'failure_stage' => 'policy',
+            'detail' => 'advisory_blocked',
+        ]);
+
+        self::assertNotContains(
+            $this->expanded['digest'],
+            array_column($this->updates()->rollbackTargets($this->installedId), 'digest'),
+            'failed install attempts must not count as previously activated rollback targets',
         );
     }
 

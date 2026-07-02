@@ -40,6 +40,7 @@ final class PackageAcquisitionServiceTest extends TestCase
         $this->artifactDir = sys_get_temp_dir() . '/rb-acquire-' . bin2hex(random_bytes(4));
         $this->store = new PackageArtifactStore($this->artifactDir);
         $this->seeded = RegistryFixtures::seed($this->db, $this->root);
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);
     }
 
     protected function tearDown(): void
@@ -233,6 +234,43 @@ final class PackageAcquisitionServiceTest extends TestCase
         } catch (PackagePolicyException $e) {
             self::assertSame('fetch_failed', $e->code);
         }
+    }
+
+    public function test_disabled_registry_refuses_before_live_fetch(): void
+    {
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], false);
+        [$registry, $package, $release] = $this->rows();
+
+        try {
+            $this->service([
+                $this->releaseUrl('1.0.0') => new RegistryFetchResult(200, 'not reached', null),
+            ])->ensureVerified($registry, $package, $release);
+            self::fail('expected registry_disabled refusal');
+        } catch (PackagePolicyException $e) {
+            self::assertSame('registry_disabled', $e->code);
+        }
+    }
+
+    public function test_tampered_cached_artifact_self_heals_from_a_digest_pinned_refetch(): void
+    {
+        $digest = hash('sha256', $this->seeded['release_document']);
+        $this->store->put($digest, $this->seeded['release_document']);
+        file_put_contents($this->store->pathFor($digest), $this->seeded['release_document'] . ' ');
+        [$registry, $package, $release] = $this->rows();
+        $body = json_encode([
+            'format' => 'rb-release-envelope.v1',
+            'document' => $this->seeded['release_document'],
+            'signature' => base64_encode((string) $release['signature']),
+            'key_id' => (string) $release['signed_key_id'],
+        ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+        $manifest = $this->service([
+            $this->releaseUrl('1.0.0') => new RegistryFetchResult(200, $body, null),
+        ])->ensureVerified($registry, $package, $release);
+
+        self::assertSame('1.0.0', $manifest->version);
+        self::assertTrue($this->store->verify($digest));
+        self::assertSame($this->seeded['release_document'], $this->store->get($digest));
     }
 
     public function test_tampered_cached_artifact_fails_closed_on_reverify(): void

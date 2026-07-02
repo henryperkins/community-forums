@@ -78,6 +78,27 @@ final class RegistryAdvisoryService
         };
     }
 
+    /** @param array<string,mixed> $advisory */
+    public static function affectsRelease(array $advisory, string $digest, ?string $version): bool
+    {
+        $affectedDigest = isset($advisory['affected_digest']) ? (string) $advisory['affected_digest'] : '';
+        if ($affectedDigest !== '') {
+            return hash_equals($affectedDigest, $digest);
+        }
+
+        $range = isset($advisory['affected_version_range']) ? trim((string) $advisory['affected_version_range']) : '';
+        if ($range === '') {
+            return true;
+        }
+
+        $version = $version !== null ? trim($version) : '';
+        if ($version === '') {
+            return true;
+        }
+
+        return self::affectsVersion($range, $version);
+    }
+
     /**
      * @param ?int $operatorId non-null only on the manual admin-console path,
      *   which writes an `advisory_ingest` audit row; the worker fetch path
@@ -186,11 +207,7 @@ final class RegistryAdvisoryService
         foreach ($this->releases->forPackage($packageId) as $release) {
             $status = 'none';
             foreach ($rows as $advisory) {
-                $digest = $advisory['affected_digest'] ?? null;
-                $hit = $digest !== null
-                    ? hash_equals((string) $digest, (string) $release['digest'])
-                    : self::affectsVersion($advisory['affected_version_range'] ?? null, (string) $release['version']);
-                if ($hit) {
+                if (self::affectsRelease($advisory, (string) $release['digest'], (string) $release['version'])) {
                     $status = self::escalate($status, self::ACTION_STATUS[(string) $advisory['action']] ?? 'none');
                 }
             }

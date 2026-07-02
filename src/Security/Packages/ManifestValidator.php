@@ -20,6 +20,8 @@ final class ManifestValidator
     public const FORMAT = 'rb-manifest.v2';
     public const TYPES = ['theme', 'automation', 'remote_app', 'local'];
     public const MAX_STORAGE_QUOTA_KB = 10_240;
+    private const MAX_CORE_VERSION_LENGTH = 32;
+    private const MAX_PERMISSION_KEY_LENGTH = 190;
 
     private const TOP_KEYS = [
         'format', 'uid', 'type', 'version', 'name', 'description', 'license',
@@ -36,8 +38,8 @@ final class ManifestValidator
     private const SETTING_TYPES = ['string', 'boolean', 'integer', 'select'];
     private const SETTING_FIELD_KEYS = ['key', 'type', 'label', 'required', 'options'];
     private const JOB_SCHEDULES = ['hourly', 'daily', 'weekly'];
-    private const HOST_PATTERN = '/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/';
-    private const KEY_PATTERN = '/^[a-z][a-z0-9_]{0,63}$/';
+    private const HOST_PATTERN = '/\A[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+\z/';
+    private const KEY_PATTERN = '/\A[a-z][a-z0-9_]{0,63}\z/';
 
     /** @param array<string,mixed> $manifest */
     public function validate(array $manifest, string $expectedUid, string $expectedVersion): PackageManifest
@@ -123,12 +125,12 @@ final class ManifestValidator
         }
 
         $min = $core['min'] ?? null;
-        if (!is_string($min) || !CoreVersion::isValid($min)) {
+        if (!is_string($min) || mb_strlen($min) > self::MAX_CORE_VERSION_LENGTH || !CoreVersion::isValid($min)) {
             $this->refuse('manifest_core', 'Manifest core.min must be a valid version.');
         }
 
         $max = $core['max'] ?? null;
-        if ($max !== null && (!is_string($max) || !CoreVersion::isValid($max))) {
+        if ($max !== null && (!is_string($max) || mb_strlen($max) > self::MAX_CORE_VERSION_LENGTH || !CoreVersion::isValid($max))) {
             $this->refuse('manifest_core', 'Manifest core.max must be null or a valid version.');
         }
 
@@ -194,7 +196,7 @@ final class ManifestValidator
         }
 
         foreach ($this->permissionList($in, 'outbound_hosts') as $host) {
-            if (!is_string($host) || preg_match(self::HOST_PATTERN, $host) !== 1) {
+            if (!is_string($host) || mb_strlen($host) > self::MAX_PERMISSION_KEY_LENGTH || preg_match(self::HOST_PATTERN, $host) !== 1) {
                 $this->refuse('outbound_host', 'Outbound hosts must be explicit lowercase hostnames.');
             }
             $add('outbound_host', $host);

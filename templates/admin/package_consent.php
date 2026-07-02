@@ -95,6 +95,10 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
         <h2>Grant</h2>
         <form method="post" action="<?= $e($base) ?>/consent" class="stacked">
             <?= $this->csrfField() ?>
+            <input type="hidden" name="intent" value="<?= $isUpdate ? 'approve_update' : 'consent' ?>">
+            <?php if ($isUpdate): ?>
+                <input type="hidden" name="staged_release_id" value="<?= (int) $install['staged_release_id'] ?>">
+            <?php endif; ?>
             <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
             <button type="submit">Grant and continue</button>
         </form>

@@ -15,7 +15,8 @@ use App\Core\App;
  */
 final class CoreVersion
 {
-    private const PATTERN = '/^\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.\-]*)?$/';
+    private const MAX_LENGTH = 32;
+    private const PATTERN = '/\A\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.\-]*)?\z/';
 
     public static function current(): string
     {
@@ -24,6 +25,10 @@ final class CoreVersion
 
     public static function isValid(string $version): bool
     {
+        if (mb_strlen($version) > self::MAX_LENGTH) {
+            return false;
+        }
+
         return preg_match(self::PATTERN, $version) === 1;
     }
 

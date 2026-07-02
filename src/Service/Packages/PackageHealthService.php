@@ -46,9 +46,15 @@ final class PackageHealthService
         foreach ($this->installs->activeWithContext() as $install) {
             if (in_array((string) $install['state'], ['installed', 'enabled', 'disabled'], true)) {
                 $checked++;
-                if (!$this->artifacts->verify((string) $install['digest'])) {
-                    $this->quarantine($install, 'digest mismatch during health check');
-                    $quarantined++;
+                $digest = (string) $install['digest'];
+                if (!$this->artifacts->has($digest)) {
+                    $this->installs->setHealth((int) $install['id'], 'degraded', 'artifact missing during health check', $now->format('Y-m-d H:i:s'));
+                    continue;
+                }
+                if (!$this->artifacts->verify($digest)) {
+                    if ($this->quarantine($install, 'digest mismatch during health check')) {
+                        $quarantined++;
+                    }
                     continue;
                 }
                 $this->installs->setHealth((int) $install['id'], 'ok', null, $now->format('Y-m-d H:i:s'));
@@ -88,8 +94,9 @@ final class PackageHealthService
                     ['force_disable', 'revoke'],
                 );
                 if ($reason !== null) {
-                    $this->securityDisable($install, $reason);
-                    $changed++;
+                    if ($this->securityDisable($install, $reason)) {
+                        $changed++;
+                    }
                 }
             }
 
@@ -146,12 +153,7 @@ final class PackageHealthService
             if (!in_array((string) $advisory['action'], $actions, true)) {
                 continue;
             }
-            $matches = ($advisory['affected_digest'] !== null && $advisory['affected_digest'] !== '')
-                ? hash_equals((string) $advisory['affected_digest'], $digest)
-                : (($advisory['affected_version_range'] === null || $advisory['affected_version_range'] === '')
-                    ? true
-                    : ($version !== '' && RegistryAdvisoryService::affectsVersion((string) $advisory['affected_version_range'], $version)));
-            if ($matches) {
+            if (RegistryAdvisoryService::affectsRelease($advisory, $digest, $version)) {
                 return 'advisory ' . (string) $advisory['advisory_uid'] . ' (' . (string) $advisory['action'] . ')';
             }
         }
@@ -160,10 +162,12 @@ final class PackageHealthService
     }
 
     /** @param array<string,mixed> $install */
-    private function securityDisable(array $install, string $reason): void
+    private function securityDisable(array $install, string $reason): bool
     {
-        $this->db->transaction(function () use ($install, $reason): void {
-            $this->installs->setState((int) $install['id'], 'disabled');
+        $changed = $this->db->transaction(function () use ($install, $reason): bool {
+            if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'disabled')) {
+                return false;
+            }
             $this->history->record([
                 'package_id' => (int) $install['package_id'],
                 'installed_package_id' => (int) $install['id'],
@@ -187,12 +191,19 @@ final class PackageHealthService
                 'target_id' => (int) $install['package_id'],
                 'reason' => $reason,
             ]);
+
+            return true;
         });
+        if (!$changed) {
+            return false;
+        }
         $this->telemetry?->emit('package.lifecycle', [
             'action' => 'force_disable',
             'package' => (string) $install['package_uid'],
             'reason' => $reason,
         ]);
+
+        return true;
     }
 
     /** @param array<string,mixed> $install */
@@ -210,10 +221,12 @@ final class PackageHealthService
     }
 
     /** @param array<string,mixed> $install */
-    private function quarantine(array $install, string $reason): void
+    private function quarantine(array $install, string $reason): bool
     {
-        $this->db->transaction(function () use ($install, $reason): void {
-            $this->installs->setState((int) $install['id'], 'quarantined');
+        $changed = $this->db->transaction(function () use ($install, $reason): bool {
+            if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'quarantined')) {
+                return false;
+            }
             $this->installs->setHealth((int) $install['id'], 'failed', $reason);
             $this->history->record([
                 'package_id' => (int) $install['package_id'],
@@ -238,12 +251,19 @@ final class PackageHealthService
                 'target_id' => (int) $install['package_id'],
                 'reason' => $reason,
             ]);
+
+            return true;
         });
+        if (!$changed) {
+            return false;
+        }
         $this->telemetry?->emit('package.lifecycle', [
             'action' => 'quarantine',
             'package' => (string) $install['package_uid'],
             'reason' => $reason,
         ]);
+
+        return true;
     }
 
     /** @param array<string,mixed> $install */

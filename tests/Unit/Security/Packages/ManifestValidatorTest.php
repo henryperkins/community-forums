@@ -111,6 +111,8 @@ final class ManifestValidatorTest extends TestCase
         yield 'description too long' => ['manifest_field', ['description' => str_repeat('x', 513)]];
         yield 'core missing min' => ['manifest_core', ['core' => ['min' => null, 'max' => '2.0.0']]];
         yield 'core invalid min' => ['manifest_core', ['core' => ['min' => 'not-semver']]];
+        yield 'core min too long for storage' => ['manifest_core', ['core' => ['min' => '0.1.0-' . str_repeat('a', 40), 'max' => null]]];
+        yield 'core max too long for storage' => ['manifest_core', ['core' => ['min' => '0.1.0', 'max' => '0.1.0-' . str_repeat('a', 40)]]];
         yield 'core unknown key' => ['manifest_core', ['core' => ['min' => '0.1.0', 'pin' => true]]];
         yield 'unknown permission kind' => ['unknown_field', ['permissions' => ['broker_services' => ['db']]]];
         yield 'unknown capability' => ['unknown_capability', ['permissions' => ['capabilities' => ['core.nonsense']]]];
@@ -124,14 +126,20 @@ final class ManifestValidatorTest extends TestCase
         yield 'host uppercase' => ['outbound_host', ['permissions' => ['outbound_hosts' => ['API.example.com']]]];
         yield 'host wildcard' => ['outbound_host', ['permissions' => ['outbound_hosts' => ['*.example.com']]]];
         yield 'host bare label' => ['outbound_host', ['permissions' => ['outbound_hosts' => ['localhost']]]];
+        yield 'host too long for permission key storage' => ['outbound_host', ['permissions' => ['outbound_hosts' => [
+            str_repeat('a', 60) . '.' . str_repeat('b', 60) . '.' . str_repeat('c', 60) . '.example.com',
+        ]]]];
+        yield 'host trailing newline' => ['outbound_host', ['permissions' => ['outbound_hosts' => ["api.example.com\n"]]]];
         yield 'duplicate permission' => ['manifest_field', ['permissions' => ['data_classes' => ['content.public', 'content.public']]]];
         yield 'job missing schedule' => ['job_declaration', ['permissions' => ['jobs' => [['name' => 'sync']]]]];
         yield 'job bad name' => ['job_declaration', ['permissions' => ['jobs' => [['name' => 'Sync!', 'schedule' => 'daily']]]]];
+        yield 'job trailing newline' => ['job_declaration', ['permissions' => ['jobs' => [['name' => "sync\n", 'schedule' => 'daily']]]]];
         yield 'job unknown schedule' => ['job_declaration', ['permissions' => ['jobs' => [['name' => 'sync', 'schedule' => 'yearly']]]]];
         yield 'job unknown key' => ['job_declaration', ['permissions' => ['jobs' => [['name' => 'sync', 'schedule' => 'daily', 'cron' => '* * * * *']]]]];
         yield 'settings not fields' => ['settings_schema', ['settings_schema' => ['fielden' => []]]];
         yield 'settings empty fields' => ['settings_schema', ['settings_schema' => ['fields' => []]]];
         yield 'settings bad key' => ['settings_schema', ['settings_schema' => ['fields' => [['key' => 'Bad Key', 'type' => 'string', 'label' => 'x']]]]];
+        yield 'settings trailing newline key' => ['settings_schema', ['settings_schema' => ['fields' => [['key' => "api_key\n", 'type' => 'string', 'label' => 'x']]]]];
         yield 'settings duplicate key' => ['settings_schema', ['settings_schema' => ['fields' => [
             ['key' => 'a', 'type' => 'string', 'label' => 'x'],
             ['key' => 'a', 'type' => 'string', 'label' => 'y'],

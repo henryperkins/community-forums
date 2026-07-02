@@ -134,9 +134,25 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/registries'));
         // A mutation route must also be dark (404, not 403/405) when the flag is off.
         $this->assertStatus(404, $this->post('/admin/blocklist', ['digest' => str_repeat('a', 64)]));
-        $this->assertStatus(404, $this->post('/admin/packages/1/plan', []));
-        $this->assertStatus(404, $this->get('/admin/packages/1/consent'));
-        $this->assertStatus(404, $this->post('/admin/packages/1/install', ['current_password' => 'password123']));
+        foreach ([
+            ['POST', '/admin/packages/1/plan', []],
+            ['POST', '/admin/packages/1/install', ['current_password' => 'password123']],
+            ['GET', '/admin/packages/1/consent', []],
+            ['POST', '/admin/packages/1/consent', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/enable', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/disable', []],
+            ['POST', '/admin/packages/1/pin', ['pinned' => '1']],
+            ['POST', '/admin/packages/1/update-policy', ['policy' => 'notify']],
+            ['POST', '/admin/packages/1/update', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/update/cancel', []],
+            ['POST', '/admin/packages/1/rollback', ['current_password' => 'password123', 'release_id' => '1']],
+            ['POST', '/admin/packages/1/uninstall', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/export', []],
+            ['POST', '/admin/packages/1/reverify', []],
+        ] as [$method, $path, $body]) {
+            $response = $method === 'GET' ? $this->get($path) : $this->post($path, $body);
+            $this->assertStatus(404, $response);
+        }
     }
 
     public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void

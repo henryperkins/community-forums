@@ -74,7 +74,7 @@ final class PackageArtifactStore
 
     private function assertDigest(string $digest): void
     {
-        if (preg_match('/^[a-f0-9]{64}$/', $digest) !== 1) {
+        if (preg_match('/\A[a-f0-9]{64}\z/', $digest) !== 1) {
             throw new PackagePolicyException('artifact_digest', 'Artifact digests must be 64 lowercase hex characters.');
         }
     }

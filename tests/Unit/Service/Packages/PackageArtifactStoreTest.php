@@ -55,7 +55,7 @@ final class PackageArtifactStoreTest extends TestCase
 
     public function test_malformed_digest_refuses_before_touching_the_filesystem(): void
     {
-        foreach (['../../etc/passwd', strtoupper(str_repeat('a', 64)), 'short', str_repeat('a', 63) . '/'] as $bad) {
+        foreach (['../../etc/passwd', strtoupper(str_repeat('a', 64)), 'short', str_repeat('a', 63) . '/', str_repeat('a', 64) . "\n"] as $bad) {
             try {
                 $this->store->pathFor($bad);
                 self::fail('expected artifact_digest refusal for ' . $bad);

@@ -105,11 +105,10 @@ final class PackageSecurityGate
         }
 
         $range = isset($advisory['affected_version_range']) ? (string) $advisory['affected_version_range'] : null;
-        if ($range === null || trim($range) === '') {
-            return true;
-        }
-
-        return RegistryAdvisoryService::affectsVersion($range, (string) ($release['version'] ?? ''));
+        return RegistryAdvisoryService::affectsRelease([
+            'affected_digest' => $affectedDigest,
+            'affected_version_range' => $range,
+        ], $digest, isset($release['version']) ? (string) $release['version'] : null);
     }
 
     /** @param array<string,mixed> $release */

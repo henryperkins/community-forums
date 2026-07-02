@@ -179,7 +179,7 @@ foreach ($installed_permissions as $permission) {
                             <select name="release_id">
                                 <?php foreach ($releases as $release): ?>
                                     <?php if ((int) $release['id'] === (int) $installed['release_id']) { continue; } ?>
-                                    <option value="<?= (int) $release['id'] ?>" <?= (int) $release['id'] === (int) ($package['latest_release_id'] ?? 0) ? 'selected' : '' ?>>
+                                    <option value="<?= (int) $release['id'] ?>" <?= (int) $release['id'] === (int) ($selected_release_id ?? $package['latest_release_id'] ?? 0) ? 'selected' : '' ?>>
                                         <?= $e($release['version']) ?> (<?= $e(substr((string) $release['digest'], 0, 12)) ?>...)
                                     </option>
                                 <?php endforeach; ?>
@@ -197,7 +197,7 @@ foreach ($installed_permissions as $permission) {
                             Rollback target
                             <select name="release_id">
                                 <?php foreach ($rollback_targets as $release): ?>
-                                    <option value="<?= (int) $release['id'] ?>"><?= $e($release['version']) ?> (<?= $e(substr((string) $release['digest'], 0, 12)) ?>...)</option>
+                                    <option value="<?= (int) $release['id'] ?>" <?= (int) $release['id'] === (int) ($selected_release_id ?? 0) ? 'selected' : '' ?>><?= $e($release['version']) ?> (<?= $e(substr((string) $release['digest'], 0, 12)) ?>...)</option>
                                 <?php endforeach; ?>
                             </select>
                         </label>

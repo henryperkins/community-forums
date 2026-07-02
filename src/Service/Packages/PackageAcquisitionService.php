@@ -54,14 +54,32 @@ final class PackageAcquisitionService
     ): PackageManifest {
         $now ??= new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $digest = (string) ($release['digest'] ?? '');
+        if ((int) ($registry['is_enabled'] ?? 0) !== 1) {
+            throw new PackagePolicyException('registry_disabled', 'This package registry is disabled.');
+        }
 
         $document = $this->artifacts->get($digest);
         $signature = $this->nonEmptyString($release['signature'] ?? null);
         $keyId = $this->nonEmptyString($release['signed_key_id'] ?? null);
         $fetched = false;
+        $cachedDigestMismatch = $document !== null && !hash_equals($digest, hash('sha256', $document));
+        if ($cachedDigestMismatch) {
+            $this->artifacts->remove($digest);
+            $document = null;
+        }
 
         if ($document === null || $signature === null || $keyId === null) {
-            [$document, $signature, $keyId] = $this->fetchEnvelope($registry, $package, $release);
+            try {
+                [$document, $signature, $keyId] = $this->fetchEnvelope($registry, $package, $release);
+            } catch (PackagePolicyException $e) {
+                if ($cachedDigestMismatch) {
+                    throw new PackagePolicyException(
+                        'artifact_digest',
+                        'Cached release document bytes do not hash to the snapshot-pinned digest.',
+                    );
+                }
+                throw $e;
+            }
             $fetched = true;
         }
 

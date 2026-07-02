@@ -55,6 +55,7 @@ final class RepairInstalledPackagesTest extends TestCase
         $this->artifactDir = sys_get_temp_dir() . '/rb-repair-install-' . bin2hex(random_bytes(4));
         $this->store = new PackageArtifactStore($this->artifactDir);
         $this->seeded = RegistryFixtures::seed($this->db, $this->root, $this->artifactDir);
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $this->seeded['registry_id'], true);
 
         $adminRow = $this->makeAdmin(['password' => 'password123']);
         $admin = (new UserRepository($this->db))->findEntity((int) $adminRow['id']);
@@ -128,6 +129,19 @@ final class RepairInstalledPackagesTest extends TestCase
 
         self::assertSame(1, $repair->repairInstalledPackageStates());
         self::assertSame('disabled', (new InstalledPackageRepository($this->db))->find($this->installedId)['state']);
+        self::assertSame(
+            1,
+            (int) $this->db->fetchValue(
+                "SELECT COUNT(*) FROM package_transparency_log WHERE package_uid = 'acme/midnight-theme' AND event = 'force_disable'",
+            ),
+        );
+        self::assertSame(
+            1,
+            (int) $this->db->fetchValue(
+                "SELECT COUNT(*) FROM moderation_log WHERE action = 'package_force_disable' AND target_id = ? AND actor_id IS NULL",
+                [$this->seeded['package_id']],
+            ),
+        );
         self::assertSame(0, $repair->repairInstalledPackageStates(), 'idempotent');
         self::assertArrayHasKey('installed_packages', $repair->repairAll());
     }

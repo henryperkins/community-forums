@@ -80,7 +80,16 @@ final class AdminPackageLifecycleController extends Controller
         $install = $this->requireInstallRow($packageId);
 
         try {
-            if ($install['staged_release_id'] !== null) {
+            // The POST is bound to what the form rendered: an update approval
+            // carries the staged release id it displayed, and a plain grant
+            // never silently converts into applying a stage that raced in.
+            if ($request->str('intent') === 'approve_update') {
+                $stagedReleaseId = (int) $request->str('staged_release_id');
+                if ($install['staged_release_id'] === null || (int) $install['staged_release_id'] !== $stagedReleaseId) {
+                    return $this->consentView($admin, $packageId, [
+                        'consent' => 'The staged update changed after this page was rendered; review it again before approving.',
+                    ], 422);
+                }
                 $this->updates()->applyStaged($admin, (string) $request->post('current_password', ''), (int) $install['id']);
             } else {
                 $this->lifecycle()->consent($admin, (string) $request->post('current_password', ''), (int) $install['id']);
@@ -166,9 +175,9 @@ final class AdminPackageLifecycleController extends Controller
 
             return $this->noindex($this->redirect($target));
         } catch (ValidationException $e) {
-            return $this->detailView($packageId, $e->errors, 422);
+            return $this->detailView($packageId, $e->errors, 422, $this->releaseId($request));
         } catch (PackagePolicyException | RegistryVerificationException $e) {
-            return $this->detailView($packageId, ['update' => $this->policyMessage($e)], 422);
+            return $this->detailView($packageId, ['update' => $this->policyMessage($e)], 422, $this->releaseId($request));
         }
     }
 
@@ -205,9 +214,9 @@ final class AdminPackageLifecycleController extends Controller
 
             return $this->noindex($this->redirect($target));
         } catch (ValidationException $e) {
-            return $this->detailView($packageId, $e->errors, 422);
+            return $this->detailView($packageId, $e->errors, 422, (int) $request->str('release_id'));
         } catch (PackagePolicyException | RegistryVerificationException $e) {
-            return $this->detailView($packageId, ['rollback' => $this->policyMessage($e)], 422);
+            return $this->detailView($packageId, ['rollback' => $this->policyMessage($e)], 422, (int) $request->str('release_id'));
         }
     }
 
@@ -341,7 +350,7 @@ final class AdminPackageLifecycleController extends Controller
     }
 
     /** @param array<string,string> $errors */
-    private function detailView(int $packageId, array $errors, int $status): Response
+    private function detailView(int $packageId, array $errors, int $status, ?int $selectedReleaseId = null): Response
     {
         $detail = $this->container->get(RegistryCatalogService::class)->detail($packageId);
         if ($detail === null) {
@@ -350,13 +359,21 @@ final class AdminPackageLifecycleController extends Controller
 
         return $this->noindex($this->view('admin/package_detail', $this->withDetailExtras($detail) + [
             'errors' => $errors,
+            'selected_release_id' => $selectedReleaseId,
         ], $status));
     }
 
     /** @param array<string,string> $errors */
     private function planView(User $admin, int $packageId, ?int $releaseId, array $errors): Response
     {
-        $plan = $this->lifecycle()->plan($admin, $packageId, $releaseId);
+        // plan() resolves the target before its own refusal-capturing try, so an
+        // unresolvable release (foreign/stale id, no releases) throws here; fall
+        // back to the detail page rather than letting the kernel 500 the re-render.
+        try {
+            $plan = $this->lifecycle()->plan($admin, $packageId, $releaseId);
+        } catch (PackagePolicyException | RegistryVerificationException $e) {
+            return $this->detailView($packageId, $errors + ['install' => $this->policyMessage($e)], 422);
+        }
 
         return $this->noindex($this->view('admin/package_plan', [
             'plan' => $plan,
