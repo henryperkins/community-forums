@@ -119,7 +119,19 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/roles'));
     }
 
-    public function test_appeals_carryover_defaults_dark(): void
+    public function test_package_registry_flag_gates_catalog_routes(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $this->assertStatus(404, $this->get('/admin/packages'));
+
+        $this->setFlags(['package_registry' => true]);
+        self::assertNotSame(404, $this->get('/admin/packages')->status());
+
+        $this->setFlags(['package_registry' => false]);
+        $this->assertStatus(404, $this->get('/admin/packages'));
+    }
+
+    public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void
     {
         // ADR 0007 appeals still ships as a deploy-dark carryover: its member and
         // staff routes must be offline by default until acceptance evidence lands.

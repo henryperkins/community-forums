@@ -13,6 +13,7 @@ use App\Controller\AdminCustomEmojiController;
 use App\Controller\AdminEmailController;
 use App\Controller\AdminExtensionController;
 use App\Controller\AdminLinkPreviewController;
+use App\Controller\AdminPackagesController;
 use App\Controller\AdminRoleController;
 use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
@@ -84,12 +85,20 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\FollowRepository;
 use App\Repository\IdempotencyRepository;
+use App\Repository\LocalPackageBlockRepository;
 use App\Repository\MfaRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\OAuthIdentityRepository;
+use App\Repository\PackageAdvisoryRepository;
+use App\Repository\PackagePublisherRepository;
+use App\Repository\PackageRegistryRepository;
+use App\Repository\PackageReleaseRepository;
+use App\Repository\PackageRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
+use App\Repository\RegistrySnapshotRepository;
+use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\RoleAssignmentHistoryRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
@@ -123,6 +132,7 @@ use App\Security\LastOwnerGuard;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
 use App\Security\RateLimiter;
+use App\Security\Registry\TrustChainVerifier;
 use App\Security\SecurityHeaders;
 use App\Security\SecretBox;
 use App\Security\Session;
@@ -170,6 +180,11 @@ use App\Service\RateLimitService;
 use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
+use App\Service\Registry\LocalBlocklistService;
+use App\Service\Registry\RegistryAdvisoryService;
+use App\Service\Registry\RegistryCatalogService;
+use App\Service\Registry\RegistrySnapshotService;
+use App\Service\Registry\RegistryTrustService;
 use App\Service\ResolverShadow;
 use App\Service\ReputationLedgerService;
 use App\Service\RoleService;
@@ -1112,6 +1127,60 @@ final class App
             $c->get(BoardMemberRepository::class),
             $c->get(BoardPolicy::class),
         ));
+        $c->bind(TrustChainVerifier::class, fn () => new TrustChainVerifier());
+        $c->bind(PackageRegistryRepository::class, fn (Container $c) => new PackageRegistryRepository($c->get(Database::class)));
+        $c->bind(RegistryTrustKeyRepository::class, fn (Container $c) => new RegistryTrustKeyRepository($c->get(Database::class)));
+        $c->bind(PackagePublisherRepository::class, fn (Container $c) => new PackagePublisherRepository($c->get(Database::class)));
+        $c->bind(PackageRepository::class, fn (Container $c) => new PackageRepository($c->get(Database::class)));
+        $c->bind(PackageReleaseRepository::class, fn (Container $c) => new PackageReleaseRepository($c->get(Database::class)));
+        $c->bind(PackageAdvisoryRepository::class, fn (Container $c) => new PackageAdvisoryRepository($c->get(Database::class)));
+        $c->bind(LocalPackageBlockRepository::class, fn (Container $c) => new LocalPackageBlockRepository($c->get(Database::class)));
+        $c->bind(RegistrySnapshotRepository::class, fn (Container $c) => new RegistrySnapshotRepository($c->get(Database::class)));
+        $c->bind(RegistrySnapshotService::class, fn (Container $c) => new RegistrySnapshotService(
+            $c->get(Database::class),
+            $c->get(TrustChainVerifier::class),
+            $c->get(PackageRegistryRepository::class),
+            $c->get(RegistryTrustKeyRepository::class),
+            $c->get(RegistrySnapshotRepository::class),
+            $c->get(PackagePublisherRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(Telemetry::class),
+        ));
+        $c->bind(RegistryTrustService::class, fn (Container $c) => new RegistryTrustService(
+            $c->get(Database::class),
+            $c->get(PackageRegistryRepository::class),
+            $c->get(RegistryTrustKeyRepository::class),
+            $c->get(TrustChainVerifier::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+        ));
+        $c->bind(RegistryAdvisoryService::class, fn (Container $c) => new RegistryAdvisoryService(
+            $c->get(Database::class),
+            $c->get(TrustChainVerifier::class),
+            $c->get(RegistryTrustKeyRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Telemetry::class),
+        ));
+        $c->bind(LocalBlocklistService::class, fn (Container $c) => new LocalBlocklistService(
+            $c->get(LocalPackageBlockRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+        ));
+        $c->bind(RegistryCatalogService::class, fn (Container $c) => new RegistryCatalogService(
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+            $c->get(PackageRegistryRepository::class),
+            $c->get(RegistrySnapshotService::class),
+            $c->get(LocalBlocklistService::class),
+        ));
         $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
             $c->get(Database::class),
             $c->get(UserRepository::class),
@@ -1408,6 +1477,8 @@ final class App
         $r->get('/admin/roles/{id}', [AdminRoleController::class, 'edit']);
         $r->post('/admin/roles/{id}', [AdminRoleController::class, 'update']);
         $r->post('/admin/roles/{id}/clone', [AdminRoleController::class, 'clone']);
+        $r->get('/admin/packages', [AdminPackagesController::class, 'index']);
+        $r->get('/admin/packages/{id}', [AdminPackagesController::class, 'show']);
         $r->get('/admin/webhooks', [AdminWebhookController::class, 'index']);
         $r->post('/admin/webhooks', [AdminWebhookController::class, 'create']);
         $r->get('/admin/webhooks/{id}', [AdminWebhookController::class, 'show']);
