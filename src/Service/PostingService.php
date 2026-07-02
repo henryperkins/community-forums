@@ -50,6 +50,7 @@ final class PostingService
         private ?FirstPartyHookRegistry $hooks = null,
         private ?ContentReferenceService $contentReferences = null,
         private ?LinkPreviewService $linkPreviews = null,
+        private ?ResolverShadow $shadow = null,
     ) {
     }
 
@@ -84,7 +85,9 @@ final class PostingService
         if ($board === null) {
             throw new ValidationException(['board_id' => 'Choose a board to post in.'], $input);
         }
-        if (!$this->policy->canPost($board, $user, $this->isBoardMember($boardId, $user->id()))) {
+        $canPost = $this->policy->canPost($board, $user, $this->isBoardMember($boardId, $user->id()));
+        $this->shadow?->compare($canPost, $user, 'core.thread.create', ['board_id' => $boardId], 'PostingService::createThread');
+        if (!$canPost) {
             throw new ForbiddenException('You cannot post in this board.');
         }
 
@@ -205,7 +208,9 @@ final class PostingService
             'post_min_role' => $thread['board_post_min_role'] ?? 'user',
             'is_archived' => (int) ($thread['board_is_archived'] ?? 0),
         ];
-        if (!$this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id()))) {
+        $canPost = $this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id()));
+        $this->shadow?->compare($canPost, $user, 'core.post.create', ['board_id' => (int) $thread['board_id']], 'PostingService::reply');
+        if (!$canPost) {
             throw new ForbiddenException('You cannot post in this board.');
         }
         if ((int) $thread['is_locked'] === 1) {

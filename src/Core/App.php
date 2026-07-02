@@ -168,6 +168,7 @@ use App\Service\RateLimitService;
 use App\Service\ReactionService;
 use App\Service\RepairService;
 use App\Service\ReportService;
+use App\Service\ResolverShadow;
 use App\Service\ReputationLedgerService;
 use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
@@ -1087,6 +1088,10 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(WriteGate::class),
         ));
+        $c->bind(ResolverShadow::class, fn (Container $c) => new ResolverShadow(
+            $c->get(CapabilityResolver::class),
+            $c->get(Telemetry::class),
+        ));
         $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
             $c->get(Database::class),
             $c->get(UserRepository::class),
@@ -1138,6 +1143,7 @@ final class App
             $c->get(FirstPartyHookRegistry::class),
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
             $c->get(FeatureFlags::class)->enabled('link_previews') ? $c->get(LinkPreviewService::class) : null,
+            $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(ResolverShadow::class) : null,
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -1150,6 +1156,7 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(UserRepository::class),
             $c->get(FirstPartyHookRegistry::class),
+            $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(ResolverShadow::class) : null,
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),

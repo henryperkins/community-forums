@@ -39,16 +39,17 @@ final class ModerationService
         private BoardRepository $boards,
         private UserRepository $users,
         private ?FirstPartyHookRegistry $hooks = null,
+        private ?ResolverShadow $shadow = null,
     ) {
     }
 
     /** Non-throwing capability check (admin anywhere, or assigned board moderator). */
     public function canModerate(User $user, int $boardId): bool
     {
-        if (!$this->writeGate->canWrite($user)) {
-            return false;
-        }
-        return $user->isAdmin() || $this->boardMods->isModerator($boardId, $user->id());
+        $allowed = $this->writeGate->canWrite($user)
+            && ($user->isAdmin() || $this->boardMods->isModerator($boardId, $user->id()));
+        $this->shadow?->compare($allowed, $user, 'core.post.delete_any', ['board_id' => $boardId], 'ModerationService::canModerate');
+        return $allowed;
     }
 
     /** @return array{thread:array<string,mixed>, pinned:bool} */
