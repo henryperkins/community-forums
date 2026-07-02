@@ -48,6 +48,14 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.getByRole('heading', { name: 'Server extensions' })).toBeVisible();
   await expect(page.getByText('browser-evidence')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/roles');
+  await expect(page.getByRole('heading', { name: 'Roles & capabilities' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/roles/simulator');
+  await expect(page.getByRole('heading', { name: 'Permission simulator' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
 });
 
 test('member appeal and server-draft pages have no serious axe violations', async ({ page }, info) => {

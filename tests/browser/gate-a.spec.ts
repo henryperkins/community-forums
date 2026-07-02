@@ -225,6 +225,27 @@ test('phase 4 topic workflow: status, snooze, and assignment via the server-rend
   await shot(page, info, '29-topic-workflow');
 });
 
+test('role editor: create a custom role and simulate a decision (no-JS forms)', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+
+  await visit(page, '/admin/roles');
+  await expect(page.getByRole('heading', { name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.getByText('system.admin')).toBeVisible();
+
+  const roleName = `Board Helper ${info.project.name}`;
+  await page.fill('input[name="name"]', roleName);
+  await page.check('input[name="capabilities[]"][value="core.thread.lock"]');
+  await page.check('input[name="capabilities[]"][value="core.thread.pin"]');
+  await page.fill('input[name="current_password"]', 'password123');
+  await page.click('form[action="/admin/roles"] button[type="submit"]');
+  await expect(page.getByText(roleName)).toBeVisible();
+  await shot(page, info, '30-admin-role-created');
+
+  await visit(page, '/admin/roles/simulator?actor=guest&capability=core.thread.lock&board_id=1');
+  await expect(page.getByText('Denied')).toBeVisible();
+  await shot(page, info, '31-admin-role-simulator');
+});
+
 test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
 

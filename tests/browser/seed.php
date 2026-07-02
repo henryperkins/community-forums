@@ -59,6 +59,7 @@ $evidenceFeatures = [
     'polls' => true,
     'slash_giphy' => true,
     'topic_workflow' => true, // GA default-on (2026-07-01); listed explicitly so the workflow bar is captured regardless of the DEFAULTS map
+    'capabilities' => true, // Inc 1 (P5-08): role editor + simulator browser evidence (shadow-only)
 ];
 if ($includeDarkSurfaceFixtures) {
     $evidenceFeatures['appeals'] = true;
