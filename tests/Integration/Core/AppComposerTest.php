@@ -290,4 +290,25 @@ final class AppComposerTest extends TestCase
         // A missing/hidden post falls back to page 1.
         self::assertSame(1, $repo->pageOfPost($threadId, 999999, 2));
     }
+
+    public function test_composer_forms_expose_bridge_context_metadata(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'bridge-meta']);
+        $author = $this->makeUser(['username' => 'bridgemeta']);
+        $recipient = $this->makeUser(['username' => 'bridgedm']);
+        $thread = $this->makeThread($board, $author, 'Bridge meta', 'Opening');
+        $this->actingAs($author);
+
+        $boardPage = $this->get('/c/bridge-meta');
+        self::assertStringContainsString('data-composer-context="new_thread"', $boardPage->body());
+        self::assertStringContainsString('data-composer-target-id="' . (int) $board['id'] . '"', $boardPage->body());
+
+        $threadPage = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        self::assertStringContainsString('data-composer-context="reply"', $threadPage->body());
+        self::assertStringContainsString('data-composer-target-id="' . $thread['thread_id'] . '"', $threadPage->body());
+        self::assertStringContainsString('data-composer-context="edit"', $threadPage->body());
+
+        $newDm = $this->get('/messages/new');
+        self::assertStringContainsString('data-composer-context="dm"', $newDm->body());
+    }
 }

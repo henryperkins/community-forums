@@ -33,6 +33,40 @@
         return t ? t.value : '';
     }
 
+    function TextareaComposerAdapter(form, ta) {
+        this.form = form;
+        this.ta = ta;
+        this.changeHandlers = [];
+        var self = this;
+        ta.addEventListener('input', function () {
+            self.changeHandlers.forEach(function (cb) { cb(self.getMarkdown()); });
+        });
+    }
+    TextareaComposerAdapter.prototype.getMarkdown = function () { return this.ta.value; };
+    TextareaComposerAdapter.prototype.setMarkdown = function (markdown) {
+        this.ta.value = markdown || '';
+        this.ta.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    TextareaComposerAdapter.prototype.insertMarkdown = function (markdown) {
+        this.replaceSelection(markdown);
+    };
+    TextareaComposerAdapter.prototype.replaceSelection = function (markdown) {
+        var ta = this.ta;
+        var s = ta.selectionStart || 0;
+        var e = ta.selectionEnd || s;
+        ta.value = ta.value.slice(0, s) + markdown + ta.value.slice(e);
+        ta.selectionStart = ta.selectionEnd = s + markdown.length;
+        ta.focus();
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    TextareaComposerAdapter.prototype.replacePendingUpload = function (token, markdown) {
+        return replaceOnce(this.ta, token, markdown);
+    };
+    TextareaComposerAdapter.prototype.focus = function () { this.ta.focus(); };
+    TextareaComposerAdapter.prototype.onChange = function (callback) { this.changeHandlers.push(callback); };
+    TextareaComposerAdapter.prototype.setDisabled = function (disabled) { this.ta.disabled = !!disabled; };
+    TextareaComposerAdapter.prototype.destroy = function () {};
+
     // ---- Markdown toolbar -------------------------------------------------
     function wrapSelection(ta, before, after) {
         var s = ta.selectionStart, e = ta.selectionEnd;
@@ -154,19 +188,20 @@
     }
 
     // ---- Live preview (same server pipeline) ------------------------------
-    function buildPreview(form, ta) {
+    function buildPreview(form, adapter) {
+        var ta = adapter.ta;
         var pane = document.createElement('div');
         pane.className = 'composer-preview';
         pane.setAttribute('aria-live', 'polite');
         ta.parentNode.appendChild(pane);
 
         var timer = null;
-        ta.addEventListener('input', function () {
+        adapter.onChange(function () {
             if (timer) { clearTimeout(timer); }
             timer = setTimeout(function () {
                 var data = new FormData();
                 data.append('_token', tokenField(form));
-                data.append('body', ta.value);
+                data.append('body', adapter.getMarkdown());
                 fetch('/composer/preview', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(function (r) { return r.ok ? r.json() : null; })
                     .then(function (j) { if (j && j.ok) { pane.innerHTML = j.html; } })
@@ -225,7 +260,8 @@
         ta.parentNode.appendChild(panel);
         return panel;
     }
-    function wireServerDrafts(form, ta, localKey, context, updateDiscard) {
+    function wireServerDrafts(form, adapter, localKey, context, updateDiscard) {
+        var ta = adapter.ta;
         var apiKey = serverDraftKey(context);
         var panel = buildDraftSyncPanel(ta);
         var timer = null;
@@ -292,12 +328,11 @@
             if (!server) { return; }
             applying = true;
             revision = parseInt(server.revision, 10) || 0;
-            ta.value = server.body || '';
+            adapter.setMarkdown(server.body || '');
             setDraftTitle(form, server.title || '');
             try {
-                ta.value ? localStorage.setItem(localKey, ta.value) : localStorage.removeItem(localKey);
+                adapter.getMarkdown() ? localStorage.setItem(localKey, adapter.getMarkdown()) : localStorage.removeItem(localKey);
             } catch (e) {}
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
             applying = false;
             updateDiscard();
         }
@@ -357,7 +392,7 @@
         }
         function saveCurrent() {
             if (paused || applying) { return; }
-            var body = ta.value;
+            var body = adapter.getMarkdown();
             if (!body) {
                 request('POST', '/discard', new FormData()).catch(function () {});
                 revision = 0;
@@ -378,11 +413,11 @@
                 var server = j && j.draft ? j.draft : null;
                 if (!server) { return; }
                 revision = parseInt(server.revision, 10) || 0;
-                if (ta.value && ta.value !== (server.body || '')) {
-                    renderConflict(server, ta.value, draftTitle(form, draftLabel(context)));
+                if (adapter.getMarkdown() && adapter.getMarkdown() !== (server.body || '')) {
+                    renderConflict(server, adapter.getMarkdown(), draftTitle(form, draftLabel(context)));
                     return;
                 }
-                if (!ta.value && server.body) {
+                if (!adapter.getMarkdown() && server.body) {
                     applyServerDraft(server);
                     showStatus('Loaded server draft.');
                 }
@@ -477,7 +512,8 @@
             }
         } catch (e) {}
     }
-    function buildDiscard(form, ta, key, discardRemote) {
+    function buildDiscard(form, adapter, key, discardRemote) {
+        var ta = adapter.ta;
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'btn btn-secondary btn-small composer-discard';
@@ -485,36 +521,36 @@
         function update() {
             var hasSaved = false;
             try { hasSaved = !!localStorage.getItem(key); } catch (e) {}
-            b.hidden = !hasSaved && !ta.value;
+            b.hidden = !hasSaved && !adapter.getMarkdown();
         }
         b.addEventListener('click', function () {
             try { localStorage.removeItem(key); } catch (e) {}
-            ta.value = '';
+            adapter.setMarkdown('');
             if (typeof discardRemote === 'function') { discardRemote(); }
-            ta.dispatchEvent(new Event('input', { bubbles: true }));
             update();
         });
         ta.parentNode.appendChild(b);
         update();
         return update;
     }
-    function wireDrafts(form, ta) {
+    function wireDrafts(form, adapter) {
+        var ta = adapter.ta;
         var who = draftUser();
         var context = draftContext(form);
         migrateAnonDrafts(who);
         var key = draftKeyFor(who, context);
         try {
             var saved = localStorage.getItem(key);
-            if (saved && !ta.value) { ta.value = saved; ta.dispatchEvent(new Event('input', { bubbles: true })); }
+            if (saved && !adapter.getMarkdown()) { adapter.setMarkdown(saved); }
         } catch (e) {}
         var remoteDiscard = null;
-        var updateDiscard = buildDiscard(form, ta, key, function () {
+        var updateDiscard = buildDiscard(form, adapter, key, function () {
             if (remoteDiscard) { remoteDiscard(); }
         });
-        var serverDrafts = serverDraftsEnabled() ? wireServerDrafts(form, ta, key, context, updateDiscard) : null;
+        var serverDrafts = serverDraftsEnabled() ? wireServerDrafts(form, adapter, key, context, updateDiscard) : null;
         if (serverDrafts) { remoteDiscard = serverDrafts.discard; }
-        ta.addEventListener('input', function () {
-            try { ta.value ? localStorage.setItem(key, ta.value) : localStorage.removeItem(key); } catch (e) {}
+        adapter.onChange(function (markdown) {
+            try { markdown ? localStorage.setItem(key, markdown) : localStorage.removeItem(key); } catch (e) {}
             if (serverDrafts) { serverDrafts.input(); }
             updateDiscard();
         });
@@ -703,7 +739,8 @@
         ta.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
     }
-    function uploadCard(form, ta, file, placeholder) {
+    function uploadCard(form, adapter, file, placeholder) {
+        var ta = adapter.ta;
         var tray = uploadTray(form, ta);
         var card = document.createElement('div');
         card.className = 'composer-upload-card is-uploading';
@@ -751,7 +788,7 @@
         tray.appendChild(card);
         card._rbMarkdown = '';
         remove.addEventListener('click', function () {
-            replaceOnce(ta, card._rbMarkdown || placeholder, '');
+            adapter.replacePendingUpload(card._rbMarkdown || placeholder, '');
             card.remove();
         });
         up.addEventListener('click', function () {
@@ -769,7 +806,7 @@
         alt.addEventListener('input', function () {
             if (!card._rbUrl || !card._rbMarkdown) { return; }
             var next = imageMarkdown(card._rbUrl, alt.value);
-            if (replaceOnce(ta, card._rbMarkdown, next)) {
+            if (adapter.replacePendingUpload(card._rbMarkdown, next)) {
                 card._rbMarkdown = next;
                 preview.alt = alt.value;
             }
@@ -778,7 +815,7 @@
             progress: function (pct) { progress.value = Math.max(0, Math.min(100, pct)); },
             complete: function (json) {
                 var markdown = imageMarkdown(json.url, '');
-                replaceOnce(ta, placeholder, markdown);
+                adapter.replacePendingUpload(placeholder, markdown);
                 card._rbUrl = json.url;
                 card._rbMarkdown = markdown;
                 preview.src = json.url;
@@ -791,7 +828,7 @@
                 card.classList.add('is-complete');
             },
             fail: function (message) {
-                replaceOnce(ta, placeholder, '');
+                adapter.replacePendingUpload(placeholder, '');
                 progress.remove();
                 alt.disabled = true;
                 status.textContent = message || 'Upload failed.';
@@ -800,7 +837,7 @@
             }
         };
     }
-    function uploadImage(form, ta, file) {
+    function uploadImage(form, adapter, file) {
         var data = new FormData();
         data.append('_token', tokenField(form));
         data.append('image', file);
@@ -809,8 +846,8 @@
         // into their OWN marker — String.replace(str) only swaps the first match.
         var token = 'rbup-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
         var placeholder = '![uploading…](' + token + ')';
-        insertAtCursor(ta, placeholder);
-        var card = uploadCard(form, ta, file, placeholder);
+        adapter.insertMarkdown(placeholder);
+        var card = uploadCard(form, adapter, file, placeholder);
         var xhr = new XMLHttpRequest();
         xhr.open('POST', '/upload');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
@@ -829,12 +866,13 @@
         xhr.onerror = function () { card.fail('Upload failed. Check your connection and try again.'); };
         xhr.send(data);
     }
-    function wireUploads(form, ta) {
+    function wireUploads(form, adapter) {
+        var ta = adapter.ta;
         ta.addEventListener('paste', function (e) {
             var items = (e.clipboardData || {}).items || [];
             for (var i = 0; i < items.length; i++) {
                 if (items[i].type && items[i].type.indexOf('image/') === 0) {
-                    uploadImage(form, ta, items[i].getAsFile());
+                    uploadImage(form, adapter, items[i].getAsFile());
                 }
             }
         });
@@ -844,7 +882,7 @@
             if (!files.length) { return; }
             e.preventDefault();
             for (var i = 0; i < files.length; i++) {
-                if (files[i].type && files[i].type.indexOf('image/') === 0) { uploadImage(form, ta, files[i]); }
+                if (files[i].type && files[i].type.indexOf('image/') === 0) { uploadImage(form, adapter, files[i]); }
             }
         });
     }
@@ -962,7 +1000,8 @@
     // combobox, the popup is a listbox of role=option items, selection is tracked
     // with aria-activedescendant (focus stays in the textarea so typing keeps
     // filtering), and Arrow/Home/End/Enter/Escape drive it from the keyboard.
-    function wireSlashMenu(form, ta) {
+    function wireSlashMenu(form, adapter) {
+        var ta = adapter.ta;
         var menu = document.createElement('div');
         var menuId = 'composer-slash-menu-' + (++slashMenuSeq);
         var optionSeq = 0;
@@ -1057,7 +1096,7 @@
                         searchGiphy(state, giphySearchTerm(state.query));
                         return;
                     }
-                    replaceRange(ta, state.start, state.end, command.body);
+                    replaceRange(adapter.ta, state.start, state.end, command.body);
                     hide();
                 });
                 menu.appendChild(b);
@@ -1115,7 +1154,7 @@
                     b.addEventListener('mousedown', function (e) { e.preventDefault(); });
                     b.addEventListener('click', function (e) {
                         e.stopPropagation();
-                        replaceRange(ta, state.start, state.end, imageMarkdown(mediaUrl, title));
+                        replaceRange(adapter.ta, state.start, state.end, imageMarkdown(mediaUrl, title));
                         hide();
                     });
                     menu.appendChild(b);
@@ -1216,7 +1255,8 @@
         ta.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
     }
-    function wireKeys(form, ta, prefs) {
+    function wireKeys(form, adapter, prefs) {
+        var ta = adapter.ta;
         ta.addEventListener('keydown', function (e) {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 var key = e.key.toLowerCase();
@@ -1248,22 +1288,23 @@
         var ta = form.querySelector('.composer-input');
         if (!ta || ta.getAttribute('data-rb-enhanced')) { return; }
         ta.setAttribute('data-rb-enhanced', '1');
+        var adapter = new TextareaComposerAdapter(form, ta);
         buildToolbar(ta);
         buildCounter(ta);
-        if (prefs.showPreview) { buildPreview(form, ta); }
+        if (prefs.showPreview) { buildPreview(form, adapter); }
         // Wire the slash combobox before wireKeys so its keydown listener runs
         // first: when the menu is open it consumes Enter/Escape (via
         // stopImmediatePropagation) before enter-to-send / list-continuation see it.
-        wireSlashMenu(form, ta);
-        wireKeys(form, ta, prefs);
+        wireSlashMenu(form, adapter);
+        wireKeys(form, adapter, prefs);
         stampIdempotency(form);
         // A form may opt out of local draft autosave (data-no-draft). The inline
         // post-edit form does: its textarea is server-pre-filled with the current
         // body, so a saved draft is never restored into it (the !ta.value guard
         // fails) and there is no Drafts-page resume target — autosaving would only
         // leave a misleading, unrecoverable draft that the next load discards.
-        if (draftsEnabled() && !form.hasAttribute('data-no-draft')) { wireDrafts(form, ta); }
-        wireUploads(form, ta);
+        if (draftsEnabled() && !form.hasAttribute('data-no-draft')) { wireDrafts(form, adapter); }
+        wireUploads(form, adapter);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

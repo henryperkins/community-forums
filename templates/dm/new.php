@@ -23,7 +23,7 @@
                 <span class="eyebrow">Private counsel</span>
                 <h1>New message</h1>
 
-                <form class="dm-form" method="post" action="/messages">
+                <form class="dm-form composer" method="post" action="/messages" data-composer-context="dm" data-composer-target-id="0">
                     <?= $this->csrfField() ?>
                     <label class="field" for="dm-to">
                         <span>To</span>

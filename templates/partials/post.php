@@ -153,7 +153,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                         <?php // data-no-draft: the textarea is pre-filled with the current body, so a
                               // local draft can never be restored here; opting out avoids a misleading,
                               // unrecoverable "Post edit" draft that the next page load would discard. ?>
-                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/edit" class="composer" data-no-draft>
+                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/edit" class="composer" data-composer-context="edit" data-composer-target-id="<?= (int) $p['id'] ?>" data-no-draft>
                             <?= $this->csrfField() ?>
                             <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($editingThis ? (string) ($edit_old ?? '') : $p['body']) ?></textarea>
                             <button class="btn btn-small" type="submit">Save changes</button>
@@ -185,7 +185,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                 <?php else: ?>
                     <details class="post-edit">
                         <summary class="linkbtn">Edit wiki</summary>
-                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/edit" class="composer" data-no-draft>
+                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/edit" class="composer" data-composer-context="edit" data-composer-target-id="<?= (int) $p['id'] ?>" data-no-draft>
                             <?= $this->csrfField() ?>
                             <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($p['body']) ?></textarea>
                             <input type="text" name="reason" class="input" maxlength="255" placeholder="Reason">
