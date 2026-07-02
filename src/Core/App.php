@@ -906,6 +906,7 @@ final class App
         $c->bind(RepairService::class, fn (Container $c) => new RepairService(
             $c->get(Database::class),
             (int) $config->get('community.solved_bonus', 5),
+            $c->get(ThemeStateService::class),
         ));
         $c->bind(SearchService::class, fn (Container $c) => new MysqlSearchService($c->get(Database::class)));
         $c->bind(ComposerSuggestionService::class, fn (Container $c) => new ComposerSuggestionService(
@@ -1283,6 +1284,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             (int) $config->get('packages.retention_days', 30),
             $c->get(Telemetry::class),
+            $c->get(ThemeStateService::class),
         ));
         $c->bind(PackageUpdateService::class, fn (Container $c) => new PackageUpdateService(
             $c->get(Database::class),
@@ -1315,6 +1317,7 @@ final class App
             $c->get(PackageArtifactStore::class),
             $c->get(ModerationLogRepository::class),
             $c->get(Telemetry::class),
+            $c->get(ThemeStateService::class),
         ));
         $c->bind(RegistrySnapshotRepository::class, fn (Container $c) => new RegistrySnapshotRepository($c->get(Database::class)));
         $c->bind(RegistrySnapshotService::class, fn (Container $c) => new RegistrySnapshotService(

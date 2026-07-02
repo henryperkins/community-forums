@@ -229,7 +229,8 @@ final class ThemeStateService
     {
         $state = $this->themes->state();
         $active = $state['active_build_id'] !== null ? $this->themes->findBuild($state['active_build_id']) : null;
-        $lkg = $state['lkg_build_id'] !== null ? $this->serveableBuild($state['lkg_build_id']) : null;
+        $lkgBuild = $state['lkg_build_id'] !== null ? $this->themes->findBuild($state['lkg_build_id']) : null;
+        $lkg = $lkgBuild !== null ? $this->serveableBuild((int) $lkgBuild['id']) : null;
 
         if ($active !== null && (int) $active['installed_package_id'] === $installedId) {
             $next = $lkg !== null && (int) $lkg['installed_package_id'] !== $installedId ? (int) $lkg['id'] : null;
@@ -254,7 +255,7 @@ final class ThemeStateService
             });
             $this->telemetry?->emit('theme.lifecycle', ['action' => 'deactivate', 'reason' => $reason]);
             return true;
-        } elseif ($lkg !== null && (int) $lkg['installed_package_id'] === $installedId) {
+        } elseif ($lkgBuild !== null && (int) $lkgBuild['installed_package_id'] === $installedId) {
             $this->themes->setState($state['active_build_id'], null, $actorId);
             return true;
         }

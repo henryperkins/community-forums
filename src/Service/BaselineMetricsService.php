@@ -352,6 +352,12 @@ final class BaselineMetricsService
             ],
             'storage_quota_kb' => 64,
             'support' => ['homepage' => 'https://example.test/package-budget'],
+            'theme' => [
+                'schema_version' => 1,
+                'tokens' => ['--accent' => '#8f3d12', '--surface' => '#fff7dc', '--text' => '#241706'],
+                'dark_tokens' => ['--accent' => '#d2b062', '--surface' => '#283440', '--text' => '#ece4d2'],
+                'assets' => [],
+            ],
         ];
         $json = json_encode([
             'format' => 'rb-release.v1',

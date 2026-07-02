@@ -15,8 +15,10 @@ use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageRepository;
 use App\Repository\PackageReviewDecisionRepository;
+use App\Repository\PackageThemeRepository;
 use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\RegistryTrustKeyRepository;
+use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\Packages\ManifestValidator;
 use App\Security\Packages\PackagePolicyException;
@@ -29,6 +31,9 @@ use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\PackageLifecycleService;
+use App\Service\Packages\ThemeAssetScanner;
+use App\Service\Packages\ThemeBuildService;
+use App\Service\Packages\ThemeStateService;
 use App\Service\Registry\ArrayRegistryTransport;
 use App\Service\Registry\LocalBlocklistService;
 use App\Service\Registry\RegistryAdvisoryService;
@@ -131,6 +136,27 @@ final class PackageHealthWorkerTest extends TestCase
             new PackageTransparencyLogRepository($this->db),
             $this->store,
             new ModerationLogRepository($this->db),
+            null,
+            $this->themeState(),
+        );
+    }
+
+    private function themeState(): ThemeStateService
+    {
+        return new ThemeStateService(
+            $this->db,
+            new PackageThemeRepository($this->db),
+            new InstalledPackageRepository($this->db),
+            new PackageRepository($this->db),
+            new PackageReleaseRepository($this->db),
+            $this->store,
+            new PackageSecurityGate(new LocalPackageBlockRepository($this->db), new PackageAdvisoryRepository($this->db)),
+            new ThemeBuildService($this->db, new PackageThemeRepository($this->db), new ManifestValidator(), new ThemeAssetScanner()),
+            new WriteGate(),
+            new ReauthGate(new PasswordHasher()),
+            new SettingRepository($this->db),
+            new ModerationLogRepository($this->db),
+            new PackageHistoryRepository($this->db),
         );
     }
 
@@ -204,6 +230,19 @@ final class PackageHealthWorkerTest extends TestCase
                 [$this->seeded['package_id']],
             ),
         );
+    }
+
+    public function test_tampered_active_theme_quarantine_clears_theme_state(): void
+    {
+        $build = $this->themeState()->activate($this->admin, 'password123', $this->installedId);
+        self::assertSame((int) $build['id'], (new PackageThemeRepository($this->db))->state()['active_build_id']);
+        file_put_contents($this->store->pathFor($this->seeded['release_digest']), 'tampered');
+
+        $stats = (new PackageHealthWorker($this->health(), true))->run();
+
+        self::assertSame(1, $stats['quarantined']);
+        self::assertSame('quarantined', (new InstalledPackageRepository($this->db))->find($this->installedId)['state']);
+        self::assertNull((new PackageThemeRepository($this->db))->state()['active_build_id']);
     }
 
     public function test_missing_artifact_marks_health_degraded_without_false_quarantine(): void
@@ -295,6 +334,19 @@ final class PackageHealthWorkerTest extends TestCase
         self::assertSame('disabled', $row['state']);
         self::assertNull($row['staged_release_id'], 'blocked staged target is cancelled');
         self::assertGreaterThanOrEqual(1, $stats['disabled']);
+    }
+
+    public function test_blocklist_force_disable_clears_active_theme_state(): void
+    {
+        $build = $this->themeState()->activate($this->admin, 'password123', $this->installedId);
+        self::assertSame((int) $build['id'], (new PackageThemeRepository($this->db))->state()['active_build_id']);
+        (new LocalPackageBlockRepository($this->db))->add($this->seeded['release_digest'], null, 'incident', null);
+
+        $stats = (new PackageHealthWorker($this->health(), true))->run();
+
+        self::assertSame(1, $stats['disabled']);
+        self::assertSame('disabled', (new InstalledPackageRepository($this->db))->find($this->installedId)['state']);
+        self::assertNull((new PackageThemeRepository($this->db))->state()['active_build_id']);
     }
 
     public function test_retention_purge_removes_rows_permissions_and_artifact(): void

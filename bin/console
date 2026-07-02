@@ -30,6 +30,7 @@ use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PackageRepository;
+use App\Repository\PackageThemeRepository;
 use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\RegistrySnapshotRepository;
 use App\Repository\RegistryTrustKeyRepository;
@@ -62,6 +63,9 @@ use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
+use App\Service\Packages\ThemeAssetScanner;
+use App\Service\Packages\ThemeBuildService;
+use App\Service\Packages\ThemeStateService;
 use App\Service\Registry\ArrayRegistryTransport;
 use App\Service\Registry\CurlRegistryTransport;
 use App\Service\Registry\RegistryAdvisoryService;
@@ -110,7 +114,27 @@ $migrator = static function () use ($config): Migrator {
 /** A Database bound to the configured database. */
 $database = static fn (): Database => new Database($config->get('db'));
 
-$packageHealth = static function (Database $db, ?Telemetry $telemetry = null) use ($config): PackageHealthService {
+$themeState = static function (Database $db, ?Telemetry $telemetry = null) use ($config): ThemeStateService {
+    return new ThemeStateService(
+        $db,
+        new PackageThemeRepository($db),
+        new InstalledPackageRepository($db),
+        new PackageRepository($db),
+        new PackageReleaseRepository($db),
+        new PackageArtifactStore((string) $config->get('packages.storage_path')),
+        new PackageSecurityGate(new LocalPackageBlockRepository($db), new PackageAdvisoryRepository($db)),
+        new ThemeBuildService($db, new PackageThemeRepository($db), new ManifestValidator(), new ThemeAssetScanner(), $telemetry),
+        new WriteGate(),
+        new ReauthGate(new PasswordHasher()),
+        new SettingRepository($db),
+        new ModerationLogRepository($db),
+        new PackageHistoryRepository($db),
+        $telemetry,
+        (bool) $config->get('theme.safe_mode', false),
+    );
+};
+
+$packageHealth = static function (Database $db, ?Telemetry $telemetry = null) use ($config, $themeState): PackageHealthService {
     return new PackageHealthService(
         $db,
         new InstalledPackageRepository($db),
@@ -124,6 +148,7 @@ $packageHealth = static function (Database $db, ?Telemetry $telemetry = null) us
         new PackageArtifactStore((string) $config->get('packages.storage_path')),
         new ModerationLogRepository($db),
         $telemetry,
+        $themeState($db, $telemetry),
     );
 };
 
@@ -181,7 +206,8 @@ try {
 
         case 'repair':
         case 'repair:all':
-            $result = (new RepairService($database(), (int) $config->get('community.solved_bonus', 5)))->repairAll();
+            $db = $database();
+            $result = (new RepairService($db, (int) $config->get('community.solved_bonus', 5), $themeState($db)))->repairAll();
             foreach ($result as $name => $rows) {
                 $log(sprintf('  repaired %-18s (%d rows)', $name, $rows));
             }
