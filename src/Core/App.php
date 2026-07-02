@@ -71,6 +71,7 @@ use App\Repository\ApiTokenRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
+use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ModerationAppealRepository;
@@ -88,6 +89,10 @@ use App\Repository\OAuthIdentityRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
+use App\Repository\RoleAssignmentHistoryRepository;
+use App\Repository\RoleAssignmentRepository;
+use App\Repository\RoleCapabilityRepository;
+use App\Repository\RoleRepository;
 use App\Repository\SessionRepository;
 use App\Repository\ServiceSecretRepository;
 use App\Repository\ServerDraftRepository;
@@ -109,6 +114,7 @@ use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\BoardPolicy;
 use App\Security\ClientIdentifier;
+use App\Security\CapabilityResolver;
 use App\Security\Csrf;
 use App\Security\EgressGuard;
 use App\Security\FileRateLimiter;
@@ -146,6 +152,7 @@ use App\Service\CommunityMemoryService;
 use App\Service\DirectMessageService;
 use App\Service\FeedService;
 use App\Service\FollowService;
+use App\Service\LegacyAuthorityProjection;
 use App\Service\LinkPreviewService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
@@ -1061,6 +1068,24 @@ final class App
         $c->bind(LastOwnerGuard::class, fn (Container $c) => new LastOwnerGuard(
             $c->get(ProtectedOwnerRepository::class),
             $c->get(UserRepository::class),
+        ));
+        $c->bind(CapabilityRepository::class, fn (Container $c) => new CapabilityRepository($c->get(Database::class)));
+        $c->bind(RoleRepository::class, fn (Container $c) => new RoleRepository($c->get(Database::class)));
+        $c->bind(RoleCapabilityRepository::class, fn (Container $c) => new RoleCapabilityRepository($c->get(Database::class)));
+        $c->bind(RoleAssignmentRepository::class, fn (Container $c) => new RoleAssignmentRepository($c->get(Database::class)));
+        $c->bind(RoleAssignmentHistoryRepository::class, fn (Container $c) => new RoleAssignmentHistoryRepository($c->get(Database::class)));
+        $c->bind(LegacyAuthorityProjection::class, fn (Container $c) => new LegacyAuthorityProjection(
+            $c->get(BoardModeratorRepository::class),
+        ));
+        $c->bind(CapabilityResolver::class, fn (Container $c) => new CapabilityResolver(
+            $c->get(RoleCapabilityRepository::class),
+            $c->get(RoleAssignmentRepository::class),
+            $c->get(LegacyAuthorityProjection::class),
+            $c->get(ProtectedOwnerRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(WriteGate::class),
         ));
         $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
             $c->get(Database::class),
