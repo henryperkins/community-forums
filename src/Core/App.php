@@ -217,6 +217,7 @@ use App\Service\Webhook\WebhookTransport;
 use App\Service\WebhookService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
+use App\Support\MentionLinker;
 use Throwable;
 
 /**
@@ -672,6 +673,11 @@ final class App
         $c->bind(Markdown::class, fn (Container $c) => new Markdown(
             $c->get(HtmlSanitizer::class),
             $c->get(FeatureFlags::class)->enabled('custom_emoji') ? $c->get(CustomEmojiService::class) : null,
+            $c->get(MentionLinker::class),
+        ));
+        $c->bind(MentionLinker::class, fn (Container $c) => new MentionLinker(
+            $c->get(UserRepository::class),
+            $c->get(FeatureFlags::class)->enabled('mentions'),
         ));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
         $c->bind(ReauthGate::class, fn (Container $c) => new ReauthGate($c->get(PasswordHasher::class)));

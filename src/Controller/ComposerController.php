@@ -31,7 +31,7 @@ final class ComposerController extends Controller
         if (mb_strlen($body) > $max) {
             $body = mb_substr($body, 0, $max);
         }
-        $html = $this->container->get(Markdown::class)->render($body);
+        $html = $this->container->get(Markdown::class)->render($body, ['link_mentions' => true]);
 
         return Response::json(['ok' => true, 'html' => $html]);
     }

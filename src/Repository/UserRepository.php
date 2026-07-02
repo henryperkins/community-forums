@@ -63,6 +63,28 @@ final class UserRepository
     }
 
     /**
+     * @param list<string> $usernames
+     * @return array<string,array{id:int,username:string}> lower(username) => row
+     */
+    public function activeMentionTargets(array $usernames): array
+    {
+        $usernames = array_values(array_unique(array_filter($usernames, static fn ($u): bool => is_string($u) && $u !== '')));
+        if ($usernames === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($usernames), '?'));
+        $rows = $this->db->fetchAll(
+            "SELECT id, username FROM users WHERE LOWER(username) IN ($place) AND status = 'active'",
+            array_map('strtolower', $usernames),
+        );
+        $out = [];
+        foreach ($rows as $row) {
+            $out[strtolower((string) $row['username'])] = ['id' => (int) $row['id'], 'username' => (string) $row['username']];
+        }
+        return $out;
+    }
+
+    /**
      * @param list<int> $ids
      * @return array<int,array{email:string,status:string}> id => contact
      */

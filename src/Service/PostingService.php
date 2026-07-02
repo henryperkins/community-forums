@@ -132,7 +132,7 @@ final class PostingService
                     'thread_id' => $threadId,
                     'user_id' => $user->id(),
                     'body' => $body,
-                    'body_html' => $this->markdown->render($body),
+                    'body_html' => $this->markdown->render($body, ['link_mentions' => true]),
                     'is_op' => true,
                     'is_anonymous' => $anon,
                     'is_pending' => $pending,
@@ -249,7 +249,7 @@ final class PostingService
                     'thread_id' => $threadId,
                     'user_id' => $user->id(),
                     'body' => $body,
-                    'body_html' => $this->markdown->render($body),
+                    'body_html' => $this->markdown->render($body, ['link_mentions' => true]),
                     'is_op' => false,
                     'is_anonymous' => $anon,
                     'is_pending' => $pending,
@@ -330,7 +330,7 @@ final class PostingService
         $added = array_values(array_filter($after, static fn (string $h): bool => !in_array(strtolower($h), $beforeLower, true)));
 
         $this->db->transaction(function () use ($post, $postId, $body, $user, $added): void {
-            $this->posts->update($postId, $body, $this->markdown->render($body), $user->id());
+            $this->posts->update($postId, $body, $this->markdown->render($body, ['link_mentions' => true]), $user->id());
             // Bind images the edit newly references. The edit composer uploads
             // pasted/dropped images as temp attachments exactly like create/reply;
             // without finalizing here they stay 'temp' (invisible to other readers)

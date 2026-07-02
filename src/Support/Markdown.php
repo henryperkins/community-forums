@@ -24,8 +24,11 @@ final class Markdown
 {
     private MarkdownConverter $converter;
 
-    public function __construct(private HtmlSanitizer $sanitizer, private ?CustomEmojiService $customEmoji = null)
-    {
+    public function __construct(
+        private HtmlSanitizer $sanitizer,
+        private ?CustomEmojiService $customEmoji = null,
+        private ?MentionLinker $mentionLinker = null,
+    ) {
         $environment = new Environment([
             'html_input' => 'escape',
             'allow_unsafe_links' => false,
@@ -44,15 +47,25 @@ final class Markdown
         $this->converter = new MarkdownConverter($environment);
     }
 
-    /** Render to sanitised HTML suitable for direct, unescaped output. */
-    public function render(string $markdown): string
+    /**
+     * Render to sanitised HTML suitable for direct, unescaped output.
+     *
+     * @param array{link_mentions?:bool} $options
+     */
+    public function render(string $markdown, array $options = []): string
     {
         if (trim($markdown) === '') {
             return '';
         }
         $html = $this->converter->convert($markdown)->getContent();
         $html = $this->renderEmojiShortcodes($html);
-        return $this->sanitizer->sanitize($html);
+        $html = $this->sanitizer->sanitize($html);
+        // Post-sanitizer pass: preserves class="mention" (which the sanitizer
+        // would otherwise strip) and only adds same-origin /u/{username} anchors.
+        if (!empty($options['link_mentions'])) {
+            $html = $this->mentionLinker?->link($html) ?? $html;
+        }
+        return $html;
     }
 
     private function renderEmojiShortcodes(string $html): string
