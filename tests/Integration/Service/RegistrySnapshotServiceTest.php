@@ -22,7 +22,7 @@ final class RegistrySnapshotServiceTest extends TestCase
 {
     private SigningHarness $root;
 
-    /** @var array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int} */
+    /** @var array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int,release_digest:string,release_document:string} */
     private array $ids;
 
     protected function setUp(): void
@@ -64,13 +64,14 @@ final class RegistrySnapshotServiceTest extends TestCase
 
     public function test_a_valid_snapshot_applies_and_reapply_is_an_unchanged_noop(): void
     {
+        $nextRelease = $this->root->mintRelease(['version' => '1.1.0']);
         $snap = $this->snapshot(['packages' => [[
             'uid' => 'acme/midnight-theme',
             'type' => 'theme',
             'name' => 'Midnight Theme',
             'releases' => [
-                ['version' => '1.0.0', 'digest' => hash('sha256', 'artifact:acme/midnight-theme:1.0.0'), 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
-                ['version' => '1.1.0', 'digest' => hash('sha256', 'artifact:acme/midnight-theme:1.1.0'), 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
+                ['version' => '1.0.0', 'digest' => $this->ids['release_digest'], 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
+                ['version' => '1.1.0', 'digest' => $nextRelease['digest'], 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
             ],
         ]]]);
 

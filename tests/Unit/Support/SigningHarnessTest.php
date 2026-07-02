@@ -47,19 +47,65 @@ final class SigningHarnessTest extends TestCase
         self::assertLessThan(time(), strtotime($doc['expires_at']));
     }
 
-    public function test_release_digest_is_sha256_and_doc_verifies(): void
+    public function test_release_digest_is_document_sha256_and_doc_verifies(): void
     {
         $root = SigningHarness::generate();
         $rel = $root->mintRelease();
 
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $rel['digest']);
+        self::assertSame(hash('sha256', $rel['json']), $rel['digest']);
         self::assertTrue(SigningHarness::verify($rel['json'], $rel['signature'], $root->publicKey()));
         $doc = json_decode($rel['json'], true);
         self::assertSame('rb-release.v1', $doc['format']);
-        self::assertSame($rel['digest'], $doc['digest']);
         self::assertSame('acme/midnight-theme', $rel['uid']);
         self::assertSame('1.0.0', $rel['version']);
         self::assertJson($rel['manifest_json']);
+    }
+
+    public function test_mint_release_digest_pins_exact_document_bytes(): void
+    {
+        $root = SigningHarness::generate();
+        $release = $root->mintRelease(['version' => '2.0.0']);
+
+        self::assertSame(hash('sha256', $release['json']), $release['digest']);
+        self::assertTrue(SigningHarness::verify($release['json'], $release['signature'], $root->publicKey()));
+
+        $doc = json_decode($release['json'], true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('rb-release.v1', $doc['format']);
+        self::assertSame('acme/midnight-theme', $doc['uid']);
+        self::assertSame('2.0.0', $doc['version']);
+        self::assertSame('approved', $doc['review']['status']);
+        self::assertSame('rb-manifest.v2', $doc['manifest']['format']);
+        self::assertSame($doc['manifest'], $release['manifest']);
+        self::assertSame(json_encode($doc['manifest'], JSON_UNESCAPED_SLASHES), $release['manifest_json']);
+
+        // One flipped byte is a different artifact: different digest, failed signature.
+        $tampered = SigningHarness::tamper($release['json']);
+        self::assertNotSame($release['digest'], hash('sha256', $tampered));
+        self::assertFalse(SigningHarness::verify($tampered, $release['signature'], $root->publicKey()));
+    }
+
+    public function test_mint_manifest_permission_lists_replace_wholesale(): void
+    {
+        $root = SigningHarness::generate();
+        $manifest = $root->mintManifest(['permissions' => ['data_classes' => []], 'type' => 'automation']);
+
+        self::assertSame([], $manifest['permissions']['data_classes']);
+        self::assertSame('automation', $manifest['type']);
+        self::assertSame('rb-manifest.v2', $manifest['format']);
+    }
+
+    public function test_mint_release_envelope_wraps_the_exact_document(): void
+    {
+        $root = SigningHarness::generate();
+        $envelope = $root->mintReleaseEnvelope(['review_status' => 'submitted']);
+
+        $body = json_decode($envelope['body'], true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('rb-release-envelope.v1', $body['format']);
+        self::assertSame($envelope['release']['json'], $body['document']);
+        self::assertSame($envelope['release']['signature'], base64_decode($body['signature'], true));
+        self::assertSame($root->keyId(), $body['key_id']);
+        self::assertSame('submitted', json_decode($body['document'], true)['review']['status']);
     }
 
     public function test_advisory_and_rotation_docs_verify_with_expected_claims(): void

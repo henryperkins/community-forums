@@ -26,7 +26,7 @@ final class RegistryRefreshWorkerTest extends TestCase
 {
     private SigningHarness $root;
 
-    /** @var array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int} */
+    /** @var array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int,release_digest:string,release_document:string} */
     private array $ids;
 
     protected function setUp(): void
@@ -72,11 +72,12 @@ final class RegistryRefreshWorkerTest extends TestCase
     /** @return array{0:string,1:string} snapshot + advisory envelope bodies */
     private function envelopes(): array
     {
+        $nextRelease = $this->root->mintRelease(['version' => '1.2.0']);
         $snap = $this->root->mintSnapshot(['packages' => [[
             'uid' => 'acme/midnight-theme', 'type' => 'theme',
             'releases' => [
-                ['version' => '1.0.0', 'digest' => hash('sha256', 'artifact:acme/midnight-theme:1.0.0'), 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
-                ['version' => '1.2.0', 'digest' => hash('sha256', 'artifact:acme/midnight-theme:1.2.0'), 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
+                ['version' => '1.0.0', 'digest' => $this->ids['release_digest'], 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
+                ['version' => '1.2.0', 'digest' => $nextRelease['digest'], 'core_min' => '0.1.0', 'core_max' => null, 'channel' => 'stable', 'advisory' => 'none'],
             ],
         ]]]);
         $adv = $this->root->mintAdvisory(['action' => 'warn']);

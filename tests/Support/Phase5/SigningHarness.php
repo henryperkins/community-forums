@@ -72,6 +72,7 @@ final class SigningHarness
     /** @param array<string,mixed> $overrides @return array{json:string,signature:string,key_id:string} */
     public function mintSnapshot(array $overrides = []): array
     {
+        $release = $this->mintRelease();
         $doc = array_replace([
             'format' => 'rb-registry-snapshot.v1',
             'registry' => 'rb-test',
@@ -81,10 +82,10 @@ final class SigningHarness
                 'uid' => 'acme/midnight-theme',
                 'type' => 'theme',
                 'releases' => [[
-                    'version' => '1.0.0',
-                    'digest' => hash('sha256', 'artifact:acme/midnight-theme:1.0.0'),
-                    'core_min' => '0.1.0',
-                    'core_max' => null,
+                    'version' => $release['version'],
+                    'digest' => $release['digest'],
+                    'core_min' => $release['manifest']['core']['min'] ?? null,
+                    'core_max' => $release['manifest']['core']['max'] ?? null,
                     'channel' => 'stable',
                     'advisory' => 'none',
                 ]],
@@ -104,37 +105,99 @@ final class SigningHarness
     }
 
     /**
-     * @param array<string,mixed> $overrides keys: uid, version, artifact (bytes the digest hashes), manifest (array)
-     * @return array{json:string,signature:string,key_id:string,digest:string,manifest_json:string,version:string,uid:string}
+     * A valid rb-manifest.v2 array (P5-02). Top-level overrides replace; `core`
+     * and `permissions` merge one level deep with permission kind lists replaced
+     * wholesale.
+     *
+     * @param array<string,mixed> $overrides
+     * @return array<string,mixed>
+     */
+    public function mintManifest(array $overrides = []): array
+    {
+        $base = [
+            'format' => 'rb-manifest.v2',
+            'uid' => 'acme/midnight-theme',
+            'type' => 'theme',
+            'version' => '1.0.0',
+            'name' => 'Midnight Theme',
+            'description' => 'A dark declarative theme for RetroBoards.',
+            'license' => 'MIT',
+            'core' => ['min' => '0.1.0', 'max' => null],
+            'permissions' => [
+                'capabilities' => [],
+                'data_classes' => ['package.own_storage'],
+                'api_scopes' => [],
+                'events' => [],
+                'outbound_hosts' => [],
+                'jobs' => [],
+            ],
+            'storage_quota_kb' => 64,
+            'support' => ['homepage' => 'https://acme.example/midnight'],
+        ];
+
+        foreach ($overrides as $key => $value) {
+            if (in_array($key, ['core', 'permissions'], true) && is_array($value)) {
+                $base[$key] = array_replace($base[$key], $value);
+                continue;
+            }
+            $base[$key] = $value;
+        }
+
+        return $base;
+    }
+
+    /**
+     * Mint a signed rb-release.v1 document: digest = sha256 over the exact JSON
+     * string; review approval lives inside the signed bytes.
+     *
+     * @param array<string,mixed> $overrides uid | version | review_status | manifest
+     * @return array{json:string,signature:string,key_id:string,digest:string,manifest:array<string,mixed>,manifest_json:string,version:string,uid:string}
      */
     public function mintRelease(array $overrides = []): array
     {
         $uid = (string) ($overrides['uid'] ?? 'acme/midnight-theme');
         $version = (string) ($overrides['version'] ?? '1.0.0');
-        $artifact = (string) ($overrides['artifact'] ?? "artifact:{$uid}:{$version}");
-        $manifest = (array) ($overrides['manifest'] ?? [
-            // Placeholder fixture shape; the real manifest.v2 schema is Inc 3
-            // (P5-02 SP1) scope and will extend this signed-doc contract.
-            'format' => 'rb-manifest.v2',
-            'uid' => $uid,
-            'type' => 'theme',
-            'version' => $version,
-        ]);
-        $digest = hash('sha256', $artifact);
-
+        $manifest = $this->mintManifest(
+            ((array) ($overrides['manifest'] ?? [])) + ['uid' => $uid, 'version' => $version],
+        );
         $signed = $this->signedDoc([
             'format' => 'rb-release.v1',
             'uid' => $uid,
             'version' => $version,
-            'digest' => $digest,
+            'review' => [
+                'status' => (string) ($overrides['review_status'] ?? 'approved'),
+                'decided_at' => '2026-07-01T00:00:00Z',
+            ],
             'manifest' => $manifest,
         ]);
 
         return $signed + [
-            'digest' => $digest,
-            'manifest_json' => json_encode($manifest, JSON_UNESCAPED_SLASHES) ?: '{}',
+            'digest' => hash('sha256', $signed['json']),
+            'manifest' => $manifest,
+            'manifest_json' => json_encode($manifest, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
             'version' => $version,
             'uid' => $uid,
+        ];
+    }
+
+    /**
+     * The rb-release-envelope.v1 body the release fetch endpoint serves.
+     *
+     * @param array<string,mixed> $overrides passed through to mintRelease()
+     * @return array{body:string,release:array<string,mixed>}
+     */
+    public function mintReleaseEnvelope(array $overrides = []): array
+    {
+        $release = $this->mintRelease($overrides);
+
+        return [
+            'body' => json_encode([
+                'format' => 'rb-release-envelope.v1',
+                'document' => $release['json'],
+                'signature' => base64_encode($release['signature']),
+                'key_id' => $release['key_id'],
+            ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+            'release' => $release,
         ];
     }
 

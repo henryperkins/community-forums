@@ -18,7 +18,7 @@ final class AppRegistryCatalogTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
-    /** @return array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int} */
+    /** @return array{registry_id:int,trust_key_id:int,publisher_id:int,package_id:int,release_id:int,release_digest:string,release_document:string} */
     private function seedCatalog(): array
     {
         $this->makeAdmin();
@@ -60,7 +60,7 @@ final class AppRegistryCatalogTest extends TestCase
         $this->assertStatus(200, $resp);
         self::assertSame('noindex', $resp->getHeader('x-robots-tag'));
         self::assertStringContainsString('1.0.0', $resp->body());
-        self::assertStringContainsString(substr(hash('sha256', 'artifact:acme/midnight-theme:1.0.0'), 0, 16), $resp->body(), 'digest (abbreviated) is displayed');
+        self::assertStringContainsString(substr($ids['release_digest'], 0, 16), $resp->body(), 'digest (abbreviated) is displayed');
         self::assertStringContainsString('root-1', $resp->body(), 'signing key id is displayed');
         self::assertStringContainsString('rb-test', $resp->body(), 'pinned source registry is displayed');
 
