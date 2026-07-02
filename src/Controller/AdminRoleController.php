@@ -11,6 +11,7 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\RoleCapabilityRepository;
 use App\Security\CapabilityCatalog;
+use App\Service\PermissionSimulatorService;
 use App\Service\RoleService;
 
 /**
@@ -67,6 +68,38 @@ final class AdminRoleController extends Controller
         } catch (ValidationException $e) {
             return $this->rolesView($e->errors, $this->oldDefinition($request, $e), 422);
         }
+    }
+
+    /** @param array<string,string> $params */
+    public function simulator(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $this->gate();
+
+        $capability = (string) $request->query('capability', '');
+        $result = null;
+        if ($capability !== '') {
+            $boardId = (int) $request->query('board_id', 0);
+            $at = (string) $request->query('at', '');
+            $result = $this->container->get(PermissionSimulatorService::class)->simulate(
+                $admin,
+                (string) $request->query('actor', 'guest'),
+                $capability,
+                $boardId > 0 ? $boardId : null,
+                $at === '' ? null : $at,
+            );
+        }
+
+        return $this->noindex($this->view('admin/role_simulator', [
+            'catalogue' => CapabilityCatalog::all(),
+            'result' => $result,
+            'q' => [
+                'actor' => (string) $request->query('actor', ''),
+                'capability' => $capability,
+                'board_id' => (string) $request->query('board_id', ''),
+                'at' => (string) $request->query('at', ''),
+            ],
+        ]));
     }
 
     /** @param array<string,string> $params */

@@ -14,6 +14,7 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
     <nav class="subnav">
         <a href="/admin">Dashboard</a>
         <a href="/admin/roles">Roles</a>
+        <a href="/admin/roles/simulator">Simulator</a>
     </nav>
 
     <div class="admin-pane">

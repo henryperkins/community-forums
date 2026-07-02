@@ -143,4 +143,32 @@ final class AppRoleAdminTest extends TestCase
         self::assertNotNull($clone);
         self::assertSame('custom', $clone['kind']);
     }
+
+    public function test_simulator_get_shows_decision_and_is_flag_gated(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $this->assertStatus(404, $this->get('/admin/roles/simulator'));
+
+        $this->enable();
+        $board = $this->makeBoard($this->makeCategory('SimHttp'));
+        $mod = $this->makeUser();
+        (new \App\Repository\BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $mod['id']);
+
+        $resp = $this->get('/admin/roles/simulator', [
+            'actor' => (string) $mod['username'],
+            'capability' => 'core.thread.lock',
+            'board_id' => (string) $board['id'],
+        ]);
+        $this->assertStatus(200, $resp);
+        $this->assertSeeText($resp, 'Allowed');
+        $this->assertSeeText($resp, 'core.thread.lock');
+        self::assertSame('noindex', $resp->getHeader('x-robots-tag'));
+
+        $resp = $this->get('/admin/roles/simulator', [
+            'actor' => 'guest',
+            'capability' => 'core.thread.lock',
+            'board_id' => (string) $board['id'],
+        ]);
+        $this->assertSeeText($resp, 'Denied');
+    }
 }

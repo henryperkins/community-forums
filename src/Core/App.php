@@ -163,6 +163,7 @@ use App\Service\OAuth\ProviderRegistry;
 use App\Service\PostingService;
 use App\Service\PollService;
 use App\Service\PersonalOrganizationService;
+use App\Service\PermissionSimulatorService;
 use App\Service\PreferenceService;
 use App\Service\ProfileMediaService;
 use App\Service\RateLimitService;
@@ -1104,6 +1105,13 @@ final class App
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
         ));
+        $c->bind(PermissionSimulatorService::class, fn (Container $c) => new PermissionSimulatorService(
+            $c->get(CapabilityResolver::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+        ));
         $c->bind(AccountLifecycleService::class, fn (Container $c) => new AccountLifecycleService(
             $c->get(Database::class),
             $c->get(UserRepository::class),
@@ -1396,6 +1404,7 @@ final class App
         $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
         $r->get('/admin/roles', [AdminRoleController::class, 'index']);
         $r->post('/admin/roles', [AdminRoleController::class, 'create']);
+        $r->get('/admin/roles/simulator', [AdminRoleController::class, 'simulator']);
         $r->get('/admin/roles/{id}', [AdminRoleController::class, 'edit']);
         $r->post('/admin/roles/{id}', [AdminRoleController::class, 'update']);
         $r->post('/admin/roles/{id}/clone', [AdminRoleController::class, 'clone']);

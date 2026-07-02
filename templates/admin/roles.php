@@ -11,6 +11,7 @@ $this->section('title', 'Roles');
     <nav class="subnav">
         <a href="/admin">Dashboard</a>
         <a class="active" href="/admin/roles">Roles</a>
+        <a href="/admin/roles/simulator">Simulator</a>
     </nav>
 
     <div class="admin-pane">
