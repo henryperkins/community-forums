@@ -2186,30 +2186,40 @@ final class ResolverParityTest extends TestCase
     public function test_oracle_canmoderate_matches_the_real_moderation_service(): void
     {
         // Guards the oracle's pinned copy of the canModerate predicate against
-        // silent drift from ModerationService::canModerate.
+        // silent drift by comparing it to the REAL ModerationService::canModerate.
         $this->seedFixture();
         $svc = $this->service();
-        $modService = null; // built below via the container-free path
         $board = $this->makeBoard($this->makeCategory('Pin'));
         $modRow = $this->makeUser();
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modRow['id']);
 
+        $modService = new \App\Service\ModerationService(
+            $this->db,
+            $this->threads(),
+            $this->posts(),
+            new \App\Repository\ModerationLogRepository($this->db),
+            $this->posting(),
+            new WriteGate(),
+            new BoardModeratorRepository($this->db),
+            $this->boards(),
+            $this->users(),
+        );
+
         $cases = [
-            [User::fromRow($this->makeAdmin()), (int) $board['id']],
-            [User::fromRow($modRow), (int) $board['id']],
-            [User::fromRow($this->makeUser(['role' => 'moderator'])), (int) $board['id']],
-            [User::fromRow($this->makeUser(['status' => 'suspended'])), (int) $board['id']],
-            [User::fromRow($this->makeUser()), (int) $board['id']],
+            User::fromRow($this->makeAdmin()),
+            User::fromRow($modRow),
+            User::fromRow($this->makeUser(['role' => 'moderator'])),
+            User::fromRow($this->makeUser(['status' => 'suspended'])),
+            User::fromRow($this->makeUser()),
         ];
-        foreach ($cases as [$user, $boardId]) {
+        foreach ($cases as $user) {
             self::assertSame(
-                (new WriteGate())->canWrite($user) && ($user->isAdmin() || (new BoardModeratorRepository($this->db))->isModerator($boardId, $user->id())),
-                $svc->legacyCanModerate($user, $boardId),
-                'oracle predicate must equal the ModerationService::canModerate definition',
+                $modService->canModerate($user, (int) $board['id']),
+                $svc->legacyCanModerate($user, (int) $board['id']),
+                'oracle predicate must equal the real ModerationService::canModerate for ' . $user->username(),
             );
         }
         self::assertFalse($svc->legacyCanModerate(null, (int) $board['id']));
-        self::assertNull($modService);
     }
 
     public function test_render_produces_the_archived_report_shape(): void
