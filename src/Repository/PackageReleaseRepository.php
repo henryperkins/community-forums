@@ -38,6 +38,23 @@ final class PackageReleaseRepository
         );
     }
 
+    /** Inc 3: persist the verified signed release metadata after acquisition. */
+    public function hydrateSignedMetadata(int $id, string $manifestJson, string $signature, string $keyId, string $reviewStatus): void
+    {
+        $this->db->run(
+            'UPDATE package_releases
+                SET manifest_json = :manifest_json, signature = :signature, signed_key_id = :signed_key_id, review_status = :review_status
+              WHERE id = :id',
+            [
+                'manifest_json' => $manifestJson,
+                'signature' => $signature,
+                'signed_key_id' => $keyId,
+                'review_status' => $reviewStatus,
+                'id' => $id,
+            ],
+        );
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function forPackage(int $packageId): array
     {
