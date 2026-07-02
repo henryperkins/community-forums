@@ -12,6 +12,7 @@ use App\Security\PasswordHasher;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
+use App\Service\Packages\ThemeStateService;
 
 /**
  * Foundation F9 — measures baseline metrics on the Phase5FixtureSeeder corpus,
@@ -266,6 +267,71 @@ final class BaselineMetricsService
         ];
     }
 
+    /** @return array<string,mixed> */
+    public function measureThemeBuildApply(
+        PackageLifecycleService $lifecycle,
+        ThemeStateService $themes,
+        Database $db,
+        PackageArtifactStore $store,
+        int $samples = 8,
+    ): array {
+        if (!$db->pdo()->inTransaction()) {
+            throw new \RuntimeException('Theme build/apply sampling must run inside a caller-owned rollback transaction.');
+        }
+
+        $samples = max(1, $samples);
+        $prefix = 'themebench' . (int) $db->fetchValue("SELECT COUNT(*) FROM packages WHERE package_uid LIKE 'bench/pkg-themebench%'");
+        $pair = sodium_crypto_sign_keypair();
+        $publicKey = sodium_crypto_sign_publickey($pair);
+        $secretKey = sodium_crypto_sign_secretkey($pair);
+        $keyId = $prefix . '-root';
+        $admin = $this->benchAdmin($db, $prefix);
+
+        $durations = [];
+        for ($i = 0; $i < $samples; $i++) {
+            $seeded = $this->seedBenchPackage(
+                $db,
+                $store,
+                $prefix . '-theme',
+                $i,
+                $keyId,
+                $publicKey,
+                $secretKey,
+                self::themeBenchAccent($i),
+            );
+            $installedId = $lifecycle->install($admin, 'password123', $seeded['package_id'], $seeded['release_v1_id']);
+            $lifecycle->consent($admin, 'password123', $installedId);
+            $lifecycle->enable($admin, 'password123', $installedId);
+
+            $t0 = hrtime(true);
+            $themes->activate($admin, 'password123', $installedId);
+            $durations[] = (hrtime(true) - $t0) / 1_000_000;
+        }
+
+        return [
+            'route_or_job' => 'theme_build_apply',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'synthetic theme package build/activate samples',
+            'role_assignment_count' => 0,
+            'installed_package_count' => $samples,
+            'concurrency' => 1,
+            'cache_state' => 'warm artifact cache',
+            'window' => $samples . ' samples',
+            'samples' => $samples,
+            'p50' => self::percentile($durations, 50),
+            'p95' => self::percentile($durations, 95),
+            'p99' => self::percentile($durations, 99),
+            'query_count' => null,
+            'query_time_ms' => round(array_sum($durations), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => 0.0,
+        ];
+    }
+
     private function benchAdmin(Database $db, string $prefix): User
     {
         $users = new UserRepository($db);
@@ -296,6 +362,7 @@ final class BaselineMetricsService
         string $keyId,
         string $publicKey,
         string $secretKey,
+        string $accent = '#8f3d12',
     ): array {
         $uid = 'bench/pkg-' . $prefix . '-' . $i;
         $registryId = $db->insert(
@@ -315,11 +382,11 @@ final class BaselineMetricsService
             [$uid, $registryId, $publisherId, 'Budget Package ' . $i, 'theme', 'reviewed_declarative'],
         );
 
-        $v1 = $this->mintBenchRelease($uid, '1.0.0', 'Budget Package ' . $i, $keyId, $secretKey);
+        $v1 = $this->mintBenchRelease($uid, '1.0.0', 'Budget Package ' . $i, $keyId, $secretKey, $accent);
         $v1Id = $this->insertBenchRelease($db, $packageId, $v1);
         $store->put($v1['digest'], $v1['json']);
 
-        $v2 = $this->mintBenchRelease($uid, '1.1.0', 'Budget Package ' . $i, $keyId, $secretKey);
+        $v2 = $this->mintBenchRelease($uid, '1.1.0', 'Budget Package ' . $i, $keyId, $secretKey, $accent);
         $v2Id = $this->insertBenchRelease($db, $packageId, $v2);
         $store->put($v2['digest'], $v2['json']);
 
@@ -331,7 +398,14 @@ final class BaselineMetricsService
     /**
      * @return array{json:string,signature:string,key_id:string,digest:string,manifest:array<string,mixed>,manifest_json:string,version:string}
      */
-    private function mintBenchRelease(string $uid, string $version, string $name, string $keyId, string $secretKey): array
+    private function mintBenchRelease(
+        string $uid,
+        string $version,
+        string $name,
+        string $keyId,
+        string $secretKey,
+        string $accent = '#8f3d12',
+    ): array
     {
         $manifest = [
             'format' => 'rb-manifest.v2',
@@ -354,7 +428,7 @@ final class BaselineMetricsService
             'support' => ['homepage' => 'https://example.test/package-budget'],
             'theme' => [
                 'schema_version' => 1,
-                'tokens' => ['--accent' => '#8f3d12', '--surface' => '#fff7dc', '--text' => '#241706'],
+                'tokens' => ['--accent' => $accent, '--surface' => '#fff7dc', '--text' => '#241706'],
                 'dark_tokens' => ['--accent' => '#d2b062', '--surface' => '#283440', '--text' => '#ece4d2'],
                 'assets' => [],
             ],
@@ -379,6 +453,13 @@ final class BaselineMetricsService
             'manifest_json' => json_encode($manifest, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
             'version' => $version,
         ];
+    }
+
+    private static function themeBenchAccent(int $i): string
+    {
+        $accents = ['#8f3d12', '#1f4fbf', '#285f56', '#7346a2', '#9a3412', '#2563eb', '#4d6f10', '#7c2d12'];
+
+        return $accents[$i % count($accents)];
     }
 
     /** @param array{json:string,signature:string,key_id:string,digest:string,manifest:array<string,mixed>,manifest_json:string,version:string} $release */

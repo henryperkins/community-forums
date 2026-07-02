@@ -603,6 +603,23 @@ try {
                 new LocalPackageBlockRepository($db),
                 new PackageAdvisoryRepository($db),
             );
+            $budgetThemeState = new ThemeStateService(
+                $db,
+                new PackageThemeRepository($db),
+                new InstalledPackageRepository($db),
+                new PackageRepository($db),
+                new PackageReleaseRepository($db),
+                $benchStore,
+                $securityGate,
+                new ThemeBuildService($db, new PackageThemeRepository($db), new ManifestValidator(), new ThemeAssetScanner()),
+                new WriteGate(),
+                new ReauthGate(new PasswordHasher()),
+                new SettingRepository($db),
+                new ModerationLogRepository($db),
+                new PackageHistoryRepository($db),
+                null,
+                (bool) $config->get('theme.safe_mode', false),
+            );
             $lifecycle = new PackageLifecycleService(
                 $db,
                 new PackageRepository($db),
@@ -620,6 +637,8 @@ try {
                 new WriteGate(),
                 new ModerationLogRepository($db),
                 (int) $config->get('packages.retention_days', 30),
+                null,
+                $budgetThemeState,
             );
             $updates = new PackageUpdateService(
                 $db,
@@ -638,7 +657,7 @@ try {
                 new WriteGate(),
                 new ModerationLogRepository($db),
             );
-            $report = new Phase5BudgetReportService($db, $resolver, new TrustChainVerifier(), $lifecycle, $updates, $benchStore);
+            $report = new Phase5BudgetReportService($db, $resolver, new TrustChainVerifier(), $lifecycle, $updates, $benchStore, $budgetThemeState);
             $path = $root . '/docs/evidence/phase5/performance-budgets.md';
             try {
                 // Non-mutating: seed + measure inside a transaction that is always

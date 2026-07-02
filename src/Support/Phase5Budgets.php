@@ -26,6 +26,8 @@ final class Phase5Budgets
         'registry.fetch_p95'             => ['metric' => 'Registry fetch duration',                       'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'staged-enablement'],
         'registry.signature_verify_p95'  => ['metric' => 'Signature verification per package',            'target' => 250,   'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc2'],
         'package.install_update_p95'     => ['metric' => 'Declarative package install/update',            'target' => 10000, 'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc3'],
+        // ADR 0004 D11 covers declarative package operations under the 10s p95 umbrella.
+        'theme.build_apply_p95'          => ['metric' => 'Theme build + activate (declarative package)',  'target' => 10000, 'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc4'],
         'resolver.p95'                   => ['metric' => 'Capability resolver decision',                  'target' => 5,     'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'foundation'],
         'webauthn.ceremony_p95'          => ['metric' => 'WebAuthn/TOTP ceremony (server time)',          'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc7'],
         'oidc.discovery_p95_cached'      => ['metric' => 'OIDC discovery/JWKS (cached)',                  'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc8'],
