@@ -11,10 +11,10 @@
 - Hardware class: unknown · OS/isolation: Linux
 - Fixture: phase5_fixture_v2 · role assignments: 4
 - Window: 200 iterations · concurrency: 1 · cache: cold
-- Legacy read p50/p95/p99 (ms): 0.7815 / 1.1924 / 1.5593
-- Resolver p50/p95/p99 (ms): 1.8308 / 2.7967 / 3.2847 · route/job: `capability_resolver_can`
-- Signature verify p50/p95/p99 (ms): 0.3065 / 0.3799 / 0.4592 · route/job: `registry_signature_verify`
-- Queries: 600 · query time (ms): 163.3674 · peak mem (bytes): 4194304 · error rate: 0
+- Legacy read p50/p95/p99 (ms): 0.8629 / 1.4031 / 1.9715
+- Resolver p50/p95/p99 (ms): 2.2859 / 3.171 / 3.5977 · route/job: `capability_resolver_can`
+- Signature verify p50/p95/p99 (ms): 0.5176 / 0.5608 / 0.5893 · route/job: `registry_signature_verify`
+- Queries: 600 · query time (ms): 187.5173 · peak mem (bytes): 4194304 · error rate: 0
 
 ## Budgets vs D11 targets (ADR 0004 D11)
 
@@ -22,9 +22,9 @@
 |---|---|---|---|---|
 | `registry.snapshot_freshness` | Registry snapshot freshness tolerance | 86400 s (max) | 86400 s enforced fail-closed (RegistrySnapshotService expired_snapshot refusal) | CONFIG |
 | `registry.fetch_p95` | Registry fetch duration | 2000 ms (p95) | — | PENDING (staged-enablement) |
-| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.3799 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
+| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5608 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
 | `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | — | PENDING (inc3) |
-| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 2.7967 ms resolver (baseline 1.1924 ms legacy) | MEASURED (PASS) |
+| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 3.171 ms resolver (baseline 1.4031 ms legacy) | MEASURED (PASS) |
 | `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | — | PENDING (inc7) |
 | `oidc.discovery_p95_cached` | OIDC discovery/JWKS (cached) | 2000 ms (p95) | — | PENDING (inc8) |
 | `oidc.discovery_p95_cold` | OIDC discovery/JWKS (cold) | 5000 ms (p95) | — | PENDING (inc8) |

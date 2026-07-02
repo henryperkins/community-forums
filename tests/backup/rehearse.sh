@@ -16,7 +16,9 @@
 # and the dedicated retroboards_backup_{src,dst} databases — never dev/test/prod
 # data. Override DB_CONTAINER / DB_ROOT_PASSWORD / DB_MYSQL_CLIENT /
 # DB_MYSQLDUMP_CLIENT / BACKUP_REHEARSAL_PORT when a checkout uses a differently
-# named local DB container or port 8021 is already occupied.
+# named local DB container or port 8021 is already occupied. Set DB_CONTAINER=host
+# to use host MariaDB clients against existing throwaway databases; in host mode
+# DB_BACKUP_SRC and DB_BACKUP_DST may name already-granted databases.
 #
 #   tests/backup/rehearse.sh                 # human run
 #   tests/backup/rehearse.sh | tee docs/evidence/backup-restore/rehearsal.log
@@ -28,17 +30,49 @@ CONTAINER="${DB_CONTAINER:-rb-mariadb}"
 ROOT_USER="${DB_ROOT_USER:-root}"
 ROOT_PASSWORD="${DB_ROOT_PASSWORD:-rootpw}"
 DB_USER="${DB_USERNAME:-retro}"
+DB_HOST="${DB_HOST:-127.0.0.1}"
+DB_PORT="${DB_PORT:-3306}"
 MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
 MYSQLDUMP_CLIENT="${DB_MYSQLDUMP_CLIENT:-mariadb-dump}"
-SRC=retroboards_backup_src
-DST=retroboards_backup_dst
+SRC="${DB_BACKUP_SRC:-retroboards_backup_src}"
+DST="${DB_BACKUP_DST:-retroboards_backup_dst}"
 PORT="${BACKUP_REHEARSAL_PORT:-8021}"
 DUMP="$(mktemp -d)/retroboards-backup.sql"
 
 # rootpw is the fixed local rb-mariadb dev-container password (see project README);
 # this script only touches throwaway rehearsal databases — never a production credential.
-myq()   { docker exec -i "$CONTAINER" "$MYSQL_CLIENT"     "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
-mydump(){ docker exec    "$CONTAINER" "$MYSQLDUMP_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+if [ "$CONTAINER" = "host" ]; then
+  myq()   { "$MYSQL_CLIENT"     "-h$DB_HOST" "-P$DB_PORT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+  mydump(){ "$MYSQLDUMP_CLIENT" "-h$DB_HOST" "-P$DB_PORT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+else
+  myq()   { docker exec -i "$CONTAINER" "$MYSQL_CLIENT"     "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+  mydump(){ docker exec    "$CONTAINER" "$MYSQLDUMP_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+fi
+
+reset_db() {
+  local db="$1" exists tables drop_list
+  if [ "$CONTAINER" != "host" ]; then
+    myq -e "DROP DATABASE IF EXISTS \`$db\`;
+            CREATE DATABASE \`$db\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+            GRANT ALL PRIVILEGES ON \`$db\`.* TO '$DB_USER'@'%'; FLUSH PRIVILEGES;"
+    return
+  fi
+
+  exists=$(myq -N -e "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$db'")
+  if [ -z "$exists" ]; then
+    echo "   FAIL: host-mode database '$db' does not exist or is not visible to $ROOT_USER." >&2
+    exit 1
+  fi
+  mapfile -t tables < <(myq -N -e "SELECT CONCAT('\`', table_schema, '\`.\`', table_name, '\`')
+                                 FROM information_schema.tables
+                                 WHERE table_schema='$db' AND table_type='BASE TABLE'
+                                 ORDER BY table_name")
+  if [ "${#tables[@]}" -gt 0 ]; then
+    printf -v drop_list '%s,' "${tables[@]}"
+    drop_list="${drop_list%,}"
+    myq -e "SET FOREIGN_KEY_CHECKS=0; DROP TABLE $drop_list; SET FOREIGN_KEY_CHECKS=1;"
+  fi
+}
 
 snapshot() {  # snapshot <db> <outfile>  →  "table count checksum" per base table, sorted
   local db="$1" out="$2" tables union cklist
@@ -60,9 +94,7 @@ snapshot() {  # snapshot <db> <outfile>  →  "table count checksum" per base ta
 echo "== Backup → restore rehearsal (PHASE_2_RUNBOOK §7) =="
 
 echo "-- 1. Build + seed source DB ($SRC)"
-myq -e "DROP DATABASE IF EXISTS \`$SRC\`;
-        CREATE DATABASE \`$SRC\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        GRANT ALL PRIVILEGES ON \`$SRC\`.* TO '$DB_USER'@'%'; FLUSH PRIVILEGES;"
+reset_db "$SRC"
 DB_DATABASE="$SRC" php bin/console migrate >/dev/null
 DB_DATABASE="$SRC" php tests/browser/seed.php >/dev/null
 echo "   seeded."
@@ -83,9 +115,7 @@ DUMP_BYTES=$(wc -c < "$DUMP")
 echo "   wrote $DUMP ($DUMP_BYTES bytes)."
 
 echo "-- 4. Restore into a fresh DB ($DST)"
-myq -e "DROP DATABASE IF EXISTS \`$DST\`;
-        CREATE DATABASE \`$DST\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-        GRANT ALL PRIVILEGES ON \`$DST\`.* TO '$DB_USER'@'%'; FLUSH PRIVILEGES;"
+reset_db "$DST"
 myq "$DST" < "$DUMP"
 echo "   restored."
 

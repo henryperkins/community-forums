@@ -50,6 +50,7 @@ php bin/console worker:email          # drain instant notification-email queue
 php bin/console worker:digest         # send due daily digests
 php bin/console worker:purge-ips      # anonymise captured IPs older than retention window
 php bin/console worker:attachments    # sweep orphaned / deleted-parent uploads
+php bin/console worker:registry-refresh   # fetch+verify signed registry snapshots/advisories (no-op while package_registry is dark)
 
 # Browser evidence + backup rehearsal (separate throwaway DBs)
 cd tests/browser && npm install && npx playwright install --with-deps chromium && npm run evidence

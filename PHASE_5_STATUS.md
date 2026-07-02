@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress — Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow) landed 2026-07-02: `CapabilityResolver` + legacy-authority projection behind the dark `capabilities` flag, fail-open `ResolverShadow` on `canModerate`/`canPost`, a ZERO-mismatch archived parity corpus (`docs/evidence/phase5/resolver-parity.md`), `resolver.p95` MEASURED vs the 5ms D11 budget, and the no-JS role editor + permission simulator with browser/axe evidence. Increment 6 (enforcement cutover) stays blocked until shadow soak; Increment 2 (registry) remains unblocked. Package, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
+**Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow) landed 2026-07-02: `CapabilityResolver` + legacy-authority projection behind the dark `capabilities` flag, fail-open `ResolverShadow` on `canModerate`/`canPost`, a ZERO-mismatch archived parity corpus (`docs/evidence/phase5/resolver-parity.md`), `resolver.p95` MEASURED vs the 5ms D11 budget, and the no-JS role editor + permission simulator with browser/axe evidence. Increment 2 (P5-01 registry protocol + package identity) landed 2026-07-02 behind the dark `package_registry` flag: signed registry metadata, staff read-only browse, trust console, refresh worker, advisory/blocklist response, and no install path until Inc 3. Increment 6 (enforcement cutover) stays blocked until shadow soak. Package install/manifest/lifecycle, passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence.
 **Last updated:** 2026-07-02
-**Branch:** `phase5-inc1-resolver-shadow`
-**Suite:** `composer test` → **981 tests / 5188 assertions, green** on two consecutive runs (fresh and reused-schema paths; post-review hardening 2026-07-02). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` → **4 tests / 8 assertions**, `vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php --filter test_phase5_foundation_flags_default_dark` → **1 test / 20 assertions**, `php bin/console verify:resolver-parity` → **1551 tuples / 0 mismatches** (fixture v2). Browser evidence: `npm run evidence` → **31 passed / 1 skipped**, `npm run a11y` → **8 passed** across desktop + mobile.
+**Branch:** `phase5-inc2-registry-protocol`
+**Suite:** `composer test` -> **1032 tests / 5441 assertions, green** on two consecutive runs (fresh and reused-schema paths, 2026-07-02). Focused closeout checks: `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php` -> **3 tests / 25 assertions**, `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` -> **4 tests / 8 assertions**, `APP_ENV=testing php bin/console verify:resolver-parity` -> **1551 tuples / 0 mismatches**, `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 MEASURED (PASS) 0.5608 ms; registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**, `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** (local grants could not create `retroboards_upgrade_rehearsal`; `retroboards_e2e` was used as the throwaway DB), `tests/backup/rehearse.sh` host mode -> **106 tables / 273 rows / 169326-byte backup restored byte-for-byte and booted**. Browser evidence: `npm run evidence` -> **33 passed / 1 skipped**, focused registry journey -> **2 passed**, `npm run a11y` -> **8 passed** across desktop + mobile.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -221,6 +221,43 @@ simulator.
   simulator (`30-admin-role-created.png`, `31-admin-role-simulator.png`), and axe
   found no serious/critical violations on `/admin/roles` or
   `/admin/roles/simulator`.
+
+## Increment 2 landed (2026-07-02) - P5-01 registry protocol, deploy-dark
+
+The registry protocol and package identity increment is complete behind the dark
+`package_registry` flag. Staff can browse signed metadata and operate trust
+response controls; package install, manifest validation, lifecycle, and runtime
+behavior remain absent until Inc 3.
+
+- **Trust-chain verifier:** `TrustChainVerifier` verifies detached Ed25519
+  signatures over exact JSON bytes, fail-closed, public-key-only, with explicit
+  refusal codes for bad signatures, unknown/revoked/windowed keys, malformed
+  documents, wrong formats, and forged rotations. TM-SC-01 and TM-SC-03 point to
+  `tests/Unit/Security/Registry/TrustChainVerifierTest.php`.
+- **Snapshots + package identity:** `RegistrySnapshotService` ingests signed,
+  expiring snapshots with anti-replay, stale/offline cache behavior, source
+  pinning, uid-conflict refusal, immutable release digests, local trust-class
+  rejection, and core-version compatibility badges. TM-SC-02 and TM-SC-05 point
+  to `tests/Integration/Service/RegistrySnapshotServiceTest.php`.
+- **Rotation, revocation, advisories, and blocklist:** the admin trust console
+  pins public keys, applies signed rotations, revokes keys, ingests advisories,
+  acknowledges advisories, toggles a registry source, and manages the
+  registry-independent local blocklist. TM-SC-04 points to
+  `tests/Integration/Core/AppRegistryAdminTest.php`.
+- **Refresh worker:** `php bin/console worker:registry-refresh` fetches the
+  snapshot/advisory envelopes through `EgressGuard`, applies verification, emits
+  telemetry, and no-ops while `package_registry` is dark.
+- **Read-only browse:** `/admin/packages` and `/admin/registries` are staff-only,
+  noindexed, server-rendered/no-JS surfaces. They intentionally show that
+  **install does not exist yet**.
+- **Evidence:** protocol contract `docs/phase5/registry-protocol.md`, operator
+  runbook `docs/runbooks/package_registry.md`, browser evidence
+  `docs/evidence/browser/{desktop,mobile}/32-admin-package-catalogue.png`,
+  `33-admin-package-detail.png`, `34-admin-registry-trust.png`, and axe coverage
+  in `tests/browser/a11y.spec.ts`.
+- **Performance:** `docs/evidence/phase5/performance-budgets.md` records
+  `registry.signature_verify_p95` as **MEASURED (PASS)**, snapshot freshness as
+  **CONFIG**, and `registry.fetch_p95` as staged-enablement pending.
 
 ## Product-owner approvals recorded
 
