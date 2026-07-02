@@ -142,6 +142,14 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
+  await visit(page, '/admin/themes');
+  await expect(page.getByRole('heading', { name: 'Themes' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/themes/safe-mode');
+  await expect(page.getByRole('heading', { name: 'Theme safe mode' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
   await visit(page, '/admin/registries');
   await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);

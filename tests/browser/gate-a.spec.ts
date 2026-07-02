@@ -58,6 +58,14 @@ function lifecyclePackageUid(info: TestInfo): string {
   return info.project.name === 'mobile' ? 'acme/midnight-theme-mobile' : 'acme/midnight-theme';
 }
 
+function themeEvidenceUid(): string {
+  return 'acme/theme-evidence';
+}
+
+function themeEvidenceAltUid(): string {
+  return 'acme/theme-evidence-alt';
+}
+
 async function openLifecyclePackageDetail(page: Page, info: TestInfo): Promise<void> {
   await visit(page, '/admin/packages');
   const row = page.locator('table.audit tbody tr').filter({ hasText: lifecyclePackageUid(info) }).first();
@@ -73,6 +81,43 @@ async function login(page: Page, email: string): Promise<void> {
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => !u.pathname.endsWith('/login')); // PRG redirect off the login page
   await dismissTour(page);
+}
+
+async function clickThemePreview(page: Page, uid: string): Promise<void> {
+  await visit(page, '/admin/themes');
+  const row = page
+    .getByRole('region', { name: 'Installed theme packages' })
+    .locator('tbody tr')
+    .filter({ hasText: uid })
+    .first();
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: 'Preview' }).click();
+  await expect(page.getByRole('status').getByText('Previewing this theme in your session only.')).toBeVisible();
+}
+
+async function activateTheme(page: Page, uid: string): Promise<void> {
+  await visit(page, '/admin/themes');
+  const row = page
+    .getByRole('region', { name: 'Installed theme packages' })
+    .locator('tbody tr')
+    .filter({ hasText: uid })
+    .first();
+  await expect(row).toBeVisible();
+  await row.locator('form[action$="/activate"] input[name="current_password"]').fill('password123');
+  await row.getByRole('button', { name: 'Activate' }).click();
+  await expect(page.getByRole('status').getByText('Theme activated.')).toBeVisible();
+}
+
+async function activeThemeDigest(page: Page): Promise<string> {
+  const href = await page
+    .locator('link[rel="stylesheet"][href^="/theme/"][href$=".css"]')
+    .first()
+    .getAttribute('href');
+  expect(href, 'active package theme stylesheet link').toBeTruthy();
+  const match = href!.match(/\/theme\/([a-f0-9]{64})\.css/);
+  expect(match, `active theme href should be digest-addressed: ${href}`).not.toBeNull();
+
+  return match![1];
 }
 
 async function dismissTour(page: Page): Promise<void> {
@@ -310,6 +355,53 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
   await page.fill('input[name="current_password"]', 'password123');
   await page.getByRole('button', { name: 'Grant and continue' }).click();
   await expect(page.getByRole('row', { name: /^Version 1\.1\.0$/ })).toBeVisible();
+});
+
+test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', async ({ page, browser, baseURL }, info) => {
+  await login(page, 'admin@retro.test');
+
+  await clickThemePreview(page, themeEvidenceUid());
+  await expect(page.locator('link[href^="/theme/preview.css"]')).toHaveCount(1);
+  await shot(page, info, '39-admin-themes-preview');
+
+  const anonymous = await browser.newContext({ baseURL });
+  try {
+    const anon = await anonymous.newPage();
+    await visit(anon, '/');
+    await expect(anon.locator('link[href^="/theme/preview.css"]')).toHaveCount(0);
+  } finally {
+    await anonymous.close();
+  }
+
+  await activateTheme(page, themeEvidenceUid());
+  await visit(page, '/');
+  const firstDigest = await activeThemeDigest(page);
+  await shot(page, info, '40-admin-theme-active');
+
+  await visit(page, '/admin/themes/safe-mode');
+  await page.getByRole('button', { name: 'Enter safe mode' }).click();
+  await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  await shot(page, info, '41-admin-theme-safe-mode');
+  await visit(page, '/');
+  await expect(page.locator('link[href*="/theme/"]')).toHaveCount(0);
+
+  await visit(page, '/admin/themes/safe-mode');
+  await page.fill('form:has(input[name="exit"]) input[name="current_password"]', 'password123');
+  await page.getByRole('button', { name: 'Exit safe mode' }).click();
+  await expect(page.getByRole('status').getByText('Theme safe mode was exited.')).toBeVisible();
+
+  await activateTheme(page, themeEvidenceAltUid());
+  await visit(page, '/');
+  const secondDigest = await activeThemeDigest(page);
+  expect(secondDigest).not.toBe(firstDigest);
+
+  await visit(page, '/admin/themes');
+  await page.fill('form[action="/admin/themes/rollback"] input[name="current_password"]', 'password123');
+  await page.getByRole('button', { name: 'Roll back' }).click();
+  await expect(page.getByRole('status').getByText('Rolled back to the last-known-good theme.')).toBeVisible();
+  await visit(page, '/');
+  await expect(page.locator(`link[href="/theme/${firstDigest}.css"]`)).toHaveCount(1);
+  await shot(page, info, '42-admin-theme-rollback');
 });
 
 test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
