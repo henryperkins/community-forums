@@ -34,11 +34,7 @@ foreach ($installed_permissions as $permission) {
         <h1><?= $e($package['name']) ?></h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/packages">Packages</a>
-        <a href="/admin/registries">Registry trust</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <?php foreach (($errors ?? []) as $err): ?>

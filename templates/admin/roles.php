@@ -8,11 +8,7 @@ $this->section('title', 'Roles');
         <h1>Roles &amp; capabilities</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a class="active" href="/admin/roles">Roles</a>
-        <a href="/admin/roles/simulator">Simulator</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'roles', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <p class="muted">Definitions are recorded but <strong>inert</strong>: nothing enforces them until the

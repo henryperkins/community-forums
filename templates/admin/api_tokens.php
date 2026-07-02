@@ -2,16 +2,14 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'API tokens');
+$selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_string'));
 ?>
 <div class="admin">
     <header class="admin-head">
         <h1>API tokens</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a class="active" href="/admin/api-tokens">API tokens</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'api_tokens', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <?php if (!empty($new_token)): ?>
@@ -33,13 +31,13 @@ $this->section('title', 'API tokens');
             <fieldset>
                 <legend>Scopes</legend>
                 <?php foreach ($scopes_catalogue as $scope => $desc): ?>
-                    <label><input type="checkbox" name="scopes[]" value="<?= $e($scope) ?>"> <?= $e($scope) ?> — <?= $e($desc) ?></label>
+                    <label><input type="checkbox" name="scopes[]" value="<?= $e($scope) ?>"<?= in_array((string) $scope, $selectedScopes, true) ? ' checked' : '' ?>> <?= $e($scope) ?> — <?= $e($desc) ?></label>
                 <?php endforeach; ?>
             </fieldset>
             <?php if (!empty($errors['scopes'])): ?><p class="field-error"><?= $e($errors['scopes']) ?></p><?php endif; ?>
 
             <label>Expires in days (optional)
-                <input type="number" name="expires_in_days" min="1" max="365">
+                <input type="number" name="expires_in_days" min="1" max="365" value="<?= $e($old['expires_in_days'] ?? '') ?>">
             </label>
             <?php if (!empty($errors['expires_in_days'])): ?><p class="field-error"><?= $e($errors['expires_in_days']) ?></p><?php endif; ?>
 

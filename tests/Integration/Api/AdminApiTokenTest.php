@@ -39,10 +39,15 @@ final class AdminApiTokenTest extends TestCase
         $this->actingAs($this->makeAdmin(['password' => 'password123']));
 
         $res = $this->post('/admin/api-tokens', [
-            'name' => 'CI', 'scopes' => ['read:boards'], 'current_password' => 'WRONG',
+            'name' => 'CI',
+            'scopes' => ['read:boards'],
+            'expires_in_days' => '30',
+            'current_password' => 'WRONG',
         ]);
         $this->assertStatus(422, $res);
         self::assertStringContainsString('CI', $res->body(), 'the typed name is preserved');
+        self::assertStringContainsString('value="read:boards" checked', $res->body(), 'the selected scope is preserved');
+        self::assertStringContainsString('value="30"', $res->body(), 'the typed expiry is preserved');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM api_tokens'), 'no token on bad reauth');
     }
 

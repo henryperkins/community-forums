@@ -168,7 +168,11 @@ final class AdminWebhookController extends Controller
         $this->gate();
         $this->container->get(RateLimitService::class)->enforce('webhook_test', $request, $admin);
         $id = (int) ($params['id'] ?? 0);
-        $this->service()->sendTestEvent($admin, $id);
+        try {
+            $this->service()->sendTestEvent($admin, $id);
+        } catch (ValidationException $e) {
+            return $this->redirectWithFlash('/admin/webhooks', $e->first());
+        }
         return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Test event queued. Run the webhook worker to deliver it.');
     }
 

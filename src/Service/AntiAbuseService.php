@@ -33,6 +33,15 @@ final class AntiAbuseService
     private const SEVERITY = ['allow' => 0, 'flag' => 1, 'hold' => 2, 'block' => 3];
     private const ACTION = ['allow', 'flag', 'hold', 'block'];
 
+    /**
+     * Minimum length of an operator blocked word. Matching is unanchored
+     * substring (`str_contains`), so a 1–2 char rule (e.g. a stray "1" left by a
+     * comma inside a phrase) would blanket-match legitimate posts. Admin input is
+     * floored to this at save time (AdminService) and re-checked here so a short
+     * config-sourced word is inert too.
+     */
+    public const MIN_BLOCKED_WORD_LENGTH = 3;
+
     public function __construct(
         private Database $db,
         private Config $config,
@@ -215,7 +224,7 @@ final class AntiAbuseService
         $haystack = mb_strtolower($text);
         foreach ($words as $word) {
             $w = mb_strtolower(trim((string) $word));
-            if ($w !== '' && str_contains($haystack, $w)) {
+            if (mb_strlen($w) >= self::MIN_BLOCKED_WORD_LENGTH && str_contains($haystack, $w)) {
                 return $w;
             }
         }

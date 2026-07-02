@@ -77,11 +77,11 @@ final class AppAdminArchiveTest extends TestCase
         $board = $this->makeBoard($this->categoryId, ['slug' => 'rearc', 'name' => 'ReArc']);
         $thread = $this->makeThread($board, $member, 'Reopenable topic');
 
-        // Archive then unarchive through the admin service path (not raw SQL).
+        // Archive then unarchive through the admin console (typed-slug confirmation).
         $this->actingAs($this->admin);
         $this->get('/admin/structure');
-        $this->post('/admin/boards/' . $board['id'] . '/archive');
-        $this->post('/admin/boards/' . $board['id'] . '/unarchive');
+        $this->post('/admin/boards/' . $board['id'] . '/archive', ['confirm' => 'rearc']);
+        $this->post('/admin/boards/' . $board['id'] . '/unarchive', ['confirm' => 'rearc']);
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'unarchive_board'"));
 
         $this->logoutClient();

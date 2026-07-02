@@ -12,11 +12,7 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
         <h1><?= $isUpdate ? 'Approve update to ' . $e($target['version']) : 'Consent to permissions' ?></h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/packages">Packages</a>
-        <a href="<?= $e($base) ?>">Package detail</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <?php foreach (($errors ?? []) as $err): ?>

@@ -10,10 +10,7 @@ $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((strin
         <h1>Webhook: <?= $e($webhook['name']) ?></h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/webhooks">Webhooks</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'webhooks', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <?php if (!empty($new_secret)): ?>

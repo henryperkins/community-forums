@@ -65,7 +65,11 @@ final class AdminApiTokenController extends Controller
                 'tokens' => $service->list(),
                 'scopes_catalogue' => ApiScopes::all(),
                 'errors' => $e->errors,
-                'old' => $e->old + ['name' => $request->str('name')],
+                'old' => $e->old + [
+                    'name' => $request->str('name'),
+                    'scopes' => array_values(array_filter((array) $request->post('scopes', []), 'is_string')),
+                    'expires_in_days' => $days,
+                ],
                 'new_token' => null,
             ], 422);
         }

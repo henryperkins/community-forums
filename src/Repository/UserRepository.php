@@ -452,32 +452,113 @@ final class UserRepository
         );
     }
 
+    /** Sortable directory columns → SQL column (ORDER BY is not bindable, so
+     *  the sort key is resolved through this allowlist, never interpolated). */
+    private const DIRECTORY_SORTS = [
+        'username' => 'username',
+        'role' => 'role',
+        'status' => 'status',
+        'created_at' => 'created_at',
+        'last_seen' => 'last_seen_at',
+        'post_count' => 'post_count',
+        'reputation' => 'reputation',
+    ];
+
     /**
-     * Admin user directory (ADMIN §5.1): newest first, optional substring search
-     * over username / display name / email. LIMIT/OFFSET are clamped + inlined
-     * (EMULATE_PREPARES=false forbids binding them); search placeholders are
-     * distinct (no placeholder is reused).
+     * Admin user directory (ADMIN §5.1) with filtering + sorting. Accepts a
+     * typed filter array: `q`, `role`, `status`, `joined_from`, `joined_to`,
+     * `last_seen`, `min_posts`, `max_posts`, `sort`, `direction`, `limit`,
+     * `offset`. LIMIT/OFFSET and interval days are clamped + inlined
+     * (EMULATE_PREPARES=false forbids binding them and ORDER BY columns); every
+     * repeated value gets a distinct named placeholder.
      *
+     * @param array<string,mixed> $filters
      * @return array<int,array<string,mixed>>
      */
-    public function directory(string $q = '', int $limit = 50, int $offset = 0): array
+    public function directory(array $filters = []): array
     {
-        $limit = max(1, min(200, $limit));
-        $offset = max(0, $offset);
-        $q = trim($q);
-        if ($q === '') {
-            return $this->db->fetchAll(
-                'SELECT id, username, display_name, email, role, status, reputation, created_at
-                 FROM users ORDER BY id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
-            );
+        [$where, $params] = $this->directoryFilters($filters);
+
+        $sortKey = (string) ($filters['sort'] ?? 'created_at');
+        $column = self::DIRECTORY_SORTS[$sortKey] ?? 'created_at';
+        $direction = strtolower((string) ($filters['direction'] ?? 'desc')) === 'asc' ? 'ASC' : 'DESC';
+        $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
+        $offset = max(0, (int) ($filters['offset'] ?? 0));
+
+        $sql = 'SELECT id, username, display_name, email, role, status, reputation, post_count, created_at, last_seen_at
+                FROM users';
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
         }
-        $like = '%' . $q . '%';
-        return $this->db->fetchAll(
-            'SELECT id, username, display_name, email, role, status, reputation, created_at
-             FROM users
-             WHERE username LIKE :q1 OR display_name LIKE :q2 OR email LIKE :q3
-             ORDER BY id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
-            ['q1' => $like, 'q2' => $like, 'q3' => $like],
-        );
+        // Tie-break on id in the same direction for a stable, deterministic page.
+        $sql .= ' ORDER BY ' . $column . ' ' . $direction . ', id ' . $direction
+            . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
+
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    /**
+     * Build the shared WHERE fragments + bound params for the directory.
+     *
+     * @param array<string,mixed> $filters
+     * @return array{0:array<int,string>,1:array<string,mixed>}
+     */
+    private function directoryFilters(array $filters): array
+    {
+        $where = [];
+        $params = [];
+
+        $q = trim((string) ($filters['q'] ?? ''));
+        if ($q !== '') {
+            $like = '%' . $q . '%';
+            $where[] = '(username LIKE :q1 OR display_name LIKE :q2 OR email LIKE :q3)';
+            $params['q1'] = $like;
+            $params['q2'] = $like;
+            $params['q3'] = $like;
+        }
+
+        $role = (string) ($filters['role'] ?? '');
+        if (in_array($role, ['user', 'moderator', 'admin'], true)) {
+            $where[] = 'role = :role';
+            $params['role'] = $role;
+        }
+
+        $status = (string) ($filters['status'] ?? '');
+        if (in_array($status, ['active', 'suspended', 'banned', 'deactivated'], true)) {
+            $where[] = 'status = :status';
+            $params['status'] = $status;
+        }
+
+        $joinedFrom = trim((string) ($filters['joined_from'] ?? ''));
+        if ($joinedFrom !== '') {
+            $where[] = 'created_at >= :joined_from';
+            $params['joined_from'] = $joinedFrom;
+        }
+        $joinedTo = trim((string) ($filters['joined_to'] ?? ''));
+        if ($joinedTo !== '') {
+            $where[] = 'created_at <= :joined_to';
+            $params['joined_to'] = $joinedTo;
+        }
+
+        $lastSeen = (string) ($filters['last_seen'] ?? '');
+        if ($lastSeen === 'never') {
+            $where[] = 'last_seen_at IS NULL';
+        } elseif (ctype_digit($lastSeen) && (int) $lastSeen > 0) {
+            $days = min(3650, (int) $lastSeen); // clamped + inlined; INTERVAL is not bindable
+            $where[] = 'last_seen_at >= UTC_TIMESTAMP() - INTERVAL ' . $days . ' DAY';
+        }
+
+        $minPosts = $filters['min_posts'] ?? '';
+        if ($minPosts !== '' && $minPosts !== null) {
+            $where[] = 'post_count >= :min_posts';
+            $params['min_posts'] = max(0, (int) $minPosts);
+        }
+        $maxPosts = $filters['max_posts'] ?? '';
+        if ($maxPosts !== '' && $maxPosts !== null) {
+            $where[] = 'post_count <= :max_posts';
+            $params['max_posts'] = max(0, (int) $maxPosts);
+        }
+
+        return [$where, $params];
     }
 }

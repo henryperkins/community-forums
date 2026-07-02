@@ -5,12 +5,12 @@
         <h1>Edit board</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/structure">Boards &amp; categories</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'structure', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
+    <?php if (!empty($roster_error ?? null)): ?>
+        <div class="flash flash-error"><?= $e($roster_error) ?></div>
+    <?php endif; ?>
     <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>" class="stacked card">
         <?= $this->csrfField() ?>
         <label class="field"><span>Category</span>
@@ -94,7 +94,7 @@
         </ul>
         <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/moderators" class="inline-form">
             <?= $this->csrfField() ?>
-            <input type="text" name="username" class="input" placeholder="username" maxlength="32" aria-label="Username to assign as moderator" required>
+            <input type="text" name="username" class="input" placeholder="username" maxlength="32" aria-label="Username to assign as moderator" value="<?= $e(($roster_context ?? null) === 'moderator' ? ($roster_username ?? '') : '') ?>" required>
             <button class="btn btn-small" type="submit">Assign moderator</button>
         </form>
     </section>
@@ -121,7 +121,7 @@
         </ul>
         <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/members" class="inline-form">
             <?= $this->csrfField() ?>
-            <input type="text" name="username" class="input" placeholder="username" maxlength="32" aria-label="Username to add as member" required>
+            <input type="text" name="username" class="input" placeholder="username" maxlength="32" aria-label="Username to add as member" value="<?= $e(($roster_context ?? null) === 'member' ? ($roster_username ?? '') : '') ?>" required>
             <button class="btn btn-small" type="submit">Add member</button>
         </form>
     </section>

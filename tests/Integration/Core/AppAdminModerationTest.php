@@ -92,6 +92,40 @@ final class AppAdminModerationTest extends TestCase
         $this->assertSeeText($this->get('/admin'), 'visibleword');
     }
 
+    public function test_blocked_words_drops_too_short_entries_and_survives_array_input(): void
+    {
+        $this->actingAs($this->admin);
+        $this->get('/admin'); // seed CSRF
+
+        // A stray 1–2 char fragment (e.g. from splitting "1,000 followers" on the
+        // comma) must be dropped, because matching is unanchored substring and a
+        // 1-char rule would blanket-match legitimate posts. The real phrase-parts
+        // that clear the floor are kept.
+        $this->post('/admin/settings', [
+            'registration_mode' => 'open',
+            'antiabuse_mode' => 'flag',
+            'antiabuse_blocked_words' => "1\nab\n000 followers\nlegitword",
+        ]);
+        $words = (array) $this->settings()->get('antiabuse_blocked_words', []);
+        self::assertNotContains('1', $words);   // too short → dropped
+        self::assertNotContains('ab', $words);  // too short → dropped
+        self::assertContains('000 followers', $words);
+        self::assertContains('legitword', $words);
+
+        // An array-shaped POST must not coerce to the literal word "Array"; it is
+        // treated as empty input (no E_WARNING, no bogus rule stored).
+        $res = $this->post('/admin/settings', [
+            'registration_mode' => 'open',
+            'antiabuse_mode' => 'flag',
+            'antiabuse_blocked_words' => ['x', 'y'],
+        ]);
+        $this->assertRedirect($res, '/admin');
+        $after = (array) $this->settings()->get('antiabuse_blocked_words', []);
+        self::assertNotContains('Array', $after);
+        self::assertNotContains('array', $after);
+        self::assertSame([], $after);
+    }
+
     public function test_registration_mode_closed_blocks_signups(): void
     {
         // Admin closes registration.

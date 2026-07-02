@@ -8,12 +8,7 @@ $this->section('title', 'Package catalogue');
         <h1>Package catalogue</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a class="active" href="/admin/packages">Packages</a>
-        <?php if (!empty($features['package_themes'])): ?><a href="/admin/themes">Themes</a><?php endif; ?>
-        <a href="/admin/registries">Registry trust</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <p class="muted">Staff browse of signed registry metadata. A signature proves byte provenance under a pinned key; install and enable still require review, consent, and local policy checks.</p>

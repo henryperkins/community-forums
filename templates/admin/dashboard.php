@@ -9,26 +9,47 @@
         <span class="pill pill-admin">Admin mode</span>
     </header>
 
-    <nav class="subnav admin-subnav">
-        <a class="active" href="/admin">Dashboard</a>
-        <a href="/admin/structure">Boards &amp; categories</a>
-        <a href="/admin/users">Users</a>
-        <?php if (!empty($features['api_tokens'])): ?><a href="/admin/api-tokens">API tokens</a><?php endif; ?>
-        <?php if (!empty($features['webhooks'])): ?><a href="/admin/webhooks">Webhooks</a><?php endif; ?>
-        <?php if (!empty($features['package_registry'])): ?><a href="/admin/packages">Packages</a><?php endif; ?>
-        <?php if (!empty($features['email'])): ?><a href="/admin/email">Email</a><?php endif; ?>
-        <?php if (!empty($features['announcements'])): ?><a href="/admin/announcements">Announcements</a><?php endif; ?>
-        <?php if (!empty($features['appeals'])): ?><a href="/mod/appeals">Appeals</a><?php endif; ?>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'dashboard', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
-    <p class="pane-intro">Manage the community's structure, trust controls, and audit trail from one dense operator surface.</p>
+    <p class="pane-intro">Start with the queues and health flags that need operator action, then drop into settings and audit detail without leaving the console.</p>
+
+    <section class="admin-dashboard-grid" aria-label="Operational summary">
+        <?php foreach ($cards as $card): ?>
+            <?php $tag = !empty($card['href']) ? 'a' : 'div'; ?>
+            <<?= $tag ?> class="card queue-card<?= empty($card['href']) ? ' is-static' : '' ?>"<?= !empty($card['href']) ? ' href="' . $e($card['href']) . '"' : '' ?>>
+                <span class="queue-card-head"><?= $e($card['title']) ?></span>
+                <strong class="queue-card-count"><?= (int) $card['count'] ?></strong>
+                <span class="queue-card-detail"><?= $e($card['detail']) ?></span>
+            </<?= $tag ?>>
+        <?php endforeach; ?>
+    </section>
+
+    <section class="card">
+        <h2>Needs attention</h2>
+        <?php if (empty($attention)): ?>
+            <p class="muted">No pending operator work right now.</p>
+        <?php else: ?>
+            <ul class="link-list attention-list">
+                <?php foreach ($attention as $item): ?>
+                    <li>
+                        <?php if (!empty($item['href'])): ?>
+                            <a href="<?= $e($item['href']) ?>"><?= $e($item['label']) ?></a>
+                        <?php else: ?>
+                            <span><?= $e($item['label']) ?></span>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
 
     <section class="card">
         <h2>Site name</h2>
         <form method="post" action="/admin/site" class="inline-form">
             <?= $this->csrfField() ?>
-            <input type="text" name="site_name" class="input" maxlength="80" value="<?= $e($site_name) ?>" required>
+            <label class="sr-only" for="admin-site-name">Site name</label>
+            <input type="text" id="admin-site-name" name="site_name" class="input" maxlength="80" value="<?= $e($site_name) ?>" required>
             <button class="btn btn-small" type="submit">Update</button>
         </form>
     </section>
@@ -56,32 +77,34 @@
             </label>
             <label class="field">
                 <span>Blocked words</span>
-                <textarea name="antiabuse_blocked_words" class="input" rows="4" placeholder="One word or phrase per line"><?= $e(implode("\n", $antiabuse_blocked_words ?? [])) ?></textarea>
-                <span class="muted">Case-insensitive; matched as substrings against new posts.</span>
+                <textarea name="antiabuse_blocked_words" class="input" rows="4" placeholder="One word or phrase per line (commas also separate entries)"><?= $e(implode("\n", $antiabuse_blocked_words ?? [])) ?></textarea>
+                <span class="muted">One per line, or comma-separated. Case-insensitive; matched as substrings against new posts. Entries shorter than 3 characters are ignored.</span>
             </label>
             <div class="form-actions"><button class="btn" type="submit">Save settings</button></div>
         </form>
     </section>
 
-    <section class="card">
+    <section class="card" id="recent-activity">
         <h2>Recent activity</h2>
         <?php if (empty($audit)): ?>
             <p class="muted">No moderation or admin actions yet.</p>
         <?php else: ?>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Recent activity">
             <table class="audit">
                 <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Reason</th></tr></thead>
                 <tbody>
                 <?php foreach ($audit as $row): ?>
                     <tr>
-                        <td><?= $e(human_datetime($row['created_at'])) ?></td>
+                        <td class="nowrap"><?= $e(human_datetime($row['created_at'])) ?></td>
                         <td><?= $e($row['actor_username'] ?? 'system') ?></td>
-                        <td><code><?= $e($row['action']) ?></code></td>
+                        <td class="action-cell"><code><?= $e($row['action']) ?></code></td>
                         <td><?= $e($row['target_type']) ?> #<?= (int) $row['target_id'] ?></td>
                         <td><?= $e($row['reason'] ?? '') ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         <?php endif; ?>
     </section>
     </div>

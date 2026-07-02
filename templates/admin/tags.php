@@ -1,24 +1,29 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Tags'); ?>
+<?php
+$this->layout('layout');
+$this->section('title', 'Tags');
+$errors = $errors ?? [];
+$old = $old ?? [];
+$errorForm = $error_form ?? null;
+$createOld = $errorForm === 'create' ? $old : [];
+?>
 <div class="admin">
     <header class="admin-head">
         <h1>Tags</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/structure">Boards &amp; categories</a>
-        <a class="active" href="/admin/tags">Tags</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'tags', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <section class="card">
         <h2>Add a tag</h2>
         <form method="post" action="/admin/tags" class="stacked">
             <?= $this->csrfField() ?>
-            <label class="field"><span>Name</span><input class="input" type="text" name="name" maxlength="80" required></label>
-            <label class="field"><span>Slug</span><input class="input" type="text" name="slug" maxlength="64"></label>
-            <label class="field"><span>Description</span><input class="input" type="text" name="description" maxlength="255"></label>
+            <label class="field"><span>Name</span><input class="input" type="text" name="name" maxlength="80" value="<?= $e($createOld['name'] ?? '') ?>" required></label>
+            <?php if ($errorForm === 'create' && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <label class="field"><span>Slug</span><input class="input" type="text" name="slug" maxlength="64" value="<?= $e($createOld['slug'] ?? '') ?>"></label>
+            <?php if ($errorForm === 'create' && !empty($errors['slug'])): ?><p class="field-error"><?= $e($errors['slug']) ?></p><?php endif; ?>
+            <label class="field"><span>Description</span><input class="input" type="text" name="description" maxlength="255" value="<?= $e($createOld['description'] ?? '') ?>"></label>
             <button class="btn btn-small" type="submit">Add tag</button>
         </form>
     </section>
@@ -30,19 +35,36 @@
         <?php else: ?>
             <ul class="admin-board-list">
                 <?php foreach ($tags as $tag): ?>
+                    <?php
+                    $isOldRow = $errorForm === 'update' && (int) ($old['id'] ?? 0) === (int) $tag['id'];
+                    $row = $isOldRow ? $old : $tag;
+                    $rowVisibility = (string) ($row['visibility'] ?? 'public');
+                    $rowEnabled = $isOldRow ? !empty($row['enabled']) : (int) ($tag['is_enabled'] ?? 1) === 1;
+                    ?>
                     <li class="admin-board-row">
                         <form method="post" action="/admin/tags/<?= (int) $tag['id'] ?>" class="inline-form">
                             <?= $this->csrfField() ?>
-                            <input class="input" type="text" name="name" maxlength="80" value="<?= $e($tag['name']) ?>" required>
-                            <input class="input" type="text" name="slug" maxlength="64" value="<?= $e($tag['slug']) ?>" required>
-                            <input class="input" type="text" name="description" maxlength="255" value="<?= $e($tag['description'] ?? '') ?>">
-                            <select class="input input-small" name="visibility">
-                                <option value="public"<?= ($tag['visibility'] ?? 'public') === 'public' ? ' selected' : '' ?>>Public</option>
-                                <option value="hidden"<?= ($tag['visibility'] ?? 'public') === 'hidden' ? ' selected' : '' ?>>Hidden</option>
+                            <label class="sr-only" for="tag-name-<?= (int) $tag['id'] ?>">Tag name</label>
+                            <input id="tag-name-<?= (int) $tag['id'] ?>" class="input" type="text" name="name" maxlength="80" value="<?= $e($row['name'] ?? '') ?>" required>
+                            <label class="sr-only" for="tag-slug-<?= (int) $tag['id'] ?>">Tag slug</label>
+                            <input id="tag-slug-<?= (int) $tag['id'] ?>" class="input" type="text" name="slug" maxlength="64" value="<?= $e($row['slug'] ?? '') ?>" required>
+                            <label class="sr-only" for="tag-description-<?= (int) $tag['id'] ?>">Tag description</label>
+                            <input id="tag-description-<?= (int) $tag['id'] ?>" class="input" type="text" name="description" maxlength="255" value="<?= $e($row['description'] ?? '') ?>">
+                            <label class="sr-only" for="tag-visibility-<?= (int) $tag['id'] ?>">Tag visibility</label>
+                            <select id="tag-visibility-<?= (int) $tag['id'] ?>" class="input input-small" name="visibility">
+                                <option value="public"<?= $rowVisibility === 'public' ? ' selected' : '' ?>>Public</option>
+                                <option value="hidden"<?= $rowVisibility === 'hidden' ? ' selected' : '' ?>>Hidden</option>
                             </select>
-                            <label class="checkline"><input type="checkbox" name="enabled" value="1" <?= (int) ($tag['is_enabled'] ?? 1) === 1 ? 'checked' : '' ?>> Enabled</label>
+                            <label class="checkline"><input type="checkbox" name="enabled" value="1" <?= $rowEnabled ? 'checked' : '' ?>> Enabled</label>
                             <button class="btn btn-small" type="submit">Save</button>
                         </form>
+                        <?php if ($isOldRow && !empty($errors)): ?>
+                            <div class="error-list" role="alert">
+                                <?php foreach ($errors as $message): ?>
+                                    <p class="field-error"><?= $e($message) ?></p>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                         <?php if ((int) ($tag['is_enabled'] ?? 1) === 1 && count($tags) > 1): ?>
                             <form method="post" action="/admin/tags/<?= (int) $tag['id'] ?>/merge" class="inline-form">
                                 <?= $this->csrfField() ?>

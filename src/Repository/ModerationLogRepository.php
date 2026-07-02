@@ -51,6 +51,21 @@ final class ModerationLogRepository
         );
     }
 
+    /** @return array<int,array<string,mixed>> recent entries for one target, newest first */
+    public function recentForTarget(string $targetType, int $targetId, int $limit = 20): array
+    {
+        $limit = max(1, min(100, $limit));
+        return $this->db->fetchAll(
+            'SELECT m.*, u.username AS actor_username, u.display_name AS actor_display_name
+             FROM moderation_log m
+             LEFT JOIN users u ON u.id = m.actor_id
+             WHERE m.target_type = ? AND m.target_id = ?
+             ORDER BY m.id DESC
+             LIMIT ' . $limit,
+            [$targetType, $targetId],
+        );
+    }
+
     public function countForTarget(string $targetType, int $targetId): int
     {
         return (int) $this->db->fetchValue(

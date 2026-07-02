@@ -8,6 +8,7 @@ $this->section('title', 'Badge rule preview');
         <h1>Badge rule preview</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
+    <?= $this->partial('admin/_nav', ['active' => 'badge_rules', 'features' => $features ?? []]) ?>
     <div class="admin-pane">
     <p><a href="/admin/badge-rules">Back to badge rules</a></p>
     <section class="card">

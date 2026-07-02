@@ -153,6 +153,7 @@ use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AccountLifecycleService;
+use App\Service\AdminDashboardService;
 use App\Service\AdminService;
 use App\Service\AnnouncementService;
 use App\Service\AntiAbuseService;
@@ -1447,6 +1448,14 @@ final class App
             $c->get(BoardModeratorRepository::class),
             $c->get(BoardMemberRepository::class),
         ));
+        $c->bind(AdminDashboardService::class, fn (Container $c) => new AdminDashboardService(
+            $c->get(Database::class),
+            $c->get(EmailDeliveryRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(FeatureFlags::class),
+            $c->get(Mailer::class),
+            $c->get(EmailDomainVerifier::class),
+        ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),
             $c->get(AuthService::class),
@@ -1739,10 +1748,15 @@ final class App
         $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
         $r->post('/admin/categories', [AdminController::class, 'createCategory']);
         $r->post('/admin/categories/{id}', [AdminController::class, 'updateCategory']);
+        // Destructive structure actions are two-step: a GET confirmation page
+        // (works with JS disabled, shows impact + typed-confirmation) then the
+        // existing POST — the only mutating endpoint.
+        $r->get('/admin/categories/{id}/delete', [AdminController::class, 'confirmDeleteCategory']);
         $r->post('/admin/categories/{id}/delete', [AdminController::class, 'deleteCategory']);
         $r->get('/admin/boards/{id}/edit', [AdminController::class, 'editBoard']);
         $r->post('/admin/boards', [AdminController::class, 'createBoard']);
         $r->post('/admin/boards/{id}', [AdminController::class, 'updateBoard']);
+        $r->get('/admin/boards/{id}/delete', [AdminController::class, 'confirmDeleteBoard']);
         $r->post('/admin/boards/{id}/delete', [AdminController::class, 'deleteBoard']);
 
         // Structure ordering + archive (Phase 2). Static reorder before any
@@ -1751,7 +1765,9 @@ final class App
         $r->post('/admin/categories/{id}/move', [AdminController::class, 'moveCategory']);
         $r->post('/admin/boards/{id}/move', [AdminController::class, 'moveBoard']);
         $r->post('/admin/structure/reorder', [AdminController::class, 'reorder']);
+        $r->get('/admin/boards/{id}/archive', [AdminController::class, 'confirmArchiveBoard']);
         $r->post('/admin/boards/{id}/archive', [AdminController::class, 'archiveBoard']);
+        $r->get('/admin/boards/{id}/unarchive', [AdminController::class, 'confirmUnarchiveBoard']);
         $r->post('/admin/boards/{id}/unarchive', [AdminController::class, 'unarchiveBoard']);
 
         // Board roster management (P2-08): assign/remove scoped moderators + members.
@@ -1768,6 +1784,11 @@ final class App
         $r->post('/admin/users/{id}/signature/remove', [AdminUserController::class, 'removeSignature']);
         $r->post('/admin/users/{id}/badges/grant', [AdminUserController::class, 'grantBadge']);
         $r->post('/admin/users/{id}/badges/revoke', [AdminUserController::class, 'revokeBadge']);
+        $r->post('/admin/users/{id}/warn', [AdminUserController::class, 'warn']);
+        $r->post('/admin/users/{id}/note', [AdminUserController::class, 'note']);
+        $r->post('/admin/users/{id}/suspend', [AdminUserController::class, 'suspend']);
+        $r->post('/admin/users/{id}/ban', [AdminUserController::class, 'ban']);
+        $r->post('/admin/users/{id}/lift', [AdminUserController::class, 'lift']);
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);

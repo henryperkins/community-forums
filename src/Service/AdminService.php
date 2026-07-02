@@ -90,11 +90,18 @@ final class AdminService
             $aaMode = 'observe';
         }
         // Blocked words: one per line or comma-separated; trimmed, de-duped
-        // (case-insensitively), empties dropped, each capped at 100 chars.
+        // (case-insensitively), each between MIN_BLOCKED_WORD_LENGTH and 100
+        // chars. A too-short entry is dropped rather than stored, because
+        // matching is unanchored substring (AntiAbuseService::matchedBlockedWord)
+        // and a 1–2 char rule would blanket-match legitimate posts. An
+        // array-shaped POST (antiabuse_blocked_words[]=…) is treated as empty
+        // rather than coerced to the literal string "Array".
+        $raw = is_string($input['antiabuse_blocked_words'] ?? null) ? $input['antiabuse_blocked_words'] : '';
         $words = [];
-        foreach (preg_split('/[\r\n,]+/', (string) ($input['antiabuse_blocked_words'] ?? '')) ?: [] as $w) {
+        foreach (preg_split('/[\r\n,]+/', $raw) ?: [] as $w) {
             $w = trim((string) $w);
-            if ($w !== '' && mb_strlen($w) <= 100) {
+            $len = mb_strlen($w);
+            if ($len >= AntiAbuseService::MIN_BLOCKED_WORD_LENGTH && $len <= 100) {
                 $words[mb_strtolower($w)] = $w;
             }
         }

@@ -5,10 +5,7 @@
         <h1>Server extensions</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a class="active" href="/admin/extensions">Extensions</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'extensions', 'features' => $features ?? []]) ?>
 
     <?php
     $activationAreas = [

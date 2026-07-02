@@ -11,11 +11,7 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
         <h1><?= $e($role['name']) ?> <small>v<?= (int) $role['version'] ?></small></h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/roles">Roles</a>
-        <a href="/admin/roles/simulator">Simulator</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'roles', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <p class="muted">

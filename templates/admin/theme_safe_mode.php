@@ -10,6 +10,7 @@ $this->section('robots', 'noindex, nofollow');
         <h1>Theme safe mode</h1>
         <span class="pill pill-admin">Recovery</span>
     </header>
+    <?= $this->partial('admin/_nav', ['active' => 'themes', 'features' => $features ?? []]) ?>
 
     <?php foreach (($errors ?? []) as $err): ?>
         <p class="field-error"><?= $e($err) ?></p>

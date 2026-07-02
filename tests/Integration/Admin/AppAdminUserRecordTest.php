@@ -45,6 +45,38 @@ final class AppAdminUserRecordTest extends TestCase
         self::assertStringContainsString('listedperson', $this->get('/admin/users')->body());
     }
 
+    public function test_directory_filters_by_role_via_get(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $this->makeUser(['username' => 'plainmember']);
+        $this->makeAdmin(['username' => 'anotheradmin']);
+        $body = $this->get('/admin/users', ['role' => 'admin'])->body();
+        self::assertStringContainsString('anotheradmin', $body);
+        self::assertStringNotContainsString('>plainmember<', $body);
+    }
+
+    public function test_directory_exposes_sortable_headers_and_bulk_foundation(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $this->makeUser(['username' => 'sortablesub']);
+        $body = $this->get('/admin/users')->body();
+        // Sortable header links carry the sort key as a shareable GET URL.
+        self::assertStringContainsString('sort=username', $body);
+        self::assertStringContainsString('sort=reputation', $body);
+        // Bulk selection foundation is present but disabled (no wired destructive action).
+        self::assertStringContainsString('name="selected[]"', $body);
+        self::assertStringContainsString('Bulk moderation requires a separate confirmation step', $body);
+    }
+
+    public function test_directory_filter_values_are_preserved_in_controls(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $this->makeUser(['username' => 'statefiltersub', 'status' => 'suspended']);
+        $body = $this->get('/admin/users', ['status' => 'suspended', 'sort' => 'username', 'direction' => 'asc'])->body();
+        // The selected filter is repopulated so the GET URL is shareable + sticky.
+        self::assertStringContainsString('value="suspended" selected', $body);
+    }
+
     public function test_admin_grants_manual_badge_visible_and_notified(): void
     {
         $this->actingAs($this->makeAdmin(['username' => 'grantadmin']));
@@ -72,6 +104,21 @@ final class AppAdminUserRecordTest extends TestCase
         $this->actingAs($this->makeAdmin());
         $sid = (int) $this->makeUser(['username' => 'noauto'])['id'];
         $this->assertStatus(422, $this->post('/admin/users/' . $sid . '/badges/grant', ['slug' => 'welcome']));
+        self::assertFalse((new BadgeRepository($this->db))->hasBadgeSlug($sid, 'welcome'));
+    }
+
+    public function test_failed_manual_badge_grant_preserves_typed_reason(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'badgereason'])['id'];
+
+        $res = $this->post('/admin/users/' . $sid . '/badges/grant', [
+            'slug' => 'welcome',
+            'reason' => 'manual badge reason survives',
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('manual badge reason survives', $res->body());
         self::assertFalse((new BadgeRepository($this->db))->hasBadgeSlug($sid, 'welcome'));
     }
 
@@ -149,5 +196,130 @@ final class AppAdminUserRecordTest extends TestCase
         $before = (int) $this->db->fetchValue('SELECT reputation FROM users WHERE id = ?', [$sid]);
         $this->post('/admin/users/' . $sid . '/badges/grant', ['slug' => 'staff']);
         self::assertSame($before, (int) $this->db->fetchValue('SELECT reputation FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_record_shows_moderation_controls_for_a_normal_user(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'controlsub'])['id'];
+        $body = $this->get('/admin/users/' . $sid)->body();
+        self::assertStringContainsString('action="/admin/users/' . $sid . '/warn"', $body);
+        self::assertStringContainsString('action="/admin/users/' . $sid . '/suspend"', $body);
+        self::assertStringContainsString('action="/admin/users/' . $sid . '/ban"', $body);
+    }
+
+    public function test_admin_cannot_see_suspend_ban_controls_on_own_record(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'selfadmin']);
+        $this->actingAs($admin);
+        $body = $this->get('/admin/users/' . (int) $admin['id'])->body();
+        self::assertStringContainsString('cannot suspend or ban your own account', $body);
+        self::assertStringNotContainsString('action="/admin/users/' . (int) $admin['id'] . '/ban"', $body);
+    }
+
+    public function test_warn_records_warning_and_returns_to_admin_record(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'warnme'])['id'];
+        $this->assertRedirectContains(
+            $this->post('/admin/users/' . $sid . '/warn', ['reason' => 'mind the rules']),
+            '/admin/users/' . $sid,
+        );
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [$sid]));
+        self::assertSame(1, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE action = 'warn' AND target_id = ?",
+            [$sid],
+        ));
+    }
+
+    public function test_empty_warn_reason_is_422(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'warnempty'])['id'];
+        $this->assertStatus(422, $this->post('/admin/users/' . $sid . '/warn', ['reason' => '']));
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [$sid]));
+    }
+
+    public function test_note_adds_private_note_and_returns_to_admin_record(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'noteme'])['id'];
+        $this->assertRedirectContains(
+            $this->post('/admin/users/' . $sid . '/note', ['body' => 'watch this account']),
+            '/admin/users/' . $sid,
+        );
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM user_notes WHERE subject_user_id = ?', [$sid]));
+    }
+
+    public function test_empty_note_is_422(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'noteempty'])['id'];
+        $this->assertStatus(422, $this->post('/admin/users/' . $sid . '/note', ['body' => '   ']));
+    }
+
+    public function test_suspend_sets_status_and_returns_to_admin_record(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'suspendme'])['id'];
+        $this->assertRedirectContains(
+            $this->post('/admin/users/' . $sid . '/suspend', ['reason' => 'cooling off', 'until' => '2030-01-01 00:00:00']),
+            '/admin/users/' . $sid,
+        );
+        self::assertSame('suspended', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_suspend_without_reason_is_422_and_preserves_until(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'suspendbad'])['id'];
+        $res = $this->post('/admin/users/' . $sid . '/suspend', ['reason' => '', 'until' => '2031-05-05 12:00:00']);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('2031-05-05 12:00:00', $res->body()); // anti-draft-loss
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_suspend_with_invalid_until_is_422_and_preserves_reason(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'suspenddatebad'])['id'];
+        $res = $this->post('/admin/users/' . $sid . '/suspend', ['reason' => 'typed justification', 'until' => '2026-13-99']);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('typed justification', $res->body());
+        self::assertStringContainsString('2026-13-99', $res->body());
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_ban_then_lift_returns_to_admin_record(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'banme'])['id'];
+        $this->assertRedirectContains(
+            $this->post('/admin/users/' . $sid . '/ban', ['reason' => 'abuse']),
+            '/admin/users/' . $sid,
+        );
+        self::assertSame('banned', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+
+        $this->assertRedirectContains(
+            $this->post('/admin/users/' . $sid . '/lift', []),
+            '/admin/users/' . $sid,
+        );
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_admin_cannot_suspend_self(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'selfsuspend']);
+        $this->actingAs($admin);
+        $this->assertStatus(422, $this->post('/admin/users/' . (int) $admin['id'] . '/suspend', ['reason' => 'x']));
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [(int) $admin['id']]));
+    }
+
+    public function test_admin_cannot_ban_another_admin(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'banneradmin']));
+        $other = $this->makeAdmin(['username' => 'targetadmin']);
+        $this->assertStatus(403, $this->post('/admin/users/' . (int) $other['id'] . '/ban', ['reason' => 'x']));
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [(int) $other['id']]));
     }
 }

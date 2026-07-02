@@ -86,6 +86,15 @@ final class AdminWebhookTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM webhooks WHERE id = ?', [$id]));
     }
 
+    public function test_send_test_for_unknown_webhook_redirects_without_500(): void
+    {
+        $this->enable();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+
+        $this->assertRedirectContains($this->post('/admin/webhooks/999/test', []), '/admin/webhooks');
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM webhook_deliveries'));
+    }
+
     public function test_send_test_event_is_rate_limited(): void
     {
         $this->enable();

@@ -135,6 +135,25 @@ final class AppContentApprovalTest extends TestCase
         self::assertSame(1, (int) $this->threads()->find((int) $held['id'])['is_pending']); // still held
     }
 
+    public function test_stale_thread_approval_does_not_flash_success(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'stale-approval']);
+        $this->db->run('UPDATE boards SET require_approval = 1 WHERE id = ?', [(int) $board['id']]);
+
+        $author = $this->makeUser(['username' => 'staleauthor']);
+        $this->actingAs($author);
+        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Already handled', 'body' => 'review me']);
+        $held = $this->db->fetch('SELECT * FROM threads WHERE board_id = ?', [(int) $board['id']]);
+        $this->db->run('UPDATE threads SET is_pending = 0 WHERE id = ?', [(int) $held['id']]);
+
+        $this->actingAs($this->makeAdmin(['username' => 'staleapprover']));
+        $this->assertRedirect($this->post('/mod/approvals/thread/' . (int) $held['id'] . '/approve'), '/mod/approvals');
+        $body = $this->get('/mod/approvals')->body();
+        self::assertStringContainsString('Topic was already handled.', $body);
+        self::assertStringNotContainsString('Topic approved and published.', $body);
+    }
+
     public function test_held_thread_page_is_hidden_from_others(): void
     {
         $cat = $this->makeCategory();

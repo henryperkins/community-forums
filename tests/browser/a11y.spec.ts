@@ -125,6 +125,10 @@ async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include
 test('admin dark-surface pages have no serious axe violations', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 
+  await visit(page, '/admin');
+  await expect(page.getByRole('heading', { name: 'Admin console' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
   await visit(page, '/admin/email');
   await expect(page.getByRole('heading', { name: 'Email delivery' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);

@@ -11,11 +11,7 @@ $this->section('title', 'Install plan: ' . $package['name']);
         <h1>Install plan - <?= $e($package['name']) ?> <?= $e($release['version']) ?></h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/packages">Packages</a>
-        <a href="<?= $e($base) ?>">Package detail</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <?php foreach (($errors ?? []) as $err): ?>

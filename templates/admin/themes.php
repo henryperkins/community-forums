@@ -8,12 +8,7 @@ $this->section('title', 'Themes');
         <h1>Themes</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/packages">Packages</a>
-        <a class="active" href="/admin/themes">Themes</a>
-        <a href="/admin/registries">Registry trust</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'themes', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <?php foreach (($errors ?? []) as $err): ?>

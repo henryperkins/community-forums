@@ -10,11 +10,7 @@ $active = is_array($ann) && !empty($ann['active']);
         <h1>Announcements</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/structure">Boards &amp; categories</a>
-        <a class="active" href="/admin/announcements">Announcements</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'announcements', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <section class="card">

@@ -77,7 +77,10 @@ final class ApprovalController extends Controller
         if ($ok) {
             $this->audit($mod->id(), $approve ? 'approve' : 'reject', 'thread', $threadId);
         }
-        return $this->redirectWithFlash('/mod/approvals', $approve ? 'Topic approved and published.' : 'Topic rejected.');
+        $message = $ok
+            ? ($approve ? 'Topic approved and published.' : 'Topic rejected.')
+            : 'Topic was already handled.';
+        return $this->redirectWithFlash('/mod/approvals', $message);
     }
 
     /** @param array<string,string> $params */
@@ -96,7 +99,10 @@ final class ApprovalController extends Controller
         if ($ok) {
             $this->audit($mod->id(), $approve ? 'approve' : 'reject', 'post', $postId);
         }
-        return $this->redirectWithFlash('/mod/approvals', $approve ? 'Reply approved and published.' : 'Reply rejected.');
+        $message = $ok
+            ? ($approve ? 'Reply approved and published.' : 'Reply rejected.')
+            : 'Reply was already handled.';
+        return $this->redirectWithFlash('/mod/approvals', $message);
     }
 
     private function assertCanModerate(\App\Domain\User $mod, int $boardId): void

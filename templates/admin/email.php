@@ -8,12 +8,7 @@ $this->section('title', 'Email delivery');
         <h1>Email delivery</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/structure">Boards &amp; categories</a>
-        <?php if (!empty($features['webhooks'])): ?><a href="/admin/webhooks">Webhooks</a><?php endif; ?>
-        <a class="active" href="/admin/email">Email</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'email', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <?php if (empty($mailer_configured)): ?>

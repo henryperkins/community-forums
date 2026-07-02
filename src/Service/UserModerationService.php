@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use App\Core\Database;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
@@ -68,6 +70,7 @@ final class UserModerationService
     {
         $this->assertAdmin($actor);
         $reason = $this->requireReason($reason);
+        $until = $this->validateSuspendUntil($until);
         $subject = $this->requireGovernable($actor, $subjectId);
 
         $this->db->transaction(function () use ($actor, $subject, $until, $reason): void {
@@ -79,6 +82,26 @@ final class UserModerationService
             );
             $this->audit($actor, 'suspend', (int) $subject['id'], $reason);
         });
+    }
+
+    private function validateSuspendUntil(?string $until): ?string
+    {
+        $until = trim((string) $until);
+        if ($until === '') {
+            return null;
+        }
+
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $until, new DateTimeZone('UTC'));
+        $errors = DateTimeImmutable::getLastErrors();
+        if (
+            $date === false
+            || (is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))
+            || $date->format('Y-m-d H:i:s') !== $until
+        ) {
+            throw new ValidationException(['until' => 'Use a valid UTC timestamp in YYYY-MM-DD HH:MM:SS format.']);
+        }
+
+        return $until;
     }
 
     public function ban(User $actor, int $subjectId, string $reason): void
@@ -172,6 +195,57 @@ final class UserModerationService
                 'after' => null,
             ]);
         });
+    }
+
+    /**
+     * Read-side aggregate for the admin record screen (ADMIN §5.2): recent
+     * warnings, private staff notes, ban history, and the target's audit trail.
+     * Every list is capped so the record view stays bounded.
+     *
+     * @return array{
+     *   warnings:array<int,array<string,mixed>>,
+     *   notes:array<int,array<string,mixed>>,
+     *   bans:array<int,array<string,mixed>>,
+     *   log:array<int,array<string,mixed>>
+     * }
+     */
+    public function history(int $subjectId, int $limit = 10): array
+    {
+        $limit = max(1, min(50, $limit));
+
+        return [
+            'warnings' => $this->db->fetchAll(
+                'SELECT w.id, w.reason, w.points, w.board_id, w.created_at,
+                        u.username AS issued_by_username
+                 FROM warnings w
+                 LEFT JOIN users u ON u.id = w.issued_by
+                 WHERE w.user_id = ?
+                 ORDER BY w.id DESC
+                 LIMIT ' . $limit,
+                [$subjectId],
+            ),
+            'notes' => $this->db->fetchAll(
+                'SELECT n.id, n.body, n.created_at, u.username AS author_username
+                 FROM user_notes n
+                 LEFT JOIN users u ON u.id = n.author_id
+                 WHERE n.subject_user_id = ?
+                 ORDER BY n.id DESC
+                 LIMIT ' . $limit,
+                [$subjectId],
+            ),
+            'bans' => $this->db->fetchAll(
+                'SELECT b.id, b.scope, b.type, b.reason, b.created_at, b.expires_at, b.lifted_at,
+                        c.username AS created_by_username, l.username AS lifted_by_username
+                 FROM bans b
+                 LEFT JOIN users c ON c.id = b.created_by
+                 LEFT JOIN users l ON l.id = b.lifted_by
+                 WHERE b.user_id = ?
+                 ORDER BY b.id DESC
+                 LIMIT ' . $limit,
+                [$subjectId],
+            ),
+            'log' => $this->log->recentForTarget('user', $subjectId, $limit),
+        ];
     }
 
     // ---- guards -----------------------------------------------------------

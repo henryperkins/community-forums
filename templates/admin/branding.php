@@ -14,15 +14,7 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
         <span class="pill pill-admin">Admin mode</span>
     </header>
 
-    <nav class="subnav admin-subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/structure">Boards &amp; categories</a>
-        <a href="/admin/users">Users</a>
-        <a href="/admin/email">Email</a>
-        <a href="/admin/tags">Tags</a>
-        <a class="active" href="/admin/branding">Branding</a>
-        <?php if (!empty($features['appeals'])): ?><a href="/mod/appeals">Appeals</a><?php endif; ?>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'branding', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
         <p class="pane-intro">Tune the public name, colour accents, assets, and preview before the council sees the updated hall.</p>

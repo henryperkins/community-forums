@@ -83,9 +83,7 @@ final class TagController extends Controller
     {
         $this->requireTags();
         $this->requireAdmin();
-        return $this->view('admin/tags', [
-            'tags' => $this->container->get(TagRepository::class)->allForAdmin(),
-        ]);
+        return $this->renderAdminTags();
     }
 
     public function create(Request $request): Response
@@ -96,9 +94,9 @@ final class TagController extends Controller
             [$slug, $name, $description] = $this->validateTag($request);
             $this->container->get(TagRepository::class)->create($slug, $name, $description, $admin->id());
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin/tags', $e->first());
+            return $this->renderAdminTags(422, $e->errors, $this->oldTagInput($request), 'create');
         } catch (\PDOException) {
-            return $this->redirectWithFlash('/admin/tags', 'That tag slug is already in use.');
+            return $this->renderAdminTags(422, ['slug' => 'That tag slug is already in use.'], $this->oldTagInput($request), 'create');
         }
         return $this->redirectWithFlash('/admin/tags', 'Tag created.');
     }
@@ -118,9 +116,9 @@ final class TagController extends Controller
             $visibility = (string) $request->post('visibility', 'public');
             $this->container->get(TagRepository::class)->update($id, $slug, $name, $description, $enabled, $visibility);
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin/tags', $e->first());
+            return $this->renderAdminTags(422, $e->errors, $this->oldTagInput($request, $id), 'update');
         } catch (\PDOException) {
-            return $this->redirectWithFlash('/admin/tags', 'That tag slug is already in use.');
+            return $this->renderAdminTags(422, ['slug' => 'That tag slug is already in use.'], $this->oldTagInput($request, $id), 'update');
         }
         return $this->redirectWithFlash('/admin/tags', 'Tag updated.');
     }
@@ -189,6 +187,33 @@ final class TagController extends Controller
         if (!$this->container->get(FeatureFlags::class)->enabled('tags')) {
             throw new NotFoundException('Not found.');
         }
+    }
+
+    /**
+     * @param array<string,string> $errors
+     * @param array<string,mixed> $old
+     */
+    private function renderAdminTags(int $status = 200, array $errors = [], array $old = [], ?string $errorForm = null): Response
+    {
+        return $this->view('admin/tags', [
+            'tags' => $this->container->get(TagRepository::class)->allForAdmin(),
+            'errors' => $errors,
+            'old' => $old,
+            'error_form' => $errorForm,
+        ], $status);
+    }
+
+    /** @return array<string,mixed> */
+    private function oldTagInput(Request $request, ?int $id = null): array
+    {
+        return [
+            'id' => $id,
+            'name' => $request->str('name'),
+            'slug' => $request->str('slug'),
+            'description' => $request->str('description'),
+            'visibility' => $request->str('visibility') !== '' ? $request->str('visibility') : 'public',
+            'enabled' => $request->post('enabled') !== null,
+        ];
     }
 
     /** @return array{0:string,1:string,2:?string} */

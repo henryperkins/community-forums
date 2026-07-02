@@ -73,24 +73,29 @@ final class AppAdminBoardRosterTest extends TestCase
     public function test_assigning_an_unknown_username_is_rejected_and_explained(): void
     {
         $this->actingAs($this->admin);
-        $this->assertRedirect($this->post('/admin/boards/' . $this->board['id'] . '/moderators', ['username' => 'ghost']));
+        // A failed assign re-renders the board edit page at 422 (anti-draft-loss),
+        // rather than redirecting and dropping the typed username.
+        $resp = $this->post('/admin/boards/' . $this->board['id'] . '/moderators', ['username' => 'ghost']);
+        $this->assertStatus(422, $resp);
 
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM board_moderators WHERE board_id = ?', [(int) $this->board['id']]));
         self::assertSame(0, $this->auditCount('assign_moderator'));
 
-        // The flash carries the reason on the next page load.
-        $this->assertSeeText($this->get('/admin/boards/' . $this->board['id'] . '/edit'), 'No member found');
+        // The reason is shown inline on the re-rendered page, and the typed value survives.
+        $this->assertSeeText($resp, 'No member found');
+        $this->assertSeeText($resp, 'ghost');
     }
 
     public function test_assigning_an_admin_as_a_board_moderator_is_rejected(): void
     {
         $other = $this->makeAdmin(['username' => 'bossadmin']);
         $this->actingAs($this->admin);
-        $this->assertRedirect($this->post('/admin/boards/' . $this->board['id'] . '/moderators', ['username' => 'bossadmin']));
+        $resp = $this->post('/admin/boards/' . $this->board['id'] . '/moderators', ['username' => 'bossadmin']);
+        $this->assertStatus(422, $resp);
 
         self::assertFalse($this->boardMods()->isModerator((int) $this->board['id'], (int) $other['id']));
         self::assertSame(0, $this->auditCount('assign_moderator'));
-        $this->assertSeeText($this->get('/admin/boards/' . $this->board['id'] . '/edit'), 'already moderates every board');
+        $this->assertSeeText($resp, 'already moderates every board');
     }
 
     public function test_duplicate_moderator_assignment_is_rejected_without_a_second_row(): void
@@ -165,7 +170,9 @@ final class AppAdminBoardRosterTest extends TestCase
     public function test_adding_an_unknown_member_is_rejected(): void
     {
         $this->actingAs($this->admin);
-        $this->assertRedirect($this->post('/admin/boards/' . $this->privateBoard['id'] . '/members', ['username' => 'nobody']));
+        $resp = $this->post('/admin/boards/' . $this->privateBoard['id'] . '/members', ['username' => 'nobody']);
+        $this->assertStatus(422, $resp);
+        $this->assertSeeText($resp, 'No member found');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM board_members WHERE board_id = ?', [(int) $this->privateBoard['id']]));
         self::assertSame(0, $this->auditCount('add_member', (int) $this->privateBoard['id']));
     }
@@ -188,24 +195,20 @@ final class AppAdminBoardRosterTest extends TestCase
     {
         // Alice was never assigned to this board.
         $this->actingAs($this->admin);
-        $this->assertRedirect(
-            $this->post('/admin/boards/' . $this->board['id'] . '/moderators/remove', ['user_id' => (int) $this->alice['id']]),
-            '/admin/boards/' . $this->board['id'] . '/edit',
-        );
+        $resp = $this->post('/admin/boards/' . $this->board['id'] . '/moderators/remove', ['user_id' => (int) $this->alice['id']]);
+        $this->assertStatus(422, $resp);
         self::assertSame(0, $this->auditCount('unassign_moderator'));
-        $this->assertSeeText($this->get('/admin/boards/' . $this->board['id'] . '/edit'), 'does not moderate this board');
+        $this->assertSeeText($resp, 'does not moderate this board');
     }
 
     public function test_removing_a_non_member_is_rejected_without_audit(): void
     {
         // Alice was never added to the private board.
         $this->actingAs($this->admin);
-        $this->assertRedirect(
-            $this->post('/admin/boards/' . $this->privateBoard['id'] . '/members/remove', ['user_id' => (int) $this->alice['id']]),
-            '/admin/boards/' . $this->privateBoard['id'] . '/edit',
-        );
+        $resp = $this->post('/admin/boards/' . $this->privateBoard['id'] . '/members/remove', ['user_id' => (int) $this->alice['id']]);
+        $this->assertStatus(422, $resp);
         self::assertSame(0, $this->auditCount('remove_member', (int) $this->privateBoard['id']));
-        $this->assertSeeText($this->get('/admin/boards/' . $this->privateBoard['id'] . '/edit'), 'not on this board');
+        $this->assertSeeText($resp, 'not on this board');
     }
 
     public function test_username_is_normalized_so_an_at_prefix_and_whitespace_resolve(): void
@@ -220,11 +223,12 @@ final class AppAdminBoardRosterTest extends TestCase
     public function test_a_blank_username_is_rejected(): void
     {
         $this->actingAs($this->admin);
-        $this->assertRedirect($this->post('/admin/boards/' . $this->board['id'] . '/moderators', ['username' => '   ']));
+        $resp = $this->post('/admin/boards/' . $this->board['id'] . '/moderators', ['username' => '   ']);
+        $this->assertStatus(422, $resp);
 
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM board_moderators WHERE board_id = ?', [(int) $this->board['id']]));
         self::assertSame(0, $this->auditCount('assign_moderator'));
-        $this->assertSeeText($this->get('/admin/boards/' . $this->board['id'] . '/edit'), 'Enter a username');
+        $this->assertSeeText($resp, 'Enter a username');
     }
 
     public function test_roster_escapes_a_member_display_name(): void

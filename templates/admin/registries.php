@@ -8,11 +8,7 @@ $this->section('title', 'Registry trust');
         <h1>Registry trust &amp; security response</h1>
         <span class="pill pill-admin">Admin mode</span>
     </header>
-    <nav class="subnav">
-        <a href="/admin">Dashboard</a>
-        <a href="/admin/packages">Packages</a>
-        <a class="active" href="/admin/registries">Registry trust</a>
-    </nav>
+    <?= $this->partial('admin/_nav', ['active' => 'registries', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
     <p class="muted">The private signing root lives offline with the operator; this console pins, rotates, and revokes public keys only. Trust changes require your password. The local blocklist works regardless of registry state.</p>
