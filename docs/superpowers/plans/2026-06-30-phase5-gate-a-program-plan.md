@@ -95,10 +95,10 @@ All additive on already-inert tables; relative numeric order is safe because eac
 | `0066` | `phase5_seed_capabilities_owners` — catalogue + role_capabilities + protected_owners seed | **F (Foundation)** |
 | `0067` | `owner_lifecycle_user_index` — `users` `idx_users_role_status_id (role, status, id)` for last-owner/admin `FOR UPDATE` guards | **F (Foundation F5 / owner-lifecycle)** — *landed 2026-07-01* |
 | `0068` | `phase5_registry_snapshots` — snapshot cache + `moderation_log.target_type` widen | Inc 2 (P5-01) |
-| `0069` | `phase5_package_lifecycle` — `installed_packages` pin/update_policy/settings/export cols | Inc 3 (P5-02) |
-| `0070` | `phase5_theme_packages` — theme_packages/versions/assets/state | Inc 4 (P5-03) |
-| `0071` | `phase5_package_integrations` — `installed_package_settings` + remote-app credential linkage | Inc 5 (P5-04) |
-| `0072` | `phase5_publisher_review_security` — publisher_signing_keys, package_review_decisions, package_transparency_log | Inc 3 (P5-02 / P5-07-A enforcement pre-req) |
+| `0069` | `phase5_package_lifecycle` — `installed_packages` pin/update_policy/staged/settings/export cols + ENUM widens | Inc 3 (P5-02) |
+| `0070` | `phase5_publisher_review_security` — publisher_signing_keys, package_review_decisions, package_transparency_log | Inc 3 (P5-02 / P5-07-A enforcement pre-req) |
+| `0071` | `phase5_theme_packages` — theme_packages/versions/assets/state | Inc 4 (P5-03) |
+| `0072` | `phase5_package_integrations` — `installed_package_settings` + remote-app credential linkage | Inc 5 (P5-04) |
 | `0073` | `phase5_assignment_lifecycle` *(conditional)* — `role_assignments.origin`/status if `0050` insufficient | Inc 6 (P5-09) |
 | `0074` | `phase5_passkey_mfa_policy` *(conditional)* — privileged-MFA grace/policy (else settings-backed) | Inc 7 (P5-11) |
 | `0075` | `phase5_provider_identity_repoint` — backfill `provider_config_id` + uniqueness change to include config/issuer | Inc 8 (P5-12) |
@@ -112,6 +112,12 @@ All additive on already-inert tables; relative numeric order is safe because eac
 > `0074→0075`). The **F1** gapless-unique guard (`tests/Unit/Core/MigrationLedgerTest.php`)
 > now enforces this table's invariant so the next drift fails CI instead of
 > colliding silently.
+>
+> **Re-baselined again 2026-07-02 (Inc 3).** The F1 guard requires gapless
+> numbering, so the review/security tables could not take `0072` while the
+> theme (`0070`) and integration (`0071`) migrations were unbuilt. Inc 3 landed
+> them as `0070`; themes move to `0071`, integrations to `0072`. Rows `0073`+
+> are unchanged.
 
 Each group must pass clean-install + populated-upgrade (`verify:upgrade`) + rollback-compatibility + backup/restore + feature-disabled tests before its behavior enables (`§8.3`).
 
@@ -136,19 +142,19 @@ Each increment is **build-now** but **enable-later** (dark until staged rollout)
 ### Increment 3 — Package manifest, install & lifecycle (P5-02) + review-enforcement seam (P5-07-A part 1 / schema pre-req) · flag `package_registry` · XL
 **Depends:** Inc 2; Foundation (F3 catalogue for "reject invalid capability names", F4 DataClasses, F7 reauth). Enable = small cohort, auto-update OFF, manual pin/rollback.
 - **Scope:** `manifest.v2` schema + **fail-closed validation**; Gate-A type allowlist (theme/automation/remote_app/local — **reject `server_extension`**); compatibility check; **install plan/preview** (resolve exact digest without executing); atomic install with full provenance + permission snapshot (`granted=0` until consent); enable/disable; pin/unpin; **update + permission diff + re-consent** (staged, old grant retained, reduction immediate); rollback to a verified digest; uninstall + export + retention; digest/tamper **health worker** `worker:packages` → quarantine; immutable history; local emergency-disable enforcement; no-JS admin surface. **Co-developed:** the `PackageSecurityGate` + `package_review_decisions` enforcement primitive (P5-07-A) so install **fails closed** on revoked/unapproved-digest/blocked — resolving the P5-02↔P5-07-A reverse dependency.
-- **Migration:** `0069` (pin/update_policy/settings/export cols); `0072` review/security tables land here as the schema/enforcement pre-req for Increment 5's operator console and response flows. **Exit gate:** `§9` Manifest-validation, Install-rollback, Permission-increase/reduction, Review-digest, Tampered-local-files scenarios pass.
+- **Migration:** `0069` (pin/update_policy/staged/settings/export cols + ENUM widens); `0070` review/security tables land here as the schema/enforcement pre-req for Increment 5's operator console and response flows. **Exit gate:** `§9` Manifest-validation, Install-rollback, Permission-increase/reduction, Review-digest, Tampered-local-files scenarios pass.
 - **→ Sub-plans:** SP1 manifest+compat+type policy (pure) · SP2 read-only catalogue · SP3 install+consent+enable/disable + `PackageSecurityGate` · SP4 update+diff+pin (`0069`) · SP5 rollback+uninstall/export + health worker + Repair reconcile.
 
 ### Increment 4 — Declarative theme packages (P5-03) · flag `package_themes` · L
 **Depends:** Inc 2 (parallel with Inc 3). Enable = staff preview → reviewed themes; safe mode retained.
 - **Scope:** theme data model (tokens, token-schema version, asset digests, validation, preview/build state, active/default + **last-known-good** pointer, safe-mode bypass); approved-**token-whitelist** validation (no selectors/JS/PHP/@import/remote/data:); local-asset scan via `AttachmentService` sniff/re-encode + digest pin (zero outbound at page load); **deterministic build** (content digest = cache key); **external-stylesheet** serving (CSP-safe, no inline); WCAG contrast/a11y validation (critical failures hard-block); **per-admin isolated preview** (never mutates global default); transactional activation invariant; **flag-independent safe mode** rendering the built-in baseline; one-action LKG rollback; theme-phishing structural guard.
-- **Migration:** `0070`. **Exit gate:** Theme-safety/accessibility/phishing fixtures pass; preview isolation proven; safe mode works against a broken theme; `package_themes`-off serves the system theme.
+- **Migration:** `0071`. **Exit gate:** Theme-safety/accessibility/phishing fixtures pass; preview isolation proven; safe mode works against a broken theme; `package_themes`-off serves the system theme.
 - **→ Sub-plans:** SP1 schema+repo · SP2 policy+validator+asset-scanner (pure) · SP3 deterministic build + CSP-safe serving · SP4 lifecycle UI (preview/activate/safe-mode/rollback) + audit + browser/a11y. **Decision:** lock theme state location + composition precedence (package theme vs `brand_color_*` vs presets vs `/brand.css`) and migrated built-in theme IDs **at Foundation/M1.5**.
 
 ### Increment 5 — Public declarative/remote integrations (P5-04) + security-response console (P5-07-A part 2) · flag `package_registry` · L
 **Depends:** Inc 3; the **B2 seam must itself reach Gate A acceptance** (api_tokens/webhooks/service_secrets/first_party_hooks R4/R5). Enable = re-consent on expansion; `service_secrets` is a **hard predecessor** (kill switch, not a feature flag).
 - **Scope:** install of `automation`/`remote_app` types on the P5-02 engine; manifest scope mapping (declared API scopes→`ApiScopes` read-only, events→`WebhookEvents`, data classes→`DataClasses`); permission+data consent committed with the grant; **remote-app install-scoped credentials** minted via `ApiTokenService`/`WebhookService` (never reuse the human token — `Human-token separation`); scope isolation at the real gate; secret storage via `SecretVault` (redacted); settings-schema form; disable/uninstall/export; registry-outage fail-closed. **P5-07-A console:** publisher verify/suspend/revoke + signing-key lifecycle; signed publication bound to exact digest; signed revocation/yank; advisory ingest/escalate + `worker:advisories`; append-only **transparency log**; **global flag-independent emergency disable / safe mode**; `RepairService` advisory_status reconcile.
-- **Migration:** `0071` (package settings + credential linkage); `0072` already landed in Inc 3. **Exit gate:** Remote-app-scope, Human-token-separation, Secret-redaction, Revoked-release, Global-emergency-disable, Publisher-compromise scenarios pass.
+- **Migration:** `0072` (package settings + credential linkage); `0070` already landed in Inc 3. **Exit gate:** Remote-app-scope, Human-token-separation, Secret-redaction, Revoked-release, Global-emergency-disable, Publisher-compromise scenarios pass.
 - **→ Sub-plans:** P5-04 SP1 manifest profile + scope/data mapping · SP2 install+consent · SP3 remote-app credential provisioning · SP4 settings schema · SP5 disable/uninstall/export + emergency disable. P5-07-A SP1 publisher/key lifecycle · SP2 signed publication + exact-digest + transparency · SP3 advisory worker · SP4 emergency console.
 
 ### Increment 6 — Scoped assignments + role editor + resolver **enforcement cutover** (P5-09 + P5-08 part 2) · flag `capabilities` · L

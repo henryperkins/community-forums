@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.27 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-02
+**Status:** v1.29 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-02
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -123,6 +123,9 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 103 | `server_extension_runs` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
 | 104 | `server_extension_kv` | Ecosystem / runtime | 5 | ADR 0011 Gate B pull-forward / migration 0065 |
 | 105 | `registry_snapshots` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #1 (offline snapshot cache, migration 0068) |
+| 106 | `publisher_signing_keys` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #5 / P5-07-A (migration 0070; inert until Inc 5 console) |
+| 107 | `package_review_decisions` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #5 / P5-07-A (migration 0070) |
+| 108 | `package_transparency_log` | Ecosystem | 5 | PHASE_5_PLAN §8.2 #5 / P5-07-A (migration 0070) |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -167,6 +170,10 @@ Those source docs remain the narrative source of truth for *why* each field exis
 > default-on 2026-07-02, reversible via the `features` override).
 > Tables 101–104 are the deploy-dark Phase 5 Gate B server-extension runtime
 > evidence harness (`0065`, `server_extensions` flag).
+> Table 105 is the Phase 5 registry snapshot cache (`0068`). Tables 106–108
+> are the Phase 5 Increment 3 review-enforcement/security-response schema
+> (`0070`); the publisher-key custody shape is documented-inert until the Inc 5
+> P5-07-A part 2 console.
 
 ---
 
@@ -996,11 +1003,14 @@ account-deletion purge.
 
 ## 5A. Phase 5 foundation — ecosystem, identity & governance (deploy-dark)
 
-Migrations `0049`–`0053` (additive; one reversible conversion). This is the
-**schema-reconciliation** slice of Phase 5 Milestone 1: the data shape exists so no
-Gate A feature depends on an undocumented table/column, but it is **inert** — every
-Phase 5 flag defaults dark (`FeatureFlags::DEFAULTS`) and no application code reads
-or writes these tables yet. Per `PHASE_5_PLAN` §2/§7, the registry trust roots,
+Migrations `0049`–`0053` established the foundation (additive; one reversible
+conversion); `0068` added the snapshot cache, and `0069`–`0070` extend the
+package lifecycle/review-enforcement shape. This is the **schema-reconciliation**
+slice of Phase 5: the data shape exists so no Gate A feature depends on an
+undocumented table/column, but it is **inert** unless a dark feature explicitly
+uses it — every Phase 5 flag defaults dark (`FeatureFlags::DEFAULTS`) and no
+application code reads or writes newly landed lifecycle tables until their
+increment wires behavior. Per `PHASE_5_PLAN` §2/§7, the registry trust roots,
 signing-key custody, WebAuthn RP ID, OIDC provider choice, isolation profile,
 numeric budgets, and permission taxonomy are **owner-approved Milestone-0 policy**
 and are deliberately **not** encoded here; private trust-root/signing keys never live
@@ -1016,12 +1026,15 @@ New tables — **ecosystem / packages** (`0049`, §8.2 #1–5):
 - `package_registries(id, source_id, display_name, base_url, is_enabled, last_snapshot_digest, last_snapshot_at, snapshot_expires_at, created_at, updated_at)` with unique `source_id`; canonical, globally-namespaced registry sources with snapshot freshness/expiry.
 - `registry_trust_keys(id, registry_id, key_id, algorithm, public_key, status, valid_from, valid_until, revoked_at, revoked_reason, created_at)` with unique `(registry_id, key_id)` and registry FK; **PUBLIC** signing-key material only, with rotation/revocation.
 - `registry_snapshots(id, registry_id, digest, document, signature, key_id, generated_at, expires_at, applied_at)` with unique `(registry_id, digest)` and registry FK; verified-snapshot offline cache and anti-replay watermark (`0068`).
+- `publisher_signing_keys(id, publisher_id, key_id, algorithm, public_key, status, valid_from, valid_until, revoked_at, revoked_reason, created_at)` with unique `(publisher_id, key_id)` — publisher key custody shape (`0070`); **documented-inert until the Inc 5 P5-07-A part 2 console** (public key bytes only, mirroring `registry_trust_keys`).
+- `package_review_decisions(id, package_id, release_id, version, digest, decision, decided_at, source, evidence_json, created_at)` (`0070`) — append-only local cache of the signed review evidence an install relied on (§8.2 #5); written at acquisition time; `decision` bound to the exact digest (decision #16).
+- `package_transparency_log(id, package_uid, version, digest, event, source, actor_id, registry_id, detail, created_at)` (`0070`) — append-only publication/lifecycle history for released/revoked digests; no update/delete path exists in code.
 - `package_publishers(id, publisher_uid, display_name, verified_at, status, created_at, updated_at)` with unique `publisher_uid`.
 - `packages(id, package_uid, registry_id, publisher_id, name, type, trust_class, advisory_status, latest_release_id, created_at, updated_at)` with unique `package_uid`, registry/publisher FKs; registry identity, trust class never implied by installability. `latest_release_id` is a denormalised pointer (no FK — avoids a cycle with releases).
 - `package_releases(id, package_id, version, digest, source_url, license, core_min, core_max, manifest_json, dependency_json, signature, signed_key_id, review_status, channel, advisory_status, published_at, created_at)` with unique `(package_id, version)`, digest index, package FK; **immutable** releases, review bound to an exact digest.
-- `installed_packages(id, package_id, release_id, digest, source_registry_id, publisher_id, trust_class, review_status, state, health, compat_min, compat_max, installed_by, installed_at, updated_at)` with unique `package_id` and FKs; local install state kept **separate** from registry metadata so a registry rollback never rewrites an installed digest.
-- `installed_package_permissions(id, installed_package_id, kind, permission_key, risk_class, declared, granted, granted_at, granted_by)` with unique `(installed_package_id, kind, permission_key)` and FKs; declared = manifest ceiling, granted = actual authority (preserved until re-consent).
-- `package_history(id, package_id, installed_package_id, event, actor_id, prior_version, new_version, prior_digest, new_digest, permission_snapshot_json, approval_ref, failure_stage, detail, created_at)` with package/actor FKs; `installed_package_id` carries **no** FK so history survives uninstall.
+- `installed_packages(id, package_id, release_id, digest, source_registry_id, publisher_id, trust_class, review_status, state, health, pinned, update_policy, staged_release_id, staged_digest, settings_json, export_json, exported_at, retain_until, uninstalled_at, quarantine_reason, last_health_check_at, compat_min, compat_max, installed_by, installed_at, updated_at)` with unique `package_id` and FKs; local install state kept **separate** from registry metadata so a registry rollback never rewrites an installed digest. `state` is `installed|enabled|disabled|quarantined|uninstalling|uninstalled`; `update_policy` is `manual|notify` only (no `auto` in Gate A); `settings_json` is dark until Inc 5.
+- `installed_package_permissions(id, installed_package_id, kind, permission_key, risk_class, declared, granted, granted_at, granted_by)` with unique `(installed_package_id, kind, permission_key)` and FKs; `kind` includes `capability|data_class|outbound_host|job|broker_service|api_scope|event`; declared = manifest ceiling, granted = actual authority (preserved until re-consent).
+- `package_history(id, package_id, installed_package_id, event, actor_id, prior_version, new_version, prior_digest, new_digest, permission_snapshot_json, approval_ref, failure_stage, detail, created_at)` with package/actor FKs; `event` includes `update_staged`, `export`, and `purge` after `0069`; `installed_package_id` carries **no** FK so history survives uninstall.
 - `package_advisories(id, advisory_uid, registry_id, package_id, affected_version_range, affected_digest, severity, action, summary, signed_evidence, issued_at, acknowledged_at, acknowledged_by, created_at)` with unique `advisory_uid` and FKs; caches the signed advisory the install relied on.
 - `local_package_blocks(id, digest, package_uid, reason, created_by, created_at)` with digest/package indexes; registry-independent local emergency blocklist.
 
@@ -1131,7 +1144,7 @@ This maps the consolidated tables onto the **seven-phase delivery plan** (PHASE_
 - **Phase 2 (community essentials):** `reactions`, `thread_user` (star), `subscriptions`, `notifications`, `conversations`/`conversation_participants`/`dm_messages`, `reports`, `board_moderators`, `bans`, `warnings`, `user_notes`, `board_members`, search FULLTEXT indexes, `oauth_identities`, `user_preferences`, `user_board_prefs`, `blocks`, `username_history`, `email_suppressions`, `email_deliveries`, `follows`, `badges`, `user_badges`.
 - **Phase 3 (polish, trust & scale):** `attachments` (image uploads + lifecycle), `plugins` (first-party/vetted), `webhooks` + `webhook_deliveries` (durable delivery, built deploy-dark by `0057`), `api_tokens`; appeals, bookmark-folder, custom-profile-field, and server-draft tables are now specced as DDL in **§4B/§4C** (migrations `0060`/`0062`/`0064`); the automation-rule table remains a **schema gap in PHASE_3_PLAN §8.2** (to be specced as DDL at its Milestone 1, then folded back here). TOTP/recovery is now built as the Phase 5 Gate A prerequisite in migration `0054`, resolving ADR 0004 B1 before passkey enforcement.
 - **Phase 4 (advanced community & content):** Gate A migration `0048` is reconciled above: topic status/history, snooze, assignment, group-DM intervals/events, tags, board/tag follows, reputation ledger, badge-rule schema, summaries/related/wiki revisions, reference metadata, and split/merge redirect/audit tables. Gate B / later Phase 4 schema remains in PHASE_4_PLAN until accepted.
-- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), webhook delivery slice (`0057`), code-only first-party hook registry, and Gate B server-extension runtime tables (`0065`) are reconciled here. The remaining Phase 5 schema (theme packages, publisher/review portal, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands.
+- **Phase 5 (ecosystem, identity & governance):** **partially consolidated** — the foundation migrations `0049`–`0053` (signed-package/registry, capabilities/roles, passkey credentials, generic-OIDC provider registry, invitations) are reconciled in **§5A** above as additive deploy-dark tables, and the B2 service-secret registry (`0055`), API-token slice (`0056`), webhook delivery slice (`0057`), code-only first-party hook registry, Gate B server-extension runtime tables (`0065`), registry snapshot cache (`0068`), and package lifecycle/review-enforcement schema (`0069`–`0070`) are reconciled here. The remaining Phase 5 schema (theme packages, governance groups/approvals/access-review, service principals, verified profile links, richer custom fields — §8.2 #7/#10/#11/#17/#18/#19 plus ADR 0004 B2 follow-ups) stays in PHASE_5_PLAN / B2 follow-up specs until its workstream lands; the publisher/review operator console behavior still lands later on the `0070` tables.
 - **Phase 6 (realtime & scale):** transactional-outbox/event + job tables, external-search projection state, object-storage/media metadata, and feed-projection/checkpoint tables. DDL in PHASE_6_PLAN.
 - **Phase 7 (platform expansion):** per-tenant `community_id` ownership, locale/translation packs, Web Push subscriptions, import source-ID mappings, community domains, and any federation tables. DDL in PHASE_7_PLAN.
 
@@ -1178,6 +1191,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.29 | 2026-07-02 | Phase 5 Increment 3 migrations `0069`+`0070`: installed-package lifecycle columns (pin, update_policy manual\|notify, staged update pointer, settings/export/retention/quarantine state, `state`+`'uninstalled'`, history events `update_staged`/`export`/`purge`, permission kinds `api_scope`/`event`) and the P5-07-A review-enforcement tables (`publisher_signing_keys` inert-for-Inc-5, `package_review_decisions`, `package_transparency_log`). |
 | v1.28 | 2026-07-02 | Phase 5 Increment 2 migration `0068`: added `registry_snapshots` (verified-snapshot offline cache / anti-replay watermark for P5-01) and widened `moderation_log.target_type` with `registry` and `package` for trust-root, blocklist, and advisory audit rows. |
 | v1.27 | 2026-07-02 | Documentation-only reconciliation after default-on graduations for `server_drafts`, `badge_rules`, `slash_giphy`, and `account_lifecycle`; no schema shape change. Updated stale Phase 3 build notes to point at the existing carryover migrations (`0059`-`0064`) instead of listing server drafts/bookmark/profile/appeal tables as not built. |
 | v1.26 | 2026-07-01 | Added owner-lifecycle locking support migration `0067`: `users` now has `idx_users_role_status_id (role, status, id)` so last-owner/admin `FOR UPDATE` guards can lock active admins through a narrow ordered index. |
