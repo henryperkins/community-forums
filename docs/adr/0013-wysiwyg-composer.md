@@ -22,6 +22,8 @@ All editor JavaScript and CSS are committed static assets served from `/assets`.
 
 The strict CSP remains `script-src 'self'; style-src 'self'`. Inline scripts, inline styles, runtime `<style>` injection, parser or `setAttribute` `style=""` writes, and constructable/adopted stylesheet rule injection are not allowed by repository policy. CSSOM property writes are acceptable.
 
+The editor build pipeline uses Vite only at development/build time and emits a deterministic `wysiwyg-composer.js` plus `wysiwyg-composer.css` pair into `public/assets`. The initial Task 7 adapter factory is intentionally no-op while the pipeline and strict-CSP loading path are proven.
+
 ## Consequences
 
 - Operators can roll back to the current Markdown-enhanced composer by setting `wysiwyg_composer=false`.
