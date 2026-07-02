@@ -15,13 +15,15 @@ namespace App\Support;
  * `foundation` = measured now (resolver baseline via the legacy authority read;
  * webhook timeout is a configured cap); everything else is `PENDING` in the
  * foundation report and filled by its increment.
+ * `registry.fetch_p95` needs a live registry endpoint over the network; it is
+ * measured at staged enablement, not on the local fixture.
  */
 final class Phase5Budgets
 {
     /** @var array<string,array{metric:string,target:int,unit:string,statistic:string,measurable_at:string}> */
     private const BUDGETS = [
         'registry.snapshot_freshness'    => ['metric' => 'Registry snapshot freshness tolerance',        'target' => 86400, 'unit' => 's',  'statistic' => 'max', 'measurable_at' => 'inc2'],
-        'registry.fetch_p95'             => ['metric' => 'Registry fetch duration',                       'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc2'],
+        'registry.fetch_p95'             => ['metric' => 'Registry fetch duration',                       'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'staged-enablement'],
         'registry.signature_verify_p95'  => ['metric' => 'Signature verification per package',            'target' => 250,   'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc2'],
         'package.install_update_p95'     => ['metric' => 'Declarative package install/update',            'target' => 10000, 'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc3'],
         'resolver.p95'                   => ['metric' => 'Capability resolver decision',                  'target' => 5,     'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'foundation'],

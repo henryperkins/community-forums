@@ -71,4 +71,23 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertStringContainsString('legacy', $rows['resolver.p95']['measured']);
         self::assertStringContainsString('Resolver p50/p95/p99', $report->render());
     }
+
+    public function test_inc2_registry_rows_measure_and_config(): void
+    {
+        $service = new Phase5BudgetReportService(
+            $this->db,
+            null,
+            new \App\Security\Registry\TrustChainVerifier(),
+        );
+        $rows = [];
+        foreach ($service->rows() as $row) {
+            $rows[$row['key']] = $row;
+        }
+
+        self::assertStringStartsWith('MEASURED', $rows['registry.signature_verify_p95']['status']);
+        self::assertStringContainsString('ms', $rows['registry.signature_verify_p95']['measured']);
+        self::assertSame('CONFIG', $rows['registry.snapshot_freshness']['status']);
+        self::assertStringContainsString('86400', $rows['registry.snapshot_freshness']['measured']);
+        self::assertStringContainsString('staged-enablement', $rows['registry.fetch_p95']['status']);
+    }
 }

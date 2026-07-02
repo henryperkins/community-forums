@@ -126,6 +126,83 @@ final class BaselineMetricsService
         ];
     }
 
+    /**
+     * Measures Ed25519 verification through the real TrustChainVerifier on an
+     * in-memory 100-package snapshot. The dev signing harness is optional; when
+     * absent, callers keep the budget row pending.
+     *
+     * @return array<string,mixed>|null the PHASE_5_PLAN measurement envelope
+     */
+    public function measureSignatureVerify(\App\Security\Registry\TrustChainVerifier $verifier, int $iterations = 200): ?array
+    {
+        if (!class_exists(\Tests\Support\Phase5\SigningHarness::class)) {
+            return null;
+        }
+
+        $iterations = max(1, $iterations);
+        $root = \Tests\Support\Phase5\SigningHarness::generate('bench-root');
+        $packages = [];
+        for ($i = 0; $i < 100; $i++) {
+            $packages[] = [
+                'uid' => "bench/pkg-$i",
+                'type' => 'theme',
+                'releases' => [[
+                    'version' => '1.0.' . $i,
+                    'digest' => hash('sha256', "bench-artifact-$i"),
+                    'core_min' => '0.1.0',
+                    'core_max' => null,
+                    'channel' => 'stable',
+                    'advisory' => 'none',
+                ]],
+            ];
+        }
+
+        $snap = $root->mintSnapshot(['packages' => $packages]);
+        $keyRow = [
+            'key_id' => 'bench-root',
+            'algorithm' => 'ed25519',
+            'public_key' => $root->publicKey(),
+            'status' => 'active',
+            'valid_from' => null,
+            'valid_until' => null,
+        ];
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+
+        $samples = [];
+        $errors = 0;
+        for ($i = 0; $i < $iterations; $i++) {
+            $t0 = hrtime(true);
+            try {
+                $verifier->verify($snap['json'], $snap['signature'], 'bench-root', [$keyRow], 'rb-registry-snapshot.v1', $now);
+            } catch (\Throwable) {
+                $errors++;
+            }
+            $samples[] = (hrtime(true) - $t0) / 1_000_000;
+        }
+
+        return [
+            'route_or_job' => 'registry_signature_verify',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($this->db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'in-memory rb-registry-snapshot.v1 (100 packages, ' . strlen($snap['json']) . ' bytes)',
+            'role_assignment_count' => 0,
+            'installed_package_count' => 100,
+            'concurrency' => 1,
+            'cache_state' => 'cold',
+            'window' => $iterations . ' iterations',
+            'p50' => self::percentile($samples, 50),
+            'p95' => self::percentile($samples, 95),
+            'p99' => self::percentile($samples, 99),
+            'query_count' => 0,
+            'query_time_ms' => 0.0,
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
+        ];
+    }
+
     /** @param list<float> $samples */
     private static function percentile(array $samples, int $p): float
     {

@@ -499,7 +499,7 @@ try {
                 new BoardPolicy(),
                 new WriteGate(),
             );
-            $report = new Phase5BudgetReportService($db, $resolver);
+            $report = new Phase5BudgetReportService($db, $resolver, new TrustChainVerifier());
             $path = $root . '/docs/evidence/phase5/performance-budgets.md';
 
             // Non-mutating: seed + measure inside a transaction that is always

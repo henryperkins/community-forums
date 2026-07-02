@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Security\CapabilityResolver;
+use App\Security\Registry\TrustChainVerifier;
 use App\Support\Phase5Budgets;
 
 /**
@@ -20,8 +21,13 @@ final class Phase5BudgetReportService
 {
     private ?array $baseline = null;
     private ?array $resolverSample = null;
+    private ?array $signatureSample = null;
 
-    public function __construct(private Database $db, private ?CapabilityResolver $resolver = null)
+    public function __construct(
+        private Database $db,
+        private ?CapabilityResolver $resolver = null,
+        private ?TrustChainVerifier $trustVerifier = null,
+    )
     {
     }
 
@@ -37,6 +43,15 @@ final class Phase5BudgetReportService
         }
 
         return $this->resolverSample ??= (new BaselineMetricsService($this->db))->measureResolver($this->resolver);
+    }
+
+    private function signatureSample(): ?array
+    {
+        if ($this->trustVerifier === null) {
+            return null;
+        }
+
+        return $this->signatureSample ??= (new BaselineMetricsService($this->db))->measureSignatureVerify($this->trustVerifier);
     }
 
     /** @return array<int,array{key:string,metric:string,target:string,measured:string,status:string}> */
@@ -58,6 +73,15 @@ final class Phase5BudgetReportService
                     $measured = $baseline['p95'] . ' ms legacy';
                     $status = 'BASELINE';
                 }
+            } elseif ($key === 'registry.signature_verify_p95') {
+                $sample = $this->signatureSample();
+                if ($sample !== null) {
+                    $measured = $sample['p95'] . ' ms verify (' . $sample['data_fixture'] . ')';
+                    $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+                }
+            } elseif ($key === 'registry.snapshot_freshness') {
+                $measured = '86400 s enforced fail-closed (RegistrySnapshotService expired_snapshot refusal)';
+                $status = 'CONFIG';
             } elseif ($key === 'webhook.delivery_timeout') {
                 $measured = '5000 ms configured';
                 $status = 'CONFIG';
@@ -86,6 +110,11 @@ final class Phase5BudgetReportService
         if ($resolverSample !== null) {
             $out .= '- Resolver p50/p95/p99 (ms): ' . $resolverSample['p50'] . ' / ' . $resolverSample['p95'] . ' / ' . $resolverSample['p99']
                 . ' · route/job: `' . $resolverSample['route_or_job'] . "`\n";
+        }
+        $signatureSample = $this->signatureSample();
+        if ($signatureSample !== null) {
+            $out .= '- Signature verify p50/p95/p99 (ms): ' . $signatureSample['p50'] . ' / ' . $signatureSample['p95'] . ' / ' . $signatureSample['p99']
+                . ' · route/job: `' . $signatureSample['route_or_job'] . "`\n";
         }
         $out .= '- Queries: ' . $env['query_count'] . ' · query time (ms): ' . $env['query_time_ms']
              . ' · peak mem (bytes): ' . $env['peak_memory_bytes'] . ' · error rate: ' . $env['error_rate'] . "\n\n";

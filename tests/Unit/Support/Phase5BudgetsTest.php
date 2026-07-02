@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 final class Phase5BudgetsTest extends TestCase
 {
     private const STATISTICS = ['p50', 'p95', 'p99', 'max'];
-    private const PHASES = ['foundation', 'inc1', 'inc2', 'inc3', 'inc4', 'inc5', 'inc7', 'inc8', 'inc9', 'gate_b'];
+    private const PHASES = ['foundation', 'inc1', 'inc2', 'inc3', 'inc4', 'inc5', 'inc7', 'inc8', 'inc9', 'gate_b', 'staged-enablement'];
 
     public function test_catalogue_encodes_all_eleven_d11_budgets(): void
     {
