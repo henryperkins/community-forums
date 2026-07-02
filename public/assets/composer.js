@@ -1020,6 +1020,7 @@
         function comboboxReady() { return ta.getAttribute('role') === 'combobox'; }
         function setExpanded(open) {
             if (!comboboxReady()) { return; }
+            if (open) { ta.setAttribute('aria-controls', menuId); }
             ta.setAttribute('aria-expanded', open ? 'true' : 'false');
             if (!open) { ta.removeAttribute('aria-activedescendant'); }
         }
@@ -1230,6 +1231,205 @@
         });
     }
 
+    var referenceMenuSeq = 0;
+    function referenceState(ta) {
+        if (ta.selectionStart !== ta.selectionEnd) { return null; }
+        var pos = ta.selectionStart || 0;
+        var before = ta.value.slice(0, pos);
+        var m = before.match(/(^|[\s(])([@#])([A-Za-z0-9_-]{1,80})$/);
+        if (!m) { return null; }
+        var trigger = m[2];
+        var query = m[3];
+        var line = before.slice(before.lastIndexOf('\n') + 1);
+        if (trigger === '#' && /^\s*#{1,3}\s?$/.test(line)) { return null; }
+        if (inFence(ta)) { return null; }
+        return {
+            trigger: trigger,
+            query: query,
+            start: pos - trigger.length - query.length,
+            end: pos
+        };
+    }
+
+    function suggestionUrl(form, state) {
+        return '/composer/suggest'
+            + '?trigger=' + encodeURIComponent(state.trigger)
+            + '&q=' + encodeURIComponent(state.query)
+            + '&context=' + encodeURIComponent(form.getAttribute('data-composer-context') || '')
+            + '&target_id=' + encodeURIComponent(form.getAttribute('data-composer-target-id') || '0');
+    }
+
+    function wireReferencePickers(form, adapter) {
+        var ta = adapter.ta;
+        var menu = document.createElement('div');
+        var menuId = 'composer-reference-menu-' + (++referenceMenuSeq);
+        var optionSeq = 0;
+        var options = [];
+        var activeIndex = -1;
+        var activeState = null;
+        var lastRenderKey = null;
+        var requestSeq = 0;
+
+        menu.id = menuId;
+        menu.className = 'composer-reference-menu';
+        menu.hidden = true;
+        menu.setAttribute('role', 'listbox');
+        menu.setAttribute('aria-label', 'Composer references');
+        ta.parentNode.insertBefore(menu, ta.nextSibling);
+
+        ensureAccessibleName(ta);
+        ta.setAttribute('role', 'combobox');
+        if (!ta.hasAttribute('aria-expanded')) { ta.setAttribute('aria-expanded', 'false'); }
+        if (!ta.hasAttribute('aria-controls')) { ta.setAttribute('aria-controls', menuId); }
+        ta.setAttribute('aria-haspopup', 'listbox');
+        ta.setAttribute('aria-autocomplete', 'list');
+
+        function ownsCombobox() { return ta.getAttribute('aria-controls') === menuId; }
+        function setExpanded(open) {
+            ta.setAttribute('role', 'combobox');
+            if (open) { ta.setAttribute('aria-controls', menuId); }
+            ta.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (!open && ownsCombobox()) { ta.removeAttribute('aria-activedescendant'); }
+        }
+        function openMenu() {
+            menu.hidden = false;
+            setExpanded(true);
+        }
+        function hide() {
+            var wasOpen = !menu.hidden || (ownsCombobox() && ta.getAttribute('aria-expanded') === 'true');
+            requestSeq++;
+            activeState = null;
+            options = [];
+            activeIndex = -1;
+            lastRenderKey = null;
+            menu.hidden = true;
+            menu.innerHTML = '';
+            if (wasOpen) { setExpanded(false); }
+        }
+        function highlight(index) {
+            if (!options.length) {
+                activeIndex = -1;
+                if (ownsCombobox()) { ta.removeAttribute('aria-activedescendant'); }
+                return;
+            }
+            if (index < 0) { index = options.length - 1; }
+            if (index >= options.length) { index = 0; }
+            activeIndex = index;
+            for (var i = 0; i < options.length; i++) {
+                options[i].setAttribute('aria-selected', i === index ? 'true' : 'false');
+            }
+            var active = options[activeIndex];
+            ta.setAttribute('aria-activedescendant', active.id);
+            active.scrollIntoView({ block: 'nearest' });
+        }
+        function selectItem(item) {
+            var state = activeState || referenceState(ta);
+            if (!state) { hide(); return; }
+            var markdown = item.markdown || item.token || item.label || '';
+            if (markdown === '') { hide(); return; }
+            replaceRange(adapter.ta, state.start, state.end, markdown);
+            hide();
+        }
+        function renderItems(items, state, key) {
+            menu.innerHTML = '';
+            options = [];
+            if (!items || !items.length) { hide(); return; }
+            activeState = state;
+            lastRenderKey = key;
+            items.forEach(function (item) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'composer-reference-option';
+                b.setAttribute('role', 'option');
+                b.setAttribute('tabindex', '-1');
+                b.setAttribute('aria-selected', 'false');
+                b.id = menuId + '-opt-' + (++optionSeq);
+
+                var badge = document.createElement('span');
+                badge.className = 'badge';
+                badge.textContent = item.type || state.trigger;
+                var label = document.createElement('span');
+                label.textContent = item.label || item.token || item.url || 'Suggestion';
+                var meta = document.createElement('span');
+                meta.className = 'composer-reference-meta';
+                meta.textContent = item.meta || item.group || item.url || '';
+
+                b.appendChild(badge);
+                b.appendChild(label);
+                b.appendChild(meta);
+                b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+                b.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    selectItem(item);
+                });
+                menu.appendChild(b);
+                options.push(b);
+            });
+            openMenu();
+            highlight(0);
+        }
+        function render() {
+            var state = referenceState(ta);
+            if (!state) { hide(); return; }
+            var key = state.trigger + '|' + state.query + '|'
+                + (form.getAttribute('data-composer-context') || '') + '|'
+                + (form.getAttribute('data-composer-target-id') || '0');
+            activeState = state;
+            if (key === lastRenderKey && !menu.hidden) { return; }
+            var seq = ++requestSeq;
+            fetch(suggestionUrl(form, state), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            }).then(function (r) {
+                return r.ok ? r.json() : null;
+            }).then(function (j) {
+                if (seq !== requestSeq) { return; }
+                if (!j || !j.ok || !Array.isArray(j.items)) { hide(); return; }
+                renderItems(j.items, state, key);
+            }).catch(function () {
+                if (seq === requestSeq) { hide(); }
+            });
+        }
+
+        ta.addEventListener('input', render);
+        ta.addEventListener('keyup', function (e) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter'
+                || e.key === 'Tab' || e.key === 'Escape') { return; }
+            render();
+        });
+        ta.addEventListener('click', render);
+        ta.addEventListener('keydown', function (e) {
+            if (menu.hidden) {
+                if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && referenceState(ta)) {
+                    lastRenderKey = null;
+                    render();
+                    if (!menu.hidden) { e.preventDefault(); }
+                }
+                return;
+            }
+            switch (e.key) {
+                case 'ArrowDown': e.preventDefault(); highlight(activeIndex + 1); break;
+                case 'ArrowUp': e.preventDefault(); highlight(activeIndex - 1); break;
+                case 'Enter':
+                case 'Tab':
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    if (activeIndex >= 0 && options.length) { options[activeIndex].click(); }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    hide();
+                    break;
+                default: break;
+            }
+        });
+        document.addEventListener('click', function (e) {
+            if (e.target === ta || menu.contains(e.target)) { return; }
+            hide();
+        });
+    }
+
     // ---- Enter-to-send + smart list continuation (P3-01) ------------------
     // Continue or end a Markdown list when Enter is pressed inside one. Returns
     // true when it handled the key (so the caller suppresses the default newline).
@@ -1296,6 +1496,7 @@
         // first: when the menu is open it consumes Enter/Escape (via
         // stopImmediatePropagation) before enter-to-send / list-continuation see it.
         wireSlashMenu(form, adapter);
+        wireReferencePickers(form, adapter);
         wireKeys(form, adapter, prefs);
         stampIdempotency(form);
         // A form may opt out of local draft autosave (data-no-draft). The inline
