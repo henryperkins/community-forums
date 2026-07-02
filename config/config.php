@@ -247,6 +247,13 @@ return [
             explode(',', (string) Env::get('REGISTRY_ALLOWED_PRIVATE_CIDRS', ''))))),
     ],
 
+    'packages' => [
+        // Verified release documents, content-addressed by sha256. Never web-served.
+        'storage_path' => Env::get('PACKAGES_STORAGE_PATH', dirname(__DIR__) . '/storage/packages'),
+        // Default uninstall retention window when the manifest declares none.
+        'retention_days' => (int) Env::get('PACKAGES_RETENTION_DAYS', '30'),
+    ],
+
     'giphy' => [
         // Public browser API key only. The app never proxies, caches, rewrites, or
         // downloads GIPHY media; the picker uses GIPHY Search/Trending directly.

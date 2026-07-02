@@ -59,6 +59,8 @@ $config = new Config(array_replace_recursive($config->all(), [
     'paths' => ['ratelimit' => sys_get_temp_dir() . '/rb-test-ratelimit'],
     // Uploaded media goes to a throwaway dir, never the real storage root.
     'uploads' => ['storage_path' => sys_get_temp_dir() . '/rb-test-media'],
+    // Package artifacts go to a throwaway dir, never the real storage root.
+    'packages' => ['storage_path' => sys_get_temp_dir() . '/rb-test-packages'],
     // Assert the HSTS header in tests regardless of the local .env value.
     'security' => ['hsts' => true],
 ]));
