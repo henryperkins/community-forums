@@ -92,4 +92,48 @@ final class ThemeTokenPolicyTest extends TestCase
             }
         }
     }
+
+    /**
+     * Each shipped baseline must itself satisfy every contrast pair at its
+     * declared minimum — guards against transcription slips and against
+     * contrast pairs that mismodel the real palette (a partial theme package
+     * would otherwise inherit a baseline-only failure).
+     */
+    public function test_baselines_are_self_consistent_with_contrast_pairs(): void
+    {
+        foreach (['light', 'dark'] as $variant) {
+            $baseline = ThemeTokenPolicy::baseline($variant);
+            foreach (ThemeTokenPolicy::contrastPairs() as $pair) {
+                $ratio = self::contrastRatio($baseline[$pair['fg']], $baseline[$pair['bg']]);
+                self::assertGreaterThanOrEqual($pair['min'], $ratio, sprintf(
+                    '%s baseline: %s (%s) on %s (%s) is %.2f:1, below %.1f:1',
+                    $variant,
+                    $pair['fg'],
+                    $baseline[$pair['fg']],
+                    $pair['bg'],
+                    $baseline[$pair['bg']],
+                    $ratio,
+                    $pair['min'],
+                ));
+            }
+        }
+    }
+
+    /** WCAG 2.x contrast ratio between two #rrggbb colours. */
+    private static function contrastRatio(string $fgHex, string $bgHex): float
+    {
+        $l1 = self::relativeLuminance($fgHex);
+        $l2 = self::relativeLuminance($bgHex);
+        return (max($l1, $l2) + 0.05) / (min($l1, $l2) + 0.05);
+    }
+
+    private static function relativeLuminance(string $hex): float
+    {
+        $lin = [];
+        foreach (str_split(ltrim($hex, '#'), 2) as $channel) {
+            $c = hexdec($channel) / 255.0;
+            $lin[] = $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+        }
+        return 0.2126 * $lin[0] + 0.7152 * $lin[1] + 0.0722 * $lin[2];
+    }
 }

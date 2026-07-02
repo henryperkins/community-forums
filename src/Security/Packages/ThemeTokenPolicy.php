@@ -60,6 +60,8 @@ final class ThemeTokenPolicy
         '--accent-2' => '#c29a44',
         '--danger' => '#9c4a33',
         '--brand' => '#2e4a3a',
+        '--brand-subtle' => '#edf3ed',
+        '--on-brand-subtle' => '#24402f',
     ];
 
     private const BASELINE_DARK = [
@@ -76,6 +78,11 @@ final class ThemeTokenPolicy
         '--accent-2' => '#c29a44',
         '--danger' => '#db8c73',
         '--brand' => '#4e7459',
+        // app.css declares rgba(78,116,89,.20) (green-500 @ 20%); flattened by
+        // compositing over the dark --surface (#283440), the lightest surface it
+        // renders on — the conservative (lowest-contrast) 6-digit equivalent.
+        '--brand-subtle' => '#304145',
+        '--on-brand-subtle' => '#bcd0bf',
     ];
 
     public static function isKnown(string $token): bool
@@ -148,7 +155,11 @@ final class ThemeTokenPolicy
             ['fg' => '--text', 'bg' => '--surface-2', 'min' => 4.5],
             ['fg' => '--text-muted', 'bg' => '--surface', 'min' => 4.5],
             ['fg' => '--accent-contrast', 'bg' => '--accent', 'min' => 4.5],
-            ['fg' => '--text-inverse', 'bg' => '--brand', 'min' => 4.5],
+            // The palette's real "text on brand-tinted fill" pairing (chips,
+            // active rows, joinbar). --text-inverse on --brand was a plan-level
+            // mismodel: app.css never pairs those two, and the dark baseline
+            // fails it at 3.04:1 (Inc 4 plan correction).
+            ['fg' => '--on-brand-subtle', 'bg' => '--brand-subtle', 'min' => 4.5],
         ];
     }
 
