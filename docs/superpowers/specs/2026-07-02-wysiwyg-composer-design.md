@@ -1,7 +1,7 @@
 # Design: WYSIWYG Composer and Slack-Style References
 
 **Date:** 2026-07-02
-**Status:** Approved design (brainstorming output) - pending implementation plan.
+**Status:** Approved design (review rounds 1-2 folded in) - pending ADR and implementation plan.
 **Scope:** True rich composer (`A`) with searchable user, board, tag, topic, and post
 references.
 
@@ -31,16 +31,25 @@ WYSIWYG:
 This is an enhancement over the existing composer contract, not a replacement for the
 fallback path.
 
+Because this reverses ADR 0001's accepted textarea-first decision, the implementation
+plan must include a new ADR that supersedes or amends ADR 0001 before the WYSIWYG editor
+ships.
+
 ---
 
 ## 1. Locked Decisions
 
 - **Editor model:** true WYSIWYG, not split-preview-only and not merely styled Markdown.
 - **Engine recommendation:** Milkdown first, because it is Markdown-native and matches
-  ADR 0001's revisit path. Tiptap remains fallback if Milkdown blocks mention/reference
-  UX or mobile behavior. Raw ProseMirror is a last-resort fallback.
+  ADR 0001's revisit path. Tiptap or raw ProseMirror remain fallbacks if Milkdown blocks
+  mention/reference UX or mobile behavior. If no true WYSIWYG engine can satisfy the
+  repo's constraints, keep the Markdown-enhanced path and revisit CodeMirror/ink-mde per
+  `DECISIONS.md` and `COMPOSER.md` rather than introducing a bespoke editor.
 - **Canonical storage:** Markdown stays canonical. The enhanced editor serializes to the
   underlying `<textarea name="body">` on every change and before submit.
+- **Round-trip guarantee:** WYSIWYG round trips are judged by semantic parity against the
+  server-rendered, sanitized HTML. Byte-stable Markdown is desirable for editor-authored
+  fixtures but is not a universal guarantee for legacy free-form Markdown.
 - **Fallback:** the server-rendered textarea remains usable with JS disabled or with the
   rich editor disabled.
 - **Kill switches:** `rich_composer=false` disables all enhanced composer JS as today.
@@ -50,6 +59,18 @@ fallback path.
   tags, topics, and posts.
 - **Reference storage:** rich chips serialize to Markdown forms the server already
   understands where possible.
+- **CSP compatibility:** the editor must produce zero CSP violations under the existing
+  strict `script-src 'self'; style-src 'self'` policy and must not add `'unsafe-inline'`.
+  Blocked: inline scripts, runtime `<style>` injection, and parser/`setAttribute`
+  `style=""` writes. CSP-legal CSSOM property writes are acceptable. Runtime-injected CSS
+  rules (constructable/adopted stylesheets) are banned by repo policy even though CSP
+  permits them: all editor CSS ships as committed static files.
+- **Picker scope:** the `@` and `#` pickers are bridge-level composer features available
+  on both the textarea and WYSIWYG adapters, discharging COMPOSER.md §6.1's
+  mention-autocomplete item. Inline chips are WYSIWYG-only; on the textarea adapter a
+  picker selection inserts the canonical Markdown directly.
+- **Anonymity safety:** suggestion ranking and metadata must never reveal anonymous
+  participation (see §4.3).
 
 ---
 
@@ -58,8 +79,12 @@ fallback path.
 ### 2.1 Writing
 
 The composer renders as a rich multiline editor. Users can use toolbar buttons and normal
-shortcuts for bold, italic, strike, code, links, headings, lists, blockquotes, spoilers,
-tables, images, and undo/redo.
+shortcuts for bold, italic, strike, code, links, supported headings, lists, blockquotes,
+spoilers, tables, images, and undo/redo.
+
+Heading controls must match the server renderer's supported output instead of exposing
+levels that will be clamped after submit. The rich surface should present the supported
+H2/H3 set, with the server preview remaining the final truth view.
 
 The editor keeps a small "Source" toggle. Source mode exposes the canonical Markdown in
 the textarea for advanced edits, debugging, and recovery from serializer edge cases.
@@ -77,14 +102,25 @@ Typing `@` opens a user picker. Results are ranked by relevance:
 2. board moderators and recent visible participants for the current board,
 3. other mentionable users.
 
+Ranking must not become a deanonymization oracle: a user whose only participation in the
+scoped thread, DM, or board is anonymous (`posts.is_anonymous`) is ranked as if they had
+not participated there.
+
 Choosing a user inserts a mention chip displayed as `@username`. The Markdown remains the
 raw token `@username` so `MentionParser` and existing mention notification behavior keep
 working. The rendered post should link valid mentions to `/u/{username}` outside code
 blocks while preserving the existing anti-spam cap and blocked-user notification rules.
+The rich surface should visually mark mentions beyond the per-post cap (currently 10) as
+non-notifying instead of letting excess chips look identical to effective ones.
 
 ### 2.3 Unified `#` References
 
-Typing `#` opens a grouped reference picker. The same query can return:
+Typing `#` as a reference token opens a grouped reference picker. The trigger must not
+fire for Markdown heading syntax such as `# `, `## `, or `### `, and should only open when
+`#` starts a token and is followed by a non-space query character. It should not open
+inside code, preformatted text, or an existing link.
+
+The same query can return:
 
 | Type | Display in picker | Markdown serialization |
 |---|---|---|
@@ -96,10 +132,21 @@ Typing `#` opens a grouped reference picker. The same query can return:
 The picker is keyboard-first: arrow keys move, Enter/Tab selects, Escape closes. It also
 works as a bottom sheet on mobile.
 
+Both pickers are bridge-level composer features (§3.2): they also mount on the plain
+textarea composer whenever `rich_composer` is on, where a selection inserts the canonical
+Markdown directly and no chip is shown.
+
+The inline chip is an editor affordance. Stored and rendered output remains Markdown. With
+`content_references` disabled, inserted board, tag, topic, and post references render as
+plain links; reference cards require the `content_references` flag, and tag cards also
+require the tag enum migration and the `tags` feature.
+
 ### 2.4 Paste Behavior
 
 Pasting an internal board, tag, topic, or post URL converts it into a chip in the rich
-surface but leaves the Markdown as a normal link. Pasting external URLs remains normal
+surface and rewrites the link to the same canonical Markdown form the picker inserts
+(for example `[#general](/c/general)`), so the editor chip and the fallback-rendered link
+text agree; undo restores the raw pasted URL. Pasting external URLs remains normal
 Markdown/link behavior; link previews stay governed by the existing `link_previews` flag.
 
 ---
@@ -131,6 +178,7 @@ Required bridge interface:
 - `setMarkdown(markdown: string): void`
 - `insertMarkdown(markdown: string): void`
 - `replaceSelection(markdown: string): void`
+- `replacePendingUpload(token: string, markdown: string): boolean`
 - `focus(): void`
 - `onChange(callback): void`
 - `setDisabled(disabled: boolean): void`
@@ -138,13 +186,24 @@ Required bridge interface:
 
 The existing textarea path becomes a `TextareaComposerAdapter`. Milkdown becomes a
 `MilkdownComposerAdapter`. Shared composer behavior uses the bridge instead of directly
-reading and writing `ta.value`.
+reading and writing `ta.value`. The `@`/`#` pickers are built against this bridge so
+they work on both adapters; only the chip presentation is adapter-specific.
+
+`replacePendingUpload` preserves the current upload flow where the composer inserts a
+temporary uploading image token and swaps it for final Markdown on completion. The
+textarea adapter can replace the token substring; the rich adapter should find the
+corresponding pending image/link node and replace that node.
 
 ### 3.3 Bundling
 
 Milkdown requires a JavaScript build step. The production request path remains static:
 the built bundle is committed under `public/assets/`, and deployment only serves static
-assets as it does today.
+assets as it does today. The build must be reproducible from committed inputs: exact
+dependency versions pinned in a lockfile, the build command documented in-repo, and
+ideally a check that rebuilding reproduces the committed bundle. The superseding ADR
+records this committed-artifact policy. The bundle should load on demand (for example a
+dynamic import on composer focus) so pages do not pay the editor's weight before a user
+starts writing.
 
 The repo can add a root development-only package setup for the editor build. The browser
 test package under `tests/browser` remains separate unless the implementation plan
@@ -155,6 +214,18 @@ chooses to consolidate package management deliberately.
 The rich editor must fit the existing composer visual system in `public/assets/app.css`.
 It should not introduce a decorative document editor look. It should feel like the forum's
 input surface.
+
+The implementation must respect the existing CSP of `script-src 'self'` and
+`style-src 'self'` and the repo rule against inline styles/scripts. All editor CSS must be
+committed as static assets served from `'self'`. Do not use an editor theme that injects
+runtime `<style>` elements or runtime CSS rules (constructable/adopted stylesheets pass
+CSP but are still banned; committed static files only). Audit Milkdown/ProseMirror
+plugins, especially tables, gapcursor, and decorations, by running them under the real
+CSP header and asserting zero violation reports — not by grepping the DOM for `style`
+attributes. CSP blocks parser- and `setAttribute`-written `style=""` and injected
+`<style>` elements, but CSSOM property writes (how prosemirror-tables sets column widths)
+are CSP-legal and acceptable. Table support is allowed only if it passes this enforcement
+audit or can be patched to do so.
 
 Accessibility requirements:
 
@@ -181,9 +252,17 @@ layout does not load composer enhancement scripts even if `wysiwyg_composer` is 
 
 ### 4.2 Suggestion API
 
-Add a CSRF-safe authenticated GET endpoint:
+Add an authenticated read-only GET endpoint. It must not require a CSRF token and must
+not mutate state:
 
 `GET /composer/suggest?trigger=@|#&q=...&context=thread|reply|dm|new_thread|edit&target_id=...`
+
+`target_id` scopes the context: the thread id for `thread`/`reply`, the conversation id
+for `dm`, the board id for `new_thread`, and the post id for `edit`. The server must
+verify the requester can read the named target (threads/boards via `BoardPolicy` with
+membership resolved, DMs via participant membership) before the context influences
+ranking. An unreadable or unknown `target_id` silently degrades to context-free ranking,
+so a forged id cannot turn result order into a participation oracle.
 
 Response shape:
 
@@ -212,12 +291,18 @@ The endpoint is:
 
 - authenticated,
 - gated by `rich_composer`,
-- rate-limited by user,
+- rate-limited by user with a dedicated policy in `config/config.php`,
 - read-gated per result,
+- context-gated before ranking: `target_id` never influences ranking unless the requester
+  can read it,
 - capped to a small response, such as 8 users or 5 results per reference group,
 - safe for short queries by returning board/tag/user results through indexed prefix/LIKE
   queries and using full-text search for thread/post results only when the query length
   meets the search service minimum.
+
+The client should debounce suggestion requests. Because thread/post search uses the
+existing full-text service and its minimum query length, topic and post suggestions are
+whole-word-ish by design and should not promise single-character prefix matching.
 
 ### 4.3 Suggestion Service
 
@@ -226,6 +311,10 @@ Add `ComposerSuggestionService` to keep controller logic thin.
 Responsibilities:
 
 - user suggestions with visibility and block-aware mention eligibility,
+- anonymity-safe ranking: participant and recency signals exclude anonymous posts
+  (`posts.is_anonymous`), and post-suggestion author metadata goes through the same
+  render-time masking as post display (`mask_author`) — the picker must never
+  deanonymize,
 - board suggestions using the same read gate as board listings,
 - tag suggestions only when `tags` is enabled and tag visibility is public,
 - topic/post suggestions by reusing `SearchService` where possible,
@@ -243,6 +332,20 @@ Implementation should walk the rendered HTML DOM and link mentions only in text 
 outside `code` and `pre`. It should resolve usernames case-insensitively, preserve display
 text as typed, and use `/u/{canonical_username}` as the link target. Unknown handles
 remain plain text. The sanitizer allowlist already permits safe links.
+
+The render-time linker must share the same mention grammar as `MentionParser`: `@`
+followed by a 3-32 character `[A-Za-z0-9_]` handle, not after a word character or second
+`@`, and with code/pre content excluded. Displayed mention links and notification fanout
+must not diverge.
+
+The linker runs in the write-time render pipeline that caches `body_html` (alongside the
+emoji walker) and applies to posts, DM messages, and the composer preview only. Bios and
+community-memory summaries share `Markdown::render()`, so the hook must be scoped (a
+render option or a separate pass) rather than unconditional in the shared renderer.
+Because `body_html` is a write-time cache, existing posts gain mention links only when
+next re-rendered (edit, approval); no backfill pass ships with this increment. Links
+resolve at write time, so a later username rename leaves a stale link — accepted, as the
+raw token would be equally stale as text.
 
 ### 4.5 Content References and Tags
 
@@ -274,6 +377,13 @@ Tag cards obey the `tags` feature flag and public tag visibility.
 3. If WYSIWYG is enabled, the Milkdown adapter parses the textarea Markdown.
 4. The textarea remains in the form as the submit source, hidden visually but not removed.
 
+Initial parse must not overwrite the textarea merely because the serializer would
+normalize Markdown formatting. For an edit form, opening content and submitting without a
+user change should not rewrite `body` solely due to parser/serializer normalization. Once
+the user edits through the rich surface, legacy Markdown may be normalized, but the
+required guarantee is that the resulting server-rendered sanitized HTML is semantically
+equivalent for supported syntax.
+
 ### 5.2 Edit
 
 1. User edits in the rich surface.
@@ -281,14 +391,16 @@ Tag cards obey the `tags` feature flag and public tag visibility.
 3. The bridge writes that Markdown into the textarea.
 4. Existing autosave, server drafts, counter, preview, and upload logic read the same
    Markdown through the bridge.
+5. Upload completion uses `replacePendingUpload` so a pending upload node or token is
+   swapped for final Markdown without relying on rich-editor substring replacement.
 
 ### 5.3 Suggest and Insert
 
 1. User types `@` or `#`.
 2. Client requests `/composer/suggest`.
 3. Server returns read-gated suggestion rows with canonical Markdown.
-4. Client inserts a rich chip and updates the hidden textarea with the serialized
-   Markdown.
+4. Client inserts a rich chip (rich adapter) or the canonical Markdown directly
+   (textarea adapter); either way the textarea ends up holding the serialized Markdown.
 
 ### 5.4 Submit
 
@@ -314,7 +426,7 @@ Tag cards obey the `tags` feature flag and public tag visibility.
 - **Tag feature disabled:** tag suggestions are omitted and tag reference cards do not
   render.
 - **`content_references` disabled:** inserted links still work, but reference-card capture
-  stays off.
+  stays off; rendered output is a normal Markdown link rather than a card.
 - **Draft conflict:** existing server-draft conflict panel remains the authority. It must
   update the rich editor through the bridge when loading server or local content.
 
@@ -338,12 +450,22 @@ Tag cards obey the `tags` feature flag and public tag visibility.
   - raw `@username` mentions,
   - board, tag, topic, and post reference links.
 - `MentionParser` remains unchanged for notification extraction.
-- mention rendering links valid users and ignores code/pre blocks.
+- mention rendering links valid users, ignores code/pre blocks, and uses the same grammar
+  as notification extraction.
 - suggestion endpoint gates private boards/topics/posts.
+- suggestion ranking excludes anonymous participation and masks post-suggestion authors.
+- an unreadable or forged `target_id` yields the same results as no context.
+- `GET /composer/suggest` is absent (404) when `rich_composer` is off, in the
+  `AppFeatureFlagTest` pattern.
 - suggestion endpoint returns boards, tags, topics, and posts for `#`.
 - `ContentReferenceService` extracts and resolves `/tags/{slug}`.
 - tag reference card rendering respects feature flags and visibility.
 - `rich_composer=false` keeps the textarea fallback and loads no WYSIWYG assets.
+- `wysiwyg_composer=false` keeps the layout free of the editor bundle while the
+  Markdown-enhanced composer still loads.
+- parser/serializer tests compare server-rendered sanitized HTML for semantic parity, not
+  byte-identical Markdown except for fixtures intentionally authored in editor output
+  form.
 
 ### 7.2 Browser Tests
 
@@ -358,15 +480,23 @@ Use desktop and mobile Playwright coverage for:
 - local draft restore,
 - server draft conflict load-local/load-server behavior,
 - image paste/drop and alt text,
+- pending upload placeholder replacement,
 - `@` user picker keyboard flow,
 - `#` picker with board, tag, topic, and post selections,
+- picker flow on the textarea adapter with `wysiwyg_composer` off,
+- `#` reference trigger does not steal heading shortcuts,
 - pasted internal URL becoming a chip,
 - no-JS or kill-switch textarea fallback,
+- strict-CSP smoke coverage with no inline style/script console violations,
 - axe checks for editor toolbar and suggestion picker.
 
 ### 7.3 Acceptance Criteria
 
-- A no-op load/save of supported Markdown does not mutate canonical Markdown fixtures.
+- A no-op edit session does not rewrite `body` solely due to editor serializer
+  normalization.
+- Supported Markdown fixtures preserve server-rendered sanitized HTML after
+  parse/serialize; byte-stable Markdown is required only for fixtures authored in the
+  editor's own canonical output form.
 - Users can create posts without knowing Markdown syntax.
 - `@` mention chips notify the same recipients as raw `@username` text.
 - `#` can search and insert boards, tags, topics, and posts.
@@ -375,6 +505,8 @@ Use desktop and mobile Playwright coverage for:
 - The server preview and final rendered post match for supported syntax.
 - Operators can roll back to the current Markdown-enhanced composer without data
   migration.
+- Suggestion ranking and metadata never reveal anonymous participation.
+- The editor runs under the existing strict CSP without adding `'unsafe-inline'`.
 
 ---
 
@@ -394,13 +526,31 @@ Use desktop and mobile Playwright coverage for:
 
 The implementation plan should likely split work into these increments:
 
-1. Suggestion API and tag reference backend support.
-2. Mention link rendering.
-3. Composer bridge extraction around the existing textarea behavior.
-4. Milkdown bundle and adapter behind `wysiwyg_composer`.
-5. Reference chips and pickers.
-6. Browser/a11y evidence and rollout flag documentation.
+1. ADR superseding or amending ADR 0001. It should also restate the actual
+   supported-syntax set (the server renderer already enables tables and task lists,
+   which ADR 0001's list omits) and record the committed-bundle policy.
+2. CSP-compatibility spike for Milkdown/ProseMirror theme, table, gapcursor, and
+   decoration behavior, asserting zero violation reports under the real
+   `style-src 'self'` header.
+3. Serializer-fidelity spike against real stored-post Markdown to define the semantic
+   round-trip corpus and legacy-edit behavior.
+4. Suggestion API and tag reference backend support.
+5. Mention link rendering.
+6. Composer bridge extraction around the existing textarea behavior.
+7. Suggestion pickers on the bridge, serving the textarea adapter first.
+8. Milkdown bundle and adapter behind `wysiwyg_composer`.
+9. Reference and mention chips in the rich adapter.
+10. Browser/a11y evidence and rollout flag documentation.
 
 Do not start with the editor bundle before the backend suggestion/reference contract is
 tested. The editor should consume a stable Markdown insertion contract instead of baking
 database and routing assumptions into client code.
+
+Follow-on documentation updates should be planned alongside implementation:
+
+- `COMPOSER.md`, especially the reference roadmap sections.
+- `SCHEMA.md`, including the tag reference enum shape, changelog entry, and version bump
+  after the migration.
+- a runbook for `wysiwyg_composer`, matching the existing feature-flag runbook style.
+- migration numbering using the current tree, where the tag enum migration should follow
+  the latest existing migration rather than the stale "next migration 0049" note.
