@@ -14,7 +14,9 @@ import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const PORT = Number(process.env.E2E_PORT ?? 8011);
-const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}`;
+// WebAuthn treats localhost as a development exception, while 127.0.0.1 is
+// rejected as an invalid RP ID by Chromium's real credential APIs.
+const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 const database = process.env.DB_DATABASE ?? 'retroboards_e2e';
 const rateLimitPath = process.env.RATELIMIT_PATH ?? path.join(repoRoot, 'storage', 'ratelimit-e2e');
 const packagesPath = process.env.PACKAGES_STORAGE_PATH ?? path.join(repoRoot, 'storage', 'packages-e2e');
