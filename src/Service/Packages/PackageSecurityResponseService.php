@@ -114,6 +114,43 @@ final class PackageSecurityResponseService
         return $disabled ? count($installs) : 0;
     }
 
+    /**
+     * /admin/packages/security read model. Publisher/advisory/blocklist rows come
+     * straight from the shared repositories — this console is a viewer, not a
+     * second source of truth.
+     *
+     * @return array{publishers:list<array<string,mixed>>, advisories:list<array<string,mixed>>, blocklist:list<array<string,mixed>>, transparency:list<array<string,mixed>>, execution_disabled:bool, affected_installs:int}
+     */
+    public function overview(?\DateTimeImmutable $now = null): array
+    {
+        return [
+            'publishers' => $this->publishers->all(),
+            'advisories' => $this->advisoryRepo->all(),
+            'blocklist' => $this->blockRepo->all(),
+            'transparency' => $this->transparency->all(50),
+            'execution_disabled' => $this->isExecutionDisabled(),
+            'affected_installs' => count($this->activeIntegrationInstalls()),
+        ];
+    }
+
+    /**
+     * @return array{publisher:array<string,mixed>, keys:list<array<string,mixed>>, packages:list<array<string,mixed>>, decisions:list<array<string,mixed>>}|null
+     */
+    public function publisherDetail(int $publisherId): ?array
+    {
+        $publisher = $this->publishers->find($publisherId);
+        if ($publisher === null) {
+            return null;
+        }
+
+        return [
+            'publisher' => $publisher,
+            'keys' => $this->publisherKeys->forPublisher($publisherId),
+            'packages' => $this->publishers->packagesFor($publisherId),
+            'decisions' => [],   // per-package review decisions are merged by the controller via PackageReviewConsoleService
+        ];
+    }
+
     /** @return list<array<string,mixed>> enabled remote_app/automation installs (integration bridges) */
     private function activeIntegrationInstalls(): array
     {

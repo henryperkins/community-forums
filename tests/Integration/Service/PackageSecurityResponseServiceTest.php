@@ -248,4 +248,53 @@ final class PackageSecurityResponseServiceTest extends TestCase
         self::assertContains('package_execution_disabled', $actions);
         self::assertContains('package_execution_enabled', $actions);
     }
+
+    public function test_overview_lists_publishers_advisories_and_blocklist_from_the_shared_sources(): void
+    {
+        $root = SigningHarness::generate('ov-root');
+        $ids = RegistryFixtures::seed($this->db, $root, $this->artifactDir, [
+            'publisher_uid' => 'globex',
+            'publisher_name' => 'Globex',
+            'package_uid' => 'globex/plugin',
+        ]);
+        (new PackageAdvisoryRepository($this->db))->upsert([
+            'advisory_uid' => 'adv-ov-1',
+            'registry_id' => $ids['registry_id'],
+            'package_id' => $ids['package_id'],
+            'affected_version_range' => '<=1.0.0',
+            'affected_digest' => null,
+            'severity' => 'high',
+            'action' => 'warn',
+            'summary' => 'test advisory',
+            'signed_evidence' => '{}',
+            'issued_at' => gmdate('Y-m-d H:i:s'),
+        ]);
+        (new LocalPackageBlockRepository($this->db))->add(str_repeat('a', 64), 'globex/plugin', 'manual block', $this->admin->id());
+
+        $overview = $this->securityService()->overview();
+
+        self::assertNotSame([], array_filter($overview['publishers'], static fn (array $r): bool => $r['publisher_uid'] === 'globex'));
+        self::assertNotSame([], array_filter($overview['advisories'], static fn (array $r): bool => $r['advisory_uid'] === 'adv-ov-1'));
+        self::assertNotSame([], array_filter($overview['blocklist'], static fn (array $r): bool => $r['package_uid'] === 'globex/plugin'));
+        self::assertFalse($overview['execution_disabled']);
+        self::assertIsInt($overview['affected_installs']);
+    }
+
+    public function test_publisher_detail_returns_records_or_null_for_unknown(): void
+    {
+        $root = SigningHarness::generate('pd-root');
+        $ids = RegistryFixtures::seed($this->db, $root, $this->artifactDir, [
+            'publisher_uid' => 'initech',
+            'publisher_name' => 'Initech',
+            'package_uid' => 'initech/app',
+        ]);
+        $svc = $this->securityService();
+
+        $detail = $svc->publisherDetail($ids['publisher_id']);
+        self::assertNotNull($detail);
+        self::assertSame('initech', $detail['publisher']['publisher_uid']);
+        self::assertNotSame([], array_filter($detail['packages'], static fn (array $r): bool => $r['package_uid'] === 'initech/app'));
+
+        self::assertNull($svc->publisherDetail(999999));
+    }
 }
