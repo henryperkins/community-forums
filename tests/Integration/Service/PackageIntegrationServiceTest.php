@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Service;
 
+use App\Core\ApiTokensDisabledException;
 use App\Core\FeatureFlags;
 use App\Core\ValidationException;
 use App\Domain\User;
@@ -331,6 +332,162 @@ final class PackageIntegrationServiceTest extends TestCase
             "SELECT COUNT(*) FROM moderation_log WHERE action = 'package_credential_revoke'",
         );
         self::assertSame(1, $revokes);
+    }
+
+    /**
+     * Seed an enabled remote_app granting the given scopes/events/hosts and (optionally)
+     * a webhook destination URL. Mirrors enabledRemoteApp but for the webhook surface.
+     *
+     * @param list<string> $scopes
+     * @param list<string> $events
+     * @param list<string> $hosts
+     * @return array{0:User,1:int}
+     */
+    private function seedWebhookApp(array $scopes, array $events, array $hosts, ?string $url = null): array
+    {
+        $seeded = RegistryFixtures::seed($this->db, $this->root, null, [
+            'type' => 'remote_app',
+            'publisher_uid' => 'acme',
+            'package_uid' => 'acme/inbox-sync',
+            'name' => 'Acme Inbox Sync',
+        ]);
+        $admin = $this->userEntity($this->makeAdmin(['password' => 'password123']));
+        $installs = new InstalledPackageRepository($this->db);
+        $installedId = $installs->create([
+            'package_id' => $seeded['package_id'],
+            'release_id' => $seeded['release_id'],
+            'digest' => $seeded['release_digest'],
+            'source_registry_id' => $seeded['registry_id'],
+            'publisher_id' => $seeded['publisher_id'],
+            'trust_class' => 'reviewed_declarative',
+            'review_status' => 'approved',
+            'compat_min' => null,
+            'compat_max' => null,
+            'installed_by' => $admin->id(),
+        ]);
+        $installs->setState($installedId, 'enabled');
+
+        $perms = [];
+        foreach ($scopes as $s) {
+            $perms[] = ['kind' => 'api_scope', 'key' => $s, 'risk' => 'low', 'granted' => true];
+        }
+        foreach ($events as $e) {
+            $perms[] = ['kind' => 'event', 'key' => $e, 'risk' => 'low', 'granted' => true];
+        }
+        foreach ($hosts as $h) {
+            $perms[] = ['kind' => 'outbound_host', 'key' => $h, 'risk' => 'medium', 'granted' => true];
+        }
+        (new InstalledPackagePermissionRepository($this->db))->replaceWithGrants($installedId, $perms, $admin->id());
+
+        if ($url !== null) {
+            (new InstalledPackageSettingsRepository($this->db))->upsert(
+                $installedId,
+                PackageIntegrationService::WEBHOOK_URL_SETTING,
+                json_encode($url),
+                null,
+                false,
+                $admin->id(),
+            );
+        }
+
+        return [$admin, $installedId];
+    }
+
+    /** @param array<string,bool> $flags */
+    private function webhookService_provision(array $flags = ['api_tokens' => true, 'service_secrets' => true, 'webhooks' => true]): PackageIntegrationService
+    {
+        return $this->service($flags);
+    }
+
+    public function test_provision_subscribes_only_to_granted_domain_events(): void
+    {
+        [$admin, $installedId] = $this->seedWebhookApp(['read:threads'], ['topic.created', 'reply.created'], ['hooks.acme.test'], 'https://hooks.acme.test/rb');
+
+        $out = $this->webhookService_provision()->provisionCredentials($admin, 'password123', $installedId);
+
+        self::assertIsString($out['webhook_secret']);
+        self::assertNotSame('', $out['webhook_secret']);
+        $link = (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId);
+        $webhook = null;
+        foreach ($link as $c) {
+            if ((string) $c['kind'] === 'webhook') {
+                $webhook = (new WebhookRepository($this->db))->findById((int) $c['webhook_id']);
+            }
+        }
+        self::assertNotNull($webhook);
+        self::assertSame(1, (int) $webhook['is_active']);
+        // The runtime reads granted events in the permission repo's deterministic
+        // (kind, permission_key) order, so assert the exact set regardless of order.
+        self::assertEqualsCanonicalizing(['topic.created', 'reply.created'], json_decode((string) $webhook['events'], true));
+    }
+
+    public function test_provision_rejects_ping_as_a_package_grantable_event(): void
+    {
+        [$admin, $installedId] = $this->seedWebhookApp([], ['ping'], ['hooks.acme.test'], 'https://hooks.acme.test/rb');
+        try {
+            $this->webhookService_provision()->provisionCredentials($admin, 'password123', $installedId);
+            self::fail('expected event_not_grantable refusal');
+        } catch (PackagePolicyException $e) {
+            self::assertSame('event_not_grantable', $e->code);
+        }
+    }
+
+    public function test_provision_denies_a_url_host_outside_the_granted_outbound_hosts(): void
+    {
+        [$admin, $installedId] = $this->seedWebhookApp([], ['topic.created'], ['other.example'], 'https://hooks.acme.test/rb');
+        try {
+            $this->webhookService_provision()->provisionCredentials($admin, 'password123', $installedId);
+            self::fail('expected outbound-host ValidationException');
+        } catch (ValidationException $e) {
+            self::assertArrayHasKey(PackageIntegrationService::WEBHOOK_URL_SETTING, $e->errors);
+        }
+        self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+    }
+
+    public function test_repeated_provisioning_refuses_a_second_active_webhook(): void
+    {
+        [$admin, $installedId] = $this->seedWebhookApp([], ['topic.created'], ['hooks.acme.test'], 'https://hooks.acme.test/rb');
+
+        $first = $this->webhookService_provision()->provisionCredentials($admin, 'password123', $installedId);
+        self::assertIsString($first['webhook_secret']);
+
+        try {
+            $this->webhookService_provision()->provisionCredentials($admin, 'password123', $installedId);
+            self::fail('expected credential_exists refusal');
+        } catch (PackagePolicyException $e) {
+            self::assertSame('credential_exists', $e->code);
+        }
+        self::assertCount(
+            1,
+            array_values(array_filter(
+                (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId),
+                static fn (array $row): bool => (string) $row['kind'] === 'webhook',
+            )),
+        );
+    }
+
+    public function test_provision_is_all_or_nothing_for_the_caller(): void
+    {
+        // One install serves both parts (RegistryFixtures::seed's registry source is
+        // unique per DB, so seeding twice in one test would collide).
+        [$admin, $installedId] = $this->seedWebhookApp(['read:threads'], ['topic.created'], ['hooks.acme.test'], 'https://hooks.acme.test/rb');
+
+        // service_secrets off: guard fires before any mint -> caller gets nothing at all.
+        try {
+            $this->webhookService_provision(['api_tokens' => true, 'service_secrets' => false, 'webhooks' => true])
+                ->provisionCredentials($admin, 'password123', $installedId);
+            self::fail('expected service_secrets ValidationException');
+        } catch (ValidationException) {
+            self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+        }
+
+        // api_tokens dark: the webhook mint runs first, then the token mint throws INSIDE the
+        // transaction. Production rolls the webhook back via the shared $db->transaction; the
+        // in-process harness has no savepoints, so we assert the caller-observable contract:
+        // the whole call throws and returns no partial plaintext (never a webhook secret alone).
+        $this->expectException(ApiTokensDisabledException::class);
+        $this->webhookService_provision(['api_tokens' => false, 'service_secrets' => true, 'webhooks' => true])
+            ->provisionCredentials($admin, 'password123', $installedId);
     }
 
     public function test_insert_webhook_link_round_trips_and_holds_kind_invariant(): void

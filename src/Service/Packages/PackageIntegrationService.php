@@ -24,6 +24,7 @@ use App\Repository\WebhookRepository;
 use App\Security\ApiScopes;
 use App\Security\Packages\ManifestValidator;
 use App\Security\Packages\PackagePolicyException;
+use App\Security\WebhookEvents;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
 use App\Service\ApiTokenService;
@@ -38,6 +39,9 @@ use App\Service\WebhookService;
  */
 final class PackageIntegrationService
 {
+    /** Per-install setting key that carries the package-owned webhook destination URL. */
+    public const WEBHOOK_URL_SETTING = 'webhook_url';
+
     public function __construct(
         private Database $db,
         private PackageRepository $packages,
@@ -105,7 +109,14 @@ final class PackageIntegrationService
             $this->lockInstallForCredentialProvision($installedId);
 
             $token = null;
-            $credentials = [];
+            $webhookSecret = null;
+
+            // Mint the webhook first so a later token-mint failure rolls it back
+            // (WebhookService::register joins this shared transaction — no savepoints).
+            if ($this->grantedEvents($installedId) !== []) {
+                $mintedHook = $this->mintPackageWebhook($admin, $currentPassword, $package, $installedId);
+                $webhookSecret = $mintedHook['secret'];
+            }
 
             // ≤1 api_token: only when the install actually grants a locally-supported scope.
             if ($scopes !== []) {
@@ -140,18 +151,13 @@ final class PackageIntegrationService
                     'target_id' => (int) $install['package_id'],
                     'after' => ['kind' => 'api_token', 'credential_id' => $linkId, 'scopes' => $scopes],
                 ]);
-
-                $credentials[] = [
-                    'id' => $linkId,
-                    'kind' => 'api_token',
-                    'label' => $label,
-                    'status' => 'active',
-                    'scopes' => $scopes,
-                    'events' => [],
-                ];
             }
 
-            return ['api_token' => $token, 'webhook_secret' => null, 'credentials' => $credentials];
+            return [
+                'api_token' => $token,
+                'webhook_secret' => $webhookSecret,
+                'credentials' => $this->credentials->activeForInstall($installedId),
+            ];
         });
     }
 
@@ -335,5 +341,99 @@ final class PackageIntegrationService
                 throw new PackagePolicyException('credential_exists', 'This install already has an active ' . $kind . ' credential.');
             }
         }
+    }
+
+    /** @return list<string> granted, declared event permission keys. */
+    private function grantedEvents(int $installedId): array
+    {
+        $events = [];
+        foreach ($this->permissions->forInstall($installedId) as $p) {
+            if ((string) $p['kind'] === 'event' && (int) $p['declared'] === 1 && (int) $p['granted'] === 1) {
+                $events[] = (string) $p['permission_key'];
+            }
+        }
+        return $events;
+    }
+
+    /** @return list<string> granted, declared outbound-host permission keys (lowercased). */
+    private function grantedOutboundHosts(int $installedId): array
+    {
+        $hosts = [];
+        foreach ($this->permissions->forInstall($installedId) as $p) {
+            if ((string) $p['kind'] === 'outbound_host' && (int) $p['declared'] === 1 && (int) $p['granted'] === 1) {
+                $hosts[] = strtolower((string) $p['permission_key']);
+            }
+        }
+        return $hosts;
+    }
+
+    private function webhookUrlSetting(int $installedId): string
+    {
+        $row = $this->settings->find($installedId, self::WEBHOOK_URL_SETTING);
+        $url = $row !== null && $row['value_json'] !== null ? json_decode((string) $row['value_json'], true) : null;
+        if (!is_string($url) || $url === '') {
+            throw new ValidationException([self::WEBHOOK_URL_SETTING => 'Set the destination URL before provisioning a webhook.']);
+        }
+        return $url;
+    }
+
+    /**
+     * Mint one package-owned webhook. Runs after the provision guards, before the api_token
+     * mint. Enforces event ⊆ WebhookEvents::domainEvents() (ping/unknown denied — TM-SC-08)
+     * and host ∈ granted outbound_hosts (or the config test origin).
+     * @param array<string,mixed> $package
+     * @return array{webhook_id:int, secret:string, events:list<string>}
+     */
+    private function mintPackageWebhook(User $admin, string $currentPassword, array $package, int $installedId): array
+    {
+        $events = $this->grantedEvents($installedId);
+        $domain = WebhookEvents::domainEvents();
+        foreach ($events as $event) {
+            if (!array_key_exists($event, $domain)) {
+                throw new PackagePolicyException('event_not_grantable', 'Event "' . $event . '" cannot be delivered to a package.');
+            }
+        }
+
+        $url = $this->webhookUrlSetting($installedId);
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $allowed = $this->grantedOutboundHosts($installedId);
+        $testOrigin = strtolower((string) $this->config->get('packages.integration_test_origin', ''));
+        if ($host === '' || (!in_array($host, $allowed, true) && ($testOrigin === '' || $host !== $testOrigin))) {
+            throw new ValidationException([self::WEBHOOK_URL_SETTING => 'Destination host is not a granted outbound host.']);
+        }
+        $this->assertNoActiveCredential($installedId, 'webhook');
+
+        $label = 'pkg:' . (string) $package['package_uid'] . '#' . $installedId;
+        $result = $this->webhooks->register($admin, $currentPassword, $label, $url, $events);
+        $this->credentials->insertWebhook(
+            $installedId,
+            (int) $result['id'],
+            $label,
+            json_encode(array_values($events), JSON_UNESCAPED_SLASHES) ?: '[]',
+            $admin->id(),
+        );
+        $this->history->record([
+            'package_id' => (int) $package['id'],
+            'installed_package_id' => $installedId,
+            'event' => 'credential_mint',
+            'actor_id' => $admin->id(),
+            'detail' => 'webhook:' . implode(',', $events),
+        ]);
+        $this->transparency->record([
+            'package_uid' => (string) $package['package_uid'],
+            'event' => 'install',
+            'source' => 'local',
+            'actor_id' => $admin->id(),
+            'detail' => 'webhook credential minted',
+        ]);
+        $this->audit->log([
+            'actor_id' => $admin->id(),
+            'action' => 'package_credential_mint',
+            'target_type' => 'package',
+            'target_id' => (int) $package['id'],
+            'after' => ['kind' => 'webhook', 'events' => $events],
+        ]);
+
+        return ['webhook_id' => (int) $result['id'], 'secret' => (string) $result['secret'], 'events' => $events];
     }
 }
