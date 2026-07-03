@@ -28,6 +28,7 @@ final class Phase5BudgetReportService
     private ?array $signatureSample = null;
     private ?array $packageSample = null;
     private ?array $themeSample = null;
+    private ?array $webauthnSample = null;
 
     public function __construct(
         private Database $db,
@@ -91,6 +92,11 @@ final class Phase5BudgetReportService
         );
     }
 
+    private function webauthnSample(): array
+    {
+        return $this->webauthnSample ??= (new BaselineMetricsService($this->db))->measureWebauthnCeremony();
+    }
+
     /** @return array<int,array{key:string,metric:string,target:string,measured:string,status:string}> */
     public function rows(): array
     {
@@ -128,6 +134,10 @@ final class Phase5BudgetReportService
                     $measured = $sample['p95'] . ' ms theme build/apply (' . $sample['samples'] . ' samples)';
                     $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
                 }
+            } elseif ($key === 'webauthn.ceremony_p95') {
+                $sample = $this->webauthnSample();
+                $measured = $sample['p95'] . ' ms WebAuthn assertion verify (' . $sample['samples'] . ' samples)';
+                $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
             } elseif ($key === 'registry.snapshot_freshness') {
                 $measured = '86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal)';
                 $status = 'CONFIG';
@@ -175,6 +185,9 @@ final class Phase5BudgetReportService
             $out .= '- Theme build/apply p50/p95/p99 (ms): ' . $themeSample['p50'] . ' / ' . $themeSample['p95'] . ' / ' . $themeSample['p99']
                 . ' · route/job: `' . $themeSample['route_or_job'] . '` · samples: ' . $themeSample['samples'] . "\n";
         }
+        $webauthnSample = $this->webauthnSample();
+        $out .= '- WebAuthn ceremony p50/p95/p99 (ms): ' . $webauthnSample['p50'] . ' / ' . $webauthnSample['p95'] . ' / ' . $webauthnSample['p99']
+            . ' · route/job: `' . $webauthnSample['route_or_job'] . '` · samples: ' . $webauthnSample['samples'] . "\n";
         $out .= '- Queries: ' . $env['query_count'] . ' · query time (ms): ' . $env['query_time_ms']
              . ' · peak mem (bytes): ' . $env['peak_memory_bytes'] . ' · error rate: ' . $env['error_rate'] . "\n\n";
         $out .= "## Budgets vs D11 targets (ADR 0004 D11)\n\n";

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Service;
 
 use App\Repository\SettingRepository;
+use App\Service\BaselineMetricsService;
 use App\Service\Phase5BudgetReportService;
 use App\Service\Phase5FixtureSeeder;
 use App\Support\Phase5Budgets;
@@ -70,6 +71,37 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertStringContainsString('ms resolver', $rows['resolver.p95']['measured']);
         self::assertStringContainsString('legacy', $rows['resolver.p95']['measured']);
         self::assertStringContainsString('Resolver p50/p95/p99', $report->render());
+    }
+
+    public function test_webauthn_ceremony_sampler_verifies_public_fixture_assertions(): void
+    {
+        $metrics = new BaselineMetricsService($this->db);
+        if (!method_exists($metrics, 'measureWebauthnCeremony')) {
+            self::fail('BaselineMetricsService must expose a fixture-backed WebAuthn ceremony sampler.');
+        }
+
+        $sample = $metrics->measureWebauthnCeremony();
+
+        self::assertSame('webauthn_ceremony_assertion_verify', $sample['route_or_job']);
+        self::assertSame(200, $sample['samples']);
+        self::assertSame('public-only webauthn-budget-fixture.json assertions', $sample['data_fixture']);
+        self::assertGreaterThan(0.0, $sample['p95']);
+        self::assertLessThanOrEqual(Phase5Budgets::target('webauthn.ceremony_p95'), $sample['p95']);
+        self::assertSame(0, $sample['query_count']);
+        self::assertSame(0.0, $sample['error_rate']);
+    }
+
+    public function test_webauthn_budget_row_is_measured_from_the_public_fixture(): void
+    {
+        $report = new Phase5BudgetReportService($this->db);
+        $rows = [];
+        foreach ($report->rows() as $row) {
+            $rows[$row['key']] = $row;
+        }
+
+        self::assertSame('MEASURED (PASS)', $rows['webauthn.ceremony_p95']['status']);
+        self::assertStringContainsString('ms WebAuthn assertion verify', $rows['webauthn.ceremony_p95']['measured']);
+        self::assertStringContainsString('WebAuthn ceremony p50/p95/p99', $report->render());
     }
 
     public function test_inc2_registry_rows_measure_and_config(): void

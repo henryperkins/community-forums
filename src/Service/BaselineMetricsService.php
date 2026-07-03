@@ -9,10 +9,13 @@ use App\Domain\User;
 use App\Repository\UserRepository;
 use App\Security\CapabilityResolver;
 use App\Security\PasswordHasher;
+use App\Security\WebAuthn\RelyingParty;
+use App\Security\WebAuthn\WebAuthnVerifier;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
 use App\Service\Packages\ThemeStateService;
+use App\Support\Base64Url;
 
 /**
  * Foundation F9 — measures baseline metrics on the Phase5FixtureSeeder corpus,
@@ -208,6 +211,60 @@ final class BaselineMetricsService
             'peak_memory_bytes' => memory_get_peak_usage(true),
             'queue_age' => null,
             'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
+        ];
+    }
+
+    /**
+     * Measures full server-side WebAuthn assertion verification from a committed
+     * public-only fixture: base64url decode, CBOR/COSE parse, and OpenSSL verify.
+     *
+     * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
+     */
+    public function measureWebauthnCeremony(): array
+    {
+        $rp = new RelyingParty('http://localhost:8000', null, 'testing');
+        $verifier = new WebAuthnVerifier($rp);
+
+        $path = dirname(__DIR__, 2) . '/docs/evidence/phase5/webauthn-budget-fixture.json';
+        $fixture = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+        $cose = Base64Url::decode((string) ($fixture['public_key_cose'] ?? ''));
+        if ($cose === null || $cose === '') {
+            throw new \RuntimeException('Invalid public_key_cose in WebAuthn budget fixture.');
+        }
+
+        $samples = [];
+        foreach ((array) ($fixture['samples'] ?? []) as $sample) {
+            $challenge = Base64Url::decode((string) ($sample['challenge'] ?? ''));
+            $payload = $sample['payload'] ?? null;
+            if ($challenge === null || $challenge === '' || !is_array($payload)) {
+                throw new \RuntimeException('Invalid WebAuthn budget sample.');
+            }
+            $t0 = hrtime(true);
+            $verifier->verifyAssertion($payload, $challenge, $cose, (int) ($sample['stored_sign_count'] ?? 0), false);
+            $samples[] = (hrtime(true) - $t0) / 1_000_000;
+        }
+
+        return [
+            'route_or_job' => 'webauthn_ceremony_assertion_verify',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($this->db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'public-only webauthn-budget-fixture.json assertions',
+            'role_assignment_count' => 0,
+            'installed_package_count' => 0,
+            'concurrency' => 1,
+            'cache_state' => 'cold',
+            'window' => count($samples) . ' assertions',
+            'samples' => count($samples),
+            'p50' => self::percentile($samples, 50),
+            'p95' => self::percentile($samples, 95),
+            'p99' => self::percentile($samples, 99),
+            'query_count' => 0,
+            'query_time_ms' => round(array_sum($samples), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => 0.0,
         ];
     }
 
