@@ -202,6 +202,7 @@ use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageCredentialAuthGuard;
 use App\Service\Packages\PackageIntegrationService;
 use App\Service\Packages\PackageReviewConsoleService;
+use App\Service\Packages\PackageSecurityResponseService;
 use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
@@ -1494,6 +1495,23 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(PackageHealthService::class),
         ));
+        $c->bind(PackageSecurityResponseService::class, fn (Container $c) => new PackageSecurityResponseService(
+            $c->get(Database::class),
+            $c->get(SettingRepository::class),
+            $c->get(RegistryAdvisoryService::class),
+            $c->get(LocalBlocklistService::class),
+            $c->get(PackageHealthService::class),
+            $c->get(PackageIntegrationService::class),
+            $c->get(PackagePublisherRepository::class),
+            $c->get(PublisherSigningKeyRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+            $c->get(LocalPackageBlockRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+            $config,
+        ));
         $c->bind(RegistryCatalogService::class, fn (Container $c) => new RegistryCatalogService(
             $c->get(PackageRepository::class),
             $c->get(PackageReleaseRepository::class),
@@ -1846,6 +1864,9 @@ final class App
         $r->post('/admin/themes/{id}/preview', [AdminThemeController::class, 'preview']);
         $r->post('/admin/themes/{id}/activate', [AdminThemeController::class, 'activate']);
         $r->get('/admin/packages', [AdminPackagesController::class, 'index']);
+        // Security-response console (P5-07-A) — non-numeric GETs registered before the numeric detail route.
+        $r->get ('/admin/packages/security',                  [AdminPackageSecurityController::class, 'index']);
+        $r->post('/admin/packages/security/execution',        [AdminPackageSecurityController::class, 'emergencyDisable']);
         // Publisher trust console (P5-07-A) — register the {id} publisher GET before the generic package GET.
         $r->get ('/admin/packages/publishers/{id}',           [AdminPackageSecurityController::class, 'publisher']);
         $r->post('/admin/packages/publishers/{id}/verify',    [AdminPackageSecurityController::class, 'verifyPublisher']);

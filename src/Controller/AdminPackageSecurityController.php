@@ -15,6 +15,7 @@ use App\Repository\PublisherSigningKeyRepository;
 use App\Security\Packages\PackagePolicyException;
 use App\Security\Registry\RegistryVerificationException;
 use App\Service\Packages\PackageReviewConsoleService;
+use App\Service\Packages\PackageSecurityResponseService;
 use App\Service\Registry\PublisherTrustService;
 use App\Service\Registry\RegistryCatalogService;
 
@@ -26,6 +27,62 @@ use App\Service\Registry\RegistryCatalogService;
  */
 final class AdminPackageSecurityController extends Controller
 {
+    /** @param array<string,string> $params */
+    public function index(Request $request, array $params): Response
+    {
+        $this->gate();
+        $this->requireAdmin();
+        $this->gate();
+
+        return $this->consoleView();
+    }
+
+    /** @param array<string,string> $params */
+    public function emergencyDisable(Request $request, array $params): Response
+    {
+        $this->gate();
+        $admin = $this->requireAdmin();
+        $this->gate();
+        $disabled = $request->post('disabled', '0') === '1';
+
+        try {
+            $this->security()->setExecutionDisabled(
+                $admin,
+                (string) $request->post('current_password', ''),
+                $disabled,
+                $request->str('reason') !== '' ? $request->str('reason') : null,
+            );
+
+            return $this->noindex($this->redirectWithFlash(
+                '/admin/packages/security',
+                $disabled
+                    ? 'Package execution disabled: package-owned webhooks paused and credentials denied.'
+                    : 'Package execution resumed.',
+            ));
+        } catch (ValidationException $e) {
+            return $this->consoleView($e->errors, $request->allInput(), 422);
+        }
+    }
+
+    private function security(): PackageSecurityResponseService
+    {
+        return $this->container->get(PackageSecurityResponseService::class);
+    }
+
+    /**
+     * @param array<string,string> $errors
+     * @param array<string,mixed> $old
+     */
+    private function consoleView(array $errors = [], array $old = [], int $status = 200): Response
+    {
+        $overview = $this->security()->overview();
+
+        return $this->noindex($this->view('admin/package_security', $overview + [
+            'errors' => $errors,
+            'old' => $old,
+        ], $status));
+    }
+
     /** @param array<string,string> $params */
     public function publisher(Request $request, array $params): Response
     {
