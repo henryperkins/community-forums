@@ -1205,23 +1205,25 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 
 /* Thread list — parchment cards with a status left-rule (::before, so hover
    shadows never clobber the rule). */
-.thread-list { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+/* Topic rows are quiet rows, not cards (consolidation pass §5a): hairline
+   dividers over per-row boxes; the 3px status rule and the chips stay as the
+   word+colour signals; unread is the dot + the semibold title. */
+.thread-list { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
 .thread-row {
     position: relative;
     display: flex; gap: 13px; align-items: flex-start;
-    padding: 14px 16px; border: 1px solid var(--border-hair);
-    border-radius: var(--radius-lg); background: var(--surface-raised);
-    box-shadow: var(--shadow-xs); overflow: hidden;
-    transition: box-shadow var(--dur-fast) var(--ease-calm), border-color var(--dur-fast) var(--ease-calm), transform var(--dur-fast) var(--ease-calm);
+    padding: 14px 16px; border: 0;
+    background: none; box-shadow: none; overflow: hidden;
+    transition: background var(--dur-fast) var(--ease-calm);
 }
+.thread-list > .thread-row + .thread-row { border-top: 1px solid var(--border-hair); }
 .thread-row::before {
     content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent;
 }
-.thread-row:hover { box-shadow: var(--shadow-md); border-color: var(--green-200); transform: translateY(-1px); }
+.thread-row:hover { background: var(--surface-sunken); }
 .thread-pinned::before              { background: var(--gold-400); }
 .thread-status-solved::before       { background: var(--leaf); }
 .thread-status-needs_answer::before { background: var(--amber); }
-.thread-unread { border-color: var(--green-200); }
 .thread-row-main { min-width: 0; flex: 1; }
 .thread-row-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
 .thread-row-chips:empty { display: none; }
@@ -1304,7 +1306,7 @@ body[data-route="inbox"] .main { padding: 0; }
 .inbox-reading { background: var(--surface-raised); padding: 24px 30px 44px; overflow-y: auto; min-width: 0; }
 .inbox-reading[aria-busy="true"] { opacity: .55; }
 .inbox-reading .thread-view, .inbox-reading .board-view { max-width: 760px; }
-.thread-row.is-active { border-color: var(--green-200); box-shadow: var(--shadow-sm); background: var(--brand-subtle); }
+.thread-row.is-active { background: var(--brand-subtle); }
 .thread-row.is-active::before { background: var(--leaf); }
 .inbox-empty { text-align: center; padding: 72px 24px; max-width: 46ch; margin: 0 auto; }
 .inbox-empty-star { width: 56px; height: 56px; color: var(--green-400); opacity: .6; }
@@ -1415,10 +1417,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 [data-density="compact"] .thread-list { gap: 0; }
 [data-density="compact"] .thread-row {
     flex-direction: row; align-items: center; gap: 10px;
-    border: 0; border-bottom: 1px solid var(--border-hair); border-radius: 0;
+    border: 0; border-radius: 0;
     box-shadow: none; background: transparent; padding: 9px 16px;
 }
-[data-density="compact"] .thread-row:hover { box-shadow: none; transform: none; background: var(--surface-raised); }
 [data-density="compact"] .thread-row .monogram { width: 26px; height: 26px; font-size: .68rem; }
 [data-density="compact"] .thread-row-main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
 [data-density="compact"] .thread-title { order: 1; flex: 1; min-width: 0; font-size: 1rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
