@@ -244,4 +244,36 @@ final class ManifestValidatorTest extends TestCase
         yield 'support http' => ['support_link', ['support' => ['homepage' => 'http://acme.example']]];
         yield 'support unknown key' => ['support_link', ['support' => ['donate' => 'https://acme.example']]];
     }
+
+    public function test_secret_flag_allowed_on_string_field(): void
+    {
+        $manifest = $this->validator->validate($this->manifest([
+            'settings_schema' => ['fields' => [
+                ['key' => 'api_key', 'type' => 'string', 'label' => 'API key', 'required' => true, 'secret' => true],
+            ]],
+        ]), 'acme/midnight-theme', '1.0.0');
+
+        self::assertTrue($manifest->settingsSchema['fields'][0]['secret']);
+    }
+
+    public function test_secret_flag_refused_on_non_string_field(): void
+    {
+        $this->assertRefusal('settings_schema', ['settings_schema' => ['fields' => [
+            ['key' => 'mode', 'type' => 'select', 'label' => 'Mode', 'options' => ['a', 'b'], 'secret' => true],
+        ]]]);
+    }
+
+    public function test_secret_flag_must_be_boolean(): void
+    {
+        $this->assertRefusal('settings_schema', ['settings_schema' => ['fields' => [
+            ['key' => 'api_key', 'type' => 'string', 'label' => 'API key', 'secret' => 'yes'],
+        ]]]);
+    }
+
+    public function test_unknown_settings_field_property_still_refused(): void
+    {
+        $this->assertRefusal('settings_schema', ['settings_schema' => ['fields' => [
+            ['key' => 'api_key', 'type' => 'string', 'label' => 'API key', 'placeholder' => 'x'],
+        ]]]);
+    }
 }

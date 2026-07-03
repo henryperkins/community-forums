@@ -68,4 +68,9 @@ final class PackageReleaseRepository
     {
         $this->db->run('UPDATE package_releases SET advisory_status = ? WHERE id = ?', [$status, $id]);
     }
+
+    public function setReviewStatus(int $id, string $status): void
+    {
+        $this->db->run('UPDATE package_releases SET review_status = ? WHERE id = ?', [$status, $id]);
+    }
 }

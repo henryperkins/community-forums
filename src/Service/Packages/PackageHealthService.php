@@ -33,6 +33,7 @@ final class PackageHealthService
         private ModerationLogRepository $audit,
         private ?Telemetry $telemetry = null,
         private ?ThemeStateService $themes = null,
+        private ?PackageIntegrationService $integrations = null,
     ) {
     }
 
@@ -86,6 +87,13 @@ final class PackageHealthService
         $changed = 0;
         foreach ($this->installs->activeWithContext() as $install) {
             $version = $install['release_version'] !== null ? (string) $install['release_version'] : '';
+            if ((string) $install['state'] === 'enabled'
+                && in_array((string) ($install['publisher_status'] ?? 'active'), ['suspended', 'revoked'], true)) {
+                if ($this->securityDisable($install, 'publisher ' . (string) $install['publisher_status'])) {
+                    $changed++;
+                }
+                continue;
+            }
             if ((string) $install['state'] === 'enabled') {
                 $reason = $this->blockingReason(
                     (int) $install['package_id'],
@@ -167,6 +175,7 @@ final class PackageHealthService
     private function securityDisable(array $install, string $reason): bool
     {
         $changed = $this->db->transaction(function () use ($install, $reason): bool {
+            $this->integrations?->onInstallIneligible((int) $install['id'], 'force_disabled', null);
             if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'disabled')) {
                 return false;
             }
@@ -227,6 +236,7 @@ final class PackageHealthService
     private function quarantine(array $install, string $reason): bool
     {
         $changed = $this->db->transaction(function () use ($install, $reason): bool {
+            $this->integrations?->onInstallIneligible((int) $install['id'], 'quarantined', null);
             if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'quarantined')) {
                 return false;
             }

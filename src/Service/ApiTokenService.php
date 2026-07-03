@@ -16,6 +16,7 @@ use App\Security\ApiPrincipal;
 use App\Security\ApiScopes;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
+use App\Service\Packages\PackageCredentialAuthGuard;
 
 /**
  * Mint/authenticate/revoke admin/service API tokens. Tokens are shown once and
@@ -32,6 +33,7 @@ final class ApiTokenService
         private Config $config,
         private ReauthGate $reauth,
         private WriteGate $writeGate,
+        private ?PackageCredentialAuthGuard $packageAuthGuard = null,
     ) {
     }
 
@@ -107,6 +109,13 @@ final class ApiTokenService
         $hash = hash('sha256', $token);
         $row = $this->tokens->findActiveByHash($hash);
         if ($row === null) {
+            return null;
+        }
+        // Package-owned tokens fail closed when the owning install is unsafe (emergency
+        // disable, revoked link, non-enabled/unreviewed install, local/advisory block).
+        // Human/legacy tokens have no credential link and pass through unchanged. Denied
+        // package tokens must not touch last_used_at.
+        if ($this->packageAuthGuard !== null && !$this->packageAuthGuard->allowsApiToken((int) $row['id'])) {
             return null;
         }
         $this->tokens->touchLastUsed((int) $row['id']);

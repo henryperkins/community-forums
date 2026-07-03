@@ -42,9 +42,11 @@ final class InstalledPackageRepository
         return $this->db->fetchAll(
             "SELECT ip.*, p.package_uid, p.name AS package_name, p.type AS package_type,
                     p.advisory_status AS package_advisory_status,
+                    pub.status AS publisher_status,
                     r.version AS release_version, r.advisory_status AS release_advisory_status
              FROM installed_packages ip
              JOIN packages p ON p.id = ip.package_id
+             LEFT JOIN package_publishers pub ON pub.id = p.publisher_id
              LEFT JOIN package_releases r ON r.id = ip.release_id
              WHERE ip.state <> 'uninstalled'
              ORDER BY ip.id",
@@ -174,6 +176,14 @@ final class InstalledPackageRepository
         $this->db->run(
             'UPDATE installed_packages SET export_json = ?, exported_at = UTC_TIMESTAMP() WHERE id = ?',
             [$exportJson, $id],
+        );
+    }
+
+    public function setSettingsSummary(int $id, ?string $json): void
+    {
+        $this->db->run(
+            'UPDATE installed_packages SET settings_json = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?',
+            [$json, $id],
         );
     }
 

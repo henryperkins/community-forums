@@ -51,6 +51,7 @@ final class PackageUpdateService
         private WriteGate $writeGate,
         private ModerationLogRepository $audit,
         private ?Telemetry $telemetry = null,
+        private ?PackageIntegrationService $integrations = null,
     ) {
     }
 
@@ -330,6 +331,10 @@ final class PackageUpdateService
                 (string) $target['review_status'],
             );
             $this->permissions->replaceWithGrants($installedId, $rows, $admin->id());
+            // Reconcile package-owned credentials against the new grant set in the same
+            // transaction: any credential whose scopes/events/host are no longer granted is
+            // revoked before the new grants can be used. Rolls back with the activation.
+            $this->integrations?->onGrantsChanged($installedId, 'update:grants_changed', $admin->id());
             $this->history->record([
                 'package_id' => (int) $install['package_id'],
                 'installed_package_id' => $installedId,

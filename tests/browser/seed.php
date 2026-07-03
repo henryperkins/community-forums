@@ -184,6 +184,44 @@ $ensureNewSurfaceFixtures = static function () use ($db, $users): bool {
         ],
     );
 
+    // Enabled remote_app integration install (P5-04): grant summary + settings form
+    // render, and provisioning mints a token deterministically (api-scope-only).
+    $db->run(
+        "INSERT INTO packages (package_uid, name, type, trust_class, created_at, updated_at)
+         VALUES ('acme/browser-remote', 'Browser Remote App', 'remote_app', 'reviewed_remote', UTC_TIMESTAMP(), UTC_TIMESTAMP())
+         ON DUPLICATE KEY UPDATE name = VALUES(name), updated_at = UTC_TIMESTAMP()",
+    );
+    $remotePkgId = (int) $db->fetchValue("SELECT id FROM packages WHERE package_uid = 'acme/browser-remote'");
+    $remoteManifest = json_encode([
+        'format' => 'rb-manifest.v2',
+        'uid' => 'acme/browser-remote', 'version' => '1.0.0', 'name' => 'Browser Remote App', 'type' => 'remote_app',
+        'core' => ['min' => '0.1.0'],
+        'permissions' => ['api_scopes' => ['read:boards']],
+        'settings_schema' => ['fields' => [
+            ['key' => 'display_name', 'type' => 'string', 'label' => 'Display name', 'required' => false],
+        ]],
+    ], JSON_THROW_ON_ERROR);
+    $db->run(
+        "INSERT INTO package_releases (package_id, version, digest, license, manifest_json, review_status, channel, advisory_status, published_at)
+         VALUES (?, '1.0.0', REPEAT('d', 64), 'MIT', ?, 'approved', 'stable', 'none', UTC_TIMESTAMP())
+         ON DUPLICATE KEY UPDATE manifest_json = VALUES(manifest_json)",
+        [$remotePkgId, $remoteManifest],
+    );
+    $remoteReleaseId = (int) $db->fetchValue("SELECT id FROM package_releases WHERE package_id = ? ORDER BY id DESC LIMIT 1", [$remotePkgId]);
+    $db->run(
+        "INSERT INTO installed_packages (package_id, release_id, digest, trust_class, review_status, state, installed_by, installed_at, updated_at)
+         VALUES (?, ?, REPEAT('d', 64), 'reviewed_remote', 'approved', 'enabled', ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+         ON DUPLICATE KEY UPDATE release_id = VALUES(release_id), state = 'enabled', updated_at = UTC_TIMESTAMP()",
+        [$remotePkgId, $remoteReleaseId, (int) $admin['id']],
+    );
+    $remoteInstalledId = (int) $db->fetchValue('SELECT id FROM installed_packages WHERE package_id = ?', [$remotePkgId]);
+    $db->run(
+        "INSERT INTO installed_package_permissions (installed_package_id, kind, permission_key, risk_class, declared, granted, granted_at, granted_by)
+         VALUES (?, 'api_scope', 'read:boards', 'low', 1, 1, UTC_TIMESTAMP(), ?)
+         ON DUPLICATE KEY UPDATE granted = 1, granted_at = UTC_TIMESTAMP()",
+        [$remoteInstalledId, (int) $admin['id']],
+    );
+
     return true;
 };
 $ensureShortcutPoll = static function () use ($db, $users): bool {

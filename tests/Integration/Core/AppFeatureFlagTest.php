@@ -221,10 +221,41 @@ final class AppFeatureFlagTest extends TestCase
             ['POST', '/admin/packages/1/uninstall', ['current_password' => 'password123']],
             ['POST', '/admin/packages/1/export', []],
             ['POST', '/admin/packages/1/reverify', []],
+            ['GET', '/admin/packages/security', []],
+            ['POST', '/admin/packages/security/execution', ['disabled' => '1', 'current_password' => 'password123']],
+            ['POST', '/admin/packages/1/integration/settings', []],
+            ['POST', '/admin/packages/1/integration/provision', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/integration/credentials/1/rotate', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/integration/credentials/1/revoke', []],
+            ['POST', '/admin/packages/1/integration/disable', []],
+            ['POST', '/admin/packages/1/integration/export', []],
+            ['POST', '/admin/packages/1/review', ['decision' => 'approved', 'release_id' => '1', 'current_password' => 'password123']],
         ] as [$method, $path, $body]) {
             $response = $method === 'GET' ? $this->get($path) : $this->post($path, $body);
             $this->assertStatus(404, $response);
         }
+    }
+
+    public function test_package_registry_gates_publisher_console_routes(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        // Dark by default: gate() → NotFoundException (404, never 403/405) before and after requireAdmin().
+        $this->assertStatus(404, $this->get('/admin/packages/publishers/1'));
+        foreach ([
+            ['/admin/packages/publishers/1/verify', ['current_password' => 'password123']],
+            ['/admin/packages/publishers/1/suspend', ['current_password' => 'password123', 'reason' => 'x']],
+            ['/admin/packages/publishers/1/reinstate', ['current_password' => 'password123']],
+            ['/admin/packages/publishers/1/keys', ['current_password' => 'password123', 'key_id' => 'k', 'public_key' => 'x']],
+            ['/admin/packages/publishers/1/rotate', ['current_password' => 'password123', 'envelope' => '{}']],
+            ['/admin/publisher-keys/1/revoke', ['current_password' => 'password123', 'reason' => 'x']],
+        ] as [$path, $body]) {
+            $this->assertStatus(404, $this->post($path, $body));
+        }
+
+        // Flag on → the gate opens (a seeded publisher renders 200, proving it was the gate, not a not-found).
+        $this->setFlags(['package_registry' => true]);
+        $ids = \Tests\Support\Phase5\RegistryFixtures::seed($this->db, \Tests\Support\Phase5\SigningHarness::generate('pub-gate'));
+        self::assertNotSame(404, $this->get('/admin/packages/publishers/' . $ids['publisher_id'])->status());
     }
 
     public function test_package_themes_flag_gates_public_theme_routes(): void
@@ -654,5 +685,63 @@ final class AppFeatureFlagTest extends TestCase
         $admin = $this->makeAdmin(['username' => 'darkadmin']);
         $this->actingAs($admin);
         $this->assertStatus(200, $this->get('/admin'));
+    }
+
+    public function test_custom_profile_fields_is_available_by_default_and_can_be_disabled(): void
+    {
+        // custom_profile_fields graduated to default-on (GA 2026-07-03): the
+        // bounded "Custom profile fields" panel renders on /settings/account with
+        // no features override, and an operator can still roll it back via the
+        // features setting. Render-gated (no route), so this asserts the panel
+        // markers rather than a route 404 (the wysiwyg_composer variant).
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertArrayHasKey('custom_profile_fields', $flags->all());
+        self::assertTrue($flags->enabled('custom_profile_fields'), 'custom_profile_fields graduated to default-on');
+
+        // Isolation: graduating this flag must not enable a dark neighbour.
+        self::assertFalse($flags->enabled('group_dms'));
+
+        $member = $this->makeUser(['username' => 'cpf_default_member']);
+        $this->actingAs($member);
+
+        // Available by default: the settings panel renders its bounded field rows.
+        $settings = $this->get('/settings/account');
+        $this->assertStatus(200, $settings);
+        self::assertStringContainsString('Custom profile fields', $settings->body());
+        self::assertStringContainsString('name="custom_label_1"', $settings->body());
+
+        // Operator rollback: disabling hides the panel; core profile editing stays.
+        $this->setFlags(['custom_profile_fields' => false]);
+        $rolledBack = $this->get('/settings/account');
+        $this->assertStatus(200, $rolledBack);
+        self::assertStringNotContainsString('name="custom_label_1"', $rolledBack->body());
+        self::assertStringContainsString('name="signature"', $rolledBack->body());
+    }
+
+    public function test_split_merge_is_available_by_default_and_can_be_disabled(): void
+    {
+        // split_merge graduated to default-on (GA 2026-07-03): the moderator
+        // split/merge routes are live for an in-scope moderator with no features
+        // override, and an operator can still take the surface offline (404).
+        $author = $this->makeUser(['username' => 'sm_default_author']);
+        $board = $this->makeBoard($this->makeCategory('Split Merge Default'), ['slug' => 'sm-default']);
+        $thread = $this->makeThread($board, $author, 'Split merge default', 'Opening post');
+        $this->actingAs($this->makeAdmin(['username' => 'sm_default_admin']));
+
+        // Available by default: the split route is live. An empty selection fails
+        // validation and redirects back to the thread (proving it is not 404-dark).
+        $this->assertRedirectContains(
+            $this->post('/mod/t/' . $thread['thread_id'] . '/split', ['title' => 'Attempted split']),
+            '/t/' . $thread['thread_id'],
+        );
+        self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('split_merge'));
+
+        // Isolation: graduating split_merge must not enable a dark neighbour.
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'));
+
+        // Operator rollback: disabling the flag takes both routes offline (404).
+        $this->setFlags(['split_merge' => false]);
+        $this->assertStatus(404, $this->post('/mod/t/' . $thread['thread_id'] . '/split', ['title' => 'x']));
+        $this->assertStatus(404, $this->post('/mod/t/' . $thread['thread_id'] . '/merge', ['target_thread_id' => 1]));
     }
 }

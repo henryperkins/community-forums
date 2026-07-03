@@ -14,7 +14,9 @@ use App\Controller\AdminEmailController;
 use App\Controller\AdminExtensionController;
 use App\Controller\AdminFeatureController;
 use App\Controller\AdminLinkPreviewController;
+use App\Controller\AdminPackageIntegrationController;
 use App\Controller\AdminPackageLifecycleController;
+use App\Controller\AdminPackageSecurityController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
 use App\Controller\AdminRoleController;
@@ -91,8 +93,10 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\FollowRepository;
 use App\Repository\IdempotencyRepository;
+use App\Repository\InstalledPackageCredentialRepository;
 use App\Repository\InstalledPackagePermissionRepository;
 use App\Repository\InstalledPackageRepository;
+use App\Repository\InstalledPackageSettingsRepository;
 use App\Repository\LocalPackageBlockRepository;
 use App\Repository\MfaRepository;
 use App\Repository\NotificationRepository;
@@ -109,6 +113,8 @@ use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
+use App\Repository\PublisherSigningKeyRepository;
+use App\Service\Registry\PublisherTrustService;
 use App\Repository\RegistrySnapshotRepository;
 use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\RoleAssignmentHistoryRepository;
@@ -193,6 +199,11 @@ use App\Service\OAuthService;
 use App\Service\PasskeyService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\Packages\PackageAcquisitionService;
+use App\Service\Packages\PackageCredentialAuthGuard;
+use App\Service\Packages\PackageIntegrationService;
+use App\Service\Packages\PackageReviewConsoleService;
+use App\Service\Packages\PackageSecurityResponseService;
+use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\PackageLifecycleService;
@@ -774,6 +785,16 @@ final class App
         $c->bind(ServerDraftRepository::class, fn (Container $c) => new ServerDraftRepository($c->get(Database::class)));
         $c->bind(ServerExtensionRepository::class, fn (Container $c) => new ServerExtensionRepository($c->get(Database::class)));
         $c->bind(ApiTokenRepository::class, fn (Container $c) => new ApiTokenRepository($c->get(Database::class)));
+        $c->bind(PackageCredentialAuthGuard::class, fn (Container $c) => new PackageCredentialAuthGuard(
+            $c->get(InstalledPackageCredentialRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+            $c->get(LocalPackageBlockRepository::class),
+            $c->get(SettingRepository::class),
+            $config,
+        ));
         $c->bind(ApiTokenService::class, fn (Container $c) => new ApiTokenService(
             $c->get(Database::class),
             $c->get(ApiTokenRepository::class),
@@ -782,6 +803,7 @@ final class App
             $config,
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
+            $c->get(PackageCredentialAuthGuard::class),
         ));
         $c->bind(ServiceSecretRepository::class, fn (Container $c) => new ServiceSecretRepository($c->get(Database::class)));
         $c->bind(SecretVault::class, fn (Container $c) => new SecretVault(
@@ -1264,6 +1286,46 @@ final class App
         $c->bind(PackageThemeRepository::class, fn (Container $c) => new PackageThemeRepository($c->get(Database::class)));
         $c->bind(PackageTransparencyLogRepository::class, fn (Container $c) => new PackageTransparencyLogRepository($c->get(Database::class)));
         $c->bind(ManifestValidator::class, fn () => new ManifestValidator());
+        $c->bind(InstalledPackageSettingsRepository::class, fn (Container $c) => new InstalledPackageSettingsRepository($c->get(Database::class)));
+        $c->bind(InstalledPackageCredentialRepository::class, fn (Container $c) => new InstalledPackageCredentialRepository($c->get(Database::class)));
+        $c->bind(PublisherSigningKeyRepository::class, fn (Container $c) => new PublisherSigningKeyRepository($c->get(Database::class)));
+        $c->bind(PackageReviewConsoleService::class, fn (Container $c) => new PackageReviewConsoleService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageReviewDecisionRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+        ));
+        $c->bind(PublisherTrustService::class, fn (Container $c) => new PublisherTrustService(
+            $c->get(Database::class),
+            $c->get(PackagePublisherRepository::class),
+            $c->get(PublisherSigningKeyRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(TrustChainVerifier::class),
+            $c->get(PackageHealthService::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+        ));
+        $c->bind(PackageSettingsService::class, fn (Container $c) => new PackageSettingsService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackageSettingsRepository::class),
+            $c->get(SecretVault::class),
+            $c->get(ManifestValidator::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
+            $config,
+        ));
         $c->bind(PackageSecurityGate::class, fn (Container $c) => new PackageSecurityGate(
             $c->get(LocalPackageBlockRepository::class),
             $c->get(PackageAdvisoryRepository::class),
@@ -1314,6 +1376,29 @@ final class App
             $c->get(RegistryTransport::class),
             $c->get(Telemetry::class),
         ));
+        $c->bind(PackageIntegrationService::class, fn (Container $c) => new PackageIntegrationService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackagePermissionRepository::class),
+            $c->get(InstalledPackageSettingsRepository::class),
+            $c->get(InstalledPackageCredentialRepository::class),
+            $c->get(ApiTokenService::class),
+            $c->get(WebhookService::class),
+            $c->get(ApiTokenRepository::class),
+            $c->get(WebhookRepository::class),
+            $c->get(SecretVault::class),
+            $c->get(ManifestValidator::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
+            $c->get(SettingRepository::class),
+            $config,
+        ));
         $c->bind(PackageLifecycleService::class, fn (Container $c) => new PackageLifecycleService(
             $c->get(Database::class),
             $c->get(PackageRepository::class),
@@ -1333,6 +1418,7 @@ final class App
             (int) $config->get('packages.retention_days', 30),
             $c->get(Telemetry::class),
             $c->get(ThemeStateService::class),
+            $c->get(PackageIntegrationService::class),
         ));
         $c->bind(PackageUpdateService::class, fn (Container $c) => new PackageUpdateService(
             $c->get(Database::class),
@@ -1351,6 +1437,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(ModerationLogRepository::class),
             $c->get(Telemetry::class),
+            $c->get(PackageIntegrationService::class),
         ));
         $c->bind(PackageHealthService::class, fn (Container $c) => new PackageHealthService(
             $c->get(Database::class),
@@ -1366,6 +1453,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(Telemetry::class),
             $c->get(ThemeStateService::class),
+            $c->get(PackageIntegrationService::class),
         ));
         $c->bind(RegistrySnapshotRepository::class, fn (Container $c) => new RegistrySnapshotRepository($c->get(Database::class)));
         $c->bind(RegistrySnapshotService::class, fn (Container $c) => new RegistrySnapshotService(
@@ -1406,6 +1494,23 @@ final class App
             $c->get(WriteGate::class),
             $c->get(ModerationLogRepository::class),
             $c->get(PackageHealthService::class),
+        ));
+        $c->bind(PackageSecurityResponseService::class, fn (Container $c) => new PackageSecurityResponseService(
+            $c->get(Database::class),
+            $c->get(SettingRepository::class),
+            $c->get(RegistryAdvisoryService::class),
+            $c->get(LocalBlocklistService::class),
+            $c->get(PackageHealthService::class),
+            $c->get(PackageIntegrationService::class),
+            $c->get(PackagePublisherRepository::class),
+            $c->get(PublisherSigningKeyRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+            $c->get(LocalPackageBlockRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+            $config,
         ));
         $c->bind(RegistryCatalogService::class, fn (Container $c) => new RegistryCatalogService(
             $c->get(PackageRepository::class),
@@ -1759,6 +1864,17 @@ final class App
         $r->post('/admin/themes/{id}/preview', [AdminThemeController::class, 'preview']);
         $r->post('/admin/themes/{id}/activate', [AdminThemeController::class, 'activate']);
         $r->get('/admin/packages', [AdminPackagesController::class, 'index']);
+        // Security-response console (P5-07-A) — non-numeric GETs registered before the numeric detail route.
+        $r->get ('/admin/packages/security',                  [AdminPackageSecurityController::class, 'index']);
+        $r->post('/admin/packages/security/execution',        [AdminPackageSecurityController::class, 'emergencyDisable']);
+        // Publisher trust console (P5-07-A) — register the {id} publisher GET before the generic package GET.
+        $r->get ('/admin/packages/publishers/{id}',           [AdminPackageSecurityController::class, 'publisher']);
+        $r->post('/admin/packages/publishers/{id}/verify',    [AdminPackageSecurityController::class, 'verifyPublisher']);
+        $r->post('/admin/packages/publishers/{id}/suspend',   [AdminPackageSecurityController::class, 'suspendPublisher']);
+        $r->post('/admin/packages/publishers/{id}/reinstate', [AdminPackageSecurityController::class, 'reinstatePublisher']);
+        $r->post('/admin/packages/publishers/{id}/keys',      [AdminPackageSecurityController::class, 'pinPublisherKey']);
+        $r->post('/admin/packages/publishers/{id}/rotate',    [AdminPackageSecurityController::class, 'rotatePublisherKey']);
+        $r->post('/admin/publisher-keys/{id}/revoke',         [AdminPackageSecurityController::class, 'revokePublisherKey']);
         $r->get('/admin/packages/{id}', [AdminPackagesController::class, 'show']);
         $r->post('/admin/packages/{id}/plan', [AdminPackageLifecycleController::class, 'plan']);
         $r->post('/admin/packages/{id}/install', [AdminPackageLifecycleController::class, 'install']);
@@ -1772,8 +1888,16 @@ final class App
         $r->post('/admin/packages/{id}/update/cancel', [AdminPackageLifecycleController::class, 'cancelUpdate']);
         $r->post('/admin/packages/{id}/rollback', [AdminPackageLifecycleController::class, 'rollback']);
         $r->post('/admin/packages/{id}/uninstall', [AdminPackageLifecycleController::class, 'uninstall']);
+        $r->post('/admin/packages/{id}/review', [AdminPackageSecurityController::class, 'recordReview']);
         $r->post('/admin/packages/{id}/export', [AdminPackageLifecycleController::class, 'export']);
         $r->post('/admin/packages/{id}/reverify', [AdminPackageLifecycleController::class, 'reverify']);
+        // Integration runtime (P5-04) — remote_app / automation, deploy-dark behind package_registry.
+        $r->post('/admin/packages/{id}/integration/settings',                          [AdminPackageIntegrationController::class, 'saveSettings']);
+        $r->post('/admin/packages/{id}/integration/provision',                         [AdminPackageIntegrationController::class, 'provision']);
+        $r->post('/admin/packages/{id}/integration/credentials/{credentialId}/rotate', [AdminPackageIntegrationController::class, 'rotateCredential']);
+        $r->post('/admin/packages/{id}/integration/credentials/{credentialId}/revoke', [AdminPackageIntegrationController::class, 'revokeCredential']);
+        $r->post('/admin/packages/{id}/integration/disable',                           [AdminPackageIntegrationController::class, 'disableIntegration']);
+        $r->post('/admin/packages/{id}/integration/export',                            [AdminPackageIntegrationController::class, 'exportSettings']);
         $r->get('/admin/registries', [AdminRegistryController::class, 'index']);
         $r->post('/admin/registries', [AdminRegistryController::class, 'create']);
         $r->post('/admin/registries/{id}/enabled', [AdminRegistryController::class, 'setEnabled']);
