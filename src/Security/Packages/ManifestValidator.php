@@ -41,7 +41,7 @@ final class ManifestValidator
         'jobs' => 'job',
     ];
     private const SETTING_TYPES = ['string', 'boolean', 'integer', 'select'];
-    private const SETTING_FIELD_KEYS = ['key', 'type', 'label', 'required', 'options'];
+    private const SETTING_FIELD_KEYS = ['key', 'type', 'label', 'required', 'options', 'secret'];
     private const JOB_SCHEDULES = ['hourly', 'daily', 'weekly'];
     private const HOST_PATTERN = '/\A[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+\z/';
     private const KEY_PATTERN = '/\A[a-z][a-z0-9_]{0,63}\z/';
@@ -279,6 +279,14 @@ final class ManifestValidator
             }
             if (array_key_exists('required', $field) && !is_bool($field['required'])) {
                 $this->refuse('settings_schema', 'Settings field "required" must be a boolean.');
+            }
+            if (array_key_exists('secret', $field)) {
+                if (!is_bool($field['secret'])) {
+                    $this->refuse('settings_schema', 'Settings field "secret" must be a boolean.');
+                }
+                if ($field['secret'] === true && $type !== 'string') {
+                    $this->refuse('settings_schema', 'Only string settings fields may be marked secret.');
+                }
             }
 
             $hasOptions = array_key_exists('options', $field);
