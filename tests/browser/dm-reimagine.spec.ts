@@ -113,5 +113,15 @@ test('DM reading room: de-boxed rows, grouped letters, no-JS report', async ({ b
   await expect(nojs.locator('.dm-report-form select[name="reason_code"]').first()).toBeVisible();
   await shot(nojs, '03-conversation-no-js');
 
-  await Promise.all([aliceCtx.close(), bobCtx.close(), adminCtx.close(), nojsCtx.close()]);
+  // ── Dark theme: the reimagine uses only theme-aware :root tokens, so it must
+  //    hold under a dark surface (no hardcoded colors) ────────────────────────
+  const darkCtx = await browser.newContext({ baseURL: baseURL!, colorScheme: 'dark' });
+  const dark = await darkCtx.newPage();
+  await login(dark, 'alice@retro.test');
+  await dark.goto(convA);
+  await expect(dark.locator('.dm-group.mine .dm-body').first()).toBeVisible();
+  await expect(dark.locator('.dm-group:not(.mine) .dm-body').first()).toBeVisible();
+  await shot(dark, '04-conversation-dark');
+
+  await Promise.all([aliceCtx.close(), bobCtx.close(), adminCtx.close(), nojsCtx.close(), darkCtx.close()]);
 });
