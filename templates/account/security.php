@@ -121,6 +121,23 @@ $recoveryCodes = $new_recovery_codes ?? [];
             </form>
         <?php endif; ?>
     </section>
+
+    <?php if (is_array($passkeys ?? null)): ?>
+    <section class="stacked scribe-panel" data-passkey-panel>
+        <h2 class="scribe-panel-head">Passkeys</h2>
+        <?php if ($passkeys['credentials'] === []): ?>
+            <p class="muted">No passkeys yet.</p>
+        <?php else: ?>
+            <ul class="code-list">
+                <?php foreach ($passkeys['credentials'] as $pk): ?>
+                    <li>
+                        <strong><?= $e($pk['nickname'] !== '' ? $pk['nickname'] : 'Unnamed passkey') ?></strong>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
+    <?php endif; ?>
         </div>
     </div>
 </div>

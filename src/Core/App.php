@@ -43,6 +43,7 @@ use App\Controller\LeaderboardController;
 use App\Controller\MediaController;
 use App\Controller\ModerationController;
 use App\Controller\OAuthController;
+use App\Controller\PasskeyController;
 use App\Controller\PostController;
 use App\Controller\PollController;
 use App\Controller\PresenceController;
@@ -189,6 +190,7 @@ use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
+use App\Service\PasskeyService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
@@ -1434,6 +1436,23 @@ final class App
             $c->get(ModerationLogRepository::class),
             $config,
         ));
+        $c->bind(PasskeyService::class, fn (Container $c) => new PasskeyService(
+            $c->get(WebAuthnCredentialRepository::class),
+            $c->get(WebAuthnChallengeRepository::class),
+            $c->get(WebAuthnVerifier::class),
+            $c->get(RelyingParty::class),
+            $c->get(UserRepository::class),
+            $c->get(OAuthIdentityRepository::class),
+            $c->get(MfaService::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(LastOwnerGuard::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Mailer::class),
+            $config,
+            $c->get(Database::class),
+            $c->get(Telemetry::class),
+        ));
         $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
             $c->get(UserPreferenceRepository::class),
             (int) $config->get('pagination.threads_per_page', 20),
@@ -1626,6 +1645,9 @@ final class App
         $r->post('/settings/security/totp/confirm', [AccountController::class, 'confirmTotpEnrollment']);
         $r->post('/settings/security/totp/recovery/rotate', [AccountController::class, 'rotateRecoveryCodes']);
         $r->post('/settings/security/totp/disable', [AccountController::class, 'disableTotp']);
+        $r->post('/settings/security/passkeys/challenge', [PasskeyController::class, 'challenge']);
+        $r->post('/settings/security/passkeys/step-up-challenge', [PasskeyController::class, 'stepUpChallenge']);
+        $r->post('/settings/security/passkeys', [PasskeyController::class, 'store']);
 
         // Member controls (P2-10): privacy, preferences, notifications, sessions, blocks, boards.
         $r->get('/settings/privacy', [SettingsController::class, 'privacyForm']);

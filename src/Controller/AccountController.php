@@ -14,6 +14,7 @@ use App\Repository\UserProfileFieldRepository;
 use App\Service\AccountLifecycleService;
 use App\Service\AccountService;
 use App\Service\MfaService;
+use App\Service\PasskeyService;
 use App\Service\ProfileMediaService;
 
 /**
@@ -281,6 +282,9 @@ final class AccountController extends Controller
         return $this->view('account/security', array_replace([
             'errors' => [],
             'totp' => $this->container->get(MfaService::class)->status($user->id()),
+            'passkeys' => $this->container->get(FeatureFlags::class)->enabled('passkeys')
+                ? $this->container->get(PasskeyService::class)->status($user)
+                : null,
             'totp_setup' => null,
             'new_recovery_codes' => [],
         ], $data), $status);

@@ -157,6 +157,20 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/roles'));
     }
 
+    public function test_passkeys_flag_gates_ceremony_routes(): void
+    {
+        $this->actingAs($this->makeUser());
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x']));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys', ['credential' => '{}']));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/step-up-challenge', []));
+
+        $this->setFlags(['passkeys' => true]);
+        self::assertNotSame(404, $this->post('/settings/security/passkeys/challenge', [])->status());
+
+        $this->setFlags(['passkeys' => false]);
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x']));
+    }
+
     public function test_package_registry_flag_gates_catalog_and_registry_routes(): void
     {
         $this->actingAs($this->makeAdmin());
