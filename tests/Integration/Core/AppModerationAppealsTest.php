@@ -87,6 +87,29 @@ final class AppModerationAppealsTest extends TestCase
         self::assertStringContainsString('Submit appeal', $page->body());
     }
 
+    public function test_appeals_page_renders_no_js_form_for_cleared_avatar_action(): void
+    {
+        $this->db->run(
+            'UPDATE users SET avatar_path = ?, avatar_source = ? WHERE id = ?',
+            ['/media/321', 'upload', (int) $this->member['id']],
+        );
+
+        $this->actingAs($this->admin);
+        $this->post('/admin/users/' . (int) $this->member['id'] . '/avatar/remove');
+        $logId = (int) $this->db->fetchValue(
+            "SELECT id FROM moderation_log WHERE action = 'clear_avatar' AND target_type = 'user' AND target_id = ? ORDER BY id DESC LIMIT 1",
+            [(int) $this->member['id']],
+        );
+
+        $this->actingAs($this->member);
+        $page = $this->get('/appeals');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('/appeals/modlog/' . $logId, $page->body());
+        self::assertStringContainsString('clear_avatar', $page->body());
+        self::assertStringContainsString('Submit appeal', $page->body());
+    }
+
     public function test_deleted_post_appeal_expires_after_30_days(): void
     {
         $this->db->run(

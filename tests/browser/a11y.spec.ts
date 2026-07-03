@@ -365,6 +365,32 @@ test('phase 4 content reference cards have no serious axe violations', async ({ 
   await expectNoSeriousA11yViolations(page, info, '.reference-cards');
 });
 
+test('phase 4 profile media panels have no serious axe violations', async ({ page }, info) => {
+  await login(page, 'bob@retro.test');
+  await visit(page, '/settings/account');
+  const avatarPanel = page.locator('.profile-media-panel');
+  await expect(avatarPanel).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.profile-media-panel');
+
+  await avatarPanel.locator('input[name="avatar"]').setInputFiles({
+    name: 'avatar.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC', 'base64'),
+  });
+  await avatarPanel.locator('form[action="/settings/avatar"] button[type="submit"]').click();
+  await page.waitForURL(/\/settings\/account$/);
+  await page.locator('textarea[name="signature"]').fill(`Profile media a11y (${info.project.name})`);
+  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.waitForURL(/\/settings\/account$/);
+
+  await login(page, 'admin@retro.test');
+  await visit(page, '/admin/users');
+  await page.getByRole('link', { name: 'bob', exact: true }).click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  await expect(page.locator('.profile-media-card')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.profile-media-card');
+});
+
 test('phase 4 slash combobox has no serious axe violations and is keyboard operable', async ({ page }, info) => {
   // slash_giphy graduated to default-on (GA 2026-07-02). The composer slash
   // inserts + GIPHY picker are an APG combobox (textarea = combobox, popup =

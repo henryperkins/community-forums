@@ -1,7 +1,7 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-07-02 (`FeatureFlags::DEFAULTS` source audit; 2026-07-02
-graduations reconciled; graduation readiness ranking added; Phase 5 rows
+**Date:** 2026-07-03 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
+profile-media graduation reconciled; graduation readiness ranking added; Phase 5 rows
 reconciled with `PHASE_5_STATUS.md`)
 
 This inventory lists feature flags that default to `false` in
@@ -18,13 +18,13 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 
 ## Source Code Audit
 
-Audited 2026-07-02 against `src/Core/FeatureFlags.php` and literal
+Audited 2026-07-03 against `src/Core/FeatureFlags.php` and literal
 `FeatureFlags::enabled('...')` call sites in `src/`.
 
-- `FeatureFlags::DEFAULTS` declares 57 flags: 33 default `true`, 24 default
+- `FeatureFlags::DEFAULTS` declares 57 flags: 34 default `true`, 23 default
   `false`.
-- This deploy-dark inventory has 39 table rows: all 24 current default-dark
-  flags, plus 15 retained graduated flags that are default-ON and
+- This deploy-dark inventory has 39 table rows: all 23 current default-dark
+  flags, plus 16 retained graduated flags that are default-ON and
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
@@ -66,7 +66,7 @@ Audited 2026-07-02 against `src/Core/FeatureFlags.php` and literal
 | `custom_emoji` | Operator-managed shortcode assets and optional reactions | Deploy-dark; awaiting browser/a11y evidence and media moderation runbook |
 | `slash_giphy` | Progressive slash insertion and client-side GIPHY picker config | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; **inert until `giphy_public_key` is set**; reversible via `features` override or by clearing the key). Acceptance evidence: `AppCustomEmojiGiphyTest` (incl. operator-rollback re-gate), `AppPhase4CarryoverFoundationTest`, browser `26-slash-menu`/`27-giphy-inserted`, `.composer-slash-menu` axe + keyboard pass, runbook `docs/runbooks/slash_giphy.md`. Retained here for traceability. |
 | `split_merge` | Moderator split/merge routes, redirects, audit, touched-counter repair | Deploy-dark; awaiting browser/runbook evidence and larger repair rehearsal |
-| `profile_media` | Avatar upload/removal, signature hardening, moderator signature removal | Deploy-dark; awaiting browser/a11y evidence and moderation runbook |
+| `profile_media` | Avatar upload/removal, signature hardening, moderator avatar/signature removal | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppProfileMediaTest` (available-by-default + rollback, self/admin removal, local-media retirement), `AppFeatureFlagTest`, `AppModerationAppealsTest` (`clear_avatar` appealability), browser `46-profile-media-avatar`/`47-profile-media-moderation`, `.profile-media-panel`/`.profile-media-card` axe passes, runbook `docs/runbooks/profile_media.md`. Retained here for traceability. |
 | `board_folders` | Private personal board folders | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `bookmark_folders` | Private folders for starred/bookmarked threads | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `saved_feeds` | Private saved feed filters and digest-composition groundwork | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
@@ -192,11 +192,19 @@ still listed as "Need: runbook" do not yet.
    reactions.
    - Have: `AppCustomEmojiGiphyTest` (shared with `slash_giphy`).
    - Need: browser/a11y evidence + media-moderation runbook.
-8. **`profile_media`** — local avatar upload/removal plus signature hardening
-   (three-line height enforcement) and audited moderator signature removal.
-   - Have: `AppProfileMediaTest`; the upload-capture Playwright pattern exists
-     (`17-composer-upload.png`).
-   - Need: browser/a11y evidence + moderation runbook.
+8. **`profile_media`** — ✓ **Graduated 2026-07-03 (default-ON).** Local avatar
+   upload/removal plus signature hardening (three-line height enforcement) and
+   audited admin avatar/signature removal; `clear_avatar` and `clear_signature`
+   remain appealable user-moderation actions.
+   - Evidence completed: `AppProfileMediaTest` (default-on + operator rollback,
+     member upload/remove, admin clear-avatar/clear-signature, attachment row
+     deletion for local `/media/{id}` avatars, validation re-render);
+     `AppFeatureFlagTest` and `AppPhase4CarryoverFoundationTest` assert the
+     default posture and rollback isolation; `AppModerationAppealsTest` covers
+     `clear_avatar` appeal eligibility; browser captures
+     `46-profile-media-avatar` + `47-profile-media-moderation`; scoped axe scans
+     for `.profile-media-panel` and `.profile-media-card`; operator runbook
+     `docs/runbooks/profile_media.md`.
 9. **`custom_profile_fields`** — bounded extra public profile fields
    (migration `0062`).
    - Have: focused coverage in `AppBoardFoldersSavedFeedsTest` (the `0062`
@@ -358,6 +366,16 @@ as of 2026-07-02.
   It is retained here for traceability and remains reversible via the `features`
   override; disabling the flag re-gates every route to 404 but never re-reverses
   a resolution already carried out by the owning moderation service.
+- `profile_media` graduated out of deploy-dark on 2026-07-03: its
+  `FeatureFlags` default is now `true`. Acceptance added audited admin avatar
+  removal beside signature removal, retired local avatar media rows on member or
+  admin removal, made `clear_avatar` appealable beside `clear_signature`, added
+  desktop/mobile browser captures (`46-profile-media-avatar` /
+  `47-profile-media-moderation`), scoped axe scans for the member/admin panels,
+  and the operator runbook at `docs/runbooks/profile_media.md`. It is retained
+  here for traceability and remains reversible via the `features` override;
+  disabling the flag stops new profile-media mutations but does not erase
+  already stored profile values.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
   decision. `group_dms` and `community_memory` additionally require an

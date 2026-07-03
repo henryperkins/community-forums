@@ -11,6 +11,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\AttachmentRepository;
 use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationLogRepository;
@@ -33,6 +34,7 @@ final class UserModerationService
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
         private BoardModeratorRepository $boardMods,
+        private ?AttachmentRepository $attachments = null,
         private ?FirstPartyHookRegistry $hooks = null,
     ) {
     }
@@ -195,6 +197,35 @@ final class UserModerationService
                 'after' => null,
             ]);
         });
+    }
+
+    public function clearAvatar(User $actor, int $subjectId): void
+    {
+        $this->assertAdmin($actor);
+        $subject = $this->requireSubject($subjectId);
+        $before = isset($subject['avatar_path']) && $subject['avatar_path'] !== null ? (string) $subject['avatar_path'] : null;
+
+        $this->db->transaction(function () use ($actor, $subjectId, $before): void {
+            $this->deleteLocalAvatar($before);
+            $this->users->setAvatar($subjectId, null, 'monogram', $actor->id());
+            $this->log->log([
+                'actor_id' => $actor->id(),
+                'action' => 'clear_avatar',
+                'target_type' => 'user',
+                'target_id' => $subjectId,
+                'before' => $before,
+                'after' => null,
+            ]);
+        });
+    }
+
+    private function deleteLocalAvatar(?string $path): void
+    {
+        if ($this->attachments === null || $path === null || preg_match('~^/media/(\d+)$~', $path, $matches) !== 1) {
+            return;
+        }
+
+        $this->attachments->markDeleted((int) $matches[1]);
     }
 
     /**

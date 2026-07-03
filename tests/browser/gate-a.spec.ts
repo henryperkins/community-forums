@@ -543,6 +543,54 @@ test('phase 4 content references render read-gated cards for public targets and 
   await viewerContext.close();
 });
 
+test('phase 4 profile media: avatar upload, signature, and admin moderation', async ({ page }, info) => {
+  await login(page, 'bob@retro.test');
+
+  await visit(page, '/settings/account');
+  const avatarPanel = page.locator('.profile-media-panel');
+  await expect(avatarPanel).toBeVisible();
+  await avatarPanel.locator('input[name="avatar"]').setInputFiles({
+    name: 'avatar.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(PNG_1X1, 'base64'),
+  });
+  await avatarPanel.locator('form[action="/settings/avatar"] button[type="submit"]').click();
+  await page.waitForURL(/\/settings\/account$/);
+  await expect(page.getByRole('status').getByText('Avatar updated.')).toBeVisible();
+  await expect(page.locator('.profile-media-panel img[src^="/media/"]')).toBeVisible();
+
+  await page.locator('textarea[name="signature"]').fill(`Profile media evidence (${info.project.name})`);
+  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.waitForURL(/\/settings\/account$/);
+  await expect(page.getByRole('status').getByText('Your profile has been updated.')).toBeVisible();
+
+  await visit(page, '/u/bob');
+  await expect(page.locator('.profile-avatar img[src^="/media/"]')).toBeVisible();
+  await shot(page, info, '46-profile-media-avatar');
+
+  await page.context().clearCookies();
+  await login(page, 'admin@retro.test');
+  await visit(page, '/admin/users');
+  await page.getByRole('link', { name: 'bob', exact: true }).click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+
+  const profileMedia = page.locator('.profile-media-card');
+  await expect(profileMedia).toBeVisible();
+  await expect(profileMedia.getByRole('button', { name: 'Remove avatar' })).toBeVisible();
+  await expect(profileMedia.getByRole('button', { name: 'Remove signature' })).toBeVisible();
+  await shot(page, info, '47-profile-media-moderation');
+
+  await profileMedia.getByRole('button', { name: 'Remove avatar' }).click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  await expect(page.getByRole('status').getByText('Avatar removed.')).toBeVisible();
+  await expect(profileMedia).toContainText('No uploaded avatar set.');
+
+  await profileMedia.getByRole('button', { name: 'Remove signature' }).click();
+  await page.waitForURL(/\/admin\/users\/\d+$/);
+  await expect(page.getByRole('status').getByText('Signature removed.')).toBeVisible();
+  await expect(profileMedia).toContainText('No signature set.');
+});
+
 test('phase 4 slash menu inserts approved snippets and GIPHY media', async ({ page }, info) => {
   await page.route('https://api.giphy.com/v1/gifs/search**', async (route) => {
     await route.fulfill({

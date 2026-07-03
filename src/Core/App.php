@@ -899,6 +899,7 @@ final class App
             $c->get(Database::class),
         ));
         $c->bind(ProfileMediaService::class, fn (Container $c) => new ProfileMediaService(
+            $c->get(Database::class),
             $c->get(AttachmentService::class),
             $c->get(AttachmentRepository::class),
             $c->get(UserRepository::class),
@@ -1022,6 +1023,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(BoardModeratorRepository::class),
+            $c->get(AttachmentRepository::class),
             $c->get(FirstPartyHookRegistry::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
@@ -1852,6 +1854,7 @@ final class App
         $r->get('/admin/users', [AdminUserController::class, 'index']);
         $r->get('/admin/users/{id}', [AdminUserController::class, 'show']);
         $r->post('/admin/users/{id}/title', [AdminUserController::class, 'setTitle']);
+        $r->post('/admin/users/{id}/avatar/remove', [AdminUserController::class, 'removeAvatar']);
         $r->post('/admin/users/{id}/signature/remove', [AdminUserController::class, 'removeSignature']);
         $r->post('/admin/users/{id}/badges/grant', [AdminUserController::class, 'grantBadge']);
         $r->post('/admin/users/{id}/badges/revoke', [AdminUserController::class, 'revokeBadge']);
