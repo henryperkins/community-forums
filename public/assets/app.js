@@ -306,4 +306,227 @@
         var cancel = newTopic.querySelector('[data-close-composer]');
         if (cancel) { cancel.addEventListener('click', closeTopic); }
     }
+
+    // Messages details rail (Phase 2 reimagine): a real column at wide widths, a
+    // right-edge drawer below ~1400px. Server-rendered as always-visible (wide)
+    // or reachable via the "Members & details" #dm-rail anchor + a CSS :target
+    // rule (narrow) — both work with no JS.
+    //
+    // At narrow widths, :target (i.e. window.location.hash) stays the ONE source
+    // of truth: JS drives it with history.replaceState instead of layering a
+    // second, independent class — two mechanisms tracking the same "is the
+    // drawer open" fact can only drift (e.g. middle-clicking the "Members &
+    // details" link opens a new tab whose hash the click handler never saw, and
+    // a class-based toggle could then never clear a :target that's still set).
+    // replaceState (not assigning location.hash directly) avoids both adding a
+    // history entry and the native scroll-to-target jump.
+    //
+    // At wide widths there's no anchor/:target involved at all — a plain
+    // .rail-hidden class (persisted in localStorage) is the only mechanism.
+    var railToggle = document.querySelector('[data-rail-toggle]');
+    var dmShell = document.querySelector('.dm-shell');
+    if (railToggle && dmShell) {
+        var RAIL_KEY = 'rb-dm-rail-collapsed';
+        var railNarrow = function () {
+            return window.matchMedia && window.matchMedia('(max-width: 1399px)').matches;
+        };
+        var setRailButton = function (expanded) {
+            railToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            railToggle.classList.toggle('is-active', expanded);
+        };
+        var railIsOpen = function () {
+            return railNarrow() ? window.location.hash === '#dm-rail' : !dmShell.classList.contains('rail-hidden');
+        };
+        var openRail = function () {
+            if (railNarrow()) {
+                if (window.location.hash !== '#dm-rail') { history.replaceState(null, '', '#dm-rail'); }
+            } else {
+                dmShell.classList.remove('rail-hidden');
+                try { window.localStorage.removeItem(RAIL_KEY); } catch (e) { /* ignore */ }
+            }
+            setRailButton(true);
+        };
+        var closeRail = function () {
+            if (railNarrow()) {
+                if (window.location.hash === '#dm-rail') {
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+            } else {
+                dmShell.classList.add('rail-hidden');
+                try { window.localStorage.setItem(RAIL_KEY, '1'); } catch (e) { /* ignore */ }
+            }
+            setRailButton(false);
+        };
+
+        var storedRailCollapsed = null;
+        try { storedRailCollapsed = window.localStorage.getItem(RAIL_KEY); } catch (e) { storedRailCollapsed = null; }
+        if (!railNarrow() && storedRailCollapsed === '1') { dmShell.classList.add('rail-hidden'); }
+        setRailButton(railIsOpen());   // sync aria-expanded with the actual computed state on load
+
+        railToggle.addEventListener('click', function () {
+            if (railIsOpen()) { closeRail(); } else { openRail(); }
+        });
+        var railScrim = document.querySelector('[data-rail-scrim]');
+        if (railScrim) {
+            railScrim.addEventListener('click', function (e) { e.preventDefault(); closeRail(); });
+        }
+        var railClose = document.querySelector('[data-rail-close]');
+        if (railClose) {
+            railClose.addEventListener('click', closeRail);
+        }
+        document.addEventListener('keydown', function (e) {
+            // Escape peels overlays outermost-first: an open compose dialog or
+            // ··· menu takes the keypress; the rail only closes when it is the
+            // topmost thing open.
+            if (document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
+            if (e.key === 'Escape' && railNarrow() && railIsOpen()) { closeRail(); }
+        });
+        // The header menu's "Members & details" item shares the #dm-rail anchor
+        // with the no-JS fallback; with JS, open the rail directly and close the
+        // menu instead of navigating.
+        var railOpeners = document.querySelectorAll('[data-rail-open]');
+        for (var ri = 0; ri < railOpeners.length; ri++) {
+            (function (opener) {
+                opener.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    openRail();
+                    var openMenu = opener.closest('details.dm-menu');
+                    if (openMenu) { openMenu.open = false; }
+                });
+            })(railOpeners[ri]);
+        }
+        window.addEventListener('resize', function () { setRailButton(railIsOpen()); });
+        // A back/forward navigation (or another tab's replaceState) can change
+        // the hash without any of the click handlers above running.
+        window.addEventListener('hashchange', function () { setRailButton(railIsOpen()); });
+    }
+
+    // ··· menus (the header overflow + each message's hover-revealed report
+    // control) are native <details> so they work with no JS; this only adds
+    // outside-click and Escape dismissal, matching the composer-details modal.
+    var dmMenus = document.querySelectorAll('details.dm-menu, details.dm-report');
+    if (dmMenus.length) {
+        document.addEventListener('click', function (e) {
+            for (var mi = 0; mi < dmMenus.length; mi++) {
+                if (dmMenus[mi].open && !dmMenus[mi].contains(e.target)) { dmMenus[mi].open = false; }
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') { return; }
+            // The compose dialog sits above the menus — let its handler take this one.
+            if (document.querySelector('details.dm-compose-details[open]')) { return; }
+            for (var ei = 0; ei < dmMenus.length; ei++) {
+                if (dmMenus[ei].open) {
+                    var menuTrigger = dmMenus[ei].querySelector('summary');
+                    dmMenus[ei].open = false;
+                    if (menuTrigger) { menuTrigger.focus(); }
+                }
+            }
+        });
+    }
+
+    // Messages compose dialog (Phase 3): the list pane's round "+" is a native
+    // <details>; CSS under .has-js lifts the open dialog into a centred modal.
+    // Mirrors the new-topic composer-details enhancement: Esc, backdrop click
+    // (the open details' ::before hit-tests to the details itself), the Close/
+    // Cancel buttons, and focusing the To field on open. Without JS the same
+    // markup opens as a panel under the list header and the form posts normally.
+    var dmCompose = document.querySelector('details.dm-compose-details');
+    if (dmCompose) {
+        // Only the enhanced presentation is a dialog; the no-JS disclosure
+        // panel keeps plain details semantics, so the role is stamped here.
+        var dmDialogEl = dmCompose.querySelector('.dm-dialog');
+        if (dmDialogEl) { dmDialogEl.setAttribute('role', 'dialog'); }
+        var dmComposeSummary = dmCompose.querySelector('summary');
+        var closeCompose = function () {
+            if (!dmCompose.open) { return; }
+            dmCompose.open = false;
+            if (dmComposeSummary) { dmComposeSummary.focus(); }
+        };
+        dmCompose.addEventListener('toggle', function () {
+            if (dmCompose.open) {
+                var toField = dmCompose.querySelector('input[name="to"]');
+                if (toField) { toField.focus(); }
+            }
+        });
+        dmCompose.addEventListener('click', function (e) {
+            if (e.target === dmCompose) { closeCompose(); }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && dmCompose.open) { closeCompose(); }
+        });
+        var dmComposeClosers = dmCompose.querySelectorAll('[data-close-compose]');
+        for (var cci = 0; cci < dmComposeClosers.length; cci++) {
+            dmComposeClosers[cci].addEventListener('click', closeCompose);
+        }
+    }
+
+    // Messages list instant filter (Phase 3): narrows the already-rendered rows
+    // as you type. The input stays a real GET form field (name="q") — Enter or
+    // no-JS submits to the server, which applies the same filter authoritatively.
+    // When the server already applied a ?q= filter the rendered rows are a
+    // subset, so narrowing them further client-side would fake empty results —
+    // in that state Enter/submit stays the one (authoritative) path.
+    var dmSearchInput = document.querySelector('.dm-search input[name="q"]');
+    var dmListEl = document.querySelector('.dm-list');
+    if (dmSearchInput && dmListEl && dmSearchInput.value.trim() === '') {
+        var dmSearchEmpty = document.querySelector('[data-search-empty]');
+        var dmListRows = dmListEl.querySelectorAll('li');
+        // Match what the server's LIKE matches — the name and the preview —
+        // not incidental row text like timestamps or the unread label.
+        var dmRowText = function (li) {
+            var name = li.querySelector('.dm-other');
+            var preview = li.querySelector('.dm-preview');
+            return ((name ? name.textContent : '') + ' ' + (preview ? preview.textContent : '')).toLowerCase();
+        };
+        var dmRowTexts = [];
+        for (var rt = 0; rt < dmListRows.length; rt++) { dmRowTexts.push(dmRowText(dmListRows[rt])); }
+        dmSearchInput.addEventListener('input', function () {
+            var needle = dmSearchInput.value.trim().toLowerCase();
+            var visible = 0;
+            for (var ri2 = 0; ri2 < dmListRows.length; ri2++) {
+                var hit = needle === '' || dmRowTexts[ri2].indexOf(needle) !== -1;
+                dmListRows[ri2].classList.toggle('is-filtered', !hit);
+                if (hit) { visible++; }
+            }
+            if (dmSearchEmpty) { dmSearchEmpty.hidden = visible !== 0; }
+        });
+    }
+
+    // Enter-to-send is deliberately NOT wired here: composer.js already owns it
+    // as the user's enter_to_send preference, ordered after its suggestion-menu
+    // handlers so picking an @mention with Enter never fires a submit. A second
+    // handler in this file would register earlier and defeat both.
+
+    // A flash on the reading room renders as a floating toast (CSS :has) — let
+    // it take its bow after a moment instead of lingering over the composer.
+    // Only when it really floats (:has support) and never for an error plate,
+    // so an in-flow flash in an older browser is never yanked mid-read.
+    var dmFlash = document.querySelector('.main > .flash');
+    if (dmFlash && dmFlash.nextElementSibling && dmFlash.nextElementSibling.classList.contains('dm-shell')
+        && !dmFlash.classList.contains('flash-error')
+        && window.CSS && CSS.supports && CSS.supports('selector(:has(*))')) {
+        window.setTimeout(function () { dmFlash.hidden = true; }, 4000);
+    }
+
+    // Copy a letter's text from its ··· menu. The clipboard only exists with
+    // JS, so the control ships hidden and is revealed here — and only when the
+    // API is actually available.
+    var dmCopyButtons = document.querySelectorAll('[data-copy-message]');
+    if (dmCopyButtons.length && navigator.clipboard && navigator.clipboard.writeText) {
+        for (var cpi = 0; cpi < dmCopyButtons.length; cpi++) {
+            (function (copyBtn) {
+                copyBtn.hidden = false;
+                copyBtn.addEventListener('click', function () {
+                    var line = copyBtn.closest('.dm-line');
+                    var bodyEl = line ? line.querySelector('.dm-body') : null;
+                    var text = bodyEl ? bodyEl.textContent.trim() : '';
+                    navigator.clipboard.writeText(text).then(function () {
+                        var pop = copyBtn.closest('details');
+                        if (pop) { pop.open = false; }
+                    }).catch(function () { /* menu stays open; nothing to undo */ });
+                });
+            })(dmCopyButtons[cpi]);
+        }
+    }
 })();

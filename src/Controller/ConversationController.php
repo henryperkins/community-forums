@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\BlockRepository;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
 use App\Repository\UserRepository;
@@ -30,8 +31,12 @@ final class ConversationController extends Controller
     public function index(Request $request): Response
     {
         $user = $this->requireDms();
-        $filter = ((string) $request->query('filter', 'all')) === 'unread' ? 'unread' : 'all';
-        $conversations = $this->container->get(ConversationRepository::class)->listForUser($user->id());
+        // ?filter[]=…/?q[]=… arrive as arrays — treat anything non-string as absent.
+        $filter = $request->query('filter', 'all') === 'unread' ? 'unread' : 'all';
+        $rawQ = $request->query('q', '');
+        $q = is_string($rawQ) ? trim($rawQ) : '';
+        $conversations = $this->container->get(ConversationRepository::class)
+            ->listForUser($user->id(), $q !== '' ? $q : null);
         if ($filter === 'unread') {
             $conversations = array_values(array_filter(
                 $conversations,
@@ -41,6 +46,8 @@ final class ConversationController extends Controller
         return $this->view('dm/index', [
             'conversations' => $conversations,
             'filter' => $filter,
+            'q' => $q,
+            'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
         ]);
     }
 
@@ -149,6 +156,17 @@ final class ConversationController extends Controller
             'messages' => $messages,
             'reference_cards' => $referenceCards,
             'other' => $other,
+            // The list is the always-present left column of the reading room, and
+            // the details rail needs the viewer's mute + block state (additive reads).
+            'conversations' => $convRepo->listForUser($user->id()),
+            'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
+            'muted' => (($membership['notification_mode'] ?? 'normal') === 'muted'),
+            'other_is_blocked' => (!$isGroup && $otherId !== null)
+                ? $this->container->get(BlockRepository::class)->blocks($user->id(), $otherId)
+                : false,
+            'other_last_read_message_id' => (!$isGroup && $otherId !== null)
+                ? $convRepo->otherLastReadMessageId($conversationId, $user->id())
+                : null,
             'page' => $page,
             'pages' => $pages,
             'reasons' => self::REASONS,

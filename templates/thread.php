@@ -48,13 +48,14 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             </div>
         <?php endif; ?>
         <?php
-        // Topic action bar (§5.1): the always-on member/mod controls — star, notify,
-        // clear-accepted, pin/lock — gathered onto one calm line instead of a stack of
-        // raw links. (The deploy-dark workflow controls below keep their own bar.)
-        $hasThreadActions = (($engagement ?? false) && $current_user !== null)
-            || (($notifications_on ?? false) && $current_user !== null)
+        // Topic action bar (§5.1, consolidated §5b): the star — the one-tap
+        // engagement primary — stays on the line; notify, clear-accepted, and
+        // the pin/lock mod switches tuck into a single ··· overflow (the DM
+        // popover pattern: native <details>, existing forms verbatim).
+        $hasThreadOverflow = (($notifications_on ?? false) && $current_user !== null)
             || (($accepted_post_id ?? null) !== null && !empty($can_mark_solved))
             || ($is_admin ?? false);
+        $hasThreadActions = ((($engagement ?? false) && $current_user !== null)) || $hasThreadOverflow;
         ?>
         <?php if ($hasThreadActions): ?>
             <div class="thread-actions">
@@ -67,36 +68,44 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                         </button>
                     </form>
                 <?php endif; ?>
-                <?php if (($notifications_on ?? false) && $current_user !== null): ?>
-                    <?php $freq = $subscription['frequency'] ?? 'off'; ?>
-                    <form class="inline subscribe-form" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
-                        <?= $this->csrfField() ?>
-                        <label class="sr-only" for="sub-freq">Notify me</label>
-                        <select class="input input-small" id="sub-freq" name="frequency">
-                            <option value="instant"<?= $freq === 'instant' ? ' selected' : '' ?>>Notify: Instant</option>
-                            <option value="daily"<?= $freq === 'daily' ? ' selected' : '' ?>>Notify: Daily</option>
-                            <option value="off"<?= $freq === 'off' ? ' selected' : '' ?>>Notify: Off</option>
-                        </select>
-                        <input type="hidden" name="in_app" value="1">
-                        <input type="hidden" name="email" value="1">
-                        <button class="linkbtn" type="submit">Save</button>
-                    </form>
-                <?php endif; ?>
-                <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
-                    <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn muted" type="submit">Clear accepted answer</button>
-                    </form>
-                <?php endif; ?>
-                <?php if ($is_admin): ?>
-                    <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn" type="submit"><?= (int) $thread['is_pinned'] === 1 ? 'Unpin' : 'Pin' ?></button>
-                    </form>
-                    <form class="inline" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn" type="submit"><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></button>
-                    </form>
+                <?php if ($hasThreadOverflow): ?>
+                    <details class="dm-menu">
+                        <summary class="dm-iconbtn" aria-label="Topic actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
+                        <div class="dm-menu-pop" role="menu">
+                            <?php if (($notifications_on ?? false) && $current_user !== null): ?>
+                                <?php $freq = $subscription['frequency'] ?? 'off'; ?>
+                                <form class="subscribe-form dm-menu-form" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
+                                    <?= $this->csrfField() ?>
+                                    <label class="sr-only" for="sub-freq">Notify me</label>
+                                    <select class="input input-small" id="sub-freq" name="frequency">
+                                        <option value="instant"<?= $freq === 'instant' ? ' selected' : '' ?>>Notify: Instant</option>
+                                        <option value="daily"<?= $freq === 'daily' ? ' selected' : '' ?>>Notify: Daily</option>
+                                        <option value="off"<?= $freq === 'off' ? ' selected' : '' ?>>Notify: Off</option>
+                                    </select>
+                                    <input type="hidden" name="in_app" value="1">
+                                    <input type="hidden" name="email" value="1">
+                                    <button class="linkbtn" type="submit">Save</button>
+                                </form>
+                            <?php endif; ?>
+                            <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
+                                <form method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept">
+                                    <?= $this->csrfField() ?>
+                                    <button class="dm-menu-item" type="submit"><span>Clear accepted answer</span></button>
+                                </form>
+                            <?php endif; ?>
+                            <?php if ($is_admin): ?>
+                                <div class="dm-menu-sep"></div>
+                                <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
+                                    <?= $this->csrfField() ?>
+                                    <button class="dm-menu-item" type="submit"><span><?= (int) $thread['is_pinned'] === 1 ? 'Unpin' : 'Pin' ?></span></button>
+                                </form>
+                                <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock">
+                                    <?= $this->csrfField() ?>
+                                    <button class="dm-menu-item danger" type="submit"><span><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></span></button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    </details>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
@@ -353,6 +362,10 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         <?php endif; ?>
         <?php if (!empty($features['split_merge']) && !empty($can_moderate_board)): ?>
             <?php $movablePosts = array_values(array_filter($posts ?? [], static fn ($post): bool => (int) ($post['is_op'] ?? 0) !== 1)); ?>
+            <?php // Closed by default (§5b) — the same disclosure treatment as Edit
+                  // tags / Add poll, instead of a permanently open two-form panel. ?>
+            <details class="workflow-actions">
+            <summary class="linkbtn">Split or merge topic</summary>
             <section class="sm-panel topic-restructure" aria-label="Split or merge topic">
                 <div class="sm-panel-head">
                     <span class="sm-panel-title">Split a topic, or merge two</span>
@@ -391,6 +404,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     </form>
                 </div>
             </section>
+            </details>
         <?php endif; ?>
     </header>
 

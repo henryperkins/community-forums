@@ -25,29 +25,13 @@
 
                 <form class="dm-form composer" method="post" action="/messages" data-composer-context="dm" data-composer-target-id="0">
                     <?= $this->csrfField() ?>
-                    <label class="field" for="dm-to">
-                        <span>To</span>
-                        <input class="input input-engraved" type="text" id="dm-to" name="to" value="<?= $e($to) ?>" maxlength="255" placeholder="<?= ($allowGroups ?? true) ? 'username, username' : 'username' ?>" required>
-                    </label>
-                    <?php if ($allowGroups ?? true): ?>
-                        <p class="field-hint">Separate multiple usernames with commas to start a group.</p>
-                    <?php endif; ?>
-                    <?php if (!empty($errors['to'])): ?><p class="field-error"><?= $e($errors['to']) ?></p><?php endif; ?>
-
-                    <?php if ($allowGroups ?? true): ?>
-                        <label class="field" for="dm-title">
-                            <span>Group title</span>
-                            <input class="input input-engraved" type="text" id="dm-title" name="title" value="<?= $e($title ?? '') ?>" maxlength="120" placeholder="Optional">
-                        </label>
-                        <?php if (!empty($errors['title'])): ?><p class="field-error"><?= $e($errors['title']) ?></p><?php endif; ?>
-                    <?php endif; ?>
-
-                    <label class="field" for="dm-body">
-                        <span>Message</span>
-                        <textarea class="composer-input" id="dm-body" name="body" rows="5" maxlength="5000" required><?= $e($body) ?></textarea>
-                    </label>
-                    <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
-
+                    <?= $this->partial('partials/dm_compose_fields', [
+                        'to' => $to,
+                        'title' => $title ?? '',
+                        'body' => $body,
+                        'errors' => $errors,
+                        'allow_groups' => $allowGroups ?? false,
+                    ]) ?>
                     <div class="form-actions"><button class="btn" type="submit">Send message</button></div>
                 </form>
             </div>

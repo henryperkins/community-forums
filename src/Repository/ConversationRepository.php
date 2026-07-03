@@ -246,14 +246,15 @@ final class ConversationRepository
 
     /**
      * The user's conversations with the other participant, a last-message preview,
-     * and an unread flag. Newest activity first.
+     * and an unread flag. Newest activity first. An optional search term narrows
+     * to conversations whose title, latest body, or other participants' names
+     * contain it (LIKE wildcards in the term are matched literally).
      *
      * @return array<int,array<string,mixed>>
      */
-    public function listForUser(int $userId): array
+    public function listForUser(int $userId, ?string $q = null): array
     {
-        return $this->db->fetchAll(
-            'SELECT c.id AS conversation_id, c.kind, c.title, c.last_message_at,
+        $sql = 'SELECT c.id AS conversation_id, c.kind, c.title, c.last_message_at,
                     ou.id AS other_id, ou.username AS other_username, ou.display_name AS other_display_name,
                     (SELECT COUNT(*) FROM conversation_participants cp WHERE cp.conversation_id = c.id AND cp.left_at IS NULL) AS participant_count,
                     (SELECT GROUP_CONCAT(COALESCE(NULLIF(gu.display_name, \'\'), gu.username) ORDER BY gu.username SEPARATOR \', \')
@@ -267,10 +268,34 @@ final class ConversationRepository
              LEFT JOIN conversation_participants op ON op.conversation_id = c.id AND op.user_id <> me.user_id AND op.left_at IS NULL AND c.kind = \'direct\'
              LEFT JOIN users ou ON ou.id = op.user_id
              LEFT JOIN dm_messages lm ON lm.id = (SELECT MAX(id) FROM dm_messages WHERE conversation_id = c.id)
-             WHERE me.user_id = ? AND me.left_at IS NULL
-             ORDER BY c.last_message_at DESC, c.id DESC',
-            [$userId],
+             WHERE me.user_id = ? AND me.left_at IS NULL';
+        $params = [$userId];
+        if ($q !== null && $q !== '') {
+            $like = '%' . addcslashes($q, '\\%_') . '%';
+            $sql .= ' AND (COALESCE(c.title, \'\') LIKE ? OR COALESCE(lm.body, \'\') LIKE ?
+                 OR EXISTS (SELECT 1 FROM conversation_participants sp JOIN users su ON su.id = sp.user_id
+                            WHERE sp.conversation_id = c.id AND sp.left_at IS NULL AND sp.user_id <> me.user_id
+                              AND (su.username LIKE ? OR COALESCE(su.display_name, \'\') LIKE ?)))';
+            array_push($params, $like, $like, $like, $like);
+        }
+        $sql .= ' ORDER BY c.last_message_at DESC, c.id DESC';
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    /**
+     * The direct counterpart's read watermark (their last_read_message_id) —
+     * null when they have read nothing or have left. Feeds the Sent/Read
+     * receipt under the viewer's last letter.
+     */
+    public function otherLastReadMessageId(int $conversationId, int $userId): ?int
+    {
+        $value = $this->db->fetchValue(
+            'SELECT cp.last_read_message_id FROM conversation_participants cp
+             WHERE cp.conversation_id = ? AND cp.user_id <> ? AND cp.left_at IS NULL
+             ORDER BY cp.user_id LIMIT 1',
+            [$conversationId, $userId],
         );
+        return ($value === null || $value === false) ? null : (int) $value;
     }
 
     /** Conversations with an unread message the user did not send (DM bell/badge). */
