@@ -52,11 +52,18 @@ $profileUrl = '/u/' . $profile['username'];
                         <a class="btn btn-small" href="/messages/new?to=<?= $e($profile['username']) ?>">Message</a>
                     <?php endif; ?>
                     <?php if (!empty($can_block)): ?>
-                        <form class="inline" method="post" action="<?= $e($profileUrl) ?>/block">
-                            <?= $this->csrfField() ?>
-                            <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
-                            <button class="linkbtn muted" type="submit"><?= !empty($viewer_blocks_profile) ? 'Unblock' : 'Block' ?></button>
-                        </form>
+                        <?php // Destructive actions live behind the ··· (consolidation §5c),
+                              // reusing the DM popover — native <details>, so no-JS still works. ?>
+                        <details class="dm-menu">
+                            <summary class="dm-iconbtn" aria-label="More actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
+                            <div class="dm-menu-pop" role="menu">
+                                <form method="post" action="<?= $e($profileUrl) ?>/block">
+                                    <?= $this->csrfField() ?>
+                                    <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
+                                    <button class="dm-menu-item danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span><?= !empty($viewer_blocks_profile) ? 'Unblock' : 'Block' ?></span></button>
+                                </form>
+                            </div>
+                        </details>
                     <?php endif; ?>
                 </div>
             <?php elseif (!empty($is_self)): ?>
