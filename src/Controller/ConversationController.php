@@ -32,7 +32,9 @@ final class ConversationController extends Controller
     {
         $user = $this->requireDms();
         $filter = ((string) $request->query('filter', 'all')) === 'unread' ? 'unread' : 'all';
-        $conversations = $this->container->get(ConversationRepository::class)->listForUser($user->id());
+        $q = trim((string) $request->query('q', ''));
+        $conversations = $this->container->get(ConversationRepository::class)
+            ->listForUser($user->id(), $q !== '' ? $q : null);
         if ($filter === 'unread') {
             $conversations = array_values(array_filter(
                 $conversations,
@@ -42,6 +44,8 @@ final class ConversationController extends Controller
         return $this->view('dm/index', [
             'conversations' => $conversations,
             'filter' => $filter,
+            'q' => $q,
+            'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
         ]);
     }
 
@@ -153,6 +157,7 @@ final class ConversationController extends Controller
             // The list is the always-present left column of the reading room, and
             // the details rail needs the viewer's mute + block state (additive reads).
             'conversations' => $convRepo->listForUser($user->id()),
+            'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
             'muted' => (($membership['notification_mode'] ?? 'normal') === 'muted'),
             'other_is_blocked' => (!$isGroup && $otherId !== null)
                 ? $this->container->get(BlockRepository::class)->blocks($user->id(), $otherId)

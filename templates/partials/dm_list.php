@@ -6,11 +6,17 @@
  * the list and the conversation are one shell, not two page shapes.
  *
  * Params: conversations (list rows), filter ('all'|'unread'), active_id (the
- * open conversation id, marked .active) — all optional.
+ * open conversation id, marked .active), q (applied search term), allow_groups
+ * (group_dms flag, gates the compose dialog's group fields) — all optional.
  */
 $dmFilter = ($filter ?? 'all') === 'unread' ? 'unread' : 'all';
 $dmActiveId = (int) ($active_id ?? 0);
 $dmConversations = $conversations ?? [];
+$dmQ = trim((string) ($q ?? ''));
+// The pills keep an applied search; with no search they stay byte-identical
+// to the long-pinned hrefs.
+$dmAllHref = '/messages' . ($dmQ !== '' ? '?q=' . urlencode($dmQ) : '');
+$dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dmQ) : '');
 ?>
 <section class="dm-listpane" aria-label="Conversations">
     <header class="dm-listpane-head">
@@ -19,16 +25,39 @@ $dmConversations = $conversations ?? [];
                 <span class="eyebrow">Private counsel</span>
                 <h1>Messages</h1>
             </span>
-            <a class="dm-new-btn" href="/messages/new" aria-label="New message" title="New message"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></a>
+            <details class="dm-compose-details">
+                <summary class="dm-new-btn" aria-label="New message" title="New message"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></summary>
+                <div class="dm-dialog">
+                    <div class="dm-dialog-head">
+                        <span><span class="eyebrow">Private counsel</span><h2>New message</h2></span>
+                        <button type="button" class="dm-dialog-close" data-close-compose aria-label="Close"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
+                    </div>
+                    <form method="post" action="/messages">
+                        <?= $this->csrfField() ?>
+                        <div class="dm-dialog-body">
+                            <?= $this->partial('partials/dm_compose_fields', ['to' => '', 'title' => '', 'body' => '', 'errors' => [], 'allow_groups' => !empty($allow_groups)]) ?>
+                        </div>
+                        <div class="dm-dialog-foot">
+                            <button class="btn" type="submit">Send message</button>
+                            <button class="btn btn-ghost" type="button" data-close-compose>Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </details>
         </div>
+        <form class="dm-search" method="get" action="/messages" role="search">
+            <?= $this->partial('partials/icon', ['name' => 'search']) ?>
+            <input type="search" name="q" value="<?= $e($dmQ) ?>" placeholder="Search messages…" aria-label="Search messages" maxlength="120">
+            <?php if ($dmFilter === 'unread'): ?><input type="hidden" name="filter" value="unread"><?php endif; ?>
+        </form>
         <nav class="dm-listpane-filters" aria-label="Message filters">
-            <a class="pill<?= $dmFilter === 'all' ? ' is-active' : '' ?>" href="/messages"<?= $dmFilter === 'all' ? ' aria-current="page"' : '' ?>>All</a>
-            <a class="pill<?= $dmFilter === 'unread' ? ' is-active' : '' ?>" href="/messages?filter=unread"<?= $dmFilter === 'unread' ? ' aria-current="page"' : '' ?>>Unread</a>
+            <a class="pill<?= $dmFilter === 'all' ? ' is-active' : '' ?>" href="<?= $e($dmAllHref) ?>"<?= $dmFilter === 'all' ? ' aria-current="page"' : '' ?>>All</a>
+            <a class="pill<?= $dmFilter === 'unread' ? ' is-active' : '' ?>" href="<?= $e($dmUnreadHref) ?>"<?= $dmFilter === 'unread' ? ' aria-current="page"' : '' ?>>Unread</a>
         </nav>
     </header>
 
     <?php if (empty($dmConversations)): ?>
-        <p class="dm-list-empty"><?= $dmFilter === 'unread' ? 'No unread conversations.' : 'No conversations yet.' ?></p>
+        <p class="dm-list-empty"><?= $dmQ !== '' ? 'No letters match your search.' : ($dmFilter === 'unread' ? 'No unread conversations.' : 'No conversations yet.') ?></p>
     <?php else: ?>
         <ul class="dm-list">
             <?php foreach ($dmConversations as $c): ?>
@@ -51,5 +80,6 @@ $dmConversations = $conversations ?? [];
                 </li>
             <?php endforeach; ?>
         </ul>
+        <p class="dm-list-empty" data-search-empty hidden>No letters match your search.</p>
     <?php endif; ?>
 </section>

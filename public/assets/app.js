@@ -418,4 +418,56 @@
             }
         });
     }
+
+    // Messages compose dialog (Phase 3): the list pane's round "+" is a native
+    // <details>; CSS under .has-js lifts the open dialog into a centred modal.
+    // Mirrors the new-topic composer-details enhancement: Esc, backdrop click
+    // (the open details' ::before hit-tests to the details itself), the Close/
+    // Cancel buttons, and focusing the To field on open. Without JS the same
+    // markup opens as a panel under the list header and the form posts normally.
+    var dmCompose = document.querySelector('details.dm-compose-details');
+    if (dmCompose) {
+        var dmComposeSummary = dmCompose.querySelector('summary');
+        var closeCompose = function () {
+            if (!dmCompose.open) { return; }
+            dmCompose.open = false;
+            if (dmComposeSummary) { dmComposeSummary.focus(); }
+        };
+        dmCompose.addEventListener('toggle', function () {
+            if (dmCompose.open) {
+                var toField = dmCompose.querySelector('input[name="to"]');
+                if (toField) { toField.focus(); }
+            }
+        });
+        dmCompose.addEventListener('click', function (e) {
+            if (e.target === dmCompose) { closeCompose(); }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && dmCompose.open) { closeCompose(); }
+        });
+        var dmComposeClosers = dmCompose.querySelectorAll('[data-close-compose]');
+        for (var cci = 0; cci < dmComposeClosers.length; cci++) {
+            dmComposeClosers[cci].addEventListener('click', closeCompose);
+        }
+    }
+
+    // Messages list instant filter (Phase 3): narrows the already-rendered rows
+    // as you type. The input stays a real GET form field (name="q") — Enter or
+    // no-JS submits to the server, which applies the same filter authoritatively.
+    var dmSearchInput = document.querySelector('.dm-search input[name="q"]');
+    var dmListEl = document.querySelector('.dm-list');
+    if (dmSearchInput && dmListEl) {
+        var dmSearchEmpty = document.querySelector('[data-search-empty]');
+        var dmListRows = dmListEl.querySelectorAll('li');
+        dmSearchInput.addEventListener('input', function () {
+            var needle = dmSearchInput.value.trim().toLowerCase();
+            var visible = 0;
+            for (var ri2 = 0; ri2 < dmListRows.length; ri2++) {
+                var hit = needle === '' || dmListRows[ri2].textContent.toLowerCase().indexOf(needle) !== -1;
+                dmListRows[ri2].classList.toggle('is-filtered', !hit);
+                if (hit) { visible++; }
+            }
+            if (dmSearchEmpty) { dmSearchEmpty.hidden = visible !== 0; }
+        });
+    }
 })();

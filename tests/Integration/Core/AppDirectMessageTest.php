@@ -273,4 +273,60 @@ final class AppDirectMessageTest extends TestCase
         $this->assertDontSeeText($unread, 'Bravo Sender');
         $this->assertSeeText($unread, 'class="pill is-active" href="/messages?filter=unread" aria-current="page"');
     }
+
+    public function test_messages_index_search_narrows_by_name_and_last_body(): void
+    {
+        $me = $this->established(['username' => 'srch_me', 'display_name' => 'Search Me']);
+        $alfa = $this->established(['username' => 'srch_alfa', 'display_name' => 'Alfa Correspondent']);
+        $bravo = $this->established(['username' => 'srch_bravo', 'display_name' => 'Bravo Correspondent']);
+
+        $this->dm()->start($this->userEntity($alfa), (int) $me['id'], 'News from the northern marches.');
+        $this->dm()->start($this->userEntity($bravo), (int) $me['id'], 'Provisions ledger for the feast.');
+
+        $this->actingAs($me);
+
+        // By the other participant's name…
+        $byName = $this->get('/messages', ['q' => 'alfa']);
+        $this->assertStatus(200, $byName);
+        $this->assertSeeText($byName, 'Alfa Correspondent');
+        $this->assertDontSeeText($byName, 'Bravo Correspondent');
+
+        // …and by the last message body; the typed query round-trips into the box.
+        $byBody = $this->get('/messages', ['q' => 'provisions']);
+        $this->assertStatus(200, $byBody);
+        $this->assertSeeText($byBody, 'Bravo Correspondent');
+        $this->assertDontSeeText($byBody, 'Alfa Correspondent');
+        self::assertStringContainsString('name="q" value="provisions"', $byBody->body());
+    }
+
+    public function test_messages_index_search_treats_like_wildcards_literally(): void
+    {
+        $me = $this->established(['username' => 'wild_me']);
+        $alfa = $this->established(['username' => 'wild_alfa', 'display_name' => 'Wildcard Alfa']);
+        $this->dm()->start($this->userEntity($alfa), (int) $me['id'], 'A plain letter.');
+
+        $this->actingAs($me);
+        // '%' must be a literal character, not a match-everything wildcard.
+        $res = $this->get('/messages', ['q' => '%']);
+        $this->assertStatus(200, $res);
+        $this->assertDontSeeText($res, 'Wildcard Alfa');
+        $this->assertSeeText($res, 'No letters match your search.');
+    }
+
+    public function test_messages_index_renders_search_form_and_compose_dialog(): void
+    {
+        $me = $this->established(['username' => 'ui_me']);
+        $this->actingAs($me);
+
+        $res = $this->get('/messages');
+        $this->assertStatus(200, $res);
+        // The list search is a real GET form (works with no JS)…
+        self::assertStringContainsString('class="dm-search"', $res->body());
+        self::assertStringContainsString('name="q"', $res->body());
+        // …and the round "+" is a native <details> compose dialog posting to the
+        // existing /messages endpoint, with the group title gated dark.
+        self::assertStringContainsString('dm-compose-details', $res->body());
+        self::assertStringContainsString('name="to"', $res->body());
+        self::assertStringNotContainsString('name="title"', $res->body());
+    }
 }

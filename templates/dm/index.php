@@ -1,7 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Messages'); $this->section('robots', 'noindex, nofollow'); ?>
 <div class="dm-shell">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations, 'filter' => $filter ?? 'all', 'active_id' => null]) ?>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations, 'filter' => $filter ?? 'all', 'active_id' => null, 'q' => $q ?? '', 'allow_groups' => $allow_groups ?? false]) ?>
 
     <section class="dm-threadpane">
         <div class="dm-empty">

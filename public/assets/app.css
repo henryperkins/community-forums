@@ -2573,6 +2573,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .dm-listpane-head {
     padding: 18px 18px 12px;
     border-bottom: 1px solid var(--border-hair);
+    position: relative;   /* anchors the no-JS compose panel */
 }
 .dm-listpane-top {
     display: flex;
@@ -2626,6 +2627,136 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .dm-new-btn .icon {
     width: 17px;
     height: 17px;
+}
+summary.dm-new-btn { list-style: none; cursor: pointer; }
+summary.dm-new-btn::-webkit-details-marker { display: none; }
+
+/* — List search: one quiet pill under the title; a real GET form. — */
+.dm-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-top: 12px;
+}
+.dm-search .icon {
+    position: absolute;
+    left: 12px;
+    width: 15px;
+    height: 15px;
+    color: var(--text-faint);
+    pointer-events: none;
+}
+.dm-search input {
+    width: 100%;
+    font: inherit;
+    font-family: var(--font-body);
+    font-size: .92rem;
+    color: var(--text-body);
+    padding: 8px 12px 8px 34px;
+    background: var(--surface-sunken);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    outline: none;
+    transition: background 140ms var(--ease-calm), border-color 140ms var(--ease-calm);
+}
+.dm-search input::placeholder { color: var(--text-faint); }
+.dm-search input:focus {
+    background: var(--surface-raised);
+    border-color: var(--gold-200);
+    box-shadow: var(--focus-ring, 0 0 0 3px rgba(194, 154, 68, .28));
+}
+.dm-list > li.is-filtered { display: none; }
+
+/* — Compose dialog: the round "+" is a native <details>. With no JS it opens
+   as a panel anchored under the list header (pure CSS on [open]); with JS the
+   same markup lifts into a centred modal (scrim via ::before, matching the
+   new-topic composer-details pattern). — */
+.dm-compose-details > .dm-dialog {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: calc(100% + 8px);
+    z-index: 46;
+    text-align: left;
+}
+.dm-dialog {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+}
+.dm-dialog-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 22px 12px;
+}
+.dm-dialog-head h2 {
+    font-family: var(--font-display);
+    font-weight: var(--weight-medium);
+    font-size: 1.4rem;
+    color: var(--text-strong);
+    margin: 0;
+}
+.dm-dialog-head .eyebrow { margin: 0 0 2px; display: block; }
+.dm-dialog-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    background: none;
+    border: 0;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+.dm-dialog-close:hover { background: var(--surface-sunken); color: var(--brand); }
+.dm-dialog-body {
+    padding: 6px 22px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.dm-dialog-body .field-hint {
+    font-size: .85rem;
+    color: var(--text-faint);
+    margin: -8px 0 0;
+}
+.dm-dialog-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px 20px;
+}
+.has-js .dm-compose-details[open]::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(22, 29, 36, .42);
+    backdrop-filter: blur(2px);
+}
+.has-js .dm-compose-details[open] > .dm-dialog {
+    position: fixed;
+    z-index: 81;
+    top: 10vh;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(540px, calc(100vw - 32px));
+    max-height: 82vh;
+    overflow-y: auto;
+    animation: dm-dialog-rise 240ms var(--ease-calm) both;
+}
+@keyframes dm-dialog-rise {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .has-js .dm-compose-details[open] > .dm-dialog { animation: none; }
 }
 .dm-list {
     list-style: none;

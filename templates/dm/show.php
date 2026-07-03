@@ -12,7 +12,7 @@ $this->layout('layout');
 $this->section('title', $title);
 ?>
 <div class="dm-shell reading has-rail">
-    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id]) ?>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id, 'allow_groups' => $allow_groups ?? false]) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head">
