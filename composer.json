@@ -10,6 +10,7 @@
         "ext-gd": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
+        "ext-openssl": "*",
         "ext-pdo": "*",
         "ext-sodium": "*",
         "league/commonmark": "^2.4"

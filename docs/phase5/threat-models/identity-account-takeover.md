@@ -23,7 +23,7 @@ anyone but its owner.
 | TM-ID-06 | Attacker adds a passkey without fresh reauthentication. | Credential add without fresh reauth factor rejected. | Inc7 |
 | TM-ID-07 | Wrong origin or RP ID completes a WebAuthn ceremony. | Mismatched origin/rpIdHash rejected in ceremony. | Inc7 |
 | TM-ID-08 | Synced-passkey counter anomaly causes permanent lockout. | Non-increasing counter logs risk event without auto-lockout. | Inc7 |
-| TM-ID-09 | Last usable credential/provider removal strands account. | Last-usable-method removal blocked; provider disable lists sole-method accounts. | Inc7 |
+| TM-ID-09 | Last usable credential removal strands account. | Last-usable-method removal blocked; provider-disable sole-method listing remains an Inc8 handoff. | Inc7 |
 
 ## Residual risk
 

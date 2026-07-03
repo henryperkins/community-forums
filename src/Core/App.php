@@ -43,6 +43,7 @@ use App\Controller\LeaderboardController;
 use App\Controller\MediaController;
 use App\Controller\ModerationController;
 use App\Controller\OAuthController;
+use App\Controller\PasskeyController;
 use App\Controller\PostController;
 use App\Controller\PollController;
 use App\Controller\PresenceController;
@@ -131,6 +132,8 @@ use App\Repository\UsernameHistoryRepository;
 use App\Repository\VerificationRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
+use App\Repository\WebAuthnChallengeRepository;
+use App\Repository\WebAuthnCredentialRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\BoardPolicy;
@@ -151,6 +154,8 @@ use App\Security\SecretBox;
 use App\Security\Session;
 use App\Security\Totp;
 use App\Security\WebhookEvents;
+use App\Security\WebAuthn\RelyingParty;
+use App\Security\WebAuthn\WebAuthnVerifier;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AccountLifecycleService;
@@ -185,6 +190,7 @@ use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
+use App\Service\PasskeyService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageArtifactStore;
@@ -838,6 +844,17 @@ final class App
         $c->bind(AttachmentRepository::class, fn (Container $c) => new AttachmentRepository($c->get(Database::class)));
         $c->bind(AttachmentScanService::class, fn (Container $c) => new AttachmentScanService($c->get(AttachmentRepository::class)));
         $c->bind(MfaRepository::class, fn (Container $c) => new MfaRepository($c->get(Database::class)));
+        $c->bind(WebAuthnCredentialRepository::class, fn (Container $c) => new WebAuthnCredentialRepository($c->get(Database::class)));
+        $c->bind(WebAuthnChallengeRepository::class, fn (Container $c) => new WebAuthnChallengeRepository($c->get(Database::class)));
+        $c->bind(RelyingParty::class, function () use ($config): RelyingParty {
+            $override = trim((string) $config->get('app.webauthn_rp_id', ''));
+            return new RelyingParty(
+                (string) $config->get('app.url', ''),
+                $override !== '' ? $override : null,
+                (string) $config->get('app.env', 'production'),
+            );
+        });
+        $c->bind(WebAuthnVerifier::class, fn (Container $c) => new WebAuthnVerifier($c->get(RelyingParty::class)));
         $c->bind(CustomEmojiService::class, fn (Container $c) => new CustomEmojiService(
             $c->get(Database::class),
             $c->get(WriteGate::class),
@@ -1407,6 +1424,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(ServerDraftRepository::class),
             $c->get(ReauthGate::class),
+            $c->get(WebAuthnCredentialRepository::class),
             $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(LastOwnerGuard::class) : null,
         ));
         $c->bind(MfaService::class, fn (Container $c) => new MfaService(
@@ -1418,6 +1436,23 @@ final class App
             $c->get(WriteGate::class),
             $c->get(ModerationLogRepository::class),
             $config,
+        ));
+        $c->bind(PasskeyService::class, fn (Container $c) => new PasskeyService(
+            $c->get(WebAuthnCredentialRepository::class),
+            $c->get(WebAuthnChallengeRepository::class),
+            $c->get(WebAuthnVerifier::class),
+            $c->get(RelyingParty::class),
+            $c->get(UserRepository::class),
+            $c->get(OAuthIdentityRepository::class),
+            $c->get(MfaService::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(LastOwnerGuard::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Mailer::class),
+            $config,
+            $c->get(Database::class),
+            $c->get(Telemetry::class),
         ));
         $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
             $c->get(UserPreferenceRepository::class),
@@ -1567,6 +1602,8 @@ final class App
         $r->get('/login', [AuthController::class, 'showLogin']);
         $r->post('/login', [AuthController::class, 'login']);
         $r->post('/login/mfa', [AuthController::class, 'completeMfa']);
+        $r->post('/login/passkey/challenge', [AuthController::class, 'passkeyChallenge']);
+        $r->post('/login/passkey', [AuthController::class, 'passkeyLogin']);
         $r->get('/register', [AuthController::class, 'showRegister']);
         $r->post('/register', [AuthController::class, 'register']);
         $r->post('/logout', [AuthController::class, 'logout']);
@@ -1611,6 +1648,11 @@ final class App
         $r->post('/settings/security/totp/confirm', [AccountController::class, 'confirmTotpEnrollment']);
         $r->post('/settings/security/totp/recovery/rotate', [AccountController::class, 'rotateRecoveryCodes']);
         $r->post('/settings/security/totp/disable', [AccountController::class, 'disableTotp']);
+        $r->post('/settings/security/passkeys/challenge', [PasskeyController::class, 'challenge']);
+        $r->post('/settings/security/passkeys/step-up-challenge', [PasskeyController::class, 'stepUpChallenge']);
+        $r->post('/settings/security/passkeys/{id}/rename', [PasskeyController::class, 'rename']);
+        $r->post('/settings/security/passkeys/{id}/revoke', [PasskeyController::class, 'revoke']);
+        $r->post('/settings/security/passkeys', [PasskeyController::class, 'store']);
 
         // Member controls (P2-10): privacy, preferences, notifications, sessions, blocks, boards.
         $r->get('/settings/privacy', [SettingsController::class, 'privacyForm']);

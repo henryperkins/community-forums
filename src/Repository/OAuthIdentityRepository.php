@@ -53,6 +53,26 @@ final class OAuthIdentityRepository
     }
 
     /**
+     * Accounts whose only sign-in method is the named OAuth provider.
+     *
+     * @return list<array{id:int,username:string,email:string}>
+     */
+    public function soleMethodAccounts(string $provider): array
+    {
+        return $this->db->fetchAll(
+            "SELECT u.id, u.username, u.email
+             FROM users u
+             JOIN oauth_identities oi ON oi.user_id = u.id AND oi.provider = ?
+             WHERE u.password_hash IS NULL
+               AND u.status NOT IN ('deleted', 'banned')
+               AND NOT EXISTS (SELECT 1 FROM oauth_identities o2 WHERE o2.user_id = u.id AND o2.provider <> ?)
+               AND NOT EXISTS (SELECT 1 FROM webauthn_credentials wc WHERE wc.user_id = u.id AND wc.revoked_at IS NULL)
+             ORDER BY u.id",
+            [$provider, $provider],
+        );
+    }
+
+    /**
      * @param array{user_id:int,provider:string,provider_user_id:string,email?:?string,email_verified?:bool,avatar_url?:?string} $data
      */
     public function create(array $data): int

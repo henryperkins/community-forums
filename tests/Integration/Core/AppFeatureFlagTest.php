@@ -157,6 +157,40 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/roles'));
     }
 
+    public function test_passkeys_flag_gates_ceremony_routes(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x']));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys', ['credential' => '{}']));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/step-up-challenge', []));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/1/rename', ['nickname' => 'x']));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/1/revoke', []));
+        $this->assertStatus(404, $this->post('/login/passkey/challenge', ['email' => 'x@example.test']));
+        $this->assertStatus(404, $this->post('/login/passkey', ['email' => 'x@example.test', 'credential' => '{}']));
+        $securityPage = $this->get('/settings/security');
+        $this->assertStatus(200, $securityPage);
+        self::assertStringNotContainsString('data-passkey-panel', $securityPage->body());
+        self::assertStringNotContainsString('/assets/passkeys.js', $this->get('/')->body());
+        $this->logoutClient();
+        $login = $this->get('/login');
+        $this->assertStatus(200, $login);
+        self::assertStringNotContainsString('data-passkey-signin', $login->body());
+        $this->actingAs($user);
+
+        $this->setFlags(['passkeys' => true]);
+        self::assertNotSame(404, $this->post('/settings/security/passkeys/challenge', [])->status());
+        self::assertStringContainsString('/assets/passkeys.js', $this->get('/')->body());
+        $this->logoutClient();
+        $enabledLogin = $this->get('/login');
+        $this->assertStatus(200, $enabledLogin);
+        self::assertStringContainsString('data-passkey-signin', $enabledLogin->body());
+
+        $this->setFlags(['passkeys' => false]);
+        $this->actingAs($user);
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x']));
+    }
+
     public function test_package_registry_flag_gates_catalog_and_registry_routes(): void
     {
         $this->actingAs($this->makeAdmin());

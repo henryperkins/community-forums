@@ -17,6 +17,16 @@
         </label>
         <button class="btn" type="submit">Log in</button>
     </form>
+    <?php if (!empty($features['passkeys'])): ?>
+        <div class="passkey-signin"
+             data-passkey-signin
+             data-challenge-url="/login/passkey/challenge"
+             data-login-url="/login/passkey"
+             hidden>
+            <button type="button" class="btn btn-secondary" data-passkey-signin-btn>Sign in with a passkey</button>
+            <p class="form-error" data-passkey-signin-error hidden></p>
+        </div>
+    <?php endif; ?>
     <?php if (!empty($oauth_providers)): ?>
         <div class="oauth-buttons">
             <p class="oauth-sep">or sign in with</p>

@@ -14,6 +14,7 @@ return [
         'env' => Env::get('APP_ENV', 'production'),
         'debug' => Env::bool('APP_DEBUG', false),
         'url' => Env::get('APP_URL', 'http://localhost:8000'),
+        'webauthn_rp_id' => Env::get('WEBAUTHN_RP_ID', ''),
         // Used to derive CSRF tokens for guests and to sign cookies.
         'key' => Env::get('APP_KEY', ''),
         'name' => Env::get('APP_NAME', 'RetroBoards'),
@@ -205,6 +206,8 @@ return [
         'composer_suggest' => [120, 60],
         'password_reset' => [5, 3600],
         'mfa_login' => [5, 900],
+        'passkey_challenge' => [30, 900],
+        'passkey_login' => [10, 900],
         'mfa_settings' => [10, 900],
         'api' => [120, 60],
         'webhook_test' => [20, 600],

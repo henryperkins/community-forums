@@ -9,6 +9,7 @@ use App\Repository\AccountDeletionRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
+use App\Repository\WebAuthnCredentialRepository;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
 use Tests\Support\TestCase;
@@ -34,6 +35,7 @@ final class AppAccountLifecycleTest extends TestCase
             new ModerationLogRepository($this->db),
             new ServerDraftRepository($this->db),
             new ReauthGate(new PasswordHasher()),
+            new WebAuthnCredentialRepository($this->db),
         );
     }
 

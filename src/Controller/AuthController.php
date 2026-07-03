@@ -7,12 +7,16 @@ namespace App\Controller;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Core\FeatureFlags;
 use App\Core\HttpException;
+use App\Core\NotFoundException;
 use App\Repository\SettingRepository;
 use App\Security\RateLimiter;
+use App\Security\WebAuthn\WebAuthnException;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
 use App\Service\MfaService;
+use App\Service\PasskeyService;
 use App\Service\PasswordResetService;
 use App\Service\RateLimitService;
 
@@ -118,6 +122,65 @@ final class AuthController extends Controller
         $limiter->clearSubject('mfa_login', $request, hash('sha256', $token));
         $this->session()->login($result['user']);
         return $this->redirect($this->safeNext($result['next']));
+    }
+
+    /** @param array<string,string> $params */
+    public function passkeyChallenge(Request $request, array $params = []): Response
+    {
+        $this->gatePasskeys();
+        if ($this->currentUser() !== null) {
+            return Response::json(['ok' => false, 'errors' => ['email' => 'Already signed in.']], 422);
+        }
+
+        $email = strtolower(trim((string) ($request->post('email') ?? '')));
+        $subject = $email !== '' ? $email : 'anonymous';
+        try {
+            $this->container->get(RateLimitService::class)->enforceSubject('passkey_challenge', $request, $subject);
+        } catch (HttpException $e) {
+            return Response::json(['ok' => false, 'errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
+
+        try {
+            $options = $this->container->get(PasskeyService::class)
+                ->beginLogin($email, PasskeyService::sessionBinding($this->session()));
+        } catch (WebAuthnException $e) {
+            return Response::json(['ok' => false, 'errors' => ['passkey' => $e->getMessage()], 'code' => $e->code], 422);
+        }
+
+        return Response::json(['ok' => true, 'options' => $options]);
+    }
+
+    /** @param array<string,string> $params */
+    public function passkeyLogin(Request $request, array $params = []): Response
+    {
+        $this->gatePasskeys();
+        if ($this->currentUser() !== null) {
+            return Response::json(['ok' => false, 'errors' => ['passkey' => 'Already signed in.']], 422);
+        }
+
+        $email = strtolower(trim((string) ($request->post('email') ?? '')));
+        $subject = $email !== '' ? $email : 'anonymous';
+        $limiter = $this->container->get(RateLimitService::class);
+        try {
+            $limiter->enforceSubject('passkey_login', $request, $subject);
+        } catch (HttpException $e) {
+            return Response::json(['ok' => false, 'errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
+
+        try {
+            $result = $this->container->get(PasskeyService::class)->completeLogin(
+                (string) ($request->post('credential') ?? ''),
+                PasskeyService::sessionBinding($this->session()),
+            );
+        } catch (ValidationException $e) {
+            return Response::json(['ok' => false, 'errors' => $e->errors], 422);
+        } catch (WebAuthnException) {
+            return Response::json(['ok' => false, 'errors' => ['passkey' => 'That passkey could not be used to sign in.']], 422);
+        }
+
+        $limiter->clearSubject('passkey_login', $request, $subject);
+        $this->session()->login($result['user']);
+        return Response::json(['ok' => true, 'redirect' => $this->safeNext((string) ($request->post('next') ?? '/'))]);
     }
 
     /** @param array<string,string> $params */
@@ -309,6 +372,13 @@ final class AuthController extends Controller
             return '/';
         }
         return $next;
+    }
+
+    private function gatePasskeys(): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('passkeys')) {
+            throw new NotFoundException('Not found.');
+        }
     }
 
     /** @return array<string,mixed> */

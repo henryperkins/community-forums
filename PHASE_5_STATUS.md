@@ -1,9 +1,9 @@
 # Phase 5 Status
 
-**Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow), Increment 2 (P5-01 registry protocol + package identity), Increment 3 (P5-02 package install/manifest/lifecycle), and Increment 4 (P5-03 declarative theme packages) landed 2026-07-02 behind dark flags. Inc 4 adds strict `theme` manifest validation, closed token/value grammars, contrast checks, raster-only asset neutralization, deterministic CSS builds, admin-only preview, password-reauth activation, LKG rollback, fail-safe deactivation, and emergency safe mode behind `package_themes`. It is still deploy-dark: only reviewed declarative theme packages can affect external CSS, no remote code executes, and integrations remain Inc 5. Increment 6 (enforcement cutover) stays blocked until shadow soak. Passkey, provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The WYSIWYG composer stream that shipped alongside Inc 4 (PR #33) graduated on 2026-07-02: `wysiwyg_composer` is now default-ON (`docs/runbooks/wysiwyg_composer.md`); the gate-a browser-evidence seed pins the textarea baseline, and `wysiwyg-composer.spec.ts` proves the GA default with no override.
-**Last updated:** 2026-07-02
-**Branch:** `phase5-inc4-declarative-themes`
-**Suite:** Closeout gates green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/Phase5EvidenceMapTest.php` -> **7 tests / 33 assertions**. `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php` -> **12 tests / 91 assertions**. Post-fix focused Phase 5/theme group -> **27 tests / 225 assertions**. `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions**. `vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions** on two consecutive reused-schema runs. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.5491 ms MEASURED (PASS); package.install_update_p95 60.7351 ms MEASURED (PASS); theme.build_apply_p95 11.3736 ms MEASURED (PASS); resolver.p95 3.4057 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0072_phase5_theme_packages`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 4: `npm run evidence` -> **53 passed / 1 skipped** and `npm run a11y` -> **14 passed** across desktop + mobile.
+**Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow), Increment 2 (P5-01 registry protocol + package identity), Increment 3 (P5-02 package install/manifest/lifecycle), and Increment 4 (P5-03 declarative theme packages) landed 2026-07-02 behind dark flags. Increment 7 (P5-11 passkeys) landed 2026-07-03 behind the dark `passkeys` flag — enrollment/sign-in/step-up/recovery with CDP browser evidence; GA-DOD-13 at R4; SLICE-TOTP retrofit paid. Inc 4 remains deploy-dark: only reviewed declarative theme packages can affect external CSS, no remote code executes, and integrations remain Inc 5. Increment 6 (enforcement cutover) stays blocked until shadow soak. Provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The WYSIWYG composer stream that shipped alongside Inc 4 (PR #33) graduated on 2026-07-02: `wysiwyg_composer` is now default-ON (`docs/runbooks/wysiwyg_composer.md`); the gate-a browser-evidence seed pins the textarea baseline, and `wysiwyg-composer.spec.ts` proves the GA default with no override.
+**Last updated:** 2026-07-03
+**Branch:** `phase5-inc7-passkeys`
+**Suite:** Prior Inc 4 closeout gates were green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/Phase5EvidenceMapTest.php` -> **7 tests / 33 assertions**. `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php` -> **12 tests / 91 assertions**. Post-fix focused Phase 5/theme group -> **27 tests / 225 assertions**. `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions**. `vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions** on two consecutive reused-schema runs. Increment 7 focused gates through Task 19 (2026-07-03): passkey PHP regression set (`Phase5BudgetReportServiceTest`, `WebAuthnPolicyTest`, and the three `AppPasskey*` suites) -> **45 tests / 326 assertions**; `ThreatModelIndexTest` + `Phase5EvidenceMapTest` -> **7 tests / 33 assertions**; `tests/browser/passkeys.spec.ts` -> **4 passed** across desktop + mobile. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.548 ms MEASURED (PASS); package.install_update_p95 46.1962 ms MEASURED (PASS); theme.build_apply_p95 8.5253 ms MEASURED (PASS); resolver.p95 3.7825 ms MEASURED (PASS); webauthn.ceremony_p95 2.1703 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. Task 20 closeout (2026-07-03) is green: `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1384 tests / 7225 assertions**, and `vendor/bin/phpunit --no-progress` -> **1384 tests / 7225 assertions** (reused-schema); `cd tests/browser && npm run evidence` -> **57 passed / 1 skipped**, `npm run a11y` -> **18 passed**, `npx playwright test passkeys.spec.ts totp.spec.ts` -> **6 passed** across desktop + mobile; `APP_ENV=testing php bin/console verify:phase5-budgets` -> **webauthn.ceremony_p95 2.2343 ms MEASURED (PASS)** against the 2000 ms D11 target (a re-run under concurrent test load transiently flagged the unrelated `resolver.p95` at 6.60 ms, then MEASURED (PASS) at 4.50 ms idle — measurement noise; the resolver is untouched by this branch); `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** (no new migration in Inc 7). Regenerated screenshots and the timing-only budget report were restored (not committed) per the deploy-dark evidence policy. Prior Inc 4 gate: `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0072_phase5_theme_packages`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 4: `npm run evidence` -> **53 passed / 1 skipped** and `npm run a11y` -> **14 passed** across desktop + mobile.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
@@ -344,6 +344,56 @@ no PHP or JavaScript, and integrations remain Inc 5.
   covers staged rollout and emergency operation, and GA-DOD-07 is R3 in
   `docs/phase5/requirement-ledger.json`.
 
+## Increment 7 landed (2026-07-03) - P5-11 passkeys, deploy-dark
+
+The passkey increment is complete behind the dark `passkeys` flag. Members can
+enroll, name, list, rename, revoke, use for sign-in, and use passkeys for
+fresh-factor step-up once the flag is enabled. Password, OAuth, TOTP, and
+recovery-code fallback remain independent of the flag.
+
+- **Protocol core:** `src/Security/WebAuthn/*` implements strict base64url,
+  CBOR/COSE, authenticatorData/clientData parsing, ES256 and RS256 verification,
+  origin/RP-ID checks from config, production HTTPS refusal, UP/UV policy, and
+  coded fail-closed exceptions. Attestation is parsed but not trusted.
+- **Stateful ceremonies:** `PasskeyService` uses the already-landed `0051`
+  WebAuthn tables for one-time session-bound challenges, public-key credential
+  storage, duplicate refusal, counter bookkeeping, audit, telemetry, and
+  security notification mail. Add/revoke require a present factor (password or
+  passkey step-up), revoke and add revoke parallel sessions, and rename remains
+  session+CSRF metadata only.
+- **Sign-in and recovery:** email-first passkey login uses fixed-shape decoys for
+  unknown/passkeyless accounts, refuses replay/cross-account/altered assertions,
+  treats counter anomalies as risk signals rather than lockouts, and requires UV
+  when TOTP is enrolled. `AppPasskeyRecoveryTest` proves password/TOTP/recovery
+  journeys still work with passkeys enrolled and that account export contains
+  passkey metadata only.
+- **Browser, threat-model, and budget evidence:** `tests/browser/passkeys.spec.ts`
+  drives Chromium's CDP virtual authenticator on desktop+mobile and includes an
+  axe scan of the panel. TM-ID-05..09 are `implemented` with real test paths, and
+  GA-DOD-13 is R4 in `docs/phase5/requirement-ledger.json`.
+  `webauthn.ceremony_p95` is **2.1703 ms MEASURED (PASS)** against the 2000 ms
+  D11 budget.
+- **Docs and handoff:** `docs/evidence/phase5/passkeys.md` indexes the Gate A
+  evidence, `docs/runbooks/passkeys.md` covers rollback, staged rollout,
+  lost-authenticator recovery, counter-anomaly review, and RP-ID/domain changes.
+  Inc 8 handoff: before an OAuth provider-disable UI ships, wire
+  `OAuthIdentityRepository::soleMethodAccounts(string $provider)` into the
+  operator flow so sole-method accounts are listed before disablement.
+
+## Decisions recorded with Inc 7
+
+These implementation decisions refine the approved artifacts and are surfaced
+for owner acknowledgment, especially the A5 RP-ID refinement:
+
+1. **RP-ID resolution.** True eTLD+1 derivation requires the Public Suffix List — a dependency the no-library posture excludes, and a naive "last two labels" rule would derive the public suffix `co.uk` for `*.co.uk` operators (browsers then refuse every ceremony). Implementation: optional env `WEBAUTHN_RP_ID` (validated: equal to, or a dot-suffix of, the `APP_URL` host), **default = the full `APP_URL` host**. The full host is always a valid, strictly-narrower RP ID; operators who want A5 §2 subdomain portability set `WEBAUTHN_RP_ID` to their registrable domain (documented in the runbook + `.env.example`). Browsers enforce the PSL boundary client-side.
+2. **Algorithm allowlist:** ES256 (−7, mandatory per program plan) + RS256 (−257, for Windows Hello-era authenticators). Everything else refuses with `unsupported_algorithm`.
+3. **User-verification policy:** ceremonies request `userVerification:'preferred'`; the server **requires** UV for `step_up`; for `login`, UV is required iff the account has TOTP enrolled (see #4); `register` records the UV bit as reported. UP is always required.
+4. **TOTP × passkey sign-in:** a UV-verified passkey assertion is multi-factor by itself and signs the user straight in (no TOTP interstitial). If the account has TOTP enrolled and the assertion lacks UV, the sign-in refuses with guidance ("use a passkey with a screen lock, or sign in with your password and code") — this avoids splicing a JSON ceremony into the HTML interstitial and never weakens a TOTP-enrolled account.
+5. **Fresh-factor scope:** credential **add** and **revoke** require a present factor (password or passkey step-up assertion); **rename** requires only session + CSRF.
+6. **TM-ID-09 clause 2** ("provider disable lists sole-method accounts"): no provider-disable surface exists until Inc 8. This increment ships the tested capability `OAuthIdentityRepository::soleMethodAccounts(string $provider)` and records an explicit Inc 8 handoff (wire it into the provider-disable UI) in PHASE_5_STATUS; the fixture flips to `implemented` on the strength of the removal-block + detector tests.
+7. **No `0074`, no privileged-MFA policy scaffolding, no enrollment-audience config.** The §13.1 step-9 staff pilot is an operational procedure (enable the flag for the pilot window; runbook documents it), not a code gate.
+8. **`ext-openssl`** is added to `composer.json` `require` (it was undeclared; ES256/RS256 verification now depends on it).
+
 ## Product-owner approvals recorded
 
 This instruction accepts ADR 0004 as the Milestone-0 decision record using its
@@ -378,9 +428,10 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
 
 - **Foundation schema:** R2 (implemented behind disabled flags) + R3-partial
   (shape auto-verified). It is **not** R4/R5 — no behavior, no release evidence.
-- **TOTP/recovery:** R3 implementation + focused release evidence. Full suite is
-  green; browser/no-JS evidence is still needed before any Gate A acceptance
-  package.
+- **TOTP/recovery:** R4 implementation + browser/no-JS release evidence. The
+  Inc 7 B1 predecessor retrofit added `tests/browser/totp.spec.ts` and PNGs
+  under `docs/evidence/browser/*/totp-*.png`; password/TOTP/recovery remains
+  the passkey fallback path.
 - **Service-secret registry:** R3 storage/service implementation + focused release
   evidence. Webhook endpoints consume `svcsec_*` references; provider and
   remote-app consumers remain deferred.
@@ -414,6 +465,13 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   `package_themes`; theme packages can only emit deterministic external CSS and
   sanitized raster assets, with preview/activation/safe-mode/LKG rollback
   release evidence.
+- **Passkeys (Inc 7, P5-11):** R4 — see
+  `docs/phase5/requirement-ledger.json` (GA-DOD-13) and
+  `docs/evidence/phase5/passkeys.md`. Deploy-dark behind `passkeys`; enrollment,
+  sign-in, list/remove, step-up, fallback/recovery, virtual-authenticator browser
+  evidence, TM-ID-05..09, and the `webauthn.ceremony_p95` budget are evidenced.
+  R5 waits for staged enablement (§13.1 step 9); privileged-MFA enforcement and
+  usernameless sign-in remain Gate B.
 - **Fixture + baselines + budget harness (Foundation F9):** R2 (implemented,
   deploy-dark — no flag; the seeder refuses `app.env=production`) +
   **R3-partial** — `Phase5FixtureSeeder` (representative role/assignment/
@@ -423,7 +481,8 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   are implemented with enforcing PHPUnit evidence. The **A3** entry-gate
   artifact (`docs/evidence/phase5/performance-budgets.md`) is generated and
   measures `resolver.p95`, `registry.signature_verify_p95`,
-  `package.install_update_p95`, and `theme.build_apply_p95` as real numbers
+  `package.install_update_p95`, `theme.build_apply_p95`, and
+  `webauthn.ceremony_p95` as real numbers
   against the F9 fixture
   (`registry.snapshot_freshness` and `webhook.delivery_timeout` report CONFIG
   caps); the unowned future budgets stay **PENDING** until each owning increment
@@ -434,9 +493,9 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   signing harness + registry fixtures, `ReauthGate`, `Telemetry`/`LogRedactor`,
   the all-flags-off core-survival regression, and six recorded-pending-review
   threat-model dossiers.
-- **All other Phase 5 subsystems (passkeys, providers, invitations, sandbox,
-  governance, service principals, verified links):** R0/R1 — pending
-  implementation and workstream-specific evidence.
+- **All other Phase 5 subsystems (providers, invitations, sandbox, governance,
+  service principals, verified links):** R0/R1 — pending implementation and
+  workstream-specific evidence.
 
 ## Evidence index (this increment)
 
@@ -485,6 +544,15 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   `docs/phase5/registry-protocol.md` (Inc 4 theme block/build/serving
   contract), and `docs/evidence/phase5/performance-budgets.md`
   (`theme.build_apply_p95` MEASURED (PASS)).
+- TOTP browser/no-JS retrofit: `tests/browser/totp.spec.ts` and
+  `docs/evidence/browser/{desktop,mobile}/totp-*.png`.
+- Increment 7 passkeys: `tests/Unit/Auth/WebAuthnPolicyTest.php`,
+  `tests/Integration/Core/AppPasskeyRegistrationTest.php`,
+  `tests/Integration/Core/AppPasskeyLoginTest.php`,
+  `tests/Integration/Core/AppPasskeyRecoveryTest.php`,
+  `tests/browser/passkeys.spec.ts`, `docs/evidence/phase5/passkeys.md`,
+  `docs/runbooks/passkeys.md`, and `docs/evidence/phase5/performance-budgets.md`
+  (`webauthn.ceremony_p95` MEASURED (PASS)).
 - Requirement ledger: `docs/phase5/requirement-ledger.json` (R0-R5 states + per-flag rollback map, machine-checked).
 - Threat models: `docs/phase5/threat-models/` (6 dossiers + `fixtures.json`, 48 negative-fixture stubs; TM-SE-01 and TM-TH-01..07 implemented).
 - **Clean-install evidence:** the test bootstrap (`tests/bootstrap.php`) `migrate:fresh`-es all migrations on every PHPUnit run; full suite **1268 tests / 6619 assertions green** on the Inc 4 post-fix fresh-schema gate, with two consecutive reused-schema runs also green.
@@ -506,9 +574,10 @@ parity and adversarial evidence before enablement:
 2. **Resolver enforcement cutover** (P5-08/P5-09, Inc 6): turn the shadow-clean
    resolver into live authorization, including the remaining protected-owner
    loss paths.
-3. **Passkeys** (P5-11, Inc 7): WebAuthn ceremonies on top of the existing
-   TOTP/recovery fallback.
-4. **Generic OIDC + provider migration** (P5-12, Inc 8) and **invitations**
+3. **Generic OIDC + provider migration** (P5-12, Inc 8): includes wiring
+   `OAuthIdentityRepository::soleMethodAccounts()` into the provider-disable UI
+   before any provider can be disabled.
+4. **Invitations**
    (P5-13, Inc 9).
 
 ## Operating note

@@ -343,7 +343,7 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
 
   await page.fill('form[action$="/enable"] input[name="current_password"]', 'password123');
   await page.locator('form[action$="/enable"] button[type="submit"]').click();
-  await expect(page.getByText('Enabled')).toBeVisible();
+  await expect(page.getByText('Enabled', { exact: true })).toBeVisible();
   await shot(page, info, '37-admin-package-enabled');
 
   await page.fill('form[action$="/update"] input[name="current_password"]', 'password123');
@@ -633,6 +633,7 @@ test('phase 4 slash status rows consume Enter when enter-to-send is enabled', as
   await form.locator('input[name="title"]').fill('Do not submit slash status');
 
   await textarea.fill('/gif');
+  await expect(page.getByRole('option', { name: 'Search GIPHY' })).toBeVisible();
   await textarea.press('Enter');
   await expect(page.getByRole('option', { name: 'Type a search after /gif.' })).toBeVisible();
 
@@ -954,7 +955,10 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
 
   // Archive #feedback, then confirm the board page is read-only.
   await page.locator('li.admin-board-row', { hasText: 'Feedback' })
-    .getByRole('button', { name: 'Archive' }).click();
+    .getByRole('link', { name: 'Archive' }).click();
+  await expect(page.getByRole('heading', { name: 'Archive board' })).toBeVisible();
+  await page.fill('form[action$="/archive"] input[name="confirm"]', 'feedback');
+  await page.getByRole('button', { name: 'Archive board' }).click();
   await expect(page).toHaveURL(/\/admin\/structure/);
 
   await visit(page, '/c/feedback');
@@ -965,7 +969,11 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
   // Unarchive restores the composer affordance.
   await visit(page, '/admin/structure');
   await page.locator('li.admin-board-row', { hasText: 'Feedback' })
-    .getByRole('button', { name: 'Unarchive' }).click();
+    .getByRole('link', { name: 'Unarchive' }).click();
+  await expect(page.getByRole('heading', { name: 'Unarchive board' })).toBeVisible();
+  await page.fill('form[action$="/unarchive"] input[name="confirm"]', 'feedback');
+  await page.getByRole('button', { name: 'Unarchive board' }).click();
+  await expect(page).toHaveURL(/\/admin\/structure/);
   await visit(page, '/c/feedback');
   await expect(page.locator('details.composer-details')).toBeVisible();
   await shot(page, info, '23-board-unarchived');
@@ -1007,7 +1015,8 @@ test('admin email delivery: dashboard, suppress/remove, and a test-send', async 
 
   // The email link appears on the admin dashboard subnav (email flag defaults on).
   await visit(page, '/admin');
-  await page.getByRole('link', { name: 'Email' }).click();
+  await page.getByRole('navigation', { name: 'Admin navigation' })
+    .getByRole('link', { name: 'Email', exact: true }).click();
   await page.waitForURL(/\/admin\/email$/);
   await expect(page.getByRole('heading', { name: 'Email delivery' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Queue status' })).toBeVisible();
