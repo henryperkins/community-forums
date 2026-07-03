@@ -1424,6 +1424,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(ServerDraftRepository::class),
             $c->get(ReauthGate::class),
+            $c->get(WebAuthnCredentialRepository::class),
             $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(LastOwnerGuard::class) : null,
         ));
         $c->bind(MfaService::class, fn (Container $c) => new MfaService(

@@ -12,6 +12,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\ServerDraftRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
+use App\Repository\WebAuthnCredentialRepository;
 use App\Security\LastOwnerGuard;
 use App\Security\ReauthGate;
 
@@ -29,6 +30,7 @@ final class AccountLifecycleService
         private ModerationLogRepository $logs,
         private ServerDraftRepository $serverDrafts,
         private ReauthGate $reauth,
+        private WebAuthnCredentialRepository $webauthnCredentials,
         private ?LastOwnerGuard $ownerGuard = null,
     ) {
     }
@@ -69,6 +71,7 @@ final class AccountLifecycleService
                 [$user->id()],
             ),
             'server_drafts' => $this->serverDrafts->exportForUser($user->id()),
+            'passkeys' => $this->passkeysForExport($user->id()),
             'audit_log' => $this->db->fetchAll(
                 "SELECT actor_id, action, target_type, target_id, reason, before_json, after_json, created_at
                  FROM moderation_log
@@ -87,6 +90,23 @@ final class AccountLifecycleService
         ]);
 
         return $payload;
+    }
+
+    /** @return list<array{nickname:mixed,created_at:mixed,last_used_at:mixed,transports:mixed,backed_up:bool}> */
+    private function passkeysForExport(int $userId): array
+    {
+        $passkeys = [];
+        foreach ($this->webauthnCredentials->activeForUser($userId) as $row) {
+            $passkeys[] = [
+                'nickname' => $row['nickname'],
+                'created_at' => $row['created_at'],
+                'last_used_at' => $row['last_used_at'],
+                'transports' => $row['transports'],
+                'backed_up' => (int) $row['is_backed_up'] === 1,
+            ];
+        }
+
+        return $passkeys;
     }
 
     public function deactivate(User $user, string $currentPassword, ?string $currentSessionId = null): void
