@@ -79,6 +79,7 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
 <script src="/assets/app.js" defer></script>
 <?php if ($richComposerOn): ?><script src="/assets/composer.js" defer></script><?php endif; ?>
 <?php if ($wysiwygComposerOn): ?><script type="module" src="/assets/wysiwyg-composer.js"></script><?php endif; ?>
+<?php if (!empty($features['passkeys'])): ?><script src="/assets/passkeys.js" defer></script><?php endif; ?>
 <?php if (!empty($features['product_tour']) && ($current_user ?? null) !== null): ?><script src="/assets/tour.js" defer></script><?php endif; ?>
 </body>
 </html>
