@@ -173,16 +173,22 @@ final class PackageIntegrationService
         if ($link === null || (int) $link['installed_package_id'] !== $installedId || $link['revoked_at'] !== null) {
             throw new PackagePolicyException('unknown_credential', 'No active credential to rotate.');
         }
-        if ((string) $link['kind'] !== 'api_token') {
-            // Webhook-credential rotation lands with the webhook-event-delivery group.
-            throw new PackagePolicyException('credential_kind', 'Webhook credentials are rotated on the webhook surface.');
-        }
         if ($this->isExecutionDisabled()) {
             throw new PackagePolicyException('execution_disabled', 'Package execution is under an emergency disable.');
         }
         if (!$this->flags->enabled('service_secrets')) {
             throw new ValidationException(['integration' => 'Enable the secret vault (service_secrets) before rotating credentials.']);
         }
+
+        // Webhook: rotate the signing secret in place (WebhookService::rotateSecret reauths).
+        if ((string) $link['kind'] === 'webhook') {
+            if ($link['webhook_id'] === null) {
+                throw new PackagePolicyException('unknown_credential', 'No webhook endpoint to rotate.');
+            }
+            $secret = $this->webhooks->rotateSecret($admin, $currentPassword, (int) $link['webhook_id']);
+            return ['secret' => $secret, 'token' => null];
+        }
+
         $this->reauth->requirePassword($admin, $currentPassword);
 
         $install = $this->installs->find($installedId);
@@ -246,11 +252,34 @@ final class PackageIntegrationService
         if ($link === null || (int) $link['installed_package_id'] !== $installedId) {
             return;
         }
-        if ((string) $link['kind'] !== 'api_token') {
-            // Webhook-credential revocation lands with the webhook-event-delivery group.
-            throw new PackagePolicyException('credential_kind', 'Webhook credentials are revoked on the webhook surface.');
-        }
         $install = $this->installs->find($installedId);
+
+        // Webhook: idempotent defensive revoke — mark the link revoked, then delete the endpoint.
+        if ((string) $link['kind'] === 'webhook') {
+            if ($this->credentials->markRevoked((int) $link['id']) !== 1) {
+                return; // already revoked -> idempotent no-op
+            }
+            if ($link['webhook_id'] !== null) {
+                $this->webhooks->delete($admin, (int) $link['webhook_id']);
+            }
+            if ($install !== null) {
+                $this->history->record([
+                    'package_id' => (int) $install['package_id'],
+                    'installed_package_id' => $installedId,
+                    'event' => 'credential_revoke',
+                    'actor_id' => $admin->id(),
+                    'detail' => json_encode(['kind' => 'webhook', 'credential_id' => (int) $link['id']], JSON_UNESCAPED_SLASHES),
+                ]);
+                $this->audit->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'package_credential_revoke',
+                    'target_type' => 'package',
+                    'target_id' => (int) $install['package_id'],
+                    'after' => ['kind' => 'webhook', 'credential_id' => (int) $link['id']],
+                ]);
+            }
+            return;
+        }
 
         $this->db->transaction(function () use ($admin, $installedId, $install, $link): void {
             if ($link['api_token_id'] !== null) {
@@ -435,5 +464,61 @@ final class PackageIntegrationService
         ]);
 
         return ['webhook_id' => (int) $result['id'], 'secret' => (string) $result['secret'], 'events' => $events];
+    }
+
+    /**
+     * Pause all package-owned webhook endpoints for an install so the delivery worker /
+     * dispatch() naturally skip them (is_active=0). Friction-free defensive action — no reauth.
+     * @return int endpoints paused.
+     */
+    public function suspendDelivery(int $installedId, string $reason): int
+    {
+        $paused = 0;
+        foreach ($this->credentials->activeForInstall($installedId) as $cred) {
+            if ((string) $cred['kind'] === 'webhook' && $cred['webhook_id'] !== null) {
+                $paused += $this->webhookRepo->disable((int) $cred['webhook_id'], substr('Package delivery paused: ' . $reason, 0, 190));
+            }
+        }
+        return $paused;
+    }
+
+    /**
+     * Re-enable package-owned webhook endpoints on install re-enable. Refused while
+     * emergency-disabled or when the install is not enabled. @return int endpoints resumed.
+     */
+    public function resumeDelivery(User $admin, int $installedId): int
+    {
+        $this->writeGate->assertCanWrite($admin);
+        if ($this->isExecutionDisabled()) {
+            throw new PackagePolicyException('execution_disabled', 'Package execution is globally disabled.');
+        }
+        $install = $this->installs->find($installedId);
+        if ($install === null || (string) $install['state'] !== 'enabled') {
+            throw new PackagePolicyException('invalid_state', 'Only enabled installs can resume delivery.');
+        }
+        $resumed = 0;
+        foreach ($this->credentials->activeForInstall($installedId) as $cred) {
+            if ((string) $cred['kind'] === 'webhook' && $cred['webhook_id'] !== null) {
+                $resumed += $this->webhookRepo->enable((int) $cred['webhook_id']);
+            }
+        }
+        return $resumed;
+    }
+
+    /**
+     * Lifecycle hook (mirrors ThemeStateService::onInstallIneligible): revoke every package-owned
+     * credential and pause its webhook endpoints before an install's state flips inactive.
+     * Idempotent, no reauth. reason ∈ disabled|uninstalled|quarantined|force_disabled|emergency_disabled.
+     */
+    public function onInstallIneligible(int $installedId, string $reason, ?int $actorId): void
+    {
+        foreach ($this->credentials->activeForInstall($installedId) as $cred) {
+            if ((string) $cred['kind'] === 'webhook' && $cred['webhook_id'] !== null) {
+                $this->webhookRepo->disable((int) $cred['webhook_id'], substr('Install ineligible: ' . $reason, 0, 190));
+            } elseif ((string) $cred['kind'] === 'api_token' && $cred['api_token_id'] !== null) {
+                $this->apiTokenRepo->revoke((int) $cred['api_token_id']);
+            }
+            $this->credentials->markRevoked((int) $cred['id']);
+        }
     }
 }

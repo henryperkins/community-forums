@@ -490,6 +490,87 @@ final class PackageIntegrationServiceTest extends TestCase
             ->provisionCredentials($admin, 'password123', $installedId);
     }
 
+    /** @return array{0:User,1:int,2:int} admin, installedId, webhookId */
+    private function provisionWebhook(): array
+    {
+        [$admin, $installedId] = $this->seedWebhookApp([], ['topic.created'], ['hooks.acme.test'], 'https://hooks.acme.test/rb');
+        $this->webhookService_provision()->provisionCredentials($admin, 'password123', $installedId);
+        foreach ((new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId) as $c) {
+            if ((string) $c['kind'] === 'webhook') {
+                return [$admin, $installedId, (int) $c['webhook_id']];
+            }
+        }
+        self::fail('no webhook credential provisioned');
+    }
+
+    public function test_suspend_delivery_disables_the_endpoint_so_dispatch_skips_it(): void
+    {
+        [, $installedId, $webhookId] = $this->provisionWebhook();
+        $svc = $this->webhookService_provision();
+        self::assertSame(1, (int) (new WebhookRepository($this->db))->findById($webhookId)['is_active']);
+
+        $paused = $svc->suspendDelivery($installedId, 'operator pause');
+        self::assertSame(1, $paused);
+        self::assertSame(0, (int) (new WebhookRepository($this->db))->findById($webhookId)['is_active']);
+
+        // A disabled package endpoint receives no deliveries.
+        $ff = new FeatureFlags(new SettingRepository($this->db));
+        $webhooks = new WebhookService(
+            $this->db, new WebhookRepository($this->db), new WebhookDeliveryRepository($this->db), $this->vault($ff),
+            new ModerationLogRepository($this->db), $ff,
+            $this->config, new ReauthGate(new PasswordHasher()), new WriteGate(), new EgressGuard(false, []),
+        );
+        self::assertSame(0, $webhooks->dispatch('topic.created', ['thread_id' => 1], 'evt-1'));
+    }
+
+    public function test_resume_delivery_reenables_after_suspension(): void
+    {
+        [$admin, $installedId, $webhookId] = $this->provisionWebhook();
+        $svc = $this->webhookService_provision();
+        $svc->suspendDelivery($installedId, 'pause');
+        self::assertSame(1, $svc->resumeDelivery($admin, $installedId));
+        self::assertSame(1, (int) (new WebhookRepository($this->db))->findById($webhookId)['is_active']);
+    }
+
+    public function test_resume_delivery_is_refused_while_execution_disabled(): void
+    {
+        [$admin, $installedId] = $this->provisionWebhook();
+        $svc = $this->webhookService_provision();
+        $svc->suspendDelivery($installedId, 'pause');
+        (new SettingRepository($this->db))->set('package_execution_disabled', '1');
+        self::assertTrue($svc->isExecutionDisabled());
+        try {
+            $svc->resumeDelivery($admin, $installedId);
+            self::fail('expected execution_disabled refusal');
+        } catch (PackagePolicyException $e) {
+            self::assertSame('execution_disabled', $e->code);
+        }
+    }
+
+    public function test_on_install_ineligible_suppresses_and_marks_revoked(): void
+    {
+        [$admin, $installedId, $webhookId] = $this->provisionWebhook();
+        $svc = $this->webhookService_provision();
+
+        $svc->onInstallIneligible($installedId, 'disabled', $admin->id());
+
+        self::assertSame(0, (int) (new WebhookRepository($this->db))->findById($webhookId)['is_active']);
+        self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+        // Idempotent second call must not throw.
+        $svc->onInstallIneligible($installedId, 'disabled', $admin->id());
+        self::assertTrue(true);
+    }
+
+    public function test_revoke_webhook_credential_is_idempotent(): void
+    {
+        [$admin, $installedId] = $this->provisionWebhook();
+        $svc = $this->webhookService_provision();
+        $credId = (int) (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId)[0]['id'];
+        $svc->revokeCredential($admin, $installedId, $credId);
+        $svc->revokeCredential($admin, $installedId, $credId); // no-op, no throw
+        self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+    }
+
     public function test_insert_webhook_link_round_trips_and_holds_kind_invariant(): void
     {
         [$admin, $installedId] = $this->enabledRemoteApp(['read:boards']);
