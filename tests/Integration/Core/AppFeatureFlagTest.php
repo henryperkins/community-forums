@@ -686,4 +686,31 @@ final class AppFeatureFlagTest extends TestCase
         self::assertStringNotContainsString('name="custom_label_1"', $rolledBack->body());
         self::assertStringContainsString('name="signature"', $rolledBack->body());
     }
+
+    public function test_split_merge_is_available_by_default_and_can_be_disabled(): void
+    {
+        // split_merge graduated to default-on (GA 2026-07-03): the moderator
+        // split/merge routes are live for an in-scope moderator with no features
+        // override, and an operator can still take the surface offline (404).
+        $author = $this->makeUser(['username' => 'sm_default_author']);
+        $board = $this->makeBoard($this->makeCategory('Split Merge Default'), ['slug' => 'sm-default']);
+        $thread = $this->makeThread($board, $author, 'Split merge default', 'Opening post');
+        $this->actingAs($this->makeAdmin(['username' => 'sm_default_admin']));
+
+        // Available by default: the split route is live. An empty selection fails
+        // validation and redirects back to the thread (proving it is not 404-dark).
+        $this->assertRedirectContains(
+            $this->post('/mod/t/' . $thread['thread_id'] . '/split', ['title' => 'Attempted split']),
+            '/t/' . $thread['thread_id'],
+        );
+        self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('split_merge'));
+
+        // Isolation: graduating split_merge must not enable a dark neighbour.
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'));
+
+        // Operator rollback: disabling the flag takes both routes offline (404).
+        $this->setFlags(['split_merge' => false]);
+        $this->assertStatus(404, $this->post('/mod/t/' . $thread['thread_id'] . '/split', ['title' => 'x']));
+        $this->assertStatus(404, $this->post('/mod/t/' . $thread['thread_id'] . '/merge', ['target_thread_id' => 1]));
+    }
 }

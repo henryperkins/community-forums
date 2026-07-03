@@ -65,7 +65,7 @@ final class FeatureFlags
         'polls' => true,               // one poll per thread, no-JS vote/result flows — GA default-on (2026-06-30; reversible via features override)
         'custom_emoji' => true,        // operator-managed static PNG/WebP shortcode assets — GA default-on (2026-07-03; reversible via features override)
         'slash_giphy' => true,         // PE slash inserts + client-side GIPHY picker — GA default-on (2026-07-02; inert until giphy_public_key is set; reversible via features override)
-        'split_merge' => false,        // moderator split/merge dry-run/apply/repair operations
+        'split_merge' => true,         // GA default-on (2026-07-03; reversible via features override) — moderator split/merge operations
         'profile_media' => true,       // avatar upload/signature moderation surfaces — GA default-on (2026-07-03; reversible via features override)
         'board_folders' => true,       // private personal board folders — GA default-on (2026-07-01; reversible via features override)
         'bookmark_folders' => true,    // private folders for starred/bookmarked threads — GA default-on (2026-07-01; reversible via features override)
