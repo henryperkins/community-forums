@@ -11,17 +11,21 @@
  * the group_dms feature is enabled).
  *
  * Params: conversation, conversation_id, is_group, is_owner, other, participants,
- * muted, other_is_blocked, current_user.
+ * muted, other_is_blocked, rail_label (optional — the caller's precomputed
+ * icon/label text, kept in sync with the header toggle + menu item that name
+ * the same rail). $current_user and $e are ambient — the View shares them with
+ * every template/partial, not passed explicitly.
  */
 $railId = (int) $conversation_id;
 $railIsGroup = !empty($is_group);
 $railMuted = !empty($muted);
 $muteLabel = $railMuted ? 'Unmute conversation' : 'Mute conversation';
 $muteNext = $railMuted ? '0' : '1';
+$railLabel = $rail_label ?? ($railIsGroup ? 'Members & details' : 'Details');
 ?>
-<aside class="dm-inforail" id="dm-rail" aria-label="<?= $railIsGroup ? 'Members and details' : 'Details' ?>">
+<aside class="dm-inforail" id="dm-rail" aria-label="<?= $e($railLabel) ?>">
     <div class="dm-rail-head">
-        <span class="eyebrow"><?= $railIsGroup ? 'Members &amp; details' : 'Details' ?></span>
+        <span class="eyebrow"><?= $e($railLabel) ?></span>
         <button type="button" class="dm-iconbtn" data-rail-close aria-label="Close details"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
     </div>
 

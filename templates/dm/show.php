@@ -4,6 +4,10 @@ $otherName = $other === null ? 'Unknown' : (($other['display_name'] ?? '') !== '
 $title = !empty($is_group)
     ? (($conversation['title'] ?? '') !== '' ? (string) $conversation['title'] : 'Group conversation')
     : 'Conversation with ' . $otherName;
+// The rail's icon + label are typed once here so the toggle button's
+// aria-label and the menu item's visible text can never drift apart.
+$railIcon = !empty($is_group) ? 'users' : 'panel-right';
+$railLabel = !empty($is_group) ? 'Members & details' : 'Details';
 $this->layout('layout');
 $this->section('title', $title);
 ?>
@@ -28,12 +32,14 @@ $this->section('title', $title);
                             <?= count(array_filter($participants ?? [], fn ($p) => empty($p['left_at']))) ?> in counsel<?= !empty($muted) ? ' · muted' : '' ?>
                         <?php elseif ($other !== null): ?>
                             @<?= $e($other['username']) ?><?= !empty($muted) ? ' · muted' : '' ?>
+                        <?php else: ?>
+                            Open letter<?= !empty($muted) ? ' · muted' : '' ?>
                         <?php endif; ?>
                     </p>
                 </div>
             </div>
             <div class="dm-thread-actions">
-                <button type="button" class="dm-iconbtn is-active" data-rail-toggle aria-controls="dm-rail" aria-expanded="true" aria-label="<?= !empty($is_group) ? 'Members and details' : 'Details' ?>"><?= $this->partial('partials/icon', ['name' => !empty($is_group) ? 'users' : 'panel-right']) ?></button>
+                <button type="button" class="dm-iconbtn is-active" data-rail-toggle aria-controls="dm-rail" aria-expanded="true" aria-label="<?= $e($railLabel) ?>"><?= $this->partial('partials/icon', ['name' => $railIcon]) ?></button>
                 <details class="dm-menu">
                     <summary class="dm-iconbtn" aria-label="More actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
                     <div class="dm-menu-pop" role="menu">
@@ -42,7 +48,7 @@ $this->section('title', $title);
                             <input type="hidden" name="muted" value="<?= !empty($muted) ? '0' : '1' ?>">
                             <button class="dm-menu-item" type="submit"><?= $this->partial('partials/icon', ['name' => 'bell-off']) ?><span><?= !empty($muted) ? 'Unmute conversation' : 'Mute conversation' ?></span></button>
                         </form>
-                        <a class="dm-menu-item" href="#dm-rail" data-rail-open><?= $this->partial('partials/icon', ['name' => !empty($is_group) ? 'users' : 'panel-right']) ?><span><?= !empty($is_group) ? 'Members &amp; details' : 'Details' ?></span></a>
+                        <a class="dm-menu-item" href="#dm-rail" data-rail-open><?= $this->partial('partials/icon', ['name' => $railIcon]) ?><span><?= $e($railLabel) ?></span></a>
                         <?php if (empty($is_group) && $other !== null): ?>
                             <a class="dm-menu-item" href="/u/<?= $e($other['username']) ?>"><?= $this->partial('partials/icon', ['name' => 'user']) ?><span>View profile</span></a>
                             <div class="dm-menu-sep"></div>
@@ -173,6 +179,7 @@ $this->section('title', $title);
         'participants' => $participants ?? [],
         'muted' => $muted ?? false,
         'other_is_blocked' => $other_is_blocked ?? false,
+        'rail_label' => $railLabel,
     ]) ?>
     <a class="dm-rail-scrim" href="#" data-rail-scrim aria-label="Close details"></a>
 </div>

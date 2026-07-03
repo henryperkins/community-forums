@@ -310,9 +310,19 @@
     // Messages details rail (Phase 2 reimagine): a real column at wide widths, a
     // right-edge drawer below ~1400px. Server-rendered as always-visible (wide)
     // or reachable via the "Members & details" #dm-rail anchor + a CSS :target
-    // rule (narrow) — both work with no JS. This only adds a same-page toggle
-    // (no hash navigation), a scrim, Escape, and remembers the wide-screen
-    // collapsed preference in localStorage. Mirrors the nav-open drawer above.
+    // rule (narrow) — both work with no JS.
+    //
+    // At narrow widths, :target (i.e. window.location.hash) stays the ONE source
+    // of truth: JS drives it with history.replaceState instead of layering a
+    // second, independent class — two mechanisms tracking the same "is the
+    // drawer open" fact can only drift (e.g. middle-clicking the "Members &
+    // details" link opens a new tab whose hash the click handler never saw, and
+    // a class-based toggle could then never clear a :target that's still set).
+    // replaceState (not assigning location.hash directly) avoids both adding a
+    // history entry and the native scroll-to-target jump.
+    //
+    // At wide widths there's no anchor/:target involved at all — a plain
+    // .rail-hidden class (persisted in localStorage) is the only mechanism.
     var railToggle = document.querySelector('[data-rail-toggle]');
     var dmShell = document.querySelector('.dm-shell');
     if (railToggle && dmShell) {
@@ -325,11 +335,11 @@
             railToggle.classList.toggle('is-active', expanded);
         };
         var railIsOpen = function () {
-            return railNarrow() ? dmShell.classList.contains('rail-open') : !dmShell.classList.contains('rail-hidden');
+            return railNarrow() ? window.location.hash === '#dm-rail' : !dmShell.classList.contains('rail-hidden');
         };
         var openRail = function () {
             if (railNarrow()) {
-                dmShell.classList.add('rail-open');
+                if (window.location.hash !== '#dm-rail') { history.replaceState(null, '', '#dm-rail'); }
             } else {
                 dmShell.classList.remove('rail-hidden');
                 try { window.localStorage.removeItem(RAIL_KEY); } catch (e) { /* ignore */ }
@@ -338,7 +348,9 @@
         };
         var closeRail = function () {
             if (railNarrow()) {
-                dmShell.classList.remove('rail-open');
+                if (window.location.hash === '#dm-rail') {
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
             } else {
                 dmShell.classList.add('rail-hidden');
                 try { window.localStorage.setItem(RAIL_KEY, '1'); } catch (e) { /* ignore */ }
@@ -358,8 +370,12 @@
         if (railScrim) {
             railScrim.addEventListener('click', function (e) { e.preventDefault(); closeRail(); });
         }
+        var railClose = document.querySelector('[data-rail-close]');
+        if (railClose) {
+            railClose.addEventListener('click', closeRail);
+        }
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && railNarrow() && dmShell.classList.contains('rail-open')) { closeRail(); }
+            if (e.key === 'Escape' && railNarrow() && railIsOpen()) { closeRail(); }
         });
         // The header menu's "Members & details" item shares the #dm-rail anchor
         // with the no-JS fallback; with JS, open the rail directly and close the
@@ -376,6 +392,9 @@
             })(railOpeners[ri]);
         }
         window.addEventListener('resize', function () { setRailButton(railIsOpen()); });
+        // A back/forward navigation (or another tab's replaceState) can change
+        // the hash without any of the click handlers above running.
+        window.addEventListener('hashchange', function () { setRailButton(railIsOpen()); });
     }
 
     // ··· menus (the header overflow + each message's hover-revealed report
