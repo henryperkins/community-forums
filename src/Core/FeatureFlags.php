@@ -43,7 +43,7 @@ final class FeatureFlags
         'server_drafts' => true,     // authenticated cross-device draft sync — GA default-on (2026-07-02; ADR 0010; reversible via features override)
         'uploads' => true,           // image upload/paste/drop + private delivery (P3-04)
         'anti_abuse' => true,        // central limiter, content filters, holds, audit (P3-05)
-        'appeals' => false,          // self-service moderation appeals + staff queue (ADR 0007 carryover; deploy-dark)
+        'appeals' => true,           // self-service moderation appeals + staff queue — GA default-on (2026-07-02; ADR 0007; reversible via features override)
         'branding' => true,          // operator branding: name/logo/favicon/colors (P3-07)
         'custom_css' => false,        // guarded raw CSS editor for trusted operators (ADR 0009)
         'seo' => true,               // public metadata, sitemap, robots (P3-10)

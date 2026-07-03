@@ -50,6 +50,10 @@ async function openPackageDetailByUid(page: Page, uid: string): Promise<string> 
 }
 
 async function login(page: Page, email: string): Promise<void> {
+  // Clear any prior session before (re-)login: an authenticated GET /login
+  // 302-redirects to '/', hiding the email field. No-op on a fresh context;
+  // required for same-page user switches (e.g. the staff appeals-queue scan).
+  await page.context().clearCookies();
   await page.goto('/login');
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', 'password123');
@@ -197,6 +201,37 @@ test('member appeal and server-draft pages have no serious axe violations', asyn
   await visit(page, '/settings/account/lifecycle');
   await expect(page.getByRole('heading', { name: 'Delete account' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
+});
+
+test('staff appeals queue has no serious axe violations (resolve form)', async ({ page }, info) => {
+  // appeals graduated to default-on (GA 2026-07-02, ADR 0007). The member
+  // /appeals form is scanned above; the incremental staff surface is the
+  // board-scoped resolution queue's resolve form (outcome select + note
+  // textarea). Ensure an open appeal exists (bob appeals his seeded, removed
+  // reply — tolerating a prior serial pass that already opened one), then scan
+  // the populated queue as alice, the seeded moderator of #general.
+  await login(page, 'bob@retro.test');
+  await visit(page, '/appeals');
+  const appealForm = page.locator('form.appeal-form').first();
+  if (await appealForm.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await appealForm.locator('textarea[name="reason"]').fill('Requesting review for the a11y appeals-queue scan.');
+    await appealForm.getByRole('button', { name: 'Submit appeal' }).click();
+    await page.waitForURL(/\/appeals$/);
+  }
+
+  await login(page, 'alice@retro.test');
+  await visit(page, '/mod/appeals');
+  await expect(page.getByRole('heading', { name: 'Appeals queue' })).toBeVisible();
+  const resolveForm = page.locator('form.appeal-resolve').first();
+  await expect(resolveForm).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.appeal-resolve');
+
+  // Self-clean so the serial mobile pass (and the member /appeals scan above)
+  // finds bob's post appealable again: dismiss does not reverse the removal, and
+  // a non-open appeal no longer blocks re-appealing (eligibility keys on 'open').
+  await resolveForm.locator('select[name="outcome"]').selectOption('dismissed');
+  await resolveForm.getByRole('button', { name: 'Resolve appeal' }).click();
+  await page.waitForURL(/\/mod\/appeals$/);
 });
 
 test('server-draft conflict panel has no serious axe violations', async ({ page }, info) => {

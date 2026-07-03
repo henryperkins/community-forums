@@ -149,8 +149,8 @@ It prints `Account purge: anonymised N due deletion(s).` and exits 0.
   `tests/Integration/Core/AppFeatureFlagTest.php` —
   `test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible`
   (default-on plus operator rollback: every lifecycle route 404 when disabled,
-  core profile editing stays up) and `test_appeals_carryover_defaults_dark`
-  (appeals stays independently dark).
+  core profile editing stays up; its still-dark cross-check now uses `group_dms`
+  since appeals graduated to default-on on 2026-07-02).
 - **Browser:** `docs/evidence/browser/{desktop,mobile}/35-account-lifecycle.png`
   (the active-state lifecycle page: export + deactivate + delete sections) and
   `36-account-deletion-scheduled.png` (the danger-zone grace/cancel state), driven

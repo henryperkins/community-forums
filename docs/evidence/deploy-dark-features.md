@@ -21,10 +21,10 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 Audited 2026-07-02 against `src/Core/FeatureFlags.php` and literal
 `FeatureFlags::enabled('...')` call sites in `src/`.
 
-- `FeatureFlags::DEFAULTS` declares 57 flags: 31 default `true`, 26 default
+- `FeatureFlags::DEFAULTS` declares 57 flags: 33 default `true`, 24 default
   `false`.
-- This deploy-dark inventory has 39 table rows: all 26 current default-dark
-  flags, plus 13 retained graduated flags that are default-ON and
+- This deploy-dark inventory has 39 table rows: all 24 current default-dark
+  flags, plus 15 retained graduated flags that are default-ON and
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
@@ -40,7 +40,7 @@ Audited 2026-07-02 against `src/Core/FeatureFlags.php` and literal
 |---|---|---|
 | `server_drafts` | Authenticated cross-device draft sync, conflict handling, `/drafts` server list/discard | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppServerDraftsTest` (available-by-default + rollback), `AppAccountLifecycleTest` (export/purge), browser `28-server-draft-conflict`, `.composer-draft-sync` axe pass, runbook `docs/runbooks/server_drafts.md`, ADR 0010. Retained here for traceability. |
 | `wysiwyg_composer` | Milkdown WYSIWYG layer over the canonical Markdown textarea | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override; `rich_composer=false` remains the emergency kill switch). Acceptance evidence: ADR 0013, runbook `docs/runbooks/wysiwyg_composer.md`, `AppComposerTest`, `AppComposerSuggestTest`, `AppMentionLinkRenderTest`, `MarkdownRoundTripTest`, `npm run check:wysiwyg`, browser `wysiwyg-composer.spec.ts` (CSP + GA-default mount with no override, source mode, no-op edit, preview parity, chips, internal URL paste, mobile smoke, textarea fallback), and `a11y.spec.ts` WYSIWYG toolbar/picker/source scans. Retained here for traceability. |
-| `appeals` | Self-service moderation appeals and staff appeal queue | Deploy-dark; focused PHPUnit exists, awaiting browser/a11y/runbook evidence |
+| `appeals` | Self-service moderation appeals and staff appeal queue | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppModerationAppealsTest`, `AppFeatureFlagTest` (default-on + operator rollback to 404), browser `44-appeals-member`/`45-appeals-staff-queue`, `/appeals` + `.appeal-resolve` axe pass, runbook `docs/runbooks/appeals.md`, ADR 0007. Retained here for traceability. |
 | `custom_css` | Guarded raw CSS editor for trusted operators | Deploy-dark; awaiting safe-mode/mobile/operator evidence |
 
 ## Phase 4 Gate A
@@ -144,9 +144,9 @@ still listed as "Need: runbook" do not yet.
    - Evidence completed: `AppAccountLifecycleTest` (now exercises the shipped
      default — export-without-secrets, deactivate/reactivate, grace cancel,
      final-admin guard, anonymizing purge, and the not-`pending_deletion` skip);
-     `AppFeatureFlagTest` split into `test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible`
-     (default-on plus operator rollback to 404) and `test_appeals_carryover_defaults_dark`
-     (appeals stays independently dark); the `phase 4 account lifecycle` Playwright
+     `AppFeatureFlagTest` covers it via `test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible`
+     (default-on plus operator rollback to 404; its dark cross-check now uses
+     `group_dms` since appeals graduated 2026-07-02); the `phase 4 account lifecycle` Playwright
      journey drives export→deactivate→reactivate→request→cancel through the no-JS
      forms (dedicated `dana` account), capturing `35-account-lifecycle` +
      `36-account-deletion-scheduled` on desktop + mobile; `/settings/account/lifecycle`
@@ -156,13 +156,21 @@ still listed as "Need: runbook" do not yet.
      `AccountLifecycleService` with a bare `PasswordHasher` after the F7 `ReauthGate`
      refactor (a `TypeError` — the pre-refactor "smoke exit 0" claim had silently
      regressed). Now wires `new ReauthGate(new PasswordHasher())`; re-verified exit 0.
-5. **`appeals`** — members appeal eligible deleted/moderated actions through
-   no-JS forms on `/appeals`; the staff queue is board-scoped like the report
-   queue (2026-06-30 hardening), with reverse restoration, notification, and
-   audit; policy ADR 0007.
-   - Have: `AppModerationAppealsTest`; ADR 0007.
-   - Need: browser + a11y evidence + runbook (simple form flows — cheap to
-     capture).
+5. **`appeals`** — ✓ **Graduated 2026-07-02 (default-ON).** Members appeal
+   eligible deleted/moderated actions through no-JS forms on `/appeals`; the
+   staff queue is board-scoped like the report queue (2026-06-30 hardening), with
+   reverse restoration (delegated to the owning moderation service),
+   notification, and an append-only appeal-event audit; policy ADR 0007.
+   - Evidence completed: `AppModerationAppealsTest` (member-open → one-active
+     → board-scoped-queue → resolve/reverse); `AppFeatureFlagTest`
+     `test_appeals_carryover_defaults_on_and_is_operator_reversible` (default-on
+     plus operator rollback re-gating every appeals route to 404); the appeals
+     Playwright journey `tests/browser/appeals.spec.ts` drives member open →
+     staff resolve through the no-JS forms, capturing `44-appeals-member` +
+     `45-appeals-staff-queue` on desktop + mobile; the member `/appeals` axe scan
+     plus a staff `/mod/appeals` `.appeal-resolve` scan added to
+     `tests/browser/a11y.spec.ts`; the appeal-target fixture moved onto the
+     standard evidence seed path; operator runbook `docs/runbooks/appeals.md`.
 
 ### Tier 3 — small surfaces, but evidence must be captured from scratch
 
@@ -340,6 +348,16 @@ as of 2026-07-02.
   `FeatureFlags` default is now `true`. It is retained here for traceability and
   remains reversible via the `features` override; persisted reference rows stay
   intact when the flag is rolled back and cards simply stop rendering.
+- `appeals` graduated out of deploy-dark on 2026-07-02 (the first Tier 2
+  graduation from the readiness ranking): its `FeatureFlags` default is now
+  `true`. Acceptance completed the ADR 0007 evidence list — the appeals browser
+  journey (`tests/browser/appeals.spec.ts`, captures `44-appeals-member` /
+  `45-appeals-staff-queue`) moved into the standard `npm run evidence` run, a
+  staff `/mod/appeals` `.appeal-resolve` axe scan joined the existing member
+  `/appeals` scan, and the operator runbook landed at `docs/runbooks/appeals.md`.
+  It is retained here for traceability and remains reversible via the `features`
+  override; disabling the flag re-gates every route to 404 but never re-reverses
+  a resolution already carried out by the owning moderation service.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
   decision. `group_dms` and `community_memory` additionally require an

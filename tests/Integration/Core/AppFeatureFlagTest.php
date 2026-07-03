@@ -205,27 +205,36 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(200, $this->get('/admin/themes/safe-mode'));
     }
 
-    public function test_appeals_and_account_lifecycle_carryovers_default_dark(): void
+    public function test_appeals_carryover_defaults_on_and_is_operator_reversible(): void
     {
-        // ADR 0007 appeals still ships as a deploy-dark carryover: its member and
-        // staff routes must be offline by default until acceptance evidence lands.
-        // (account_lifecycle, its former co-carryover, graduated on 2026-07-02 and
-        // is now covered by test_account_lifecycle_carryover_defaults_on below.)
+        // ADR 0007 appeals graduated to default-on (GA 2026-07-02) with
+        // browser/a11y/runbook acceptance evidence. The member appeal surface and
+        // the board-scoped staff queue are live out of the box, but every route
+        // stays operator-reversible via the features override (the deploy-dark
+        // rollback path), mirroring the account_lifecycle co-carryover below.
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        self::assertFalse($flags->enabled('appeals'), 'appeals should deploy dark by default');
+        self::assertTrue($flags->enabled('appeals'), 'appeals graduated to default-on');
         self::assertArrayHasKey('appeals', $flags->all(), 'appeals must be a declared flag, not an unknown-key false');
 
-        $member = $this->makeUser(['username' => 'darkcarryovermember']);
+        $member = $this->makeUser(['username' => 'appealsdefaultmember']);
         $this->actingAs($member);
 
-        // Appeals member + staff routes are 404 while the flag is dark.
+        // Default-on: the member appeal surface answers without any override.
+        self::assertNotSame(404, $this->get('/appeals')->status());
+
+        // Operator rollback: disabling re-gates every appeals route to 404 (the
+        // in-controller gate fires before the auth check, so the member and staff
+        // faces both go dark)…
+        $this->setFlags(['appeals' => false]);
         $this->assertStatus(404, $this->get('/appeals'));
         $this->assertStatus(404, $this->post('/appeals/posts/1', ['reason' => 'x']));
+        $this->assertStatus(404, $this->post('/appeals/modlog/1', ['reason' => 'x']));
         $this->assertStatus(404, $this->get('/mod/appeals'));
 
-        // The override seam still re-enables appeals on its own.
-        $this->setFlags(['appeals' => true]);
-        self::assertNotSame(404, $this->get('/appeals')->status());
+        // …but the core forum stays up, and rolling appeals back must not enable a
+        // still-dark neighbour.
+        $this->assertStatus(200, $this->get('/'));
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'));
     }
 
     public function test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible(): void
@@ -254,9 +263,11 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/settings/account/delete/cancel'));
 
         // …but core profile editing is NOT part of the lifecycle slice and stays
-        // up, and the still-dark appeals flag is not surfaced by the rollback.
+        // up, and rolling account_lifecycle back must not enable a still-dark
+        // neighbour (appeals graduated 2026-07-02, so it is no longer a valid
+        // dark cross-check; group_dms is).
         self::assertNotSame(404, $this->get('/settings/account')->status(), 'core profile editing must stay available');
-        $this->assertStatus(404, $this->get('/appeals'), 'disabling account_lifecycle must not surface the still-dark appeals flag');
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'), 'disabling account_lifecycle must not surface a still-dark flag');
     }
 
     public function test_group_dms_flag_gates_group_creation_and_management(): void

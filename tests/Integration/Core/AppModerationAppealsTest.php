@@ -21,7 +21,8 @@ final class AppModerationAppealsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Appeals ship deploy-dark (ADR 0007); enable the flag for this suite.
+        // Appeals graduated to default-on (GA 2026-07-02, ADR 0007); pin the flag
+        // on explicitly so this suite is isolated from any operator override.
         (new SettingRepository($this->db))->set('features', ['appeals' => true]);
         $this->admin = $this->makeAdmin(['username' => 'appeal-admin']);
         $this->member = $this->makeUser(['username' => 'appeal-member']);

@@ -62,6 +62,7 @@ $evidenceFeatures = [
     'topic_workflow' => true, // GA default-on (2026-07-01); listed explicitly so the workflow bar is captured regardless of the DEFAULTS map
     'server_drafts' => true, // GA default-on (2026-07-02); listed explicitly so the conflict journey is captured as a standard (non-dark) surface
     'account_lifecycle' => true, // GA default-on (2026-07-02; ADR 0006); listed explicitly so the member self-serve export/deactivate/delete surface is captured
+    'appeals' => true, // GA default-on (2026-07-02; ADR 0007); listed explicitly so the member /appeals + staff /mod/appeals surfaces are captured (fixture: $ensureAppealFixture soft-deletes bob's reply)
     'capabilities' => true, // Inc 1 (P5-08): role editor + simulator browser evidence (shadow-only)
     'package_registry' => true, // Inc 2 (P5-01): staff catalogue browse evidence (read-only)
     'package_themes' => true, // Inc 4 (P5-03): package theme preview/activate/safe-mode/rollback evidence
@@ -71,7 +72,13 @@ if ($includeDarkSurfaceFixtures) {
     $evidenceFeatures['appeals'] = true;
     $evidenceFeatures['server_extensions'] = true;
 }
-$ensureNewSurfaceFixtures = static function () use ($db, $users): bool {
+// appeals graduated to default-on (GA 2026-07-02): the appeal-target fixture
+// runs on the STANDARD evidence path (not the dark branch) so /appeals renders
+// an appealable action by default. Soft-deletes bob's #general reply as a
+// moderator removal (with the matching delete_post moderation_log row that
+// AppealService::openForPost requires). No spec depends on that reply being
+// present, so removing it is safe for the gate-a journeys.
+$ensureAppealFixture = static function () use ($db, $users): bool {
     $admin = $users->findByUsername('admin');
     $bob = $users->findByUsername('bob');
     if ($admin === null || $bob === null) {
@@ -82,25 +89,35 @@ $ensureNewSurfaceFixtures = static function () use ($db, $users): bool {
         'SELECT id FROM posts WHERE user_id = ? AND body = ? ORDER BY id ASC LIMIT 1',
         [(int) $bob['id'], 'Mine is jumping straight to the inbox.'],
     );
-    if ($bobReply !== null) {
-        $postId = (int) $bobReply['id'];
+    if ($bobReply === null) {
+        return false;
+    }
+    $postId = (int) $bobReply['id'];
+    $db->run(
+        'UPDATE posts
+            SET is_deleted = 1, deleted_at = COALESCE(deleted_at, UTC_TIMESTAMP()), deleted_by = ?
+          WHERE id = ?',
+        [(int) $admin['id'], $postId],
+    );
+    $hasDeleteLog = $db->fetchValue(
+        "SELECT 1 FROM moderation_log WHERE target_type = 'post' AND target_id = ? AND action = 'delete_post' LIMIT 1",
+        [$postId],
+    );
+    if ($hasDeleteLog === false) {
         $db->run(
-            'UPDATE posts
-                SET is_deleted = 1, deleted_at = COALESCE(deleted_at, UTC_TIMESTAMP()), deleted_by = ?
-              WHERE id = ?',
+            "INSERT INTO moderation_log (actor_id, action, target_type, target_id, reason, created_at)
+             VALUES (?, 'delete_post', 'post', ?, 'browser evidence appeal fixture', UTC_TIMESTAMP())",
             [(int) $admin['id'], $postId],
         );
-        $hasDeleteLog = $db->fetchValue(
-            "SELECT 1 FROM moderation_log WHERE target_type = 'post' AND target_id = ? AND action = 'delete_post' LIMIT 1",
-            [$postId],
-        );
-        if ($hasDeleteLog === false) {
-            $db->run(
-                "INSERT INTO moderation_log (actor_id, action, target_type, target_id, reason, created_at)
-                 VALUES (?, 'delete_post', 'post', ?, 'browser evidence appeal fixture', UTC_TIMESTAMP())",
-                [(int) $admin['id'], $postId],
-            );
-        }
+    }
+
+    return true;
+};
+$ensureNewSurfaceFixtures = static function () use ($db, $users): bool {
+    $admin = $users->findByUsername('admin');
+    $bob = $users->findByUsername('bob');
+    if ($admin === null || $bob === null) {
+        return false;
     }
 
     $db->run(
@@ -412,6 +429,7 @@ if ($users->adminCount() > 0) {
     $settings->set('giphy_rating', 'pg');
     $pollReady = $ensureShortcutPoll();
     $registryReady = $ensureRegistryFixtures();
+    $ensureAppealFixture();
     $newSurfaceFixturesReady = $includeDarkSurfaceFixtures ? $ensureNewSurfaceFixtures() : false;
     fwrite(STDOUT, $pollReady
         ? ($registryReady
@@ -535,6 +553,7 @@ $db->transaction(function () use ($db, $settings, $categories, $boards, $mods, $
 });
 
 $ensureRegistryFixtures();
+$ensureAppealFixture();
 
 if ($includeDarkSurfaceFixtures) {
     $ensureNewSurfaceFixtures();
