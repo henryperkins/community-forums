@@ -1,10 +1,10 @@
 # Increment 5 — Package Integrations & Security Response Implementation Plan
 
-> For agentic workers: execute this plan with `superpowers:subagent-driven-development` (one subagent per task group, in listed order) and `superpowers:executing-plans` review checkpoints. Every task is TDD-first (`superpowers:test-driven-development`): write the failing PHPUnit/browser test, then the code, then `composer test`. Do not claim a task done without `superpowers:verification-before-completion` evidence.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (one subagent per task group, in listed order) or `superpowers:executing-plans` with review checkpoints to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Every task is TDD-first (`superpowers:test-driven-development`): write the failing PHPUnit/browser test, then the code, then `composer test`. Do not claim a task done without `superpowers:verification-before-completion` evidence.
 
 **Goal:** Animate non-theme Gate A packages (`remote_app` / declarative `automation`) with install-scoped settings, secret storage, read-only API tokens, and package-owned webhook event delivery, and complete the local operator security-response console (publisher keys, exact-digest review, advisories, emergency disable, transparency) — all deploy-dark behind `package_registry`.
 
-**Architecture:** A thin integration runtime layers over the already-landed B2 seams (`SecretVault`, `ApiTokenService`, `WebhookService`, `first_party_hooks` producers) and the Inc 3 package lifecycle engine — manifests declare the ceiling (`api_scope`/`event`/`data_class`/`outbound_host`/`job`), granted permission rows are the authority, per-install settings and credentials are new normalized tables (`installed_package_settings`, `installed_package_credentials`) added by migration `0073`. Package-owned credentials are minted through the existing `ApiTokenService`/`WebhookService` (never reusing a human token) and are revoked/paused before any state flips inactive, via a nullable `PackageIntegrationService::onInstallIneligible()` hook wired into `PackageLifecycleService` and `PackageHealthService` exactly like the existing `?ThemeStateService` seam. The security console reuses `RegistryAdvisoryService`/`LocalBlocklistService`/`PackageHealthService::enforcePolicy()` (no new worker) and adds `PublisherTrustService`, `PackageReviewConsoleService`, and a flag-independent emergency-disable brake.
+**Architecture:** A thin integration runtime layers over the already-landed B2 seams (`SecretVault`, `ApiTokenService`, `WebhookService`, `first_party_hooks` producers) and the Inc 3 package lifecycle engine — manifests declare the ceiling (`api_scope`/`event`/`data_class`/`outbound_host`/`job`), granted permission rows are the authority, per-install settings and credentials are new normalized tables (`installed_package_settings`, `installed_package_credentials`) added by migration `0073`. Package-owned credentials are minted through the existing `ApiTokenService`/`WebhookService` (never reusing a human token), runtime API-token auth is denied by `PackageCredentialAuthGuard` when the owning install is unsafe, credentials are revoked/paused before any state flips inactive via `PackageIntegrationService::onInstallIneligible()` wired into lifecycle/health services, and stale credentials are reconciled after update/rollback grant replacement via `PackageIntegrationService::onGrantsChanged()` wired into `PackageUpdateService`. The security console reuses `RegistryAdvisoryService`/`LocalBlocklistService`/`PackageHealthService::enforcePolicy()` (no new worker) and adds `PublisherTrustService`, `PackageReviewConsoleService`, and a flag-independent emergency-disable brake.
 
 **Tech Stack:** Vanilla PHP 8.2+ (`App\` → `src/`, PSR-4), MySQL/MariaDB via the file-based `Migrator`, server-rendered plain-PHP templates + progressive-enhancement JS, PHPUnit (in-process kernel) + Playwright/axe browser evidence. No framework, no autowiring, short-polling only, strict CSP (no inline script/style).
 
@@ -33,20 +33,22 @@
 |---|---|
 | `database/migrations/0073_phase5_package_integrations.php` | Additive migration: `installed_package_settings` + `installed_package_credentials` tables; widen `package_history.event` (+3) and `moderation_log.target_type` (+`publisher`). |
 | `src/Repository/InstalledPackageSettingsRepository.php` | Single-table wrapper for `installed_package_settings` (upsert/read/delete + secret-ref harvest for cleanup). |
-| `src/Repository/InstalledPackageCredentialRepository.php` | Single-table wrapper for `installed_package_credentials` (insert api_token/webhook links, revoke, lookups by owning token/webhook). |
+| `src/Repository/InstalledPackageCredentialRepository.php` | Single-table wrapper for `installed_package_credentials` (insert api_token/webhook links, revoke, lookups by owning token/webhook). **Single owner:** Task 18 creates the full api_token + webhook surface; later tasks only append tests or repair missing methods without replacing the file. |
 | `src/Repository/PublisherSigningKeyRepository.php` | Single-table wrapper for `publisher_signing_keys` (mirrors `RegistryTrustKeyRepository`, keyed on `publisher_id`). |
 | `src/Service/Packages/PackageSettingsService.php` | Validates submitted settings against manifest `settings_schema`; secret fields → `SecretVault`, non-secret → `value_json`; writes settings rows + summary + history + audit in one transaction. |
-| `src/Service/Packages/PackageIntegrationService.php` | Install-scoped credential provisioning/rotation/revocation + event/scope/outbound-host gating + delivery pause/resume + the `onInstallIneligible()` lifecycle hook + integration read model. |
+| `src/Service/Packages/PackageIntegrationService.php` | Install-scoped credential provisioning/rotation/revocation + event/scope/outbound-host gating + delivery pause/resume + the `onInstallIneligible()` lifecycle hook + post-update grant reconciliation + integration read model. |
+| `src/Service/Packages/PackageCredentialAuthGuard.php` | Package-owned API token runtime guard: human tokens pass through, linked package tokens fail closed when execution is disabled, the install is not enabled, or the package/release is no longer locally acceptable. |
 | `src/Service/Packages/PackageReviewConsoleService.php` | Displays cached signed review decisions; records local manual decisions (tightening-only) tied to package/release/version/digest/reviewer/evidence. |
 | `src/Service/Packages/PackageSecurityResponseService.php` | Security-console read model + flag-independent emergency execution disable; reuses (does not duplicate) advisory/blocklist/enforcement services. |
 | `src/Service/Registry/PublisherTrustService.php` | Publisher verify/suspend/reinstate + signing-key pin/rotate/revoke (reauth-gated), cascading force-disable on suspension via `PackageHealthService::enforcePolicy()`/security response. |
-| `src/Controller/AdminPackageIntegrationController.php` | No-JS integration POSTs under `/admin/packages/{id}/integration/*` (settings, provision, rotate/revoke credential, disable integration, export settings). |
-| `src/Controller/AdminPackageSecurityController.php` | Security-response console GET/POSTs (`/admin/packages/security`, `/admin/packages/publishers/{id}`, publisher/key/review/emergency-disable actions). |
+| `src/Controller/AdminPackageIntegrationController.php` | No-JS integration POSTs under `/admin/packages/{id}/integration/*` (settings, provision, rotate/revoke credential, disable integration, export settings). **Single owner:** Task 42 creates the controller with the redacted export body from Task 38; Task 38 may add tests before that but must not introduce a competing implementation. |
+| `src/Controller/AdminPackageSecurityController.php` | Security-response console GET/POSTs (`/admin/packages/security`, `/admin/packages/publishers/{id}`, publisher/key/review/emergency-disable actions). **Cumulative file:** the first task that touches it creates shared `gate()`/`noindex()` scaffolding; all later tasks append/modify methods in place and must preserve `publisher*`, `recordReview`, `index`, `emergencyDisable`, key actions, and helpers already present. |
 | `templates/admin/_package_integration.php` | Partial: settings form + permission/grant summary + credential panel (labels/status, no plaintext) folded into package detail. |
 | `templates/admin/package_security.php` | Security-response console overview (publishers, advisories, blocklist, transparency, emergency-disable toggle). |
 | `templates/admin/package_publisher.php` | Publisher detail (status, keys, packages, review decisions, suspend/reinstate, key lifecycle forms). |
 | `tests/Unit/Service/Packages/PackageSettingsSchemaTest.php` | Settings-schema validation (types/required/select/oversize/unknown-key/secret-field) pure/near-pure coverage. |
-| `tests/Integration/Service/PackageIntegrationServiceTest.php` | Provision/rotate/revoke atomicity + scope/event/host gating + onInstallIneligible cleanup + emergency-disable suppression. |
+| `tests/Integration/Service/PackageIntegrationServiceTest.php` | Provision/rotate/revoke atomicity + one-live-credential-per-kind locking + scope/event/host gating + onInstallIneligible cleanup + post-update grant reconciliation + emergency-disable suppression. **Cumulative file:** Task 27 creates the scaffold; later tasks append cases/helpers and never replace the class. |
+| `tests/Integration/Service/PackageCredentialAuthGuardTest.php` | Package-owned API token authentication denial when execution is disabled, linked credential revoked, install inactive, local block/advisory/review state is unsafe; proves human tokens are unaffected. |
 | `tests/Integration/Service/PublisherTrustServiceTest.php` | Publisher verify/suspend/reinstate + key pin/rotate/revoke + suspension cascade. |
 | `tests/Integration/Service/PackageSecurityResponseServiceTest.php` | Emergency-disable brake, overview read model, transparency entries, advisory/blocklist delegation. |
 | `tests/Integration/Core/AppPackageIntegrationSchemaTest.php` | `0073` table/column/index/FK/enum shape assertions. |
@@ -62,12 +64,14 @@
 
 | File | Change |
 |---|---|
-| `src/Core/App.php` | Add `use` imports + container binds for the 3 new repos + 5 new services; **append** `$c->get(PackageIntegrationService::class)` to the `PackageLifecycleService` and `PackageHealthService` binds; register the new integration + security routes in `buildRouter()`. |
+| `src/Core/App.php` | Add `use` imports + container binds for the 3 new repos + 6 new services; inject `PackageCredentialAuthGuard` into `ApiTokenService`; **append** `$c->get(PackageIntegrationService::class)` to the `PackageLifecycleService`, `PackageUpdateService`, and `PackageHealthService` binds; register the new integration + security routes in `buildRouter()`. |
+| `src/Service/ApiTokenService.php` | Add an optional `?PackageCredentialAuthGuard $packageAuthGuard = null` tail dependency; after hash lookup and before `touchLastUsed`, deny linked package-owned tokens when the guard fails. |
 | `src/Security/Packages/ManifestValidator.php` | Add `'secret'` to `SETTING_FIELD_KEYS`; validate `secret` as optional bool allowed only when `type==='string'`; still refuse unknown keys. |
 | `src/Repository/InstalledPackageRepository.php` | Add `setSettingsSummary(int $id, ?string $json): void`. |
 | `src/Repository/PackagePublisherRepository.php` | Add `find(int $id): ?array`, `all(): array`, `setStatus(int $id, string $status): void`, `markVerified(int $id, ?int $actorId): void`, `packagesFor(int $publisherId): array`. |
-| `src/Service/Packages/PackageLifecycleService.php` | Append `?PackageIntegrationService $integrations = null` (last param, before existing trailing optionals stay valid); call `$this->integrations?->onInstallIneligible($installedId, 'disabled'\|'uninstalled', $admin->id())` in `disable()`/`uninstall()` **before** state flips inactive. |
-| `src/Service/Packages/PackageHealthService.php` | Append `?PackageIntegrationService $integrations = null`; call `onInstallIneligible(..., 'quarantined'\|'force_disabled', null)` alongside the existing `themes?->onInstallIneligible(...)` in `quarantine()`/`securityDisable()`. |
+| `src/Service/Packages/PackageLifecycleService.php` | Append `?PackageIntegrationService $integrations = null` (last param, before existing trailing optionals stay valid); call `$this->integrations?->onInstallIneligible($installedId, 'disabled'\|'uninstalled', $admin->id())` **inside** the same `disable()`/`uninstall()` transaction, immediately before state flips inactive. |
+| `src/Service/Packages/PackageUpdateService.php` | Append `?PackageIntegrationService $integrations = null`; call `onGrantsChanged(...)` inside the same update/rollback activation transaction immediately after `replaceWithGrants()` so stale package credentials are revoked before the new grant set can be used. |
+| `src/Service/Packages/PackageHealthService.php` | Append `?PackageIntegrationService $integrations = null`; call `onInstallIneligible(..., 'quarantined'\|'force_disabled', null)` inside the same `quarantine()`/`securityDisable()` transaction immediately before the state flips inactive. |
 | `templates/admin/package_detail.php` | Render `admin/_package_integration` partial when install type ∈ `remote_app`/`automation`; add links to the security console. |
 | `config/config.php` | Add `packages.execution_disabled` (`Env::bool('PACKAGE_EXECUTION_DISABLED', false)`) break-glass fallback; optionally `packages.integration_test_origin` for the same-origin test-endpoint allowance (§7). |
 | `SCHEMA.md` | Bump `v1.32`→`v1.33`; add the two new table shapes to §5B, a §9 changelog row for `0073`, note the two enum widens. |
@@ -132,7 +136,7 @@ ALTER TABLE moderation_log
   MODIFY target_type ENUM('thread','post','user','board','category','setting',
                           'service_secret','api_token','webhook','registry','package','publisher') NOT NULL;
 ```
-Application-enforced invariants (validated in the credential repo/service + asserted in tests, not by CHECK constraints): `kind='api_token'` ⇒ `api_token_id` NOT NULL and `webhook_id` NULL; `kind='webhook'` ⇒ `webhook_id` NOT NULL and `api_token_id` NULL; a setting row has exactly one of `value_json`/`secret_ref` populated (`is_secret=1` iff `secret_ref` set). `down()` deletes the three new `package_history.event` rows + `moderation_log.target_type='publisher'` rows, narrows both enums, drops both tables.
+Application-enforced invariants (validated in the credential repo/service + asserted in tests, not by CHECK constraints): `kind='api_token'` ⇒ `api_token_id` NOT NULL and `webhook_id` NULL; `kind='webhook'` ⇒ `webhook_id` NOT NULL and `api_token_id` NULL; an install may have **at most one active (`revoked_at IS NULL`) credential per kind**, enforced by `PackageIntegrationService` locking the owning `installed_packages` row `FOR UPDATE` before it checks/inserts active credential links; a setting row has exactly one of `value_json`/`secret_ref` populated (`is_secret=1` iff `secret_ref` set). `down()` deletes the three new `package_history.event` rows + `moderation_log.target_type='publisher'` rows, narrows both enums, drops both tables.
 
 ### `App\Repository\InstalledPackageSettingsRepository` (final; constructor `(private Database $db)`)
 ```php
@@ -148,7 +152,7 @@ public function deleteFor(int $installedId): void;
 public function forInstall(int $installedId): array;                              // active + revoked, ORDER BY id DESC
 public function activeForInstall(int $installedId): array;                        // revoked_at IS NULL
 public function find(int $id): ?array;
-public function findByApiToken(int $apiTokenId): ?array;
+public function findByApiToken(int $apiTokenId): ?array;                           // package-owned auth guard; revoked links remain visible and deny auth
 public function findByWebhook(int $webhookId): ?array;
 public function insertApiToken(int $installedId, int $apiTokenId, string $label, string $scopesJson, ?int $createdBy): int;
 public function insertWebhook(int $installedId, int $webhookId, string $label, string $eventsJson, ?int $createdBy): int;
@@ -259,8 +263,28 @@ public function suspendDelivery(int $installedId, string $reason): int;
 public function resumeDelivery(User $admin, int $installedId): int;
 /** Lifecycle hook (mirrors ThemeStateService::onInstallIneligible): revoke all credentials + suspendDelivery. Idempotent, no reauth. reason ∈ disabled|uninstalled|quarantined|force_disabled|emergency_disabled. */
 public function onInstallIneligible(int $installedId, string $reason, ?int $actorId): void;
+/** Grant-reconciliation hook called by PackageUpdateService after permission rows change: revoke only active credentials whose scopes/events/host are no longer a subset of current granted rows. Idempotent, no reauth. @return number of credentials revoked. */
+public function onGrantsChanged(int $installedId, string $reason, ?int $actorId): int;
 /** True when the package_execution_disabled DB setting OR packages.execution_disabled config is set. */
 public function isExecutionDisabled(): bool;
+```
+
+### `App\Service\Packages\PackageCredentialAuthGuard` (final)
+```php
+public function __construct(
+    private InstalledPackageCredentialRepository $credentials,
+    private InstalledPackageRepository $installs,
+    private PackageRepository $packages,
+    private PackageReleaseRepository $releases,
+    private PackageAdvisoryRepository $advisories,
+    private LocalPackageBlockRepository $blocks,
+    private SettingRepository $settings,
+    private Config $config,
+);
+
+/** Human/admin API tokens are allowed through. Package-owned tokens are allowed only while the linked credential is active, execution is not disabled, the install is enabled, the installed release remains approved, and no local/advisory block applies. */
+public function allowsApiToken(int $apiTokenId): bool;
+public function isExecutionDisabled(): bool; // DB setting OR packages.execution_disabled config break-glass
 ```
 
 ### `App\Service\Registry\PublisherTrustService` (final) — mirrors `RegistryTrustService`, keyed on publisher
@@ -279,7 +303,7 @@ public function __construct(
 );
 
 public function verifyPublisher(User $admin, string $currentPassword, int $publisherId): void;                 // markVerified + status active; audit publisher_verify (target_type='publisher')
-public function suspendPublisher(User $admin, string $currentPassword, int $publisherId, string $reason): int; // status suspended; cascade force-disable installs of this publisher's packages via enforcement->enforcePolicy() + per-package transparency('force_disable'); audit publisher_suspend; @return affected installs
+public function suspendPublisher(User $admin, string $currentPassword, int $publisherId, string $reason): int; // atomically set status suspended + cascade force-disable installs of this publisher's packages via enforcement->enforcePolicy() + per-package transparency('force_disable'); audit publisher_suspend; @return affected installs
 public function reinstatePublisher(User $admin, string $currentPassword, int $publisherId): void;              // status active; does NOT auto-re-enable installs; audit publisher_reinstate
 public function pinKey(User $admin, string $currentPassword, int $publisherId, string $keyId, string $publicKeyBase64, ?string $validFrom, ?string $validUntil): int;  // base64 decodes to exactly 32 bytes; audit publisher_pin_key
 public function applyKeyRotation(User $admin, string $currentPassword, int $publisherId, string $documentJson, string $signature, string $keyId): int;  // verifier->verifyRotation (rb-key-rotation.v1); pin successor; markRotated old; audit publisher_rotate_key
@@ -342,7 +366,7 @@ public function setExecutionDisabled(User $admin, string $currentPassword, bool 
 public function isExecutionDisabled(): bool;   // DB setting OR packages.execution_disabled config break-glass
 ```
 
-### Controllers (all actions `(Request $request, array $params): Response`; each `requireAdmin()` then `gate()` [`package_registry` else `NotFoundException`], `noindex()` header, resolve `{id}` server-side via `requireInstallRow`, catch `ValidationException`/`PackagePolicyException|RegistryVerificationException` → re-render 422)
+### Controllers (all actions `(Request $request, array $params): Response`; each calls `gate()` before `requireAdmin()` and again after auth [`package_registry` else `NotFoundException`], `noindex()` header, resolve `{id}` server-side via `requireInstallRow`, catch `ValidationException`/`PackagePolicyException|RegistryVerificationException` → re-render 422)
 
 `App\Controller\AdminPackageIntegrationController`: `saveSettings`, `provision`, `rotateCredential`, `revokeCredential`, `disableIntegration`, `exportSettings` (returns `Response::json(...)` + `Content-Disposition`).
 `App\Controller\AdminPackageSecurityController`: `index`, `publisher`, `emergencyDisable`, `recordReview`, `verifyPublisher`, `suspendPublisher`, `reinstatePublisher`, `pinPublisherKey`, `rotatePublisherKey` (parses `envelope` JSON `{document,signature(base64),key_id}` like `AdminRegistryController::rotate`), `revokePublisherKey`.
@@ -376,13 +400,15 @@ $c->bind(InstalledPackageCredentialRepository::class, fn (Container $c) => new I
 $c->bind(PublisherSigningKeyRepository::class,        fn (Container $c) => new PublisherSigningKeyRepository($c->get(Database::class)));
 $c->bind(PackageSettingsService::class,       fn (Container $c) => new PackageSettingsService(/* Database, PackageRepository, PackageReleaseRepository, InstalledPackageRepository, InstalledPackageSettingsRepository, SecretVault, ManifestValidator, PackageHistoryRepository, ModerationLogRepository, ReauthGate, WriteGate, FeatureFlags, $config */));
 $c->bind(PackageIntegrationService::class,    fn (Container $c) => new PackageIntegrationService(/* … + ApiTokenService, WebhookService, ApiTokenRepository, WebhookRepository, PackageTransparencyLogRepository, SettingRepository, $config */));
+$c->bind(PackageCredentialAuthGuard::class,   fn (Container $c) => new PackageCredentialAuthGuard(/* InstalledPackageCredentialRepository, InstalledPackageRepository, PackageRepository, PackageReleaseRepository, PackageAdvisoryRepository, LocalPackageBlockRepository, SettingRepository, $config */));
 $c->bind(PublisherTrustService::class,        fn (Container $c) => new PublisherTrustService(/* Database, PackagePublisherRepository, PublisherSigningKeyRepository, PackageRepository, PackageTransparencyLogRepository, TrustChainVerifier, PackageHealthService, ReauthGate, WriteGate, ModerationLogRepository */));
 $c->bind(PackageReviewConsoleService::class,  fn (Container $c) => new PackageReviewConsoleService(/* Database, PackageRepository, PackageReleaseRepository, PackageReviewDecisionRepository, PackageTransparencyLogRepository, ReauthGate, WriteGate, ModerationLogRepository */));
 $c->bind(PackageSecurityResponseService::class, fn (Container $c) => new PackageSecurityResponseService(/* Database, SettingRepository, RegistryAdvisoryService, LocalBlocklistService, PackageHealthService, PackageIntegrationService, PackagePublisherRepository, PublisherSigningKeyRepository, PackageAdvisoryRepository, LocalPackageBlockRepository, PackageTransparencyLogRepository, ReauthGate, WriteGate, ModerationLogRepository, $config */));
-// MODIFY existing binds: append $c->get(PackageIntegrationService::class) as the last arg of the
-// PackageLifecycleService and PackageHealthService binds (both already accept a trailing nullable seam).
+// MODIFY existing binds:
+// - ApiTokenService: append $c->get(PackageCredentialAuthGuard::class) as the last optional arg.
+// - PackageLifecycleService, PackageUpdateService, PackageHealthService: append $c->get(PackageIntegrationService::class) as the last optional arg.
 ```
-Hand-built test constructors for `PackageLifecycleService`/`PackageHealthService` pass `null` for the new `?PackageIntegrationService` param (keeps existing tests green); Inc 5 tests pass a real instance.
+Hand-built test constructors for `ApiTokenService` may omit the optional guard (human-token seam tests stay green); package-owned auth tests pass a real guard. Hand-built constructors for `PackageLifecycleService`/`PackageUpdateService`/`PackageHealthService` pass `null` for the new `?PackageIntegrationService` param (keeps existing tests green); Inc 5 tests pass a real instance.
 
 
 ---
@@ -394,9 +420,9 @@ Hand-built test constructors for `PackageLifecycleService`/`PackageHealthService
 3. **SP0 — service_secrets redaction/revoke/prune coverage + first_party_hooks private-content-absence proof** — Owns tests/Integration/Service/SecretVaultRedactionTest.php and tests/Integration/Service/FirstPartyHookPrivateContentTest.php. Builds the leak-proof coverage: plaintext never appears in metadata/audit rows/exception messages, revoke makes versions immediately prunable, prune destroys+zeroes retired ciphertext, forced vault-failure yields only svcsec_ ref/context (TM-SE-02/04/05); and proves emitted domain events for private/hidden-board threads + DM reports carry no bodies/titles/emails/reasons and suppress entirely (redaction + board_visibility gate). No production code changes. Exit deliverable: green PHPUnit + the four TM-SE-*/private-content fixtures flipped stub→implemented. Advances SLICE-SERVICE-SECRETS + SLICE-FIRST-PARTY-HOOKS R3→R4 and lands TM-SE-02/04/05.
 4. **Migration 0073 + settings/credential/publisher-key repositories** — Owns database/migrations/0073_phase5_package_integrations.php (installed_package_settings + installed_package_credentials tables, package_history.event +3 events, moderation_log.target_type +publisher), the three new repos (InstalledPackageSettingsRepository, InstalledPackageCredentialRepository, PublisherSigningKeyRepository), the added methods on InstalledPackageRepository (setSettingsSummary) + PackagePublisherRepository (find/all/setStatus/markVerified/packagesFor), tests/Integration/Core/AppPackageIntegrationSchemaTest.php, and SCHEMA.md v1.33 bump. Additive-only, verified through verify:upgrade. Exit deliverable: migrate green, schema-shape test green (tables/indexes/FKs/enum widens), repo CRUD integration tests green. Foundation for GA-DOD-08.
 5. **PackageSettingsService — settings_schema validation + secret storage** — Owns src/Service/Packages/PackageSettingsService.php, the ManifestValidator 'secret' field-key extension (+ its ManifestValidatorTest unknown-field/secret-only-on-string cases), tests/Unit/Service/Packages/PackageSettingsSchemaTest.php, and container bind. Validates submitted values against the active release manifest settings_schema (string/boolean/integer/select + secret:true), writes non-secret value_json + secret fields through SecretVault (svcsec_ ref only), one transaction (settings rows + setSettingsSummary + package_history settings_update + moderation_log), fails closed with ValidationException (safe old input) on unknown key/missing required/bad select/oversize/type mismatch/vault-disabled. Exit deliverable: unit + integration green proving no plaintext persists and vault-disabled fails closed. Advances GA-DOD-08 (secrets).
-6. **Install-scoped API-token provisioning** — Owns the API-token half of src/Service/Packages/PackageIntegrationService.php (provisionCredentials/rotateCredential/revokeCredential for kind=api_token) + InstalledPackageCredentialRepository api_token linkage + the relevant PackageIntegrationServiceTest cases. Mints ≤1 package-owned token via ApiTokenService::mint using declared+granted api_scope rows (⊆ApiScopes), name carrying package UID + installed id, hash-only, shown once, created_by=admin (provenance) but zero role inheritance (human-token separation); guards type∈remote_app/automation + state=enabled + ungranted=0 + service_secrets on + reauth; records installed_package_credentials + package_history credential_mint + transparency + audit. Exit deliverable: integration test proving one-time reveal, hash-only storage, human-token separation, ungranted/disabled/flag-dark denial. Advances GA-DOD-08 (scope), maps TM-SC-08.
-7. **Package-owned webhook provisioning + event/outbound-host gating** — Owns the webhook half of PackageIntegrationService (provision/rotate/revoke for kind=webhook, suspendDelivery/resumeDelivery) + InstalledPackageCredentialRepository webhook linkage + the atomic single-transaction wrapping (token-mint failure rolls back webhook+secret+links) + PackageIntegrationServiceTest cases. Provisions a package-owned endpoint via WebhookService::register using settings-provided URL + granted event rows (⊆WebhookEvents::domainEvents(), ping rejected), enforces URL host∈granted outbound_hosts (or config test origin), reuses SecretVault/HMAC/delivery ledger; never broadens private/DM payloads. Exit deliverable: integration test proving domainEvents-only subscription, outbound-host denial, atomic rollback, delivery suppression when not enabled. Advances GA-DOD-08 (scope/outage), maps TM-SC-08.
-8. **Disable/uninstall/export credential cleanup + lifecycle hook wiring** — Owns PackageIntegrationService::onInstallIneligible + the modifications appending ?PackageIntegrationService to PackageLifecycleService (disable/uninstall) and PackageHealthService (quarantine/securityDisable) with onInstallIneligible calls before state flips inactive, the two modified container binds, exportSettings behavior, and the cross-service integration tests (disable/uninstall/quarantine/force-disable revoke tokens + pause webhooks; export includes settings/credential attribution without plaintext). Ensures package-owned deliveries are suppressed before egress via endpoint pause. Exit deliverable: worker + service tests proving credentials revoked and delivery paused on every ineligible transition, existing hand-built lifecycle/health tests still green (null seam). Advances GA-DOD-08 (disable/uninstall/export).
+6. **Install-scoped API-token provisioning + package-token auth guard** — Owns the API-token half of src/Service/Packages/PackageIntegrationService.php (provisionCredentials/rotateCredential/revokeCredential for kind=api_token), `src/Service/Packages/PackageCredentialAuthGuard.php`, the `ApiTokenService` optional guard hook, and the relevant PackageIntegrationServiceTest / PackageCredentialAuthGuardTest cases. It consumes the Task 18 `InstalledPackageCredentialRepository` full surface; it may repair missing api-token methods but must not replace the repository or remove webhook methods. Mints ≤1 package-owned token via ApiTokenService::mint using declared+granted api_scope rows (⊆ApiScopes), name carrying package UID + installed id, hash-only, shown once, created_by=admin (provenance) but zero role inheritance (human-token separation); guards type∈remote_app/automation + state=enabled + ungranted=0 + service_secrets on + reauth; records installed_package_credentials + package_history credential_mint + transparency + audit. The auth guard leaves human/admin tokens unchanged and denies linked package tokens when the link is revoked, execution is disabled, the install is not enabled, the release is unreviewed/revoked, or a local/advisory block applies. Exit deliverable: integration test proving one-time reveal, hash-only storage, human-token separation, ungranted/disabled/flag-dark denial, and emergency-disable package-token auth denial. Advances GA-DOD-08 (scope), maps TM-SC-08.
+7. **Package-owned webhook provisioning + event/outbound-host gating** — Owns the webhook half of PackageIntegrationService (provision/rotate/revoke for kind=webhook, suspendDelivery/resumeDelivery) + PackageIntegrationServiceTest cases. It consumes the Task 18 `InstalledPackageCredentialRepository` webhook linkage; it may repair missing webhook methods but must not replace the repository or remove api-token methods. Provisions a package-owned endpoint via WebhookService::register using settings-provided URL + granted event rows (⊆WebhookEvents::domainEvents(), ping rejected), enforces URL host∈granted outbound_hosts (or config test origin), reuses SecretVault/HMAC/delivery ledger; never broadens private/DM payloads. Exit deliverable: integration test proving domainEvents-only subscription, outbound-host denial, atomic rollback, delivery suppression when not enabled. Advances GA-DOD-08 (scope/outage), maps TM-SC-08.
+8. **Disable/uninstall/export credential cleanup + lifecycle/update hook wiring** — Owns PackageIntegrationService::onInstallIneligible + PackageIntegrationService::onGrantsChanged + the modifications appending ?PackageIntegrationService to PackageLifecycleService (disable/uninstall), PackageUpdateService (update/rollback grant replacement), and PackageHealthService (quarantine/securityDisable) with hook calls inside the same lifecycle/update/health transaction immediately before state flips inactive or immediately after permission rows change. It also owns the modified container binds, exportSettings behavior, and the cross-service integration tests (disable/uninstall/quarantine/force-disable revoke tokens + pause webhooks; update/rollback permission reductions revoke stale tokens/webhooks; export includes settings/credential attribution without plaintext). Ensures package-owned deliveries are suppressed before egress via endpoint pause and package tokens cannot retain removed scopes. Exit deliverable: worker + service tests proving credentials revoked/paused on every ineligible transition, stale credentials reconciled after grant changes, existing hand-built lifecycle/update/health tests still green (null seam). Advances GA-DOD-08 (disable/uninstall/export).
 9. **Operator Integration UX — no-JS forms + browser/a11y** — Owns src/Controller/AdminPackageIntegrationController.php, templates/admin/_package_integration.php + package_detail.php Integration section, the new integration routes, tests/Integration/Core/AppPackageIntegrationTest.php (settings/credential forms, direct-POST denial, noindex, CSRF, reauth, flag-dark 404 including AppFeatureFlagTest additions), and tests/browser/package-integrations.spec.ts (no-JS settings save + one-time credential reveal + axe). Renders settings form from schema, permission/grant summary (data classes/scopes/events/hosts/jobs), credential panel by label/status (never plaintext post-reveal), provision/rotate/revoke/disable/export buttons, and copy that packages run remotely/declaratively only. Exit deliverable: HTTP + browser/axe evidence green. Advances GA-DOD-08 to R3/R4.
 10. **PublisherTrustService + publisher console** — Owns src/Service/Registry/PublisherTrustService.php, PublisherSigningKeyRepository usage, templates/admin/package_publisher.php, the publisher routes/actions on AdminPackageSecurityController, tests/Integration/Service/PublisherTrustServiceTest.php + publisher HTTP cases. Implements publisher verify/suspend/reinstate + signing-key pin/rotate(rb-key-rotation.v1 via TrustChainVerifier::verifyRotation)/revoke, reauth-gated, suspension cascading force-disable of the publisher's installs via PackageHealthService::enforcePolicy() + per-package transparency('force_disable'), audit target_type=publisher. Exit deliverable: service + HTTP tests proving key-status transitions, forged-rotation 422, suspension cascade, reauth preservation. Advances GA-DOD-09 (publisher/key lifecycle), maps Publisher-compromise scenario.
 11. **PackageReviewConsoleService — exact-digest review decisions** — Owns src/Service/Packages/PackageReviewConsoleService.php, the recordReview route/action, and tests/Integration/Service coverage. Displays signed review decisions cached by PackageAcquisitionService and records LOCAL manual decisions tied to package/release/version/digest/reviewer/evidence/timestamp; tightening-only (local approve refused with review_conflict when a signed reject/revoke exists), updates package_releases.review_status, writes transparency + audit. Exit deliverable: test proving decision provenance, exact-digest binding, tightening-only guard, transparency entry. Advances GA-DOD-09 (exact-digest maintainer review + manual approval).
@@ -1426,7 +1452,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 <!-- ===== group: sp0-secrets-hooks-retrofit — SP0 — service_secrets redaction/revoke/prune coverage + first_party_hooks private-content-absence proof ===== -->
 
-Based on my exploration of the actual `SecretVault`, `SecretBox`, first-party domain producers, the enforcement tests, and the `TestCase` helpers, here are the task blocks for group #3.
+The SP0 secrets and hook-hardening tasks below rely on the landed `SecretVault`, `SecretBox`, first-party domain producers, enforcement tests, and `TestCase` helpers.
 
 ---
 
@@ -2543,7 +2569,7 @@ EOF
       /** @return array<string,mixed>|null */
       public function findByApiToken(int $apiTokenId): ?array
       {
-          return $this->db->fetch('SELECT * FROM installed_package_credentials WHERE api_token_id = ?', [$apiTokenId]);
+          return $this->db->fetch('SELECT * FROM installed_package_credentials WHERE api_token_id = ? ORDER BY id DESC LIMIT 1', [$apiTokenId]);
       }
 
       /** @return array<string,mixed>|null */
@@ -3748,23 +3774,25 @@ Steps:
 
 ---
 
-> **Group #6 ownership & prerequisites.** This group owns the **API-token half** of the integration runtime. It **creates** `src/Service/Packages/PackageIntegrationService.php` (constructor + `isExecutionDisabled()` + the `api_token` paths of `provisionCredentials`/`rotateCredential`/`revokeCredential`); the **webhook-event-delivery group (#7)** and the **integration-runtime-core group** later *modify* this same file to add `overview()`, `onInstallIneligible()`, `suspend/resumeDelivery()`, and the webhook-minting branches. It **creates** `InstalledPackageCredentialRepository` with the shared + `api_token` methods; group #7 *modifies* it to add `insertWebhook`/`findByWebhook`. **Assumed already landed by earlier groups:** migration `0073` (tables `installed_package_credentials` + `installed_package_settings`; `package_history.event` widened with `credential_mint`/`credential_revoke`/`settings_update`) and `InstalledPackageSettingsRepository`. **Not in this group:** `App.php` container binds + route wiring (App-wiring/controllers groups) and the route-level `/admin/packages/{id}/integration/*` `404-while-dark` assertions in `AppFeatureFlagTest` (controllers group). This group proves flag-dark at the **service** layer (`service_secrets` off ⇒ fail-closed `ValidationException`). Every test constructs the service directly (no container).
+> **Group #6 ownership & prerequisites.** This group owns the **API-token half** of the integration runtime. It **creates** `src/Service/Packages/PackageIntegrationService.php` (constructor + `isExecutionDisabled()` + the `api_token` paths of `provisionCredentials`/`rotateCredential`/`revokeCredential`); the **webhook-event-delivery group (#7)** and the **integration-runtime-core group** later *modify* this same file to add `overview()`, `onInstallIneligible()`, `suspend/resumeDelivery()`, and the webhook-minting branches. It **consumes** the Task 18 `InstalledPackageCredentialRepository` full surface; if local drift left only the api-token subset, repair by adding the missing methods while preserving all existing api-token/webhook methods. **Assumed already landed by earlier groups:** migration `0073` (tables `installed_package_credentials` + `installed_package_settings`; `package_history.event` widened with `credential_mint`/`credential_revoke`/`settings_update`), `InstalledPackageSettingsRepository`, and the full `InstalledPackageCredentialRepository`. **Not in this group:** `App.php` container binds + route wiring (App-wiring/controllers groups) and the route-level `/admin/packages/{id}/integration/*` `404-while-dark` assertions in `AppFeatureFlagTest` (controllers group). This group proves flag-dark at the **service** layer (`service_secrets` off ⇒ fail-closed `ValidationException`). Every test constructs the service directly (no container).
 
-### Task 26: `InstalledPackageCredentialRepository` — api_token linkage
+### Task 26: `InstalledPackageCredentialRepository` — api_token linkage regression
 
 **Files:**
-- Create: `src/Repository/InstalledPackageCredentialRepository.php`
+- Modify: `src/Repository/InstalledPackageCredentialRepository.php` (verify/preserve the full Task 18 api_token + webhook surface; do not replace the file with a subset)
 - Test: `tests/Integration/Repository/InstalledPackageCredentialRepositoryTest.php`
 
 **Interfaces:**
 - Consumes: `Database::insert(string,array):int`, `Database::run(string,array):\PDOStatement` (→`->rowCount()`), `Database::fetch/fetchAll`, `InstalledPackageRepository::create(array):int`, `ApiTokenRepository::insert(string $name,string $hash,string $scopesJson,int $createdBy,?string $expiresAt):int`, `Tests\Support\Phase5\RegistryFixtures::seed(Database,SigningHarness,?string,array):array`.
-- Produces (LOCKED subset owned here):
+- Produces (LOCKED full surface after this task; webhook methods may already be present from Task 18 and must remain present):
   ```php
   public function forInstall(int $installedId): array;
   public function activeForInstall(int $installedId): array;
   public function find(int $id): ?array;
   public function findByApiToken(int $apiTokenId): ?array;
+  public function findByWebhook(int $webhookId): ?array;
   public function insertApiToken(int $installedId, int $apiTokenId, string $label, string $scopesJson, ?int $createdBy): int;
+  public function insertWebhook(int $installedId, int $webhookId, string $label, string $eventsJson, ?int $createdBy): int;
   public function markRevoked(int $id): int;      // idempotent; rowCount
   public function deleteFor(int $installedId): void;
   ```
@@ -3827,13 +3855,13 @@ Steps:
   }
   ```
 
-- [ ] **Step 2: Run it — expect RED (class missing).**
+- [ ] **Step 2: Run it.**
   ```bash
   vendor/bin/phpunit --filter test_api_token_link_round_trips_and_revoke_is_idempotent
   ```
-  Expected: `Error: Class "App\Repository\InstalledPackageCredentialRepository" not found`.
+  Expected: `OK` if Task 18 already landed. If it fails because a local branch has no repository or only a partial subset, continue to Step 3 and repair the class to the full locked surface; do not delete webhook methods.
 
-- [ ] **Step 3: Create the repository.** Write `src/Repository/InstalledPackageCredentialRepository.php`:
+- [ ] **Step 3: Repair/verify the repository without dropping methods.** If Step 2 exposed local drift, update `src/Repository/InstalledPackageCredentialRepository.php` so the class still contains every method in the locked surface. The implementation must include the webhook methods shown below as well as the api-token methods:
   ```php
   <?php
 
@@ -3878,7 +3906,13 @@ Steps:
       /** @return array<string,mixed>|null */
       public function findByApiToken(int $apiTokenId): ?array
       {
-          return $this->db->fetch('SELECT * FROM installed_package_credentials WHERE api_token_id = ?', [$apiTokenId]);
+          return $this->db->fetch('SELECT * FROM installed_package_credentials WHERE api_token_id = ? ORDER BY id DESC LIMIT 1', [$apiTokenId]);
+      }
+
+      /** @return array<string,mixed>|null */
+      public function findByWebhook(int $webhookId): ?array
+      {
+          return $this->db->fetch('SELECT * FROM installed_package_credentials WHERE webhook_id = ? ORDER BY id DESC LIMIT 1', [$webhookId]);
       }
 
       public function insertApiToken(int $installedId, int $apiTokenId, string $label, string $scopesJson, ?int $createdBy): int
@@ -3888,6 +3922,16 @@ Steps:
                   (installed_package_id, kind, api_token_id, webhook_id, label, scopes_json, events_json, created_by, created_at)
                VALUES (?, \'api_token\', ?, NULL, ?, ?, NULL, ?, UTC_TIMESTAMP())',
               [$installedId, $apiTokenId, $label, $scopesJson, $createdBy],
+          );
+      }
+
+      public function insertWebhook(int $installedId, int $webhookId, string $label, string $eventsJson, ?int $createdBy): int
+      {
+          return $this->db->insert(
+              'INSERT INTO installed_package_credentials
+                  (installed_package_id, kind, webhook_id, label, events_json, created_by, created_at)
+               VALUES (?, \'webhook\', ?, ?, ?, ?, UTC_TIMESTAMP())',
+              [$installedId, $webhookId, $label, $eventsJson, $createdBy],
           );
       }
 
@@ -3907,7 +3951,7 @@ Steps:
       }
   }
   ```
-  (The `kind='webhook'` methods `insertWebhook`/`findByWebhook` are added by the webhook-event-delivery group.)
+  Do not remove `insertWebhook()`/`findByWebhook()` when editing the api-token path. The later webhook-event-delivery group appends additional tests and uses these methods; it does not own a second replacement implementation.
 
 - [ ] **Step 4: Run it — expect GREEN.**
   ```bash
@@ -3919,7 +3963,7 @@ Steps:
   ```bash
   git add src/Repository/InstalledPackageCredentialRepository.php \
           tests/Integration/Repository/InstalledPackageCredentialRepositoryTest.php
-  git commit -m "feat(packages): add InstalledPackageCredentialRepository api_token linkage"
+  git commit -m "test(packages): verify InstalledPackageCredentialRepository api_token linkage"
   ```
 
 ### Task 27: `PackageIntegrationService::provisionCredentials` (api_token) + scope gating (TM-SC-08)
@@ -4163,6 +4207,28 @@ Steps:
           self::assertSame(1, $denied, 'the unknown scope is audited exactly once');
       }
 
+      public function test_repeated_provisioning_refuses_a_second_active_api_token(): void
+      {
+          [$admin, $installedId] = $this->enabledRemoteApp(['read:boards']);
+          $svc = $this->service();
+
+          $first = $svc->provisionCredentials($admin, 'password123', $installedId);
+          self::assertNotNull($first['api_token']);
+
+          $this->assertRefusal(
+              'credential_exists',
+              fn () => $svc->provisionCredentials($admin, 'password123', $installedId),
+          );
+          self::assertCount(
+              1,
+              array_values(array_filter(
+                  (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId),
+                  static fn (array $row): bool => (string) $row['kind'] === 'api_token',
+              )),
+              'exactly one active package-owned api_token link remains',
+          );
+      }
+
       public function test_ungranted_permission_blocks_provisioning_and_mints_nothing(): void
       {
           [$admin, $installedId] = $this->enabledRemoteApp(['read:boards'], ['read:threads']);
@@ -4323,11 +4389,14 @@ Steps:
           $scopes = $this->grantedApiScopes($installedId, (int) $install['package_id'], $admin);
 
           return $this->db->transaction(function () use ($admin, $currentPassword, $installedId, $install, $package, $scopes): array {
+              $this->lockInstallForCredentialProvision($installedId);
+
               $token = null;
               $credentials = [];
 
               // ≤1 api_token: only when the install actually grants a locally-supported scope.
               if ($scopes !== []) {
+                  $this->assertNoActiveCredential($installedId, 'api_token');
                   $label = $this->credentialLabel((string) $package['package_uid'], $installedId);
                   $minted = $this->apiTokens->mint($admin, $currentPassword, $label, $scopes, null);
                   $token = (string) $minted['token'];
@@ -4424,6 +4493,22 @@ Steps:
           // ApiTokenService caps names at 80 chars; keep the uid + install id inside that.
           return mb_substr('pkg:' . $packageUid . '#' . $installedId, 0, 80);
       }
+
+      private function lockInstallForCredentialProvision(int $installedId): void
+      {
+          // Serializes concurrent plain-form POSTs so the app-enforced
+          // "≤1 active credential per kind" invariant cannot race.
+          $this->db->fetch('SELECT id FROM installed_packages WHERE id = ? FOR UPDATE', [$installedId]);
+      }
+
+      private function assertNoActiveCredential(int $installedId, string $kind): void
+      {
+          foreach ($this->credentials->activeForInstall($installedId) as $cred) {
+              if ((string) $cred['kind'] === $kind) {
+                  throw new PackagePolicyException('credential_exists', 'This install already has an active ' . $kind . ' credential.');
+              }
+          }
+      }
   }
   ```
 
@@ -4431,7 +4516,7 @@ Steps:
   ```bash
   vendor/bin/phpunit tests/Integration/Service/PackageIntegrationServiceTest.php
   ```
-  Expected: `OK (7 tests, N assertions)`.
+  Expected: `OK (8 tests, N assertions)`.
 
 - [ ] **Step 5: Commit.**
   ```bash
@@ -4632,7 +4717,7 @@ Steps:
   ```bash
   vendor/bin/phpunit tests/Integration/Service/PackageIntegrationServiceTest.php
   ```
-  Expected: `OK (9 tests, N assertions)`.
+  Expected: `OK (10 tests, N assertions)`.
 
 - [ ] **Step 6: Commit.**
   ```bash
@@ -4656,7 +4741,7 @@ Steps:
   vendor/bin/phpunit tests/Integration/Service/PackageIntegrationServiceTest.php \
                      tests/Integration/Repository/InstalledPackageCredentialRepositoryTest.php
   ```
-  Expected: `OK (10 tests, …)`.
+  Expected: `OK (11 tests, …)`.
 
 - [ ] **Step 2: Flip `TM-SC-08` in `docs/phase5/threat-models/fixtures.json`.** Change the `TM-SC-08` object from `"status": "stub"` to `"status": "implemented"` and add `"test": "tests/Integration/Service/PackageIntegrationServiceTest.php::test_undeclared_or_unknown_scope_is_denied_and_audited_never_minted"`.
 
@@ -4665,9 +4750,9 @@ Steps:
 - [ ] **Step 4: Run the requirement-ledger + threat-model guards (JSON well-formedness + any ledger test).**
   ```bash
   php -r 'json_decode(file_get_contents("docs/phase5/requirement-ledger.json"), true, 512, JSON_THROW_ON_ERROR); json_decode(file_get_contents("docs/phase5/threat-models/fixtures.json"), true, 512, JSON_THROW_ON_ERROR); echo "json ok\n";'
-  vendor/bin/phpunit --filter 'RequirementLedger|ThreatModel' 2>/dev/null || true
+  vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php tests/Unit/Core/ThreatModelIndexTest.php
   ```
-  Expected: `json ok` (and any ledger/threat-model schema test green).
+  Expected: `json ok` and PHPUnit `OK`. This guard is not optional; do not redirect or mask failures.
 
 - [ ] **Step 5: Run the full suite once (no regressions) per DESIGN §13 / verification-before-completion.**
   ```bash
@@ -4683,14 +4768,179 @@ Steps:
 
 **Group deliverable:** an independently committable api-token provisioning slice — `InstalledPackageCredentialRepository` (api_token linkage) + `PackageIntegrationService::{provisionCredentials,rotateCredential,revokeCredential,isExecutionDisabled}` (api_token path) with integration tests proving one-time reveal, hash-only storage, human-token separation (scope-only `ApiPrincipal`, `created_by` provenance), TM-SC-08 unknown/ungranted-scope denial+audit, and `not_consented`/`invalid_state`/`execution_disabled`/`service_secrets`-dark fail-closed denials — advancing `GA-DOD-08` (scope) and flipping `TM-SC-08` to implemented.
 
+---
+
+### Task 30: Package-owned API token auth guard (emergency disable + install safety)
+
+**Files:**
+- Create: `src/Service/Packages/PackageCredentialAuthGuard.php`
+- Modify: `src/Service/ApiTokenService.php` (optional guard dependency + one authenticate-time check)
+- Modify: `src/Core/App.php` (bind guard and append to `ApiTokenService`)
+- Test: `tests/Integration/Service/PackageCredentialAuthGuardTest.php`
+
+**Interfaces:**
+- Consumes: `InstalledPackageCredentialRepository::findByApiToken(int): ?array`, `InstalledPackageRepository::find(int): ?array`, `PackageRepository::find(int): ?array`, `PackageReleaseRepository::find(int): ?array`, `PackageAdvisoryRepository::forPackage(int): array`, `LocalPackageBlockRepository::isBlocked(string, ?string): bool`, `RegistryAdvisoryService::blockingAdvisoryReason(...)`, `SettingRepository::getString(string,string): string`, `Config::get(string,mixed): mixed`.
+- Produces:
+  ```php
+  final class PackageCredentialAuthGuard
+  {
+      public function allowsApiToken(int $apiTokenId): bool;
+      public function isExecutionDisabled(): bool;
+  }
+  ```
+- Auth invariant: API tokens with no active `installed_package_credentials.kind='api_token'` link are human/admin or legacy tokens and pass through unchanged. Linked package-owned tokens fail closed when the credential is revoked/missing, execution is disabled, the install is not `enabled`, review state is not approved, the installed release/package cannot be resolved, or local/advisory blocking applies.
+
+**Steps:**
+
+- [ ] **Step 1: Write the failing guard/authentication tests.** Create `tests/Integration/Service/PackageCredentialAuthGuardTest.php` with one shared package-owned-token fixture from `PackageIntegrationServiceTest` and these cases:
+  ```php
+  public function test_package_owned_token_authenticates_while_link_and_install_are_safe(): void;
+  public function test_human_token_still_authenticates_when_package_execution_is_disabled(): void;
+  public function test_package_owned_token_is_denied_when_execution_is_disabled(): void;
+  public function test_package_owned_token_is_denied_after_credential_link_is_revoked(): void;
+  public function test_package_owned_token_is_denied_when_install_is_disabled_quarantined_or_uninstalled(): void;
+  public function test_package_owned_token_is_denied_when_review_local_block_or_advisory_is_unsafe(): void;
+  ```
+  The revoked-link case must mark only the `installed_package_credentials.revoked_at` row while leaving the raw `api_tokens.revoked_at` NULL, proving the guard denies package-owned auth by link state rather than relying only on token-table revocation. The test must authenticate through a real `ApiTokenService` that receives the guard, not by calling the guard directly for every case. Keep one direct `PackageCredentialAuthGuard::isExecutionDisabled()` assertion to prove DB setting and config break-glass both count.
+
+- [ ] **Step 2: Run it — expect FAIL (class missing / auth does not consult guard).**
+  ```bash
+  vendor/bin/phpunit tests/Integration/Service/PackageCredentialAuthGuardTest.php
+  ```
+  Expected: `PackageCredentialAuthGuard` missing first; after the class exists but before `ApiTokenService` is modified, the emergency-disable package-token test must fail because `authenticate()` still returns an `ApiPrincipal`.
+
+- [ ] **Step 3: Create `PackageCredentialAuthGuard`.** Implement fail-closed package-owned token checks and pass-through for non-package tokens:
+  ```php
+  <?php
+
+  declare(strict_types=1);
+
+  namespace App\Service\Packages;
+
+  use App\Core\Config;
+  use App\Repository\InstalledPackageCredentialRepository;
+  use App\Repository\InstalledPackageRepository;
+  use App\Repository\LocalPackageBlockRepository;
+  use App\Repository\PackageAdvisoryRepository;
+  use App\Repository\PackageReleaseRepository;
+  use App\Repository\PackageRepository;
+  use App\Repository\SettingRepository;
+  use App\Service\Registry\RegistryAdvisoryService;
+
+  final class PackageCredentialAuthGuard
+  {
+      public function __construct(
+          private InstalledPackageCredentialRepository $credentials,
+          private InstalledPackageRepository $installs,
+          private PackageRepository $packages,
+          private PackageReleaseRepository $releases,
+          private PackageAdvisoryRepository $advisories,
+          private LocalPackageBlockRepository $blocks,
+          private SettingRepository $settings,
+          private Config $config,
+      ) {
+      }
+
+      public function allowsApiToken(int $apiTokenId): bool
+      {
+          $link = $this->credentials->findByApiToken($apiTokenId);
+          if ($link === null) {
+              return true; // not package-owned
+          }
+          if ($link['revoked_at'] !== null) {
+              return false;
+          }
+          if ($this->isExecutionDisabled()) {
+              return false;
+          }
+
+          $install = $this->installs->find((int) $link['installed_package_id']);
+          if ($install === null || (string) $install['state'] !== 'enabled') {
+              return false;
+          }
+          if ((string) ($install['review_status'] ?? '') !== 'approved') {
+              return false;
+          }
+
+          $package = $this->packages->find((int) $install['package_id']);
+          if ($package === null) {
+              return false;
+          }
+          if (in_array((string) ($package['advisory_status'] ?? 'none'), ['blocked', 'revoked'], true)) {
+              return false;
+          }
+          if ($this->blocks->isBlocked((string) $install['digest'], (string) $package['package_uid'])) {
+              return false;
+          }
+
+          $release = $install['release_id'] !== null ? $this->releases->find((int) $install['release_id']) : null;
+          if ($release === null || (string) ($release['review_status'] ?? 'approved') !== 'approved') {
+              return false;
+          }
+          if (in_array((string) ($release['advisory_status'] ?? 'none'), ['blocked', 'revoked'], true)) {
+              return false;
+          }
+
+          $reason = RegistryAdvisoryService::blockingAdvisoryReason(
+              $this->advisories->forPackage((int) $install['package_id']),
+              ['force_disable', 'revoke'],
+              (string) $install['digest'],
+              (string) ($release['version'] ?? ''),
+          );
+
+          return $reason === null;
+      }
+
+      public function isExecutionDisabled(): bool
+      {
+          try {
+              if ($this->settings->getString('package_execution_disabled', '') === '1') {
+                  return true;
+              }
+          } catch (\Throwable) {
+              // fall through to config break-glass
+          }
+
+          return (bool) $this->config->get('packages.execution_disabled', false);
+      }
+  }
+  ```
+
+- [ ] **Step 4: Wire the guard into `ApiTokenService::authenticate()`.** Add `use App\Service\Packages\PackageCredentialAuthGuard;`, append a nullable constructor property, then consult it after the token hash row is found and before `touchLastUsed()` or any principal is returned:
+  ```php
+          private ?PackageCredentialAuthGuard $packageAuthGuard = null,
+  ```
+  ```php
+          if ($this->packageAuthGuard !== null && !$this->packageAuthGuard->allowsApiToken((int) $row['id'])) {
+              return null;
+          }
+  ```
+  This placement is important: denied package-owned tokens must not update `last_used_at`, and human tokens must not pay any package lookup cost unless the guard finds a credential link.
+
+- [ ] **Step 5: Bind the guard and append it to `ApiTokenService`.** In `src/Core/App.php`, bind `PackageCredentialAuthGuard::class` with the repositories/settings/config listed above, then append `$c->get(PackageCredentialAuthGuard::class)` as the last argument to the `ApiTokenService::class` bind. Existing hand-built tests may omit the optional arg.
+
+- [ ] **Step 6: Run to PASS.**
+  ```bash
+  vendor/bin/phpunit tests/Integration/Service/PackageCredentialAuthGuardTest.php \
+                     tests/Integration/Service/PackageIntegrationServiceTest.php
+  ```
+  Expected: `OK`. The guard test proves emergency disable now denies package-owned API-token auth even when the token hash itself remains valid; the integration test proves provisioning/rotation/revoke behavior did not regress.
+
+- [ ] **Step 7: Commit.**
+  ```bash
+  git add src/Service/Packages/PackageCredentialAuthGuard.php src/Service/ApiTokenService.php src/Core/App.php \
+          tests/Integration/Service/PackageCredentialAuthGuardTest.php
+  git commit -m "feat(packages): deny unsafe package-owned api token authentication"
+  ```
+
 
 <!-- ===== group: webhook-provisioning-event-gating — Package-owned webhook provisioning + event/outbound-host gating ===== -->
 
 ### Task 31: `installed_package_credentials` webhook linkage in the credential repository
 
 **Files:**
-- Modify: `src/Repository/InstalledPackageCredentialRepository.php` (add the two webhook-linkage methods)
-- Create: `tests/Integration/Service/PackageIntegrationServiceTest.php` (shared test scaffold + repo round-trip case)
+- Modify: `src/Repository/InstalledPackageCredentialRepository.php` (verify the two webhook-linkage methods exist; add only if local drift removed them)
+- Modify: `tests/Integration/Service/PackageIntegrationServiceTest.php` (append repo round-trip case to the Task 27 scaffold; do not replace the class)
 
 **Interfaces:**
 - Consumes: `App\Core\Database::insert(string,array):int`, `Database::fetch(string,array):?array`; the `installed_package_credentials` table shipped by migration `0073` (columns `installed_package_id, kind ENUM('api_token','webhook'), api_token_id, webhook_id, label, scopes_json, events_json, created_by, created_at, revoked_at`); the base repo methods `forInstall`, `activeForInstall`, `find`, `markRevoked`, `deleteFor` (already landed by the migration/repo group).
@@ -4701,81 +4951,8 @@ Steps:
   ```
 - Invariant enforced by these methods (asserted, no CHECK constraint): `kind='webhook'` ⇒ `webhook_id` NOT NULL and `api_token_id` NULL and `scopes_json` NULL.
 
-- [ ] **Step 1: Write the failing repo round-trip test.** Create `tests/Integration/Service/PackageIntegrationServiceTest.php` with the shared scaffold (seed a `remote_app` install) plus the first case:
+- [ ] **Step 1: Append the repo round-trip test.** Append this case to the existing `tests/Integration/Service/PackageIntegrationServiceTest.php` scaffold created by Task 27. If that file is missing, stop and run Task 27 first; do not recreate the file with only this case:
   ```php
-  <?php
-
-  declare(strict_types=1);
-
-  namespace Tests\Integration\Service;
-
-  use App\Core\ApiTokensDisabledException;
-  use App\Core\FeatureFlags;
-  use App\Core\ValidationException;
-  use App\Domain\User;
-  use App\Repository\ApiTokenRepository;
-  use App\Repository\InstalledPackageCredentialRepository;
-  use App\Repository\InstalledPackagePermissionRepository;
-  use App\Repository\InstalledPackageRepository;
-  use App\Repository\InstalledPackageSettingsRepository;
-  use App\Repository\ModerationLogRepository;
-  use App\Repository\PackageHistoryRepository;
-  use App\Repository\PackageReleaseRepository;
-  use App\Repository\PackageRepository;
-  use App\Repository\PackageTransparencyLogRepository;
-  use App\Repository\ServiceSecretRepository;
-  use App\Repository\SettingRepository;
-  use App\Repository\WebhookDeliveryRepository;
-  use App\Repository\WebhookRepository;
-  use App\Security\EgressGuard;
-  use App\Security\Packages\ManifestValidator;
-  use App\Security\Packages\PackagePolicyException;
-  use App\Security\PasswordHasher;
-  use App\Security\ReauthGate;
-  use App\Security\SecretBox;
-  use App\Security\WriteGate;
-  use App\Service\ApiTokenService;
-  use App\Service\Packages\PackageIntegrationService;
-  use App\Service\SecretVault;
-  use App\Service\WebhookService;
-  use Tests\Support\Phase5\RegistryFixtures;
-  use Tests\Support\Phase5\SigningHarness;
-  use Tests\Support\TestCase;
-
-  final class PackageIntegrationServiceTest extends TestCase
-  {
-      private User $admin;
-      /** @var array<string,mixed> */
-      private array $seeded;
-      private int $installId;
-
-      protected function setUp(): void
-      {
-          parent::setUp();
-          $this->admin = $this->userEntity($this->makeAdmin(['password' => 'password123']));
-          $root = SigningHarness::generate();
-          $this->seeded = RegistryFixtures::seed($this->db, $root, null, [
-              'type' => 'remote_app',
-              'trust_class' => 'reviewed_declarative',
-              'package_uid' => 'acme/inbox-sync',
-              'name' => 'Inbox Sync',
-          ]);
-          $installs = new InstalledPackageRepository($this->db);
-          $this->installId = $installs->create([
-              'package_id' => $this->seeded['package_id'],
-              'release_id' => $this->seeded['release_id'],
-              'digest' => $this->seeded['release_digest'],
-              'source_registry_id' => $this->seeded['registry_id'],
-              'publisher_id' => $this->seeded['publisher_id'],
-              'trust_class' => 'reviewed_declarative',
-              'review_status' => 'approved',
-              'compat_min' => null,
-              'compat_max' => null,
-              'installed_by' => $this->admin->id(),
-          ]);
-          $installs->setState($this->installId, 'enabled');
-      }
-
       public function test_insert_webhook_link_round_trips_and_holds_kind_invariant(): void
       {
           $webhookId = (new WebhookRepository($this->db))->insert('pkg-hook', 'https://hooks.acme.test/rb', '["topic.created"]', '', $this->admin->id());
@@ -4793,10 +4970,9 @@ Steps:
           self::assertNull($row['revoked_at']);
           self::assertContains($id, array_map(static fn (array $c): int => (int) $c['id'], $repo->activeForInstall($this->installId)));
       }
-  }
   ```
-- [ ] **Step 2: Run it and confirm the expected FAIL.** `vendor/bin/phpunit --filter test_insert_webhook_link_round_trips_and_holds_kind_invariant` → expect `Error: Call to undefined method App\Repository\InstalledPackageCredentialRepository::insertWebhook()`.
-- [ ] **Step 3: Implement `insertWebhook`.** Add to `InstalledPackageCredentialRepository` (leaves `api_token_id`/`scopes_json` at their NULL default, satisfying the webhook invariant):
+- [ ] **Step 2: Run it and confirm repository coverage.** `vendor/bin/phpunit --filter test_insert_webhook_link_round_trips_and_holds_kind_invariant` → expect `OK` if Task 18/26 left the full repository surface intact. If it fails with `Call to undefined method ...::insertWebhook()`, continue to Steps 3-4 to repair the missing methods without replacing the repository.
+- [ ] **Step 3: Implement `insertWebhook` only if missing.** Add to `InstalledPackageCredentialRepository` (leaves `api_token_id`/`scopes_json` at their NULL default, satisfying the webhook invariant):
   ```php
   public function insertWebhook(int $installedId, int $webhookId, string $label, string $eventsJson, ?int $createdBy): int
   {
@@ -4808,7 +4984,7 @@ Steps:
       );
   }
   ```
-- [ ] **Step 4: Implement `findByWebhook`.** Add the lookup (single-webhook, newest link wins):
+- [ ] **Step 4: Implement `findByWebhook` only if missing.** Add the lookup (single-webhook, newest link wins):
   ```php
   public function findByWebhook(int $webhookId): ?array
   {
@@ -4822,10 +4998,11 @@ Steps:
 - [ ] **Step 6: Commit.**
   ```bash
   git add src/Repository/InstalledPackageCredentialRepository.php tests/Integration/Service/PackageIntegrationServiceTest.php
-  git commit -m "feat(packages): add webhook linkage to installed_package_credentials repo
+  git commit -m "test(packages): verify webhook linkage on installed_package_credentials repo
 
-  insertWebhook/findByWebhook back package-owned webhook credentials; kind='webhook'
-  rows keep api_token_id/scopes_json NULL. Scaffolds PackageIntegrationServiceTest.
+  Verifies insertWebhook/findByWebhook for package-owned webhook credentials;
+  kind='webhook' rows keep api_token_id/scopes_json NULL. Appends to the
+  cumulative PackageIntegrationServiceTest without replacing its scaffold.
 
   Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
   ```
@@ -4963,6 +5140,29 @@ Steps:
       self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($this->installId));
   }
 
+  public function test_repeated_provisioning_refuses_a_second_active_webhook(): void
+  {
+      $this->grant([], ['topic.created'], ['hooks.acme.test']);
+      $this->setUrl('https://hooks.acme.test/rb');
+
+      $first = $this->integration()->provisionCredentials($this->admin, 'password123', $this->installId);
+      self::assertIsString($first['webhook_secret']);
+
+      try {
+          $this->integration()->provisionCredentials($this->admin, 'password123', $this->installId);
+          self::fail('expected credential_exists refusal');
+      } catch (PackagePolicyException $e) {
+          self::assertSame('credential_exists', $e->code);
+      }
+      self::assertCount(
+          1,
+          array_values(array_filter(
+              (new InstalledPackageCredentialRepository($this->db))->activeForInstall($this->installId),
+              static fn (array $row): bool => (string) $row['kind'] === 'webhook',
+          )),
+      );
+  }
+
   public function test_provision_is_all_or_nothing_for_the_caller(): void
   {
       // service_secrets off: guard fires before any mint -> caller gets nothing at all.
@@ -5053,6 +5253,7 @@ Steps:
       if ($host === '' || (!in_array($host, $allowed, true) && ($testOrigin === '' || $host !== $testOrigin))) {
           throw new ValidationException([self::WEBHOOK_URL_SETTING => 'Destination host is not a granted outbound host.']);
       }
+      $this->assertNoActiveCredential($installedId, 'webhook');
 
       $label = 'pkg:' . (string) $package['package_uid'] . '#' . $installedId;
       $result = $this->webhooks->register($admin, $currentPassword, $label, $url, $events);
@@ -5306,7 +5507,7 @@ Steps:
   }
   ```
   (Merge with the api-token task's branch — one loop, do not duplicate.)
-- [ ] **Step 7: Run to PASS.** `vendor/bin/phpunit --filter PackageIntegrationServiceTest` → expect `OK (10 tests, …)`, then `composer test` to confirm the lifecycle-hook wiring and `WebhookServiceTest` stay green.
+- [ ] **Step 7: Run to PASS.** `vendor/bin/phpunit --filter PackageIntegrationServiceTest` → expect `OK (... tests, N assertions)`, then `composer test` to confirm the lifecycle-hook wiring and `WebhookServiceTest` stay green.
 - [ ] **Step 8: Flip the threat-model fixture.** In `docs/phase5/threat-models/fixtures.json` change the `TM-SC-08` row from `"status": "stub"` to `"status": "implemented", "test": "tests/Integration/Service/PackageIntegrationServiceTest.php"`.
 - [ ] **Step 9: Advance the requirement ledger.** In `docs/phase5/requirement-ledger.json` update `GA-DOD-08` from `"state": "R1", "evidence": []` to `"state": "R3", "evidence": ["tests/Integration/Service/PackageIntegrationServiceTest.php"]` (scope/outage coverage; final R4 lands with the controller/browser groups).
 - [ ] **Step 10: Commit the deliverable.**
@@ -5325,7 +5526,7 @@ Steps:
 
 <!-- ===== group: credential-cleanup-lifecycle — Disable/uninstall/export credential cleanup + lifecycle hook wiring ===== -->
 
-Based on my analysis of the actual repo (verified the `themes?->onInstallIneligible` mirror pattern at `PackageLifecycleService.php:334/450` and `PackageHealthService.php:207/268`, the trailing-nullable seam in both constructors, the two container binds at `App.php:1335/1368`, the raw revoke paths `ApiTokenRepository::revoke`/`WebhookRepository::disable`/`findById`, the export pattern at `AdminPackageLifecycleController.php:236`, and the `AppFeatureFlagTest` dark-route array at line 209), here is task group #8:
+The lifecycle-hook group uses the existing `themes?->onInstallIneligible` mirror pattern, the trailing-nullable constructor seams, the raw revoke paths in the token/webhook repositories, the lifecycle export pattern, and the existing `AppFeatureFlagTest` dark-route matrix.
 
 ---
 
@@ -5480,25 +5681,28 @@ Steps:
 
 ---
 
-### Task 37: Wire the teardown hook into every ineligible transition (disable / uninstall / quarantine / force-disable)
+### Task 37: Wire teardown + grant reconciliation into lifecycle, health, and update paths
 
-Appends the nullable `?PackageIntegrationService $integrations` seam to `PackageLifecycleService` and `PackageHealthService` (exactly like the existing `?ThemeStateService` seam), calls `onInstallIneligible` **before** state flips inactive in `disable()`/`uninstall()` and **alongside** the theme hook in `quarantine()`/`securityDisable()`, and appends the collaborator to the two container binds. Cross-service tests prove each transition revokes tokens + pauses webhooks; the existing hand-built lifecycle/health tests stay green because they pass `null` for the new seam.
+Appends the nullable `?PackageIntegrationService $integrations` seam to `PackageLifecycleService`, `PackageHealthService`, and `PackageUpdateService`. Lifecycle/health calls `onInstallIneligible` inside the same transaction immediately before state flips inactive. Update/rollback calls `onGrantsChanged` inside the same activation transaction immediately after `replaceWithGrants()` changes the permission rows. Cross-service tests prove each ineligible transition revokes tokens + pauses webhooks, and that update/rollback permission reductions revoke only stale credentials before the new grant set can be used. Existing hand-built lifecycle/health/update tests stay green because they pass `null` for the new seam.
 
 **Files:**
 - Modify: `src/Service/Packages/PackageLifecycleService.php` (constructor param + 2 call sites)
 - Modify: `src/Service/Packages/PackageHealthService.php` (constructor param + 2 call sites)
-- Modify: `src/Core/App.php` (append `$c->get(PackageIntegrationService::class)` to the `PackageLifecycleService` and `PackageHealthService` binds)
-- Test: `tests/Integration/Service/PackageIntegrationServiceTest.php` (append `healthWith()` builder + 4 cross-service tests)
-- Test (verify-green, no edit): `tests/Integration/Service/PackageLifecycleServiceTest.php`, `tests/Integration/Worker/PackageHealthWorkerTest.php`
+- Modify: `src/Service/Packages/PackageUpdateService.php` (constructor param + update/rollback activation hook)
+- Modify: `src/Service/Packages/PackageIntegrationService.php` (`onGrantsChanged` + no-audit granted-scope/event/host helpers)
+- Modify: `src/Core/App.php` (append `$c->get(PackageIntegrationService::class)` to the `PackageLifecycleService`, `PackageUpdateService`, and `PackageHealthService` binds)
+- Test: `tests/Integration/Service/PackageIntegrationServiceTest.php` (append `healthWith()`/`updateWith()` builders + 6 cross-service tests)
+- Test (verify-green, no edit): `tests/Integration/Service/PackageLifecycleServiceTest.php`, `tests/Integration/Worker/PackageHealthWorkerTest.php`, existing `PackageUpdateService` tests
 
 **Interfaces:**
-- Consumes: `PackageIntegrationService::onInstallIneligible(int, string, ?int): void` (Task 36); existing private `PackageHealthService::quarantine`/`securityDisable`; the existing lifecycle `disable`/`uninstall`.
+- Consumes: `PackageIntegrationService::onInstallIneligible(int, string, ?int): void` (Task 36); `PackageIntegrationService::onGrantsChanged(int, string, ?int): int`; existing private `PackageHealthService::quarantine`/`securityDisable`; existing lifecycle `disable`/`uninstall`; existing update/rollback path where `PackageUpdateService` replaces granted permission rows.
 - Produces (constructor deltas — appended as the last param, all trailing params already optional so existing callers stay valid):
   ```php
   // PackageLifecycleService::__construct( … , ?Telemetry $telemetry = null, ?ThemeStateService $themes = null, ?PackageIntegrationService $integrations = null )
   // PackageHealthService::__construct(    … , ?Telemetry $telemetry = null, ?ThemeStateService $themes = null, ?PackageIntegrationService $integrations = null )
+  // PackageUpdateService::__construct(    … , ?PackageIntegrationService $integrations = null )
   ```
-- Both services live in `App\Service\Packages`, same namespace as `PackageIntegrationService`, so **no `use` import is required** in either service file.
+- These services live in `App\Service\Packages`, same namespace as `PackageIntegrationService`, so **no `use` import is required** for the seam type.
 
 Steps:
 
@@ -5524,7 +5728,7 @@ Steps:
       );
   }
   ```
-  Then a small assertion helper and the four transition tests (disable + uninstall exercise the real container-wired lifecycle service the provisioning fixture builds as `$this->lifecycle()`; quarantine + force-disable drive the worker paths):
+  Then a small assertion helper and the six transition/reconciliation tests (disable + uninstall exercise the real container-wired lifecycle service the provisioning fixture builds as `$this->lifecycle()`; quarantine + force-disable drive the worker paths; update/rollback exercise `PackageUpdateService` after it replaces grants):
   ```php
   private function assertCredentialsToreDown(int $tokenId, int $hookId): void
   {
@@ -5580,14 +5784,51 @@ Steps:
 
       $this->assertCredentialsToreDown($ids['api_token_id'], $ids['webhook_id']);
   }
+
+  public function test_update_permission_reduction_revokes_token_with_removed_scope(): void
+  {
+      $svc = $this->service();
+      $installedId = $this->integrableInstallWithReleasePermissions([
+          ['kind' => 'api_scope', 'key' => 'read:boards'],
+          ['kind' => 'api_scope', 'key' => 'read:threads'],
+      ]);
+      $ids = $this->provisionVia($svc, $installedId);
+
+      $targetReleaseId = $this->releaseForSamePackageWithPermissions($installedId, [
+          ['kind' => 'api_scope', 'key' => 'read:boards'],
+      ]);
+      $this->updateWith($svc)->update($this->admin(), 'password123', $installedId, $targetReleaseId);
+
+      self::assertNotNull((new ApiTokenRepository($this->db))->findById($ids['api_token_id'])['revoked_at']);
+      self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+  }
+
+  public function test_update_permission_reduction_revokes_webhook_with_removed_event_or_host(): void
+  {
+      $svc = $this->service();
+      $installedId = $this->integrableInstallWithReleasePermissions([
+          ['kind' => 'event', 'key' => 'topic.created'],
+          ['kind' => 'outbound_host', 'key' => 'hooks.acme.test'],
+      ]);
+      $ids = $this->provisionVia($svc, $installedId);
+
+      $targetReleaseId = $this->releaseForSamePackageWithPermissions($installedId, [
+          ['kind' => 'event', 'key' => 'topic.created'],
+          ['kind' => 'outbound_host', 'key' => 'other.example'],
+      ]);
+      $this->updateWith($svc)->update($this->admin(), 'password123', $installedId, $targetReleaseId);
+
+      self::assertSame(0, (int) (new WebhookRepository($this->db))->findById($ids['webhook_id'])['is_active']);
+      self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+  }
   ```
-  `$this->lifecycle(PackageIntegrationService $i): PackageLifecycleService` is a fixture builder the provisioning task provides; if it does not yet accept the seam, extend it to pass `$i` as the trailing arg in the same step.
+  `$this->lifecycle(PackageIntegrationService $i): PackageLifecycleService` and `$this->updateWith(PackageIntegrationService $i): PackageUpdateService` are fixture builders the provisioning/update tests provide; if either does not yet accept the seam, extend it to pass `$i` as the trailing arg in the same step.
 
 - [ ] **Step 2: Run — expect FAIL (seam not injected yet).**
   ```bash
-  vendor/bin/phpunit --filter 'tears_down_package_credentials' tests/Integration/Service/PackageIntegrationServiceTest.php
+  vendor/bin/phpunit --filter 'tears_down_package_credentials|permission_reduction_revokes' tests/Integration/Service/PackageIntegrationServiceTest.php
   ```
-  Expected: 4 failures — token `revoked_at` is `null` / webhook `is_active` is `1`, because the lifecycle/health services still receive `null` for `$integrations` and never call the hook.
+  Expected: 6 failures — token `revoked_at` is `null`, webhook `is_active` is `1`, or stale credentials remain active after update, because lifecycle/health/update services still receive `null` for `$integrations` and never call the hooks.
 
 - [ ] **Step 3: Add the seam to `PackageLifecycleService`.** In `src/Service/Packages/PackageLifecycleService.php`, append the constructor param after `?ThemeStateService $themes = null,`:
   ```php
@@ -5595,25 +5836,25 @@ Steps:
           private ?PackageIntegrationService $integrations = null,
   ```
 
-- [ ] **Step 4: Call the hook before `disable()` flips state.** In `disable()`, insert the call immediately **before** the `$this->db->transaction(...)` that sets state to `disabled` (so credentials die before the install goes inactive, per design §"revokes the token before any package state is marked inactive"):
+- [ ] **Step 4: Call the hook inside the `disable()` transaction before state flips.** In `disable()`, insert the call as the first write inside the existing `$this->db->transaction(...)` that sets state to `disabled`. This preserves the design rule "revokes the token before any package state is marked inactive" while keeping teardown + state transition atomic:
   ```php
           $package = $this->packages->find((int) $install['package_id']);
 
-          // Revoke package-owned credentials + pause delivery BEFORE the state flips inactive.
-          $this->integrations?->onInstallIneligible($installedId, 'disabled', $admin->id());
-
           $this->db->transaction(function () use ($install, $installedId, $admin): void {
+              // Revoke package-owned credentials + pause delivery in the same transaction,
+              // immediately before the state flips inactive.
+              $this->integrations?->onInstallIneligible($installedId, 'disabled', $admin->id());
               $this->installs->setState($installedId, 'disabled');
   ```
 
-- [ ] **Step 5: Call the hook before `uninstall()` flips state.** In `uninstall()`, insert the call immediately **before** the `$export = $this->db->transaction(...)` block that disables + marks uninstalled:
+- [ ] **Step 5: Call the hook inside the `uninstall()` transaction before state flips.** In `uninstall()`, insert the call as the first write inside the existing `$export = $this->db->transaction(...)` block that disables + marks uninstalled:
   ```php
           $retentionDays = $this->retentionDaysFor($install);
 
-          // Tear down package-owned credentials before the install transitions to uninstalled.
-          $this->integrations?->onInstallIneligible($installedId, 'uninstalled', $admin->id());
-
           $export = $this->db->transaction(function () use ($install, $installedId, $package, $admin, $retentionDays): array {
+              // Tear down package-owned credentials in the same transaction,
+              // immediately before the install transitions to uninstalled.
+              $this->integrations?->onInstallIneligible($installedId, 'uninstalled', $admin->id());
   ```
 
 - [ ] **Step 6: Add the seam to `PackageHealthService`.** In `src/Service/Packages/PackageHealthService.php`, append the constructor param after `?ThemeStateService $themes = null,`:
@@ -5622,57 +5863,152 @@ Steps:
           private ?PackageIntegrationService $integrations = null,
   ```
 
-- [ ] **Step 7: Call the hook alongside the theme hook in `quarantine()` and `securityDisable()`.** In `quarantine()`, next to the existing `$this->themes?->onInstallIneligible((int) $install['id'], 'quarantined: ' . $reason);` line, add:
+- [ ] **Step 7: Call the health hook inside the same transaction before `setStateIfCurrent()`.** In `PackageHealthService::quarantine()` and `securityDisable()`, add the integration hook at the top of the existing transaction, immediately before the compare-and-set state flip. Do not add it after the transaction beside the theme hook; that would leave a committed inactive install with still-active credentials if the hook fails.
   ```php
-          $this->integrations?->onInstallIneligible((int) $install['id'], 'quarantined', null);
+      private function securityDisable(array $install, string $reason): bool
+      {
+          $changed = $this->db->transaction(function () use ($install, $reason): bool {
+              $this->integrations?->onInstallIneligible((int) $install['id'], 'force_disabled', null);
+              if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'disabled')) {
+                  return false;
+              }
+              // existing history/transparency/audit writes stay here
   ```
-  In `securityDisable()`, next to `$this->themes?->onInstallIneligible((int) $install['id'], 'force_disabled: ' . $reason);`, add:
   ```php
-          $this->integrations?->onInstallIneligible((int) $install['id'], 'force_disabled', null);
+      private function quarantine(array $install, string $reason): bool
+      {
+          $changed = $this->db->transaction(function () use ($install, $reason): bool {
+              $this->integrations?->onInstallIneligible((int) $install['id'], 'quarantined', null);
+              if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'quarantined')) {
+                  return false;
+              }
+              // existing health/history/transparency/audit writes stay here
   ```
+  Keep the existing `$this->themes?->onInstallIneligible(...)` line where it already is unless the theme service is independently changed to be transaction-safe.
 
-- [ ] **Step 8: Append the collaborator to the two container binds.** In `src/Core/App.php`, in the `PackageLifecycleService::class` bind add a line after `$c->get(ThemeStateService::class),`:
+- [ ] **Step 8: Implement `PackageIntegrationService::onGrantsChanged`.** This hook is called after permission rows are replaced. It revokes only active credentials whose recorded scopes/events/host are no longer a subset of the current grants:
+  ```php
+  public function onGrantsChanged(int $installedId, string $reason, ?int $actorId): int
+  {
+      $install = $this->installs->find($installedId);
+      if ($install === null) {
+          return 0;
+      }
+
+      $allowedScopes = array_flip($this->currentGrantedApiScopes($installedId));
+      $allowedEvents = array_flip($this->currentGrantedEvents($installedId));
+      $allowedHosts = array_flip($this->currentGrantedOutboundHosts($installedId));
+      $revoked = 0;
+
+      foreach ($this->credentials->activeForInstall($installedId) as $cred) {
+          $stale = false;
+          if ((string) $cred['kind'] === 'api_token') {
+              $scopes = $this->decodeList($cred['scopes_json'] ?? null);
+              $stale = array_diff($scopes, array_keys($allowedScopes)) !== [];
+              if ($stale && $cred['api_token_id'] !== null) {
+                  $this->apiTokenRepo->revoke((int) $cred['api_token_id']);
+              }
+          } elseif ((string) $cred['kind'] === 'webhook') {
+              $events = $this->decodeList($cred['events_json'] ?? null);
+              $stale = array_diff($events, array_keys($allowedEvents)) !== [];
+              if (!$stale && $cred['webhook_id'] !== null) {
+                  $hook = $this->webhookRepo->findById((int) $cred['webhook_id']);
+                  $host = $hook !== null ? (string) parse_url((string) $hook['url'], PHP_URL_HOST) : '';
+                  $stale = $host === '' || !isset($allowedHosts[strtolower($host)]);
+              }
+              if ($stale && $cred['webhook_id'] !== null) {
+                  $this->webhookRepo->disable((int) $cred['webhook_id'], substr('Package grant changed: ' . $reason, 0, 190));
+              }
+          }
+
+          if ($stale && $this->credentials->markRevoked((int) $cred['id']) === 1) {
+              $revoked++;
+              $this->history->record([
+                  'package_id' => (int) $install['package_id'],
+                  'installed_package_id' => $installedId,
+                  'event' => 'credential_revoke',
+                  'actor_id' => $actorId,
+                  'detail' => json_encode(['kind' => (string) $cred['kind'], 'credential_id' => (int) $cred['id'], 'reason' => $reason], JSON_UNESCAPED_SLASHES),
+              ]);
+          }
+      }
+
+      return $revoked;
+  }
+
+  /** @return list<string> */
+  private function currentGrantedApiScopes(int $installedId): array
+  {
+      $scopes = [];
+      foreach ($this->permissions->forInstall($installedId) as $row) {
+          if ((string) $row['kind'] === 'api_scope' && (int) $row['declared'] === 1 && (int) $row['granted'] === 1 && ApiScopes::isValid((string) $row['permission_key'])) {
+              $scopes[] = (string) $row['permission_key'];
+          }
+      }
+      return array_values(array_unique($scopes));
+  }
+  ```
+  Add matching `currentGrantedEvents()` and `currentGrantedOutboundHosts()` helpers using the webhook provisioning task's event/host validation rules, and a small `decodeList()` helper that returns `[]` on invalid JSON. Reuse existing helpers if they already exist, but make sure this path does not emit `package_scope_denied` audit rows; reconciliation is not an admin scope-denial event.
+
+- [ ] **Step 9: Add the seam to `PackageUpdateService` and call `onGrantsChanged` inside `activate()`.** Append the nullable constructor property after `?Telemetry $telemetry = null,`:
+  ```php
+          private ?Telemetry $telemetry = null,
+          private ?PackageIntegrationService $integrations = null,
+  ```
+  Then, in the private `activate()` transaction, call the hook immediately after `replaceWithGrants()` and before history/transparency writes:
+  ```php
+              $this->permissions->replaceWithGrants($installedId, $rows, $admin->id());
+              $this->integrations?->onGrantsChanged($installedId, $event . ':grants_changed', $admin->id());
+  ```
+  This keeps update/rollback, grant replacement, and credential revocation atomic. If the hook throws, the release activation and permission replacement roll back with it.
+
+- [ ] **Step 10: Append the collaborator to the three container binds.** In `src/Core/App.php`, add `$c->get(PackageIntegrationService::class)` as the trailing arg for `PackageLifecycleService`, `PackageUpdateService`, and `PackageHealthService`:
   ```php
               $c->get(ThemeStateService::class),
               $c->get(PackageIntegrationService::class),
           ));
   ```
-  Do the same in the `PackageHealthService::class` bind (after its `$c->get(ThemeStateService::class),`). `PackageIntegrationService::class` is already imported + bound by the provisioning task; there is no dependency cycle (neither injects the other back).
+  For `PackageUpdateService`, append it after `$c->get(Telemetry::class),`. `PackageIntegrationService::class` is already imported + bound by the provisioning task; there is no dependency cycle.
 
-- [ ] **Step 9: Run the cross-service tests — expect PASS.**
+- [ ] **Step 11: Run the cross-service tests — expect PASS.**
   ```bash
-  vendor/bin/phpunit --filter 'tears_down_package_credentials' tests/Integration/Service/PackageIntegrationServiceTest.php
+  vendor/bin/phpunit --filter 'tears_down_package_credentials|permission_reduction_revokes' tests/Integration/Service/PackageIntegrationServiceTest.php
   ```
-  Expected: `OK (4 tests, N assertions)`.
+  Expected: `OK (6 tests, N assertions)`.
 
-- [ ] **Step 10: Prove the null seam keeps the hand-built lifecycle/health suites green.** These tests build both services positionally and stop before the new optional param, so they must pass unchanged:
+- [ ] **Step 12: Prove the null seam keeps the hand-built lifecycle/health/update suites green.** These tests build services positionally and stop before the new optional param, so they must pass unchanged:
   ```bash
-  vendor/bin/phpunit tests/Integration/Service/PackageLifecycleServiceTest.php tests/Integration/Worker/PackageHealthWorkerTest.php tests/Integration/Service/PackageUninstallTest.php
+  vendor/bin/phpunit tests/Integration/Service/PackageLifecycleServiceTest.php \
+                     tests/Integration/Worker/PackageHealthWorkerTest.php \
+                     tests/Integration/Service/PackageUninstallTest.php \
+                     tests/Integration/Service/PackageUpdateServiceTest.php
   ```
-  Expected: `OK` for all three (the appended trailing `?PackageIntegrationService = null` default is used).
+  Expected: `OK` for all four (the appended trailing `?PackageIntegrationService = null` default is used outside container-built paths).
 
-- [ ] **Step 11: Commit.**
+- [ ] **Step 13: Commit.**
   ```bash
-  git add src/Service/Packages/PackageLifecycleService.php src/Service/Packages/PackageHealthService.php src/Core/App.php tests/Integration/Service/PackageIntegrationServiceTest.php
-  git commit -m "feat(packages): tear down package credentials on disable/uninstall/quarantine/force-disable"
+  git add src/Service/Packages/PackageLifecycleService.php src/Service/Packages/PackageHealthService.php \
+          src/Service/Packages/PackageUpdateService.php src/Service/Packages/PackageIntegrationService.php \
+          src/Core/App.php tests/Integration/Service/PackageIntegrationServiceTest.php
+  git commit -m "feat(packages): reconcile package credentials on lifecycle and grant changes"
   ```
 
 ---
 
 ### Task 38: `exportSettings` — redacted settings + credential attribution download (no plaintext)
 
-Implements the `AdminPackageIntegrationController::exportSettings` action: a CSRF-protected POST that returns a downloadable JSON snapshot of the install's non-secret setting values, secret-field `has_value` flags (never plaintext), and credential attribution (id/kind/label/status/scopes/events/timestamps — never a token or webhook secret). Mirrors the existing `AdminPackageLifecycleController::export` download shape. Advances GA-DOD-08 (export).
+Locks the `AdminPackageIntegrationController::exportSettings` behavior: a CSRF-protected POST that returns a downloadable JSON snapshot of the install's non-secret setting values, secret-field `has_value` flags (never plaintext), and credential attribution (id/kind/label/status/scopes/events/timestamps — never a token or webhook secret). Mirrors the existing `AdminPackageLifecycleController::export` download shape. Advances GA-DOD-08 (export). **Execution order:** Task 42 owns controller creation. If executing this task before Task 42, add the tests now, carry the implementation body below into Task 42, and return here for the PASS run after Task 42 lands.
 
 **Files:**
-- Modify: `src/Controller/AdminPackageIntegrationController.php` (implement the `exportSettings` action; the class + sibling actions + routes land in the earlier integration-controller task)
+- Modify: `src/Controller/AdminPackageIntegrationController.php` (use the exact `exportSettings` body below when Task 42 creates the controller; do not add a competing reduced export implementation)
 - Test: `tests/Integration/Core/AppPackageIntegrationTest.php` (append full-kernel redaction + flag-dark tests)
 - Test: `tests/Integration/Core/AppFeatureFlagTest.php` (add the export route to the `package_registry`-dark list)
 - Test: `tests/browser/package-integrations.spec.ts` (no-JS export + axe evidence)
 
 **Interfaces:**
-- Consumes (implemented by earlier tasks): `PackageIntegrationService::overview(int $installedId): array` (already redacted — `credentials:list<{id,kind,label,status,scopes,events,created_at,revoked_at}>`, `settings_summary`, `granted_scopes`, `granted_events`); `PackageSettingsService::describe(int $installedId): array` (`fields`, `values`, `has_secret:array<string,bool>` — secrets report `has_value`, never plaintext); base `Controller` helpers `requireAdmin()`, `gate()`, `noindex()`, `requireInstallRow()`; `Response::json(mixed,int)` + `Response::header(string,string)`.
+- Consumes (implemented by earlier tasks): `PackageIntegrationService::overview(int $installedId): array` (already redacted — `credentials:list<{id,kind,label,status,scopes,events,created_at,revoked_at}>`, `settings_summary`, `granted_scopes`, `granted_events`); `PackageSettingsService::describe(int $installedId): array` (`fields`, `values`, `has_secret:array<string,bool>` — secrets report `has_value`, never plaintext); base `Controller` helpers `requireAdmin()`, `gate()`, `noindex()`, `requireIntegrationInstall()`; `Response::json(mixed,int)` + `Response::header(string,string)`.
 - Produces: `AdminPackageIntegrationController::exportSettings(Request $request, array $params): Response` returning `Response::json($export)` with `Content-Disposition: attachment`.
-- Route (registered by the earlier routes task): `POST /admin/packages/{id}/integration/export` → `[AdminPackageIntegrationController::class, 'exportSettings']`.
+- Route (registered by Task 42): `POST /admin/packages/{id}/integration/export` → `[AdminPackageIntegrationController::class, 'exportSettings']`.
 
 Steps:
 
@@ -5687,8 +6023,8 @@ Steps:
       $response = $this->post('/admin/packages/' . $packageId . '/integration/export', []);
 
       self::assertSame(200, $response->status());
-      self::assertStringContainsString('application/json', $response->headers()['Content-Type'] ?? '');
-      self::assertStringContainsString('attachment', $response->headers()['Content-Disposition'] ?? '');
+      self::assertStringContainsString('application/json', $response->getHeader('content-type'));
+      self::assertStringContainsString('attachment', $response->getHeader('content-disposition'));
 
       $body = $response->body();
       $export = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
@@ -5720,10 +6056,11 @@ Steps:
   /** @param array<string,string> $params */
   public function exportSettings(Request $request, array $params): Response
   {
+      $this->gate();
       $this->requireAdmin();
       $this->gate();
       $packageId = (int) ($params['id'] ?? 0);
-      $install = $this->requireInstallRow($packageId);
+      $install = $this->requireIntegrationInstall($packageId);
       $installedId = (int) $install['id'];
 
       $overview = $this->integrations()->overview($installedId);
@@ -6200,6 +6537,7 @@ final class AdminPackageIntegrationController extends Controller
     /** @param array<string,string> $params */
     public function saveSettings(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $packageId = (int) ($params['id'] ?? 0);
@@ -6221,6 +6559,7 @@ final class AdminPackageIntegrationController extends Controller
     /** @param array<string,string> $params */
     public function provision(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $packageId = (int) ($params['id'] ?? 0);
@@ -6239,6 +6578,7 @@ final class AdminPackageIntegrationController extends Controller
     /** @param array<string,string> $params */
     public function rotateCredential(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $packageId = (int) ($params['id'] ?? 0);
@@ -6258,6 +6598,7 @@ final class AdminPackageIntegrationController extends Controller
     /** @param array<string,string> $params */
     public function revokeCredential(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $packageId = (int) ($params['id'] ?? 0);
@@ -6275,6 +6616,7 @@ final class AdminPackageIntegrationController extends Controller
     /** Friction-free defensive pause of all package-owned delivery — no reauth. @param array<string,string> $params */
     public function disableIntegration(Request $request, array $params): Response
     {
+        $this->gate();
         $this->requireAdmin();
         $this->gate();
         $packageId = (int) ($params['id'] ?? 0);
@@ -6287,13 +6629,28 @@ final class AdminPackageIntegrationController extends Controller
     /** @param array<string,string> $params */
     public function exportSettings(Request $request, array $params): Response
     {
+        $this->gate();
         $this->requireAdmin();
         $this->gate();
         $packageId = (int) ($params['id'] ?? 0);
         $install = $this->requireIntegrationInstall($packageId);
+        $installedId = (int) $install['id'];
 
-        // describe() reports secret fields as has_value only — never plaintext.
-        $export = $this->settings()->describe((int) $install['id']);
+        $overview = $this->integrations()->overview($installedId);
+        $described = $this->settings()->describe($installedId);
+        $export = [
+            'exported_at' => gmdate('c'),
+            'package_uid' => $overview['settings_summary']['package_uid'] ?? null,
+            'type' => $overview['type'],
+            'granted_scopes' => $overview['granted_scopes'],
+            'granted_events' => $overview['granted_events'],
+            'settings' => [
+                'values' => $described['values'],
+                'has_secret' => $described['has_secret'],
+            ],
+            'credentials' => $overview['credentials'],
+        ];
+
         return $this->noindex(
             Response::json($export)
                 ->header('Content-Disposition', 'attachment; filename="package-integration-' . $packageId . '.json"'),
@@ -7004,7 +7361,7 @@ final class PublisherTrustService
             throw new ValidationException(['reason' => 'A suspension reason between 1 and 255 characters is required.']);
         }
 
-        $this->db->transaction(function () use ($admin, $publisher, $publisherId, $reason): void {
+        return $this->db->transaction(function () use ($admin, $publisher, $publisherId, $reason): int {
             $this->publishers->setStatus($publisherId, 'suspended');
             $this->audit->log([
                 'actor_id' => $admin->id(),
@@ -7014,12 +7371,14 @@ final class PublisherTrustService
                 'before' => ['status' => (string) $publisher['status']],
                 'after' => ['status' => 'suspended', 'reason' => $reason],
             ]);
-        });
 
-        // The one enforcement engine now sees the suspended publisher and
-        // force-disables each enabled install (writing per-install force_disable
-        // transparency + history + audit and driving the theme/integration seams).
-        return $this->enforcement->enforcePolicy();
+            // The one enforcement engine now sees the suspended publisher and
+            // force-disables each enabled install (writing per-install force_disable
+            // transparency + history + audit and driving the theme/integration seams).
+            // It runs in this same transaction; any failure rolls back the
+            // publisher status and every package state/credential change.
+            return $this->enforcement->enforcePolicy();
+        });
     }
 
     /** Reinstating clears the suspension but deliberately never auto-re-enables installs — the operator re-enables each explicitly. */
@@ -7301,7 +7660,7 @@ final class AppPackagePublisherConsoleTest extends TestCase
     {
         $response = $this->get('/admin/packages/publishers/' . $this->pid());
         $this->assertStatus(200, $response);
-        self::assertSame('noindex', $response->headers()['X-Robots-Tag'] ?? null);
+        self::assertSame('noindex', $response->getHeader('x-robots-tag'));
         $this->assertSeeText($response, 'Acme Themes');
         self::assertStringContainsString('/admin/packages/publishers/' . $this->pid() . '/suspend', $response->body());
     }
@@ -7406,6 +7765,7 @@ Expected: 404s / `View "admin/package_publisher" not found` — red across the b
     /** @param array<string,string> $params */
     public function publisher(Request $request, array $params): Response
     {
+        $this->gate();
         $this->requireAdmin();
         $this->gate();
 
@@ -7415,6 +7775,7 @@ Expected: 404s / `View "admin/package_publisher" not found` — red across the b
     /** @param array<string,string> $params */
     public function verifyPublisher(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
@@ -7429,6 +7790,7 @@ Expected: 404s / `View "admin/package_publisher" not found` — red across the b
     /** @param array<string,string> $params */
     public function suspendPublisher(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
@@ -7448,6 +7810,7 @@ Expected: 404s / `View "admin/package_publisher" not found` — red across the b
     /** @param array<string,string> $params */
     public function reinstatePublisher(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
@@ -7462,6 +7825,7 @@ Expected: 404s / `View "admin/package_publisher" not found` — red across the b
     /** @param array<string,string> $params */
     public function pinPublisherKey(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
@@ -7484,6 +7848,7 @@ Expected: 404s / `View "admin/package_publisher" not found` — red across the b
     /** @param array<string,string> $params */
     public function rotatePublisherKey(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
@@ -7508,6 +7873,7 @@ Expected: 404s / `View "admin/package_publisher" not found` — red across the b
     /** @param array<string,string> $params */
     public function revokePublisherKey(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $keyRowId = (int) ($params['id'] ?? 0);
@@ -7795,7 +8161,7 @@ EOF
 
 <!-- ===== group: review-console-service — PackageReviewConsoleService — exact-digest review decisions ===== -->
 
-Everything I need is confirmed. Writing the task group now.
+The review-console service task group starts here.
 
 
 ---
@@ -8215,7 +8581,7 @@ EOF
 ### Task 52: `recordReview` route + no-JS form + kernel/flag-dark/browser evidence
 
 **Files:**
-- Create: `src/Controller/AdminPackageSecurityController.php` (gate/noindex + `recordReview` only — the security-console task group *appends* its remaining actions to this same class; do not recreate it)
+- Modify: `src/Controller/AdminPackageSecurityController.php` (append `recordReview` + `reviewErrorView`; create only if absent, and never replace existing publisher/security actions)
 - Create: `templates/admin/_package_review_form.php` (no-JS per-release review form partial)
 - Create: `tests/Integration/Core/AppPackageReviewTest.php` (full-kernel HTTP)
 - Create: `tests/browser/package-review.spec.ts` (no-JS + axe evidence)
@@ -8242,7 +8608,7 @@ Produces:
 // POST /admin/packages/{id}/review  →  AdminPackageSecurityController::recordReview
 public function recordReview(Request $request, array $params): Response;   // {id} = packageId
 ```
-Behavior: `requireAdmin()` → `gate()` (`package_registry` else `NotFoundException` 404) → `noindex()`; success → 303 redirect to `/admin/packages/{id}` with a flash; `ValidationException`/`PackagePolicyException` → re-render `admin/package_detail` at **422** with `$e->errors` (PRG-free anti-draft-loss). Redirect target is the Inc 3 package-detail page (the publisher/security console GET pages are the later task group's; do not target them here).
+Behavior: `gate()` → `requireAdmin()` → `gate()` (`package_registry` else `NotFoundException` 404) → `noindex()`; success → 303 redirect to `/admin/packages/{id}` with a flash; `ValidationException`/`PackagePolicyException` → re-render `admin/package_detail` at **422** with `$e->errors` (PRG-free anti-draft-loss). Redirect target is the Inc 3 package-detail page (the publisher/security console GET pages are the later task group's; do not target them here).
 
 - [ ] **Step 1: Write the failing full-kernel HTTP test.** Create `tests/Integration/Core/AppPackageReviewTest.php` (drives `App::handle` as a cookie-jar client; CSRF is automatic; asserts observable HTTP status/body + persisted `review_status`):
 ```php
@@ -8337,45 +8703,16 @@ vendor/bin/phpunit --filter AppPackageReviewTest
 ```
 Expected: red — the GET assertion fails on missing form markup and the POST returns 404 (route unregistered).
 
-- [ ] **Step 3: Create the controller** `src/Controller/AdminPackageSecurityController.php` with only the shared gate/noindex helpers and `recordReview` (the security-console task group extends this file):
+- [ ] **Step 3: Append the review action to the cumulative controller.** Open `src/Controller/AdminPackageSecurityController.php`; create a shared shell only if it does not exist. Add the imports if missing and add the methods below inside the existing class. Do not remove `publisher*`, `index`, `emergencyDisable`, key actions, `gate()`, `noindex()`, or helpers already present.
 ```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Controller;
-
-use App\Core\FeatureFlags;
-use App\Core\NotFoundException;
-use App\Core\Request;
-use App\Core\Response;
-use App\Core\ValidationException;
 use App\Security\Packages\PackagePolicyException;
 use App\Service\Packages\PackageReviewConsoleService;
 use App\Service\Registry\RegistryCatalogService;
 
-/**
- * Deploy-dark package security-response console. This slice ships the local
- * review-decision action; publisher/emergency-disable actions are appended by
- * the security-console task group onto this same controller.
- */
-final class AdminPackageSecurityController extends Controller
-{
-    private function gate(): void
-    {
-        if (!$this->container->get(FeatureFlags::class)->enabled('package_registry')) {
-            throw new NotFoundException();
-        }
-    }
-
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
-
     /** @param array<string,string> $params */
     public function recordReview(Request $request, array $params): Response
     {
+        $this->gate();
         $admin = $this->requireAdmin();
         $this->gate();
         $packageId = (int) ($params['id'] ?? 0);
@@ -8408,7 +8745,6 @@ final class AdminPackageSecurityController extends Controller
 
         return $this->noindex($this->view('admin/package_detail', $detail + ['errors' => $errors], 422));
     }
-}
 ```
 
 - [ ] **Step 4: Register the route.** In `App::buildRouter()`, add beside the other `/admin/packages/{id}/…` POSTs (after `.../uninstall`, ~line 1780) — `review` is a distinct literal segment so first-match ordering is unaffected:
@@ -8560,7 +8896,7 @@ EOF
 
 **Group exit deliverable:** `PackageReviewConsoleService` + the `recordReview` route/action, proven by `PackageReviewConsoleServiceTest` (decision provenance, exact-digest binding, tightening-only `review_conflict` guard, transparency + audit rows) and `AppPackageReviewTest` (no-JS form POST, reauth 422, flag-dark 404), with browser/axe evidence for the server-rendered form — an independently testable, committable slice advancing GA-DOD-09.
 
-**Boundary notes for the orchestrator:** (1) `src/Controller/AdminPackageSecurityController.php` is **created here with only `recordReview`**; the later security-console task group must *append* its `index`/`publisher`/`emergencyDisable`/publisher-key actions and the remaining security routes to this existing file, not recreate it. (2) `templates/admin/package_detail.php` and `src/Core/App.php` receive adjacent edits from this group and the integration task group — different sections, no logical conflict. (3) `PackageReleaseRepository::setReviewStatus` is a new thin single-table setter added by this group (no other contract group modifies that repo). (4) This group is independent of migration `0073` — it uses only pre-existing schema (`package_review_decisions`/`package_transparency_log` from `0070`, `moderation_log.target_type='package'` from `0068`), so it may land before or after the migration group.
+**Boundary notes for the orchestrator:** (1) `src/Controller/AdminPackageSecurityController.php` is cumulative; this group appends `recordReview`/`reviewErrorView` to the existing shell or creates the shell only if absent, and later security-console task groups must append their `index`/`publisher`/`emergencyDisable`/publisher-key actions without recreating it. (2) `templates/admin/package_detail.php` and `src/Core/App.php` receive adjacent edits from this group and the integration task group — different sections, no logical conflict. (3) `PackageReleaseRepository::setReviewStatus` is a new thin single-table setter added by this group (no other contract group modifies that repo). (4) This group is independent of migration `0073` — it uses only pre-existing schema (`package_review_decisions`/`package_transparency_log` from `0070`, `moderation_log.target_type='package'` from `0068`), so it may land before or after the migration group.
 
 
 <!-- ===== group: security-response-emergency-disable — PackageSecurityResponseService + emergency disable + transparency ===== -->
@@ -9206,7 +9542,7 @@ Group deliverable: `PackageSecurityResponseService` is complete and independentl
 ### Task 61: Security-response console overview + flag-independent emergency execution brake
 
 **Files:**
-- Create: `src/Controller/AdminPackageSecurityController.php` (skeleton: `gate`/`noindex`/`index`/`emergencyDisable` + `security()`/`consoleView()` helpers)
+- Modify: `src/Controller/AdminPackageSecurityController.php` (append `index`/`emergencyDisable` + `security()`/`consoleView()` helpers; never replace existing publisher/review/key actions)
 - Create: `templates/admin/package_security.php`
 - Modify: `src/Core/App.php` (add `use App\Controller\AdminPackageSecurityController;`; register `GET /admin/packages/security` + `POST /admin/packages/security/execution` **before** `GET /admin/packages/{id}`)
 - Test: `tests/Integration/Core/AppPackageSecurityConsoleTest.php` (new; console render, reauth-gated brake, flag-dark 404)
@@ -9270,7 +9606,7 @@ Steps:
           $this->assertStatus(200, $response);
           $this->assertSeeText($response, 'Package security response');
           $this->assertSeeText($response, 'Acme Themes');
-          self::assertSame('noindex', $response->headers()['X-Robots-Tag'] ?? null);
+          self::assertSame('noindex', $response->getHeader('x-robots-tag'));
       }
 
       public function test_emergency_disable_requires_reauth_then_pauses_execution(): void
@@ -9305,45 +9641,15 @@ Steps:
       }
   }
   ```
-- [ ] **Step 2: Run it — expect FAIL (route 404 / class missing).** `vendor/bin/phpunit --filter 'AppPackageSecurityConsoleTest'` → expect errors: `AdminPackageSecurityController` not found and the security route 404s where the test expects 200/422. This proves the test exercises unbuilt code.
-- [ ] **Step 3: Create the controller skeleton.** Write `src/Controller/AdminPackageSecurityController.php` mirroring `AdminRegistryController`'s `gate`/`noindex`/`consoleView` shape:
+- [ ] **Step 2: Run it — expect FAIL (route/action missing).** `vendor/bin/phpunit --filter 'AppPackageSecurityConsoleTest'` → expect the security route to 404 where the test expects 200/422, or action-method errors if the cumulative controller exists without these methods. This proves the test exercises unbuilt code without requiring the class itself to be absent.
+- [ ] **Step 3: Append the overview/brake actions to the cumulative controller.** Open `src/Controller/AdminPackageSecurityController.php`. Add the import if missing and add the methods below inside the existing class. If the file is absent, create the shared shell with `gate()`/`noindex()` first, then add these methods. Do not remove `recordReview`, `publisher*`, key actions, or existing helpers.
   ```php
-  <?php
-
-  declare(strict_types=1);
-
-  namespace App\Controller;
-
-  use App\Core\FeatureFlags;
-  use App\Core\NotFoundException;
-  use App\Core\Request;
-  use App\Core\Response;
-  use App\Core\ValidationException;
   use App\Service\Packages\PackageSecurityResponseService;
-
-  /**
-   * Deploy-dark package security-response console: emergency execution brake,
-   * publisher trust, signing-key lifecycle, and local review decisions. Reuses
-   * (links to) the registry advisory/blocklist controls rather than duplicating
-   * them (see /admin/registries).
-   */
-  final class AdminPackageSecurityController extends Controller
-  {
-      private function gate(): void
-      {
-          if (!$this->container->get(FeatureFlags::class)->enabled('package_registry')) {
-              throw new NotFoundException();
-          }
-      }
-
-      private function noindex(Response $response): Response
-      {
-          return $response->header('X-Robots-Tag', 'noindex');
-      }
 
       /** @param array<string,string> $params */
       public function index(Request $request, array $params): Response
       {
+          $this->gate();
           $this->requireAdmin();
           $this->gate();
 
@@ -9353,6 +9659,7 @@ Steps:
       /** @param array<string,string> $params */
       public function emergencyDisable(Request $request, array $params): Response
       {
+          $this->gate();
           $admin = $this->requireAdmin();
           $this->gate();
           $disabled = $request->post('disabled', '0') === '1';
@@ -9392,9 +9699,8 @@ Steps:
           return $this->noindex($this->view('admin/package_security', $overview + [
               'errors' => $errors,
               'old' => $old,
-          ], $status));
+              ], $status));
       }
-  }
   ```
 - [ ] **Step 4: Create the console template.** Write `templates/admin/package_security.php` — a no-JS overview with the emergency brake form (renders both the `current_password` reauth error and any policy `execution` error), publishers table linking to detail, an advisories/blocklist card that **links to `/admin/registries`** (no duplicated controls), and a transparency table:
   ```php
@@ -9563,6 +9869,7 @@ Steps:
       /** @param array<string,string> $params */
       public function publisher(Request $request, array $params): Response
       {
+          $this->gate();
           $this->requireAdmin();
           $this->gate();
 
@@ -9615,6 +9922,7 @@ Steps:
        */
       private function publisherAction(Request $request, int $publisherId, callable $call, string $flash): Response
       {
+          $this->gate();
           $admin = $this->requireAdmin();
           $this->gate();
 
@@ -9750,12 +10058,12 @@ Steps:
 
 ---
 
-### Task 63: Signing-key lifecycle (pin / signed rotation / revoke) + local review decision
+### Task 63: Signing-key lifecycle (pin / signed rotation / revoke) + publisher-page review form reuse
 
 **Files:**
-- Modify: `src/Controller/AdminPackageSecurityController.php` (add `pinPublisherKey`, `rotatePublisherKey`, `revokePublisherKey`, `recordReview` + `reviews()`/`parseEnvelope()` helpers)
+- Modify: `src/Controller/AdminPackageSecurityController.php` (add `pinPublisherKey`, `rotatePublisherKey`, `revokePublisherKey` + `parseEnvelope()` helper; do not add or replace `recordReview`)
 - Modify: `templates/admin/package_publisher.php` (add pin/rotation forms, per-key revoke form, per-package review form)
-- Modify: `src/Core/App.php` (register the four new POST routes)
+- Modify: `src/Core/App.php` (register the three new key POST routes; keep the Task 52 `/admin/packages/{id}/review` route registered once)
 - Modify: `tests/Integration/Core/AppFeatureFlagTest.php` (extend the `package_registry` dark loop with every new security route)
 - Test: `tests/Integration/Core/AppPackageSecurityConsoleTest.php` (add envelope-422 + key-reauth-422 + dark cases)
 
@@ -9765,12 +10073,10 @@ Steps:
   PublisherTrustService::pinKey(User $admin, string $currentPassword, int $publisherId, string $keyId, string $publicKeyBase64, ?string $validFrom, ?string $validUntil): int;
   PublisherTrustService::applyKeyRotation(User $admin, string $currentPassword, int $publisherId, string $documentJson, string $signature, string $keyId): int;
   PublisherTrustService::revokeKey(User $admin, string $currentPassword, int $keyRowId, string $reason): void;
-  PackageReviewConsoleService::recordDecision(User $admin, string $currentPassword, int $packageId, int $releaseId, string $decision, ?string $note): int;
   PublisherSigningKeyRepository::find(int $id): ?array;   // resolve publisher_id for revoke re-render
-  PackageRepository::find(int $id): ?array;               // resolve publisher_id for review re-render
   ```
-- Produces controller actions `pinPublisherKey`, `rotatePublisherKey`, `revokePublisherKey`, `recordReview`.
-- Produces routes: `POST …/publishers/{id}/keys`, `…/publishers/{id}/rotate`, `POST /admin/publisher-keys/{id}/revoke`, `POST /admin/packages/{id}/review`.
+- Produces controller actions `pinPublisherKey`, `rotatePublisherKey`, `revokePublisherKey`. The local review POST remains the single `recordReview` action from Task 52; this task only adds publisher-page forms that submit to that existing route.
+- Produces routes: `POST …/publishers/{id}/keys`, `…/publishers/{id}/rotate`, `POST /admin/publisher-keys/{id}/revoke`; verify `POST /admin/packages/{id}/review` remains registered once from Task 52.
 
 Steps:
 
@@ -9812,11 +10118,12 @@ Steps:
       }
   ```
 - [ ] **Step 18: Run — expect FAIL.** `vendor/bin/phpunit --filter 'test_key_pin_and_rotation_are_reauth_and_envelope_guarded'` → expect 404 where 422 is expected (actions/routes missing).
-- [ ] **Step 19: Add imports + actions to the controller.** Add `use App\Repository\PackageRepository;`, `use App\Repository\PublisherSigningKeyRepository;`, `use App\Service\Packages\PackageReviewConsoleService;`, then add (reusing the exact `parseEnvelope` shape from `AdminRegistryController::rotate`):
+- [ ] **Step 19: Add imports + actions to the controller.** Add `use App\Repository\PublisherSigningKeyRepository;`, then add the key actions below (reusing the exact `parseEnvelope` shape from `AdminRegistryController::rotate`). Do not add a second `recordReview`; if the method is missing, stop and run Task 52.
   ```php
       /** @param array<string,string> $params */
       public function pinPublisherKey(Request $request, array $params): Response
       {
+          $this->gate();
           $admin = $this->requireAdmin();
           $this->gate();
           $publisherId = (int) ($params['id'] ?? 0);
@@ -9841,6 +10148,7 @@ Steps:
       /** @param array<string,string> $params */
       public function rotatePublisherKey(Request $request, array $params): Response
       {
+          $this->gate();
           $admin = $this->requireAdmin();
           $this->gate();
           $publisherId = (int) ($params['id'] ?? 0);
@@ -9867,6 +10175,7 @@ Steps:
       /** @param array<string,string> $params */
       public function revokePublisherKey(Request $request, array $params): Response
       {
+          $this->gate();
           $admin = $this->requireAdmin();
           $this->gate();
           $keyRowId = (int) ($params['id'] ?? 0);
@@ -9890,41 +10199,6 @@ Steps:
           }
       }
 
-      /** @param array<string,string> $params */
-      public function recordReview(Request $request, array $params): Response
-      {
-          $admin = $this->requireAdmin();
-          $this->gate();
-          $packageId = (int) ($params['id'] ?? 0);
-          $package = $this->container->get(PackageRepository::class)->find($packageId);
-          if ($package === null) {
-              throw new NotFoundException('Package not found.');
-          }
-          $publisherId = (int) $package['publisher_id'];
-
-          try {
-              $this->reviews()->recordDecision(
-                  $admin,
-                  (string) $request->post('current_password', ''),
-                  $packageId,
-                  (int) $request->str('release_id'),
-                  $request->str('decision'),
-                  $request->str('note') !== '' ? $request->str('note') : null,
-              );
-
-              return $this->noindex($this->redirectWithFlash('/admin/packages/publishers/' . $publisherId, 'Local review decision recorded.'));
-          } catch (ValidationException $e) {
-              return $this->publisherView($publisherId, $e->errors, $request->allInput(), 422);
-          } catch (\App\Security\Packages\PackagePolicyException | \App\Security\Registry\RegistryVerificationException $e) {
-              return $this->publisherView($publisherId, ['review' => $e->code . ': ' . $e->getMessage()], $request->allInput(), 422);
-          }
-      }
-
-      private function reviews(): PackageReviewConsoleService
-      {
-          return $this->container->get(PackageReviewConsoleService::class);
-      }
-
       /** @return array{0:string,1:string,2:string} document, raw signature bytes, key id */
       private function parseEnvelope(string $raw): array
       {
@@ -9937,12 +10211,13 @@ Steps:
           return [(string) $decoded['document'], $signature, (string) ($decoded['key_id'] ?? '')];
       }
   ```
-- [ ] **Step 20: Register the four POST routes.** In `buildRouter()`, anchor on the `…/reinstate` route (from Task 62) and add the key + review POSTs after it:
+- [ ] **Step 20: Register the three key POST routes and verify the existing review route.** In `buildRouter()`, anchor on the `…/reinstate` route (from Task 62) and add the key POSTs after it. Confirm the Task 52 review route already exists once in the security block; do not duplicate it:
   ```php
           $r->post('/admin/packages/publishers/{id}/reinstate', [AdminPackageSecurityController::class, 'reinstatePublisher']);
           $r->post('/admin/packages/publishers/{id}/keys', [AdminPackageSecurityController::class, 'pinPublisherKey']);
           $r->post('/admin/packages/publishers/{id}/rotate', [AdminPackageSecurityController::class, 'rotatePublisherKey']);
           $r->post('/admin/publisher-keys/{id}/revoke', [AdminPackageSecurityController::class, 'revokePublisherKey']);
+          // Existing from Task 52; keep exactly once, do not add a duplicate.
           $r->post('/admin/packages/{id}/review', [AdminPackageSecurityController::class, 'recordReview']);
   ```
 - [ ] **Step 21: Add the key + review forms to the publisher template.** In `templates/admin/package_publisher.php`, (a) fill the empty `form-cell` in the keys table with a per-key revoke form gated on `$key['status'] !== 'revoked'`:
@@ -10020,17 +10295,17 @@ Steps:
               ['POST', '/admin/publisher-keys/1/revoke', ['reason' => 'x', 'current_password' => 'password123']],
               ['POST', '/admin/packages/1/review', ['release_id' => '1', 'decision' => 'approved', 'current_password' => 'password123']],
   ```
-- [ ] **Step 24: Run the flag-dark test.** `vendor/bin/phpunit --filter test_package_registry_flag_gates_catalog_and_registry_routes` → expect green (every new security route 404s while dark; `gate()` runs after `requireAdmin()` so an admin sees 404, not 403/405).
+- [ ] **Step 24: Run the flag-dark test.** `vendor/bin/phpunit --filter test_package_registry_flag_gates_catalog_and_registry_routes` → expect green (every new security route 404s while dark; `gate()` runs before and after `requireAdmin()` so unauthenticated and authenticated callers see 404, not 403/405).
 - [ ] **Step 25: Full integration sweep.** `vendor/bin/phpunit --testsuite integration` → expect green (no route-ordering or strict-mode regressions).
 - [ ] **Step 26: Commit.**
   ```bash
   git add src/Controller/AdminPackageSecurityController.php templates/admin/package_publisher.php src/Core/App.php tests/Integration/Core/AppPackageSecurityConsoleTest.php tests/Integration/Core/AppFeatureFlagTest.php
   git commit -m "$(cat <<'EOF'
-  feat(packages): publisher signing-key lifecycle + local review decision console actions
+  feat(packages): publisher signing-key lifecycle console actions
 
-  Adds pin / signed-rotation (envelope) / revoke key actions and the tightening-only local review
-  decision POST, all reauth-gated with 422 anti-draft-loss re-render. Extends AppFeatureFlagTest so
-  every new security route is asserted dark (404) under package_registry=off.
+  Adds pin / signed-rotation (envelope) / revoke key actions and publisher-page
+  forms that reuse the Task 52 review POST. Extends AppFeatureFlagTest so every
+  new security route is asserted dark (404) under package_registry=off.
 
   Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
   EOF
@@ -10159,7 +10434,7 @@ Steps:
 
 <!-- ===== group: evidence-closeout — Evidence, threat fixtures, runbooks, ledger & SCHEMA closeout ===== -->
 
-All facts confirmed: the four fixture IDs are already documented in their dossiers (no dossier edits needed), the guards are the pre-existing `ThreatModelIndexTest`/`Phase5EvidenceMapTest`/`MigrationLedgerTest`, and the doc structures are clear. Here is task group #14.
+The evidence-closeout group uses the pre-existing `ThreatModelIndexTest`, `Phase5EvidenceMapTest`, and `MigrationLedgerTest` guards; the four fixture IDs are already documented in their dossiers.
 
 ---
 
