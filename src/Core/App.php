@@ -91,8 +91,10 @@ use App\Repository\EmailDeliveryRepository;
 use App\Repository\EmailSuppressionRepository;
 use App\Repository\FollowRepository;
 use App\Repository\IdempotencyRepository;
+use App\Repository\InstalledPackageCredentialRepository;
 use App\Repository\InstalledPackagePermissionRepository;
 use App\Repository\InstalledPackageRepository;
+use App\Repository\InstalledPackageSettingsRepository;
 use App\Repository\LocalPackageBlockRepository;
 use App\Repository\MfaRepository;
 use App\Repository\NotificationRepository;
@@ -109,6 +111,7 @@ use App\Repository\PackageTransparencyLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
+use App\Repository\PublisherSigningKeyRepository;
 use App\Repository\RegistrySnapshotRepository;
 use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\RoleAssignmentHistoryRepository;
@@ -193,6 +196,7 @@ use App\Service\OAuthService;
 use App\Service\PasskeyService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\Packages\PackageAcquisitionService;
+use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\PackageLifecycleService;
@@ -1264,6 +1268,24 @@ final class App
         $c->bind(PackageThemeRepository::class, fn (Container $c) => new PackageThemeRepository($c->get(Database::class)));
         $c->bind(PackageTransparencyLogRepository::class, fn (Container $c) => new PackageTransparencyLogRepository($c->get(Database::class)));
         $c->bind(ManifestValidator::class, fn () => new ManifestValidator());
+        $c->bind(InstalledPackageSettingsRepository::class, fn (Container $c) => new InstalledPackageSettingsRepository($c->get(Database::class)));
+        $c->bind(InstalledPackageCredentialRepository::class, fn (Container $c) => new InstalledPackageCredentialRepository($c->get(Database::class)));
+        $c->bind(PublisherSigningKeyRepository::class, fn (Container $c) => new PublisherSigningKeyRepository($c->get(Database::class)));
+        $c->bind(PackageSettingsService::class, fn (Container $c) => new PackageSettingsService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackageSettingsRepository::class),
+            $c->get(SecretVault::class),
+            $c->get(ManifestValidator::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
+            $config,
+        ));
         $c->bind(PackageSecurityGate::class, fn (Container $c) => new PackageSecurityGate(
             $c->get(LocalPackageBlockRepository::class),
             $c->get(PackageAdvisoryRepository::class),
