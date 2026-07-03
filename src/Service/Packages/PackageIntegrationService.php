@@ -1,0 +1,225 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Service\Packages;
+
+use App\Core\Config;
+use App\Core\Database;
+use App\Core\FeatureFlags;
+use App\Core\ValidationException;
+use App\Domain\User;
+use App\Repository\ApiTokenRepository;
+use App\Repository\InstalledPackageCredentialRepository;
+use App\Repository\InstalledPackagePermissionRepository;
+use App\Repository\InstalledPackageRepository;
+use App\Repository\InstalledPackageSettingsRepository;
+use App\Repository\ModerationLogRepository;
+use App\Repository\PackageHistoryRepository;
+use App\Repository\PackageReleaseRepository;
+use App\Repository\PackageRepository;
+use App\Repository\PackageTransparencyLogRepository;
+use App\Repository\SettingRepository;
+use App\Repository\WebhookRepository;
+use App\Security\ApiScopes;
+use App\Security\Packages\ManifestValidator;
+use App\Security\Packages\PackagePolicyException;
+use App\Security\ReauthGate;
+use App\Security\WriteGate;
+use App\Service\ApiTokenService;
+use App\Service\SecretVault;
+use App\Service\WebhookService;
+
+/**
+ * Install-scoped integration runtime for remote_app/automation packages:
+ * package-owned credential provisioning + event/scope gating over the B2 seams.
+ * This file's api_token surface is owned by the api-token-provisioning group;
+ * webhook minting/delivery + overview/onInstallIneligible land with sibling groups.
+ */
+final class PackageIntegrationService
+{
+    public function __construct(
+        private Database $db,
+        private PackageRepository $packages,
+        private PackageReleaseRepository $releases,
+        private InstalledPackageRepository $installs,
+        private InstalledPackagePermissionRepository $permissions,
+        private InstalledPackageSettingsRepository $settings,
+        private InstalledPackageCredentialRepository $credentials,
+        private ApiTokenService $apiTokens,
+        private WebhookService $webhooks,
+        private ApiTokenRepository $apiTokenRepo,
+        private WebhookRepository $webhookRepo,
+        private SecretVault $vault,
+        private ManifestValidator $manifests,
+        private PackageHistoryRepository $history,
+        private PackageTransparencyLogRepository $transparency,
+        private ModerationLogRepository $audit,
+        private ReauthGate $reauth,
+        private WriteGate $writeGate,
+        private FeatureFlags $flags,
+        private SettingRepository $settingRepo,
+        private Config $config,
+    ) {
+    }
+
+    /**
+     * Atomically mint the package-owned api_token from its declared+granted api_scopes.
+     * All guards fail before the transaction, minting nothing.
+     *
+     * @return array{api_token:?string, webhook_secret:?string, credentials:list<array<string,mixed>>}
+     */
+    public function provisionCredentials(User $admin, string $currentPassword, int $installedId): array
+    {
+        $this->writeGate->assertCanWrite($admin);
+
+        $install = $this->installs->find($installedId);
+        if ($install === null) {
+            throw new PackagePolicyException('unknown_install', 'No such installed package.');
+        }
+        $package = $this->packages->find((int) $install['package_id']);
+        if ($package === null) {
+            throw new PackagePolicyException('invalid_state', 'The installed package is no longer resolvable.');
+        }
+        if (!in_array((string) $package['type'], ['remote_app', 'automation'], true)) {
+            throw new PackagePolicyException('not_integrable', 'Only remote_app and automation packages expose integration credentials.');
+        }
+        if ((string) $install['state'] !== 'enabled') {
+            throw new PackagePolicyException('invalid_state', 'The package must be enabled before provisioning credentials.');
+        }
+        if ($this->isExecutionDisabled()) {
+            throw new PackagePolicyException('execution_disabled', 'Package execution is under an emergency disable.');
+        }
+        if ($this->permissions->ungrantedCount($installedId) > 0) {
+            throw new PackagePolicyException('not_consented', 'Grant every declared permission before provisioning credentials.');
+        }
+        if (!$this->flags->enabled('service_secrets')) {
+            // Hard predecessor / kill switch: fail closed, mint nothing.
+            throw new ValidationException(['integration' => 'Enable the secret vault (service_secrets) before minting credentials.']);
+        }
+        $this->reauth->requirePassword($admin, $currentPassword);
+
+        $scopes = $this->grantedApiScopes($installedId, (int) $install['package_id'], $admin);
+
+        return $this->db->transaction(function () use ($admin, $currentPassword, $installedId, $install, $package, $scopes): array {
+            $this->lockInstallForCredentialProvision($installedId);
+
+            $token = null;
+            $credentials = [];
+
+            // ≤1 api_token: only when the install actually grants a locally-supported scope.
+            if ($scopes !== []) {
+                $this->assertNoActiveCredential($installedId, 'api_token');
+                $label = $this->credentialLabel((string) $package['package_uid'], $installedId);
+                $minted = $this->apiTokens->mint($admin, $currentPassword, $label, $scopes, null);
+                $token = (string) $minted['token'];
+                $scopesJson = json_encode($scopes, JSON_UNESCAPED_SLASHES) ?: '[]';
+                $linkId = $this->credentials->insertApiToken($installedId, (int) $minted['id'], $label, $scopesJson, $admin->id());
+
+                $this->history->record([
+                    'package_id' => (int) $install['package_id'],
+                    'installed_package_id' => $installedId,
+                    'event' => 'credential_mint',
+                    'actor_id' => $admin->id(),
+                    'detail' => json_encode(['kind' => 'api_token', 'credential_id' => $linkId, 'scopes' => $scopes], JSON_UNESCAPED_SLASHES),
+                ]);
+                $release = $install['release_id'] !== null ? $this->releases->find((int) $install['release_id']) : null;
+                $this->transparency->record([
+                    'package_uid' => (string) $package['package_uid'],
+                    'version' => $release !== null ? (string) $release['version'] : null,
+                    'digest' => (string) $install['digest'],
+                    'event' => 'install',
+                    'source' => 'local',
+                    'actor_id' => $admin->id(),
+                    'detail' => 'credential_mint:api_token',
+                ]);
+                $this->audit->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'package_credential_mint',
+                    'target_type' => 'package',
+                    'target_id' => (int) $install['package_id'],
+                    'after' => ['kind' => 'api_token', 'credential_id' => $linkId, 'scopes' => $scopes],
+                ]);
+
+                $credentials[] = [
+                    'id' => $linkId,
+                    'kind' => 'api_token',
+                    'label' => $label,
+                    'status' => 'active',
+                    'scopes' => $scopes,
+                    'events' => [],
+                ];
+            }
+
+            return ['api_token' => $token, 'webhook_secret' => null, 'credentials' => $credentials];
+        });
+    }
+
+    /** True when the package_execution_disabled DB setting OR packages.execution_disabled config is set. */
+    public function isExecutionDisabled(): bool
+    {
+        if ((bool) $this->config->get('packages.execution_disabled', false)) {
+            return true;
+        }
+        try {
+            return $this->settingRepo->getString('package_execution_disabled', '') === '1';
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Manifest = ceiling, grants = authority, local code = final gate: only declared+granted
+     * api_scopes that ApiScopes still supports are minted; unknown/future scopes are denied
+     * and audited (TM-SC-08), never included.
+     *
+     * @return list<string>
+     */
+    private function grantedApiScopes(int $installedId, int $packageId, User $admin): array
+    {
+        $scopes = [];
+        foreach ($this->permissions->forInstall($installedId) as $row) {
+            if ((string) $row['kind'] !== 'api_scope' || (int) $row['declared'] !== 1 || (int) $row['granted'] !== 1) {
+                continue;
+            }
+            $key = (string) $row['permission_key'];
+            if (!ApiScopes::isValid($key)) {
+                $this->audit->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'package_scope_denied',
+                    'target_type' => 'package',
+                    'target_id' => $packageId,
+                    'after' => ['installed_package_id' => $installedId, 'scope' => $key],
+                ]);
+                continue;
+            }
+            if (!in_array($key, $scopes, true)) {
+                $scopes[] = $key;
+            }
+        }
+
+        return $scopes;
+    }
+
+    private function credentialLabel(string $packageUid, int $installedId): string
+    {
+        // ApiTokenService caps names at 80 chars; keep the uid + install id inside that.
+        return mb_substr('pkg:' . $packageUid . '#' . $installedId, 0, 80);
+    }
+
+    private function lockInstallForCredentialProvision(int $installedId): void
+    {
+        // Serializes concurrent plain-form POSTs so the app-enforced
+        // "≤1 active credential per kind" invariant cannot race.
+        $this->db->fetch('SELECT id FROM installed_packages WHERE id = ? FOR UPDATE', [$installedId]);
+    }
+
+    private function assertNoActiveCredential(int $installedId, string $kind): void
+    {
+        foreach ($this->credentials->activeForInstall($installedId) as $cred) {
+            if ((string) $cred['kind'] === $kind) {
+                throw new PackagePolicyException('credential_exists', 'This install already has an active ' . $kind . ' credential.');
+            }
+        }
+    }
+}
