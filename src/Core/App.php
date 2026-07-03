@@ -196,6 +196,7 @@ use App\Service\OAuthService;
 use App\Service\PasskeyService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\Packages\PackageAcquisitionService;
+use App\Service\Packages\PackageCredentialAuthGuard;
 use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
@@ -778,6 +779,16 @@ final class App
         $c->bind(ServerDraftRepository::class, fn (Container $c) => new ServerDraftRepository($c->get(Database::class)));
         $c->bind(ServerExtensionRepository::class, fn (Container $c) => new ServerExtensionRepository($c->get(Database::class)));
         $c->bind(ApiTokenRepository::class, fn (Container $c) => new ApiTokenRepository($c->get(Database::class)));
+        $c->bind(PackageCredentialAuthGuard::class, fn (Container $c) => new PackageCredentialAuthGuard(
+            $c->get(InstalledPackageCredentialRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageAdvisoryRepository::class),
+            $c->get(LocalPackageBlockRepository::class),
+            $c->get(SettingRepository::class),
+            $config,
+        ));
         $c->bind(ApiTokenService::class, fn (Container $c) => new ApiTokenService(
             $c->get(Database::class),
             $c->get(ApiTokenRepository::class),
@@ -786,6 +797,7 @@ final class App
             $config,
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
+            $c->get(PackageCredentialAuthGuard::class),
         ));
         $c->bind(ServiceSecretRepository::class, fn (Container $c) => new ServiceSecretRepository($c->get(Database::class)));
         $c->bind(SecretVault::class, fn (Container $c) => new SecretVault(
