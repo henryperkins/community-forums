@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.32 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-03
+**Status:** v1.33 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-03
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -129,6 +129,8 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 109 | `package_theme_builds` | Ecosystem / themes | 5 | PHASE_5_PLAN §8.2 #7 / P5-03 (migration 0072) |
 | 110 | `package_theme_assets` | Ecosystem / themes | 5 | PHASE_5_PLAN §8.2 #7 / P5-03 (migration 0072) |
 | 111 | `theme_state` | Ecosystem / themes | 5 | PHASE_5_PLAN §8.2 #7 / P5-03 (migration 0072) |
+| 112 | `installed_package_settings` | Ecosystem | 5 | PHASE_5_PLAN §8.2 / P5-04 (migration 0073; inert until Inc 5 integration runtime) |
+| 113 | `installed_package_credentials` | Ecosystem | 5 | PHASE_5_PLAN §8.2 / P5-04 (migration 0073; package-owned api_token/webhook links) |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -1040,6 +1042,8 @@ New tables — **ecosystem / packages** (`0049`, §8.2 #1–5):
 - `installed_package_permissions(id, installed_package_id, kind, permission_key, risk_class, declared, granted, granted_at, granted_by)` with unique `(installed_package_id, kind, permission_key)` and FKs; `kind` includes `capability|data_class|outbound_host|job|broker_service|api_scope|event`; declared = manifest ceiling, granted = actual authority (preserved until re-consent).
 - `package_history(id, package_id, installed_package_id, event, actor_id, prior_version, new_version, prior_digest, new_digest, permission_snapshot_json, approval_ref, failure_stage, detail, created_at)` with package/actor FKs; `event` includes `update_staged`, `export`, and `purge` after `0069`, plus `theme_activate`, `theme_rollback`, and `theme_deactivate` after `0072`; `installed_package_id` carries **no** FK so history survives uninstall.
 - `package_advisories(id, advisory_uid, registry_id, package_id, affected_version_range, affected_digest, severity, action, summary, signed_evidence, issued_at, acknowledged_at, acknowledged_by, created_at)` with unique `advisory_uid` and FKs; caches the signed advisory the install relied on.
+- `installed_package_settings(id, installed_package_id, setting_key, value_json, secret_ref, is_secret, updated_by, updated_at)` — unique `(installed_package_id, setting_key)`, `idx_install_setting_secret`, FKs to `installed_packages` (CASCADE) + `users` (SET NULL); a row carries exactly one of `value_json` (non-secret) or `secret_ref` (an `svcsec_*` reference into `SecretVault`, `is_secret=1`).
+- `installed_package_credentials(id, installed_package_id, kind ENUM('api_token','webhook'), api_token_id, webhook_id, label, scopes_json, events_json, created_by, created_at, revoked_at)` — links a package-owned `api_tokens`/`webhooks` row to an install (FKs SET NULL); `kind` fixes which id is populated; `revoked_at` is the soft-revoke marker used by the delivery/auth guards.
 - `local_package_blocks(id, digest, package_uid, reason, created_by, created_at)` with digest/package indexes; registry-independent local emergency blocklist.
 - `package_theme_builds(id, installed_package_id, package_id, release_id, source_digest, token_schema_version, tokens_json, validation_json, css, css_digest, built_by, created_at)` (`0072`) with unique `(installed_package_id, source_digest)`, `css_digest` index, and install/package/release/user FKs; stores the deterministic built stylesheet and validation record for a verified theme release.
 - `package_theme_assets(id, build_id, name, mime, bytes, byte_len, digest)` (`0072`) with unique `(build_id, name)`, digest index, and build FK; stores the neutralized raster asset bytes so backup/restore carries active and last-known-good themes.
@@ -1199,6 +1203,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.33 | 2026-07-03 | Phase 5 Increment 5 migration `0073_phase5_package_integrations`: added `installed_package_settings` (per-install non-secret `value_json` + `svcsec_*` secret references) and `installed_package_credentials` (package-owned api_token/webhook links), and widened `package_history.event` (+`settings_update`/`credential_mint`/`credential_revoke`) and `moderation_log.target_type` (+`publisher`). Additive-only; verified via `verify:upgrade`. Migration number follows `0072_phase5_theme_packages`. |
 | v1.32 | 2026-07-03 | `0051` tables activated by Inc 7 passkeys (no schema change): `PasskeyService` and the WebAuthn repositories now read/write credentials and challenges behind the dark `passkeys` flag; RP ID/origin policy remains config-derived. |
 | v1.31 | 2026-07-02 | Phase 5 Increment 4 migration `0072`: added declarative theme package build rows, DB-stored neutralized assets, the single-row active/LKG `theme_state`, and widened `package_history.event` with theme activate/rollback/deactivate events. Migration number follows the existing `0071_content_reference_tags` migration on this branch. |
 | v1.30 | 2026-07-02 | Added migration `0071_content_reference_tags`: widened `content_references.target_type` with `tag` so composer-inserted `/tags/{slug}` links can resolve to read-gated tag cards while `content_references` and `tags` are enabled. |
