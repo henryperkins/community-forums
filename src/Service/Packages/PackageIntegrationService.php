@@ -68,6 +68,92 @@ final class PackageIntegrationService
     }
 
     /**
+     * Read model for the integration panel; never returns plaintext or secret refs.
+     *
+     * @return array{type:?string, integrable:bool, granted_scopes:list<string>, granted_events:list<string>, data_classes:list<array<string,mixed>>, outbound_hosts:list<string>, jobs:list<array<string,mixed>>, credentials:list<array<string,mixed>>, settings_summary:array<string,mixed>, execution_disabled:bool, refusal:?array{code:string,message:string}}
+     */
+    public function overview(int $installedId): array
+    {
+        $executionDisabled = $this->isExecutionDisabled();
+        $empty = [
+            'type' => null,
+            'integrable' => false,
+            'granted_scopes' => [],
+            'granted_events' => [],
+            'data_classes' => [],
+            'outbound_hosts' => [],
+            'jobs' => [],
+            'credentials' => [],
+            'settings_summary' => [],
+            'execution_disabled' => $executionDisabled,
+            'refusal' => ['code' => 'unknown_install', 'message' => 'No such installed package.'],
+        ];
+
+        $install = $this->installs->find($installedId);
+        if ($install === null) {
+            return $empty;
+        }
+        $package = $this->packages->find((int) $install['package_id']);
+        $type = $package !== null ? (string) $package['type'] : null;
+        $integrable = in_array((string) $type, ['remote_app', 'automation'], true);
+
+        $credentials = array_map(
+            fn (array $row): array => [
+                'id' => (int) $row['id'],
+                'kind' => (string) $row['kind'],
+                'label' => (string) $row['label'],
+                'status' => $row['revoked_at'] !== null ? 'revoked' : 'active',
+                'scopes' => $this->decodeList($row['scopes_json'] ?? null),
+                'events' => $this->decodeList($row['events_json'] ?? null),
+                'created_at' => (string) $row['created_at'],
+                'revoked_at' => $row['revoked_at'] !== null ? (string) $row['revoked_at'] : null,
+            ],
+            $this->credentials->forInstall($installedId),
+        );
+
+        $summaryRaw = $install['settings_json'] !== null ? json_decode((string) $install['settings_json'], true) : [];
+        $settingsSummary = is_array($summaryRaw) ? $summaryRaw : [];
+        $settingsSummary['package_uid'] = $package !== null ? (string) $package['package_uid'] : null;
+
+        $refusal = null;
+        if (!$integrable) {
+            $refusal = ['code' => 'not_integrable', 'message' => 'Only remote_app and automation packages expose integration credentials.'];
+        } elseif ((string) $install['state'] !== 'enabled') {
+            $refusal = ['code' => 'invalid_state', 'message' => 'The package must be enabled before provisioning credentials.'];
+        } elseif ($this->permissions->ungrantedCount($installedId) > 0) {
+            $refusal = ['code' => 'not_consented', 'message' => 'Grant every declared permission before provisioning credentials.'];
+        } elseif (!$this->flags->enabled('service_secrets')) {
+            $refusal = ['code' => 'service_secrets', 'message' => 'Enable the secret vault (service_secrets) before minting credentials.'];
+        }
+
+        return [
+            'type' => $type,
+            'integrable' => $integrable,
+            'granted_scopes' => $this->currentGrantedApiScopes($installedId),
+            'granted_events' => $this->grantedEvents($installedId),
+            'data_classes' => $this->grantsOfKind($installedId, 'data_class'),
+            'outbound_hosts' => $this->grantedOutboundHosts($installedId),
+            'jobs' => $this->grantsOfKind($installedId, 'job'),
+            'credentials' => $credentials,
+            'settings_summary' => $settingsSummary,
+            'execution_disabled' => $executionDisabled,
+            'refusal' => $refusal,
+        ];
+    }
+
+    /** @return list<array<string,mixed>> declared+granted permission rows of the given kind. */
+    private function grantsOfKind(int $installedId, string $kind): array
+    {
+        $rows = [];
+        foreach ($this->permissions->forInstall($installedId) as $p) {
+            if ((string) $p['kind'] === $kind && (int) $p['declared'] === 1 && (int) $p['granted'] === 1) {
+                $rows[] = $p;
+            }
+        }
+        return $rows;
+    }
+
+    /**
      * Atomically mint the package-owned api_token from its declared+granted api_scopes.
      * All guards fail before the transaction, minting nothing.
      *

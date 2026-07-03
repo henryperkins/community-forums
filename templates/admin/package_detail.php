@@ -284,5 +284,14 @@ foreach ($installed_permissions as $permission) {
         </div>
         <?php endif; ?>
     </section>
+    <?php if (($integration ?? null) !== null): ?>
+        <?= $this->partial('admin/_package_integration', [
+            'integration' => $integration,
+            'settings' => $settings_describe ?? ['fields' => [], 'values' => [], 'has_secret' => []],
+            'reveal' => $reveal ?? null,
+            'errors' => $errors ?? [],
+            'base' => $base,
+        ]) ?>
+    <?php endif; ?>
     </div>
 </div>

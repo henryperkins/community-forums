@@ -9,6 +9,8 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Security\Packages\PermissionDiff;
+use App\Service\Packages\PackageIntegrationService;
+use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageUpdateService;
 use App\Service\Registry\RegistryCatalogService;
 
@@ -54,6 +56,13 @@ final class AdminPackagesController extends Controller
             ? $this->container->get(PackageUpdateService::class)->rollbackTargets((int) $installed['id'])
             : [];
         $detail['permission_labels'] = $this->permissionRows($detail['installed_permissions']);
+
+        if ($installed !== null
+            && in_array((string) ($detail['package']['type'] ?? ''), ['remote_app', 'automation'], true)) {
+            $installedId = (int) $installed['id'];
+            $detail['integration'] = $this->container->get(PackageIntegrationService::class)->overview($installedId);
+            $detail['settings_describe'] = $this->container->get(PackageSettingsService::class)->describe($installedId);
+        }
 
         return $this->noindex($this->view('admin/package_detail', $detail));
     }
