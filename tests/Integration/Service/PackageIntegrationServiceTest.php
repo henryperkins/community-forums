@@ -13,11 +13,16 @@ use App\Repository\InstalledPackageCredentialRepository;
 use App\Repository\InstalledPackagePermissionRepository;
 use App\Repository\InstalledPackageRepository;
 use App\Repository\InstalledPackageSettingsRepository;
+use App\Repository\LocalPackageBlockRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\PackageAdvisoryRepository;
 use App\Repository\PackageHistoryRepository;
+use App\Repository\PackageRegistryRepository;
 use App\Repository\PackageReleaseRepository;
 use App\Repository\PackageRepository;
+use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PackageTransparencyLogRepository;
+use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\ServiceSecretRepository;
 use App\Repository\SettingRepository;
 use App\Repository\WebhookDeliveryRepository;
@@ -26,12 +31,19 @@ use App\Security\ApiPrincipal;
 use App\Security\EgressGuard;
 use App\Security\Packages\ManifestValidator;
 use App\Security\Packages\PackagePolicyException;
+use App\Security\Packages\PackageSecurityGate;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
+use App\Security\Registry\TrustChainVerifier;
 use App\Security\SecretBox;
 use App\Security\WriteGate;
 use App\Service\ApiTokenService;
+use App\Service\Packages\PackageAcquisitionService;
+use App\Service\Packages\PackageArtifactStore;
+use App\Service\Packages\PackageHealthService;
 use App\Service\Packages\PackageIntegrationService;
+use App\Service\Packages\PackageLifecycleService;
+use App\Service\Registry\ArrayRegistryTransport;
 use App\Service\SecretVault;
 use App\Service\WebhookService;
 use Tests\Support\Phase5\RegistryFixtures;
@@ -634,6 +646,148 @@ final class PackageIntegrationServiceTest extends TestCase
             'revocation timestamp is stable across repeated teardown',
         );
         self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+    }
+
+    // ---- Cross-service lifecycle/health wiring + grant reconciliation -------------------
+
+    private function artifactStore(): PackageArtifactStore
+    {
+        return new PackageArtifactStore(sys_get_temp_dir() . '/rb-int-' . bin2hex(random_bytes(4)));
+    }
+
+    private function acquisition(PackageArtifactStore $store): PackageAcquisitionService
+    {
+        return new PackageAcquisitionService(
+            $this->db,
+            new TrustChainVerifier(),
+            new RegistryTrustKeyRepository($this->db),
+            new PackageReleaseRepository($this->db),
+            new PackageReviewDecisionRepository($this->db),
+            new PackageTransparencyLogRepository($this->db),
+            $store,
+            new ManifestValidator(),
+            new ArrayRegistryTransport([]),
+        );
+    }
+
+    private function lifecycleWith(PackageIntegrationService $integrations): PackageLifecycleService
+    {
+        $store = $this->artifactStore();
+
+        return new PackageLifecycleService(
+            $this->db,
+            new PackageRepository($this->db),
+            new PackageReleaseRepository($this->db),
+            new PackageRegistryRepository($this->db),
+            new InstalledPackageRepository($this->db),
+            new InstalledPackagePermissionRepository($this->db),
+            new PackageHistoryRepository($this->db),
+            new PackageTransparencyLogRepository($this->db),
+            new PackageReviewDecisionRepository($this->db),
+            $this->acquisition($store),
+            new PackageSecurityGate(new LocalPackageBlockRepository($this->db), new PackageAdvisoryRepository($this->db)),
+            $store,
+            new ReauthGate(new PasswordHasher()),
+            new WriteGate(),
+            new ModerationLogRepository($this->db),
+            30,
+            null,           // ?Telemetry
+            null,           // ?ThemeStateService
+            $integrations,  // NEW seam under test
+        );
+    }
+
+    private function healthWith(PackageIntegrationService $integrations): PackageHealthService
+    {
+        return new PackageHealthService(
+            $this->db,
+            new InstalledPackageRepository($this->db),
+            new InstalledPackagePermissionRepository($this->db),
+            new PackageRepository($this->db),
+            new PackageReleaseRepository($this->db),
+            new PackageAdvisoryRepository($this->db),
+            new LocalPackageBlockRepository($this->db),
+            new PackageHistoryRepository($this->db),
+            new PackageTransparencyLogRepository($this->db),
+            $this->artifactStore(),
+            new ModerationLogRepository($this->db),
+            null,           // ?Telemetry
+            null,           // ?ThemeStateService
+            $integrations,  // NEW seam under test
+        );
+    }
+
+    private function assertCredentialsToreDown(int $tokenId, int $hookId): void
+    {
+        self::assertNotNull((new ApiTokenRepository($this->db))->findById($tokenId)['revoked_at'], 'token revoked');
+        self::assertSame(0, (int) (new WebhookRepository($this->db))->findById($hookId)['is_active'], 'webhook paused');
+    }
+
+    public function test_disable_tears_down_package_credentials(): void
+    {
+        [$admin, $installedId, $tokenId, $hookId] = $this->provisionBoth();
+
+        $this->lifecycleWith($this->webhookService_provision())->disable($admin, $installedId);
+
+        $this->assertCredentialsToreDown($tokenId, $hookId);
+    }
+
+    public function test_uninstall_tears_down_package_credentials(): void
+    {
+        [$admin, $installedId, $tokenId, $hookId] = $this->provisionBoth();
+
+        $this->lifecycleWith($this->webhookService_provision())->uninstall($admin, 'password123', $installedId);
+
+        $this->assertCredentialsToreDown($tokenId, $hookId);
+    }
+
+    public function test_force_disable_tears_down_package_credentials(): void
+    {
+        [, $installedId, $tokenId, $hookId] = $this->provisionBoth();
+
+        $digest = (string) (new InstalledPackageRepository($this->db))->find($installedId)['digest'];
+        (new LocalPackageBlockRepository($this->db))->add($digest, null, 'incident', null);
+        $this->healthWith($this->webhookService_provision())->enforcePolicy();
+
+        self::assertSame('disabled', (new InstalledPackageRepository($this->db))->find($installedId)['state']);
+        $this->assertCredentialsToreDown($tokenId, $hookId);
+    }
+
+    public function test_on_grants_changed_revokes_token_with_removed_scope(): void
+    {
+        [$admin, $installedId, $tokenId] = $this->provisionBoth();
+        $svc = $this->webhookService_provision();
+
+        // Reduce grants: drop read:boards (the token's scope), keep only the event + host.
+        (new InstalledPackagePermissionRepository($this->db))->replaceWithGrants($installedId, [
+            ['kind' => 'event', 'key' => 'topic.created', 'risk' => 'low', 'granted' => true],
+            ['kind' => 'outbound_host', 'key' => 'hooks.acme.test', 'risk' => 'medium', 'granted' => true],
+        ], $admin->id());
+
+        $revoked = $svc->onGrantsChanged($installedId, 'update:grants_changed', $admin->id());
+        self::assertGreaterThanOrEqual(1, $revoked);
+        self::assertNotNull((new ApiTokenRepository($this->db))->findById($tokenId)['revoked_at'], 'token with removed scope is revoked');
+    }
+
+    public function test_on_grants_changed_revokes_webhook_with_removed_event_or_host(): void
+    {
+        [$admin, $installedId, , $hookId] = $this->provisionBoth();
+        $svc = $this->webhookService_provision();
+
+        // Reduce grants: keep the api_scope, move the outbound host to one the webhook no longer targets.
+        (new InstalledPackagePermissionRepository($this->db))->replaceWithGrants($installedId, [
+            ['kind' => 'api_scope', 'key' => 'read:boards', 'risk' => 'low', 'granted' => true],
+            ['kind' => 'event', 'key' => 'topic.created', 'risk' => 'low', 'granted' => true],
+            ['kind' => 'outbound_host', 'key' => 'other.example', 'risk' => 'medium', 'granted' => true],
+        ], $admin->id());
+
+        $svc->onGrantsChanged($installedId, 'update:grants_changed', $admin->id());
+        self::assertSame(0, (int) (new WebhookRepository($this->db))->findById($hookId)['is_active'], 'webhook whose host is no longer granted is paused');
+        $stillWebhook = array_filter(
+            (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId),
+            static fn (array $r): bool => (string) $r['kind'] === 'webhook',
+        );
+        self::assertSame([], $stillWebhook, 'stale webhook credential is marked revoked');
     }
 
     public function test_insert_webhook_link_round_trips_and_holds_kind_invariant(): void

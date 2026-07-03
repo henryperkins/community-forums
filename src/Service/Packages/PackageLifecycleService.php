@@ -52,6 +52,7 @@ final class PackageLifecycleService
         private int $retentionDays = 30,
         private ?Telemetry $telemetry = null,
         private ?ThemeStateService $themes = null,
+        private ?PackageIntegrationService $integrations = null,
     ) {
     }
 
@@ -310,6 +311,9 @@ final class PackageLifecycleService
         $package = $this->packages->find((int) $install['package_id']);
 
         $this->db->transaction(function () use ($install, $installedId, $admin): void {
+            // Revoke package-owned credentials + pause delivery in the same transaction,
+            // immediately before the state flips inactive.
+            $this->integrations?->onInstallIneligible($installedId, 'disabled', $admin->id());
             $this->installs->setState($installedId, 'disabled');
             $this->history->record([
                 'package_id' => (int) $install['package_id'],
@@ -397,6 +401,9 @@ final class PackageLifecycleService
         $retentionDays = $this->retentionDaysFor($install);
 
         $export = $this->db->transaction(function () use ($install, $installedId, $package, $admin, $retentionDays): array {
+            // Tear down package-owned credentials in the same transaction,
+            // immediately before the install transitions to uninstalled.
+            $this->integrations?->onInstallIneligible($installedId, 'uninstalled', $admin->id());
             if ((string) $install['state'] === 'enabled') {
                 $this->installs->setState($installedId, 'disabled');
                 $this->history->record([

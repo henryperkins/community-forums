@@ -197,6 +197,7 @@ use App\Service\PasskeyService;
 use App\Service\OAuth\ProviderRegistry;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageCredentialAuthGuard;
+use App\Service\Packages\PackageIntegrationService;
 use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
@@ -1348,6 +1349,29 @@ final class App
             $c->get(RegistryTransport::class),
             $c->get(Telemetry::class),
         ));
+        $c->bind(PackageIntegrationService::class, fn (Container $c) => new PackageIntegrationService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(InstalledPackageRepository::class),
+            $c->get(InstalledPackagePermissionRepository::class),
+            $c->get(InstalledPackageSettingsRepository::class),
+            $c->get(InstalledPackageCredentialRepository::class),
+            $c->get(ApiTokenService::class),
+            $c->get(WebhookService::class),
+            $c->get(ApiTokenRepository::class),
+            $c->get(WebhookRepository::class),
+            $c->get(SecretVault::class),
+            $c->get(ManifestValidator::class),
+            $c->get(PackageHistoryRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
+            $c->get(SettingRepository::class),
+            $config,
+        ));
         $c->bind(PackageLifecycleService::class, fn (Container $c) => new PackageLifecycleService(
             $c->get(Database::class),
             $c->get(PackageRepository::class),
@@ -1367,6 +1391,7 @@ final class App
             (int) $config->get('packages.retention_days', 30),
             $c->get(Telemetry::class),
             $c->get(ThemeStateService::class),
+            $c->get(PackageIntegrationService::class),
         ));
         $c->bind(PackageUpdateService::class, fn (Container $c) => new PackageUpdateService(
             $c->get(Database::class),
@@ -1385,6 +1410,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(ModerationLogRepository::class),
             $c->get(Telemetry::class),
+            $c->get(PackageIntegrationService::class),
         ));
         $c->bind(PackageHealthService::class, fn (Container $c) => new PackageHealthService(
             $c->get(Database::class),
@@ -1400,6 +1426,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(Telemetry::class),
             $c->get(ThemeStateService::class),
+            $c->get(PackageIntegrationService::class),
         ));
         $c->bind(RegistrySnapshotRepository::class, fn (Container $c) => new RegistrySnapshotRepository($c->get(Database::class)));
         $c->bind(RegistrySnapshotService::class, fn (Container $c) => new RegistrySnapshotService(

@@ -543,4 +543,85 @@ final class PackageIntegrationService
             }
         });
     }
+
+    /**
+     * Grant-reconciliation hook called by PackageUpdateService after the permission rows change:
+     * revoke only active credentials whose recorded scopes/events/host are no longer a subset of
+     * the current granted rows. Idempotent, no reauth, emits no scope-denial audit. @return revoked count.
+     */
+    public function onGrantsChanged(int $installedId, string $reason, ?int $actorId): int
+    {
+        $install = $this->installs->find($installedId);
+        if ($install === null) {
+            return 0;
+        }
+
+        $allowedScopes = array_flip($this->currentGrantedApiScopes($installedId));
+        $allowedEvents = array_flip($this->grantedEvents($installedId));
+        $allowedHosts = array_flip($this->grantedOutboundHosts($installedId));
+        $revoked = 0;
+
+        foreach ($this->credentials->activeForInstall($installedId) as $cred) {
+            $stale = false;
+            if ((string) $cred['kind'] === 'api_token') {
+                $scopes = $this->decodeList($cred['scopes_json'] ?? null);
+                $stale = array_diff($scopes, array_keys($allowedScopes)) !== [];
+                if ($stale && $cred['api_token_id'] !== null) {
+                    $this->apiTokenRepo->revoke((int) $cred['api_token_id']);
+                }
+            } elseif ((string) $cred['kind'] === 'webhook') {
+                $events = $this->decodeList($cred['events_json'] ?? null);
+                $stale = array_diff($events, array_keys($allowedEvents)) !== [];
+                if (!$stale && $cred['webhook_id'] !== null) {
+                    $hook = $this->webhookRepo->findById((int) $cred['webhook_id']);
+                    $host = $hook !== null ? (string) parse_url((string) $hook['url'], PHP_URL_HOST) : '';
+                    $stale = $host === '' || !isset($allowedHosts[strtolower($host)]);
+                }
+                if ($stale && $cred['webhook_id'] !== null) {
+                    $this->webhookRepo->disable((int) $cred['webhook_id'], substr('Package grant changed: ' . $reason, 0, 190));
+                }
+            }
+
+            if ($stale && $this->credentials->markRevoked((int) $cred['id']) === 1) {
+                $revoked++;
+                $this->history->record([
+                    'package_id' => (int) $install['package_id'],
+                    'installed_package_id' => $installedId,
+                    'event' => 'credential_revoke',
+                    'actor_id' => $actorId,
+                    'detail' => json_encode(['kind' => (string) $cred['kind'], 'credential_id' => (int) $cred['id'], 'reason' => $reason], JSON_UNESCAPED_SLASHES),
+                ]);
+            }
+        }
+
+        return $revoked;
+    }
+
+    /** @return list<string> currently declared+granted api_scopes local code supports (no audit). */
+    private function currentGrantedApiScopes(int $installedId): array
+    {
+        $scopes = [];
+        foreach ($this->permissions->forInstall($installedId) as $row) {
+            if ((string) $row['kind'] === 'api_scope' && (int) $row['declared'] === 1 && (int) $row['granted'] === 1 && ApiScopes::isValid((string) $row['permission_key'])) {
+                $scopes[] = (string) $row['permission_key'];
+            }
+        }
+        return array_values(array_unique($scopes));
+    }
+
+    /**
+     * @param mixed $json
+     * @return list<string>
+     */
+    private function decodeList($json): array
+    {
+        if (!is_string($json) || $json === '') {
+            return [];
+        }
+        $decoded = json_decode($json, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+        return array_values(array_filter($decoded, 'is_string'));
+    }
 }

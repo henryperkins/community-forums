@@ -33,6 +33,7 @@ final class PackageHealthService
         private ModerationLogRepository $audit,
         private ?Telemetry $telemetry = null,
         private ?ThemeStateService $themes = null,
+        private ?PackageIntegrationService $integrations = null,
     ) {
     }
 
@@ -167,6 +168,7 @@ final class PackageHealthService
     private function securityDisable(array $install, string $reason): bool
     {
         $changed = $this->db->transaction(function () use ($install, $reason): bool {
+            $this->integrations?->onInstallIneligible((int) $install['id'], 'force_disabled', null);
             if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'disabled')) {
                 return false;
             }
@@ -227,6 +229,7 @@ final class PackageHealthService
     private function quarantine(array $install, string $reason): bool
     {
         $changed = $this->db->transaction(function () use ($install, $reason): bool {
+            $this->integrations?->onInstallIneligible((int) $install['id'], 'quarantined', null);
             if (!$this->installs->setStateIfCurrent((int) $install['id'], (string) $install['state'], 'quarantined')) {
                 return false;
             }
