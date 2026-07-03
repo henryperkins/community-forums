@@ -249,6 +249,28 @@ final class PackageSecurityResponseServiceTest extends TestCase
         self::assertContains('package_execution_enabled', $actions);
     }
 
+    public function test_emergency_disable_persists_the_string_the_runtime_guards_enforce_on(): void // TM-SC-08 regression
+    {
+        // Regression for the brake-bypass: setExecutionDisabled() used to persist a PHP
+        // bool, which SettingRepository::set json_encodes to `true`. The two runtime
+        // enforcement readers (PackageCredentialAuthGuard + PackageIntegrationService)
+        // deny only when getString('package_execution_disabled', '') === '1'; getString()
+        // returns '' for a decoded bool, so the brake looked engaged in the console
+        // ((bool) get() → true) yet never actually denied package execution. Pin the write
+        // to the exact string the guards read, exercising the real writer (not a seeded '1').
+        $this->seedEnabledIntegration();
+        $svc = $this->securityService();
+        $settings = new SettingRepository($this->db);
+
+        $svc->setExecutionDisabled($this->admin, 'password123', true, 'incident-99');
+        self::assertSame('1', $settings->getString('package_execution_disabled', ''),
+            'the brake must persist the canonical string the runtime credential-auth guards enforce on');
+
+        $svc->setExecutionDisabled($this->admin, 'password123', false, null);
+        self::assertNotSame('1', $settings->getString('package_execution_disabled', ''),
+            're-enabling must clear the guard-visible brake');
+    }
+
     public function test_overview_lists_publishers_advisories_and_blocklist_from_the_shared_sources(): void
     {
         $root = SigningHarness::generate('ov-root');

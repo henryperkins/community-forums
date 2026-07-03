@@ -55,7 +55,11 @@ final class PackageSecurityResponseService
     /** DB setting OR the packages.execution_disabled config break-glass. Flag-independent. */
     public function isExecutionDisabled(): bool
     {
-        if ((bool) $this->settings->get(self::SETTING_KEY, false)) {
+        // The setting is persisted as the canonical string '1'/'0' (setExecutionDisabled),
+        // matching the runtime guards in PackageCredentialAuthGuard + PackageIntegrationService.
+        // A JSON boolean would decode to a non-string and getString() would drop it to '',
+        // silently disarming the brake — so all three readers compare getString(...) === '1'.
+        if ($this->settings->getString(self::SETTING_KEY, '') === '1') {
             return true;
         }
 
@@ -80,7 +84,11 @@ final class PackageSecurityResponseService
         $cleanReason = $reason === null || trim($reason) === '' ? null : mb_substr(trim($reason), 0, 255);
 
         $this->db->transaction(function () use ($admin, $disabled, $cleanReason, $installs): void {
-            $this->settings->set(self::SETTING_KEY, $disabled);
+            // Store the canonical string form the runtime guards enforce on
+            // (getString(...) === '1'). A bare bool would json_encode to `true`,
+            // which getString() cannot read back — the brake would look engaged in
+            // the console yet never actually deny package execution.
+            $this->settings->set(self::SETTING_KEY, $disabled ? '1' : '0');
 
             if ($disabled) {
                 foreach ($installs as $install) {
