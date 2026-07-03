@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.31 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-02
+**Status:** v1.32 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-03
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -1059,6 +1059,7 @@ New tables — **identity / auth** (`0051`–`0054`, §8.2 #14/#15/#16 plus ADR 
 
 - `webauthn_credentials(id, user_id, credential_id, public_key, sign_count, aaguid, transports, is_discoverable, is_backup_eligible, is_backed_up, nickname, created_at, last_used_at, revoked_at)` with unique `credential_id` (VARBINARY) and user FK; **PUBLIC** credential material only — private keys never reach the server.
 - `webauthn_challenges(id, user_id, session_token_hash, purpose, challenge, created_at, expires_at, consumed_at)` with user FK; one-time, short-lived, purpose/session-bound; `user_id` NULL = usernameless/discoverable login.
+  Animated by Increment 7 (2026-07-03): `PasskeyService` + WebAuthn repositories read/write these tables; RP ID/origins remain config-derived (A5).
 - `identity_providers(id, provider_key, display_name, protocol, type, issuer, discovery_url, jwks_uri, jwks_cache_json, jwks_cached_at, client_id, client_secret_ref, claim_map_json, is_enabled, health_status, health_checked_at, created_at, updated_at)` with unique `provider_key`; **seeds google/apple/github** as dark `builtin` rows. `client_secret_ref` is a reference into the encrypted secret service — **never plaintext**.
 - `provider_aliases(id, alias, provider_key, created_at)` with unique `alias`; maps historical provider strings to canonical keys so the enum→registry migration never duplicates/orphans an identity. Seeds google/apple/github.
 - `invitations(id, token_hash, created_by, email, domain, onboarding_role_id, onboarding_board_id, max_uses, used_count, expires_at, revoked_at, revoked_by, created_at)` with unique `token_hash` (sha256 — **no raw token column**) and creator/revoker/role/board FKs; an invitation is onboarding evidence, not authority (`onboarding_role_id` is non-privileged only, enforced in code).
@@ -1198,6 +1199,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.32 | 2026-07-03 | `0051` tables activated by Inc 7 passkeys (no schema change): `PasskeyService` and the WebAuthn repositories now read/write credentials and challenges behind the dark `passkeys` flag; RP ID/origin policy remains config-derived. |
 | v1.31 | 2026-07-02 | Phase 5 Increment 4 migration `0072`: added declarative theme package build rows, DB-stored neutralized assets, the single-row active/LKG `theme_state`, and widened `package_history.event` with theme activate/rollback/deactivate events. Migration number follows the existing `0071_content_reference_tags` migration on this branch. |
 | v1.30 | 2026-07-02 | Added migration `0071_content_reference_tags`: widened `content_references.target_type` with `tag` so composer-inserted `/tags/{slug}` links can resolve to read-gated tag cards while `content_references` and `tags` are enabled. |
 | v1.29 | 2026-07-02 | Phase 5 Increment 3 migrations `0069`+`0070`: installed-package lifecycle columns (pin, update_policy manual\|notify, staged update pointer, settings/export/retention/quarantine state, `state`+`'uninstalled'`, history events `update_staged`/`export`/`purge`, permission kinds `api_scope`/`event`) and the P5-07-A review-enforcement tables (`publisher_signing_keys` inert-for-Inc-5, `package_review_decisions`, `package_transparency_log`). |
