@@ -15,8 +15,10 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Core\View;
 use App\Domain\User;
+use App\Repository\PostRepository;
 use App\Repository\ServerDraftRepository;
 use App\Security\Session;
+use App\Service\PreferenceService;
 
 /**
  * Base controller: thin helpers for resolving services, rendering views,
@@ -69,6 +71,24 @@ abstract class Controller
     {
         $this->flash()->add($message);
         return $this->redirect($to);
+    }
+
+    /**
+     * Canonical location of a post within its thread, including the page it
+     * falls on, so a no-JS redirect after a write lands on the right page and
+     * its #anchor resolves (a paginated thread otherwise dropped the viewer on
+     * page 1 where the anchor doesn't exist). Uses the viewer's own
+     * posts-per-page preference — the same pagination the thread render uses —
+     * falling back to the site default for guests.
+     */
+    protected function postLocation(int $threadId, string $slug, int $postId): string
+    {
+        $user = $this->currentUser();
+        $perPage = $user !== null
+            ? $this->container->get(PreferenceService::class)->postsPerPage($user->id())
+            : (int) $this->config()->get('pagination.posts_per_page', 20);
+        $page = $this->container->get(PostRepository::class)->pageOfPost($threadId, $postId, $perPage);
+        return '/t/' . $threadId . '-' . $slug . ($page > 1 ? '?page=' . $page : '') . '#p' . $postId;
     }
 
     protected function discardServerDraftFor(User $user, string $contextKey): void

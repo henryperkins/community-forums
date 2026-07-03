@@ -14,7 +14,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
 ?>
 <article class="thread">
     <header class="thread-head">
-        <p class="breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Inbox</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
+        <p class="breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Home</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
         <h1>
             <?php if ((int) $thread['is_pinned'] === 1): ?><span class="badge">Pinned</span><?php endif; ?>
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
@@ -54,7 +54,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         // popover pattern: native <details>, existing forms verbatim).
         $hasThreadOverflow = (($notifications_on ?? false) && $current_user !== null)
             || (($accepted_post_id ?? null) !== null && !empty($can_mark_solved))
-            || ($is_admin ?? false);
+            || !empty($can_moderate_board);
         $hasThreadActions = ((($engagement ?? false) && $current_user !== null)) || $hasThreadOverflow;
         ?>
         <?php if ($hasThreadActions): ?>
@@ -93,7 +93,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                                     <button class="dm-menu-item" type="submit"><span>Clear accepted answer</span></button>
                                 </form>
                             <?php endif; ?>
-                            <?php if ($is_admin): ?>
+                            <?php if (!empty($can_moderate_board)): ?>
                                 <div class="dm-menu-sep"></div>
                                 <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
                                     <?= $this->csrfField() ?>
@@ -456,6 +456,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
                     'can_mark_solved' => $can_mark_solved ?? false,
                     'can_reveal_anon' => $can_reveal_anon ?? false,
+                    'can_moderate_board' => $can_moderate_board ?? false,
                     'can_curate_memory' => $can_curate_memory ?? false,
                     'can_curate_wiki' => $can_curate_wiki ?? false,
                     'wiki_revisions' => ($wiki_revisions_by_post ?? [])[(int) $p['id']] ?? [],

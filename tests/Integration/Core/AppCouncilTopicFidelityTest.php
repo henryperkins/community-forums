@@ -83,7 +83,7 @@ final class AppCouncilTopicFidelityTest extends TestCase
         $this->assertSeeText($resp, '<em>log in to add your counsel.</em>');
     }
 
-    public function test_breadcrumb_resolves_to_an_inbox_and_board_back_trail(): void
+    public function test_breadcrumb_back_trail_resolves_to_home_and_board(): void
     {
         $board = $this->makeBoard($this->cat, ['slug' => 'audit-trails', 'name' => 'audit-trails']);
         $author = $this->makeUser(['username' => 'cirdan']);
@@ -92,8 +92,10 @@ final class AppCouncilTopicFidelityTest extends TestCase
         $resp = $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']);
 
         $this->assertStatus(200, $resp);
-        // First hop is the Inbox; second hop is the board channel.
-        $this->assertSeeText($resp, 'Inbox</a>');
+        // First hop is Home (the board index at /), labelled to match where it
+        // actually goes — not "Inbox", which is the distinct /inbox route.
+        $this->assertSeeText($resp, 'class="breadcrumb-back" href="/"');
+        $this->assertSeeText($resp, 'Home</a>');
         $this->assertSeeText($resp, 'breadcrumb-board');
     }
 }

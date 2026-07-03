@@ -109,6 +109,28 @@ final class ModerationService
         $this->assertCanModerate($mod, (int) $post['board_id']);
         $this->assertNotArchived((int) $post['board_id']);
 
+        // Removing the opening post removes the whole topic rather than orphaning
+        // a headless, still-listed thread. Moderators legitimately remove abusive
+        // or spam topics that already have replies, so — unlike the opener's own
+        // retraction — there is no sole-participant guard here. Purge + audit are
+        // one transaction; the reason is required (validated above) and the soft
+        // delete is reversible through repair tooling.
+        if ((int) $post['is_op'] === 1) {
+            $this->db->transaction(function () use ($mod, $post, $reason): void {
+                $this->posting->purgeThread((int) $post['thread_id'], (int) $post['board_id'], $mod->id());
+                $this->log->log([
+                    'actor_id' => $mod->id(),
+                    'action' => 'delete_thread',
+                    'target_type' => 'thread',
+                    'target_id' => (int) $post['thread_id'],
+                    'reason' => $reason,
+                    'before' => ['is_deleted' => 0],
+                    'after' => ['is_deleted' => 1, 'deleted_by' => $mod->id()],
+                ]);
+            });
+            return $post;
+        }
+
         $deleted = $this->db->transaction(function () use ($mod, $post, $postId, $reason): bool {
             if ($this->posts->softDelete($postId, $mod->id()) === 0) {
                 return false; // already deleted concurrently — nothing to adjust or audit

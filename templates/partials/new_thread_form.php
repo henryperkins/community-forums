@@ -2,6 +2,10 @@
 <form method="post" action="/threads" class="composer stacked" data-composer-context="new_thread" data-composer-target-id="<?= (int) $board['id'] ?>">
     <?= $this->csrfField() ?>
     <input type="hidden" name="board_id" value="<?= (int) $board['id'] ?>">
+    <?php // No-JS idempotency: without this, a double-submit (double-click, retry,
+          // back-button resend) creates duplicate topics. app.js stamps it too when
+          // JS is on; this server-rendered field is the progressive-enhancement base. ?>
+    <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
     <?php if (!empty($errors['title'])): ?><p class="field-error"><?= $e($errors['title']) ?></p><?php endif; ?>
     <input type="text" name="title" class="input" placeholder="Title" maxlength="160" value="<?= $e($old['title'] ?? '') ?>" required>
     <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>

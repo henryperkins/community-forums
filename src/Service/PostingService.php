@@ -382,6 +382,21 @@ final class PostingService
             throw new ForbiddenException('This board is archived and is read-only.');
         }
 
+        // Deleting the opening post retracts the whole topic instead of leaving a
+        // headless, still-listed thread (the board list keys on the thread row,
+        // not the OP). Allowed only while the opener is the sole participant, so
+        // it can never erase another member's replies; once others have joined,
+        // refuse and point them at a moderator who can remove the topic.
+        if ((int) $post['is_op'] === 1) {
+            if ($this->posts->hasOtherParticipants((int) $post['thread_id'], (int) $post['user_id'])) {
+                throw new ValidationException([
+                    'post' => 'You can’t delete the opening post once others have replied. Ask a moderator to remove the topic.',
+                ]);
+            }
+            $this->purgeThread((int) $post['thread_id'], (int) $post['board_id'], (int) $post['user_id']);
+            return $post + ['topic_retracted' => true];
+        }
+
         $deleted = $this->db->transaction(function () use ($post, $postId, $user): bool {
             // Only adjust counters if this call actually performed the delete
             // (guards against a concurrent/duplicate delete double-decrementing).
@@ -400,6 +415,45 @@ final class PostingService
         }
 
         return $post;
+    }
+
+    /**
+     * Soft-delete an entire topic: every live post (reversing the counters and
+     * reputation each one contributed) plus the thread row, then drop it from
+     * the board's thread tally. Reuses the per-post deletion accounting so
+     * counters stay in lockstep with {@see RepairService}. Shared by the
+     * opener's topic retraction ({@see deleteOwnPost}) and the moderator
+     * remove-topic path ({@see \App\Service\ModerationService::deletePost});
+     * each caller owns its own audit logging.
+     */
+    public function purgeThread(int $threadId, int $boardId, int $actorId): void
+    {
+        $rows = $this->db->fetchAll(
+            'SELECT id, user_id, is_op, is_pending FROM posts WHERE thread_id = ? AND is_deleted = 0',
+            [$threadId],
+        );
+
+        $this->db->transaction(function () use ($rows, $threadId, $boardId, $actorId): void {
+            foreach ($rows as $row) {
+                if ($this->posts->softDelete((int) $row['id'], $actorId) === 0) {
+                    continue; // deleted concurrently — don't double-count
+                }
+                // Held (is_pending=1) posts never reached the denormalized counters,
+                // so only reverse accounting for the posts that actually did.
+                if ((int) $row['is_pending'] === 0) {
+                    $this->applyDeletionCounters([
+                        'id' => (int) $row['id'],
+                        'user_id' => (int) $row['user_id'],
+                        'is_op' => (int) $row['is_op'],
+                        'thread_id' => $threadId,
+                        'board_id' => $boardId,
+                        'deleted_by' => $actorId,
+                    ]);
+                }
+            }
+            $this->threads->softDelete($threadId, $actorId);
+            $this->boards->decrementThreadCount($boardId, 1);
+        });
     }
 
     /**

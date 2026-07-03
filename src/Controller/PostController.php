@@ -88,7 +88,7 @@ final class PostController extends Controller
         if ($post !== null && (int) $post['is_pending'] === 1) {
             return $this->redirectWithFlash('/t/' . $threadId . '-' . $slug, 'Your reply was submitted and is awaiting moderator approval.');
         }
-        return $this->redirect('/t/' . $threadId . '-' . $slug . '#p' . $postId);
+        return $this->redirect($this->postLocation($threadId, $slug, $postId));
     }
 
     /** Evaluate auto badges for a user after they post (community flag aware). */
@@ -128,7 +128,7 @@ final class PostController extends Controller
             ])->withStatus(422);
         }
 
-        return $this->redirect($this->threadUrl($post) . '#p' . $postId);
+        return $this->redirect($this->postLocation((int) $post['thread_id'], (string) $post['thread_slug'], $postId));
     }
 
     /** @param array<string,string> $params */
@@ -144,7 +144,17 @@ final class PostController extends Controller
         $threadUrl = $this->threadUrl($post);
 
         if ($user->owns((int) $post['user_id'])) {
-            $this->container->get(PostingService::class)->deleteOwnPost($user, $postId);
+            try {
+                $result = $this->container->get(PostingService::class)->deleteOwnPost($user, $postId);
+            } catch (ValidationException $e) {
+                // Refusing to delete the opening post of a topic others have joined.
+                return $this->redirectWithFlash($threadUrl . '#p' . $postId, $e->first());
+            }
+            // Deleting the opening post retracts the whole topic — send the author
+            // back to the board rather than to a now-removed thread.
+            if (!empty($result['topic_retracted'])) {
+                return $this->redirectWithFlash('/c/' . $post['board_slug'], 'Your topic was deleted.');
+            }
             return $this->redirectWithFlash($threadUrl, 'Your post was deleted.');
         }
 
@@ -154,6 +164,11 @@ final class PostController extends Controller
                 $moderation->deletePost($user, $postId, $request->str('reason'));
             } catch (ValidationException $e) {
                 return $this->redirectWithFlash($threadUrl . '#p' . $postId, $e->first());
+            }
+            // Removing the opening post removes the whole topic — the thread is
+            // gone, so send the moderator back to the board, not to a dead URL.
+            if ((int) $post['is_op'] === 1) {
+                return $this->redirectWithFlash('/c/' . $post['board_slug'], 'Topic removed.');
             }
             return $this->redirectWithFlash($threadUrl, 'Post removed.');
         }

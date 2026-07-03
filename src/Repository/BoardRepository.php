@@ -205,6 +205,15 @@ final class BoardRepository
         );
     }
 
+    /** Drop one thread from the board tally when a topic is deleted/retracted. */
+    public function decrementThreadCount(int $boardId, int $delta = 1): void
+    {
+        $this->db->run(
+            'UPDATE boards SET thread_count = GREATEST(0, CAST(thread_count AS SIGNED) - ?) WHERE id = ?',
+            [$delta, $boardId],
+        );
+    }
+
     /** Re-add to post_count when a soft-deleted post is restored (P2-08). */
     public function incrementPostCount(int $boardId, int $delta = 1): void
     {

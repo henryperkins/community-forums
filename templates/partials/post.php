@@ -1,8 +1,10 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 $owner = $current_user !== null && $current_user->id() === (int) $p['user_id'];
-$admin = $current_user?->isAdmin() ?? false;
-$canModerate = $admin && !$owner;
+// Board moderators — not just global admins — get the mod controls; the caller's
+// can_moderate_board flag already folds in admin-any. Keep an isAdmin fallback so
+// any render path that doesn't thread the flag still shows admins their controls.
+$canModerate = (!empty($can_moderate_board) || ($current_user?->isAdmin() ?? false)) && !$owner;
 $isAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
 // Public byline is ALWAYS masked when anonymous; a mod "reveal" is a separate
 // audited action (flash), never an un-mask of this render.
@@ -161,15 +163,18 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                     </details>
                     <form method="post" action="/posts/<?= (int) $p['id'] ?>/delete" class="inline">
                         <?= $this->csrfField() ?>
-                        <button class="linkbtn danger" type="submit">Delete</button>
+                        <button class="linkbtn danger" type="submit"><?= (int) $p['is_op'] === 1 ? 'Delete topic' : 'Delete' ?></button>
                     </form>
                 <?php elseif ($canModerate): ?>
+                    <?php // Removing the opening post removes the whole topic (replies and all),
+                          // so the OP's mod control says so; a reply removes just that post. ?>
+                    <?php $opRemoval = (int) $p['is_op'] === 1; ?>
                     <details class="post-edit">
-                        <summary class="linkbtn danger">Remove (mod)</summary>
+                        <summary class="linkbtn danger"><?= $opRemoval ? 'Remove topic (mod)' : 'Remove (mod)' ?></summary>
                         <form method="post" action="/posts/<?= (int) $p['id'] ?>/delete" class="composer">
                             <?= $this->csrfField() ?>
                             <input type="text" name="reason" class="input" placeholder="Reason (required)" maxlength="255" required>
-                            <button class="btn btn-small danger" type="submit">Remove post</button>
+                            <button class="btn btn-small danger" type="submit"><?= $opRemoval ? 'Remove topic' : 'Remove post' ?></button>
                         </form>
                     </details>
                 <?php endif; ?>

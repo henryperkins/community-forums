@@ -43,7 +43,6 @@ final class EngagementController extends Controller
         }
 
         $post = $result['post'];
-        $threadUrl = '/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'];
 
         // A received reaction may cross a reputation badge milestone for the
         // post author (Appreciated / Well-Liked). Idempotent + cheap when not due.
@@ -61,7 +60,7 @@ final class EngagementController extends Controller
             ]);
         }
 
-        return $this->redirect($threadUrl . '#p' . $postId);
+        return $this->redirect($this->postLocation((int) $post['thread_id'], (string) $post['thread_slug'], $postId));
     }
 
     /** @param array<string,string> $params */

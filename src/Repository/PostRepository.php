@@ -132,6 +132,21 @@ final class PostRepository
         );
     }
 
+    /**
+     * True when any member OTHER than $userId still has a live (non-deleted)
+     * post in the thread — including approval-held replies. Gates topic
+     * retraction: the opener may only delete their opening post while they are
+     * the thread's sole participant, so removing it can never erase someone
+     * else's contribution.
+     */
+    public function hasOtherParticipants(int $threadId, int $userId): bool
+    {
+        return (int) $this->db->fetchValue(
+            'SELECT EXISTS(SELECT 1 FROM posts WHERE thread_id = ? AND user_id <> ? AND is_deleted = 0)',
+            [$threadId, $userId],
+        ) === 1;
+    }
+
     /** @return array<int,int> user_id => rank boost */
     public function nonAnonymousParticipantRanks(int $threadId): array
     {
