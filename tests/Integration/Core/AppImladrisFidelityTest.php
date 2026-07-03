@@ -286,7 +286,7 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'dm-row');
     }
 
-    public function test_message_thread_renders_open_letter_bubbles_and_report_form(): void
+    public function test_message_thread_renders_grouped_letters_and_report_form(): void
     {
         $sender = $this->makeUser(['username' => 'letter_sender', 'display_name' => 'Letter Sender']);
         $recipient = $this->makeUser(['username' => 'letter_recipient', 'display_name' => 'Letter Recipient']);
@@ -310,7 +310,20 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'dm-threadpane');
         $this->assertSeeText($res, 'dm-thread-head');
         $this->assertSeeText($res, 'dm-scroll');
-        $this->assertSeeText($res, 'dm-bubble');
+        // Reimagine: messages are de-boxed into grouped "letters" (one author line
+        // per run), not the old bordered .dm-bubble cards.
+        $this->assertSeeText($res, 'dm-scroll-inner');
+        $this->assertSeeText($res, 'Beginning of your counsel');
+        $this->assertSeeText($res, 'dm-group');
+        $this->assertSeeText($res, 'dm-body');
+        $this->assertDontSeeText($res, 'dm-bubble');
+        // Mine wears the one ceremonial gold plate; both message bodies render.
+        $this->assertSeeText($res, 'class="dm-group mine"');
+        $this->assertSeeText($res, 'First private counsel.');
+        $this->assertSeeText($res, 'An open-letter reply.');
+        // The per-message report is a hover-revealed ··· that still opens the
+        // report form with no JavaScript (native <details>).
+        $this->assertSeeText($res, 'dm-line-menu');
         $this->assertSeeText($res, 'dm-report-form');
     }
 
