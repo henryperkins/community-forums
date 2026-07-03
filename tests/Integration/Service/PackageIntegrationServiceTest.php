@@ -289,4 +289,47 @@ final class PackageIntegrationServiceTest extends TestCase
         $this->expectException(ValidationException::class);
         $this->service()->provisionCredentials($admin, 'WRONG', $installedId);
     }
+
+    public function test_rotate_revokes_the_old_token_and_reveals_a_new_one_once(): void
+    {
+        [$admin, $installedId] = $this->enabledRemoteApp(['read:boards']);
+        $svc = $this->service();
+        $first = $svc->provisionCredentials($admin, 'password123', $installedId);
+        $credentialId = (int) $first['credentials'][0]['id'];
+
+        $rotated = $svc->rotateCredential($admin, 'password123', $installedId, $credentialId);
+        self::assertNull($rotated['secret']);
+        self::assertNotNull($rotated['token']);
+        self::assertStringStartsWith('rbt_', $rotated['token']);
+        self::assertNotSame($first['api_token'], $rotated['token']);
+
+        self::assertNull(
+            $this->apiTokenService()->authenticate('Bearer ' . $first['api_token']),
+            'the rotated-out token no longer authenticates',
+        );
+        $principal = $this->apiTokenService()->authenticate('Bearer ' . $rotated['token']);
+        self::assertNotNull($principal);
+        self::assertSame(['read:boards'], $principal->scopes());
+    }
+
+    public function test_revoke_kills_authentication_and_is_idempotent(): void
+    {
+        [$admin, $installedId] = $this->enabledRemoteApp(['read:boards']);
+        $svc = $this->service();
+        $res = $svc->provisionCredentials($admin, 'password123', $installedId);
+        $credentialId = (int) $res['credentials'][0]['id'];
+
+        $svc->revokeCredential($admin, $installedId, $credentialId);
+        self::assertNull(
+            $this->apiTokenService()->authenticate('Bearer ' . $res['api_token']),
+            'a revoked credential cannot authenticate',
+        );
+
+        // Idempotent: a second revoke is a silent no-op (no exception, no re-audit).
+        $svc->revokeCredential($admin, $installedId, $credentialId);
+        $revokes = (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE action = 'package_credential_revoke'",
+        );
+        self::assertSame(1, $revokes);
+    }
 }

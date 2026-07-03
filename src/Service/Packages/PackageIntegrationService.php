@@ -155,6 +155,120 @@ final class PackageIntegrationService
         });
     }
 
+    /**
+     * Rotate one api_token credential: tokens have no in-place rotate, so revoke the old and
+     * mint a replacement inside one transaction. @return array{secret:?string,token:?string} shown once.
+     */
+    public function rotateCredential(User $admin, string $currentPassword, int $installedId, int $credentialId): array
+    {
+        $this->writeGate->assertCanWrite($admin);
+
+        $link = $this->credentials->find($credentialId);
+        if ($link === null || (int) $link['installed_package_id'] !== $installedId || $link['revoked_at'] !== null) {
+            throw new PackagePolicyException('unknown_credential', 'No active credential to rotate.');
+        }
+        if ((string) $link['kind'] !== 'api_token') {
+            // Webhook-credential rotation lands with the webhook-event-delivery group.
+            throw new PackagePolicyException('credential_kind', 'Webhook credentials are rotated on the webhook surface.');
+        }
+        if ($this->isExecutionDisabled()) {
+            throw new PackagePolicyException('execution_disabled', 'Package execution is under an emergency disable.');
+        }
+        if (!$this->flags->enabled('service_secrets')) {
+            throw new ValidationException(['integration' => 'Enable the secret vault (service_secrets) before rotating credentials.']);
+        }
+        $this->reauth->requirePassword($admin, $currentPassword);
+
+        $install = $this->installs->find($installedId);
+        $package = $install !== null ? $this->packages->find((int) $install['package_id']) : null;
+        if ($install === null || $package === null) {
+            throw new PackagePolicyException('invalid_state', 'The installed package is no longer resolvable.');
+        }
+        $scopes = $this->grantedApiScopes($installedId, (int) $install['package_id'], $admin);
+        if ($scopes === []) {
+            throw new PackagePolicyException('no_scopes', 'This install no longer grants any API scope to mint.');
+        }
+
+        return $this->db->transaction(function () use ($admin, $currentPassword, $installedId, $install, $package, $link, $scopes): array {
+            $this->apiTokens->revoke($admin, (int) $link['api_token_id']);
+            $this->credentials->markRevoked((int) $link['id']);
+            $this->history->record([
+                'package_id' => (int) $install['package_id'],
+                'installed_package_id' => $installedId,
+                'event' => 'credential_revoke',
+                'actor_id' => $admin->id(),
+                'detail' => json_encode(['kind' => 'api_token', 'credential_id' => (int) $link['id'], 'reason' => 'rotate'], JSON_UNESCAPED_SLASHES),
+            ]);
+
+            $label = $this->credentialLabel((string) $package['package_uid'], $installedId);
+            $minted = $this->apiTokens->mint($admin, $currentPassword, $label, $scopes, null);
+            $newLinkId = $this->credentials->insertApiToken(
+                $installedId,
+                (int) $minted['id'],
+                $label,
+                json_encode($scopes, JSON_UNESCAPED_SLASHES) ?: '[]',
+                $admin->id(),
+            );
+            $this->history->record([
+                'package_id' => (int) $install['package_id'],
+                'installed_package_id' => $installedId,
+                'event' => 'credential_mint',
+                'actor_id' => $admin->id(),
+                'detail' => json_encode(['kind' => 'api_token', 'credential_id' => $newLinkId, 'scopes' => $scopes, 'rotated_from' => (int) $link['id']], JSON_UNESCAPED_SLASHES),
+            ]);
+            $this->audit->log([
+                'actor_id' => $admin->id(),
+                'action' => 'package_credential_rotate',
+                'target_type' => 'package',
+                'target_id' => (int) $install['package_id'],
+                'after' => ['kind' => 'api_token', 'credential_id' => $newLinkId, 'rotated_from' => (int) $link['id']],
+            ]);
+
+            return ['secret' => null, 'token' => (string) $minted['token']];
+        });
+    }
+
+    /**
+     * Revoke one api_token credential (friction-free defensive action: WriteGate only, no reauth).
+     * Idempotent: a no-op revoke forges no audit row.
+     */
+    public function revokeCredential(User $admin, int $installedId, int $credentialId): void
+    {
+        $this->writeGate->assertCanWrite($admin);
+
+        $link = $this->credentials->find($credentialId);
+        if ($link === null || (int) $link['installed_package_id'] !== $installedId) {
+            return;
+        }
+        if ((string) $link['kind'] !== 'api_token') {
+            // Webhook-credential revocation lands with the webhook-event-delivery group.
+            throw new PackagePolicyException('credential_kind', 'Webhook credentials are revoked on the webhook surface.');
+        }
+        $install = $this->installs->find($installedId);
+
+        $this->db->transaction(function () use ($admin, $installedId, $install, $link): void {
+            if ($link['api_token_id'] !== null) {
+                $this->apiTokens->revoke($admin, (int) $link['api_token_id']);
+            }
+            if ($this->credentials->markRevoked((int) $link['id']) === 1 && $install !== null) {
+                $this->history->record([
+                    'package_id' => (int) $install['package_id'],
+                    'installed_package_id' => $installedId,
+                    'event' => 'credential_revoke',
+                    'actor_id' => $admin->id(),
+                    'detail' => json_encode(['kind' => 'api_token', 'credential_id' => (int) $link['id']], JSON_UNESCAPED_SLASHES),
+                ]);
+                $this->audit->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'package_credential_revoke',
+                    'target_type' => 'package',
+                    'target_id' => (int) $install['package_id'],
+                    'after' => ['kind' => 'api_token', 'credential_id' => (int) $link['id']],
+                ]);
+            }
+        });
+    }
+
     /** True when the package_execution_disabled DB setting OR packages.execution_disabled config is set. */
     public function isExecutionDisabled(): bool
     {
