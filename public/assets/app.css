@@ -2557,6 +2557,11 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
     min-height: calc(100vh - var(--topbar-h));
     background: var(--surface-raised);
+    transition: grid-template-columns 240ms var(--ease-calm);
+}
+/* With the details rail open, the conversation becomes the middle of three columns. */
+.dm-shell.has-rail {
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) minmax(260px, 320px);
 }
 .dm-listpane {
     border-right: 1px solid var(--border-hair);
@@ -2730,136 +2735,190 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     min-height: 0;
     min-width: 0;
 }
+/* One-row conversation header: (back) · identity · details-toggle + one ··· menu. */
 .dm-thread-head {
-    padding: 18px 28px 14px;
+    padding: 13px 22px;
     border-bottom: 1px solid var(--border-hair);
-    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     flex: 0 0 auto;
 }
-.dm-thread-head .breadcrumb,
 .dm-compose .breadcrumb {
     font-family: var(--font-mono);
     font-size: .78rem;
     color: var(--text-faint);
     margin: 0 0 8px;
 }
-.dm-thread-title-row {
-    display: flex;
+.dm-back {
+    display: none;
     align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    flex-wrap: wrap;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    background: none;
+    border: 0;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex: 0 0 auto;
+    text-decoration: none;
 }
+.dm-back:hover { background: var(--surface-sunken); color: var(--brand); }
+.dm-back .icon { width: 18px; height: 18px; }
 .dm-thread-id {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
     min-width: 0;
     flex: 1 1 auto;
 }
-.dm-thread-id > div {
-    min-width: 0;
-}
+.dm-thread-id > div { min-width: 0; }
 .dm-thread-title {
     font-family: var(--font-display);
     font-weight: var(--weight-medium);
-    font-size: 1.5rem;
-    line-height: 1.1;
+    font-size: 1.28rem;
+    line-height: 1.12;
     margin: 0;
     color: var(--text-strong);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.dm-thread-title a {
-    color: inherit;
-    text-decoration: none;
-}
-.dm-thread-title a:hover {
-    color: var(--brand);
-}
+.dm-thread-title a { color: inherit; text-decoration: none; }
+.dm-thread-title a:hover { color: var(--brand); }
 .dm-thread-sub {
     font-family: var(--font-mono);
-    font-size: .76rem;
+    font-size: .72rem;
     color: var(--text-muted);
-    margin: 3px 0 0;
+    margin: 2px 0 0;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-.dm-thread-actions {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 0 0 auto;
-}
-.dm-head-btn {
+.dm-thread-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+/* Icon-only header controls — the details toggle and the single overflow. */
+.dm-iconbtn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-family: var(--font-label);
-    letter-spacing: .03em;
-    font-size: .78rem;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    background: none;
+    border: 1px solid transparent;
     color: var(--text-muted);
+    cursor: pointer;
+    transition: background 140ms var(--ease-calm), color 140ms var(--ease-calm);
+}
+.dm-iconbtn:hover { background: var(--surface-sunken); color: var(--brand); }
+.dm-iconbtn.is-active { background: var(--brand-subtle); color: var(--brand); border-color: var(--green-200); }
+.dm-iconbtn .icon { width: 18px; height: 18px; }
+
+/* The header ··· overflow — a native <details> popover (works with no JS). */
+.dm-menu { position: relative; display: inline-flex; }
+.dm-menu > summary { list-style: none; }
+.dm-menu > summary::-webkit-details-marker { display: none; }
+.dm-menu-pop {
+    position: absolute;
+    z-index: 50;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 214px;
+    padding: 6px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+}
+.dm-menu form { display: contents; }
+.dm-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
     background: none;
     border: 0;
     cursor: pointer;
-}
-.dm-head-btn:hover {
-    color: var(--brand);
-}
-.dm-head-btn.danger:hover {
-    color: var(--danger);
-}
-.dm-group-panel {
-    margin: 16px 28px 0;
-    padding: 14px 16px;
-    background: var(--surface-sunken);
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-lg);
-}
-.dm-group-panel h2 {
-    font-family: var(--font-label);
-    text-transform: uppercase;
-    letter-spacing: var(--tracking-caps);
-    font-size: .68rem;
-    color: var(--gold-ink);
-    margin: 0 0 10px;
-}
-.dm-members {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 0;
-    margin: 0 0 12px;
-}
-.dm-member {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 11px;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-md);
-    background: var(--surface-raised);
-    font-family: var(--font-mono);
-    font-size: .8rem;
+    font-family: var(--font-body);
+    font-size: .92rem;
     color: var(--text-body);
+    text-decoration: none;
 }
-.dm-member .role {
-    font-family: var(--font-label);
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    font-size: .56rem;
-    color: var(--gold-700);
-}
-.dm-member.is-left {
-    border-style: dashed;
-    color: var(--text-faint);
-}
-.dm-owner-tools {
+.dm-menu-item:hover { background: var(--surface-sunken); }
+.dm-menu-item.danger { color: var(--danger); }
+.dm-menu-item .icon { width: 16px; height: 16px; color: var(--text-muted); flex: 0 0 auto; }
+.dm-menu-item.danger .icon { color: var(--danger); }
+.dm-menu-sep { height: 1px; background: var(--border-hair); margin: 5px 4px; }
+/* ── Details rail (right column, collapsible) ───────────────────────────── */
+.dm-inforail {
+    background: var(--surface-page);
+    border-left: 1px solid var(--border-hair);
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
 }
+.dm-rail-head {
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border-hair);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+.dm-rail-head .eyebrow { margin: 0; }
+.dm-rail-body { overflow-y: auto; min-height: 0; padding: 22px 18px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+.dm-rail-id { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.dm-rail-id .monogram { width: 72px; height: 72px; font-size: 1.7rem; margin-bottom: 6px; }
+.dm-rail-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.4rem; color: var(--text-strong); line-height: 1.1; margin: 0; }
+.dm-rail-handle { font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); }
+.dm-tier-pill { margin-top: 4px; display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: var(--radius-pill); background: var(--gold-soft); border: 1px solid var(--gold-200); font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .62rem; color: var(--gold-ink); }
+
+.dm-rail-sec { display: flex; flex-direction: column; gap: 9px; }
+.dm-rail-sec > h3 { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .64rem; color: var(--gold-ink); margin: 0; }
+.dm-rail-meta { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.dm-rail-meta li { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-family: var(--font-body); font-size: .9rem; color: var(--text-body); }
+.dm-rail-meta li .k { color: var(--text-muted); }
+.dm-rail-meta li .v { font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong); text-align: right; }
+
+.dm-rail-actions { display: flex; flex-direction: column; gap: 2px; }
+.dm-rail-form { display: contents; }
+.dm-rail-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 10px; border-radius: var(--radius-md); background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: .95rem; color: var(--text-body); text-decoration: none; }
+.dm-rail-btn:hover { background: var(--surface-sunken); }
+.dm-rail-btn.danger { color: var(--danger); }
+.dm-rail-btn .icon { width: 16px; height: 16px; flex: 0 0 auto; }
+
+/* Group members list in the rail */
+.dm-members { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.dm-member { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--radius-md); position: relative; }
+.dm-member:hover { background: var(--surface-sunken); }
+.dm-member .monogram { width: 32px; height: 32px; font-size: .72rem; flex: 0 0 auto; }
+.dm-member .m-id { min-width: 0; display: flex; flex-direction: column; }
+.dm-member .m-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1rem; color: var(--text-strong); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-member .m-handle { font-family: var(--font-mono); font-size: .68rem; color: var(--text-muted); }
+.dm-member .m-role { margin-left: auto; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .56rem; color: var(--gold-ink); flex: 0 0 auto; }
+.dm-member.is-left { opacity: .55; }
+.dm-member.is-left .m-name { text-decoration: line-through; }
+.dm-member .m-role.left { color: var(--text-faint); }
+.dm-member-tools { margin-left: auto; display: flex; gap: 8px; opacity: 0; transition: opacity 140ms var(--ease-calm); }
+.dm-member-tools form { display: contents; }
+.dm-member:hover .dm-member-tools, .dm-member:focus-within .dm-member-tools { opacity: 1; }
+.dm-linkbtn { background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-label); letter-spacing: .03em; text-transform: uppercase; font-size: .58rem; color: var(--text-muted); white-space: nowrap; }
+.dm-linkbtn:hover { color: var(--brand); }
+.dm-linkbtn.danger:hover { color: var(--danger); }
+.dm-owner-tool { display: flex; gap: 8px; align-items: center; }
+.dm-owner-tool .input { flex: 1; min-width: 0; }
+
+/* Rail scrim — only used as the mobile overlay backdrop (revealed by JS). */
+.dm-rail-scrim { display: none; }
 .dm-scroll {
     flex: 1 1 auto;
     overflow-y: auto;
@@ -4189,29 +4248,59 @@ span.wf-btn {
     .brand-preview {
         position: static;
     }
-    .dm-shell {
-        grid-template-columns: 1fr;
-        margin-left: -16px;
-        margin-right: -16px;
-    }
-    .dm-threadpane {
-        display: none;
-    }
-    .dm-shell.reading .dm-listpane {
-        display: none;
-    }
-    .dm-shell.reading .dm-threadpane {
-        display: flex;
-    }
-    .dm-group {
-        max-width: 92%;
-    }
-    .dm-composer {
-        flex-direction: column;
-    }
     .appeal-resolve {
         grid-template-columns: 1fr;
     }
+}
+
+/* ── Messages reading room — responsive: rail column → drawer → overlay ───── */
+@media (min-width: 1400px) {
+    /* Collapsing the rail (the header toggle) drops the third column and hides it.
+       The rail is a real column only when there's room beside the app nav rail +
+       list + a readable conversation; below that it's an on-demand drawer. */
+    .dm-shell:not(.has-rail) .dm-inforail { display: none; }
+}
+@media (max-width: 1399px) {
+    /* The rail floats over the conversation's right edge instead of squeezing a
+       third column. No-JS: the header's "Members & details" (#dm-rail) opens it
+       via :target and the scrim (an anchor to #) closes it; app.js adds the
+       toggle button + Escape on top. */
+    .dm-shell.has-rail { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); }
+    .dm-inforail {
+        position: fixed;
+        top: var(--topbar-h);
+        right: 0;
+        bottom: 0;
+        width: min(340px, 92vw);
+        z-index: 55;
+        box-shadow: var(--shadow-xl);
+        transform: translateX(101%);
+    }
+    .dm-inforail:target,
+    .dm-shell.rail-open .dm-inforail { transform: translateX(0); }
+    .dm-inforail:target + .dm-rail-scrim,
+    .dm-shell.rail-open .dm-rail-scrim {
+        display: block;
+        position: fixed;
+        inset: var(--topbar-h) 0 0 0;
+        z-index: 54;
+        background: rgba(22, 29, 36, .42);
+    }
+}
+@media (max-width: 1399px) and (prefers-reduced-motion: no-preference) {
+    .dm-inforail { transition: transform 240ms var(--ease-calm); }
+}
+@media (max-width: 900px) {
+    /* Single pane: list ↔ conversation with a back control; rail as a full overlay. */
+    .dm-shell,
+    .dm-shell.has-rail { grid-template-columns: 1fr; margin-left: -16px; margin-right: -16px; }
+    .dm-threadpane { display: none; }
+    .dm-shell.reading .dm-listpane { display: none; }
+    .dm-shell.reading .dm-threadpane { display: flex; }
+    .dm-back { display: inline-flex; }
+    .dm-inforail { width: 100vw; max-width: 100vw; }
+    .dm-group { max-width: 92%; }
+    .dm-composer { flex-direction: column; }
 }
 
 @media (max-width: 680px) {

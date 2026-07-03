@@ -7,89 +7,62 @@ $title = !empty($is_group)
 $this->layout('layout');
 $this->section('title', $title);
 ?>
-<div class="dm-shell reading">
+<div class="dm-shell reading has-rail">
     <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id]) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head">
-            <p class="breadcrumb"><a href="/messages">← Messages</a></p>
-            <div class="dm-thread-title-row">
-                <div class="dm-thread-id">
-                    <?= $this->partial('partials/monogram', ['name' => $title, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'gilt' => true]) ?>
-                    <div>
-                        <h1 class="dm-thread-title">
-                            <?php if (!empty($is_group)): ?>
-                                <?= $e($title) ?>
-                            <?php elseif ($other !== null): ?>
-                                <a href="/u/<?= $e($other['username']) ?>"><?= $e($otherName) ?></a>
-                            <?php else: ?><?= $e($otherName) ?><?php endif; ?>
-                        </h1>
-                        <p class="dm-thread-sub">
-                            <?php if (!empty($is_group)): ?>
-                                <?= count(array_filter($participants ?? [], fn ($p) => empty($p['left_at']))) ?> active members
-                            <?php else: ?>
-                                Open letter
-                            <?php endif; ?>
-                        </p>
-                    </div>
+            <a class="dm-back" href="/messages" aria-label="Back to messages"><?= $this->partial('partials/icon', ['name' => 'chevron-left']) ?></a>
+            <div class="dm-thread-id">
+                <?= $this->partial('partials/monogram', ['name' => !empty($is_group) ? $title : $otherName, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'gilt' => true]) ?>
+                <div>
+                    <h1 class="dm-thread-title">
+                        <?php if (!empty($is_group)): ?>
+                            <?= $e($title) ?>
+                        <?php elseif ($other !== null): ?>
+                            <a href="/u/<?= $e($other['username']) ?>"><?= $e($otherName) ?></a>
+                        <?php else: ?><?= $e($otherName) ?><?php endif; ?>
+                    </h1>
+                    <p class="dm-thread-sub">
+                        <?php if (!empty($is_group)): ?>
+                            <?= count(array_filter($participants ?? [], fn ($p) => empty($p['left_at']))) ?> in counsel<?= !empty($muted) ? ' · muted' : '' ?>
+                        <?php elseif ($other !== null): ?>
+                            @<?= $e($other['username']) ?><?= !empty($muted) ? ' · muted' : '' ?>
+                        <?php endif; ?>
+                    </p>
                 </div>
-                <?php if (!empty($is_group)): ?>
-                    <div class="dm-thread-actions">
-                        <form class="inline" method="post" action="/messages/<?= (int) $conversation_id ?>/mute">
+            </div>
+            <div class="dm-thread-actions">
+                <button type="button" class="dm-iconbtn is-active" data-rail-toggle aria-controls="dm-rail" aria-expanded="true" aria-label="<?= !empty($is_group) ? 'Members and details' : 'Details' ?>"><?= $this->partial('partials/icon', ['name' => !empty($is_group) ? 'users' : 'panel-right']) ?></button>
+                <details class="dm-menu">
+                    <summary class="dm-iconbtn" aria-label="More actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
+                    <div class="dm-menu-pop" role="menu">
+                        <form method="post" action="/messages/<?= (int) $conversation_id ?>/mute">
                             <?= $this->csrfField() ?>
-                            <input type="hidden" name="muted" value="1">
-                            <button class="dm-head-btn" type="submit">Mute</button>
+                            <input type="hidden" name="muted" value="<?= !empty($muted) ? '0' : '1' ?>">
+                            <button class="dm-menu-item" type="submit"><?= $this->partial('partials/icon', ['name' => 'bell-off']) ?><span><?= !empty($muted) ? 'Unmute conversation' : 'Mute conversation' ?></span></button>
                         </form>
-                        <form class="inline" method="post" action="/messages/<?= (int) $conversation_id ?>/members/remove">
-                            <?= $this->csrfField() ?>
-                            <input type="hidden" name="user_id" value="<?= $current_user !== null ? (int) $current_user->id() : 0 ?>">
-                            <button class="dm-head-btn danger" type="submit">Leave</button>
-                        </form>
+                        <a class="dm-menu-item" href="#dm-rail" data-rail-open><?= $this->partial('partials/icon', ['name' => !empty($is_group) ? 'users' : 'panel-right']) ?><span><?= !empty($is_group) ? 'Members &amp; details' : 'Details' ?></span></a>
+                        <?php if (empty($is_group) && $other !== null): ?>
+                            <a class="dm-menu-item" href="/u/<?= $e($other['username']) ?>"><?= $this->partial('partials/icon', ['name' => 'user']) ?><span>View profile</span></a>
+                            <div class="dm-menu-sep"></div>
+                            <form method="post" action="/u/<?= $e($other['username']) ?>/block">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="return" value="/messages/<?= (int) $conversation_id ?>">
+                                <button class="dm-menu-item danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'ban']) ?><span><?= !empty($other_is_blocked) ? 'Unblock' : 'Block' ?> <?= $e($otherName) ?></span></button>
+                            </form>
+                        <?php elseif (!empty($is_group)): ?>
+                            <div class="dm-menu-sep"></div>
+                            <form method="post" action="/messages/<?= (int) $conversation_id ?>/members/remove">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="user_id" value="<?= $current_user !== null ? (int) $current_user->id() : 0 ?>">
+                                <button class="dm-menu-item danger" type="submit"><?= $this->partial('partials/icon', ['name' => 'log-out']) ?><span>Leave group</span></button>
+                            </form>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                </details>
             </div>
         </header>
-
-        <?php if (!empty($is_group)): ?>
-            <section class="dm-group-panel">
-                <h2>Members</h2>
-                <ul class="dm-members">
-                    <?php foreach (($participants ?? []) as $p): ?>
-                        <li class="dm-member<?= !empty($p['left_at']) ? ' is-left' : '' ?>">
-                            <span class="handle">@<?= $e($p['username']) ?></span>
-                            <?php if ($p['role'] === 'owner'): ?><span class="role">Owner</span><?php endif; ?>
-                            <?php if (!empty($p['left_at'])): ?><span class="role">Left</span><?php endif; ?>
-                            <?php if (!empty($is_owner) && empty($p['left_at']) && (int) $p['user_id'] !== (int) ($conversation['owner_user_id'] ?? 0)): ?>
-                                <form class="inline" method="post" action="/messages/<?= (int) $conversation_id ?>/members/remove">
-                                    <?= $this->csrfField() ?>
-                                    <input type="hidden" name="user_id" value="<?= (int) $p['user_id'] ?>">
-                                    <button class="linkbtn danger" type="submit">Remove</button>
-                                </form>
-                                <form class="inline" method="post" action="/messages/<?= (int) $conversation_id ?>/transfer">
-                                    <?= $this->csrfField() ?>
-                                    <input type="hidden" name="user_id" value="<?= (int) $p['user_id'] ?>">
-                                    <button class="linkbtn" type="submit">Make owner</button>
-                                </form>
-                            <?php endif; ?>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php if (!empty($is_owner)): ?>
-                    <div class="dm-owner-tools">
-                        <form class="inline-form" method="post" action="/messages/<?= (int) $conversation_id ?>/members">
-                            <?= $this->csrfField() ?>
-                            <input class="input input-small" type="text" name="username" maxlength="32" placeholder="username" required>
-                            <button class="btn btn-small" type="submit">Add member</button>
-                        </form>
-                        <form class="inline-form" method="post" action="/messages/<?= (int) $conversation_id ?>/rename">
-                            <?= $this->csrfField() ?>
-                            <input class="input input-small" type="text" name="title" maxlength="120" value="<?= $e($conversation['title'] ?? '') ?>" required>
-                            <button class="btn btn-small" type="submit">Rename</button>
-                        </form>
-                    </div>
-            <?php endif; ?>
-            </section>
-        <?php endif; ?>
 
         <div class="dm-scroll">
             <div class="dm-scroll-inner">
@@ -190,4 +163,16 @@ $this->section('title', $title);
             <div class="joinbar">You are no longer an active participant in this conversation.</div>
         <?php endif; ?>
     </section>
+
+    <?= $this->partial('partials/dm_rail', [
+        'conversation' => $conversation,
+        'conversation_id' => $conversation_id,
+        'is_group' => $is_group,
+        'is_owner' => $is_owner ?? false,
+        'other' => $other,
+        'participants' => $participants ?? [],
+        'muted' => $muted ?? false,
+        'other_is_blocked' => $other_is_blocked ?? false,
+    ]) ?>
+    <a class="dm-rail-scrim" href="#" data-rail-scrim aria-label="Close details"></a>
 </div>

@@ -63,7 +63,7 @@ test('DM reading room: de-boxed rows, grouped letters, no-JS report', async ({ b
 
   // ── Seed the conversation over real HTTP (separate contexts avoid the
   //    same-page re-login cookie trap) ───────────────────────────────────────
-  const aliceCtx = await browser.newContext({ baseURL: baseURL! });
+  const aliceCtx = await browser.newContext({ baseURL: baseURL!, viewport: { width: 1440, height: 900 } });
   const alice = await aliceCtx.newPage();
   await login(alice, 'alice@retro.test');
   const convA = await startDm(alice, 'bob', 'First private counsel — the audit note holds.');
@@ -98,6 +98,13 @@ test('DM reading room: de-boxed rows, grouped letters, no-JS report', async ({ b
   // Alice's two consecutive messages group under a single author line.
   await expect(alice.locator('.dm-group.mine').first().locator('.dm-ghead')).toHaveCount(1);
   await expect(alice.locator('.dm-group.mine .dm-line')).toHaveCount(2);
+  // The details rail is the third column at wide widths; the header carries one
+  // ··· overflow. Standing Mute/Leave buttons and the inline group panel are gone.
+  await expect(alice.locator('.dm-inforail .dm-rail-name')).toHaveText('Bob Brooks');
+  await expect(alice.locator('.dm-inforail')).toContainText('Mute conversation');
+  await expect(alice.locator('.dm-inforail')).toContainText('Block Bob Brooks');
+  await expect(alice.locator('.dm-thread-actions .dm-menu > summary')).toBeVisible();
+  await expect(alice.locator('.dm-head-btn')).toHaveCount(0);
   await shot(alice, '02-conversation');
 
   // ── No-JS: the same page renders and the report <details> still opens ─────
@@ -111,6 +118,10 @@ test('DM reading room: de-boxed rows, grouped letters, no-JS report', async ({ b
   await menuSummary.click();
   await expect(nojs.locator('.dm-report-form').first()).toBeVisible();
   await expect(nojs.locator('.dm-report-form select[name="reason_code"]').first()).toBeVisible();
+  // The header ··· overflow is a native <details> — it opens with no JS.
+  await nojs.locator('.dm-thread-actions .dm-menu > summary').click();
+  await expect(nojs.locator('.dm-menu-pop')).toBeVisible();
+  await expect(nojs.locator('.dm-menu-pop')).toContainText('Mute conversation');
   await shot(nojs, '03-conversation-no-js');
 
   // ── Dark theme: the reimagine uses only theme-aware :root tokens, so it must
