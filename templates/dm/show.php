@@ -141,6 +141,21 @@ $this->section('title', $title);
                         </div>
                     </div>
                 <?php endforeach; ?>
+                <?php
+                // Read receipt — a quiet line under my last letter. Direct only,
+                // and only on the newest page (that's where the last letter is).
+                $lastMessage = $messages[count($messages) - 1];
+                $receipt = null;
+                if (empty($is_group) && $other !== null && $current_user !== null
+                    && (int) $lastMessage['user_id'] === $current_user->id()
+                    && (int) $page === (int) $pages) {
+                    $receipt = ($other_last_read_message_id ?? null) !== null
+                        && (int) $other_last_read_message_id >= (int) $lastMessage['id'] ? 'Read' : 'Sent';
+                }
+                ?>
+                <?php if ($receipt !== null): ?>
+                    <div class="dm-receipt-row"><span class="dm-receipt"><?php if ($receipt === 'Read'): ?><?= $this->partial('partials/icon', ['name' => 'check']) ?><?php endif; ?><?= $receipt ?></span></div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <?= $this->partial('partials/pagination', ['page' => $page, 'pages' => $pages, 'base_url' => '/messages/' . (int) $conversation_id . '?']) ?>
@@ -162,8 +177,14 @@ $this->section('title', $title);
             <form class="dm-composer composer" method="post" action="/messages/<?= (int) $conversation_id ?>" data-composer-context="dm" data-composer-target-id="<?= (int) $conversation_id ?>">
                 <?= $this->csrfField() ?>
                 <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
-                <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
-                <button class="btn" type="submit">Send</button>
+                <div class="dm-composer-field">
+                    <textarea name="body" rows="2" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
+                    <button class="dm-send" type="submit" aria-label="Send" title="Send"><?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?></button>
+                </div>
+                <div class="dm-composer-meta">
+                    <span class="dm-composer-hint">Enter to send · Shift + Enter for a new line</span>
+                    <span class="dm-composer-count" data-dm-count><?= mb_strlen((string) ($body ?? '')) ?> / 5000</span>
+                </div>
             </form>
         <?php else: ?>
             <div class="joinbar">You are no longer an active participant in this conversation.</div>

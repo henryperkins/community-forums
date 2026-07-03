@@ -313,6 +313,36 @@ final class AppDirectMessageTest extends TestCase
         $this->assertSeeText($res, 'No letters match your search.');
     }
 
+    public function test_direct_conversation_read_receipt_flips_from_sent_to_read(): void
+    {
+        $alice = $this->established(['username' => 'rcpt_alice', 'display_name' => 'Receipt Alice']);
+        $bob = $this->established(['username' => 'rcpt_bob', 'display_name' => 'Receipt Bob']);
+        $convId = (int) $this->dm()->start($this->userEntity($alice), (int) $bob['id'], 'A first word.')['conversation_id'];
+
+        // Bob has not opened the conversation — Alice's last letter is only Sent.
+        $this->actingAs($alice);
+        $before = $this->get('/messages/' . $convId);
+        $this->assertStatus(200, $before);
+        self::assertStringContainsString('class="dm-receipt"', $before->body());
+        self::assertStringContainsString('Sent</span>', $before->body());
+
+        // Bob opens it (viewing marks read) — Alice now sees Read.
+        $this->actingAs($bob);
+        $this->get('/messages/' . $convId);
+        $this->actingAs($alice);
+        $after = $this->get('/messages/' . $convId);
+        self::assertStringContainsString('Read</span>', $after->body());
+        self::assertStringNotContainsString('Sent</span>', $after->body());
+
+        // Bob replies — the newest letter is his, so Alice's view shows no receipt.
+        $this->actingAs($bob);
+        $this->post('/messages/' . $convId, ['body' => 'A reply.']);
+        $this->actingAs($alice);
+        $replied = $this->get('/messages/' . $convId);
+        $this->assertStatus(200, $replied);
+        self::assertStringNotContainsString('class="dm-receipt"', $replied->body());
+    }
+
     public function test_messages_index_renders_search_form_and_compose_dialog(): void
     {
         $me = $this->established(['username' => 'ui_me']);

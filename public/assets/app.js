@@ -470,4 +470,34 @@
             if (dmSearchEmpty) { dmSearchEmpty.hidden = visible !== 0; }
         });
     }
+
+    // DM reply composer (Phase 4): Enter sends, Shift+Enter breaks the line
+    // (the visible hint is CSS-gated on .has-js so it never lies to a no-JS
+    // reader), plus the live character count. Plain form submit stays the
+    // no-JS path; requestSubmit keeps native `required` validation.
+    var dmReplyForm = document.querySelector('form.dm-composer');
+    if (dmReplyForm) {
+        var dmReplyText = dmReplyForm.querySelector('textarea[name="body"]');
+        var dmReplyCount = dmReplyForm.querySelector('[data-dm-count]');
+        if (dmReplyText) {
+            dmReplyText.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+                    e.preventDefault();
+                    if (dmReplyForm.requestSubmit) { dmReplyForm.requestSubmit(); } else { dmReplyForm.submit(); }
+                }
+            });
+            if (dmReplyCount) {
+                var dmUpdateCount = function () { dmReplyCount.textContent = dmReplyText.value.length + ' / 5000'; };
+                dmReplyText.addEventListener('input', dmUpdateCount);
+                dmUpdateCount();
+            }
+        }
+    }
+
+    // A flash on the reading room renders as a floating toast (CSS :has) — let
+    // it take its bow after a moment instead of lingering over the composer.
+    var dmFlash = document.querySelector('.main > .flash');
+    if (dmFlash && dmFlash.nextElementSibling && dmFlash.nextElementSibling.classList.contains('dm-shell')) {
+        window.setTimeout(function () { dmFlash.hidden = true; }, 4000);
+    }
 })();

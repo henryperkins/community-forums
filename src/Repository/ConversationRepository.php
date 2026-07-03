@@ -282,6 +282,22 @@ final class ConversationRepository
         return $this->db->fetchAll($sql, $params);
     }
 
+    /**
+     * The direct counterpart's read watermark (their last_read_message_id) —
+     * null when they have read nothing or have left. Feeds the Sent/Read
+     * receipt under the viewer's last letter.
+     */
+    public function otherLastReadMessageId(int $conversationId, int $userId): ?int
+    {
+        $value = $this->db->fetchValue(
+            'SELECT cp.last_read_message_id FROM conversation_participants cp
+             WHERE cp.conversation_id = ? AND cp.user_id <> ? AND cp.left_at IS NULL
+             ORDER BY cp.user_id LIMIT 1',
+            [$conversationId, $userId],
+        );
+        return ($value === null || $value === false) ? null : (int) $value;
+    }
+
     /** Conversations with an unread message the user did not send (DM bell/badge). */
     public function unreadConversationCount(int $userId): int
     {

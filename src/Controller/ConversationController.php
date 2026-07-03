@@ -162,6 +162,9 @@ final class ConversationController extends Controller
             'other_is_blocked' => (!$isGroup && $otherId !== null)
                 ? $this->container->get(BlockRepository::class)->blocks($user->id(), $otherId)
                 : false,
+            'other_last_read_message_id' => (!$isGroup && $otherId !== null)
+                ? $convRepo->otherLastReadMessageId($conversationId, $user->id())
+                : null,
             'page' => $page,
             'pages' => $pages,
             'reasons' => self::REASONS,
