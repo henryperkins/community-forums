@@ -104,6 +104,7 @@ All additive on already-inert tables; relative numeric order is safe because eac
 | `0073` | `phase5_package_integrations` — `installed_package_settings` + remote-app credential linkage | Inc 5 (P5-04) |
 | `0074` | `phase5_assignment_lifecycle` — Inc 6 assignment lifecycle delta **or a schema-neutral decision marker if no DDL is needed** | Inc 6 (P5-09) |
 | `0075` | `phase5_provider_identity_repoint` — backfill `provider_config_id` + uniqueness change to include config/issuer | Inc 8 (P5-12) |
+| — | **P5-11 passkeys: NO migration** — activates the existing `0051` WebAuthn tables (privileged-MFA/usernameless policy is Gate B) | Inc 7 |
 | — | **P5-13 invitations: NO migration** (`0053` + `settings` suffice); conditional only for member quotas | Inc 9 |
 | — | **P5-16: NO migration** (policy/evidence/telemetry/SEO are code) | Inc 10 |
 
@@ -242,7 +243,7 @@ Foundation (F: catalogue, owners, CORE_VERSION, DataClasses, harness, reauth, te
 
 - **§4 Gate A DoD bullets** → P5-00..P5-13 + Foundation; the §4 "automated evidence" half of publisher review is explicitly scoped (manifest validation + SBOM display + supply-chain corpus) with the operator-facing scan pipeline deferred to Gate B via an ADR (§A note / Inc 5).
 - **§9 acceptance scenarios** → mapped to increment exit gates (each increment lists its scenarios).
-- **§8 data/migration** → §C allocation + F-seeds + G3/G4 backfills, all additive, legacy sources retained as rollback per decision #41/§8.4.
+- **§8 data/migration** → §C allocation + F-seeds + the Inc 6 legacy-role migration and Inc 8 provider-identity repoint (`0075`) backfills, all additive, legacy sources retained as rollback per decision #41/§8.4.
 - **§10/§11 evidence** → §F distributed discipline + Inc 10 consolidation; R0–R5 ledger in F10.
 - **§13 rollout** → §E enablement order with shadow/parity/rollback gates.
 - **Gate B correctly excluded:** P5-05/06 sandbox runtime, **P5-10 governance groups / approvals / access review** — but *not* its Gate A protected-owner/last-admin + recent-reauth slice (GA-DOD-12), which ships via F5 (`LastOwnerGuard`) + F7 (`ReauthGate`) plus the owner-loss wiring distributed to Inc 6/7/9 (mirrors the P5-07-A carve-out) — P5-14 service principals, P5-15 verified links, restricted stylesheet modules, usernameless passkeys, privileged-MFA enforcement.
