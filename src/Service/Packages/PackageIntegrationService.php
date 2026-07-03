@@ -288,8 +288,15 @@ final class PackageIntegrationService
         }
 
         return $this->db->transaction(function () use ($admin, $currentPassword, $installedId, $install, $package, $link, $scopes): array {
+            // Serialize with provisionCredentials + concurrent rotates on the install row, then
+            // re-assert the target link is still active under that lock. A concurrent rotate/revoke
+            // that already flipped it returns 0 here and this rotate mints nothing — preserving the
+            // "≤1 active api_token per install" invariant instead of double-minting.
+            $this->lockInstallForCredentialProvision($installedId);
+            if ($this->credentials->markRevoked((int) $link['id']) !== 1) {
+                throw new PackagePolicyException('unknown_credential', 'No active credential to rotate.');
+            }
             $this->apiTokens->revoke($admin, (int) $link['api_token_id']);
-            $this->credentials->markRevoked((int) $link['id']);
             $this->history->record([
                 'package_id' => (int) $install['package_id'],
                 'installed_package_id' => $installedId,
@@ -340,30 +347,34 @@ final class PackageIntegrationService
         }
         $install = $this->installs->find($installedId);
 
-        // Webhook: idempotent defensive revoke — mark the link revoked, then delete the endpoint.
+        // Webhook: idempotent defensive revoke inside one transaction so a failed endpoint
+        // delete rolls the link back to active rather than leaving a "revoked" credential
+        // whose webhook endpoint keeps delivering signed events.
         if ((string) $link['kind'] === 'webhook') {
-            if ($this->credentials->markRevoked((int) $link['id']) !== 1) {
-                return; // already revoked -> idempotent no-op
-            }
-            if ($link['webhook_id'] !== null) {
-                $this->webhooks->delete($admin, (int) $link['webhook_id']);
-            }
-            if ($install !== null) {
-                $this->history->record([
-                    'package_id' => (int) $install['package_id'],
-                    'installed_package_id' => $installedId,
-                    'event' => 'credential_revoke',
-                    'actor_id' => $admin->id(),
-                    'detail' => json_encode(['kind' => 'webhook', 'credential_id' => (int) $link['id']], JSON_UNESCAPED_SLASHES),
-                ]);
-                $this->audit->log([
-                    'actor_id' => $admin->id(),
-                    'action' => 'package_credential_revoke',
-                    'target_type' => 'package',
-                    'target_id' => (int) $install['package_id'],
-                    'after' => ['kind' => 'webhook', 'credential_id' => (int) $link['id']],
-                ]);
-            }
+            $this->db->transaction(function () use ($admin, $installedId, $install, $link): void {
+                if ($this->credentials->markRevoked((int) $link['id']) !== 1) {
+                    return; // already revoked -> idempotent no-op (nothing to roll back)
+                }
+                if ($link['webhook_id'] !== null) {
+                    $this->webhooks->delete($admin, (int) $link['webhook_id']);
+                }
+                if ($install !== null) {
+                    $this->history->record([
+                        'package_id' => (int) $install['package_id'],
+                        'installed_package_id' => $installedId,
+                        'event' => 'credential_revoke',
+                        'actor_id' => $admin->id(),
+                        'detail' => json_encode(['kind' => 'webhook', 'credential_id' => (int) $link['id']], JSON_UNESCAPED_SLASHES),
+                    ]);
+                    $this->audit->log([
+                        'actor_id' => $admin->id(),
+                        'action' => 'package_credential_revoke',
+                        'target_type' => 'package',
+                        'target_id' => (int) $install['package_id'],
+                        'after' => ['kind' => 'webhook', 'credential_id' => (int) $link['id']],
+                    ]);
+                }
+            });
             return;
         }
 
