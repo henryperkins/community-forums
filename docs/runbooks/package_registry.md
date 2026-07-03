@@ -115,3 +115,13 @@ guarantees underpinning package-owned webhooks.
 package/release `advisory_status` from authoritative rows (`package_latest`,
 `package_advisory` in the output). Use it after manual DB repair or restored
 snapshots, then run `worker:packages` once to verify cached artifacts and policy.
+
+## Package Integrations & Security-Response Console (Inc 5)
+
+The `remote_app`/`automation` integration runtime (install-scoped settings,
+read-only API tokens, package-owned webhooks) and the operator security-response
+console (publisher trust, exact-digest review, advisories, emergency disable,
+transparency) are documented in **`docs/runbooks/package_integrations.md`**.
+Both consume this same `package_registry` flag and stay deploy-dark; the flag-
+independent `package_execution_disabled` brake is the kill switch for package
+execution specifically.
