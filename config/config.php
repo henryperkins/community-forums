@@ -256,6 +256,9 @@ return [
         'storage_path' => Env::get('PACKAGES_STORAGE_PATH', dirname(__DIR__) . '/storage/packages'),
         // Default uninstall retention window when the manifest declares none.
         'retention_days' => (int) Env::get('PACKAGES_RETENTION_DAYS', '30'),
+        // Flag-independent emergency break-glass: OR'd with the package_execution_disabled
+        // DB setting to pause every package-owned runtime bridge (Inc 5 Global Constraints).
+        'execution_disabled' => Env::bool('PACKAGE_EXECUTION_DISABLED', false),
     ],
 
     'theme' => [
