@@ -1601,6 +1601,8 @@ final class App
         $r->get('/login', [AuthController::class, 'showLogin']);
         $r->post('/login', [AuthController::class, 'login']);
         $r->post('/login/mfa', [AuthController::class, 'completeMfa']);
+        $r->post('/login/passkey/challenge', [AuthController::class, 'passkeyChallenge']);
+        $r->post('/login/passkey', [AuthController::class, 'passkeyLogin']);
         $r->get('/register', [AuthController::class, 'showRegister']);
         $r->post('/register', [AuthController::class, 'register']);
         $r->post('/logout', [AuthController::class, 'logout']);

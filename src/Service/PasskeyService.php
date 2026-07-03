@@ -29,6 +29,9 @@ final class PasskeyService
 {
     public const CHALLENGE_TTL = 300;
     public const MAX_ACTIVE_CREDENTIALS = 8;
+    private const LOGIN_FAILED = 'That passkey could not be used to sign in.';
+    private const LOGIN_ALLOW_CREDENTIAL_SLOTS = self::MAX_ACTIVE_CREDENTIALS;
+    private const LOGIN_TRANSPORT_HINTS = ['internal', 'hybrid', 'usb', 'nfc', 'ble'];
 
     public function __construct(
         private readonly WebAuthnCredentialRepository $credentials,
@@ -216,6 +219,69 @@ final class PasskeyService
         }
     }
 
+    /**
+     * @return array<string,mixed>
+     */
+    public function beginLogin(?string $email, string $sessionHash): array
+    {
+        $this->rp->assertUsable();
+        $this->challenges->purgeExpired();
+        $email = strtolower(trim((string) $email));
+        $challenge = random_bytes(32);
+
+        $userRow = $email !== '' ? $this->users->findByEmail($email) : null;
+        $credentials = $userRow !== null ? $this->credentials->activeForUser((int) $userRow['id']) : [];
+        if ($userRow === null || $credentials === []) {
+            return $this->loginRequestOptions($challenge, [], $email);
+        }
+
+        $this->challenges->mint((int) $userRow['id'], $sessionHash, 'login', $challenge, self::CHALLENGE_TTL);
+        return $this->loginRequestOptions($challenge, $credentials, $email);
+    }
+
+    /**
+     * @return array{user:User,used_uv:bool}
+     */
+    public function completeLogin(string $credentialJson, string $sessionHash): array
+    {
+        $payload = $this->decodePayload($credentialJson);
+        $challenge = $this->challengeFromPayload($payload);
+        $rawId = Base64Url::decode((string) ($payload['rawId'] ?? ''));
+        $row = ($rawId !== null && $rawId !== '') ? $this->credentials->findActiveByCredentialId($rawId) : null;
+        if ($row === null) {
+            throw new ValidationException(['passkey' => self::LOGIN_FAILED]);
+        }
+
+        $userId = (int) $row['user_id'];
+        if (!$this->challenges->consume($challenge, $sessionHash, 'login', $userId)) {
+            throw new ValidationException(['passkey' => self::LOGIN_FAILED]);
+        }
+
+        $user = $this->users->findEntity($userId);
+        if ($user === null || $user->isBanned()) {
+            throw new ValidationException(['passkey' => 'This account is not permitted to sign in.']);
+        }
+
+        $requireUv = $this->mfaService->enabledForUser($userId);
+        try {
+            $result = $this->verifier->verifyAssertion($payload, $challenge, (string) $row['public_key'], (int) $row['sign_count'], $requireUv);
+        } catch (WebAuthnException $e) {
+            if ($e->code === 'uv_required') {
+                throw new ValidationException(['passkey' => 'This account uses two-factor authentication: use a passkey with a screen lock, or sign in with your password and code.']);
+            }
+            throw new ValidationException(['passkey' => self::LOGIN_FAILED]);
+        }
+
+        $this->credentials->updateOnUse((int) $row['id'], $result->signCount);
+        if ($result->counterAnomaly) {
+            $this->recordAnomaly($userId, (int) $row['id']);
+        }
+        $this->audit($userId, 'passkey_login', ['credential' => (int) $row['id'], 'uv' => $result->userVerified]);
+        $this->telemetry?->emit('passkey.login', ['user' => $userId]);
+
+        return ['user' => $user, 'used_uv' => $result->userVerified];
+    }
+
     public function rename(User $user, int $credentialId, string $nickname): void
     {
         $this->writeGate->assertCanWrite($user);
@@ -287,6 +353,46 @@ final class PasskeyService
             'timeout' => self::CHALLENGE_TTL * 1000,
             'allowCredentials' => $allow,
             'userVerification' => $userVerification,
+        ];
+    }
+
+    /** @param list<array<string,mixed>> $credentialRows @return array<string,mixed> */
+    private function loginRequestOptions(string $challenge, array $credentialRows, string $email): array
+    {
+        $key = (string) $this->config->get('app.key', '');
+        if ($key === '') {
+            throw new WebAuthnException('missing_app_key', 'APP_KEY is required for enumeration-safe passkey login decoys.');
+        }
+
+        $allow = [];
+        foreach (array_slice($credentialRows, 0, self::LOGIN_ALLOW_CREDENTIAL_SLOTS) as $row) {
+            $allow[] = [
+                'type' => 'public-key',
+                'id' => Base64Url::encode((string) $row['credential_id']),
+                'transports' => self::LOGIN_TRANSPORT_HINTS,
+            ];
+        }
+
+        for ($i = count($allow); $i < self::LOGIN_ALLOW_CREDENTIAL_SLOTS; $i++) {
+            $allow[] = [
+                'type' => 'public-key',
+                'id' => Base64Url::encode(hash_hmac('sha256', 'passkey-decoy:' . $email . ':' . $i, $key, true)),
+                'transports' => self::LOGIN_TRANSPORT_HINTS,
+            ];
+        }
+
+        usort($allow, static function (array $a, array $b) use ($key, $email): int {
+            $ha = hash_hmac('sha256', 'passkey-slot:' . $email . ':' . (string) $a['id'], $key);
+            $hb = hash_hmac('sha256', 'passkey-slot:' . $email . ':' . (string) $b['id'], $key);
+            return $ha <=> $hb;
+        });
+
+        return [
+            'challenge' => Base64Url::encode($challenge),
+            'rpId' => $this->rp->rpId(),
+            'timeout' => self::CHALLENGE_TTL * 1000,
+            'allowCredentials' => $allow,
+            'userVerification' => 'preferred',
         ];
     }
 

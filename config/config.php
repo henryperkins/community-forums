@@ -206,6 +206,8 @@ return [
         'composer_suggest' => [120, 60],
         'password_reset' => [5, 3600],
         'mfa_login' => [5, 900],
+        'passkey_challenge' => [30, 900],
+        'passkey_login' => [10, 900],
         'mfa_settings' => [10, 900],
         'api' => [120, 60],
         'webhook_test' => [20, 600],
