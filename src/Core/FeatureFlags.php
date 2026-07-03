@@ -70,7 +70,7 @@ final class FeatureFlags
         'board_folders' => true,       // private personal board folders — GA default-on (2026-07-01; reversible via features override)
         'bookmark_folders' => true,    // private folders for starred/bookmarked threads — GA default-on (2026-07-01; reversible via features override)
         'saved_feeds' => true,         // private saved feed filters/digest composition — GA default-on (2026-07-01; reversible via features override)
-        'custom_profile_fields' => false, // bounded extra public profile fields
+        'custom_profile_fields' => true,  // GA default-on (2026-07-03; reversible via features override) — bounded extra public profile fields
         'account_lifecycle' => true,   // self-serve export/deactivate/reactivate/30-day-grace delete — GA default-on (2026-07-02; ADR 0006; reversible via features override)
         'automated_context' => false,  // since-last-read context + suggested related topics
 

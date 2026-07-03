@@ -655,4 +655,35 @@ final class AppFeatureFlagTest extends TestCase
         $this->actingAs($admin);
         $this->assertStatus(200, $this->get('/admin'));
     }
+
+    public function test_custom_profile_fields_is_available_by_default_and_can_be_disabled(): void
+    {
+        // custom_profile_fields graduated to default-on (GA 2026-07-03): the
+        // bounded "Custom profile fields" panel renders on /settings/account with
+        // no features override, and an operator can still roll it back via the
+        // features setting. Render-gated (no route), so this asserts the panel
+        // markers rather than a route 404 (the wysiwyg_composer variant).
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertArrayHasKey('custom_profile_fields', $flags->all());
+        self::assertTrue($flags->enabled('custom_profile_fields'), 'custom_profile_fields graduated to default-on');
+
+        // Isolation: graduating this flag must not enable a dark neighbour.
+        self::assertFalse($flags->enabled('group_dms'));
+
+        $member = $this->makeUser(['username' => 'cpf_default_member']);
+        $this->actingAs($member);
+
+        // Available by default: the settings panel renders its bounded field rows.
+        $settings = $this->get('/settings/account');
+        $this->assertStatus(200, $settings);
+        self::assertStringContainsString('Custom profile fields', $settings->body());
+        self::assertStringContainsString('name="custom_label_1"', $settings->body());
+
+        // Operator rollback: disabling hides the panel; core profile editing stays.
+        $this->setFlags(['custom_profile_fields' => false]);
+        $rolledBack = $this->get('/settings/account');
+        $this->assertStatus(200, $rolledBack);
+        self::assertStringNotContainsString('name="custom_label_1"', $rolledBack->body());
+        self::assertStringContainsString('name="signature"', $rolledBack->body());
+    }
 }
