@@ -40,8 +40,13 @@ disease the DM header ··· menu cured (principles 1–2).
   actions and fields relocate verbatim (no-JS: native `<details>`; the
   dismissal JS already targets `details.dm-menu` generically). Lock/Unlock and
   other destructive items take the `danger` item treatment.
-- Each standing mod panel collapses into a closed `<details>` disclosure under
-  a single "Moderator tools" section; forms inside are byte-identical.
+- Each standing mod panel collapses into a closed `<details>` disclosure;
+  forms inside are byte-identical. *As built:* Edit tags, Add poll, Curate
+  topic memory, and Status history were already disclosures — only the
+  split/merge panel needed collapsing. The Summary / Related / poll displays
+  are information, not controls, and stay visible. The workflow actions bar
+  (status/snooze/assign) is a staff surface with three select-driven forms —
+  left as its own bar rather than forced into a popover.
 
 **Risk:** medium — thread.php is heavily exercised by workflow/poll/tag tests.
 Mitigation: forms keep identical `action`/fields/labels; suite runs per commit.

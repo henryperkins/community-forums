@@ -2994,6 +2994,9 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .dm-menu-item .icon { width: 16px; height: 16px; color: var(--text-muted); flex: 0 0 auto; }
 .dm-menu-item.danger .icon { color: var(--danger); }
 .dm-menu-sep { height: 1px; background: var(--border-hair); margin: 5px 4px; }
+/* A small in-menu form (e.g. the topic Notify frequency + Save) — one row. */
+.dm-menu-form { display: flex; align-items: center; gap: 8px; padding: 7px 12px; }
+.dm-menu-form .input-small { flex: 1; min-width: 0; }
 /* ── Details rail (right column, collapsible) ───────────────────────────── */
 .dm-inforail {
     background: var(--surface-page);
