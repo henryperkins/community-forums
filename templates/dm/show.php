@@ -8,21 +8,7 @@ $this->layout('layout');
 $this->section('title', $title);
 ?>
 <div class="dm-shell reading">
-    <aside class="dm-listpane dm-return-pane" aria-label="Messages">
-        <header class="dm-listpane-head">
-            <div class="dm-listpane-top">
-                <span>
-                    <span class="eyebrow">Private counsel</span>
-                    <h1>Messages</h1>
-                </span>
-                <a class="btn btn-small" href="/messages/new">New message</a>
-            </div>
-        </header>
-        <div class="dm-empty-inner dm-return-copy">
-            <span class="star" aria-hidden="true">✦</span>
-            <p><a href="/messages">Back to all messages</a></p>
-        </div>
-    </aside>
+    <?= $this->partial('partials/dm_list', ['conversations' => $conversations ?? [], 'filter' => 'all', 'active_id' => $conversation_id]) ?>
 
     <section class="dm-threadpane">
         <header class="dm-thread-head">

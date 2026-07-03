@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\BlockRepository;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
 use App\Repository\UserRepository;
@@ -149,6 +150,13 @@ final class ConversationController extends Controller
             'messages' => $messages,
             'reference_cards' => $referenceCards,
             'other' => $other,
+            // The list is the always-present left column of the reading room, and
+            // the details rail needs the viewer's mute + block state (additive reads).
+            'conversations' => $convRepo->listForUser($user->id()),
+            'muted' => (($membership['notification_mode'] ?? 'normal') === 'muted'),
+            'other_is_blocked' => (!$isGroup && $otherId !== null)
+                ? $this->container->get(BlockRepository::class)->blocks($user->id(), $otherId)
+                : false,
             'page' => $page,
             'pages' => $pages,
             'reasons' => self::REASONS,
