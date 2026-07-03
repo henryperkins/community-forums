@@ -87,6 +87,13 @@ final class PackageHealthService
         $changed = 0;
         foreach ($this->installs->activeWithContext() as $install) {
             $version = $install['release_version'] !== null ? (string) $install['release_version'] : '';
+            if ((string) $install['state'] === 'enabled'
+                && in_array((string) ($install['publisher_status'] ?? 'active'), ['suspended', 'revoked'], true)) {
+                if ($this->securityDisable($install, 'publisher ' . (string) $install['publisher_status'])) {
+                    $changed++;
+                }
+                continue;
+            }
             if ((string) $install['state'] === 'enabled') {
                 $reason = $this->blockingReason(
                     (int) $install['package_id'],
