@@ -76,6 +76,21 @@ async function discardServerDraft(page: Page, key: string): Promise<void> {
   );
 }
 
+async function expectServerDraftSaved(page: Page, key: string, body: string): Promise<void> {
+  await expect
+    .poll(
+      async () =>
+        page.evaluate(async ({ key }) => {
+          const response = await fetch(`/api/drafts/${key}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+          const json = await response.json();
+          return json.draft?.body ?? null;
+        }, { key }),
+      { timeout: 10000 },
+    )
+    .toBe(body);
+  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 2000 });
+}
+
 test('server drafts expose conflict choices and save local as next revision', async ({ page }, info) => {
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
@@ -92,7 +107,7 @@ test('server drafts expose conflict choices and save local as next revision', as
 
   await title.fill('Local conflict title');
   await body.fill('Local first draft');
-  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+  await expectServerDraftSaved(page, key, 'Local first draft');
 
   await postServerDraft(page, key, 1, 'Remote draft from another device');
 
@@ -104,7 +119,7 @@ test('server drafts expose conflict choices and save local as next revision', as
   await shot(page, info, '28-server-draft-conflict');
 
   await page.getByRole('button', { name: 'Save local as next revision' }).click();
-  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+  await expectServerDraftSaved(page, key, 'Local second draft');
 
   const saved = await page.evaluate(async ({ key }) => {
     const response = await fetch(`/api/drafts/${key}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -128,7 +143,7 @@ test('server draft validation errors replace stale success status', async ({ pag
 
   await title.fill('Validation status topic');
   await body.fill('Saved before validation error');
-  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+  await expectServerDraftSaved(page, key, 'Saved before validation error');
 
   await body.evaluate((node) => {
     const textarea = node as HTMLTextAreaElement;
@@ -173,7 +188,7 @@ test('failed submits keep server drafts and successful submits clear them after 
 
   await title.fill('Draft retention topic');
   await body.fill('Keep this shared draft on failed submit');
-  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+  await expectServerDraftSaved(page, key, 'Keep this shared draft on failed submit');
 
   await body.evaluate((node) => {
     const textarea = node as HTMLTextAreaElement;
@@ -191,7 +206,7 @@ test('failed submits keep server drafts and successful submits clear them after 
   expect(afterFailedSubmit.draft.body).toBe('Keep this shared draft on failed submit');
 
   await body.fill('Now submit successfully');
-  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+  await expectServerDraftSaved(page, key, 'Now submit successfully');
 
   await page.getByRole('button', { name: 'Create topic' }).click();
   await page.waitForURL(/\/t\/\d+-/);
@@ -217,7 +232,7 @@ test('composer discard button immediately removes the matching server draft', as
 
   await title.fill('Discard synced draft');
   await body.fill('This draft should disappear from both stores');
-  await expect(page.getByText('Saved to server drafts.')).toBeVisible({ timeout: 5000 });
+  await expectServerDraftSaved(page, key, 'This draft should disappear from both stores');
 
   await page.getByRole('button', { name: 'Discard draft' }).click();
 

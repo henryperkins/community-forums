@@ -4146,7 +4146,18 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     color: var(--gold-ink);
 }
 .wf-actions {
-    gap: 10px;
+    gap: 10px 22px;
+}
+.wf-actions > form,
+.wf-actions > form.inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.wf-actions .input-small {
+    width: auto;
+    min-width: 128px;
 }
 .wf-btn {
     display: inline-flex;
