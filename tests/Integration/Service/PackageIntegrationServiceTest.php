@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Service;
 
-use App\Core\ApiTokensDisabledException;
 use App\Core\FeatureFlags;
 use App\Core\ValidationException;
 use App\Domain\User;
@@ -493,13 +492,16 @@ final class PackageIntegrationServiceTest extends TestCase
             self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
         }
 
-        // api_tokens dark: the webhook mint runs first, then the token mint throws INSIDE the
-        // transaction. Production rolls the webhook back via the shared $db->transaction; the
-        // in-process harness has no savepoints, so we assert the caller-observable contract:
-        // the whole call throws and returns no partial plaintext (never a webhook secret alone).
-        $this->expectException(ApiTokensDisabledException::class);
-        $this->webhookService_provision(['api_tokens' => false, 'service_secrets' => true, 'webhooks' => true])
-            ->provisionCredentials($admin, 'password123', $installedId);
+        // api_tokens dark (install grants a scope): the predecessor guard fires BEFORE the
+        // transaction, so nothing is minted — not even the webhook — and the caller gets a
+        // graceful ValidationException (422 at the controller), never a partial webhook secret.
+        try {
+            $this->webhookService_provision(['api_tokens' => false, 'service_secrets' => true, 'webhooks' => true])
+                ->provisionCredentials($admin, 'password123', $installedId);
+            self::fail('expected api_tokens ValidationException');
+        } catch (ValidationException) {
+            self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+        }
     }
 
     /** @return array{0:User,1:int,2:int} admin, installedId, webhookId */

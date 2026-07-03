@@ -130,6 +130,30 @@ final class AppPackageIntegrationTest extends TestCase
         $this->assertSeeText($detail, 'Acme Bot');
     }
 
+    public function test_settings_422_preserves_typed_non_secret_edits(): void
+    {
+        $app = $this->installEnabledRemoteApp(
+            ['api_scopes' => ['read:boards']],
+            ['fields' => [
+                ['key' => 'display_name', 'type' => 'string', 'label' => 'Display name', 'required' => false],
+                ['key' => 'max_items', 'type' => 'integer', 'label' => 'Max items', 'required' => false],
+            ]],
+            'draftloss',
+        );
+
+        // max_items is invalid, so the whole save aborts (422). display_name is a
+        // valid edit that never persisted — the re-render must keep it typed in
+        // rather than reverting to the stored (empty) value (anti-draft-loss).
+        $save = $this->post($app['base'] . '/integration/settings', [
+            'display_name' => 'Typed But Unsaved',
+            'max_items' => 'not-a-number',
+        ]);
+
+        $this->assertStatus(422, $save);
+        $this->assertSeeText($save, 'must be a whole number');
+        $this->assertSeeText($save, 'Typed But Unsaved');
+    }
+
     public function test_provision_reveals_credentials_once_then_lists_by_status(): void
     {
         (new SettingRepository($this->db))->set('features', ['package_registry' => true, 'service_secrets' => true, 'api_tokens' => true]);

@@ -141,6 +141,39 @@ final class SecretVaultTest extends TestCase
         self::assertSame('revoked', $this->vault(false)->metadata($ref)['status']);
     }
 
+    public function test_rotate_is_blocked_when_flag_dark(): void
+    {
+        // The write kill-switch is symmetric: dark blocks store AND rotate. Guards
+        // the second assertEnabled() call site independently of store's.
+        $ref = $this->vault(true)->store('generic', null, 'rot', 'old-secret');
+        $this->expectException(SecretsDisabledException::class);
+        $this->vault(false)->rotate($ref, 'new-secret');
+    }
+
+    public function test_usable_secrets_still_works_when_flag_dark(): void
+    {
+        // Read side of the asymmetry: consumers (webhook delivery) must resolve
+        // usable secrets even while the write kill-switch is engaged.
+        $v = $this->vault(true);
+        $ref = $v->store('generic', null, 'use', 'old-secret');
+        $v->rotate($ref, 'new-secret');
+        self::assertSame(['new-secret', 'old-secret'], $this->vault(false)->usableSecrets($ref));
+    }
+
+    public function test_prune_still_works_when_flag_dark(): void
+    {
+        $v = $this->vault(true);
+        $ref = $v->store('generic', null, 'g', 'old-secret');
+        $v->rotate($ref, 'new-secret');
+        $id = (int) $this->db->fetchValue('SELECT id FROM service_secrets WHERE secret_ref = ?', [$ref]);
+        $this->db->run(
+            "UPDATE service_secret_versions SET retire_after = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR) WHERE secret_id = ? AND state = 'retired'",
+            [$id],
+        );
+
+        self::assertSame(1, $this->vault(false)->prune(100), 'prune remains available while the flag is dark');
+    }
+
     public function test_prune_destroys_expired_retired_version_fully(): void
     {
         $v = $this->vault();

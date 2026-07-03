@@ -43,7 +43,7 @@ final class AdminPackageIntegrationController extends Controller
             $this->settings()->save($admin, (string) $request->post('current_password', ''), (int) $install['id'], $input);
             return $this->noindex($this->redirect('/admin/packages/' . $packageId . '#integration'));
         } catch (ValidationException $e) {
-            return $this->detailView($packageId, (int) $install['id'], ['errors' => $e->errors], 422);
+            return $this->detailView($packageId, (int) $install['id'], ['errors' => $e->errors, 'old' => $e->old], 422);
         } catch (PackagePolicyException | RegistryVerificationException $e) {
             return $this->detailView($packageId, (int) $install['id'], ['errors' => ['settings' => $this->policyMessage($e)]], 422);
         }
@@ -207,6 +207,21 @@ final class AdminPackageIntegrationController extends Controller
         $detail['permission_labels'] = $this->permissionRows($detail['installed_permissions'] ?? []);
         $detail['integration'] = $this->integrations()->overview($installedId);
         $detail['settings_describe'] = $this->settings()->describe($installedId);
+
+        // Anti-draft-loss: on a settings 422, overlay the operator's just-typed
+        // non-secret values (ValidationException::$old) over the DB-loaded values so
+        // valid edits submitted alongside an invalid field are not silently reverted.
+        // Secret fields are never repopulated (safeOld already excludes them).
+        $oldSettings = $extra['old']['settings'] ?? null;
+        if (is_array($oldSettings)) {
+            foreach ($detail['settings_describe']['fields'] as $field) {
+                $key = (string) $field['key'];
+                if (empty($field['secret']) && array_key_exists($key, $oldSettings)) {
+                    $detail['settings_describe']['values'][$key] = (string) $oldSettings[$key];
+                }
+            }
+        }
+
         $detail['reveal'] = $extra['reveal'] ?? null;
         $detail['errors'] = $extra['errors'] ?? [];
 

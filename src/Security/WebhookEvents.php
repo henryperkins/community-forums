@@ -27,6 +27,47 @@ final class WebhookEvents
         return isset(self::EVENTS[$event]);
     }
 
+    /**
+     * Redact authoring identity from a domain-event payload when the content was
+     * authored anonymously, so an installed package can never de-anonymize a
+     * masked author. Anonymity is masked at render time everywhere else
+     * (ADMIN §1.3, DECISIONS #anon); the producer payloads are the one path
+     * that reaches third-party code, so they must mask it too.
+     *
+     * The author-id key(s) are nulled and an `is_anonymous` state flag is
+     * stamped so consumers can distinguish "no author" from "author omitted".
+     * Any actor id equal to the masked author (a self-edit / self-delete) is
+     * also nulled, since it would otherwise re-identify them; an actor id that
+     * differs (a moderator acting on the post) is preserved.
+     *
+     * @param array<string,mixed> $payload
+     * @param list<string> $authorKeys keys holding the author's user id
+     * @param list<string> $actorKeys  keys holding an acting user id to null iff it equals the author
+     * @return array<string,mixed>
+     */
+    public static function maskAnonymousAuthor(array $payload, bool $isAnonymous, array $authorKeys, array $actorKeys = []): array
+    {
+        $payload['is_anonymous'] = $isAnonymous;
+        if (!$isAnonymous) {
+            return $payload;
+        }
+
+        $authorIds = [];
+        foreach ($authorKeys as $key) {
+            if (array_key_exists($key, $payload) && $payload[$key] !== null) {
+                $authorIds[] = (int) $payload[$key];
+            }
+            $payload[$key] = null;
+        }
+        foreach ($actorKeys as $key) {
+            if (array_key_exists($key, $payload) && in_array((int) $payload[$key], $authorIds, true)) {
+                $payload[$key] = null;
+            }
+        }
+
+        return $payload;
+    }
+
     /** @return array<string,string> non-test events produced by domain hooks */
     public static function domainEvents(): array
     {

@@ -15,6 +15,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
+use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 
 /**
@@ -102,14 +103,14 @@ final class SolvedAnswerService
             ]);
         });
         if ($this->isPublicAcceptedAnswer($threadId, $postId)) {
-            $this->hooks?->emit('thread.solved', [
+            $this->hooks?->emit('thread.solved', WebhookEvents::maskAnonymousAuthor([
                 'thread_id' => $threadId,
                 'post_id' => $postId,
                 'board_id' => (int) $thread['board_id'],
                 'actor_id' => $actor->id(),
                 'answer_author_id' => $answerAuthorId,
                 'audit_id' => $auditId,
-            ], 'thread:' . $threadId . ':solved:' . $postId . ':' . $auditId);
+            ], (int) ($post['is_anonymous'] ?? 0) === 1, ['answer_author_id'], ['actor_id']), 'thread:' . $threadId . ':solved:' . $postId . ':' . $auditId);
         }
     }
 

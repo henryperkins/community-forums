@@ -52,6 +52,7 @@ php bin/console worker:purge-ips      # anonymise captured IPs older than retent
 php bin/console worker:attachments    # sweep orphaned / deleted-parent uploads
 php bin/console worker:registry-refresh   # fetch+verify signed registry snapshots/advisories (no-op while package_registry is dark)
 php bin/console worker:packages       # verify installed package digests, enforce advisories/blocklist, purge retained uninstalls
+php bin/console worker:webhooks       # drain the outbound webhook delivery queue (no-op while webhooks is dark)
 
 # Browser evidence + backup rehearsal (separate throwaway DBs)
 cd tests/browser && npm install && npx playwright install --with-deps chromium && npm run evidence
@@ -111,7 +112,7 @@ Every post-MVP subsystem is gated by a flag. `DEFAULTS` map + a `features` JSON 
 **Replaceable-interface seams** (DECISIONS §2) — swap by rebinding the interface in `App.php`, never touch callers: `Mailer` (`SendmailMailer`/`ArrayMailer`), `SearchService` (`MysqlSearchService` — impls **must** apply the read gate), `FeedService`, `SpamScorer` (`NullSpamScorer` abstains). Email **fails closed**: no `From` configured ⇒ email skipped, in-app notifications still deliver.
 
 ### Database & migrations
-File-based runner (`src/Core/Migrator.php`). A migration is `database/migrations/NNNN_name.php` that **`return`s an anonymous class with `up(\PDO)`/`down(\PDO)`**, ordered by the zero-padded 4-digit prefix, tracked in `schema_migrations`. **To add one: use the next number (currently `0049`)**, write DDL in a `<<<'SQL'` nowdoc, make `up()` additive (drop FKs before columns in `down()`), then `php bin/console migrate`. Migrations are **additive-only / forward-only**; `migrate:rollback` cascades through *all* migrations and is greenfield-only. Data seeds live inside a numbered migration using `INSERT IGNORE` (pattern: `0040_seed_badges.php`). After landing a schema migration, hand-update `SCHEMA.md` (shape + §9 changelog + version bump).
+File-based runner (`src/Core/Migrator.php`). A migration is `database/migrations/NNNN_name.php` that **`return`s an anonymous class with `up(\PDO)`/`down(\PDO)`**, ordered by the zero-padded 4-digit prefix, tracked in `schema_migrations`. **To add one: use the next number (currently `0074`)**, write DDL in a `<<<'SQL'` nowdoc, make `up()` additive (drop FKs before columns in `down()`), then `php bin/console migrate`. Migrations are **additive-only / forward-only**; `migrate:rollback` cascades through *all* migrations and is greenfield-only. Data seeds live inside a numbered migration using `INSERT IGNORE` (pattern: `0040_seed_badges.php`). After landing a schema migration, hand-update `SCHEMA.md` (shape + §9 changelog + version bump).
 
 PDO is configured `ERRMODE_EXCEPTION`, `FETCH_ASSOC`, **`EMULATE_PREPARES=false`** — so **never bind `LIMIT`/`OFFSET`** (cast to int + concatenate after clamping) and **never reuse a named placeholder twice** (give it two names). Use UTC everywhere (`UTC_TIMESTAMP()` / `gmdate()`); IPs are stored packed via `inet_pton` into `VARBINARY(16)`.
 

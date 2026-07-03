@@ -19,6 +19,7 @@ use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
+use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 use App\Support\Markdown;
 use App\Support\MentionParser;
@@ -112,7 +113,7 @@ final class PostingService
         // hold ⇒ create pending; flag/observe ⇒ create + audit only.
         $decision = $this->antiAbuse?->evaluate($user, 'thread', $body, $title);
         if ($decision !== null && $decision->blocks()) {
-            $this->antiAbuse->audit($decision, 'thread', 0);
+            $this->antiAbuse->audit($decision, 'thread', 0, (string) ($board['visibility'] ?? 'public'));
             throw new ValidationException(['body' => 'Your post couldn’t be published by the automated content filters. Please revise it and try again.'], $input);
         }
         $pending = ($decision !== null && $decision->holds()) || (int) ($board['require_approval'] ?? 0) === 1;
@@ -170,13 +171,13 @@ final class PostingService
 
                 // Audit + hold commit together (immutable system-actor record).
                 if ($decision !== null) {
-                    $this->antiAbuse->audit($decision, 'thread', $threadId);
+                    $this->antiAbuse->audit($decision, 'thread', $threadId, (string) ($board['visibility'] ?? 'public'));
                 }
 
                 return ['thread_id' => $threadId, 'slug' => $slug, 'pending' => $pending, 'post_id' => $postId];
             });
             if (empty($result['pending']) && (string) ($board['visibility'] ?? 'public') === 'public') {
-                $this->emitTopicCreated((int) $result['thread_id'], (int) $result['post_id'], $boardId, $user->id());
+                $this->emitTopicCreated((int) $result['thread_id'], (int) $result['post_id'], $boardId, $user->id(), $anon);
             }
             return $result;
         } catch (DuplicateSubmissionException) {
@@ -232,7 +233,7 @@ final class PostingService
         // Anti-abuse (P3-05): block ⇒ reject; hold/board-approval ⇒ pending reply.
         $decision = $this->antiAbuse?->evaluate($user, 'reply', $body);
         if ($decision !== null && $decision->blocks()) {
-            $this->antiAbuse->audit($decision, 'post', 0);
+            $this->antiAbuse->audit($decision, 'post', 0, (string) ($thread['board_visibility'] ?? 'public'));
             throw new ValidationException(['body' => 'Your reply couldn’t be published by the automated content filters. Please revise it and try again.'], $input);
         }
         $pending = ($decision !== null && $decision->holds()) || (int) ($thread['board_require_approval'] ?? 0) === 1;
@@ -283,13 +284,13 @@ final class PostingService
                 }
 
                 if ($decision !== null) {
-                    $this->antiAbuse->audit($decision, 'post', $postId);
+                    $this->antiAbuse->audit($decision, 'post', $postId, (string) ($thread['board_visibility'] ?? 'public'));
                 }
 
                 return $postId;
             });
             if (!$pending && (string) ($thread['board_visibility'] ?? 'public') === 'public') {
-                $this->emitReplyCreated($postId, $threadId, (int) $thread['board_id'], $user->id());
+                $this->emitReplyCreated($postId, $threadId, (int) $thread['board_id'], $user->id(), $anon);
             }
             return $postId;
         } catch (DuplicateSubmissionException) {
@@ -588,9 +589,9 @@ final class PostingService
         });
         if ($approved) {
             $thread = $this->threads->findWithBoard($threadId);
-            $op = $this->db->fetch('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1 LIMIT 1', [$threadId]);
+            $op = $this->db->fetch('SELECT id, is_anonymous FROM posts WHERE thread_id = ? AND is_op = 1 LIMIT 1', [$threadId]);
             if ($thread !== null && $op !== null && (string) ($thread['board_visibility'] ?? 'public') === 'public') {
-                $this->emitTopicCreated($threadId, (int) $op['id'], (int) $thread['board_id'], (int) $thread['user_id']);
+                $this->emitTopicCreated($threadId, (int) $op['id'], (int) $thread['board_id'], (int) $thread['user_id'], (int) ($op['is_anonymous'] ?? 0) === 1);
             }
         }
         return $approved;
@@ -626,7 +627,7 @@ final class PostingService
         if ($approved) {
             $post = $this->posts->findWithContext($postId);
             if ($post !== null && (string) ($post['board_visibility'] ?? 'public') === 'public') {
-                $this->emitReplyCreated($postId, (int) $post['thread_id'], (int) $post['board_id'], (int) $post['user_id']);
+                $this->emitReplyCreated($postId, (int) $post['thread_id'], (int) $post['board_id'], (int) $post['user_id'], (int) ($post['is_anonymous'] ?? 0) === 1);
             }
         }
         return $approved;
@@ -671,24 +672,24 @@ final class PostingService
         ) !== false;
     }
 
-    private function emitTopicCreated(int $threadId, int $postId, int $boardId, int $authorId): void
+    private function emitTopicCreated(int $threadId, int $postId, int $boardId, int $authorId, bool $isAnonymous = false): void
     {
-        $this->hooks?->emit('topic.created', [
+        $this->hooks?->emit('topic.created', WebhookEvents::maskAnonymousAuthor([
             'thread_id' => $threadId,
             'post_id' => $postId,
             'board_id' => $boardId,
             'author_id' => $authorId,
-        ], 'thread:' . $threadId . ':created');
+        ], $isAnonymous, ['author_id']), 'thread:' . $threadId . ':created');
     }
 
-    private function emitReplyCreated(int $postId, int $threadId, int $boardId, int $authorId): void
+    private function emitReplyCreated(int $postId, int $threadId, int $boardId, int $authorId, bool $isAnonymous = false): void
     {
-        $this->hooks?->emit('reply.created', [
+        $this->hooks?->emit('reply.created', WebhookEvents::maskAnonymousAuthor([
             'post_id' => $postId,
             'thread_id' => $threadId,
             'board_id' => $boardId,
             'author_id' => $authorId,
-        ], 'post:' . $postId . ':created');
+        ], $isAnonymous, ['author_id']), 'post:' . $postId . ':created');
     }
 
     /** @param array<string,mixed> $post */
@@ -703,14 +704,14 @@ final class PostingService
         }
         $hash = substr(hash('sha256', (string) ($post['body'] ?? '')), 0, 12);
         $postId = (int) $post['id'];
-        $this->hooks?->emit('post.edited', [
+        $this->hooks?->emit('post.edited', WebhookEvents::maskAnonymousAuthor([
             'post_id' => $postId,
             'thread_id' => (int) $post['thread_id'],
             'board_id' => (int) $post['board_id'],
             'author_id' => (int) $post['user_id'],
             'edited_by_id' => (int) ($post['edited_by'] ?? 0),
             'is_op' => (int) ($post['is_op'] ?? 0) === 1,
-        ], 'post:' . $postId . ':edited:' . $editedAt . ':' . $hash);
+        ], (int) ($post['is_anonymous'] ?? 0) === 1, ['author_id'], ['edited_by_id']), 'post:' . $postId . ':edited:' . $editedAt . ':' . $hash);
     }
 
     /** @param array<string,mixed> $post */
@@ -724,14 +725,14 @@ final class PostingService
             return;
         }
         $postId = (int) $post['id'];
-        $this->hooks?->emit('post.deleted', [
+        $this->hooks?->emit('post.deleted', WebhookEvents::maskAnonymousAuthor([
             'post_id' => $postId,
             'thread_id' => (int) $post['thread_id'],
             'board_id' => (int) $post['board_id'],
             'author_id' => (int) $post['user_id'],
             'deleted_by_id' => (int) ($post['deleted_by'] ?? 0),
             'is_op' => (int) ($post['is_op'] ?? 0) === 1,
-        ], 'post:' . $postId . ':deleted:' . $deletedAt);
+        ], (int) ($post['is_anonymous'] ?? 0) === 1, ['author_id'], ['deleted_by_id']), 'post:' . $postId . ':deleted:' . $deletedAt);
     }
 
     /** @param array<string,mixed> $post */

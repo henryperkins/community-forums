@@ -16,6 +16,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
+use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 
 /**
@@ -332,13 +333,13 @@ final class ModerationService
             return;
         }
         $postId = (int) $post['id'];
-        $this->hooks?->emit('post.deleted', [
+        $this->hooks?->emit('post.deleted', WebhookEvents::maskAnonymousAuthor([
             'post_id' => $postId,
             'thread_id' => (int) $post['thread_id'],
             'board_id' => (int) $post['board_id'],
             'author_id' => (int) $post['user_id'],
             'deleted_by_id' => (int) ($post['deleted_by'] ?? 0),
             'is_op' => (int) ($post['is_op'] ?? 0) === 1,
-        ], 'post:' . $postId . ':deleted:' . $deletedAt);
+        ], (int) ($post['is_anonymous'] ?? 0) === 1, ['author_id'], ['deleted_by_id']), 'post:' . $postId . ':deleted:' . $deletedAt);
     }
 }

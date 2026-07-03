@@ -115,6 +115,8 @@ final class PackageIntegrationService
         $settingsSummary = is_array($summaryRaw) ? $summaryRaw : [];
         $settingsSummary['package_uid'] = $package !== null ? (string) $package['package_uid'] : null;
 
+        $grantedScopes = $this->currentGrantedApiScopes($installedId);
+
         $refusal = null;
         if (!$integrable) {
             $refusal = ['code' => 'not_integrable', 'message' => 'Only remote_app and automation packages expose integration credentials.'];
@@ -124,12 +126,14 @@ final class PackageIntegrationService
             $refusal = ['code' => 'not_consented', 'message' => 'Grant every declared permission before provisioning credentials.'];
         } elseif (!$this->flags->enabled('service_secrets')) {
             $refusal = ['code' => 'service_secrets', 'message' => 'Enable the secret vault (service_secrets) before minting credentials.'];
+        } elseif ($grantedScopes !== [] && !$this->flags->enabled('api_tokens')) {
+            $refusal = ['code' => 'api_tokens', 'message' => 'Enable API tokens (api_tokens) before minting credentials for this install’s granted API scopes.'];
         }
 
         return [
             'type' => $type,
             'integrable' => $integrable,
-            'granted_scopes' => $this->currentGrantedApiScopes($installedId),
+            'granted_scopes' => $grantedScopes,
             'granted_events' => $this->grantedEvents($installedId),
             'data_classes' => $this->grantsOfKind($installedId, 'data_class'),
             'outbound_hosts' => $this->grantedOutboundHosts($installedId),
@@ -187,9 +191,14 @@ final class PackageIntegrationService
             // Hard predecessor / kill switch: fail closed, mint nothing.
             throw new ValidationException(['integration' => 'Enable the secret vault (service_secrets) before minting credentials.']);
         }
-        $this->reauth->requirePassword($admin, $currentPassword);
-
         $scopes = $this->grantedApiScopes($installedId, (int) $install['package_id'], $admin);
+        if ($scopes !== [] && !$this->flags->enabled('api_tokens')) {
+            // The install grants an API scope but the api_tokens predecessor is dark:
+            // fail closed BEFORE the transaction so nothing (not even the webhook) is
+            // minted, and the caller gets a graceful 422 instead of an unhandled 500.
+            throw new ValidationException(['integration' => 'Enable API tokens (api_tokens) before minting credentials for this install’s granted API scopes.']);
+        }
+        $this->reauth->requirePassword($admin, $currentPassword);
 
         return $this->db->transaction(function () use ($admin, $currentPassword, $installedId, $install, $package, $scopes): array {
             $this->lockInstallForCredentialProvision($installedId);
@@ -285,6 +294,11 @@ final class PackageIntegrationService
         $scopes = $this->grantedApiScopes($installedId, (int) $install['package_id'], $admin);
         if ($scopes === []) {
             throw new PackagePolicyException('no_scopes', 'This install no longer grants any API scope to mint.');
+        }
+        if (!$this->flags->enabled('api_tokens')) {
+            // Fail closed before revoking the old token, symmetric to provisioning:
+            // graceful 422 rather than an unhandled ApiTokensDisabledException 500.
+            throw new ValidationException(['integration' => 'Enable API tokens (api_tokens) before rotating this credential.']);
         }
 
         return $this->db->transaction(function () use ($admin, $currentPassword, $installedId, $install, $package, $link, $scopes): array {

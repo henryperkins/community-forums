@@ -163,6 +163,147 @@ final class FirstPartyHookPrivateContentTest extends TestCase
         }
     }
 
+    /** @param array<string,mixed> $author */
+    private function createAnonThreadOverHttp(array $author, int $boardId, string $title, string $body): void
+    {
+        $this->actingAs($author);
+        self::assertContains($this->post('/threads', [
+            'board_id' => $boardId,
+            'title' => $title,
+            'body' => $body,
+            'is_anonymous' => '1',
+            'idempotency_key' => 'anon-' . bin2hex(random_bytes(6)),
+        ])->status(), [302, 303]);
+    }
+
+    private function latestPostId(int $threadId): int
+    {
+        return (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? ORDER BY id DESC LIMIT 1', [$threadId]);
+    }
+
+    public function test_anonymous_public_topic_masks_author_id(): void
+    {
+        $topicHook = $this->registerEndpoint(['topic.created']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'anon-topic', 'allow_anonymous' => 1]);
+        $author = $this->makeUser(['username' => 'anontopicauthor']);
+
+        $this->createAnonThreadOverHttp($author, (int) $board['id'], 'Anon topic title', 'Anon topic body');
+
+        $payloads = $this->payloads($topicHook, 'topic.created');
+        self::assertCount(1, $payloads);
+        $data = json_decode($payloads[0], true)['data'];
+        self::assertNull($data['author_id'], 'the real author of an anonymous post must never reach a package');
+        self::assertTrue($data['is_anonymous']);
+        self::assertNotSame((int) $author['id'], $data['author_id']);
+    }
+
+    public function test_non_anonymous_public_topic_still_carries_author_id(): void
+    {
+        $topicHook = $this->registerEndpoint(['topic.created']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'named-topic']);
+        $author = $this->makeUser(['username' => 'namedtopicauthor']);
+
+        $this->createThreadOverHttp($author, (int) $board['id'], 'Named topic title', 'Named topic body');
+
+        $data = json_decode($this->payloads($topicHook, 'topic.created')[0], true)['data'];
+        self::assertSame((int) $author['id'], $data['author_id'], 'named authorship is preserved (no over-masking)');
+        self::assertFalse($data['is_anonymous']);
+    }
+
+    public function test_anonymous_public_reply_masks_author_id(): void
+    {
+        $replyHook = $this->registerEndpoint(['reply.created']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'anon-reply', 'allow_anonymous' => 1]);
+        $op = $this->makeUser(['username' => 'replyop']);
+        $thread = $this->makeThread($board, $op, 'Reply host topic', 'host op body');
+        $replier = $this->makeUser(['username' => 'anonreplier']);
+
+        $this->actingAs($replier);
+        $this->assertRedirectContains($this->post('/t/' . (int) $thread['thread_id'] . '/reply', [
+            'body' => 'anon reply body',
+            'is_anonymous' => '1',
+            'idempotency_key' => 'anonr-' . bin2hex(random_bytes(6)),
+        ]), '/t/' . (int) $thread['thread_id']);
+
+        $data = json_decode($this->payloads($replyHook, 'reply.created')[0], true)['data'];
+        self::assertNull($data['author_id']);
+        self::assertTrue($data['is_anonymous']);
+    }
+
+    public function test_anonymous_self_edit_masks_author_and_editor(): void
+    {
+        $editHook = $this->registerEndpoint(['post.edited']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'anon-edit', 'allow_anonymous' => 1]);
+        $op = $this->makeUser(['username' => 'editop']);
+        $thread = $this->makeThread($board, $op, 'Edit host topic', 'host op body');
+        $replier = $this->makeUser(['username' => 'anoneditor']);
+
+        $this->actingAs($replier);
+        $this->assertRedirectContains($this->post('/t/' . (int) $thread['thread_id'] . '/reply', [
+            'body' => 'original anon body',
+            'is_anonymous' => '1',
+            'idempotency_key' => 'anone-' . bin2hex(random_bytes(6)),
+        ]), '/t/' . (int) $thread['thread_id']);
+        $replyId = $this->latestPostId((int) $thread['thread_id']);
+
+        $this->actingAs($replier);
+        $this->assertRedirectContains($this->post('/posts/' . $replyId . '/edit', ['body' => 'edited anon body']), '/t/');
+
+        $data = json_decode($this->payloads($editHook, 'post.edited')[0], true)['data'];
+        self::assertNull($data['author_id']);
+        self::assertNull($data['edited_by_id'], 'a self-edit actor id would re-identify the masked author');
+        self::assertTrue($data['is_anonymous']);
+    }
+
+    public function test_anonymous_self_delete_masks_author_and_deleter(): void
+    {
+        $deleteHook = $this->registerEndpoint(['post.deleted']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'anon-delete', 'allow_anonymous' => 1]);
+        $op = $this->makeUser(['username' => 'deleteop']);
+        $thread = $this->makeThread($board, $op, 'Delete host topic', 'host op body');
+        $replier = $this->makeUser(['username' => 'anondeleter']);
+
+        $this->actingAs($replier);
+        $this->assertRedirectContains($this->post('/t/' . (int) $thread['thread_id'] . '/reply', [
+            'body' => 'anon body to delete',
+            'is_anonymous' => '1',
+            'idempotency_key' => 'anond-' . bin2hex(random_bytes(6)),
+        ]), '/t/' . (int) $thread['thread_id']);
+        $replyId = $this->latestPostId((int) $thread['thread_id']);
+
+        $this->actingAs($replier);
+        $this->assertRedirectContains($this->post('/posts/' . $replyId . '/delete'), '/t/');
+
+        $data = json_decode($this->payloads($deleteHook, 'post.deleted')[0], true)['data'];
+        self::assertNull($data['author_id']);
+        self::assertNull($data['deleted_by_id'], 'a self-delete actor id would re-identify the masked author');
+        self::assertTrue($data['is_anonymous']);
+    }
+
+    public function test_anonymous_accepted_answer_masks_answer_author_id(): void
+    {
+        $solvedHook = $this->registerEndpoint(['thread.solved']);
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'anon-solved', 'allow_anonymous' => 1]);
+        $op = $this->makeUser(['username' => 'solveop']);
+        $thread = $this->makeThread($board, $op, 'Solve host topic', 'host op body');
+        $answerer = $this->makeUser(['username' => 'anonanswerer']);
+
+        $this->actingAs($answerer);
+        $this->assertRedirectContains($this->post('/t/' . (int) $thread['thread_id'] . '/reply', [
+            'body' => 'anon accepted answer body',
+            'is_anonymous' => '1',
+            'idempotency_key' => 'anons-' . bin2hex(random_bytes(6)),
+        ]), '/t/' . (int) $thread['thread_id']);
+        $answerId = $this->latestPostId((int) $thread['thread_id']);
+
+        $this->actingAs($op);
+        $this->assertRedirectContains($this->post('/posts/' . $answerId . '/accept'), '/t/');
+
+        $data = json_decode($this->payloads($solvedHook, 'thread.solved')[0], true)['data'];
+        self::assertNull($data['answer_author_id'], 'an anonymous accepted answer must not reveal its author');
+        self::assertTrue($data['is_anonymous']);
+    }
+
     public function test_member_registered_payload_omits_email(): void
     {
         $memberHook = $this->registerEndpoint(['member.registered']);

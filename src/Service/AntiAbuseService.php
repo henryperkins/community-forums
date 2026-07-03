@@ -150,7 +150,7 @@ final class AntiAbuseService
      * Called after the content is created (flag/hold/observe) or rejected
      * (block, target_id 0). Only writes when a rule actually fired.
      */
-    public function audit(AntiAbuseDecision $decision, string $targetType, int $targetId): ?int
+    public function audit(AntiAbuseDecision $decision, string $targetType, int $targetId, ?string $boardVisibility = null): ?int
     {
         if (!$decision->triggered()) {
             return null;
@@ -169,7 +169,12 @@ final class AntiAbuseService
                 'effective' => $decision->action,
             ],
         ]);
-        if (in_array($decision->action, ['flag', 'hold', 'block'], true)) {
+        // The immutable audit row is always written; the first-party domain event
+        // only fires for PUBLIC-board content. Held/blocked activity on a hidden or
+        // private board (or a pre-creation block with no board context) must not
+        // signal its existence to a package webhook (PHASE_5 first-party-hook scope
+        // is public-board domain events only).
+        if ($boardVisibility === 'public' && in_array($decision->action, ['flag', 'hold', 'block'], true)) {
             $this->hooks?->emit('moderation.auto_action', [
                 'moderation_log_id' => $logId,
                 'target_type' => $targetType,

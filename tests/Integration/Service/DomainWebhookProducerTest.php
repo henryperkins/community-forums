@@ -198,6 +198,32 @@ final class DomainWebhookProducerTest extends TestCase
         self::assertSame(0, $this->deliveryCount($reportHook, 'report.created'));
     }
 
+    public function test_moderation_auto_action_is_suppressed_on_non_public_boards(): void
+    {
+        $autoHook = $this->registerEndpoint(['moderation.auto_action']);
+        (new SettingRepository($this->db))->set('antiabuse_mode', 'hold');
+        (new SettingRepository($this->db))->set('antiabuse_blocked_words', ['privhookword']);
+
+        $hidden = $this->makeBoard($this->makeCategory(), ['slug' => 'auto-hidden', 'visibility' => 'hidden']);
+        $author = $this->makeUser(['username' => 'autohiddenauthor']);
+        $this->actingAs($author);
+        self::assertContains($this->post('/threads', [
+            'board_id' => (int) $hidden['id'],
+            'title' => 'Hidden auto topic',
+            'body' => 'this has privhookword and is held',
+            'idempotency_key' => 'autoh-' . bin2hex(random_bytes(6)),
+        ])->status(), [302, 303]);
+
+        // The auto-action WAS taken and audited (proving the producer path ran) ...
+        self::assertGreaterThan(
+            0,
+            (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'auto_hold' AND target_type = 'thread'"),
+            'the hold must still be recorded in the immutable audit trail',
+        );
+        // ... but no webhook event escapes to packages for non-public board content.
+        self::assertSame(0, $this->deliveryCount($autoHook, 'moderation.auto_action'));
+    }
+
     public function test_first_party_hook_flag_dark_suppresses_domain_events_but_not_ping(): void
     {
         $this->enableWebhookFeatures(firstPartyHooks: false);
