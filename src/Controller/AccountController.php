@@ -277,7 +277,7 @@ final class AccountController extends Controller
     }
 
     /** @param array<string,mixed> $data */
-    private function securityView(\App\Domain\User $user, array $data = [], int $status = 200): Response
+    public function securityView(\App\Domain\User $user, array $data = [], int $status = 200): Response
     {
         return $this->view('account/security', array_replace([
             'errors' => [],

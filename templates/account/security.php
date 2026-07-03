@@ -125,17 +125,69 @@ $recoveryCodes = $new_recovery_codes ?? [];
     <?php if (is_array($passkeys ?? null)): ?>
     <section class="stacked scribe-panel" data-passkey-panel>
         <h2 class="scribe-panel-head">Passkeys</h2>
+        <?php if (!empty($passkey_errors)): ?>
+            <p class="field-error"><?= $e(implode(' ', $passkey_errors)) ?></p>
+        <?php endif; ?>
         <?php if ($passkeys['credentials'] === []): ?>
-            <p class="muted">No passkeys yet.</p>
+            <p class="muted">No passkeys yet. A passkey signs you in with your device's screen lock instead of your password.</p>
         <?php else: ?>
-            <ul class="code-list">
+            <ul class="stacked">
                 <?php foreach ($passkeys['credentials'] as $pk): ?>
                     <li>
-                        <strong><?= $e($pk['nickname'] !== '' ? $pk['nickname'] : 'Unnamed passkey') ?></strong>
+                        <div>
+                            <strong><?= $e($pk['nickname'] !== '' ? $pk['nickname'] : 'Unnamed passkey') ?></strong>
+                            <p class="muted">Added <?= $e(human_datetime($pk['created_at'])) ?><?= $pk['last_used_at'] !== null ? ' · last used ' . $e(human_datetime((string) $pk['last_used_at'])) : '' ?><?= $pk['backed_up'] ? ' · synced' : '' ?></p>
+                        </div>
+                        <form method="post" action="/settings/security/passkeys/<?= (int) $pk['id'] ?>/rename" class="stacked">
+                            <?= $this->csrfField() ?>
+                            <label class="field">
+                                <span>Passkey name</span>
+                                <input type="text" name="nickname" class="input" value="<?= $e($pk['nickname']) ?>" maxlength="120">
+                            </label>
+                            <button type="submit" class="btn btn-secondary">Rename</button>
+                        </form>
+                        <form method="post" action="/settings/security/passkeys/<?= (int) $pk['id'] ?>/revoke" class="stacked" data-passkey-revoke-form>
+                            <?= $this->csrfField() ?>
+                            <input type="hidden" name="passkey_assertion" value="">
+                            <?php if ($passkeys['has_password']): ?>
+                                <label class="field">
+                                    <span>Current password</span>
+                                    <input type="password" name="current_password" class="input" autocomplete="current-password">
+                                </label>
+                            <?php else: ?>
+                                <button type="button" class="btn btn-secondary" data-passkey-stepup-btn hidden>Confirm with a passkey</button>
+                            <?php endif; ?>
+                            <button type="submit" class="btn danger"<?= !$passkeys['has_password'] ? ' data-passkey-needs-stepup' : '' ?>>Remove</button>
+                            <p class="field-error" data-passkey-revoke-error hidden></p>
+                        </form>
                     </li>
                 <?php endforeach; ?>
             </ul>
         <?php endif; ?>
+        <form class="stacked"
+              data-passkey-add-form
+              data-challenge-url="/settings/security/passkeys/challenge"
+              data-store-url="/settings/security/passkeys"
+              data-stepup-url="/settings/security/passkeys/step-up-challenge"
+              hidden>
+            <?= $this->csrfField() ?>
+            <input type="hidden" name="passkey_assertion" value="">
+            <?php if ($passkeys['has_password']): ?>
+                <label class="field">
+                    <span>Current password</span>
+                    <input type="password" name="current_password" class="input" autocomplete="current-password">
+                </label>
+            <?php endif; ?>
+            <label class="field">
+                <span>Name this passkey (optional)</span>
+                <input type="text" name="nickname" class="input" maxlength="120">
+            </label>
+            <button type="button" class="btn" data-passkey-add-btn>Add a passkey</button>
+            <p class="field-error" data-passkey-add-error hidden></p>
+        </form>
+        <noscript>
+            <p class="muted">Adding a passkey needs JavaScript and a supported browser. Password, authenticator code, and recovery sign-in keep working without it.</p>
+        </noscript>
     </section>
     <?php endif; ?>
         </div>

@@ -182,4 +182,123 @@ final class AppPasskeyRegistrationTest extends TestCase
         ]);
         $this->assertStatus(200, $res);
     }
+
+    /** @return array{0:array<string,mixed>,1:int} */
+    private function enroll(string $nickname = 'Key'): array
+    {
+        $challenge = (string) Base64Url::decode($this->mintChallenge()['options']['challenge']);
+        $cred = $this->harness->createCredential();
+        $this->assertStatus(200, $this->post('/settings/security/passkeys', [
+            'credential' => $this->harness->registrationPayload($cred, $challenge),
+            'nickname' => $nickname,
+        ]));
+        $page = $this->get('/settings/security')->body();
+        preg_match('#/settings/security/passkeys/(\d+)/revoke#', $page, $m);
+        self::assertNotEmpty($m, 'panel must render a revoke form');
+        return [$cred, (int) $m[1]];
+    }
+
+    public function test_rename_and_revoke_work_as_plain_forms(): void
+    {
+        $this->actingAs($this->makeUser());
+        [, $id] = $this->enroll('Old name');
+
+        $rename = $this->post("/settings/security/passkeys/{$id}/rename", ['nickname' => 'New name']);
+        $this->assertRedirect($rename, '/settings/security');
+        $this->assertSeeText($this->get('/settings/security'), 'New name');
+
+        $revoke = $this->post("/settings/security/passkeys/{$id}/revoke", ['current_password' => 'password123']);
+        $this->assertRedirect($revoke, '/settings/security');
+        $this->assertDontSeeText($this->get('/settings/security'), 'New name');
+    }
+
+    public function test_revoke_requires_a_fresh_factor_and_supports_passkey_step_up(): void
+    {
+        $this->actingAs($this->makeUser());
+        [$cred, $id] = $this->enroll();
+
+        $this->assertStatus(422, $this->post("/settings/security/passkeys/{$id}/revoke", []));
+
+        $stepOptions = json_decode($this->post('/settings/security/passkeys/step-up-challenge', [])->body(), true)['options'];
+        $stepChallenge = (string) Base64Url::decode($stepOptions['challenge']);
+        $revoke = $this->post("/settings/security/passkeys/{$id}/revoke", [
+            'passkey_assertion' => $this->harness->assertionPayload($cred, $stepChallenge, 3),
+        ]);
+        $this->assertRedirect($revoke, '/settings/security');
+    }
+
+    public function test_revoking_a_passkey_revokes_other_sessions_but_keeps_current_session(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        [, $id] = $this->enroll('Session key');
+        $otherSession = $this->createExtraSessionFor($user);
+        self::assertNull($this->db->fetchValue('SELECT revoked_at FROM sessions WHERE id = ?', [$otherSession]));
+
+        $this->assertRedirect(
+            $this->post("/settings/security/passkeys/{$id}/revoke", ['current_password' => 'password123']),
+            '/settings/security',
+        );
+
+        self::assertNotNull($this->db->fetchValue('SELECT revoked_at FROM sessions WHERE id = ?', [$otherSession]));
+        $current = $this->get('/settings/security');
+        $this->assertStatus(200, $current);
+    }
+
+    public function test_removing_the_last_sign_in_method_is_blocked(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        [$cred, $id] = $this->enroll('Only key');
+        $this->db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [(int) $user['id']]);
+
+        $stepOptions = json_decode($this->post('/settings/security/passkeys/step-up-challenge', [])->body(), true)['options'];
+        $blocked = $this->post("/settings/security/passkeys/{$id}/revoke", [
+            'passkey_assertion' => $this->harness->assertionPayload($cred, (string) Base64Url::decode($stepOptions['challenge']), 2),
+        ]);
+        $this->assertStatus(422, $blocked);
+        $this->assertSeeText($this->get('/settings/security'), 'Only key');
+
+        $hash = (new \App\Security\PasswordHasher())->hash('password123');
+        $this->db->run('UPDATE users SET password_hash = ? WHERE id = ?', [$hash, (int) $user['id']]);
+        $this->assertRedirect($this->post("/settings/security/passkeys/{$id}/revoke", ['current_password' => 'password123']), '/settings/security');
+    }
+
+    public function test_final_owner_last_method_removal_carries_the_owner_block(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->actingAs($admin);
+        [$cred, $id] = $this->enroll('Owner key');
+        $this->db->run('UPDATE users SET role = ? WHERE id <> ?', ['user', (int) $admin['id']]);
+        $this->db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [(int) $admin['id']]);
+
+        $stepOptions = json_decode($this->post('/settings/security/passkeys/step-up-challenge', [])->body(), true)['options'];
+        $blocked = $this->post("/settings/security/passkeys/{$id}/revoke", [
+            'passkey_assertion' => $this->harness->assertionPayload($cred, (string) Base64Url::decode($stepOptions['challenge']), 2),
+        ]);
+        $this->assertStatus(422, $blocked);
+        $this->assertSeeText($blocked, 'active admin');
+    }
+
+    public function test_sole_provider_accounts_detector_reports_oauth_only_accounts(): void
+    {
+        $user = $this->makeUser();
+        $this->db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [(int) $user['id']]);
+        $this->db->run(
+            "INSERT INTO oauth_identities (user_id, provider, provider_user_id, created_at) VALUES (?, 'github', 'gh-1', UTC_TIMESTAMP())",
+            [(int) $user['id']],
+        );
+        $hits = (new \App\Repository\OAuthIdentityRepository($this->db))->soleMethodAccounts('github');
+        self::assertContains((int) $user['id'], array_column($hits, 'id'));
+
+        $this->db->run(
+            'INSERT INTO webauthn_credentials
+                (user_id, credential_id, public_key, sign_count, aaguid, transports,
+                 is_discoverable, is_backup_eligible, is_backed_up, nickname, created_at)
+             VALUES (?, ?, ?, 0, ?, ?, 0, 0, 0, ?, UTC_TIMESTAMP())',
+            [(int) $user['id'], random_bytes(32), "\xa1\x01\x02", str_repeat("\0", 16), 'internal', 'Rescue key'],
+        );
+        $again = (new \App\Repository\OAuthIdentityRepository($this->db))->soleMethodAccounts('github');
+        self::assertNotContains((int) $user['id'], array_column($again, 'id'));
+    }
 }

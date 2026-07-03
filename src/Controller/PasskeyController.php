@@ -10,6 +10,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Domain\User;
 use App\Security\WebAuthn\WebAuthnException;
 use App\Service\PasskeyService;
 use App\Service\RateLimitService;
@@ -99,6 +100,61 @@ final class PasskeyController extends Controller
         return Response::json(['ok' => true, 'options' => $options]);
     }
 
+    /** @param array<string,string> $params */
+    public function rename(Request $request, array $params): Response
+    {
+        $user = $this->requireUser();
+        $this->gate();
+
+        try {
+            $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
+
+        try {
+            $this->container->get(PasskeyService::class)->rename($user, (int) $params['id'], (string) ($this->str($request, 'nickname') ?? ''));
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['passkey' => $e->getMessage()]], $e->statusCode());
+        } catch (ValidationException $e) {
+            return $this->securityPage($user, ['passkey_errors' => $e->errors], 422);
+        }
+
+        return $this->redirectWithFlash('/settings/security', 'Passkey renamed.');
+    }
+
+    /** @param array<string,string> $params */
+    public function revoke(Request $request, array $params): Response
+    {
+        $user = $this->requireUser();
+        $this->gate();
+
+        try {
+            $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+        }
+
+        try {
+            $this->container->get(PasskeyService::class)->remove(
+                $user,
+                (int) $params['id'],
+                $this->str($request, 'current_password'),
+                $this->str($request, 'passkey_assertion'),
+                PasskeyService::sessionBinding($this->session()),
+            );
+        } catch (HttpException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['passkey' => $e->getMessage()]], $e->statusCode());
+        } catch (ValidationException $e) {
+            return $this->securityPage($user, ['passkey_errors' => $e->errors], 422);
+        } catch (WebAuthnException $e) {
+            return $this->securityPage($user, ['passkey_errors' => ['passkey' => $e->getMessage()]], 422);
+        }
+
+        $this->revokeOtherSessionsFor($user);
+        return $this->redirectWithFlash('/settings/security', 'Passkey removed.');
+    }
+
     private function str(Request $request, string $key): ?string
     {
         $value = $request->post($key);
@@ -108,6 +164,12 @@ final class PasskeyController extends Controller
     private function jsonRateLimit(HttpException $e): Response
     {
         return Response::json(['ok' => false, 'errors' => ['rate_limit' => $e->getMessage()]], $e->statusCode());
+    }
+
+    /** @param array<string,mixed> $extra */
+    private function securityPage(User $user, array $extra, int $status): Response
+    {
+        return (new AccountController($this->container))->securityView($user, $extra, $status);
     }
 
     private function gate(): void

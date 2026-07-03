@@ -163,6 +163,11 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x']));
         $this->assertStatus(404, $this->post('/settings/security/passkeys', ['credential' => '{}']));
         $this->assertStatus(404, $this->post('/settings/security/passkeys/step-up-challenge', []));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/1/rename', ['nickname' => 'x']));
+        $this->assertStatus(404, $this->post('/settings/security/passkeys/1/revoke', []));
+        $securityPage = $this->get('/settings/security');
+        $this->assertStatus(200, $securityPage);
+        self::assertStringNotContainsString('data-passkey-panel', $securityPage->body());
 
         $this->setFlags(['passkeys' => true]);
         self::assertNotSame(404, $this->post('/settings/security/passkeys/challenge', [])->status());

@@ -216,6 +216,58 @@ final class PasskeyService
         }
     }
 
+    public function rename(User $user, int $credentialId, string $nickname): void
+    {
+        $this->writeGate->assertCanWrite($user);
+        $nickname = trim($nickname);
+        if ($nickname === '' || mb_strlen($nickname) > 120) {
+            throw new ValidationException(['nickname' => 'Pick a name between 1 and 120 characters.']);
+        }
+        if (!$this->credentials->rename($user->id(), $credentialId, $nickname)) {
+            throw new ValidationException(['passkey' => 'That passkey was not found.']);
+        }
+        $this->audit($user->id(), 'passkey_renamed', ['credential' => $credentialId, 'nickname' => $nickname]);
+    }
+
+    public function remove(User $user, int $credentialId, ?string $currentPassword, ?string $assertionJson, string $sessionHash): void
+    {
+        $this->writeGate->assertCanWrite($user);
+        $this->assertFreshFactor($user, $currentPassword, $assertionJson, $sessionHash);
+
+        $removedNickname = $this->db->transaction(function () use ($user, $credentialId): ?string {
+            $rows = $this->credentials->activeForUserForUpdate($user->id());
+            $target = null;
+            foreach ($rows as $row) {
+                if ((int) $row['id'] === $credentialId) {
+                    $target = $row;
+                    break;
+                }
+            }
+            if ($target === null) {
+                throw new ValidationException(['passkey' => 'That passkey was not found.']);
+            }
+
+            $fresh = $this->users->findEntity($user->id());
+            $hasPassword = $fresh !== null && $fresh->passwordHash() !== null;
+            $hasProvider = $this->oauthIdentities->countForUser($user->id()) > 0;
+            if (count($rows) === 1 && !$hasPassword && !$hasProvider) {
+                $this->lastOwnerGuard->assertNotLastOwnerForUpdate($user, 'passkey');
+                throw new ValidationException(['passkey' => 'Add a password or another passkey before removing your only way to sign in.']);
+            }
+
+            $this->credentials->revoke($user->id(), $credentialId);
+            $this->audit($user->id(), 'passkey_revoked', ['credential' => $credentialId, 'nickname' => $target['nickname']]);
+            return $target['nickname'] !== null ? (string) $target['nickname'] : null;
+        });
+
+        $this->notify(
+            $user,
+            'A passkey was removed from your account',
+            'A passkey' . ($removedNickname !== null ? ' ("' . $removedNickname . '")' : '') . ' was removed from your account.',
+        );
+        $this->telemetry?->emit('passkey.revoked', ['user' => $user->id()]);
+    }
+
     /** @param list<array<string,mixed>> $credentialRows @return array<string,mixed> */
     private function requestOptions(string $challenge, array $credentialRows, string $userVerification): array
     {

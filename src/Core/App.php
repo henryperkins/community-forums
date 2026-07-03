@@ -1647,6 +1647,8 @@ final class App
         $r->post('/settings/security/totp/disable', [AccountController::class, 'disableTotp']);
         $r->post('/settings/security/passkeys/challenge', [PasskeyController::class, 'challenge']);
         $r->post('/settings/security/passkeys/step-up-challenge', [PasskeyController::class, 'stepUpChallenge']);
+        $r->post('/settings/security/passkeys/{id}/rename', [PasskeyController::class, 'rename']);
+        $r->post('/settings/security/passkeys/{id}/revoke', [PasskeyController::class, 'revoke']);
         $r->post('/settings/security/passkeys', [PasskeyController::class, 'store']);
 
         // Member controls (P2-10): privacy, preferences, notifications, sessions, blocks, boards.
