@@ -16,6 +16,7 @@ use App\Controller\AdminFeatureController;
 use App\Controller\AdminLinkPreviewController;
 use App\Controller\AdminPackageIntegrationController;
 use App\Controller\AdminPackageLifecycleController;
+use App\Controller\AdminPackageSecurityController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
 use App\Controller\AdminRoleController;
@@ -113,6 +114,7 @@ use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\ReportRepository;
 use App\Repository\PublisherSigningKeyRepository;
+use App\Service\Registry\PublisherTrustService;
 use App\Repository\RegistrySnapshotRepository;
 use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\RoleAssignmentHistoryRepository;
@@ -1285,6 +1287,18 @@ final class App
         $c->bind(InstalledPackageSettingsRepository::class, fn (Container $c) => new InstalledPackageSettingsRepository($c->get(Database::class)));
         $c->bind(InstalledPackageCredentialRepository::class, fn (Container $c) => new InstalledPackageCredentialRepository($c->get(Database::class)));
         $c->bind(PublisherSigningKeyRepository::class, fn (Container $c) => new PublisherSigningKeyRepository($c->get(Database::class)));
+        $c->bind(PublisherTrustService::class, fn (Container $c) => new PublisherTrustService(
+            $c->get(Database::class),
+            $c->get(PackagePublisherRepository::class),
+            $c->get(PublisherSigningKeyRepository::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(TrustChainVerifier::class),
+            $c->get(PackageHealthService::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+        ));
         $c->bind(PackageSettingsService::class, fn (Container $c) => new PackageSettingsService(
             $c->get(Database::class),
             $c->get(PackageRepository::class),
@@ -1821,6 +1835,14 @@ final class App
         $r->post('/admin/themes/{id}/preview', [AdminThemeController::class, 'preview']);
         $r->post('/admin/themes/{id}/activate', [AdminThemeController::class, 'activate']);
         $r->get('/admin/packages', [AdminPackagesController::class, 'index']);
+        // Publisher trust console (P5-07-A) — register the {id} publisher GET before the generic package GET.
+        $r->get ('/admin/packages/publishers/{id}',           [AdminPackageSecurityController::class, 'publisher']);
+        $r->post('/admin/packages/publishers/{id}/verify',    [AdminPackageSecurityController::class, 'verifyPublisher']);
+        $r->post('/admin/packages/publishers/{id}/suspend',   [AdminPackageSecurityController::class, 'suspendPublisher']);
+        $r->post('/admin/packages/publishers/{id}/reinstate', [AdminPackageSecurityController::class, 'reinstatePublisher']);
+        $r->post('/admin/packages/publishers/{id}/keys',      [AdminPackageSecurityController::class, 'pinPublisherKey']);
+        $r->post('/admin/packages/publishers/{id}/rotate',    [AdminPackageSecurityController::class, 'rotatePublisherKey']);
+        $r->post('/admin/publisher-keys/{id}/revoke',         [AdminPackageSecurityController::class, 'revokePublisherKey']);
         $r->get('/admin/packages/{id}', [AdminPackagesController::class, 'show']);
         $r->post('/admin/packages/{id}/plan', [AdminPackageLifecycleController::class, 'plan']);
         $r->post('/admin/packages/{id}/install', [AdminPackageLifecycleController::class, 'install']);

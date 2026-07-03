@@ -233,6 +233,28 @@ final class AppFeatureFlagTest extends TestCase
         }
     }
 
+    public function test_package_registry_gates_publisher_console_routes(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        // Dark by default: gate() → NotFoundException (404, never 403/405) before and after requireAdmin().
+        $this->assertStatus(404, $this->get('/admin/packages/publishers/1'));
+        foreach ([
+            ['/admin/packages/publishers/1/verify', ['current_password' => 'password123']],
+            ['/admin/packages/publishers/1/suspend', ['current_password' => 'password123', 'reason' => 'x']],
+            ['/admin/packages/publishers/1/reinstate', ['current_password' => 'password123']],
+            ['/admin/packages/publishers/1/keys', ['current_password' => 'password123', 'key_id' => 'k', 'public_key' => 'x']],
+            ['/admin/packages/publishers/1/rotate', ['current_password' => 'password123', 'envelope' => '{}']],
+            ['/admin/publisher-keys/1/revoke', ['current_password' => 'password123', 'reason' => 'x']],
+        ] as [$path, $body]) {
+            $this->assertStatus(404, $this->post($path, $body));
+        }
+
+        // Flag on → the gate opens (a seeded publisher renders 200, proving it was the gate, not a not-found).
+        $this->setFlags(['package_registry' => true]);
+        $ids = \Tests\Support\Phase5\RegistryFixtures::seed($this->db, \Tests\Support\Phase5\SigningHarness::generate('pub-gate'));
+        self::assertNotSame(404, $this->get('/admin/packages/publishers/' . $ids['publisher_id'])->status());
+    }
+
     public function test_package_themes_flag_gates_public_theme_routes(): void
     {
         $this->actingAs($this->makeAdmin());
