@@ -313,13 +313,12 @@
     // rule (narrow) — both work with no JS.
     //
     // At narrow widths, :target (i.e. window.location.hash) stays the ONE source
-    // of truth: JS drives it with history.replaceState instead of layering a
+    // of truth: JS drives it with same-document location.replace instead of layering a
     // second, independent class — two mechanisms tracking the same "is the
     // drawer open" fact can only drift (e.g. middle-clicking the "Members &
     // details" link opens a new tab whose hash the click handler never saw, and
     // a class-based toggle could then never clear a :target that's still set).
-    // replaceState (not assigning location.hash directly) avoids both adding a
-    // history entry and the native scroll-to-target jump.
+    // location.replace updates CSS :target without adding a history entry.
     //
     // At wide widths there's no anchor/:target involved at all — a plain
     // .rail-hidden class (persisted in localStorage) is the only mechanism.
@@ -339,7 +338,7 @@
         };
         var openRail = function () {
             if (railNarrow()) {
-                if (window.location.hash !== '#dm-rail') { history.replaceState(null, '', '#dm-rail'); }
+                if (window.location.hash !== '#dm-rail') { window.location.replace('#dm-rail'); }
             } else {
                 dmShell.classList.remove('rail-hidden');
                 try { window.localStorage.removeItem(RAIL_KEY); } catch (e) { /* ignore */ }
@@ -349,7 +348,7 @@
         var closeRail = function () {
             if (railNarrow()) {
                 if (window.location.hash === '#dm-rail') {
-                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                    window.location.replace(window.location.pathname + window.location.search);
                 }
             } else {
                 dmShell.classList.add('rail-hidden');
