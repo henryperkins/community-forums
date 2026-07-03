@@ -7,6 +7,14 @@ import path from 'node:path';
  * Drives the no-JS mint form, proves the plaintext is shown exactly once, revokes
  * the token via the row form, and certifies /admin/api-tokens is free of
  * serious/critical axe violations. Seed enables api_tokens + admin@retro.test.
+ *
+ * Isolation: `npm run evidence` shares one seeded DB, and gate-a's theme-rollback
+ * journey deliberately leaves an evidence package theme active site-wide. That theme
+ * only overrides a subset of tokens (surfaces/--text), so shared admin-table styles
+ * (.audit th → --gold-ink, .audit td → --text-body) desync on its dark surface and
+ * fail WCAG AA. This spec certifies the api-tokens surface under the app's own
+ * appearance, so it neutralises any leftover active theme via the app's theme safe
+ * mode first (the same fallback an operator uses when a theme misbehaves).
  */
 const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
 
@@ -33,6 +41,29 @@ async function login(page: Page, email: string): Promise<void> {
   }
 }
 
+// Neutralise any package theme gate-a left active site-wide on the shared evidence DB so
+// the api-tokens surface is certified under the standard appearance. Idempotent: if safe
+// mode is already on the "Enter" button is absent and this is a no-op.
+async function enterThemeSafeMode(page: Page): Promise<void> {
+  await page.goto('/admin/themes/safe-mode');
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  if (await enter.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await enter.click();
+    await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  }
+}
+
+async function exitThemeSafeMode(page: Page): Promise<void> {
+  await page.goto('/admin/themes/safe-mode');
+  const exit = page.getByRole('button', { name: 'Exit safe mode' });
+  if (await exit.isVisible({ timeout: 1000 }).catch(() => false)) {
+    // Exiting reauths (setSafeMode(false) requires the current password); enter does not.
+    await page.fill('form:has(input[name="exit"]) input[name="current_password"]', 'password123');
+    await exit.click();
+    await expect(page.getByRole('status').getByText('Theme safe mode was exited.')).toBeVisible();
+  }
+}
+
 async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include?: string): Promise<void> {
   let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']);
   if (include !== undefined) builder = builder.include(include);
@@ -43,6 +74,7 @@ async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include
 
 test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
+  await enterThemeSafeMode(page);
 
   // Flag-gated discovery link off the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
@@ -74,4 +106,7 @@ test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke
   await revokeBtn.click({ force: true });
   await expect(page.locator('table tbody tr', { hasText: tokenName })).toContainText('revoked');
   await shot(page, info, 'api-token-revoked');
+
+  // Leave the shared site appearance as we found it for any later spec in the run.
+  await exitThemeSafeMode(page);
 });
