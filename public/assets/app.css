@@ -2597,6 +2597,31 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .dm-listpane-filters .pill { text-decoration: none; }
 .dm-listpane-filters .pill:hover { color: var(--text); }
 .dm-listpane-filters .pill.is-active { background: var(--accent); color: var(--accent-contrast); }
+/* Round "new message" action — quiet gold, the one invitation in the header. */
+.dm-new-btn {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    color: var(--brand);
+    box-shadow: var(--shadow-xs);
+    transition: background 140ms var(--ease-calm), border-color 140ms var(--ease-calm), transform 140ms var(--ease-calm);
+}
+.dm-new-btn:hover {
+    background: var(--brand-subtle);
+    border-color: var(--green-200);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+.dm-new-btn .icon {
+    width: 17px;
+    height: 17px;
+}
 .dm-list {
     list-style: none;
     margin: 0;
@@ -2613,19 +2638,21 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .dm-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
-    gap: 4px 11px;
-    align-items: start;
+    gap: 3px 11px;
+    align-items: center;
     width: 100%;
-    padding: 11px 12px;
+    padding: 10px 12px;
     border-radius: var(--radius-md);
     color: inherit;
+    position: relative;
+    transition: background 140ms var(--ease-calm);
 }
 .dm-row:hover {
     background: var(--surface-sunken);
     text-decoration: none;
 }
-.dm-row.active,
-.dm-row.is-unread {
+/* Only the active conversation carries the plate; unread is a lone gold dot. */
+.dm-row.active {
     background: var(--brand-subtle);
     box-shadow: inset 3px 0 0 var(--accent-2);
 }
@@ -2634,14 +2661,16 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 }
 .dm-row-top {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 7px;
     min-width: 0;
+    grid-column: 2;
+    grid-row: 1;
 }
 .dm-other {
     font-family: var(--font-display);
     font-weight: var(--weight-medium);
-    font-size: 1.05rem;
+    font-size: 1.06rem;
     color: var(--text-strong);
     line-height: 1.15;
     white-space: nowrap;
@@ -2655,9 +2684,13 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     grid-column: 3;
     grid-row: 1;
     font-family: var(--font-mono);
-    font-size: .7rem;
+    font-size: .68rem;
     color: var(--text-faint);
     white-space: nowrap;
+    align-self: baseline;
+}
+.dm-row.is-unread .dm-time {
+    color: var(--gold-ink);
 }
 .dm-preview {
     grid-column: 2 / span 2;
@@ -2665,19 +2698,25 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     font-family: var(--font-body);
     font-size: .9rem;
     color: var(--text-muted);
-    line-height: 1.45;
+    line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
-.dm-group-meta {
-    grid-column: 2 / span 2;
-    grid-row: 3;
-    font-family: var(--font-mono);
-    font-size: .7rem;
-    color: var(--text-faint);
-    margin-top: 1px;
+.dm-row.is-unread .dm-preview {
+    color: var(--text-body);
+}
+/* Unread marker — a single gold dot at the row's far right, nothing more. */
+.dm-unread-dot {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    align-self: center;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-2);
 }
 .dm-list-empty {
     padding: 40px 22px;
@@ -2825,136 +2864,222 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     flex: 1 1 auto;
     overflow-y: auto;
     min-height: 0;
-    padding: 22px 28px;
+    padding: 20px 26px 22px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 3px;
 }
+.dm-scroll-inner {
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+/* Day / section divider — a hairline with a small-caps label, no pill box. */
 .dm-day {
-    align-self: center;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 14px 2px 10px;
+    color: var(--text-faint);
     font-family: var(--font-label);
     text-transform: uppercase;
     letter-spacing: var(--tracking-caps);
-    font-size: .64rem;
-    color: var(--text-faint);
-    padding: 2px 12px;
-    background: var(--surface-sunken);
-    border-radius: var(--radius-pill);
+    font-size: .6rem;
 }
-.dm-message {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    max-width: 76%;
-    align-self: flex-start;
+.dm-day::before,
+.dm-day::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: var(--border-hair);
 }
-.dm-message.dm-mine {
-    align-self: flex-end;
-    align-items: flex-end;
+/* Grouped "letter" — one author line, then a run of that author's messages. */
+.dm-group {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 12px;
+    max-width: 82%;
+    margin-top: 13px;
 }
-.dm-message-head {
+.dm-group .dm-mono-col {
+    grid-row: 1 / span 2;
+    align-self: start;
+}
+.dm-ghead {
     display: flex;
     align-items: baseline;
     gap: 9px;
-    padding: 0 4px;
+    margin: 1px 0 5px;
 }
-.dm-mine .dm-message-head {
-    flex-direction: row-reverse;
-}
-.dm-author {
+.dm-name {
     font-family: var(--font-label);
-    letter-spacing: .03em;
-    font-size: .74rem;
-    color: var(--text-strong);
+    letter-spacing: .04em;
+    font-size: .72rem;
+    text-transform: uppercase;
+    color: var(--on-brand-subtle);
 }
-.dm-message-head .post-time {
+.dm-ghead .dm-gtime {
     font-family: var(--font-mono);
-    font-size: .7rem;
+    font-size: .66rem;
     color: var(--text-faint);
 }
-.dm-bubble {
-    background: var(--surface-page);
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-lg);
-    padding: 11px 15px;
-    box-shadow: var(--shadow-xs);
+.dm-msgs {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
 }
-.dm-bubble p {
-    margin: 0;
+.dm-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    position: relative;
+}
+.dm-body {
     font-family: var(--font-body);
-    font-size: 1.02rem;
+    font-size: 1.04rem;
     line-height: 1.6;
     color: var(--text-body);
 }
-.dm-bubble p + p {
+.dm-body p {
+    margin: 0;
+}
+.dm-body p + p {
     margin-top: .7em;
 }
-.dm-mine .dm-bubble {
-    background: var(--gold-soft);
-    border-color: var(--gold-200);
+/* Mine — right-aligned, wearing the one ceremonial gold plate. */
+.dm-group.mine {
+    grid-template-columns: minmax(0, 1fr);
+    margin-left: auto;
+    justify-items: end;
 }
+.dm-group.mine .dm-ghead {
+    flex-direction: row-reverse;
+}
+.dm-group.mine .dm-line {
+    flex-direction: row-reverse;
+}
+.dm-group.mine .dm-body {
+    background: var(--gold-soft);
+    border: 1px solid var(--gold-200);
+    border-radius: var(--radius-lg);
+    padding: 8px 14px;
+}
+/* Theirs — plain counsel on parchment; a right gutter holds the hover ···. */
+.dm-group:not(.mine) .dm-body {
+    padding: 1px 0;
+}
+.dm-group:not(.mine) .dm-line {
+    padding-right: 26px;
+}
+/* Per-message hover ··· (report) — nothing visible until you reach for it. */
+.dm-line-menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+    opacity: 0;
+    transition: opacity 140ms var(--ease-calm);
+}
+.dm-line:hover .dm-line-menu,
+.dm-line:focus-within .dm-line-menu,
+.dm-line-menu:has(details[open]) {
+    opacity: 1;
+}
+.dm-dotbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    color: var(--text-muted);
+    cursor: pointer;
+    list-style: none;
+}
+.dm-dotbtn::-webkit-details-marker {
+    display: none;
+}
+.dm-dotbtn:hover {
+    color: var(--brand);
+    border-color: var(--green-200);
+}
+.dm-dotbtn .icon {
+    width: 15px;
+    height: 15px;
+}
+/* Reference cards (linked topics / posts inside a message) — lightened. */
 .reference-cards {
     display: flex;
     flex-direction: column;
-    gap: 7px;
-    margin-top: 8px;
+    gap: 6px;
+    margin-top: 7px;
     max-width: 100%;
 }
 .reference-card {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     text-decoration: none;
     border: 1px solid var(--border-hair);
     border-left: 3px solid var(--accent-2);
-    border-radius: var(--radius-md);
-    padding: 9px 13px;
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
     background: var(--surface-raised);
 }
 .reference-card:hover {
     border-color: var(--green-200);
     box-shadow: var(--shadow-xs);
 }
+.reference-card .ref-type {
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: .56rem;
+    color: var(--gold-ink);
+}
 .reference-card strong {
     font-family: var(--font-display);
     font-weight: var(--weight-medium);
-    font-size: 1rem;
+    font-size: .98rem;
     color: var(--text-strong);
+    line-height: 1.2;
 }
-.reference-card .muted {
+.reference-card .ref-meta {
     font-family: var(--font-mono);
-    font-size: .72rem;
+    font-size: .68rem;
+    color: var(--text-muted);
 }
+/* Per-message report — opened from the hover ···, floats as a small card. */
 .dm-report {
-    margin-top: 2px;
-}
-.dm-report summary {
-    font-family: var(--font-label);
-    letter-spacing: .03em;
-    font-size: .7rem;
-    color: var(--text-faint);
-    cursor: pointer;
-    list-style: none;
-}
-.dm-report summary::-webkit-details-marker {
-    display: none;
-}
-.dm-report summary:hover {
-    color: var(--danger);
+    position: static;
 }
 .dm-report-form {
+    position: absolute;
+    z-index: 6;
+    top: calc(100% + 4px);
+    right: 0;
+    width: max-content;
+    max-width: 300px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 9px;
     padding: 11px;
-    background: var(--surface-sunken);
+    background: var(--surface-raised);
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
 }
 .dm-report-form .input {
     font-size: .85rem;
+}
+.dm-report-form .input-small {
+    flex: 1;
+    min-width: 120px;
 }
 .dm-composer {
     flex: 0 0 auto;
@@ -4078,7 +4203,7 @@ span.wf-btn {
     .dm-shell.reading .dm-threadpane {
         display: flex;
     }
-    .dm-message {
+    .dm-group {
         max-width: 92%;
     }
     .dm-composer {

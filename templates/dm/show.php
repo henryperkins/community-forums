@@ -106,51 +106,74 @@ $this->section('title', $title);
         <?php endif; ?>
 
         <div class="dm-scroll">
+            <div class="dm-scroll-inner">
             <?php if (empty($messages)): ?>
                 <p class="muted empty">No messages yet.</p>
             <?php else: ?>
-                <div class="dm-day">Open letter</div>
-                <?php foreach ($messages as $m): ?>
-                    <?php $mine = $current_user !== null && (int) $m['user_id'] === $current_user->id(); ?>
-                    <div class="dm-message<?= $mine ? ' dm-mine' : '' ?>" id="m<?= (int) $m['id'] ?>">
-                        <div class="dm-message-head">
-                            <span class="dm-author"><?= $e(($m['author_display_name'] ?? '') !== '' ? $m['author_display_name'] : $m['author_username']) ?></span>
-                            <span class="post-time"><?= $e(human_datetime($m['created_at'])) ?></span>
-                        </div>
-                        <div class="dm-bubble">
-                            <?php if (($m['body_html'] ?? '') !== ''): ?>
-                                <?= $m['body_html'] /* sanitised at write time */ ?>
-                            <?php else: ?>
-                                <p><?= $e($m['body']) ?></p>
-                            <?php endif; ?>
-                        </div>
-                        <?php $messageReferenceCards = ($reference_cards ?? [])[(int) $m['id']] ?? []; ?>
-                        <?php if (!empty($messageReferenceCards)): ?>
-                            <div class="reference-cards" aria-label="Referenced content">
-                                <?php foreach ($messageReferenceCards as $card): ?>
-                                    <a class="reference-card" href="<?= $e($card['url']) ?>">
-                                        <span class="badge badge-muted"><?= $e($card['type']) ?></span>
-                                        <strong><?= $e($card['title']) ?></strong>
-                                        <?php if (($card['meta'] ?? '') !== ''): ?><span class="muted"><?= $e($card['meta']) ?></span><?php endif; ?>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
+                <div class="dm-day">Beginning of your counsel</div>
+                <?php
+                // Group consecutive messages by author into de-boxed "letters":
+                // one author line per run, then the run's messages.
+                $dmGroups = [];
+                foreach ($messages as $m) {
+                    $lastIdx = count($dmGroups) - 1;
+                    if ($lastIdx >= 0 && (int) $dmGroups[$lastIdx]['user_id'] === (int) $m['user_id']) {
+                        $dmGroups[$lastIdx]['items'][] = $m;
+                    } else {
+                        $dmGroups[] = ['user_id' => (int) $m['user_id'], 'items' => [$m]];
+                    }
+                }
+                ?>
+                <?php foreach ($dmGroups as $g): ?>
+                    <?php
+                    $first = $g['items'][0];
+                    $mine = $current_user !== null && (int) $first['user_id'] === $current_user->id();
+                    $authorName = ($first['author_display_name'] ?? '') !== '' ? $first['author_display_name'] : $first['author_username'];
+                    ?>
+                    <div class="dm-group<?= $mine ? ' mine' : '' ?>">
                         <?php if (!$mine): ?>
-                            <details class="dm-report">
-                                <summary class="linkbtn danger">Report</summary>
-                                <form method="post" action="/dm/<?= (int) $m['id'] ?>/report" class="dm-report-form">
-                                    <?= $this->csrfField() ?>
-                                    <select name="reason_code" class="input input-small">
-                                        <?php foreach ($reasons as $rc): ?>
-                                            <option value="<?= $e($rc) ?>"><?= $e(ucfirst(str_replace('_', ' ', $rc))) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <input type="text" name="reason" class="input" placeholder="Details (optional)" maxlength="255">
-                                    <button class="btn btn-small danger" type="submit">Report message</button>
-                                </form>
-                            </details>
+                            <span class="dm-mono-col"><?= $this->partial('partials/monogram', ['name' => $authorName, 'username' => $first['author_username']]) ?></span>
                         <?php endif; ?>
+                        <div class="dm-msgs">
+                            <div class="dm-ghead">
+                                <span class="dm-name"><?= $mine ? 'You' : $e($authorName) ?></span>
+                                <span class="dm-gtime"><?= $e(human_datetime($first['created_at'])) ?></span>
+                            </div>
+                            <?php foreach ($g['items'] as $m): ?>
+                                <div class="dm-line" id="m<?= (int) $m['id'] ?>">
+                                    <div class="dm-body">
+                                        <?php if (($m['body_html'] ?? '') !== ''): ?><?= $m['body_html'] /* sanitised at write time */ ?><?php else: ?><p><?= $e($m['body']) ?></p><?php endif; ?>
+                                    </div>
+                                    <?php if (!$mine): ?>
+                                        <span class="dm-line-menu">
+                                            <details class="dm-report">
+                                                <summary class="dm-dotbtn" aria-label="Message actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
+                                                <form method="post" action="/dm/<?= (int) $m['id'] ?>/report" class="dm-report-form">
+                                                    <?= $this->csrfField() ?>
+                                                    <select name="reason_code" class="input input-small">
+                                                        <?php foreach ($reasons as $rc): ?><option value="<?= $e($rc) ?>"><?= $e(ucfirst(str_replace('_', ' ', $rc))) ?></option><?php endforeach; ?>
+                                                    </select>
+                                                    <input type="text" name="reason" class="input input-small" placeholder="Details (optional)" maxlength="255">
+                                                    <button class="btn btn-small danger" type="submit">Report message</button>
+                                                </form>
+                                            </details>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <?php $messageReferenceCards = ($reference_cards ?? [])[(int) $m['id']] ?? []; ?>
+                                <?php if (!empty($messageReferenceCards)): ?>
+                                    <div class="reference-cards" aria-label="Referenced content">
+                                        <?php foreach ($messageReferenceCards as $card): ?>
+                                            <a class="reference-card" href="<?= $e($card['url']) ?>">
+                                                <span class="ref-type"><?= $e($card['type']) ?></span>
+                                                <strong><?= $e($card['title']) ?></strong>
+                                                <?php if (($card['meta'] ?? '') !== ''): ?><span class="ref-meta"><?= $e($card['meta']) ?></span><?php endif; ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -167,6 +190,7 @@ $this->section('title', $title);
                     </ul>
                 </details>
             <?php endif; ?>
+            </div>
         </div>
 
         <?php if (!empty($can_reply)): ?>

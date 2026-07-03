@@ -8,7 +8,7 @@
                     <span class="eyebrow">Private counsel</span>
                     <h1>Messages</h1>
                 </span>
-                <a class="btn btn-small" href="/messages/new">New message</a>
+                <a class="dm-new-btn" href="/messages/new" aria-label="New message" title="New message"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></a>
             </div>
             <?php $filter = ($filter ?? 'all') === 'unread' ? 'unread' : 'all'; ?>
             <nav class="dm-listpane-filters" aria-label="Message filters">
@@ -33,12 +33,11 @@
                         <a class="dm-row dm-link<?= !empty($c['is_unread']) ? ' is-unread' : '' ?>" href="/messages/<?= (int) $c['conversation_id'] ?>">
                         <?= $this->partial('partials/monogram', ['name' => $other, 'username' => $seed, 'gilt' => $isGroup]) ?>
                             <span class="dm-row-top">
-                                <?php if (!empty($c['is_unread'])): ?><span class="unread-dot" aria-hidden="true"></span><?php endif; ?>
                                 <span class="dm-other"><?= $e($other) ?></span>
                             </span>
                         <span class="dm-time"><?= $e(human_datetime($c['last_message_at'] ?? null)) ?></span>
                             <span class="dm-preview"><?= $e(mb_strimwidth((string) ($c['last_body'] ?? ''), 0, 120, '…')) ?></span>
-                            <?php if ($isGroup && !empty($c['participant_names'])): ?><span class="dm-group-meta"><?= $e($c['participant_names']) ?></span><?php endif; ?>
+                            <?php if (!empty($c['is_unread'])): ?><span class="dm-unread-dot" aria-label="Unread"></span><?php endif; ?>
                         </a>
                     </li>
                 <?php endforeach; ?>
