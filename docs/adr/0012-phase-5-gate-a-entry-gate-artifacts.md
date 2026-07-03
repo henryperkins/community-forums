@@ -7,10 +7,10 @@
 pass returned a **go** on 2026-07-01; this ADR flips from Proposed to **Accepted**
 and `PHASE_5_STATUS.md` is updated to match. Acceptance covers the §2 **entry-gate
 artifacts only** — it does **not** accept any Gate A *behavior* (that remains
-**ADR 0013**, Increment 10).
+**ADR 0015**, Increment 10).
 **Supersedes a numbering reservation:** the Gate A program plan originally
 reserved ADR `0012` for the *acceptance* record; that acceptance ADR is
-renumbered **`0013`**. This ADR (`0012`) is entry-gate artifacts.
+renumbered **`0015`** (ADR `0013`/`0014` were subsequently consumed by the wysiwyg-composer and member-notifications ADRs). This ADR (`0012`) is entry-gate artifacts.
 
 ## Context
 
@@ -102,7 +102,7 @@ behavior lost).
    satisfied and the **Foundation increment (program-plan §B, F1–F11) may become
    an executable TDD plan.**
 2. This ADR does **not** accept any Gate A *behavior*. Gate A acceptance remains a
-   separate, evidence-gated record (**ADR 0013**, Increment 10).
+   separate, evidence-gated record (**ADR 0015**, Increment 10).
 3. A1 is the source of truth the Foundation **F3** generates `CapabilityCatalog.php`
    and the `0066` seed from; the F3 coverage test is the enforcement of A1, not
    this ADR.
@@ -113,7 +113,7 @@ behavior lost).
 
 - Clears the last §2 entry-gate artifacts; ADR 0004's Milestone-0 policy plus this
   ADR's instantiation together make the trust model "recorded before code begins."
-- The Gate A program plan's acceptance-ADR reference moves `0012 → 0013`.
+- The Gate A program plan's acceptance-ADR reference moves `0012 → 0015` (`0013`/`0014` since consumed).
 - A1's parity-first quirks (capability-taxonomy.md §7) are recorded as *current
   authority to reproduce*; correcting any of them is a separate post-parity owner
   decision, not Gate A scope.
