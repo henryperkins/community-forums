@@ -14,6 +14,7 @@ use App\Controller\AdminEmailController;
 use App\Controller\AdminExtensionController;
 use App\Controller\AdminFeatureController;
 use App\Controller\AdminLinkPreviewController;
+use App\Controller\AdminPackageIntegrationController;
 use App\Controller\AdminPackageLifecycleController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
@@ -1835,6 +1836,13 @@ final class App
         $r->post('/admin/packages/{id}/uninstall', [AdminPackageLifecycleController::class, 'uninstall']);
         $r->post('/admin/packages/{id}/export', [AdminPackageLifecycleController::class, 'export']);
         $r->post('/admin/packages/{id}/reverify', [AdminPackageLifecycleController::class, 'reverify']);
+        // Integration runtime (P5-04) — remote_app / automation, deploy-dark behind package_registry.
+        $r->post('/admin/packages/{id}/integration/settings',                          [AdminPackageIntegrationController::class, 'saveSettings']);
+        $r->post('/admin/packages/{id}/integration/provision',                         [AdminPackageIntegrationController::class, 'provision']);
+        $r->post('/admin/packages/{id}/integration/credentials/{credentialId}/rotate', [AdminPackageIntegrationController::class, 'rotateCredential']);
+        $r->post('/admin/packages/{id}/integration/credentials/{credentialId}/revoke', [AdminPackageIntegrationController::class, 'revokeCredential']);
+        $r->post('/admin/packages/{id}/integration/disable',                           [AdminPackageIntegrationController::class, 'disableIntegration']);
+        $r->post('/admin/packages/{id}/integration/export',                            [AdminPackageIntegrationController::class, 'exportSettings']);
         $r->get('/admin/registries', [AdminRegistryController::class, 'index']);
         $r->post('/admin/registries', [AdminRegistryController::class, 'create']);
         $r->post('/admin/registries/{id}/enabled', [AdminRegistryController::class, 'setEnabled']);

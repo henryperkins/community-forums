@@ -221,6 +221,12 @@ final class AppFeatureFlagTest extends TestCase
             ['POST', '/admin/packages/1/uninstall', ['current_password' => 'password123']],
             ['POST', '/admin/packages/1/export', []],
             ['POST', '/admin/packages/1/reverify', []],
+            ['POST', '/admin/packages/1/integration/settings', []],
+            ['POST', '/admin/packages/1/integration/provision', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/integration/credentials/1/rotate', ['current_password' => 'password123']],
+            ['POST', '/admin/packages/1/integration/credentials/1/revoke', []],
+            ['POST', '/admin/packages/1/integration/disable', []],
+            ['POST', '/admin/packages/1/integration/export', []],
         ] as [$method, $path, $body]) {
             $response = $method === 'GET' ? $this->get($path) : $this->post($path, $body);
             $this->assertStatus(404, $response);
