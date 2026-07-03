@@ -12,8 +12,11 @@ use App\Core\ValidationException;
 use App\Repository\PackagePublisherRepository;
 use App\Repository\PackageReviewDecisionRepository;
 use App\Repository\PublisherSigningKeyRepository;
+use App\Security\Packages\PackagePolicyException;
 use App\Security\Registry\RegistryVerificationException;
+use App\Service\Packages\PackageReviewConsoleService;
 use App\Service\Registry\PublisherTrustService;
+use App\Service\Registry\RegistryCatalogService;
 
 /**
  * Local operator security-response console (P5-07-A), deploy-dark behind
@@ -151,6 +154,43 @@ final class AdminPackageSecurityController extends Controller
         } catch (ValidationException $e) {
             return $this->publisherView($publisherId, $e->errors, $request->allInput(), 422);
         }
+    }
+
+    /** @param array<string,string> $params */
+    public function recordReview(Request $request, array $params): Response
+    {
+        $this->gate();
+        $admin = $this->requireAdmin();
+        $this->gate();
+        $packageId = (int) ($params['id'] ?? 0);
+
+        try {
+            $this->container->get(PackageReviewConsoleService::class)->recordDecision(
+                $admin,
+                (string) $request->post('current_password', ''),
+                $packageId,
+                (int) $request->post('release_id', 0),
+                $request->str('decision'),
+                $request->str('note') !== '' ? $request->str('note') : null,
+            );
+
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, 'Local review decision recorded.'));
+        } catch (ValidationException $e) {
+            return $this->reviewErrorView($packageId, $e->errors);
+        } catch (PackagePolicyException $e) {
+            return $this->reviewErrorView($packageId, ['review' => 'Refused (' . $e->code . '): ' . $e->getMessage()]);
+        }
+    }
+
+    /** @param array<string,string> $errors */
+    private function reviewErrorView(int $packageId, array $errors): Response
+    {
+        $detail = $this->container->get(RegistryCatalogService::class)->detail($packageId);
+        if ($detail === null) {
+            throw new NotFoundException('Package not found.');
+        }
+
+        return $this->noindex($this->view('admin/package_detail', $detail + ['errors' => $errors], 422));
     }
 
     private function gate(): void

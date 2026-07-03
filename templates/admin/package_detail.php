@@ -58,7 +58,7 @@ foreach ($installed_permissions as $permission) {
         <h2>Releases (immutable: any changed byte is a new release)</h2>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Package releases">
         <table class="audit">
-            <thead><tr><th>Version</th><th>Channel</th><th>Digest (sha256)</th><th>Signed by</th><th>Review</th><th>Core range</th><th>Advisory</th></tr></thead>
+            <thead><tr><th>Version</th><th>Channel</th><th>Digest (sha256)</th><th>Signed by</th><th>Review</th><th>Core range</th><th>Advisory</th><th>Local review</th></tr></thead>
             <tbody>
             <?php foreach ($releases as $r): ?>
                 <tr>
@@ -72,6 +72,7 @@ foreach ($installed_permissions as $permission) {
                         <?= $r['compatible'] ? '<span class="pill">compatible</span>' : '<span class="pill">incompatible</span>' ?>
                     </td>
                     <td><?= $e($r['advisory_status']) ?></td>
+                    <td><?= $this->partial('admin/_package_review_form', ['package_id' => $package['id'], 'release' => $r]) ?></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>

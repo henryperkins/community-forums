@@ -1867,6 +1867,7 @@ final class App
         $r->post('/admin/packages/{id}/update/cancel', [AdminPackageLifecycleController::class, 'cancelUpdate']);
         $r->post('/admin/packages/{id}/rollback', [AdminPackageLifecycleController::class, 'rollback']);
         $r->post('/admin/packages/{id}/uninstall', [AdminPackageLifecycleController::class, 'uninstall']);
+        $r->post('/admin/packages/{id}/review', [AdminPackageSecurityController::class, 'recordReview']);
         $r->post('/admin/packages/{id}/export', [AdminPackageLifecycleController::class, 'export']);
         $r->post('/admin/packages/{id}/reverify', [AdminPackageLifecycleController::class, 'reverify']);
         // Integration runtime (P5-04) — remote_app / automation, deploy-dark behind package_registry.
