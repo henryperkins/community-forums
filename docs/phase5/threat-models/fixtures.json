@@ -9,7 +9,7 @@
     { "id": "TM-SC-05", "model": "supply-chain.md", "fixture": "same-uid package on second registry cannot satisfy install/update", "owner": "Inc2", "status": "implemented", "test": "tests/Integration/Service/RegistrySnapshotServiceTest.php" },
     { "id": "TM-SC-06", "model": "supply-chain.md", "fixture": "revoked and locally-blocked digests fail install and enable", "owner": "Inc3", "status": "implemented", "test": "tests/Integration/Service/PackageLifecycleServiceTest.php" },
     { "id": "TM-SC-07", "model": "supply-chain.md", "fixture": "on-disk byte flip triggers health failure and quarantine", "owner": "Inc3", "status": "implemented", "test": "tests/Integration/Worker/PackageHealthWorkerTest.php" },
-    { "id": "TM-SC-08", "model": "supply-chain.md", "fixture": "undeclared scope/host exercised at runtime is denied and audited", "owner": "Inc5", "status": "stub" },
+    { "id": "TM-SC-08", "model": "supply-chain.md", "fixture": "undeclared scope/host exercised at runtime is denied and audited", "owner": "Inc5", "status": "implemented", "test": "tests/Integration/Service/PackageIntegrationServiceTest.php" },
     { "id": "TM-SC-09", "model": "supply-chain.md", "fixture": "approval for digest A does not authorize digest B", "owner": "Inc3", "status": "implemented", "test": "tests/Integration/Service/PackageAcquisitionServiceTest.php" },
     { "id": "TM-ID-01", "model": "identity-account-takeover.md", "fixture": "cross-issuer token, wrong audience, and wrong azp rejected", "owner": "Inc8", "status": "stub" },
     { "id": "TM-ID-02", "model": "identity-account-takeover.md", "fixture": "replayed state, missing nonce, wrong PKCE verifier rejected", "owner": "Inc8", "status": "stub" },
