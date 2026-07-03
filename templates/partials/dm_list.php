@@ -22,7 +22,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
     <header class="dm-listpane-head">
         <div class="dm-listpane-top">
             <span>
-                <span class="eyebrow">Private counsel</span>
+                <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
                 <h1>Messages</h1>
             </span>
             <details class="dm-compose-details">

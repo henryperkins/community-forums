@@ -20,6 +20,7 @@ $this->section('title', $title);
             <div class="dm-thread-id">
                 <?= $this->partial('partials/monogram', ['name' => !empty($is_group) ? $title : $otherName, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'gilt' => true]) ?>
                 <div>
+                    <span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?><?= !empty($is_group) ? 'Private group' : 'Private counsel' ?></span>
                     <h1 class="dm-thread-title">
                         <?php if (!empty($is_group)): ?>
                             <?= $e($title) ?>
@@ -75,7 +76,7 @@ $this->section('title', $title);
             <?php if (empty($messages)): ?>
                 <p class="muted empty">No messages yet.</p>
             <?php else: ?>
-                <div class="dm-day">Beginning of your counsel</div>
+                <div class="dm-day dm-day-private"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private — only those named here can read</div>
                 <?php
                 // Group consecutive messages by author into de-boxed "letters":
                 // one author line per run, then the run's messages.
@@ -87,6 +88,11 @@ $this->section('title', $title);
                     } else {
                         $dmGroups[] = ['user_id' => (int) $m['user_id'], 'items' => [$m]];
                     }
+                }
+                // Conversation role (owner/member) per user, for the group rank pill.
+                $dmRoles = [];
+                foreach (($participants ?? []) as $pp) {
+                    $dmRoles[(int) $pp['user_id']] = (string) ($pp['role'] ?? '');
                 }
                 ?>
                 <?php foreach ($dmGroups as $g): ?>
@@ -102,6 +108,9 @@ $this->section('title', $title);
                         <div class="dm-msgs">
                             <div class="dm-ghead">
                                 <span class="dm-name"><?= $mine ? 'You' : $e($authorName) ?></span>
+                                <?php if (!$mine && !empty($is_group) && ($dmRoles[(int) $first['user_id']] ?? '') === 'owner'): ?>
+                                    <span class="dm-rank">Owner</span>
+                                <?php endif; ?>
                                 <span class="dm-gtime"><?= $e(human_datetime($first['created_at'])) ?></span>
                             </div>
                             <?php foreach ($g['items'] as $m): ?>
@@ -176,17 +185,18 @@ $this->section('title', $title);
 
         <?php if (!empty($can_reply)): ?>
             <?php
-            // The composer stays the plain textarea + Send that composer.js has
-            // always decorated (toolbar, drafts, suggestion menus, and the user's
-            // own enter_to_send preference). The handoff's pill well + forced
-            // Enter-to-send would sit UNDER those injections and override the
-            // preference, so that restyle is deferred to a browser-evidenced pass.
+            // The composer keeps class="composer", so composer.js still decorates it
+            // (toolbar, drafts, suggestion menus) and the user's own enter_to_send
+            // preference is left untouched — we do NOT force Enter-to-send. Only the
+            // presentation changes: the field is restyled to the calm river "pill"
+            // and Send becomes a round icon button. The pill is the form itself, so
+            // any toolbar / counter composer.js injects stacks cleanly around it.
             ?>
             <form class="dm-composer composer" method="post" action="/messages/<?= (int) $conversation_id ?>" data-composer-context="dm" data-composer-target-id="<?= (int) $conversation_id ?>">
                 <?= $this->csrfField() ?>
                 <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
                 <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
-                <button class="btn" type="submit">Send</button>
+                <button class="btn dm-send" type="submit" aria-label="Send message"><?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?></button>
             </form>
         <?php else: ?>
             <div class="joinbar">You are no longer an active participant in this conversation.</div>

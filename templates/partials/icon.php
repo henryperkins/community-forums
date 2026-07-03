@@ -32,6 +32,7 @@ $iconStroke = [
     'check'           => '<path d="M20 6 9 17l-5-5"/>',
     'arrow-up'        => '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
     'chevron-left'    => '<path d="M15 18l-6-6 6-6"/>',
+    'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
 ];
 $iconFilled = [
     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',

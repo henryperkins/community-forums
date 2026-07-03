@@ -13,7 +13,7 @@
                         <span>Inbox</span></a></li>
                 <?php endif; ?>
                 <?php if (!empty($features['dms'])): ?>
-                    <li><a class="rail-filter<?= $request_path === '/messages' ? ' active' : '' ?>" href="/messages">
+                    <li><a class="rail-filter<?= ($request_path === '/messages' || strncmp((string) $request_path, '/messages/', 10) === 0) ? ' active' : '' ?>" href="/messages">
                         <svg class="rail-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <span>Messages</span></a></li>
                 <?php endif; ?>
