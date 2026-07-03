@@ -131,6 +131,8 @@ use App\Repository\UsernameHistoryRepository;
 use App\Repository\VerificationRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\UserRepository;
+use App\Repository\WebAuthnChallengeRepository;
+use App\Repository\WebAuthnCredentialRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\BoardPolicy;
@@ -151,6 +153,8 @@ use App\Security\SecretBox;
 use App\Security\Session;
 use App\Security\Totp;
 use App\Security\WebhookEvents;
+use App\Security\WebAuthn\RelyingParty;
+use App\Security\WebAuthn\WebAuthnVerifier;
 use App\Security\WriteGate;
 use App\Service\AccountService;
 use App\Service\AccountLifecycleService;
@@ -838,6 +842,17 @@ final class App
         $c->bind(AttachmentRepository::class, fn (Container $c) => new AttachmentRepository($c->get(Database::class)));
         $c->bind(AttachmentScanService::class, fn (Container $c) => new AttachmentScanService($c->get(AttachmentRepository::class)));
         $c->bind(MfaRepository::class, fn (Container $c) => new MfaRepository($c->get(Database::class)));
+        $c->bind(WebAuthnCredentialRepository::class, fn (Container $c) => new WebAuthnCredentialRepository($c->get(Database::class)));
+        $c->bind(WebAuthnChallengeRepository::class, fn (Container $c) => new WebAuthnChallengeRepository($c->get(Database::class)));
+        $c->bind(RelyingParty::class, function () use ($config): RelyingParty {
+            $override = trim((string) $config->get('app.webauthn_rp_id', ''));
+            return new RelyingParty(
+                (string) $config->get('app.url', ''),
+                $override !== '' ? $override : null,
+                (string) $config->get('app.env', 'production'),
+            );
+        });
+        $c->bind(WebAuthnVerifier::class, fn (Container $c) => new WebAuthnVerifier($c->get(RelyingParty::class)));
         $c->bind(CustomEmojiService::class, fn (Container $c) => new CustomEmojiService(
             $c->get(Database::class),
             $c->get(WriteGate::class),
