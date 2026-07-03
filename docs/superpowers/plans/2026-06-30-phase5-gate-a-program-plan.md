@@ -17,7 +17,7 @@ This document sequences the work; it does **not** waive `PHASE_5_PLAN.md` §2 �
 *Every task in every increment implicitly includes this section. Values are copied from CLAUDE.md, `PHASE_5_PLAN.md`, and `docs/adr/0004`.*
 
 - **Deploy-dark.** Every Gate A subsystem ships behind its existing `FeatureFlags` flag, **default `false`**, route-gated (controller throws `NotFoundException` when off), with a regression in `tests/Integration/Core/AppFeatureFlagTest.php`. No Gate A slice leaves dark-by-default status until it reaches **R4/R5** in the ledger. Pre-acceptance enablement is limited to the staged `PHASE_5_PLAN` / ADR-0004 order (shadow, staff preview/browse, constrained cohort), and **broad/public/default-on enablement** still waits for formal Gate A acceptance (`§11.1`, `§13.1`). The Gate A flags: `package_registry`, `package_themes`, `capabilities`, `passkeys`, `provider_registry`, `invitations`, plus the already-landed-dark `service_secrets`, `api_tokens`, `webhooks`, `first_party_hooks`.
-- **Migrations** are additive-only / forward-only; allocate the **exact number from §C** (never re-grab an already-allocated number — the F1 guard fails CI if you do); `up()` additive, `down()` drops FKs before columns; hand-update `SCHEMA.md` (shape + §9 changelog + version bump, currently v1.32) per landed migration. Seeds use `INSERT IGNORE` (pattern `0040_seed_badges.php`).
+- **Migrations** are additive-only / forward-only; allocate the **exact number from §C** (never re-grab an already-allocated number — the F1 guard (`tests/Unit/Core/MigrationLedgerTest.php`) fails the local `composer test` suite if you do; there is **no PHPUnit CI**, so run it before landing a migration); `up()` additive, `down()` drops FKs before columns; hand-update `SCHEMA.md` (shape + §9 changelog + version bump, currently v1.32) per landed migration. Seeds use `INSERT IGNORE` (pattern `0040_seed_badges.php`).
 - **Strict CSP** (`SecurityHeaders`): `script-src 'self'; style-src 'self'`, **no inline `<script>`/`<style>`**. All PE JS in `public/assets/*.js`; **every flow works server-rendered, no-JS first.** Theme/built CSS is served as an external app-origin stylesheet, never inline.
 - **CSRF** `_token` on every POST; **no GET mutates state**; the only exemption stays the OAuth callback. New high-impact admin actions require **recent reauthentication** (WriteGate + password) via the unified gate from §B-F7.
 - **Write path & counters.** Multi-table mutations run in `$db->transaction(fn)`. Every denormalized counter/pointer added (`invitations.used_count`, `packages.latest_release_id`, theme active/LKG pointer, `advisory_status`) gets a matching recompute in `RepairService` with identical WHERE clauses.
@@ -116,7 +116,7 @@ All additive on already-inert tables; relative numeric order is safe because eac
 > required assignment columns, it must still land a schema-neutral `0074`
 > decision-marker migration (plus `SCHEMA.md` changelog) before Inc 8 lands
 > `0075`; otherwise the F1 gapless-unique guard
-> (`tests/Unit/Core/MigrationLedgerTest.php`) fails CI.
+> (`tests/Unit/Core/MigrationLedgerTest.php`) fails the local `composer test` suite (no PHPUnit CI — run it before landing).
 
 Each group must pass clean-install + populated-upgrade (`verify:upgrade`) + rollback-compatibility + backup/restore + feature-disabled tests before its behavior enables (`§8.3`).
 
