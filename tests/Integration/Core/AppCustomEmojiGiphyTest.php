@@ -15,20 +15,37 @@ final class AppCustomEmojiGiphyTest extends TestCase
         $this->makeAdmin();
     }
 
-    public function test_custom_emoji_admin_is_dark_by_default(): void
+    public function test_custom_emoji_is_available_by_default_and_operator_rollback_regates_admin_routes(): void
     {
-        $admin = $this->makeAdmin(['username' => 'emoji_dark_admin']);
+        $admin = $this->makeAdmin(['username' => 'emoji_default_admin']);
         $this->actingAs($admin);
 
-        $res = $this->post('/admin/custom-emoji', [
+        $dashboard = $this->get('/admin');
+        $this->assertStatus(200, $dashboard);
+        self::assertStringContainsString('Custom emoji', $dashboard->body());
+        self::assertStringContainsString('name="shortcode"', $dashboard->body());
+
+        $this->assertRedirect($this->post('/admin/custom-emoji', [
             'shortcode' => 'party',
             'name' => 'Party',
             'image_path' => '/emoji/party.webp',
             'mime' => 'image/webp',
-        ]);
+        ]));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
 
+        (new SettingRepository($this->db))->set('features', ['custom_emoji' => false]);
+        $disabledDashboard = $this->get('/admin');
+        $this->assertStatus(200, $disabledDashboard);
+        self::assertStringNotContainsString('name="shortcode"', $disabledDashboard->body());
+
+        $res = $this->post('/admin/custom-emoji', [
+            'shortcode' => 'wave',
+            'name' => 'Wave',
+            'image_path' => '/emoji/wave.webp',
+            'mime' => 'image/webp',
+        ]);
         $this->assertStatus(404, $res);
-        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
     }
 
     public function test_custom_emoji_renders_through_markdown_and_can_be_used_as_reaction(): void
@@ -115,6 +132,24 @@ final class AppCustomEmojiGiphyTest extends TestCase
         self::assertSame('pg-13', $json['rating']);
         self::assertSame('Powered by GIPHY', $json['attribution']);
         self::assertFalse($json['server_proxy']);
+    }
+
+    public function test_custom_emoji_rollback_removes_slash_insert(): void
+    {
+        $settings = new SettingRepository($this->db);
+        $settings->set('giphy_public_key', 'public-test-key');
+
+        $enabled = $this->get('/composer/giphy-config');
+        $this->assertStatus(200, $enabled);
+        $enabledJson = json_decode($enabled->body(), true);
+        self::assertContains('custom_emoji', $enabledJson['allowed_inserts']);
+
+        $settings->set('features', ['custom_emoji' => false]);
+        $rolledBack = $this->get('/composer/giphy-config');
+        $this->assertStatus(200, $rolledBack);
+        $rolledBackJson = json_decode($rolledBack->body(), true);
+        self::assertContains('giphy', $rolledBackJson['allowed_inserts']);
+        self::assertNotContains('custom_emoji', $rolledBackJson['allowed_inserts']);
     }
 
     public function test_giphy_csp_sources_are_added_only_when_slash_giphy_is_configured(): void

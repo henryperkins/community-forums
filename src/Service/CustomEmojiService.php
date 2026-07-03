@@ -71,6 +71,16 @@ final class CustomEmojiService
         );
     }
 
+    /** @return list<array{shortcode:string,name:string,image_path:string,mime:string,is_enabled:int,allow_reactions:int,created_at:string,updated_at:?string}> */
+    public function catalogue(): array
+    {
+        return $this->db->fetchAll(
+            'SELECT shortcode, name, image_path, mime, is_enabled, allow_reactions, created_at, updated_at
+             FROM custom_emoji
+             ORDER BY shortcode ASC',
+        );
+    }
+
     public function isReactionAllowed(string $shortcode): bool
     {
         $shortcode = trim(strtolower($shortcode), ':');

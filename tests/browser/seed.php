@@ -63,6 +63,7 @@ $evidenceFeatures = [
     'server_drafts' => true, // GA default-on (2026-07-02); listed explicitly so the conflict journey is captured as a standard (non-dark) surface
     'account_lifecycle' => true, // GA default-on (2026-07-02; ADR 0006); listed explicitly so the member self-serve export/deactivate/delete surface is captured
     'appeals' => true, // GA default-on (2026-07-02; ADR 0007); listed explicitly so the member /appeals + staff /mod/appeals surfaces are captured (fixture: $ensureAppealFixture soft-deletes bob's reply)
+    'custom_emoji' => true, // GA default-on (2026-07-03); listed explicitly so the admin catalogue + rendered shortcode evidence is captured
     'capabilities' => true, // Inc 1 (P5-08): role editor + simulator browser evidence (shadow-only)
     'package_registry' => true, // Inc 2 (P5-01): staff catalogue browse evidence (read-only)
     'package_themes' => true, // Inc 4 (P5-03): package theme preview/activate/safe-mode/rollback evidence

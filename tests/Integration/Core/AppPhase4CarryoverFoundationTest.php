@@ -15,9 +15,10 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         $flags = new FeatureFlags(new SettingRepository($this->db));
         // `polls` graduated to default-on (GA 2026-06-30); the personal
         // organization slice graduated to default-on on 2026-07-01; `slash_giphy`
-        // graduated on 2026-07-02 (inert until an operator sets giphy_public_key).
+        // graduated on 2026-07-02 (inert until an operator sets giphy_public_key);
+        // `custom_emoji` graduated on 2026-07-03.
         // The rest stay dark until their own rollout evidence lands.
-        foreach (['board_folders', 'bookmark_folders', 'saved_feeds', 'slash_giphy', 'profile_media'] as $flag) {
+        foreach (['board_folders', 'bookmark_folders', 'saved_feeds', 'slash_giphy', 'profile_media', 'custom_emoji'] as $flag) {
             self::assertArrayHasKey($flag, $flags->all(), "$flag must be declared, not merely unknown");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
@@ -30,7 +31,6 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         $carryovers = [
             'link_previews',
             'expanded_files',
-            'custom_emoji',
             'split_merge',
             'automated_context',
         ];
@@ -44,7 +44,7 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         $overridden = new FeatureFlags(new SettingRepository($this->db));
 
         self::assertTrue($overridden->enabled('link_previews'));
-        self::assertFalse($overridden->enabled('custom_emoji'), 'enabling one carryover flag must not enable another');
+        self::assertTrue($overridden->enabled('custom_emoji'), 'enabling one dark carryover flag must not disable graduated flags');
         self::assertTrue($overridden->enabled('board_folders'), 'enabling one dark carryover flag must not disable graduated flags');
     }
 

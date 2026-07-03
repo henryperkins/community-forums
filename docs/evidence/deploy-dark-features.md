@@ -1,8 +1,8 @@
 # Deploy-Dark Feature Inventory
 
 **Date:** 2026-07-03 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
-profile-media graduation reconciled; graduation readiness ranking added; Phase 5 rows
-reconciled with `PHASE_5_STATUS.md`)
+profile-media graduation reconciled; Phase 5 passkeys row reconciled with
+`PHASE_5_STATUS.md`; custom-emoji graduation reconciled)
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -18,16 +18,23 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 
 ## Source Code Audit
 
-Audited 2026-07-03 against `src/Core/FeatureFlags.php` and literal
-`FeatureFlags::enabled('...')` call sites in `src/`.
+Audited 2026-07-03 against `src/Core/FeatureFlags.php`, literal
+`FeatureFlags::enabled('...')` call sites in `src/`, and shared
+`$features[...]` consumers in templates/bootstrapping code.
 
-- `FeatureFlags::DEFAULTS` declares 57 flags: 34 default `true`, 23 default
+- `FeatureFlags::DEFAULTS` declares 57 flags: 35 default `true`, 22 default
   `false`.
-- This deploy-dark inventory has 39 table rows: all 23 current default-dark
-  flags, plus 16 retained graduated flags that are default-ON and
+- This deploy-dark inventory has 39 table rows: all 22 current default-dark
+  flags, plus 17 retained graduated flags that are default-ON and
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
+- All 51 unique literal `FeatureFlags::enabled('...')` keys used in `src/` are
+  declared in `FeatureFlags::DEFAULTS`. The declared flags without direct
+  literal `enabled()` reads in `src/` are expected: `wysiwyg_composer` is
+  consumed from the shared feature map in `templates/layout.php`, while
+  `provider_registry`, `invitations`, `governance`, `service_principals`, and
+  `verified_links` are still inert/reserved workstreams.
 - The default-ON baseline flags intentionally outside this deploy-dark inventory
   are: `engagement`, `notifications`, `email`, `mentions`, `search`, `dms`,
   `moderation_queue`, `community`, `oauth`, `presence`, `announcements`,
@@ -63,7 +70,7 @@ Audited 2026-07-03 against `src/Core/FeatureFlags.php` and literal
 | `link_previews` | Allowlisted server-fetched URL metadata, admin purge/refresh | Deploy-dark; awaiting browser, crawler/noindex, load, and runbook evidence |
 | `expanded_files` | PDF/text-family uploads, scanner/quarantine state, download-only serving | Deploy-dark; awaiting browser/no-JS, scanner-outage smoke, and operator runbook |
 | `polls` | One-poll-per-thread no-JS create/vote/close/result flow | **Graduated 2026-06-30 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `25-poll-voted`, `.poll-panel` axe pass, runbook `docs/runbooks/polls.md`. Retained here for traceability. |
-| `custom_emoji` | Operator-managed shortcode assets and optional reactions | Deploy-dark; awaiting browser/a11y evidence and media moderation runbook |
+| `custom_emoji` | Operator-managed shortcode assets and optional reactions | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppCustomEmojiGiphyTest` (available-by-default + rollback, Markdown rendering, reaction compatibility), `AppPhase4CarryoverFoundationTest`, browser `48-custom-emoji-admin`/`49-custom-emoji-thread`, `.custom-emoji-panel`/`.post-body`/`.reactions` axe passes, runbook `docs/runbooks/custom_emoji.md`. Retained here for traceability. |
 | `slash_giphy` | Progressive slash insertion and client-side GIPHY picker config | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; **inert until `giphy_public_key` is set**; reversible via `features` override or by clearing the key). Acceptance evidence: `AppCustomEmojiGiphyTest` (incl. operator-rollback re-gate), `AppPhase4CarryoverFoundationTest`, browser `26-slash-menu`/`27-giphy-inserted`, `.composer-slash-menu` axe + keyboard pass, runbook `docs/runbooks/slash_giphy.md`. Retained here for traceability. |
 | `split_merge` | Moderator split/merge routes, redirects, audit, touched-counter repair | Deploy-dark; awaiting browser/runbook evidence and larger repair rehearsal |
 | `profile_media` | Avatar upload/removal, signature hardening, moderator avatar/signature removal | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppProfileMediaTest` (available-by-default + rollback, self/admin removal, local-media retirement), `AppFeatureFlagTest`, `AppModerationAppealsTest` (`clear_avatar` appealability), browser `46-profile-media-avatar`/`47-profile-media-moderation`, `.profile-media-panel`/`.profile-media-card` axe passes, runbook `docs/runbooks/profile_media.md`. Retained here for traceability. |
@@ -187,11 +194,15 @@ still listed as "Need: runbook" do not yet.
      `43-content-references-redacted` showing a public target card rendered while
      the private-board target is redacted for a non-member; `.reference-cards`
      scoped axe pass added to `tests/browser/a11y.spec.ts`.
-7. **`custom_emoji`** — operator-managed static PNG/WebP shortcode assets
-   rendered through the server Markdown sanitizer, optionally usable as
-   reactions.
-   - Have: `AppCustomEmojiGiphyTest` (shared with `slash_giphy`).
-   - Need: browser/a11y evidence + media-moderation runbook.
+7. **`custom_emoji`** — ✓ **Graduated 2026-07-03 (default-ON).**
+   Operator-managed static PNG/WebP shortcode assets rendered through the server
+   Markdown sanitizer, optionally usable as reactions.
+   - Evidence completed: `AppCustomEmojiGiphyTest` (default-on + operator
+     rollback, admin create, Markdown rendering outside code/pre, and reaction
+     compatibility), `AppPhase4CarryoverFoundationTest` default posture,
+     browser captures `48-custom-emoji-admin` + `49-custom-emoji-thread`, scoped
+     axe scans for `.custom-emoji-panel`, `.post-body`, and `.reactions`, and
+     operator/media-moderation runbook `docs/runbooks/custom_emoji.md`.
 8. **`profile_media`** — ✓ **Graduated 2026-07-03 (default-ON).** Local avatar
    upload/removal plus signature hardening (three-line height enforcement) and
    audited admin avatar/signature removal; `clear_avatar` and `clear_signature`
@@ -273,14 +284,14 @@ Phase 5 flags are gated on their own workstreams' Milestone-0 approvals and
 acceptance evidence (`PHASE_5_PLAN.md` §2/§13), so they are not part of the
 graduation readiness ranking above. Per-flag implementation states (R0–R5) are
 machine-tracked in `docs/phase5/requirement-ledger.json`; the summary below is
-as of 2026-07-02.
+as of 2026-07-03.
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
 | `package_registry` | Signed registry, package catalogue/install/update foundation | Deploy-dark; Inc 2/3 implementation landed — signed trust chain, snapshots/advisories, staff catalogue, install/consent/enable/update/rollback/uninstall/export, health worker, browser/axe evidence, and runbook. Enabled packages are eligibility only until their runtimes are enabled. |
 | `package_themes` | Declarative theme packages, preview, activation, safe mode, rollback | Deploy-dark; Inc 4 implementation landed behind `package_themes` — strict theme manifest block, token/asset/contrast gates, deterministic digest-addressed CSS builds, admin preview isolation, password-reauth activation/LKG rollback, flag-independent safe mode, fail-safe deactivation/repair, browser/axe evidence, and runbook. Rollback contract unchanged: set `features.package_themes=false` or enter safe mode; active/LKG rows are preserved. |
 | `capabilities` | DB-backed roles/capability resolver and scoped grants | Deploy-dark; foundation + Increment 1 resolver shadow landed — catalogue/role-map seed (`0066`), protected-owner spine, `CapabilityResolver` + fail-open `ResolverShadow`, zero-mismatch parity corpus (`docs/evidence/phase5/resolver-parity.md`), no-JS role editor/simulator with browser/axe evidence. Live authorization is still legacy; enforcement cutover is Increment 6 after shadow soak |
-| `passkeys` | WebAuthn registration, sign-in, step-up | Deploy-dark; schema landed inert (`0051`), TOTP/recovery fallback prerequisite (B1) resolved; implementation and real-browser/authenticator evidence pending |
+| `passkeys` | WebAuthn registration, sign-in, credential management, step-up, recovery fallback | Deploy-dark; Inc 7 implementation landed behind `passkeys` on 2026-07-03 — enrollment/list/rename/revoke, sign-in, step-up, TOTP/recovery fallback compatibility, CDP browser evidence, runbook, and requirement-ledger R4 evidence are present. Broad enablement remains pending staged acceptance (`GA-DOD-13` R5). |
 | `provider_registry` | Generic OIDC and provider registry expansion | Deploy-dark; schema landed (`0052`, google/apple/github seeded as dark builtin rows); generic-OIDC implementation pending; A2 (first named provider) required before P5-12 acceptance |
 | `invitations` | Invitation lifecycle and invite-based registration | Deploy-dark; schema landed inert (`0053`, hash-only tokens); lifecycle implementation pending |
 | `service_secrets` | Encrypted service-secret vault for providers/webhooks | Deploy-dark; storage/rotate/revoke/prune seam implemented with focused evidence (R3) and consumed by webhook delivery; doubles as the write/rotate kill switch (reveal/revoke/prune stay available while dark); provider/remote-app consumers deferred |
@@ -376,6 +387,14 @@ as of 2026-07-02.
   here for traceability and remains reversible via the `features` override;
   disabling the flag stops new profile-media mutations but does not erase
   already stored profile values.
+- `custom_emoji` graduated out of deploy-dark on 2026-07-03: its
+  `FeatureFlags` default is now `true`. Acceptance added the no-JS admin
+  catalogue panel, default-on/rollback tests, desktop/mobile browser captures
+  (`48-custom-emoji-admin` / `49-custom-emoji-thread`), scoped axe scans for the
+  admin and rendered post/reaction surfaces, and the media-moderation runbook at
+  `docs/runbooks/custom_emoji.md`. It is retained here for traceability and
+  remains reversible via the `features` override; disabling the flag stops new
+  catalogue mutations and shortcode rendering while preserving existing rows.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
   decision. `group_dms` and `community_memory` additionally require an

@@ -12,6 +12,7 @@ composer.lock
 # App runtime
 /.env
 /storage/logs/
+/storage/local-server.log
 /storage/cache/*
 /storage/ratelimit/*
 /storage/ratelimit-e2e/

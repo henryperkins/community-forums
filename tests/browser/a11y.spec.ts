@@ -4,6 +4,8 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
+const CUSTOM_EMOJI_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#d94848"/><circle cx="11" cy="12" r="2" fill="#fff7df"/><circle cx="21" cy="12" r="2" fill="#fff7df"/><path d="M10 21c3.5 3 8.5 3 12 0" fill="none" stroke="#fff7df" stroke-width="2.5" stroke-linecap="round"/></svg>';
 
 function runPhp(code: string): string {
   const php = `
@@ -389,6 +391,57 @@ test('phase 4 profile media panels have no serious axe violations', async ({ pag
   await page.waitForURL(/\/admin\/users\/\d+$/);
   await expect(page.locator('.profile-media-card')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '.profile-media-card');
+});
+
+test('phase 4 custom emoji surfaces have no serious axe violations', async ({ page }, info) => {
+  const suffix = info.project.name.replace(/[^a-z0-9_-]/gi, '').toLowerCase();
+  const shortcode = `a11y_${suffix}`;
+  const token = `:${shortcode}:`;
+  const imagePath = `/emoji/${shortcode}.png`;
+
+  await page.route(`**${imagePath}`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/svg+xml',
+      body: CUSTOM_EMOJI_SVG,
+    });
+  });
+
+  await login(page, 'admin@retro.test');
+  await visit(page, '/admin');
+  const panel = page.locator('.custom-emoji-panel');
+  await expect(panel).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.custom-emoji-panel');
+
+  await panel.locator('input[name="shortcode"]').fill(shortcode);
+  await panel.locator('input[name="name"]').fill(`A11y ${suffix}`);
+  await panel.locator('input[name="image_path"]').fill(imagePath);
+  await panel.locator('select[name="mime"]').selectOption('image/png');
+  await panel.locator('input[name="allow_reactions"]').check();
+  await panel.getByRole('button', { name: 'Save emoji' }).click();
+  await page.waitForURL(/\/admin$/);
+  await expect(page.getByRole('status').getByText('Custom emoji saved.')).toBeVisible();
+  await expect(page.locator('.custom-emoji-panel')).toContainText(token);
+  await expectNoSeriousA11yViolations(page, info, '.custom-emoji-panel');
+
+  await page.context().clearCookies();
+  await login(page, 'bob@retro.test');
+  await visit(page, '/c/general');
+  await page.locator('details.composer-details > summary').click();
+  await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
+  await page.locator('form.composer input[name="title"]').first().fill(`Custom emoji a11y ${suffix}`);
+  await page.locator('form.composer textarea.composer-input').first().fill(`Hello ${token}`);
+  await page.locator('form.composer button[type="submit"]').first().click();
+  await page.waitForURL(/\/t\/\d+-/);
+
+  await expect(page.locator(`.post-body img[src="${imagePath}"][alt="${token}"]`)).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.post-body');
+
+  const reactions = page.locator('.reactions').first();
+  await expect(reactions).toBeVisible();
+  await reactions.locator('.reaction-add > summary').click();
+  await expect(reactions.getByRole('button', { name: token })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.reactions');
 });
 
 test('phase 4 slash combobox has no serious axe violations and is keyboard operable', async ({ page }, info) => {

@@ -84,6 +84,76 @@
         </form>
     </section>
 
+    <?php if (!empty($custom_emoji_on)): ?>
+    <section class="card custom-emoji-panel" aria-labelledby="custom-emoji-heading">
+        <h2 id="custom-emoji-heading">Custom emoji</h2>
+        <form method="post" action="/admin/custom-emoji" class="stacked">
+            <?= $this->csrfField() ?>
+            <div class="form-grid">
+                <label class="field">
+                    <span>Shortcode</span>
+                    <input type="text" name="shortcode" class="input" maxlength="40" placeholder="party" pattern="[A-Za-z0-9_+\-]{2,40}" required>
+                </label>
+                <label class="field">
+                    <span>Name</span>
+                    <input type="text" name="name" class="input" maxlength="80" placeholder="Party" required>
+                </label>
+                <label class="field">
+                    <span>Asset path</span>
+                    <input type="text" name="image_path" class="input" placeholder="/emoji/party.webp" required>
+                </label>
+                <label class="field">
+                    <span>MIME type</span>
+                    <select name="mime" class="input" required>
+                        <option value="image/webp">image/webp</option>
+                        <option value="image/png">image/png</option>
+                    </select>
+                </label>
+            </div>
+            <label class="checkline">
+                <input type="checkbox" name="allow_reactions" value="1">
+                <span>Allow as a reaction</span>
+            </label>
+            <div class="form-actions"><button class="btn" type="submit">Save emoji</button></div>
+        </form>
+
+        <?php if (empty($custom_emoji)): ?>
+            <p class="muted">No custom emoji have been added yet.</p>
+        <?php else: ?>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Custom emoji catalogue">
+                <table class="audit">
+                    <thead><tr><th>Emoji</th><th>Name</th><th>Asset</th><th>Reactions</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($custom_emoji as $emoji): ?>
+                        <?php $shortcode = (string) $emoji['shortcode']; ?>
+                        <tr>
+                            <td><img src="<?= $e($emoji['image_path']) ?>" alt=":<?= $e($shortcode) ?>:" width="24" height="24"> <code>:<?= $e($shortcode) ?>:</code></td>
+                            <td><?= $e($emoji['name']) ?></td>
+                            <td><code><?= $e($emoji['image_path']) ?></code></td>
+                            <td><?= !empty($emoji['allow_reactions']) ? 'Allowed' : 'Post rendering only' ?></td>
+                            <td><?= !empty($emoji['is_enabled']) ? 'Enabled' : 'Disabled' ?></td>
+                            <td>
+                                <?php if (!empty($emoji['is_enabled'])): ?>
+                                    <form method="post" action="/admin/custom-emoji/<?= rawurlencode($shortcode) ?>/disable" class="inline">
+                                        <?= $this->csrfField() ?>
+                                        <button class="btn btn-small" type="submit">Disable</button>
+                                    </form>
+                                <?php else: ?>
+                                    <form method="post" action="/admin/custom-emoji/<?= rawurlencode($shortcode) ?>/enable" class="inline">
+                                        <?= $this->csrfField() ?>
+                                        <button class="btn btn-small" type="submit">Enable</button>
+                                    </form>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </section>
+    <?php endif; ?>
+
     <section class="card" id="recent-activity">
         <h2>Recent activity</h2>
         <?php if (empty($audit)): ?>

@@ -136,6 +136,35 @@
         return true;
     }
 
+    function adapterEventTargets(adapter, ta, method) {
+        if (adapter && typeof adapter[method] === 'function') {
+            try {
+                var targets = adapter[method]();
+                if (targets && typeof targets.length === 'number') {
+                    var out = [];
+                    for (var i = 0; i < targets.length; i++) {
+                        if (targets[i] && typeof targets[i].addEventListener === 'function') {
+                            out.push(targets[i]);
+                        }
+                    }
+                    if (out.length) { return out; }
+                }
+            } catch (e) {}
+        }
+        return [ta];
+    }
+
+    function applyActionForAdapter(adapter, ta, key) {
+        var action = ACTIONS[key];
+        if (!action) { return false; }
+        if (adapter && typeof adapter.applyAction === 'function') {
+            try {
+                if (adapter.applyAction(key, action)) { return true; }
+            } catch (e) {}
+        }
+        return applyAction(ta, key);
+    }
+
     function currentLine(ta) {
         var v = ta.value, pos = ta.selectionStart;
         var lineStart = v.lastIndexOf('\n', pos - 1) + 1;
@@ -166,7 +195,7 @@
         return false;
     }
 
-    function buildToolbar(ta) {
+    function buildToolbar(form, ta) {
         var bar = document.createElement('div');
         bar.className = 'composer-toolbar';
         var buttons = [];
@@ -186,7 +215,7 @@
             }
             b.setAttribute('aria-pressed', 'false');
             b.addEventListener('click', function () {
-                applyAction(ta, key);
+                applyActionForAdapter(form._rbComposerAdapter || form._rbComposerFallbackAdapter, ta, key);
                 updateState();
             });
             buttons.push({ button: b, action: action });
@@ -900,22 +929,32 @@
     }
     function wireUploads(form, adapter) {
         var ta = adapter.ta;
-        ta.addEventListener('paste', function (e) {
+        var targets = adapterEventTargets(adapter, ta, 'uploadTargets');
+        function onPaste(e) {
             var items = (e.clipboardData || {}).items || [];
             for (var i = 0; i < items.length; i++) {
                 if (items[i].type && items[i].type.indexOf('image/') === 0) {
+                    e.preventDefault();
                     uploadImage(form, adapter, items[i].getAsFile());
                 }
             }
-        });
-        ta.addEventListener('dragover', function (e) { e.preventDefault(); });
-        ta.addEventListener('drop', function (e) {
+        }
+        function onDrop(e) {
             var files = (e.dataTransfer || {}).files || [];
             if (!files.length) { return; }
             e.preventDefault();
+            var handled = false;
             for (var i = 0; i < files.length; i++) {
-                if (files[i].type && files[i].type.indexOf('image/') === 0) { uploadImage(form, adapter, files[i]); }
+                if (files[i].type && files[i].type.indexOf('image/') === 0) {
+                    handled = true;
+                    uploadImage(form, adapter, files[i]);
+                }
             }
+        }
+        targets.forEach(function (target) {
+            target.addEventListener('paste', onPaste, target !== ta);
+            target.addEventListener('dragover', function (e) { e.preventDefault(); }, target !== ta);
+            target.addEventListener('drop', onDrop, target !== ta);
         });
     }
 
@@ -973,6 +1012,25 @@
             end: pos,
             query: query
         };
+    }
+    function currentSlashState(adapter, ta) {
+        if (adapter && typeof adapter.slashState === 'function') {
+            try {
+                return adapter.slashState();
+            } catch (e) {
+                return null;
+            }
+        }
+        return slashState(ta);
+    }
+    function replaceSlashSelection(adapter, ta, state, markdown) {
+        if (adapter && typeof adapter.replaceSlashSelection === 'function') {
+            try {
+                adapter.replaceSlashSelection(state, markdown);
+                return;
+            } catch (e) {}
+        }
+        replaceRange(ta, state.start, state.end, markdown);
     }
     function slashQueryMatches(query, command) {
         if (query === '') { return true; }
@@ -1034,6 +1092,7 @@
     // filtering), and Arrow/Home/End/Enter/Escape drive it from the keyboard.
     function wireSlashMenu(form, adapter) {
         var ta = adapter.ta;
+        var targets = adapterEventTargets(adapter, ta, 'slashTargets');
         var menu = document.createElement('div');
         var menuId = 'composer-slash-menu-' + (++slashMenuSeq);
         var optionSeq = 0;
@@ -1123,13 +1182,13 @@
                 b.addEventListener('mousedown', function (e) { e.preventDefault(); });
                 b.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    var state = activeState || slashState(ta);
+                    var state = activeState || currentSlashState(adapter, ta);
                     if (!state) { hide(); return; }
                     if (command.type === 'giphy') {
                         searchGiphy(state, giphySearchTerm(state.query));
                         return;
                     }
-                    replaceRange(adapter.ta, state.start, state.end, command.body);
+                    replaceSlashSelection(adapter, ta, state, command.body);
                     hide();
                 });
                 menu.appendChild(b);
@@ -1139,7 +1198,7 @@
         }
         function render() {
             if (!ready || config === null) { return; }
-            var state = slashState(ta);
+            var state = currentSlashState(adapter, ta);
             if (!state) { hide(); return; }
             activeState = state;
             var commands = slashCommands(config, state.query);
@@ -1152,7 +1211,7 @@
             renderButtons(commands);
         }
         function searchGiphy(state, term) {
-            lastRenderKey = null;
+            lastRenderKey = state.query + '|giphy';
             if (!term) { showStatus('Type a search after /gif.'); return; }
             showStatus('Searching GIPHY...');
             var url = 'https://api.giphy.com/v1/gifs/search'
@@ -1187,12 +1246,13 @@
                     b.addEventListener('mousedown', function (e) { e.preventDefault(); });
                     b.addEventListener('click', function (e) {
                         e.stopPropagation();
-                        replaceRange(adapter.ta, state.start, state.end, imageMarkdown(mediaUrl, title));
+                        replaceSlashSelection(adapter, ta, state, imageMarkdown(mediaUrl, title));
                         hide();
                     });
                     menu.appendChild(b);
                 });
                 if (!menu.childNodes.length) { showStatus('No GIFs found.'); return; }
+                lastRenderKey = state.query + '|giphy';
                 openMenu();
                 collectOptions();
             }).catch(function () {
@@ -1216,49 +1276,54 @@
             ta.setAttribute('aria-autocomplete', 'list');
             render();
         });
-        ta.addEventListener('input', render);
-        ta.addEventListener('keyup', function (e) {
-            // Navigation/activation keys are handled on keydown; their keyup must
-            // not rebuild the menu and reset the active option.
-            if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter'
-                || e.key === 'Home' || e.key === 'End' || e.key === 'Escape') { return; }
-            render();
-        });
-        ta.addEventListener('click', render);
-        ta.addEventListener('keydown', function (e) {
-            if (menu.hidden) {
-                if (e.key === 'ArrowDown' && !e.altKey && !e.ctrlKey && !e.metaKey && ready && config !== null) {
-                    if (slashState(ta)) {
-                        lastRenderKey = null;
-                        render();
-                        if (!menu.hidden) { e.preventDefault(); }
+        targets.forEach(function (target) {
+            target.addEventListener('input', render);
+            target.addEventListener('keyup', function (e) {
+                // Navigation/activation keys are handled on keydown; their keyup must
+                // not rebuild the menu and reset the active option.
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter'
+                    || e.key === 'Home' || e.key === 'End' || e.key === 'Escape') { return; }
+                render();
+            });
+            target.addEventListener('click', render);
+            target.addEventListener('keydown', function (e) {
+                if (menu.hidden) {
+                    if (e.key === 'ArrowDown' && !e.altKey && !e.ctrlKey && !e.metaKey && ready && config !== null) {
+                        if (currentSlashState(adapter, ta)) {
+                            lastRenderKey = null;
+                            render();
+                            if (!menu.hidden) { e.preventDefault(); }
+                        }
                     }
+                    return;
                 }
-                return;
-            }
-            switch (e.key) {
-                case 'ArrowDown': e.preventDefault(); highlight(activeIndex + 1); break;
-                case 'ArrowUp': e.preventDefault(); highlight(activeIndex - 1); break;
-                case 'Home': if (options.length) { e.preventDefault(); highlight(0); } break;
-                case 'End': if (options.length) { e.preventDefault(); highlight(options.length - 1); } break;
-                case 'Enter':
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    if (activeIndex >= 0 && options.length) {
-                        options[activeIndex].click();
-                    }
-                    break;
-                case 'Escape':
-                    e.preventDefault();
-                    e.stopImmediatePropagation();
-                    hide();
-                    break;
-                case 'Tab': hide(); break;
-                default: break;
-            }
+                switch (e.key) {
+                    case 'ArrowDown': e.preventDefault(); highlight(activeIndex + 1); break;
+                    case 'ArrowUp': e.preventDefault(); highlight(activeIndex - 1); break;
+                    case 'Home': if (options.length) { e.preventDefault(); highlight(0); } break;
+                    case 'End': if (options.length) { e.preventDefault(); highlight(options.length - 1); } break;
+                    case 'Enter':
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        if (activeIndex >= 0 && options.length) {
+                            options[activeIndex].click();
+                        }
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        hide();
+                        break;
+                    case 'Tab': hide(); break;
+                    default: break;
+                }
+            }, target !== ta);
         });
         document.addEventListener('click', function (e) {
-            if (e.target === ta || menu.contains(e.target)) { return; }
+            if (menu.contains(e.target)) { return; }
+            for (var i = 0; i < targets.length; i++) {
+                if (e.target === targets[i] || (targets[i].contains && targets[i].contains(e.target))) { return; }
+            }
             hide();
         });
     }
@@ -1534,7 +1599,8 @@
     }
     function wireKeys(form, adapter, prefs) {
         var ta = adapter.ta;
-        ta.addEventListener('keydown', function (e) {
+        var targets = adapterEventTargets(adapter, ta, 'keyTargets');
+        function onKeyDown(e, target) {
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 var key = e.key.toLowerCase();
                 var action = key === 'b' ? 'bold'
@@ -1544,7 +1610,7 @@
                     : null;
                 if (action !== null) {
                     e.preventDefault();
-                    applyAction(ta, action);
+                    applyActionForAdapter(adapter, ta, action);
                     return;
                 }
             }
@@ -1557,7 +1623,10 @@
                 else { form.submit(); }
                 return;
             }
-            if (prefs.smartLists && continueList(ta)) { e.preventDefault(); }
+            if (target === ta && prefs.smartLists && continueList(ta)) { e.preventDefault(); }
+        }
+        targets.forEach(function (target) {
+            target.addEventListener('keydown', function (e) { onKeyDown(e, target); }, target !== ta);
         });
     }
 
@@ -1575,7 +1644,7 @@
         var adapter = new TextareaComposerAdapter(form, ta);
         form._rbComposerFallbackAdapter = adapter;
         form._rbComposerAdapter = adapter;
-        buildToolbar(ta);
+        buildToolbar(form, ta);
         buildCounter(ta);
         adapter = maybeUpgradeWysiwyg(form, ta, adapter);
         if (prefs.showPreview) { buildPreview(form, adapter); }

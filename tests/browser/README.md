@@ -49,6 +49,7 @@ harness grows. The current branch also captures:
 - `26-slash-menu`, `27-giphy-inserted` (Phase 4 carryover slash menu and direct GIPHY insertion)
 - `28-server-draft-conflict` (`server_drafts` cross-device conflict controls; graduated to default-on 2026-07-02, now captured in the standard `evidence` run)
 - `46-profile-media-avatar`, `47-profile-media-moderation` (`profile_media` member avatar/signature flow plus admin moderation controls; graduated to default-on 2026-07-03)
+- `48-custom-emoji-admin`, `49-custom-emoji-thread` (`custom_emoji` admin catalogue, Markdown rendering, and reaction compatibility; graduated to default-on 2026-07-03)
 
 Focused acceptance specs that do not write numbered screenshots:
 
@@ -113,9 +114,9 @@ environment.
 desktop and mobile projects. It opts into `RB_BROWSER_DARK_SURFACES=1` during
 seeding so still-dark appeal and server-extension pages are available while the
 now-default-on server-draft, badge-rules, slash/GIPHY, account-lifecycle,
-profile-media, and WYSIWYG composer surfaces are also scanned. It currently
-checks the admin extension/badge-rules/profile-media surfaces, member
-appeals/drafts/account-lifecycle/profile-media surfaces, scoped server-draft
-conflict and slash-combobox widgets, plus the WYSIWYG
-toolbar/reference-picker/source-mode surfaces for serious or critical WCAG
-2A/2AA axe violations.
+profile-media, custom-emoji, and WYSIWYG composer surfaces are also scanned. It
+currently checks the admin extension/badge-rules/profile-media/custom-emoji
+surfaces, member appeals/drafts/account-lifecycle/profile-media surfaces, scoped
+server-draft conflict, slash-combobox, custom-emoji post/reaction widgets, plus
+the WYSIWYG toolbar/reference-picker/source-mode surfaces for serious or
+critical WCAG 2A/2AA axe violations.

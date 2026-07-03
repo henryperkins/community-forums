@@ -63,7 +63,7 @@ final class FeatureFlags
         'link_previews' => false,      // allowlisted server-fetched URL metadata + purge/refresh
         'expanded_files' => false,     // PDF/text-family uploads behind scanner/quarantine gates
         'polls' => true,               // one poll per thread, no-JS vote/result flows — GA default-on (2026-06-30; reversible via features override)
-        'custom_emoji' => false,       // operator-managed static PNG/WebP shortcode assets
+        'custom_emoji' => true,        // operator-managed static PNG/WebP shortcode assets — GA default-on (2026-07-03; reversible via features override)
         'slash_giphy' => true,         // PE slash inserts + client-side GIPHY picker — GA default-on (2026-07-02; inert until giphy_public_key is set; reversible via features override)
         'split_merge' => false,        // moderator split/merge dry-run/apply/repair operations
         'profile_media' => true,       // avatar upload/signature moderation surfaces — GA default-on (2026-07-03; reversible via features override)

@@ -1,8 +1,10 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
+const PNG_1X1 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
 
 function runPhp(code: string): string {
   const php = `
@@ -30,6 +32,23 @@ $features = $settings->get('features', []);
 if (!is_array($features)) { $features = []; }
 ${mutation}
 $settings->set('features', $features);
+`);
+}
+
+function setComposingPrefs(email: string, prefs: { enterToSend?: boolean; showPreview?: boolean; smartLists?: boolean }): void {
+  const email64 = Buffer.from(email, 'utf8').toString('base64');
+  runPhp(`
+$email = base64_decode('${email64}');
+$user = $db->fetch('SELECT id FROM users WHERE email = ?', [$email]);
+if ($user) {
+    $repo = new \\App\\Repository\\UserPreferenceRepository($db);
+    $repo->merge((int) $user['id'], [
+        '__v' => \\App\\Support\\PreferenceSchema::VERSION,
+        'enter_to_send' => ${prefs.enterToSend ? 'true' : 'false'},
+        'show_preview' => ${prefs.showPreview === false ? 'false' : 'true'},
+        'smart_lists' => ${prefs.smartLists === false ? 'false' : 'true'},
+    ]);
+}
 `);
 }
 
@@ -62,6 +81,28 @@ async function openNewTopicComposer(page: Page) {
   const form = page.locator('form.composer').first();
   await expect(form.locator('textarea.composer-input')).toBeAttached();
   return form;
+}
+
+async function dropTinyPngOn(page: Page, target: Locator): Promise<void> {
+  const dataTransfer = await page.evaluateHandle((base64) => {
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const dt = new DataTransfer();
+    dt.items.add(new File([bytes], 'tiny.png', { type: 'image/png' }));
+    return dt;
+  }, PNG_1X1);
+  await target.dispatchEvent('drop', { dataTransfer });
+}
+
+async function unsupportedFileDropWasPrevented(target: Locator): Promise<boolean> {
+  return target.evaluate((el) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File(['plain text'], 'notes.txt', { type: 'text/plain' }));
+    const event = new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt });
+    el.dispatchEvent(event);
+    return event.defaultPrevented;
+  });
 }
 
 function postByTitle(title: string): { id: number; body: string } {
@@ -192,6 +233,21 @@ test('source mode edits canonical Markdown and switches back', async ({ page }) 
   await expect(page.locator('.post-op .post-body input[type="checkbox"]')).toBeChecked();
 });
 
+test('wysiwyg toolbar actions update the rich editor canonical markdown', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+
+  await editor.fill('toolbar text');
+  await editor.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+  await form.getByRole('button', { name: 'Insert Bold' }).click();
+
+  await form.getByRole('button', { name: 'Source' }).click();
+  await expect(form.locator('textarea.composer-input')).toHaveValue('**toolbar text**');
+});
+
 test('wysiwyg reference selections become chips and serialize to markdown', async ({ page }) => {
   setWysiwygComposer(true);
   await login(page, 'bob@retro.test');
@@ -206,6 +262,107 @@ test('wysiwyg reference selections become chips and serialize to markdown', asyn
 
   await form.getByRole('button', { name: 'Source' }).click();
   await expect(form.locator('textarea.composer-input')).toHaveValue('[#general](/c/general)');
+});
+
+test('wysiwyg slash menu inserts snippets and GIPHY media', async ({ page }) => {
+  setWysiwygComposer(true);
+  await page.route('https://api.giphy.com/v1/gifs/search**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            title: 'Evidence cat',
+            images: {
+              fixed_height_small: { url: 'https://media4.giphy.com/media/cat/100.gif' },
+              original: { url: 'https://media4.giphy.com/media/cat/giphy.gif' },
+            },
+          },
+        ],
+      }),
+    });
+  });
+  await page.route('https://media4.giphy.com/**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(PNG_1X1, 'base64'),
+    });
+  });
+
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const textarea = form.locator('textarea.composer-input');
+  await expect(editor).toBeVisible();
+
+  await editor.fill('/table');
+  const tableOption = page.getByRole('option', { name: 'Insert table' });
+  await expect(tableOption).toBeVisible();
+  await editor.press('Enter');
+  await expect(tableOption).toHaveCount(0);
+  await form.getByRole('button', { name: 'Source' }).click();
+  await expect(textarea).toHaveValue(/\| Heading \| Heading \|/);
+
+  await textarea.fill('');
+  await form.getByRole('button', { name: 'Rich text' }).click();
+  await editor.fill('/gif cat');
+  await page.getByRole('option', { name: 'Search GIPHY' }).click();
+  await expect(page.getByRole('option', { name: 'Insert GIF Evidence cat' })).toBeVisible();
+  await page.getByRole('option', { name: 'Insert GIF Evidence cat' }).click();
+  await form.getByRole('button', { name: 'Source' }).click();
+  await expect(textarea).toHaveValue('![Evidence cat](https://media4.giphy.com/media/cat/giphy.gif)');
+});
+
+test('wysiwyg image drop uploads and inserts markdown at the rich selection', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const textarea = form.locator('textarea.composer-input');
+  await expect(editor).toBeVisible();
+
+  await editor.click();
+  await dropTinyPngOn(page, editor);
+  await expect(form.locator('.composer-upload-status')).toContainText('Uploaded image', { timeout: 5000 });
+
+  await form.getByRole('button', { name: 'Source' }).click();
+  await expect(textarea).toHaveValue(/!\[\]\(\/media\/\d+(?:\/tiny\.png)?\)/);
+});
+
+test('unsupported file drops are cancelled in rich and source composer modes', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const textarea = form.locator('textarea.composer-input');
+  await expect(editor).toBeVisible();
+
+  await expect.poll(() => unsupportedFileDropWasPrevented(editor)).toBe(true);
+
+  await form.getByRole('button', { name: 'Source' }).click();
+  await expect(textarea).not.toHaveClass(/is-wysiwyg-source-hidden/);
+  await expect.poll(() => unsupportedFileDropWasPrevented(textarea)).toBe(true);
+});
+
+test('wysiwyg enter-to-send preference submits from the rich editor', async ({ page }) => {
+  setWysiwygComposer(true);
+  setComposingPrefs('bob@retro.test', { enterToSend: true });
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(page.locator('body')).toHaveAttribute('data-enter-to-send', '1');
+  await expect(editor).toBeVisible();
+
+  const title = `WYSIWYG enter send ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await editor.fill('Submitted by Enter from rich mode');
+  await editor.press('Enter');
+
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+  await expect(page.locator('.post-op .post-body')).toContainText('Submitted by Enter from rich mode');
 });
 
 test('pasted internal topic url becomes canonical markdown chip', async ({ page }) => {
@@ -280,12 +437,25 @@ test('server preview matches final rendered post for supported syntax', async ({
   await expect(post.locator('.spoiler')).toContainText('secret');
 });
 
-test('WYSIWYG mobile viewport smoke', async ({ page }, info) => {
+test('mobile WYSIWYG edits and submits through rich mode without textarea fallback', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile-specific smoke');
   setWysiwygComposer(true);
   await login(page, 'bob@retro.test');
   const form = await openNewTopicComposer(page);
-  await expect(form.locator('.wysiwyg-composer .ProseMirror')).toBeVisible();
-  await form.getByRole('button', { name: 'Source' }).click();
-  await expect(form.locator('textarea.composer-input')).not.toHaveClass(/is-wysiwyg-source-hidden/);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const textarea = form.locator('textarea.composer-input');
+
+  await expect(page.locator('body')).toHaveAttribute('data-wysiwyg-composer', '1');
+  await expect(editor).toBeVisible();
+  await expect(textarea).toHaveClass(/is-wysiwyg-source-hidden/);
+  await expect(form.getByRole('button', { name: 'Source' })).toBeVisible();
+
+  const title = `Mobile WYSIWYG ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await editor.fill('Posted from the mobile rich editor');
+  await form.locator('button[type="submit"]').click();
+
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+  await expect(page.locator('.post-op .post-body')).toContainText('Posted from the mobile rich editor');
 });

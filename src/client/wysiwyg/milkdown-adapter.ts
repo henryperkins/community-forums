@@ -27,6 +27,20 @@ type ReferenceState = {
   end: number;
 };
 
+type SlashState = {
+  query: string;
+  start: number;
+  end: number;
+};
+
+type MarkdownAction = {
+  label?: string;
+  before?: string;
+  after?: string;
+  prefix?: string;
+  active?: string;
+};
+
 type ComposerSuggestionItem = {
   type?: string;
   label?: string;
@@ -39,6 +53,16 @@ type InternalPasteTarget = {
   path: string;
   query: string;
   fallbackMarkdown: string;
+};
+
+type TextRange = {
+  from: number;
+  to: number;
+};
+
+type BareImageMarkdown = {
+  alt: string;
+  src: string;
 };
 
 const MAX_NOTIFYING_MENTIONS = 10;
@@ -232,13 +256,34 @@ class MilkdownComposerAdapter {
 
   replacePendingUpload(token: string, markdown: string): boolean {
     const replaced = this.fallback.replacePendingUpload(token, markdown);
-    if (!replaced) {
+    if (replaced) {
+      this.dirty = true;
+      this.emit(this.textarea.value);
+      this.ready.then(() => {
+        this.editor?.action(replaceAll(this.textarea.value, true));
+      }).catch(() => {});
+      return true;
+    }
+    if (!this.richMode || this.failed || this.destroyed) {
       return false;
     }
-    this.dirty = true;
-    this.emit(this.textarea.value);
+    const imageSrc = this.bareImageMarkdown(token)?.src || token;
+    const view = this.currentView();
+    const range = view
+      ? this.findRecentTextRange(view, token) || this.findImageRangeBySrc(view, imageSrc)
+      : null;
+    if (range) {
+      this.replaceEditorRangeWithMarkdown(range, markdown);
+      return true;
+    }
     this.ready.then(() => {
-      this.editor?.action(replaceAll(this.textarea.value, true));
+      const activeView = this.currentView();
+      const delayedRange = activeView
+        ? this.findRecentTextRange(activeView, token) || this.findImageRangeBySrc(activeView, imageSrc)
+        : null;
+      if (delayedRange) {
+        this.replaceEditorRangeWithMarkdown(delayedRange, markdown);
+      }
     }).catch(() => {});
     return true;
   }
@@ -263,6 +308,73 @@ class MilkdownComposerAdapter {
       editor.setAttribute('contenteditable', disabled ? 'false' : 'true');
     }
     this.toggle.disabled = disabled;
+  }
+
+  keyTargets(): HTMLElement[] {
+    return [this.host, this.textarea];
+  }
+
+  slashTargets(): HTMLElement[] {
+    return [this.host, this.textarea];
+  }
+
+  uploadTargets(): HTMLElement[] {
+    return [this.host, this.textarea];
+  }
+
+  applyAction(_key: string, action: MarkdownAction): boolean {
+    if (!this.richMode || this.failed || this.destroyed) {
+      return false;
+    }
+    const view = this.currentView();
+    if (!view) {
+      return false;
+    }
+    const { selection } = view.state;
+    const selected = view.state.doc.textBetween(selection.from, selection.to, '\n', '\n');
+    const markdown = `${action.before || ''}${selected}${action.after || ''}`;
+    this.replaceEditorRangeWithMarkdown({ from: selection.from, to: selection.to }, markdown, true);
+    return true;
+  }
+
+  slashState(): SlashState | null {
+    if (!this.richMode || this.failed || this.destroyed) {
+      return this.textareaSlashState();
+    }
+    const view = this.currentView();
+    if (!view) {
+      return null;
+    }
+    const { selection } = view.state;
+    if (!selection.empty) {
+      return null;
+    }
+    const pos = selection.from;
+    const from = Math.max(0, pos - 90);
+    const before = view.state.doc.textBetween(from, pos, '\n', '\n');
+    const match = before.match(/(^|\s)\/([A-Za-z0-9_ -]*)$/);
+    if (!match) {
+      return null;
+    }
+    if (selection.$from.parent.type.spec.code) {
+      return null;
+    }
+    const rawQuery = match[2] || '';
+    return {
+      query: rawQuery.toLowerCase().trim(),
+      start: pos - rawQuery.length - 1,
+      end: pos,
+    };
+  }
+
+  replaceSlashSelection(state: SlashState, markdown: string): void {
+    if (!this.richMode || this.failed || this.destroyed) {
+      this.textarea.selectionStart = state.start;
+      this.textarea.selectionEnd = state.end;
+      this.fallback.replaceSelection(markdown);
+      return;
+    }
+    this.replaceEditorRangeWithMarkdown({ from: state.start, to: state.end }, markdown, true);
   }
 
   referenceTargets(): HTMLElement[] {
@@ -482,9 +594,31 @@ class MilkdownComposerAdapter {
     };
   }
 
-  private replaceEditorRangeWithMarkdown(range: { from: number; to: number }, markdown: string, refocus = false): void {
+  private textareaSlashState(): SlashState | null {
+    if (this.textarea.selectionStart !== this.textarea.selectionEnd) {
+      return null;
+    }
+    const pos = this.textarea.selectionStart || 0;
+    const lineStart = this.textarea.value.lastIndexOf('\n', pos - 1) + 1;
+    const prefix = this.textarea.value.slice(lineStart, pos);
+    const match = prefix.match(/(^|\s)\/([A-Za-z0-9_ -]*)$/);
+    if (!match) {
+      return null;
+    }
+    const rawQuery = match[2] || '';
+    if (((this.textarea.value.slice(0, pos).match(/^```/gm) || []).length % 2) === 1) {
+      return null;
+    }
+    return {
+      query: rawQuery.toLowerCase().trim(),
+      start: pos - rawQuery.length - 1,
+      end: pos,
+    };
+  }
+
+  private replaceEditorRangeWithMarkdown(range: TextRange, markdown: string, refocus = false): void {
     this.dirty = true;
-    this.ready.then(() => {
+    const applyReplacement = () => {
       if (this.destroyed || this.failed || !this.editor) {
         return;
       }
@@ -492,12 +626,23 @@ class MilkdownComposerAdapter {
         const view = ctx.get(editorViewCtx);
         const slice = markdownToSlice(markdown)(ctx);
         view.dispatch(closeHistory(view.state.tr.replace(range.from, range.to, slice).scrollIntoView()));
+        const bareImage = this.bareImageMarkdown(markdown);
+        if (bareImage) {
+          this.clearGeneratedImageTitle(view, bareImage);
+        }
       });
       this.syncRichMarkdown();
       if (refocus) {
         this.focus();
       }
-    }).catch(() => {
+    };
+    try {
+      if (this.editor && this.currentView()) {
+        applyReplacement();
+        return;
+      }
+    } catch {}
+    this.ready.then(applyReplacement).catch(() => {
       this.fallback.replaceSelection(markdown);
     });
   }
@@ -593,7 +738,55 @@ class MilkdownComposerAdapter {
     }).catch(() => {});
   }
 
-  private findRecentTextRange(view: EditorView, raw: string): { from: number; to: number } | null {
+  private bareImageMarkdown(markdown: string): BareImageMarkdown | null {
+    const match = markdown.match(/^!\[([^\]\n]*)\]\(([^)\s]+)\)$/);
+    if (!match) {
+      return null;
+    }
+    return {
+      alt: match[1].replace(/\\([\\[\]])/g, '$1'),
+      src: match[2],
+    };
+  }
+
+  private clearGeneratedImageTitle(view: EditorView, image: BareImageMarkdown): void {
+    let found = false;
+    let transaction = view.state.tr;
+    view.state.doc.descendants((node, pos) => {
+      if (node.type.name !== 'image') {
+        return true;
+      }
+      if (String(node.attrs.src || '') !== image.src || String(node.attrs.alt || '') !== image.alt) {
+        return true;
+      }
+      if (node.attrs.title !== image.alt) {
+        return false;
+      }
+      transaction = transaction.setNodeMarkup(pos, undefined, { ...node.attrs, title: null });
+      found = true;
+      return false;
+    });
+    if (found) {
+      view.dispatch(transaction);
+    }
+  }
+
+  private findImageRangeBySrc(view: EditorView, src: string): TextRange | null {
+    if (src === '') {
+      return null;
+    }
+    let found: TextRange | null = null;
+    view.state.doc.descendants((node, pos) => {
+      if (node.type.name === 'image' && String(node.attrs.src || '') === src) {
+        found = { from: pos, to: pos + node.nodeSize };
+        return false;
+      }
+      return true;
+    });
+    return found;
+  }
+
+  private findRecentTextRange(view: EditorView, raw: string): TextRange | null {
     const end = view.state.selection.from;
     const start = Math.max(0, end - raw.length);
     if (start < end && view.state.doc.textBetween(start, end, '\n', '\n') === raw) {

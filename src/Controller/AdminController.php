@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
@@ -16,6 +17,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Service\AdminDashboardService;
 use App\Service\AdminService;
+use App\Service\CustomEmojiService;
 
 /**
  * Minimal admin console: dashboard + audit feed, site naming, and
@@ -30,10 +32,13 @@ final class AdminController extends Controller
         $this->requireAdmin();
         $settings = $this->container->get(SettingRepository::class);
         $dashboard = $this->container->get(AdminDashboardService::class)->summary();
+        $customEmojiOn = $this->container->get(FeatureFlags::class)->enabled('custom_emoji');
         return $this->view('admin/dashboard', [
             'cards' => $dashboard['cards'],
             'attention' => $dashboard['attention'],
             'audit' => $dashboard['audit'],
+            'custom_emoji_on' => $customEmojiOn,
+            'custom_emoji' => $customEmojiOn ? $this->container->get(CustomEmojiService::class)->catalogue() : [],
             'mailer_configured' => $dashboard['mailer_configured'],
             'send_blocked' => $dashboard['send_blocked'],
             'registration_mode' => $settings->getString('registration_mode', 'open'),
