@@ -245,7 +245,7 @@ Foundation (F: catalogue, owners, CORE_VERSION, DataClasses, harness, reauth, te
 - **§8 data/migration** → §C allocation + F-seeds + G3/G4 backfills, all additive, legacy sources retained as rollback per decision #41/§8.4.
 - **§10/§11 evidence** → §F distributed discipline + Inc 10 consolidation; R0–R5 ledger in F10.
 - **§13 rollout** → §E enablement order with shadow/parity/rollback gates.
-- **Gate B correctly excluded:** P5-05/06 sandbox runtime, P5-10 governance, P5-14 service principals, P5-15 verified links, restricted stylesheet modules, usernameless passkeys, privileged-MFA enforcement.
+- **Gate B correctly excluded:** P5-05/06 sandbox runtime, **P5-10 governance groups / approvals / access review** — but *not* its Gate A protected-owner/last-admin + recent-reauth slice (GA-DOD-12), which ships via F5 (`LastOwnerGuard`) + F7 (`ReauthGate`) plus the owner-loss wiring distributed to Inc 6/7/9 (mirrors the P5-07-A carve-out) — P5-14 service principals, P5-15 verified links, restricted stylesheet modules, usernameless passkeys, privileged-MFA enforcement.
 
 ---
 
