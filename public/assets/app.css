@@ -2663,7 +2663,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .dm-search input:focus {
     background: var(--surface-raised);
     border-color: var(--gold-200);
-    box-shadow: var(--focus-ring, 0 0 0 3px rgba(194, 154, 68, .28));
+    box-shadow: 0 0 0 3px var(--focus-ring);
 }
 .dm-list > li.is-filtered { display: none; }
 
@@ -2714,6 +2714,13 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     cursor: pointer;
 }
 .dm-dialog-close:hover { background: var(--surface-sunken); color: var(--brand); }
+/* Close/Cancel are JS-wired; without JS the native <summary> is the one honest
+   toggle, so the inert controls stay out of the way (composer-cancel pattern). */
+.dm-compose-details [data-close-compose] { display: none; }
+.has-js .dm-compose-details .dm-dialog-close[data-close-compose] { display: inline-flex; }
+.has-js .dm-compose-details .btn[data-close-compose] { display: inline-block; }
+.dm-rail-head [data-rail-close] { display: none; }
+.has-js .dm-rail-head [data-rail-close] { display: inline-flex; }
 .dm-dialog-body {
     padding: 6px 22px 8px;
     display: flex;
@@ -3265,6 +3272,14 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
 }
+.dm-report-form .dm-copy {
+    flex: 1 0 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+}
+.dm-report-form .dm-copy .icon { width: 14px; height: 14px; color: var(--text-muted); }
 .dm-report-form .input {
     font-size: .85rem;
 }
@@ -3275,68 +3290,15 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .dm-composer {
     flex: 0 0 auto;
     border-top: 1px solid var(--border-hair);
-    padding: 12px 28px 14px;
+    padding: 14px 28px 18px;
     background: var(--surface-raised);
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-}
-/* One clean well, not a heavy card: the field is the pill, the textarea bare. */
-.dm-composer-field {
-    display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 10px;
-    background: var(--surface-page);
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-lg);
-    padding: 8px 8px 8px 14px;
-    transition: border-color 140ms var(--ease-calm), box-shadow 140ms var(--ease-calm);
-}
-.dm-composer-field:focus-within {
-    border-color: var(--gold-200);
-    box-shadow: var(--focus-ring, 0 0 0 3px rgba(194, 154, 68, .28));
 }
 .dm-composer .composer-input {
-    flex: 1;
-    min-height: 40px;
-    max-height: 200px;
-    padding: 5px 0;
-    border: 0;
-    background: none;
-    box-shadow: none;
-    clip-path: none;
+    min-height: 62px;
 }
-.dm-composer .composer-input:focus {
-    outline: 0;
-    box-shadow: none;
-}
-.dm-send {
-    flex: 0 0 auto;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--brand);
-    border: 0;
-    color: var(--accent-contrast);
-    cursor: pointer;
-    transition: background 140ms var(--ease-calm), transform 140ms var(--ease-calm);
-}
-.dm-send:hover { background: var(--brand-hover); }
-.dm-send:active { transform: scale(.96); }
-.dm-send .icon { width: 18px; height: 18px; }
-/* The hint + live count only mean anything once JS is wired (Enter-to-send). */
-.dm-composer-meta { display: none; }
-.has-js .dm-composer-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 6px 4px 0;
-}
-.dm-composer-hint { font-size: .78rem; color: var(--text-faint); }
-.dm-composer-count { font-family: var(--font-mono); font-size: .68rem; color: var(--text-faint); }
 /* Read receipt — a quiet line under my last letter. */
 .dm-receipt-row { display: flex; justify-content: flex-end; }
 .dm-receipt {
@@ -3364,7 +3326,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     max-width: 90vw;
     text-align: center;
     background: var(--surface-inverse);
-    color: var(--parchment-50);
+    color: var(--text-inverse);
     border: 0;
     font-size: .92rem;
     padding: 10px 18px;
@@ -3376,13 +3338,15 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 @media (prefers-reduced-motion: reduce) {
     .main > .flash:has(+ .dm-shell) { animation: none; }
 }
-.dm-form .composer-input {
+.dm-form .composer-input,
+.dm-composer .composer-input {
     border: 0;
     background: var(--surface-page);
     box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);
     clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
 }
-.dm-form .composer-input:focus {
+.dm-form .composer-input:focus,
+.dm-composer .composer-input:focus {
     outline: 0;
     border-color: transparent;
     box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-500), 0 0 0 3px var(--focus-ring);
@@ -4526,7 +4490,7 @@ span.wf-btn {
     .dm-back { display: inline-flex; }
     .dm-inforail { width: 100vw; max-width: 100vw; }
     .dm-group { max-width: 92%; }
-    .dm-composer { padding: 10px 14px 14px; }
+    .dm-composer { flex-direction: column; }
 }
 
 @media (max-width: 680px) {

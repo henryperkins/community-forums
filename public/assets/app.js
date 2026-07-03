@@ -375,6 +375,10 @@
             railClose.addEventListener('click', closeRail);
         }
         document.addEventListener('keydown', function (e) {
+            // Escape peels overlays outermost-first: an open compose dialog or
+            // ··· menu takes the keypress; the rail only closes when it is the
+            // topmost thing open.
+            if (document.querySelector('details.dm-compose-details[open], details.dm-menu[open], details.dm-report[open]')) { return; }
             if (e.key === 'Escape' && railNarrow() && railIsOpen()) { closeRail(); }
         });
         // The header menu's "Members & details" item shares the #dm-rail anchor
@@ -409,6 +413,8 @@
         });
         document.addEventListener('keydown', function (e) {
             if (e.key !== 'Escape') { return; }
+            // The compose dialog sits above the menus — let its handler take this one.
+            if (document.querySelector('details.dm-compose-details[open]')) { return; }
             for (var ei = 0; ei < dmMenus.length; ei++) {
                 if (dmMenus[ei].open) {
                     var menuTrigger = dmMenus[ei].querySelector('summary');
@@ -427,6 +433,10 @@
     // markup opens as a panel under the list header and the form posts normally.
     var dmCompose = document.querySelector('details.dm-compose-details');
     if (dmCompose) {
+        // Only the enhanced presentation is a dialog; the no-JS disclosure
+        // panel keeps plain details semantics, so the role is stamped here.
+        var dmDialogEl = dmCompose.querySelector('.dm-dialog');
+        if (dmDialogEl) { dmDialogEl.setAttribute('role', 'dialog'); }
         var dmComposeSummary = dmCompose.querySelector('summary');
         var closeCompose = function () {
             if (!dmCompose.open) { return; }
@@ -454,16 +464,28 @@
     // Messages list instant filter (Phase 3): narrows the already-rendered rows
     // as you type. The input stays a real GET form field (name="q") — Enter or
     // no-JS submits to the server, which applies the same filter authoritatively.
+    // When the server already applied a ?q= filter the rendered rows are a
+    // subset, so narrowing them further client-side would fake empty results —
+    // in that state Enter/submit stays the one (authoritative) path.
     var dmSearchInput = document.querySelector('.dm-search input[name="q"]');
     var dmListEl = document.querySelector('.dm-list');
-    if (dmSearchInput && dmListEl) {
+    if (dmSearchInput && dmListEl && dmSearchInput.value.trim() === '') {
         var dmSearchEmpty = document.querySelector('[data-search-empty]');
         var dmListRows = dmListEl.querySelectorAll('li');
+        // Match what the server's LIKE matches — the name and the preview —
+        // not incidental row text like timestamps or the unread label.
+        var dmRowText = function (li) {
+            var name = li.querySelector('.dm-other');
+            var preview = li.querySelector('.dm-preview');
+            return ((name ? name.textContent : '') + ' ' + (preview ? preview.textContent : '')).toLowerCase();
+        };
+        var dmRowTexts = [];
+        for (var rt = 0; rt < dmListRows.length; rt++) { dmRowTexts.push(dmRowText(dmListRows[rt])); }
         dmSearchInput.addEventListener('input', function () {
             var needle = dmSearchInput.value.trim().toLowerCase();
             var visible = 0;
             for (var ri2 = 0; ri2 < dmListRows.length; ri2++) {
-                var hit = needle === '' || dmListRows[ri2].textContent.toLowerCase().indexOf(needle) !== -1;
+                var hit = needle === '' || dmRowTexts[ri2].indexOf(needle) !== -1;
                 dmListRows[ri2].classList.toggle('is-filtered', !hit);
                 if (hit) { visible++; }
             }
@@ -471,33 +493,40 @@
         });
     }
 
-    // DM reply composer (Phase 4): Enter sends, Shift+Enter breaks the line
-    // (the visible hint is CSS-gated on .has-js so it never lies to a no-JS
-    // reader), plus the live character count. Plain form submit stays the
-    // no-JS path; requestSubmit keeps native `required` validation.
-    var dmReplyForm = document.querySelector('form.dm-composer');
-    if (dmReplyForm) {
-        var dmReplyText = dmReplyForm.querySelector('textarea[name="body"]');
-        var dmReplyCount = dmReplyForm.querySelector('[data-dm-count]');
-        if (dmReplyText) {
-            dmReplyText.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-                    e.preventDefault();
-                    if (dmReplyForm.requestSubmit) { dmReplyForm.requestSubmit(); } else { dmReplyForm.submit(); }
-                }
-            });
-            if (dmReplyCount) {
-                var dmUpdateCount = function () { dmReplyCount.textContent = dmReplyText.value.length + ' / 5000'; };
-                dmReplyText.addEventListener('input', dmUpdateCount);
-                dmUpdateCount();
-            }
-        }
-    }
+    // Enter-to-send is deliberately NOT wired here: composer.js already owns it
+    // as the user's enter_to_send preference, ordered after its suggestion-menu
+    // handlers so picking an @mention with Enter never fires a submit. A second
+    // handler in this file would register earlier and defeat both.
 
     // A flash on the reading room renders as a floating toast (CSS :has) — let
     // it take its bow after a moment instead of lingering over the composer.
+    // Only when it really floats (:has support) and never for an error plate,
+    // so an in-flow flash in an older browser is never yanked mid-read.
     var dmFlash = document.querySelector('.main > .flash');
-    if (dmFlash && dmFlash.nextElementSibling && dmFlash.nextElementSibling.classList.contains('dm-shell')) {
+    if (dmFlash && dmFlash.nextElementSibling && dmFlash.nextElementSibling.classList.contains('dm-shell')
+        && !dmFlash.classList.contains('flash-error')
+        && window.CSS && CSS.supports && CSS.supports('selector(:has(*))')) {
         window.setTimeout(function () { dmFlash.hidden = true; }, 4000);
+    }
+
+    // Copy a letter's text from its ··· menu. The clipboard only exists with
+    // JS, so the control ships hidden and is revealed here — and only when the
+    // API is actually available.
+    var dmCopyButtons = document.querySelectorAll('[data-copy-message]');
+    if (dmCopyButtons.length && navigator.clipboard && navigator.clipboard.writeText) {
+        for (var cpi = 0; cpi < dmCopyButtons.length; cpi++) {
+            (function (copyBtn) {
+                copyBtn.hidden = false;
+                copyBtn.addEventListener('click', function () {
+                    var line = copyBtn.closest('.dm-line');
+                    var bodyEl = line ? line.querySelector('.dm-body') : null;
+                    var text = bodyEl ? bodyEl.textContent.trim() : '';
+                    navigator.clipboard.writeText(text).then(function () {
+                        var pop = copyBtn.closest('details');
+                        if (pop) { pop.open = false; }
+                    }).catch(function () { /* menu stays open; nothing to undo */ });
+                });
+            })(dmCopyButtons[cpi]);
+        }
     }
 })();

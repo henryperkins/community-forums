@@ -115,6 +115,7 @@ $this->section('title', $title);
                                                 <summary class="dm-dotbtn" aria-label="Message actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
                                                 <form method="post" action="/dm/<?= (int) $m['id'] ?>/report" class="dm-report-form">
                                                     <?= $this->csrfField() ?>
+                                                    <button type="button" class="linkbtn dm-copy" data-copy-message hidden><?= $this->partial('partials/icon', ['name' => 'copy']) ?><span>Copy text</span></button>
                                                     <select name="reason_code" class="input input-small">
                                                         <?php foreach ($reasons as $rc): ?><option value="<?= $e($rc) ?>"><?= $e(ucfirst(str_replace('_', ' ', $rc))) ?></option><?php endforeach; ?>
                                                     </select>
@@ -150,7 +151,7 @@ $this->section('title', $title);
                     && (int) $lastMessage['user_id'] === $current_user->id()
                     && (int) $page === (int) $pages) {
                     $receipt = ($other_last_read_message_id ?? null) !== null
-                        && (int) $other_last_read_message_id >= (int) $lastMessage['id'] ? 'Read' : 'Sent';
+                        && (int) $other_last_read_message_id >= (int) $lastMessage['id'] ? 'Read' : 'Delivered';
                 }
                 ?>
                 <?php if ($receipt !== null): ?>
@@ -174,17 +175,18 @@ $this->section('title', $title);
         </div>
 
         <?php if (!empty($can_reply)): ?>
+            <?php
+            // The composer stays the plain textarea + Send that composer.js has
+            // always decorated (toolbar, drafts, suggestion menus, and the user's
+            // own enter_to_send preference). The handoff's pill well + forced
+            // Enter-to-send would sit UNDER those injections and override the
+            // preference, so that restyle is deferred to a browser-evidenced pass.
+            ?>
             <form class="dm-composer composer" method="post" action="/messages/<?= (int) $conversation_id ?>" data-composer-context="dm" data-composer-target-id="<?= (int) $conversation_id ?>">
                 <?= $this->csrfField() ?>
                 <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
-                <div class="dm-composer-field">
-                    <textarea name="body" rows="2" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
-                    <button class="dm-send" type="submit" aria-label="Send" title="Send"><?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?></button>
-                </div>
-                <div class="dm-composer-meta">
-                    <span class="dm-composer-hint">Enter to send · Shift + Enter for a new line</span>
-                    <span class="dm-composer-count" data-dm-count><?= mb_strlen((string) ($body ?? '')) ?> / 5000</span>
-                </div>
+                <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
+                <button class="btn" type="submit">Send</button>
             </form>
         <?php else: ?>
             <div class="joinbar">You are no longer an active participant in this conversation.</div>

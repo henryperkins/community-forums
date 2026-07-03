@@ -27,12 +27,19 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
             </span>
             <details class="dm-compose-details">
                 <summary class="dm-new-btn" aria-label="New message" title="New message"><?= $this->partial('partials/icon', ['name' => 'plus']) ?></summary>
-                <div class="dm-dialog">
+                <div class="dm-dialog" aria-labelledby="dm-compose-title">
                     <div class="dm-dialog-head">
-                        <span><span class="eyebrow">Private counsel</span><h2>New message</h2></span>
+                        <div><span class="eyebrow">Private counsel</span><h2 id="dm-compose-title">New message</h2></div>
                         <button type="button" class="dm-dialog-close" data-close-compose aria-label="Close"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
                     </div>
-                    <form method="post" action="/messages">
+                    <?php
+                    // Same classes + composer hooks as the /messages/new page form, so
+                    // composer.js gives the dialog the identical toolbar, drafts, and
+                    // suggestion menus (shared draft key: it IS the same task). Only the
+                    // rich-text mount is opted out — a hidden closed <details> is no
+                    // place to measure an editor.
+                    ?>
+                    <form class="dm-form composer" method="post" action="/messages" data-composer-context="dm" data-composer-target-id="0" data-no-wysiwyg>
                         <?= $this->csrfField() ?>
                         <div class="dm-dialog-body">
                             <?= $this->partial('partials/dm_compose_fields', ['to' => '', 'title' => '', 'body' => '', 'errors' => [], 'allow_groups' => !empty($allow_groups)]) ?>
@@ -80,6 +87,6 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                 </li>
             <?php endforeach; ?>
         </ul>
-        <p class="dm-list-empty" data-search-empty hidden>No letters match your search.</p>
+        <p class="dm-list-empty" data-search-empty role="status" hidden>No letters match your search.</p>
     <?php endif; ?>
 </section>

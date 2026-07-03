@@ -31,8 +31,10 @@ final class ConversationController extends Controller
     public function index(Request $request): Response
     {
         $user = $this->requireDms();
-        $filter = ((string) $request->query('filter', 'all')) === 'unread' ? 'unread' : 'all';
-        $q = trim((string) $request->query('q', ''));
+        // ?filter[]=…/?q[]=… arrive as arrays — treat anything non-string as absent.
+        $filter = $request->query('filter', 'all') === 'unread' ? 'unread' : 'all';
+        $rawQ = $request->query('q', '');
+        $q = is_string($rawQ) ? trim($rawQ) : '';
         $conversations = $this->container->get(ConversationRepository::class)
             ->listForUser($user->id(), $q !== '' ? $q : null);
         if ($filter === 'unread') {
