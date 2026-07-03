@@ -332,4 +332,23 @@ final class PackageIntegrationServiceTest extends TestCase
         );
         self::assertSame(1, $revokes);
     }
+
+    public function test_insert_webhook_link_round_trips_and_holds_kind_invariant(): void
+    {
+        [$admin, $installedId] = $this->enabledRemoteApp(['read:boards']);
+        $webhookId = (new WebhookRepository($this->db))->insert('pkg-hook', 'https://hooks.acme.test/rb', '["topic.created"]', '', $admin->id());
+        $repo = new InstalledPackageCredentialRepository($this->db);
+
+        $id = $repo->insertWebhook($installedId, $webhookId, 'pkg:acme/inbox-sync#' . $installedId, '["topic.created"]', $admin->id());
+        self::assertGreaterThan(0, $id);
+
+        $row = $repo->findByWebhook($webhookId);
+        self::assertNotNull($row);
+        self::assertSame('webhook', (string) $row['kind']);
+        self::assertSame($webhookId, (int) $row['webhook_id']);
+        self::assertNull($row['api_token_id']);
+        self::assertNull($row['scopes_json']);
+        self::assertNull($row['revoked_at']);
+        self::assertContains($id, array_map(static fn (array $c): int => (int) $c['id'], $repo->activeForInstall($installedId)));
+    }
 }
