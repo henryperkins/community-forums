@@ -47,7 +47,7 @@ final class InstalledPackageCredentialRepository
     /** @return array<string,mixed>|null */
     public function findByWebhook(int $webhookId): ?array
     {
-        return $this->db->fetch('SELECT * FROM installed_package_credentials WHERE webhook_id = ?', [$webhookId]);
+        return $this->db->fetch('SELECT * FROM installed_package_credentials WHERE webhook_id = ? ORDER BY id DESC LIMIT 1', [$webhookId]);
     }
 
     public function insertApiToken(int $installedId, int $apiTokenId, string $label, string $scopesJson, ?int $createdBy): int
