@@ -103,6 +103,12 @@ reauthentication.
    staged updates.
 4. Unblocking requires deliberate operator action and audited state changes.
 
+Webhook SSRF/idempotency evidence of record: the delivery-idempotency report at
+`docs/evidence/phase5/webhook-idempotency.md` and the SSRF/egress adversarial
+suite `tests/Unit/Security/EgressGuardAdversarialTest.php` document the
+registration + delivery egress denial corpus and the at-least-once delivery
+guarantees underpinning package-owned webhooks.
+
 ## Repair
 
 `php bin/console repair` reconciles `packages.latest_release_id` and
