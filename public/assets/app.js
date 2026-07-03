@@ -306,4 +306,97 @@
         var cancel = newTopic.querySelector('[data-close-composer]');
         if (cancel) { cancel.addEventListener('click', closeTopic); }
     }
+
+    // Messages details rail (Phase 2 reimagine): a real column at wide widths, a
+    // right-edge drawer below ~1400px. Server-rendered as always-visible (wide)
+    // or reachable via the "Members & details" #dm-rail anchor + a CSS :target
+    // rule (narrow) — both work with no JS. This only adds a same-page toggle
+    // (no hash navigation), a scrim, Escape, and remembers the wide-screen
+    // collapsed preference in localStorage. Mirrors the nav-open drawer above.
+    var railToggle = document.querySelector('[data-rail-toggle]');
+    var dmShell = document.querySelector('.dm-shell');
+    if (railToggle && dmShell) {
+        var RAIL_KEY = 'rb-dm-rail-collapsed';
+        var railNarrow = function () {
+            return window.matchMedia && window.matchMedia('(max-width: 1399px)').matches;
+        };
+        var setRailButton = function (expanded) {
+            railToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            railToggle.classList.toggle('is-active', expanded);
+        };
+        var railIsOpen = function () {
+            return railNarrow() ? dmShell.classList.contains('rail-open') : !dmShell.classList.contains('rail-hidden');
+        };
+        var openRail = function () {
+            if (railNarrow()) {
+                dmShell.classList.add('rail-open');
+            } else {
+                dmShell.classList.remove('rail-hidden');
+                try { window.localStorage.removeItem(RAIL_KEY); } catch (e) { /* ignore */ }
+            }
+            setRailButton(true);
+        };
+        var closeRail = function () {
+            if (railNarrow()) {
+                dmShell.classList.remove('rail-open');
+            } else {
+                dmShell.classList.add('rail-hidden');
+                try { window.localStorage.setItem(RAIL_KEY, '1'); } catch (e) { /* ignore */ }
+            }
+            setRailButton(false);
+        };
+
+        var storedRailCollapsed = null;
+        try { storedRailCollapsed = window.localStorage.getItem(RAIL_KEY); } catch (e) { storedRailCollapsed = null; }
+        if (!railNarrow() && storedRailCollapsed === '1') { dmShell.classList.add('rail-hidden'); }
+        setRailButton(railIsOpen());   // sync aria-expanded with the actual computed state on load
+
+        railToggle.addEventListener('click', function () {
+            if (railIsOpen()) { closeRail(); } else { openRail(); }
+        });
+        var railScrim = document.querySelector('[data-rail-scrim]');
+        if (railScrim) {
+            railScrim.addEventListener('click', function (e) { e.preventDefault(); closeRail(); });
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && railNarrow() && dmShell.classList.contains('rail-open')) { closeRail(); }
+        });
+        // The header menu's "Members & details" item shares the #dm-rail anchor
+        // with the no-JS fallback; with JS, open the rail directly and close the
+        // menu instead of navigating.
+        var railOpeners = document.querySelectorAll('[data-rail-open]');
+        for (var ri = 0; ri < railOpeners.length; ri++) {
+            (function (opener) {
+                opener.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    openRail();
+                    var openMenu = opener.closest('details.dm-menu');
+                    if (openMenu) { openMenu.open = false; }
+                });
+            })(railOpeners[ri]);
+        }
+        window.addEventListener('resize', function () { setRailButton(railIsOpen()); });
+    }
+
+    // ··· menus (the header overflow + each message's hover-revealed report
+    // control) are native <details> so they work with no JS; this only adds
+    // outside-click and Escape dismissal, matching the composer-details modal.
+    var dmMenus = document.querySelectorAll('details.dm-menu, details.dm-report');
+    if (dmMenus.length) {
+        document.addEventListener('click', function (e) {
+            for (var mi = 0; mi < dmMenus.length; mi++) {
+                if (dmMenus[mi].open && !dmMenus[mi].contains(e.target)) { dmMenus[mi].open = false; }
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') { return; }
+            for (var ei = 0; ei < dmMenus.length; ei++) {
+                if (dmMenus[ei].open) {
+                    var menuTrigger = dmMenus[ei].querySelector('summary');
+                    dmMenus[ei].open = false;
+                    if (menuTrigger) { menuTrigger.focus(); }
+                }
+            }
+        });
+    }
 })();

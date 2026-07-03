@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * Phase 1 evidence for the DM "one reading room" reimagine (de-box).
+ * Evidence for the DM "one reading room" reimagine — Phase 1 (de-box) and
+ * Phase 2 (details rail + header ··· menu).
  *
  * Drives the real server-rendered app in Chromium and proves the reimagined
  * Messages surface renders — and still works with JavaScript disabled:
@@ -11,7 +12,11 @@ import path from 'node:path';
  *   • conversation: grouped "letters" (consecutive messages share one author
  *     line; mine wear the one gold plate, theirs read plain), the hairline day
  *     divider, and the hover ··· report control;
- *   • no-JS: the same page renders and the report <details> still opens.
+ *   • the details rail as the reading room's third column, and the header's
+ *     one ··· overflow (both native <details> — no-JS proof included);
+ *   • the JS enhancement layer: the rail toggle collapses/restores (and
+ *     persists) at wide widths, opens as a drawer+scrim at narrow widths, and
+ *     the ··· menus dismiss on outside-click / Escape.
  *
  * Runs against a seeded DB (alice/bob/admin, all password123). Isolated from the
  * shared evidence DB via DB_DATABASE — see the npm/run command in the PR notes.
@@ -135,4 +140,62 @@ test('DM reading room: de-boxed rows, grouped letters, no-JS report', async ({ b
   await shot(dark, '04-conversation-dark');
 
   await Promise.all([aliceCtx.close(), bobCtx.close(), adminCtx.close(), nojsCtx.close(), darkCtx.close()]);
+});
+
+test('DM reading room: rail toggle, menu dismissal, mobile drawer (JS enhancement)', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'desktop', 'Exercised at the desktop viewport; the mobile drawer is checked via an explicit narrow context below.');
+  ensureDir();
+
+  const wideCtx = await browser.newContext({ baseURL: baseURL!, viewport: { width: 1440, height: 900 } });
+  const wide = await wideCtx.newPage();
+  await login(wide, 'alice@retro.test');
+  const convB = await startDm(wide, 'bob', 'A note for the rail-toggle evidence run.');
+  await wide.goto(convB);
+
+  // ── Wide (>=1400px): the rail toggle collapses the third column and the
+  //    preference survives a reload (localStorage) ──────────────────────────
+  const railToggle = wide.locator('[data-rail-toggle]');
+  await expect(wide.locator('.dm-inforail')).toBeVisible();
+  await expect(railToggle).toHaveAttribute('aria-expanded', 'true');
+  await railToggle.click();
+  await expect(wide.locator('.dm-inforail')).toBeHidden();
+  await expect(railToggle).toHaveAttribute('aria-expanded', 'false');
+  await wide.reload();
+  await expect(wide.locator('.dm-inforail')).toBeHidden('the collapsed preference persists across a reload');
+  await railToggle.click();
+  await expect(wide.locator('.dm-inforail')).toBeVisible();
+
+  // ── Header ··· menu: opens, and dismisses on outside-click and on Escape ──
+  const menuSummary = wide.locator('.dm-thread-actions .dm-menu > summary');
+  await menuSummary.click();
+  await expect(wide.locator('.dm-menu-pop')).toBeVisible();
+  // Click into the message scroll area's padding — inert background, not the
+  // thread title (which is a profile link for direct conversations and would
+  // navigate away instead of merely testing the outside-click dismissal).
+  await wide.locator('.dm-scroll').click({ position: { x: 10, y: 10 } });
+  await expect(wide.locator('.dm-menu-pop')).toBeHidden();
+  await menuSummary.click();
+  await expect(wide.locator('.dm-menu-pop')).toBeVisible();
+  await wide.keyboard.press('Escape');
+  await expect(wide.locator('.dm-menu-pop')).toBeHidden();
+  await shot(wide, '05-rail-toggle-collapsed-then-menu');
+
+  await wideCtx.close();
+
+  // ── Narrow (<=1399px): the rail opens as a drawer with a scrim, closed by
+  //    the scrim click ─────────────────────────────────────────────────────
+  const narrowCtx = await browser.newContext({ baseURL: baseURL!, viewport: { width: 1024, height: 800 } });
+  const narrow = await narrowCtx.newPage();
+  await login(narrow, 'alice@retro.test');
+  await narrow.goto(convB);
+  const narrowToggle = narrow.locator('[data-rail-toggle]');
+  await expect(narrow.locator('.dm-inforail')).not.toBeInViewport();
+  await narrowToggle.click();
+  await expect(narrow.locator('.dm-inforail')).toBeInViewport();
+  await expect(narrow.locator('[data-rail-scrim]')).toBeVisible();
+  await shot(narrow, '06-rail-drawer-open-narrow');
+  await narrow.locator('[data-rail-scrim]').click({ position: { x: 5, y: 5 } });
+  await expect(narrow.locator('.dm-inforail')).not.toBeInViewport();
+
+  await narrowCtx.close();
 });
