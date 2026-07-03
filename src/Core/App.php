@@ -201,6 +201,7 @@ use App\Service\OAuth\ProviderRegistry;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageCredentialAuthGuard;
 use App\Service\Packages\PackageIntegrationService;
+use App\Service\Packages\PackageReviewConsoleService;
 use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageHealthService;
@@ -1287,6 +1288,16 @@ final class App
         $c->bind(InstalledPackageSettingsRepository::class, fn (Container $c) => new InstalledPackageSettingsRepository($c->get(Database::class)));
         $c->bind(InstalledPackageCredentialRepository::class, fn (Container $c) => new InstalledPackageCredentialRepository($c->get(Database::class)));
         $c->bind(PublisherSigningKeyRepository::class, fn (Container $c) => new PublisherSigningKeyRepository($c->get(Database::class)));
+        $c->bind(PackageReviewConsoleService::class, fn (Container $c) => new PackageReviewConsoleService(
+            $c->get(Database::class),
+            $c->get(PackageRepository::class),
+            $c->get(PackageReleaseRepository::class),
+            $c->get(PackageReviewDecisionRepository::class),
+            $c->get(PackageTransparencyLogRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+        ));
         $c->bind(PublisherTrustService::class, fn (Container $c) => new PublisherTrustService(
             $c->get(Database::class),
             $c->get(PackagePublisherRepository::class),
