@@ -313,7 +313,8 @@ final class AppImladrisFidelityTest extends TestCase
         // Reimagine: messages are de-boxed into grouped "letters" (one author line
         // per run), not the old bordered .dm-bubble cards.
         $this->assertSeeText($res, 'dm-scroll-inner');
-        $this->assertSeeText($res, 'Beginning of your counsel');
+        $this->assertSeeText($res, 'dm-day-private');
+        $this->assertSeeText($res, 'Private — only those named here can read');
         $this->assertSeeText($res, 'dm-group');
         $this->assertSeeText($res, 'dm-body');
         $this->assertDontSeeText($res, 'dm-bubble');
