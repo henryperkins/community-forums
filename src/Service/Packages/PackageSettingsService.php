@@ -165,11 +165,17 @@ final class PackageSettingsService
         if ($release === null || $package === null) {
             return [];
         }
-        $manifest = $this->manifests->validate(
-            (array) json_decode((string) $release['manifest_json'], true, 512, JSON_THROW_ON_ERROR),
-            (string) $package['package_uid'],
-            (string) $release['version'],
-        );
+        try {
+            $manifest = $this->manifests->validate(
+                (array) json_decode((string) $release['manifest_json'], true, 512, JSON_THROW_ON_ERROR),
+                (string) $package['package_uid'],
+                (string) $release['version'],
+            );
+        } catch (\Throwable) {
+            // A stored manifest that no longer re-validates (format drift, tampering)
+            // must not break the operator detail page; it simply exposes no settings.
+            return [];
+        }
 
         return $manifest->settingsSchema['fields'] ?? [];
     }
