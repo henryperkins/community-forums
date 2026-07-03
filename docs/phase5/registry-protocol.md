@@ -279,3 +279,33 @@ worker-enforced disable of enabled installed packages, and `revoke -> revoked`.
 
 The registry-independent local blocklist (`local_package_blocks`) refuses
 regardless of registry or trust-root state.
+
+## Remote-App Settings, Credentials & Security Response (Inc 5)
+
+Non-theme Gate A packages (`remote_app`, declarative `automation`) are animated
+by a thin runtime over the B2 seams. Two normalized tables (migration `0073`):
+
+- `installed_package_settings` — one row per `(installed_package_id, setting_key)`.
+  Non-secret → `value_json`; secret (`type=string, secret:true`) → `SecretVault`,
+  persisting only `secret_ref` (`svcsec_*`), `is_secret=1`. Exactly one of the two
+  columns is populated per row.
+- `installed_package_credentials` — `kind ∈ api_token|webhook`, FK to
+  `api_tokens`/`webhooks` (ownership + attribution live here; the B2 tables are
+  never widened with `owner_type/owner_id`). `created_by` is the minting admin for
+  provenance only — package tokens are `ApiPrincipal`s, never a `User`.
+
+**Ceiling vs authority:** runtime honours only `installed_package_permissions`
+with `declared=1 AND granted=1`. `api_scope ⊆ ApiScopes::isValid`; `event ⊆
+WebhookEvents::domainEvents()` (`ping` is operator-test-only and can never be
+package-granted); webhook host ∈ granted `outbound_host`s. Private/DM payloads are
+never broadened (IDs+enums only, `first_party_hooks` minimization authoritative).
+
+**Provisioning** mints ≤1 read-only api_token + ≤1 webhook in one transaction;
+plaintext is shown once. **Security response** adds publisher verify/suspend/
+reinstate, signing-key pin/rotate (signed `rb-key-rotation.v1` envelope
+`{document,signature,key_id}`)/revoke, local exact-digest review (tightening-only),
+advisory/blocklist reuse (no new worker — stays on `worker:registry-refresh` +
+`worker:packages`), and the flag-independent `package_execution_disabled` brake.
+Lifecycle events widen `package_history.event` (+`settings_update`,
+`credential_mint`, `credential_revoke`) and `moderation_log.target_type`
+(+`publisher`).
