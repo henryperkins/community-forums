@@ -512,13 +512,35 @@ final class PackageIntegrationService
      */
     public function onInstallIneligible(int $installedId, string $reason, ?int $actorId): void
     {
-        foreach ($this->credentials->activeForInstall($installedId) as $cred) {
-            if ((string) $cred['kind'] === 'webhook' && $cred['webhook_id'] !== null) {
-                $this->webhookRepo->disable((int) $cred['webhook_id'], substr('Install ineligible: ' . $reason, 0, 190));
-            } elseif ((string) $cred['kind'] === 'api_token' && $cred['api_token_id'] !== null) {
-                $this->apiTokenRepo->revoke((int) $cred['api_token_id']);
-            }
-            $this->credentials->markRevoked((int) $cred['id']);
+        $active = $this->credentials->activeForInstall($installedId);
+        if ($active === []) {
+            return; // idempotent: nothing live to tear down
         }
+
+        $this->db->transaction(function () use ($active, $installedId, $reason, $actorId): void {
+            // Pause every package-owned webhook endpoint FIRST so the delivery worker /
+            // WebhookService::dispatch() stop draining it before we revoke or flip any state.
+            $this->suspendDelivery($installedId, 'ineligible:' . $reason);
+
+            $install = $this->installs->find($installedId);
+            $packageId = $install !== null ? (int) $install['package_id'] : null;
+
+            foreach ($active as $cred) {
+                if ((string) $cred['kind'] === 'api_token' && $cred['api_token_id'] !== null) {
+                    // Raw repo revoke: the autonomous lifecycle path carries no admin/reauth.
+                    $this->apiTokenRepo->revoke((int) $cred['api_token_id']);
+                }
+                $this->credentials->markRevoked((int) $cred['id']);
+                if ($packageId !== null) {
+                    $this->history->record([
+                        'package_id' => $packageId,
+                        'installed_package_id' => $installedId,
+                        'event' => 'credential_revoke',
+                        'actor_id' => $actorId,
+                        'detail' => $reason . ':' . (string) $cred['kind'],
+                    ]);
+                }
+            }
+        });
     }
 }

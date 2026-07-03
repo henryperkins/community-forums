@@ -571,6 +571,71 @@ final class PackageIntegrationServiceTest extends TestCase
         self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
     }
 
+    /**
+     * Seed an integrable install granting a scope + event + host (so provisioning mints
+     * BOTH an api_token and a webhook), and provision. @return array{0:User,1:int,2:int,3:int} admin, installedId, apiTokenId, webhookId
+     */
+    private function provisionBoth(): array
+    {
+        [$admin, $installedId] = $this->seedWebhookApp(['read:boards'], ['topic.created'], ['hooks.acme.test'], 'https://hooks.acme.test/rb');
+        $this->webhookService_provision()->provisionCredentials($admin, 'password123', $installedId);
+        $tokenId = 0;
+        $hookId = 0;
+        foreach ((new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId) as $row) {
+            if ((string) $row['kind'] === 'api_token') {
+                $tokenId = (int) $row['api_token_id'];
+            }
+            if ((string) $row['kind'] === 'webhook') {
+                $hookId = (int) $row['webhook_id'];
+            }
+        }
+
+        return [$admin, $installedId, $tokenId, $hookId];
+    }
+
+    public function test_on_install_ineligible_revokes_tokens_and_pauses_webhooks(): void
+    {
+        [$admin, $installedId, $tokenId, $hookId] = $this->provisionBoth();
+        $svc = $this->webhookService_provision();
+
+        // Sanity: live before teardown.
+        self::assertNull((new ApiTokenRepository($this->db))->findById($tokenId)['revoked_at']);
+        self::assertSame(1, (int) (new WebhookRepository($this->db))->findById($hookId)['is_active']);
+
+        $svc->onInstallIneligible($installedId, 'disabled', $admin->id());
+
+        self::assertNotNull(
+            (new ApiTokenRepository($this->db))->findById($tokenId)['revoked_at'],
+            'package api token is revoked',
+        );
+        self::assertSame(
+            0,
+            (int) (new WebhookRepository($this->db))->findById($hookId)['is_active'],
+            'package webhook endpoint is paused so the delivery worker skips it',
+        );
+        foreach ((new InstalledPackageCredentialRepository($this->db))->forInstall($installedId) as $link) {
+            self::assertNotNull($link['revoked_at'], 'every credential link is marked revoked');
+        }
+    }
+
+    public function test_on_install_ineligible_is_idempotent(): void
+    {
+        [, $installedId, $tokenId] = $this->provisionBoth();
+        $svc = $this->webhookService_provision();
+
+        $svc->onInstallIneligible($installedId, 'uninstalled', null);
+        $firstRevokedAt = (new ApiTokenRepository($this->db))->findById($tokenId)['revoked_at'];
+
+        // Second call must not throw and must not resurrect or re-stamp anything.
+        $svc->onInstallIneligible($installedId, 'uninstalled', null);
+        self::assertSame(
+            $firstRevokedAt,
+            (new ApiTokenRepository($this->db))->findById($tokenId)['revoked_at'],
+            'revocation timestamp is stable across repeated teardown',
+        );
+        self::assertSame([], (new InstalledPackageCredentialRepository($this->db))->activeForInstall($installedId));
+    }
+
     public function test_insert_webhook_link_round_trips_and_holds_kind_invariant(): void
     {
         [$admin, $installedId] = $this->enabledRemoteApp(['read:boards']);
