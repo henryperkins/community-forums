@@ -177,6 +177,14 @@ final class InstalledPackageRepository
         );
     }
 
+    public function setSettingsSummary(int $id, ?string $json): void
+    {
+        $this->db->run(
+            'UPDATE installed_packages SET settings_json = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?',
+            [$json, $id],
+        );
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function purgeable(string $nowUtc): array
     {
