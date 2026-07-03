@@ -1,0 +1,421 @@
+From ce5df4257d784f5b6b7c6cd4b71d132a77c47ad4 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 3 Jul 2026 07:28:00 +0000
+Subject: [PATCH] DMs: apply the "private counsel" Bruinen register + finish
+ prototype deltas
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Brings the live Direct Messages surface up to the design handoff
+(design_handoff_dm_reimagine) now that its structure/backend already
+landed on main. Visual + small template deltas only — no routes,
+controllers, DB, CSRF, or feature gates change.
+
+- app.css: add a cool river `--dm-*` register scoped to `.dm-shell` and
+  repoint the DM panes + every status signal (active row, unread dot,
+  unread time, search focus, receipt check, reference rule, filter
+  chips) to river. Gold stays "my voice"/esteem; green stays actions.
+- Lock signatures: river lock eyebrow on the list + conversation headers
+  (Private counsel / Private group) and an opening "Private — only those
+  named here can read" divider.
+- Rank pill (gold "Owner") beside a group author, from conversation role.
+- Quoted-reply blockquote (gold rule, italic) for message markdown quotes.
+- Composer -> calm river pill-well with a round send button. Keeps
+  class="composer" so composer.js (toolbar/drafts) and the user's
+  enter_to_send preference are untouched; the pill is robust to the
+  injected toolbar/counter (verified against a rendered harness).
+- icon.php: add the Lucide "lock" mark.
+- sidebar.php: keep "Messages" active on /messages/{id} (prefix match).
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_014ArR3LfGjE8pyVZnwY7hwf
+---
+ public/assets/app.css          | 146 +++++++++++++++++++++++++++------
+ templates/dm/show.php          |  24 ++++--
+ templates/partials/dm_list.php |   2 +-
+ templates/partials/icon.php    |   1 +
+ templates/partials/sidebar.php |   2 +-
+ 5 files changed, 141 insertions(+), 34 deletions(-)
+
+diff --git a/public/assets/app.css b/public/assets/app.css
+index 16b9a15..a4d328b 100644
+--- a/public/assets/app.css
++++ b/public/assets/app.css
+@@ -2551,13 +2551,27 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
+ 
+ /* — Messages: private counsel two-pane reading room. — */
+ .dm-shell {
++    /* Private-counsel "Bruinen" register — a cool river tint layered over the
++       warm parchment/gold, scoped to the DM room only (the global topbar + nav
++       rail stay warm, so the temperature shift IS the "you're in the private
++       room" cue). River = the private surface + every status signal; gold stays
++       "my voice"/esteem; green stays actions. */
++    --dm-ground: color-mix(in srgb, var(--river-100) 40%, var(--surface-page));
++    --dm-raised: color-mix(in srgb, var(--river-100) 34%, var(--surface-raised));
++    --dm-sunken: color-mix(in srgb, var(--river-200) 40%, var(--surface-sunken));
++    --dm-accent: var(--river-500);
++    --dm-accent-soft: var(--river-100);
++    --dm-accent-line: var(--river-200);
++    --dm-accent-ink: var(--river-700);
++    --dm-active-wash: color-mix(in srgb, var(--river-100) 62%, var(--surface-raised));
++    --dm-focus-ring: 0 0 0 3px color-mix(in srgb, var(--river-500) 22%, transparent);
+     width: 100%;
+     max-width: var(--maxw);
+     margin: -24px auto -64px;
+     display: grid;
+     grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+     min-height: calc(100vh - var(--topbar-h));
+-    background: var(--surface-raised);
++    background: var(--dm-raised);
+     transition: grid-template-columns 240ms var(--ease-calm);
+ }
+ /* With the details rail open, the conversation becomes the middle of three columns. */
+@@ -2566,7 +2580,7 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
+ }
+ .dm-listpane {
+     border-right: 1px solid var(--border-hair);
+-    background: var(--surface-page);
++    background: var(--dm-ground);
+     display: flex;
+     flex-direction: column;
+     min-height: 0;
+@@ -2586,7 +2600,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
+     min-width: 0;
+ }
+ .dm-listpane-head .eyebrow {
+-    display: block;
++    display: inline-flex;
++    align-items: center;
++    gap: 5px;
+     margin: 0 0 3px;
+     white-space: nowrap;
+ }
+@@ -2601,9 +2617,9 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
+     gap: 7px;
+     margin-top: 12px;
+ }
+-.dm-listpane-filters .pill { text-decoration: none; }
+-.dm-listpane-filters .pill:hover { color: var(--text); }
+-.dm-listpane-filters .pill.is-active { background: var(--accent); color: var(--accent-contrast); }
++.dm-listpane-filters .pill { text-decoration: none; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; }
++.dm-listpane-filters .pill:hover { color: var(--dm-accent-ink); }
++.dm-listpane-filters .pill.is-active { background: var(--dm-accent-soft); color: var(--dm-accent-ink); border-color: var(--dm-accent-line); }
+ /* Round "new message" action — quiet gold, the one invitation in the header. */
+ .dm-new-btn {
+     flex: 0 0 auto;
+@@ -2654,7 +2670,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     font-size: .92rem;
+     color: var(--text-body);
+     padding: 8px 12px 8px 34px;
+-    background: var(--surface-sunken);
++    background: var(--dm-sunken);
+     border: 1px solid transparent;
+     border-radius: var(--radius-pill);
+     outline: none;
+@@ -2662,9 +2678,9 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+ }
+ .dm-search input::placeholder { color: var(--text-faint); }
+ .dm-search input:focus {
+-    background: var(--surface-raised);
+-    border-color: var(--gold-200);
+-    box-shadow: 0 0 0 3px var(--focus-ring);
++    background: var(--dm-raised);
++    border-color: var(--dm-accent-line);
++    box-shadow: var(--dm-focus-ring);
+ }
+ .dm-list > li.is-filtered { display: none; }
+ 
+@@ -2795,10 +2811,10 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     background: var(--surface-sunken);
+     text-decoration: none;
+ }
+-/* Only the active conversation carries the plate; unread is a lone gold dot. */
++/* Only the active conversation carries the plate; unread is a lone river dot. */
+ .dm-row.active {
+-    background: var(--brand-subtle);
+-    box-shadow: inset 3px 0 0 var(--accent-2);
++    background: var(--dm-active-wash);
++    box-shadow: inset 3px 0 0 var(--dm-accent);
+ }
+ .dm-row .monogram {
+     grid-row: 1 / span 2;
+@@ -2834,7 +2850,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     align-self: baseline;
+ }
+ .dm-row.is-unread .dm-time {
+-    color: var(--gold-ink);
++    color: var(--dm-accent-ink);
+ }
+ .dm-preview {
+     grid-column: 2 / span 2;
+@@ -2860,7 +2876,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     width: 7px;
+     height: 7px;
+     border-radius: 50%;
+-    background: var(--accent-2);
++    background: var(--dm-accent);
+ }
+ .dm-list-empty {
+     padding: 40px 22px;
+@@ -2868,7 +2884,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     text-align: center;
+ }
+ .dm-threadpane {
+-    background: var(--surface-raised);
++    background: var(--dm-raised);
+     display: flex;
+     flex-direction: column;
+     min-height: 0;
+@@ -2999,7 +3015,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+ .dm-menu-form .input-small { flex: 1; min-width: 0; }
+ /* ── Details rail (right column, collapsible) ───────────────────────────── */
+ .dm-inforail {
+-    background: var(--surface-page);
++    background: var(--dm-ground);
+     border-left: 1px solid var(--border-hair);
+     display: flex;
+     flex-direction: column;
+@@ -3228,7 +3244,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     gap: 2px;
+     text-decoration: none;
+     border: 1px solid var(--border-hair);
+-    border-left: 3px solid var(--accent-2);
++    border-left: 3px solid var(--dm-accent);
+     border-radius: var(--radius-sm);
+     padding: 8px 12px;
+     background: var(--surface-raised);
+@@ -3242,7 +3258,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     text-transform: uppercase;
+     letter-spacing: .08em;
+     font-size: .56rem;
+-    color: var(--gold-ink);
++    color: var(--dm-accent-ink);
+ }
+ .reference-card strong {
+     font-family: var(--font-display);
+@@ -3294,14 +3310,15 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+ .dm-composer {
+     flex: 0 0 auto;
+     border-top: 1px solid var(--border-hair);
+-    padding: 14px 28px 18px;
+-    background: var(--surface-raised);
++    padding: 12px 26px 16px;
++    background: var(--dm-raised);
+     display: flex;
+-    align-items: flex-start;
+-    gap: 10px;
++    flex-direction: column;
++    align-items: stretch;
++    gap: 6px;
+ }
+ .dm-composer .composer-input {
+-    min-height: 62px;
++    min-height: 58px;
+ }
+ /* Read receipt — a quiet line under my last letter. */
+ .dm-receipt-row { display: flex; justify-content: flex-end; }
+@@ -3316,7 +3333,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     align-items: center;
+     gap: 5px;
+ }
+-.dm-receipt .icon { width: 12px; height: 12px; color: var(--leaf); }
++.dm-receipt .icon { width: 12px; height: 12px; color: var(--dm-accent); }
+ /* A flash on the reading room floats as a quiet toast — the acknowledgement of
+    tucked-away actions (mute, leave, report) — instead of pushing the shell
+    down. :has() browsers only; others keep the standard flash plate. */
+@@ -3414,6 +3431,85 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
+     margin-top: 2px;
+ }
+ 
++/* — Private-counsel signatures + register additions ————————————————————————— */
++/* Lock eyebrows (list header + conversation header) read in river ink. */
++.dm-listpane-head .eyebrow.dm-lock-eyebrow,
++.dm-thread-eyebrow { color: var(--dm-accent-ink); }
++.dm-lock-eyebrow .icon,
++.dm-thread-eyebrow .icon { width: 12px; height: 12px; color: var(--dm-accent); flex: 0 0 auto; }
++.dm-thread-eyebrow {
++    display: inline-flex;
++    align-items: center;
++    gap: 5px;
++    font-family: var(--font-label);
++    text-transform: uppercase;
++    letter-spacing: var(--tracking-caps);
++    font-size: .6rem;
++    margin: 0 0 2px;
++}
++/* Opening divider — the fastest "this is private" cue at the top of the thread. */
++.dm-day-private { gap: 9px; color: var(--dm-accent-ink); }
++.dm-day-private .icon { width: 12px; height: 12px; color: var(--dm-accent); flex: 0 0 auto; }
++
++/* Rank pill beside a group author's name — gold esteem, like the members list. */
++.dm-rank {
++    font-family: var(--font-label);
++    text-transform: uppercase;
++    letter-spacing: .04em;
++    font-size: .56rem;
++    line-height: 1.5;
++    color: var(--gold-ink);
++    background: var(--gold-100);
++    border: 1px solid var(--gold-200);
++    border-radius: var(--radius-pill);
++    padding: 1px 7px;
++}
++
++/* Quoted reply → a gold-ruled italic blockquote (from the message's markdown). */
++.dm-body blockquote {
++    margin: 4px 0;
++    padding: 2px 0 2px 14px;
++    border-left: 2px solid var(--rule-gold);
++    color: var(--text-muted);
++    font-style: italic;
++}
++.dm-group.mine .dm-body blockquote { border-left-color: var(--gold-400); }
++
++/* Conversation composer → the calm river "pill". The field sheds the gold
++   engrave for a cool rounded well and Send becomes a round action button. These
++   rules are robust to composer.js: whatever toolbar it injects sits above the
++   field (order:-1) and the counter/preview below. Only .dm-composer (the reply)
++   is repointed — the compose dialog's .dm-form fields keep their engrave. */
++.dm-composer .composer-input {
++    border: 1px solid var(--dm-accent-line);
++    border-radius: var(--radius-lg);
++    background: var(--dm-ground);
++    box-shadow: none;
++    clip-path: none;
++    padding: 10px 14px;
++    resize: none;
++}
++.dm-composer .composer-input:focus {
++    outline: 0;
++    border-color: var(--dm-accent);
++    box-shadow: var(--dm-focus-ring);
++}
++.dm-composer .composer-toolbar { order: -1; margin: 0; }
++.dm-composer .composer-count { align-self: flex-end; margin: 0; }
++.dm-composer .dm-send {
++    align-self: flex-end;
++    width: 38px;
++    height: 38px;
++    min-width: 0;
++    padding: 0;
++    margin: 0;
++    border-radius: 50%;
++    display: inline-flex;
++    align-items: center;
++    justify-content: center;
++}
++.dm-composer .dm-send .icon { width: 18px; height: 18px; }
++
+ /* — Moderation: warden's table and member appeal surfaces. — */
+ .mod {
+     max-width: 1120px;
+diff --git a/templates/dm/show.php b/templates/dm/show.php
+index 006a00c..dcd90ef 100644
+--- a/templates/dm/show.php
++++ b/templates/dm/show.php
+@@ -20,6 +20,7 @@ $this->section('title', $title);
+             <div class="dm-thread-id">
+                 <?= $this->partial('partials/monogram', ['name' => !empty($is_group) ? $title : $otherName, 'username' => !empty($is_group) ? ('group-' . (int) $conversation_id) : (string) ($other['username'] ?? $otherName), 'gilt' => true]) ?>
+                 <div>
++                    <span class="dm-thread-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?><?= !empty($is_group) ? 'Private group' : 'Private counsel' ?></span>
+                     <h1 class="dm-thread-title">
+                         <?php if (!empty($is_group)): ?>
+                             <?= $e($title) ?>
+@@ -75,7 +76,7 @@ $this->section('title', $title);
+             <?php if (empty($messages)): ?>
+                 <p class="muted empty">No messages yet.</p>
+             <?php else: ?>
+-                <div class="dm-day">Beginning of your counsel</div>
++                <div class="dm-day dm-day-private"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private — only those named here can read</div>
+                 <?php
+                 // Group consecutive messages by author into de-boxed "letters":
+                 // one author line per run, then the run's messages.
+@@ -88,6 +89,11 @@ $this->section('title', $title);
+                         $dmGroups[] = ['user_id' => (int) $m['user_id'], 'items' => [$m]];
+                     }
+                 }
++                // Conversation role (owner/member) per user, for the group rank pill.
++                $dmRoles = [];
++                foreach (($participants ?? []) as $pp) {
++                    $dmRoles[(int) $pp['user_id']] = (string) ($pp['role'] ?? '');
++                }
+                 ?>
+                 <?php foreach ($dmGroups as $g): ?>
+                     <?php
+@@ -102,6 +108,9 @@ $this->section('title', $title);
+                         <div class="dm-msgs">
+                             <div class="dm-ghead">
+                                 <span class="dm-name"><?= $mine ? 'You' : $e($authorName) ?></span>
++                                <?php if (!$mine && !empty($is_group) && ($dmRoles[(int) $first['user_id']] ?? '') === 'owner'): ?>
++                                    <span class="dm-rank">Owner</span>
++                                <?php endif; ?>
+                                 <span class="dm-gtime"><?= $e(human_datetime($first['created_at'])) ?></span>
+                             </div>
+                             <?php foreach ($g['items'] as $m): ?>
+@@ -176,17 +185,18 @@ $this->section('title', $title);
+ 
+         <?php if (!empty($can_reply)): ?>
+             <?php
+-            // The composer stays the plain textarea + Send that composer.js has
+-            // always decorated (toolbar, drafts, suggestion menus, and the user's
+-            // own enter_to_send preference). The handoff's pill well + forced
+-            // Enter-to-send would sit UNDER those injections and override the
+-            // preference, so that restyle is deferred to a browser-evidenced pass.
++            // The composer keeps class="composer", so composer.js still decorates it
++            // (toolbar, drafts, suggestion menus) and the user's own enter_to_send
++            // preference is left untouched — we do NOT force Enter-to-send. Only the
++            // presentation changes: the field is restyled to the calm river "pill"
++            // and Send becomes a round icon button. The pill is the form itself, so
++            // any toolbar / counter composer.js injects stacks cleanly around it.
+             ?>
+             <form class="dm-composer composer" method="post" action="/messages/<?= (int) $conversation_id ?>" data-composer-context="dm" data-composer-target-id="<?= (int) $conversation_id ?>">
+                 <?= $this->csrfField() ?>
+                 <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
+                 <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
+-                <button class="btn" type="submit">Send</button>
++                <button class="btn dm-send" type="submit" aria-label="Send message"><?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?></button>
+             </form>
+         <?php else: ?>
+             <div class="joinbar">You are no longer an active participant in this conversation.</div>
+diff --git a/templates/partials/dm_list.php b/templates/partials/dm_list.php
+index e860ffc..681b66a 100644
+--- a/templates/partials/dm_list.php
++++ b/templates/partials/dm_list.php
+@@ -22,7 +22,7 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
+     <header class="dm-listpane-head">
+         <div class="dm-listpane-top">
+             <span>
+-                <span class="eyebrow">Private counsel</span>
++                <span class="eyebrow dm-lock-eyebrow"><?= $this->partial('partials/icon', ['name' => 'lock']) ?>Private counsel</span>
+                 <h1>Messages</h1>
+             </span>
+             <details class="dm-compose-details">
+diff --git a/templates/partials/icon.php b/templates/partials/icon.php
+index 15a4465..841c4e4 100644
+--- a/templates/partials/icon.php
++++ b/templates/partials/icon.php
+@@ -32,6 +32,7 @@ $iconStroke = [
+     'check'           => '<path d="M20 6 9 17l-5-5"/>',
+     'arrow-up'        => '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
+     'chevron-left'    => '<path d="M15 18l-6-6 6-6"/>',
++    'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
+ ];
+ $iconFilled = [
+     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',
+diff --git a/templates/partials/sidebar.php b/templates/partials/sidebar.php
+index a94b1bd..802413c 100644
+--- a/templates/partials/sidebar.php
++++ b/templates/partials/sidebar.php
+@@ -13,7 +13,7 @@
+                         <span>Inbox</span></a></li>
+                 <?php endif; ?>
+                 <?php if (!empty($features['dms'])): ?>
+-                    <li><a class="rail-filter<?= $request_path === '/messages' ? ' active' : '' ?>" href="/messages">
++                    <li><a class="rail-filter<?= ($request_path === '/messages' || strncmp((string) $request_path, '/messages/', 10) === 0) ? ' active' : '' ?>" href="/messages">
+                         <svg class="rail-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                         <span>Messages</span></a></li>
+                 <?php endif; ?>
+-- 
+2.43.0
+
