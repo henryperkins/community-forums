@@ -633,6 +633,7 @@ test('phase 4 slash status rows consume Enter when enter-to-send is enabled', as
   await form.locator('input[name="title"]').fill('Do not submit slash status');
 
   await textarea.fill('/gif');
+  await expect(page.getByRole('option', { name: 'Search GIPHY' })).toBeVisible();
   await textarea.press('Enter');
   await expect(page.getByRole('option', { name: 'Type a search after /gif.' })).toBeVisible();
 
