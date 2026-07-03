@@ -82,14 +82,30 @@ final class PasskeyService
     public function assertFreshFactor(User $user, ?string $currentPassword, ?string $assertionJson, string $sessionHash): string
     {
         $probe = null;
+        $passkeyFailure = null;
         if ($assertionJson !== null && $assertionJson !== '') {
-            $probe = function () use ($user, $assertionJson, $sessionHash): bool {
-                $this->verifyStepUp($user, $sessionHash, $assertionJson);
-                return true;
+            $probe = function () use ($user, $assertionJson, $sessionHash, &$passkeyFailure): bool {
+                try {
+                    $this->verifyStepUp($user, $sessionHash, $assertionJson);
+                    return true;
+                } catch (ValidationException|WebAuthnException $e) {
+                    $passkeyFailure = $e;
+                    return false;
+                }
             };
         }
 
-        return $this->reauth->requireFactor($user, $currentPassword, $probe);
+        try {
+            return $this->reauth->requireFactor($user, $currentPassword, $probe);
+        } catch (ValidationException $e) {
+            if (($currentPassword === null || $currentPassword === '') && $passkeyFailure !== null) {
+                if ($passkeyFailure instanceof ValidationException) {
+                    throw $passkeyFailure;
+                }
+                throw new ValidationException(['passkey' => $passkeyFailure->getMessage()]);
+            }
+            throw $e;
+        }
     }
 
     /** @return array<string,mixed> */
@@ -148,7 +164,7 @@ final class PasskeyService
             if (!$this->challenges->consume($challenge, $sessionHash, 'register', $user->id())) {
                 throw new ValidationException(['passkey' => 'This passkey request expired or was already used - try again.']);
             }
-            if ($this->credentials->countActiveForUser($user->id()) >= self::MAX_ACTIVE_CREDENTIALS) {
+            if (count($this->credentials->activeForUserForUpdate($user->id())) >= self::MAX_ACTIVE_CREDENTIALS) {
                 throw new ValidationException(['passkey' => 'Remove an old passkey before adding another one.']);
             }
 
@@ -212,10 +228,16 @@ final class PasskeyService
             throw new ValidationException(['passkey' => 'The passkey confirmation expired - try again.']);
         }
 
+        $credentialId = (int) $row['id'];
         $result = $this->verifier->verifyAssertion($payload, $challenge, (string) $row['public_key'], (int) $row['sign_count'], true);
-        $this->credentials->updateOnUse((int) $row['id'], $result->signCount);
+        $this->db->transaction(function () use ($user, $credentialId, $result): void {
+            $this->credentials->updateOnUse($credentialId, $result->signCount);
+            if ($result->counterAnomaly) {
+                $this->audit($user->id(), 'passkey_counter_anomaly', ['credential' => $credentialId]);
+            }
+        });
         if ($result->counterAnomaly) {
-            $this->recordAnomaly($user->id(), (int) $row['id']);
+            $this->telemetry?->emit('passkey.counter_anomaly', ['user' => $user->id(), 'credential' => $credentialId]);
         }
     }
 
@@ -272,11 +294,17 @@ final class PasskeyService
             throw new ValidationException(['passkey' => self::LOGIN_FAILED]);
         }
 
-        $this->credentials->updateOnUse((int) $row['id'], $result->signCount);
+        $credentialId = (int) $row['id'];
+        $this->db->transaction(function () use ($userId, $credentialId, $result): void {
+            $this->credentials->updateOnUse($credentialId, $result->signCount);
+            if ($result->counterAnomaly) {
+                $this->audit($userId, 'passkey_counter_anomaly', ['credential' => $credentialId]);
+            }
+            $this->audit($userId, 'passkey_login', ['credential' => $credentialId, 'uv' => $result->userVerified]);
+        });
         if ($result->counterAnomaly) {
-            $this->recordAnomaly($userId, (int) $row['id']);
+            $this->telemetry?->emit('passkey.counter_anomaly', ['user' => $userId, 'credential' => $credentialId]);
         }
-        $this->audit($userId, 'passkey_login', ['credential' => (int) $row['id'], 'uv' => $result->userVerified]);
         $this->telemetry?->emit('passkey.login', ['user' => $userId]);
 
         return ['user' => $user, 'used_uv' => $result->userVerified];
@@ -289,10 +317,12 @@ final class PasskeyService
         if ($nickname === '' || mb_strlen($nickname) > 120) {
             throw new ValidationException(['nickname' => 'Pick a name between 1 and 120 characters.']);
         }
-        if (!$this->credentials->rename($user->id(), $credentialId, $nickname)) {
-            throw new ValidationException(['passkey' => 'That passkey was not found.']);
-        }
-        $this->audit($user->id(), 'passkey_renamed', ['credential' => $credentialId, 'nickname' => $nickname]);
+        $this->db->transaction(function () use ($user, $credentialId, $nickname): void {
+            if (!$this->credentials->rename($user->id(), $credentialId, $nickname)) {
+                throw new ValidationException(['passkey' => 'That passkey was not found.']);
+            }
+            $this->audit($user->id(), 'passkey_renamed', ['credential' => $credentialId, 'nickname' => $nickname]);
+        });
     }
 
     public function remove(User $user, int $credentialId, ?string $currentPassword, ?string $assertionJson, string $sessionHash): void
@@ -421,12 +451,6 @@ final class PasskeyService
             throw new ValidationException(['passkey' => 'The passkey response could not be read.']);
         }
         return $challenge;
-    }
-
-    private function recordAnomaly(int $userId, int $credentialId): void
-    {
-        $this->audit($userId, 'passkey_counter_anomaly', ['credential' => $credentialId]);
-        $this->telemetry?->emit('passkey.counter_anomaly', ['user' => $userId, 'credential' => $credentialId]);
     }
 
     /** @param array<string,mixed> $context */

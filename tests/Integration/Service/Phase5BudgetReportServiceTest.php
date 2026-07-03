@@ -8,6 +8,7 @@ use App\Repository\SettingRepository;
 use App\Service\BaselineMetricsService;
 use App\Service\Phase5BudgetReportService;
 use App\Service\Phase5FixtureSeeder;
+use App\Support\Base64Url;
 use App\Support\Phase5Budgets;
 use Tests\Support\TestCase;
 
@@ -89,6 +90,25 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertLessThanOrEqual(Phase5Budgets::target('webauthn.ceremony_p95'), $sample['p95']);
         self::assertSame(0, $sample['query_count']);
         self::assertSame(0.0, $sample['error_rate']);
+    }
+
+    public function test_webauthn_ceremony_sampler_counts_invalid_fixture_samples_as_errors(): void
+    {
+        $source = dirname(__DIR__, 3) . '/docs/evidence/phase5/webauthn-budget-fixture.json';
+        $fixture = json_decode((string) file_get_contents($source), true, flags: JSON_THROW_ON_ERROR);
+        $fixture['samples'][0]['payload']['response']['signature'] = Base64Url::encode(random_bytes(64));
+
+        $path = sys_get_temp_dir() . '/webauthn-budget-fixture-' . bin2hex(random_bytes(4)) . '.json';
+        file_put_contents($path, json_encode($fixture, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
+        try {
+            $sample = (new BaselineMetricsService($this->db))->measureWebauthnCeremony($path);
+        } finally {
+            unlink($path);
+        }
+
+        self::assertSame(200, $sample['samples']);
+        self::assertGreaterThan(0.0, $sample['error_rate']);
+        self::assertLessThan(1.0, $sample['error_rate']);
     }
 
     public function test_webauthn_budget_row_is_measured_from_the_public_fixture(): void

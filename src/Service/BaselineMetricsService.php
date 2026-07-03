@@ -220,12 +220,12 @@ final class BaselineMetricsService
      *
      * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
      */
-    public function measureWebauthnCeremony(): array
+    public function measureWebauthnCeremony(?string $fixturePath = null): array
     {
         $rp = new RelyingParty('http://localhost:8000', null, 'testing');
         $verifier = new WebAuthnVerifier($rp);
 
-        $path = dirname(__DIR__, 2) . '/docs/evidence/phase5/webauthn-budget-fixture.json';
+        $path = $fixturePath ?? dirname(__DIR__, 2) . '/docs/evidence/phase5/webauthn-budget-fixture.json';
         $fixture = json_decode((string) file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
         $cose = Base64Url::decode((string) ($fixture['public_key_cose'] ?? ''));
         if ($cose === null || $cose === '') {
@@ -233,6 +233,7 @@ final class BaselineMetricsService
         }
 
         $samples = [];
+        $errors = 0;
         foreach ((array) ($fixture['samples'] ?? []) as $sample) {
             $challenge = Base64Url::decode((string) ($sample['challenge'] ?? ''));
             $payload = $sample['payload'] ?? null;
@@ -240,7 +241,11 @@ final class BaselineMetricsService
                 throw new \RuntimeException('Invalid WebAuthn budget sample.');
             }
             $t0 = hrtime(true);
-            $verifier->verifyAssertion($payload, $challenge, $cose, (int) ($sample['stored_sign_count'] ?? 0), false);
+            try {
+                $verifier->verifyAssertion($payload, $challenge, $cose, (int) ($sample['stored_sign_count'] ?? 0), false);
+            } catch (\Throwable) {
+                $errors++;
+            }
             $samples[] = (hrtime(true) - $t0) / 1_000_000;
         }
 
@@ -264,7 +269,7 @@ final class BaselineMetricsService
             'query_time_ms' => round(array_sum($samples), 4),
             'peak_memory_bytes' => memory_get_peak_usage(true),
             'queue_age' => null,
-            'error_rate' => 0.0,
+            'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
         ];
     }
 

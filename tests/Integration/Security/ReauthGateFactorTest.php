@@ -29,6 +29,14 @@ final class ReauthGateFactorTest extends TestCase
         self::assertSame(ReauthGate::FACTOR_PASSKEY, $gate->requireFactor($user, null, static fn (): bool => true));
     }
 
+    public function test_false_passkey_probe_falls_back_to_password_factor(): void
+    {
+        $gate = new ReauthGate(new PasswordHasher());
+        $user = $this->userEntity($this->makeUser(['password' => 'secret-pass-1']));
+
+        self::assertSame(ReauthGate::FACTOR_PASSWORD, $gate->requireFactor($user, 'secret-pass-1', static fn (): bool => false));
+    }
+
     public function test_no_factor_at_all_throws_on_the_named_field(): void
     {
         $gate = new ReauthGate(new PasswordHasher());

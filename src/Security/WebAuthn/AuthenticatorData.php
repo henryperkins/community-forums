@@ -48,7 +48,7 @@ final class AuthenticatorData
 
             $aaguid = substr($rest, 0, 16);
             $idLen = unpack('n', substr($rest, 16, 2))[1];
-            if ($idLen < 16 || $idLen > 1023 || strlen($rest) < 18 + $idLen) {
+            if ($idLen < 1 || $idLen > 1023 || strlen($rest) < 18 + $idLen) {
                 throw new WebAuthnException('malformed_authenticator_data', 'Credential id length out of range.');
             }
 

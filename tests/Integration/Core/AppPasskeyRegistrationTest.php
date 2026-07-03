@@ -183,6 +183,24 @@ final class AppPasskeyRegistrationTest extends TestCase
         $this->assertStatus(200, $res);
     }
 
+    public function test_invalid_passkey_step_up_probe_falls_back_to_valid_password_factor(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        $challenge = (string) Base64Url::decode($this->mintChallenge()['options']['challenge']);
+        $cred = $this->harness->createCredential();
+        $this->assertStatus(200, $this->post('/settings/security/passkeys', ['credential' => $this->harness->registrationPayload($cred, $challenge)]));
+
+        $stepOptions = json_decode($this->post('/settings/security/passkeys/step-up-challenge', [])->body(), true)['options'];
+        $stepChallenge = (string) Base64Url::decode($stepOptions['challenge']);
+
+        $res = $this->post('/settings/security/passkeys/challenge', [
+            'current_password' => 'password123',
+            'passkey_assertion' => $this->harness->assertionPayload($cred, $stepChallenge, 1, ['tamperSignature' => true]),
+        ]);
+        $this->assertStatus(200, $res);
+    }
+
     /** @return array{0:array<string,mixed>,1:int} */
     private function enroll(string $nickname = 'Key'): array
     {

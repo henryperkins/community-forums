@@ -44,6 +44,13 @@ final class AuthenticatorDataTest extends TestCase
         self::assertFalse($a->userVerified());
     }
 
+    public function test_accepts_non_empty_short_credential_ids(): void
+    {
+        $id = 'x';
+        $a = AuthenticatorData::parse(self::bytes(0x01 | 0x40, 0, $id));
+        self::assertSame($id, $a->credentialId);
+    }
+
     public function test_tolerates_extension_data_when_flagged(): void
     {
         $a = AuthenticatorData::parse(self::bytes(0x01 | 0x80, 7, null, self::COSE_STUB, "\xa1\x63abc\x01"));

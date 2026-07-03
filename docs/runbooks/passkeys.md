@@ -67,7 +67,7 @@ ceremonies hard-refuse a non-localhost `http://` APP_URL.
 - Accounts with TOTP enrolled require user-verified, screen-lock assertions.
 - Usernameless/discoverable sign-in and privileged-MFA enforcement are Gate B.
 - Inc 8 handoff: before disabling an OAuth provider, list sole-method accounts
-  via OAuthIdentityRepository::soleMethodAccounts() (UI arrives with provider
+  via OAuthIdentityRepository::soleMethodAccounts($providerKey) (UI arrives with provider
   registry).
 
 ## Acceptance evidence
