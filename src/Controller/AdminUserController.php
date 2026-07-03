@@ -136,11 +136,19 @@ final class AdminUserController extends Controller
     }
 
     /** @param array<string,string> $params */
+    public function removeAvatar(Request $request, array $params): Response
+    {
+        $this->requireProfileMedia();
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        $this->container->get(UserModerationService::class)->clearAvatar($admin, $id);
+        return $this->redirectWithFlash('/admin/users/' . $id, 'Avatar removed.');
+    }
+
+    /** @param array<string,string> $params */
     public function removeSignature(Request $request, array $params): Response
     {
-        if (!$this->container->get(FeatureFlags::class)->enabled('profile_media')) {
-            throw new NotFoundException('User not found.');
-        }
+        $this->requireProfileMedia();
         $admin = $this->requireAdmin();
         $id = (int) ($params['id'] ?? 0);
         $this->container->get(UserModerationService::class)->clearSignature($admin, $id);
@@ -274,5 +282,12 @@ final class AdminUserController extends Controller
             throw new NotFoundException('User not found.');
         }
         return $subject;
+    }
+
+    private function requireProfileMedia(): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('profile_media')) {
+            throw new NotFoundException('User not found.');
+        }
     }
 }

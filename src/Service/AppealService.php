@@ -88,7 +88,7 @@ final class AppealService
             throw new NotFoundException('Appealable moderation action not found.');
         }
         $action = (string) $log['action'];
-        if (!in_array($action, ['warn', 'suspend', 'ban', 'clear_signature'], true)) {
+        if (!in_array($action, ['warn', 'suspend', 'ban', 'clear_signature', 'clear_avatar'], true)) {
             throw new ValidationException(['reason' => 'That moderation action is not appealable.']);
         }
         $created = strtotime((string) $log['created_at'] . ' UTC') ?: 0;
@@ -215,7 +215,7 @@ final class AppealService
              FROM moderation_log
              WHERE target_type = 'user'
                AND target_id = ?
-               AND action IN ('warn', 'suspend', 'ban', 'clear_signature')
+               AND action IN ('warn', 'suspend', 'ban', 'clear_signature', 'clear_avatar')
                AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY)
              ORDER BY created_at DESC, id DESC
              LIMIT 20",

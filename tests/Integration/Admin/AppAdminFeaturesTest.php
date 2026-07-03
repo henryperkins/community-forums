@@ -29,8 +29,8 @@ final class AppAdminFeaturesTest extends TestCase
         $this->assertStatus(200, $page);
         self::assertStringContainsString('Feature flags', $page->body());
         self::assertStringContainsString('57 declared', $page->body());
-        self::assertStringContainsString('33 default-on', $page->body());
-        self::assertStringContainsString('24 default-dark', $page->body());
+        self::assertStringContainsString('34 default-on', $page->body());
+        self::assertStringContainsString('23 default-dark', $page->body());
         self::assertStringContainsString('<code>server_extensions</code>', $page->body());
         self::assertStringContainsString('Phase 5 Gate B', $page->body());
         self::assertStringContainsString('Effective on', $page->body());

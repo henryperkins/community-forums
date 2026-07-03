@@ -304,6 +304,47 @@ final class AppFeatureFlagTest extends TestCase
         self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'), 'disabling account_lifecycle must not surface a still-dark flag');
     }
 
+    public function test_profile_media_carryover_defaults_on_and_is_operator_reversible(): void
+    {
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($flags->enabled('profile_media'), 'profile_media graduated to default-on');
+        self::assertArrayHasKey('profile_media', $flags->all(), 'profile_media must be a declared flag');
+
+        $admin = $this->makeAdmin(['username' => 'profilemediaadmin']);
+        $member = $this->makeUser(['username' => 'profilemediamember']);
+        $this->actingAs($member);
+
+        $settings = $this->get('/settings/account');
+        $this->assertStatus(200, $settings);
+        self::assertStringContainsString('action="/settings/avatar"', $settings->body());
+
+        $this->actingAs($admin);
+        $record = $this->get('/admin/users/' . (int) $member['id']);
+        $this->assertStatus(200, $record);
+        self::assertStringContainsString('Profile media', $record->body());
+
+        $this->setFlags(['profile_media' => false]);
+
+        $this->actingAs($member);
+        $rolledBackSettings = $this->get('/settings/account');
+        $this->assertStatus(200, $rolledBackSettings);
+        self::assertStringNotContainsString('action="/settings/avatar"', $rolledBackSettings->body());
+        $this->assertStatus(404, $this->post('/settings/avatar/remove'));
+        self::assertNotSame(404, $this->post('/settings/account', [
+            'display_name' => 'Profile Media Member',
+            'signature' => 'still editable',
+        ])->status(), 'core profile editing must stay available when profile_media is rolled back');
+
+        $this->actingAs($admin);
+        $rolledBackRecord = $this->get('/admin/users/' . (int) $member['id']);
+        $this->assertStatus(200, $rolledBackRecord);
+        self::assertStringNotContainsString('Profile media', $rolledBackRecord->body());
+        $this->assertStatus(404, $this->post('/admin/users/' . (int) $member['id'] . '/signature/remove'));
+        $this->assertStatus(404, $this->post('/admin/users/' . (int) $member['id'] . '/avatar/remove'));
+
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'), 'disabling profile_media must not surface a still-dark flag');
+    }
+
     public function test_group_dms_flag_gates_group_creation_and_management(): void
     {
         // group_dms defaults dark; the legacy `dms` flag defaults on. Group DMs

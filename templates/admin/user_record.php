@@ -135,8 +135,19 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
     </section>
 
     <?php if (!empty($profile_media)): ?>
-        <section class="card">
+        <section class="card profile-media-card">
             <h2>Profile media</h2>
+            <?php if (!empty($subject['avatar_path']) && ($subject['avatar_source'] ?? '') === 'upload'): ?>
+                <div class="avatar-row">
+                    <img class="monogram avatar-img monogram-gilt" src="<?= $e((string) $subject['avatar_path']) ?>" alt="" width="64" height="64">
+                    <form method="post" action="/admin/users/<?= $uid ?>/avatar/remove" class="inline-form">
+                        <?= $this->csrfField() ?>
+                        <button class="btn btn-small danger" type="submit">Remove avatar</button>
+                    </form>
+                </div>
+            <?php else: ?>
+                <p class="muted">No uploaded avatar set.</p>
+            <?php endif; ?>
             <?php if (!empty($subject['signature'])): ?>
                 <p class="muted">Current signature: <?= nl2br($e($subject['signature'])) ?></p>
                 <form method="post" action="/admin/users/<?= $uid ?>/signature/remove" class="inline-form">

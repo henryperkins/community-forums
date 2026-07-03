@@ -20,7 +20,7 @@
     <?php endif; ?>
 
     <?php if (!empty($profile_media)): ?>
-        <section class="scribe-panel">
+        <section class="scribe-panel profile-media-panel">
             <span class="scribe-panel-head">Avatar</span>
             <?php if (!empty($old['avatar_path'])): ?>
                 <div class="avatar-row">

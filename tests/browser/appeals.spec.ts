@@ -81,7 +81,10 @@ test('member opens an appeal and staff resolves it through the no-JS queue', asy
   await page.waitForURL(/\/appeals$/);
   await expect(page.locator('.flash')).toContainText('Appeal submitted.');
   // The open appeal now shows in "Your appeals" with an open-status badge.
-  await expect(page.locator('.report-list')).toContainText('open');
+  const yourAppeals = page.locator('section.card', {
+    has: page.getByRole('heading', { name: 'Your appeals' }),
+  });
+  await expect(yourAppeals.locator('.report-list')).toContainText('open');
   await shot(page, info, '44-appeals-member');
 
   // Staff leg: alice (moderator of #general) resolves the post appeal from the
