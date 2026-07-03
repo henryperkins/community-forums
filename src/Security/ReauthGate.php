@@ -13,12 +13,13 @@ use App\Domain\User;
  * "present the factor with the request itself" (window zero), matching the
  * accepted behavior of the call sites this consolidates. A non-zero session
  * window would require session-scoped state and lands with the increment that
- * needs it. Inc 7 adds FACTOR_PASSKEY beside FACTOR_PASSWORD as a step-up
+ * needs it. Inc 7 added FACTOR_PASSKEY beside FACTOR_PASSWORD as a step-up
  * alternative behind this same API.
  */
 final class ReauthGate
 {
     public const FACTOR_PASSWORD = 'password';
+    public const FACTOR_PASSKEY = 'passkey';
 
     public function __construct(private PasswordHasher $hasher)
     {
@@ -41,6 +42,23 @@ final class ReauthGate
         if (!$this->hasher->verify($currentPassword, $actor->passwordHash())) {
             throw new ValidationException([$field => 'Your current password is incorrect.']);
         }
+    }
+
+    public function requireFactor(
+        User $actor,
+        ?string $currentPassword,
+        ?\Closure $passkeyProbe = null,
+        string $field = 'current_password',
+    ): string {
+        if ($passkeyProbe !== null && $passkeyProbe() === true) {
+            return self::FACTOR_PASSKEY;
+        }
+        if ($currentPassword !== null && $currentPassword !== '') {
+            $this->requirePassword($actor, $currentPassword, $field);
+            return self::FACTOR_PASSWORD;
+        }
+
+        throw new ValidationException([$field => 'Confirm this change with your password or a passkey.']);
     }
 
     /** Boolean form for collect-errors flows (AccountService::changePassword). */
