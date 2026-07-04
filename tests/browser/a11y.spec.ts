@@ -478,3 +478,26 @@ test('phase 4 slash combobox has no serious axe violations and is keyboard opera
   await expect(body).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('.composer-slash-menu')).toBeHidden();
 });
+
+test('phase 4 split/merge moderator panel has no serious axe violations', async ({ page }, info) => {
+  // split_merge default-on: the restructure panel renders for alice (board
+  // moderator of #general). Read-only scan — nothing is submitted, so the shared
+  // seed thread is untouched. Scope to `.sm-panel` so an unrelated pre-existing
+  // thread-page issue can't block this feature's gate.
+  await login(page, 'alice@retro.test');
+  await visit(page, '/c/general');
+  await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
+  await page.waitForURL(/\/t\//);
+  await page.getByText('Split or merge topic', { exact: true }).click();
+  await expect(page.locator('.sm-panel')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.sm-panel');
+});
+
+test('phase 4 custom profile fields settings panel has no serious axe violations', async ({ page }, info) => {
+  // custom_profile_fields default-on: the bounded label/value fieldset renders on
+  // /settings/account whenever the flag is on (no seeded values required).
+  await login(page, 'carol@retro.test');
+  await visit(page, '/settings/account');
+  await expect(page.locator('.custom-profile-fields')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.custom-profile-fields');
+});

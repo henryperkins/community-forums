@@ -1157,3 +1157,85 @@ test('admin email delivery: dashboard, suppress/remove, and a test-send', async 
   await expect(page.locator('.flash')).toContainText(/Test email sent/);
   await shot(page, info, '24-admin-email-test-sent');
 });
+
+test('phase 4 split/merge: moderator splits a reply out then merges it back', async ({ page }, info) => {
+  // split_merge graduated to default-on (GA 2026-07-03). Drive the whole
+  // moderator restructure surface end-to-end as no-JS forms: create a throwaway
+  // source topic + reply, split the reply into a new topic, then merge it back.
+  // Everything is created fresh per run (unique title) so the destructive ops
+  // never touch shared seed threads and the serial desktop→mobile re-run over
+  // one DB stays independent. Driven as alice, the board moderator of #general.
+  const suffix = info.project.name.replace(/[^a-z0-9_-]/gi, '').toLowerCase();
+  await login(page, 'alice@retro.test');
+
+  // Fresh source topic (OP) …
+  await openNewTopicComposer(page);
+  const composer = page.locator('form.composer').first();
+  await composer.locator('input[name="title"]').fill(`Split source ${suffix} ${Date.now()}`);
+  await composer.locator('textarea.composer-input').fill('Opening post for the split/merge evidence journey.');
+  await composer.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/t\/\d+-/);
+  const sourceId = page.url().match(/\/t\/(\d+)/)![1];
+
+  // … plus a non-OP reply (only replies are movable by a split).
+  await page.locator('form#reply textarea[name="body"]').fill('A reply that will be split into its own topic.');
+  await page.locator('form#reply button[type="submit"]').click();
+  await expect(
+    page.locator('.post-body', { hasText: 'A reply that will be split into its own topic.' }),
+  ).toBeVisible();
+
+  // Open the collapsed moderator panel and capture both restructure forms.
+  await page.getByText('Split or merge topic', { exact: true }).click();
+  const panel = page.locator('.sm-panel');
+  await expect(panel).toBeVisible();
+  await shot(page, info, '50-split-merge-panel');
+
+  // Split the reply out into a brand-new topic (redirects to it, flash "Thread split.").
+  await panel.locator('form[action$="/split"] input[name="post_ids[]"]').first().check();
+  await panel.locator('form[action$="/split"] input[name="title"]').fill(`Split out ${suffix}`);
+  await panel.locator('form[action$="/split"]').getByRole('button', { name: 'Split replies out' }).click();
+  await expect(page.locator('.flash')).toContainText('Thread split.');
+  const splitId = page.url().match(/\/t\/(\d+)/)![1];
+  expect(splitId).not.toEqual(sourceId);
+
+  // Merge the split-out topic back into the source (both in #general, which
+  // alice moderates) — redirects to the source, flash "Thread merged.".
+  await page.getByText('Split or merge topic', { exact: true }).click();
+  const mergePanel = page.locator('.sm-panel');
+  await expect(mergePanel).toBeVisible();
+  await mergePanel.locator('form[action$="/merge"] input[name="target_thread_id"]').fill(sourceId);
+  await mergePanel.locator('form[action$="/merge"]').getByRole('button', { name: 'Merge topics' }).click();
+  await expect(page.locator('.flash')).toContainText('Thread merged.');
+  await shot(page, info, '51-thread-merged');
+});
+
+test('phase 4 custom profile fields: member self-edit and public display', async ({ page }, info) => {
+  // custom_profile_fields graduated to default-on (GA 2026-07-03). Bounded (3)
+  // member-authored label/value facts editable on /settings/account and shown on
+  // the public profile. Driven as carol (isolated from the profile-media/appeals
+  // fixtures); replaceForUser makes the fill idempotent across the re-run.
+  await login(page, 'carol@retro.test');
+  await visit(page, '/settings/account');
+
+  const fieldsPanel = page.locator('.custom-profile-fields');
+  await expect(fieldsPanel).toBeVisible();
+  await fieldsPanel.locator('input[name="custom_label_1"]').fill('Favourite editor');
+  await fieldsPanel.locator('input[name="custom_value_1"]').fill('Vim');
+  await fieldsPanel.locator('input[name="custom_label_2"]').fill('Timezone');
+  await fieldsPanel.locator('input[name="custom_value_2"]').fill('UTC');
+  await shot(page, info, '52-custom-profile-fields-edit');
+
+  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.waitForURL(/\/settings\/account$/);
+  await expect(page.locator('.flash')).toContainText('Your profile has been updated.');
+
+  // Public profile (Overview tab) renders the saved facts.
+  await visit(page, '/u/carol');
+  const publicFields = page.locator('.profile-fields');
+  await expect(publicFields).toBeVisible();
+  await expect(publicFields).toContainText('Favourite editor');
+  await expect(publicFields).toContainText('Vim');
+  await expect(publicFields).toContainText('Timezone');
+  await expect(publicFields).toContainText('UTC');
+  await shot(page, info, '53-custom-profile-fields-profile');
+});

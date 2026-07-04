@@ -93,7 +93,7 @@
             <?php if (!empty($errors['signature'])): ?><span class="field-error"><?= $e($errors['signature']) ?></span><?php endif; ?>
         </label>
         <?php if (!empty($custom_profile_fields)): ?>
-            <fieldset class="field">
+            <fieldset class="field custom-profile-fields">
                 <legend class="scribe-panel-head">Custom profile fields</legend>
                 <p class="muted">Add up to three public profile facts. Labels are limited to 40 characters; values to 160.</p>
                 <?php for ($i = 1; $i <= 3; $i++): ?>
