@@ -142,6 +142,7 @@ use App\Repository\WebAuthnChallengeRepository;
 use App\Repository\WebAuthnCredentialRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\ClientIdentifier;
 use App\Security\CapabilityResolver;
@@ -1255,6 +1256,18 @@ final class App
             $c->get(CapabilityResolver::class),
             $c->get(Telemetry::class),
         ));
+        $c->bind(AuthorityGate::class, function (Container $c) use ($config): AuthorityGate {
+            if (!$c->get(FeatureFlags::class)->enabled('capabilities')) {
+                return AuthorityGate::legacy();
+            }
+            $enforce = $config->get('capabilities.mode', 'shadow') === 'enforce';
+            return new AuthorityGate(
+                $c->get(CapabilityResolver::class),
+                $enforce ? null : $c->get(ResolverShadow::class),
+                $c->get(Telemetry::class),
+                $enforce ? AuthorityGate::MODE_ENFORCE : AuthorityGate::MODE_SHADOW,
+            );
+        });
         $c->bind(RoleService::class, fn (Container $c) => new RoleService(
             $c->get(Database::class),
             $c->get(RoleRepository::class),
@@ -1593,7 +1606,7 @@ final class App
             $c->get(FirstPartyHookRegistry::class),
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
             $c->get(FeatureFlags::class)->enabled('link_previews') ? $c->get(LinkPreviewService::class) : null,
-            $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(ResolverShadow::class) : null,
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -1606,7 +1619,7 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(UserRepository::class),
             $c->get(FirstPartyHookRegistry::class),
-            $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(ResolverShadow::class) : null,
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),

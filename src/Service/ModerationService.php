@@ -16,6 +16,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 
@@ -40,17 +41,26 @@ final class ModerationService
         private BoardRepository $boards,
         private UserRepository $users,
         private ?FirstPartyHookRegistry $hooks = null,
-        private ?ResolverShadow $shadow = null,
+        private ?AuthorityGate $authority = null,
     ) {
     }
 
-    /** Non-throwing capability check (admin anywhere, or assigned board moderator). */
-    public function canModerate(User $user, int $boardId): bool
+    private function gate(): AuthorityGate
     {
-        $allowed = $this->writeGate->canWrite($user)
-            && ($user->isAdmin() || $this->boardMods->isModerator($boardId, $user->id()));
-        $this->shadow?->compare($allowed, $user, 'core.post.delete_any', ['board_id' => $boardId], 'ModerationService::canModerate');
-        return $allowed;
+        return $this->authority ?? AuthorityGate::legacy();
+    }
+
+    /** Non-throwing capability check (admin anywhere, or assigned board moderator). */
+    public function canModerate(User $user, int $boardId, string $capability = 'core.post.delete_any'): bool
+    {
+        return $this->gate()->allows(
+            fn (): bool => $this->writeGate->canWrite($user)
+                && ($user->isAdmin() || $this->boardMods->isModerator($boardId, $user->id())),
+            $user,
+            $capability,
+            ['board_id' => $boardId],
+            'ModerationService::canModerate',
+        );
     }
 
     /** @return array{thread:array<string,mixed>, pinned:bool} */
@@ -302,10 +312,10 @@ final class ModerationService
         ];
     }
 
-    private function assertCanModerate(User $mod, int $boardId): void
+    private function assertCanModerate(User $mod, int $boardId, string $capability = 'core.post.delete_any'): void
     {
         $this->writeGate->assertCanWrite($mod);
-        if (!$mod->isAdmin() && !$this->boardMods->isModerator($boardId, $mod->id())) {
+        if (!$this->canModerate($mod, $boardId, $capability)) {
             throw new ForbiddenException('You do not moderate this board.');
         }
     }
