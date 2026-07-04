@@ -199,7 +199,7 @@ final class PostController extends Controller
                 && $gate->allows(
                     fn (): bool => $policy->canPost($b, $user, isset($memberBoardIds[(int) $b['id']])),
                     $user,
-                    'core.post.create',
+                    'core.thread.create',
                     ['board_id' => (int) $b['id']],
                     'PostController::postableBoards',
                 )
