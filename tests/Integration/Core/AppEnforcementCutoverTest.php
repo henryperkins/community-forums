@@ -129,6 +129,33 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->assertSeeText($page, 'action="/posts/' . $postId . '/delete"');
     }
 
+    /**
+     * Phase 5 Inc 6 Task 5 — parity pin (spec §8 parity evidence). A plain
+     * member is refused by the post_min_role floor identically whether the
+     * legacy BoardPolicy::canPost() decides directly or AuthorityGate decides
+     * via the resolver under enforce. The legacy status is measured first (not
+     * assumed) so this assertion is pinned to a real, observed value.
+     */
+    public function test_posting_floor_enforced_via_resolver(): void
+    {
+        // A live admin must exist or every request (including this POST) is
+        // bounced to /setup by App::process()'s first-run gate, independent of
+        // the floor check this test targets (see sibling tests above).
+        $this->makeAdmin();
+        $member = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory(), ['post_min_role' => 'moderator']);
+        $this->actingAs($member);
+
+        // Legacy (unenforced) refusal — observed, not assumed.
+        $legacy = $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Nope', 'body' => 'Denied by floor.']);
+        self::assertSame(403, $legacy->status(), 'Observed legacy refusal status — encode this value below if it ever changes.');
+
+        // Same request, same session, now under CAPABILITIES_MODE=enforce.
+        $this->withCapabilitiesEnforced();
+        $response = $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Nope', 'body' => 'Denied by floor.']);
+        self::assertSame(403, $response->status()); // pin: enforced status === legacy status
+    }
+
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
     private function makeCustomRoleWithAssignment(array $adminRow, array $subjectRow, array $keys, int $boardId): int
     {

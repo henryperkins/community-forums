@@ -15,6 +15,7 @@ use App\Repository\SubscriptionRepository;
 use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Service\PreferenceService;
@@ -96,12 +97,23 @@ final class ThreadController extends Controller
         $isMember = $user !== null
             && $this->container->get(BoardMemberRepository::class)->isMember((int) $thread['board_id'], $user->id());
         $locked = (int) $thread['is_locked'] === 1;
+        // Shared for both posting-floor sites below (reply gate + tag member arm)
+        // so a custom role's core.post.create/core.thread.tag grant is honored
+        // under enforce (Phase 5 Inc 6 Task 5) without re-fetching from the container.
+        $policy = $this->container->get(BoardPolicy::class);
+        $gate = $this->container->get(AuthorityGate::class);
         $canReply = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)
-            && $this->container->get(BoardPolicy::class)->canPost(
-                ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+            && $gate->allows(
+                fn (): bool => $policy->canPost(
+                    ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                    $user,
+                    $isMember,
+                ),
                 $user,
-                $isMember,
+                'core.post.create',
+                ['board_id' => (int) $thread['board_id']],
+                'ThreadController::renderThread',
             )
             && !$locked;
 
@@ -253,10 +265,16 @@ final class ThreadController extends Controller
                 // so a custom role granted only core.thread.tag can edit tags
                 // even in a board where it holds no ordinary posting rights.
                 $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.tag')
-                    || $this->container->get(BoardPolicy::class)->canPost(
-                        ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                    || $gate->allows(
+                        fn (): bool => $policy->canPost(
+                            ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                            $user,
+                            $isMember,
+                        ),
                         $user,
-                        $isMember,
+                        'core.thread.tag',
+                        ['board_id' => (int) $thread['board_id']],
+                        'ThreadController::renderThread',
                     );
             }
             if ($canEditTags) {

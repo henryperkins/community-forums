@@ -14,6 +14,7 @@ use App\Repository\BoardMemberRepository;
 use App\Repository\FollowRepository;
 use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Service\FollowService;
@@ -163,15 +164,26 @@ final class TagController extends Controller
         }
         // Posting rights are the single tagging gate (archive-aware via canPost):
         // no role carve-out, so admins/moderators are bound by the same rules.
+        // The capability predicate is the only thing routed through the gate —
+        // assertCanWrite/isMember/archived above stay exactly where they were
+        // (Phase 5 Inc 6 Task 5 [STATE-KEEP]).
         $isMember = $this->container->get(BoardMemberRepository::class)->isMember($boardId, $user->id());
-        $canTag = $this->container->get(BoardPolicy::class)->canPost(
-            [
-                'visibility' => $thread['board_visibility'],
-                'post_min_role' => $thread['board_post_min_role'] ?? 'user',
-                'is_archived' => $thread['board_is_archived'] ?? 0,
-            ],
+        $policy = $this->container->get(BoardPolicy::class);
+        $gate = $this->container->get(AuthorityGate::class);
+        $canTag = $gate->allows(
+            fn (): bool => $policy->canPost(
+                [
+                    'visibility' => $thread['board_visibility'],
+                    'post_min_role' => $thread['board_post_min_role'] ?? 'user',
+                    'is_archived' => $thread['board_is_archived'] ?? 0,
+                ],
+                $user,
+                $isMember,
+            ),
             $user,
-            $isMember,
+            'core.thread.tag',
+            ['board_id' => $boardId],
+            'TagController::updateThread',
         );
         if (!$canTag) {
             throw new ForbiddenException('You cannot tag this thread.');
