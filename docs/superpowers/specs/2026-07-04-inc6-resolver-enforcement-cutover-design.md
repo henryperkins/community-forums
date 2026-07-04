@@ -146,8 +146,11 @@ Per-mode behavior of `allows()`:
 **Wiring (App::buildContainer):** mode = flag off → `legacy`; else
 `config('capabilities.mode') === 'enforce'` → `enforce`; anything else →
 `shadow` (fail-safe). `PostingService` and `ModerationService` swap their
-`?ResolverShadow` constructor param for a required `AuthorityGate`; every other
-cutover site receives the gate the same way.
+`?ResolverShadow` constructor param for an `?AuthorityGate $authority = null`
+that defaults to `AuthorityGate::legacy()` internally — hand-constructed
+service instances in tests (e.g. `TestCase::posting()`) stay valid, and the
+container always injects the real gate; every other cutover site receives the
+gate the same way.
 
 **One deliberate deviation from the "null collaborator when dark" pattern:**
 the gate is always bound (dark = legacy passthrough) so ~30 call sites stay
