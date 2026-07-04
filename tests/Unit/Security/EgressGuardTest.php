@@ -34,6 +34,30 @@ final class EgressGuardTest extends TestCase
         }
     }
 
+    public function test_blocks_ipv6_unspecified_6to4_nat64_and_v4_compatible(): void
+    {
+        // ::            unspecified — connects to loopback on Linux
+        // 2002:7f00:1:: 6to4 embedding 127.0.0.1
+        // 64:ff9b::7f00:1  NAT64 well-known prefix embedding 127.0.0.1
+        // ::7f00:1      deprecated IPv4-compatible ::127.0.0.1
+        foreach (['::', '2002:7f00:1::', '64:ff9b::7f00:1', '::7f00:1'] as $ip) {
+            try {
+                $this->guard([$ip])->validate('https://internal.test/hook');
+                self::fail("expected block for $ip");
+            } catch (EgressBlockedException) {
+                self::assertTrue(true);
+            }
+        }
+    }
+
+    public function test_wildcard_allowlist_entry_does_not_disable_ssrf_protection(): void
+    {
+        // A 0.0.0.0/0 allowlist matches every address; treated literally it would
+        // silently disable SSRF protection. It must be ignored so DENY still bites.
+        $this->expectException(EgressBlockedException::class);
+        $this->guard(['169.254.169.254'], true, ['0.0.0.0/0'])->validate('http://metadata.test/');
+    }
+
     public function test_allowlist_relaxes_scheme_and_port_for_all_allowlisted(): void
     {
         $ip = $this->guard(['127.0.0.1'], false, ['127.0.0.1/32'])->validate('http://localhost:8011/hook');

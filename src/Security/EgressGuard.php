@@ -29,6 +29,9 @@ final class EgressGuard
         '224.0.0.0/4',
         '240.0.0.0/4',
         '::ffff:0:0/96',
+        '::/96',          // deprecated IPv4-compatible IPv6 (incl. ::, ::1, ::127.0.0.1)
+        '2002::/16',      // 6to4 — embeds an arbitrary IPv4, including private/loopback
+        '64:ff9b::/96',   // NAT64 well-known prefix — embeds an IPv4 destination
     ];
 
     /** @var callable(string):array<int,string> */
@@ -43,6 +46,16 @@ final class EgressGuard
         private array $allowedCidrs,
         ?callable $resolver = null,
     ) {
+        // A /0 ("match everything") allowlist entry would silently disable the
+        // DENY tier — e.g. make cloud-metadata reachable. Drop it so only
+        // specific operator-allowlisted CIDRs relax the policy.
+        $this->allowedCidrs = array_values(array_filter(
+            $this->allowedCidrs,
+            static function (string $cidr): bool {
+                $slash = strrpos($cidr, '/');
+                return $slash === false || trim(substr($cidr, $slash + 1)) !== '0';
+            },
+        ));
         $this->resolver = $resolver ?? static function (string $host): array {
             $ips = [];
             $a = @gethostbynamel($host);
