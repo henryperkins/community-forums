@@ -99,6 +99,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Security;
 
+use App\Core\Config;
 use App\Core\ForbiddenException;
 use App\Core\Telemetry;
 use App\Repository\BoardMemberRepository;
@@ -117,15 +118,33 @@ use Tests\Support\TestCase;
 
 final class AuthorityGateTest extends TestCase
 {
-    /** @var list<array{0:string,1:array<string,mixed>}> */
-    private array $events = [];
+    /** @var list<string> */
+    private array $lines = [];
 
     private function telemetry(): Telemetry
     {
-        $this->events = [];
-        return new Telemetry($this->config, function (string $event, array $ctx): void {
-            $this->events[] = [$event, $ctx];
-        });
+        $this->lines = [];
+
+        return new Telemetry(
+            new Config(['telemetry' => ['enabled' => true]]),
+            function (string $line): void {
+                $this->lines[] = $line;
+            },
+        );
+    }
+
+    /** @return list<string> */
+    private function eventNames(): array
+    {
+        $names = [];
+        foreach ($this->lines as $line) {
+            $decoded = json_decode($line, true);
+            if (is_array($decoded) && isset($decoded['event'])) {
+                $names[] = (string) $decoded['event'];
+            }
+        }
+
+        return $names;
     }
 
     private function resolver(): CapabilityResolver
@@ -161,8 +180,7 @@ final class AuthorityGateTest extends TestCase
 
         // Legacy=false vs resolver=true (admin holds delete_any) -> legacy wins, one mismatch event.
         self::assertFalse($gate->allows(fn (): bool => false, $admin, 'core.post.delete_any', ['board_id' => (int) $board['id']], 'test'));
-        $names = array_column($this->events, 0);
-        self::assertContains('resolver.shadow_mismatch', $names);
+        self::assertContains('resolver.shadow_mismatch', $this->eventNames());
     }
 
     public function test_enforce_mode_returns_resolver_decision_and_flags_reverse_mismatch(): void
@@ -179,26 +197,18 @@ final class AuthorityGateTest extends TestCase
 
         // Resolver denies a plain member even when legacy says yes -> enforce wins + reverse mismatch.
         self::assertFalse($gate->allows(fn (): bool => true, $member, 'core.post.delete_any', $target, 'test'));
-        self::assertContains('resolver.enforce_mismatch', array_column($this->events, 0));
-        self::assertContains('authority.enforce_denied', array_column($this->events, 0));
+        self::assertContains('resolver.enforce_mismatch', $this->eventNames());
+        self::assertContains('authority.enforce_denied', $this->eventNames());
     }
 
-    public function test_enforce_mode_fails_closed_when_the_resolver_throws(): void
+    public function test_enforce_mode_fails_closed_when_the_resolver_is_missing(): void
     {
         $telemetry = $this->telemetry();
-        $boom = new class {
-            public function can(): never
-            {
-                throw new \RuntimeException('db gone');
-            }
-        };
-        // Constructing with a broken resolver is awkward through the final class;
-        // instead prove fail-closed through the public seam: enforce mode with an
-        // unknown capability denies (resolver fails dark) even when legacy allows.
-        $gate = new AuthorityGate($this->resolver(), null, $telemetry, AuthorityGate::MODE_ENFORCE);
+        $gate = new AuthorityGate(null, null, $telemetry, AuthorityGate::MODE_ENFORCE);
         $admin = $this->userEntity($this->makeAdmin());
-        self::assertFalse($gate->allows(fn (): bool => true, $admin, 'core.definitely.not.a.key', [], 'test'));
-        unset($boom);
+
+        self::assertFalse($gate->allows(fn (): bool => true, $admin, 'core.post.delete_any', [], 'test'));
+        self::assertContains('authority.enforce_error', $this->eventNames());
     }
 
     public function test_assert_throws_forbidden_with_caller_message_on_deny(): void
@@ -214,7 +224,7 @@ final class AuthorityGateTest extends TestCase
 }
 ```
 
-Note: `makeBoard` requires a category id — `$this->makeBoard($this->makeCategory())` as shown. If `Telemetry`'s constructor requires `telemetry.enabled` config to emit, pass a config that enables it: check `src/Core/Telemetry.php::emit` — it no-ops unless `config('telemetry.enabled')`; build the telemetry with `new Telemetry(new \App\Core\Config(['telemetry' => ['enabled' => true]]), $sink)` instead of `$this->config` if `$this->config` leaves it off.
+Note: `makeBoard` requires a category id — `$this->makeBoard($this->makeCategory())` as shown. `Telemetry`'s sink receives one JSON line, not `(event, context)`, and `emit()` no-ops unless `telemetry.enabled` is true; keep the `Config(['telemetry' => ['enabled' => true]])` + `json_decode` helper above. The missing-resolver test is mandatory because enforce mode must fail closed even if a bad container/test construction gives it no resolver; do not replace it with an unknown-capability case, which only proves a normal resolver deny.
 
 - [ ] **Step 2: Run to verify it fails**
 
@@ -276,7 +286,16 @@ final class AuthorityGate
      */
     public function allows(callable $legacy, ?User $actor, string $capability, array $target, string $site): bool
     {
-        if ($this->mode === self::MODE_ENFORCE && $this->resolver !== null) {
+        if ($this->mode === self::MODE_ENFORCE) {
+            if ($this->resolver === null) {
+                $this->telemetry?->emit('authority.enforce_error', [
+                    'site' => $site,
+                    'capability' => $capability,
+                    'error' => 'missing_resolver',
+                ]);
+                return false; // authorization fails closed
+            }
+
             try {
                 $decision = $this->resolver->can($actor, $capability, $target);
             } catch (\Throwable $e) {
@@ -395,7 +414,7 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->withCapabilitiesEnforced();
 
         $this->actingAs($admin);
-        $response = $this->post('/t/' . $t['thread_id'] . '/lock');
+        $response = $this->post('/mod/t/' . $t['thread_id'] . '/lock');
         $this->assertRedirect($response); // admin still locks under enforcement
     }
 
@@ -408,13 +427,13 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->withCapabilitiesEnforced();
 
         $this->actingAs($member);
-        $response = $this->post('/t/' . $t['thread_id'] . '/lock');
+        $response = $this->post('/mod/t/' . $t['thread_id'] . '/lock');
         $this->assertStatus(403, $response);
     }
 }
 ```
 
-First check the real lock route path: `grep -n "'/t/{id}/lock'\|lock'" src/Core/App.php` and use the exact registered path/params (adjust the POST path above if the route differs, e.g. includes `-{slug}` or a different verb path). Keep the two assertions as-is.
+First check the real lock route path: `grep -n "'/mod/t/{id}/lock'\|lock'" src/Core/App.php` and use the exact registered path/params (adjust the POST path above if the route differs). Keep the two assertions as-is.
 
 - [ ] **Step 2: Add `withCapabilitiesEnforced` to `tests/Support/TestCase.php`**
 
@@ -564,23 +583,25 @@ git commit -m "feat(capabilities): wire AuthorityGate through container, Posting
 ```php
 public function test_memo_serves_repeat_decisions_and_invalidate_clears_it(): void
 {
-    $admin = $this->userEntity($this->makeAdmin());
+    $modRow = $this->makeUser();
+    $mod = $this->userEntity($modRow);
     $board = $this->makeBoard($this->makeCategory());
     $resolver = $this->resolver(); // use the file's existing builder helper
     $target = ['board_id' => (int) $board['id']];
+    (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modRow['id']);
 
-    self::assertTrue($resolver->can($admin, 'core.post.delete_any', $target)->allowed);
+    self::assertTrue($resolver->can($mod, 'core.thread.lock', $target)->allowed);
 
-    // Mutate authority behind the memo's back: demote the admin row directly
-    // (no app path exists until Task 13; a direct write is the point here).
-    $this->db->run("UPDATE users SET role = 'user' WHERE id = ?", [$admin->id()]);
+    // Mutate DB-read authority behind the memo's back. This would be visible to
+    // a fresh resolver call immediately if bundle/decision memoization were not
+    // active within the request.
+    $this->db->run('DELETE FROM board_moderators WHERE board_id = ? AND user_id = ?', [(int) $board['id'], (int) $modRow['id']]);
 
     // Memoized: still allowed within this request scope...
-    self::assertTrue($resolver->can($admin, 'core.post.delete_any', $target)->allowed);
+    self::assertTrue($resolver->can($mod, 'core.thread.lock', $target)->allowed);
     // ...until invalidated.
     $resolver->invalidate();
-    $freshAdmin = $this->userEntity($this->users()->find($admin->id()));
-    self::assertFalse($resolver->can($freshAdmin, 'core.post.delete_any', $target)->allowed);
+    self::assertFalse($resolver->can($mod, 'core.thread.lock', $target)->allowed);
 }
 
 public function test_expiry_denies_despite_warm_memo_tm_pe_03(): void
@@ -606,12 +627,12 @@ public function test_expiry_denies_despite_warm_memo_tm_pe_03(): void
 }
 ```
 
-Adapt the two helper references to the file's actual helpers (read the test file first: it already builds a resolver and creates roles — reuse its exact private helpers; if it has no custom-role helper, create the role via `RoleService::create` exactly as its existing cases do, and remove the stray `run !==` guard line — use `$this->db->run(...)` as shown). The demote in the first test is a direct-DB write precisely because no app path exists yet (Task 13 builds it).
+Adapt the two helper references to the file's actual helpers (read the test file first: it already builds a resolver and creates roles — reuse its exact private helpers; if it has no custom-role helper, create the role via `RoleService::create` exactly as its existing cases do, and remove the stray `run !==` guard line — use `$this->db->run(...)` as shown). The first test must mutate authority that `CapabilityResolver` reads from the DB (`board_moderators`/`role_assignments`), not `users.role` on a stale `User` value object, or it will pass without proving memoization.
 
 - [ ] **Step 2: Run to verify failures**
 
 Run: `vendor/bin/phpunit tests/Integration/Security/CapabilityResolverTest.php`
-Expected: FAIL — `invalidate()` undefined; the memo case fails at "still allowed" (fresh query sees the demote).
+Expected: FAIL — `invalidate()` undefined; after adding only the method without memoization, the memo case fails at "still allowed" (fresh projection sees the removed board-moderator row).
 
 - [ ] **Step 3: Implement the memos**
 
@@ -698,7 +719,7 @@ public function test_lock_only_custom_role_can_lock_but_not_delete_tm_granularit
     $this->withCapabilitiesEnforced();
 
     $this->actingAs($deputy);
-    $this->assertRedirect($this->post('/t/' . $t['thread_id'] . '/lock'));      // granted key works
+    $this->assertRedirect($this->post('/mod/t/' . $t['thread_id'] . '/lock'));  // granted key works
     $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? ORDER BY id LIMIT 1', [$t['thread_id']]);
     $this->assertStatus(403, $this->post('/posts/' . $postId . '/delete'));      // ungranted key refuses
 }
@@ -948,12 +969,26 @@ $this->container->get(AuthorityGate::class)->assert(
 ```
 
 (read the current throw for the exact message; the board data-scoping at ~:32 stays untouched).
-- `MediaController` pending-media view (~:204): same transform on its `isModerator()` view check, site `'MediaController::pending'`.
+- `MediaController` pending-media view (~:204): preserve the existing anti-enumeration 404. Do **not** use `AuthorityGate::assert()` here because that would turn an unauthorized held-media probe into a 403. Instead wrap only the predicate with `allows()` and keep the existing `NotFoundException('Media not found.')` denial:
+
+```php
+if ($pending && !$this->container->get(AuthorityGate::class)->allows(
+    fn (): bool => $user !== null && $user->isModerator(),
+    $user,
+    'core.content.view_pending',
+    [], // site probe: no board target — board-scoped grants correctly do not qualify
+    'MediaController::authorizePendingMedia',
+)) {
+    throw new NotFoundException('Media not found.');
+}
+```
+
+Also extend the existing held-media coverage (`tests/Integration/Core/AppImageUploadTest.php::test_held_post_media_is_never_publicly_cacheable` or a sibling test) so a stranger still receives **404, not 403**, with `capabilities` enabled and `CAPABILITIES_MODE=enforce`.
 - `UserModerationService::assertStaff` (~:284): keep the leading `assertCanWrite` line, replace the role test with `assert(...)` — closure `fn (): bool => $user->isAdmin() || $this->boardMods->boardsFor($user->id()) !== []`, key `'core.user.warn'`, target `[]`, site `'UserModerationService::assertStaff'`, message verbatim from the existing throw. Service gains the `?AuthorityGate` ctor param (Task 2 pattern) + container binding update.
 
 - [ ] **Step 4: Run to verify green**
 
-Run: `vendor/bin/phpunit tests/Integration/Core/AppEnforcementCutoverTest.php && vendor/bin/phpunit --testsuite integration`
+Run: `vendor/bin/phpunit tests/Integration/Core/AppEnforcementCutoverTest.php tests/Integration/Core/AppImageUploadTest.php && vendor/bin/phpunit --testsuite integration`
 Expected: PASS (the warn path parity is covered by existing `UserModerationService` suites staying green).
 
 - [ ] **Step 5: Commit**
@@ -968,56 +1003,86 @@ git commit -m "feat(capabilities): warn + pending-view site probes through the g
 ### Task 8: Authority-granting sites + invalidation calls
 
 **Files:**
+- Modify: `src/Controller/AdminController.php` (four board roster POST actions switch from `requireAdmin()` to `requireUser()` and rely on service authorization)
 - Modify: `src/Service/AdminService.php` (`assignModerator` ~:473, `unassignModerator` ~:503, `addMember` ~:530, `removeMember` ~:554)
 - Modify: `src/Service/RoleService.php` (invalidate after create/update/clone)
 - Test: extend `tests/Integration/Core/AppEnforcementCutoverTest.php`
 
 **Interfaces:**
 - Consumes: `AuthorityGate`, `CapabilityResolver::invalidate()`.
-- Produces: `core.board.assign_moderators` / `core.board.manage_members` enforced; every authority mutation invalidates resolver memos.
+- Produces: `core.board.assign_moderators` / `core.board.manage_members` enforced at the four board-roster POST command endpoints; every authority mutation invalidates resolver memos. The broader admin console GET/edit UI remains admin-only and is still the later admin-console follow-up, but these four POST routes must be live because Task 9 marks their keys grantable.
 
 - [ ] **Step 1: Write the failing test**
 
 ```php
-public function test_board_mod_roster_changes_gate_on_assign_moderators_key(): void
+public function test_board_roster_assign_moderators_key_can_assign_board_moderator_under_enforce(): void
 {
     $admin = $this->makeAdmin();
     $deputy = $this->makeUser();
     $target = $this->makeUser();
     $board = $this->makeBoard($this->makeCategory());
-    // Deputy holds ONLY core.thread.lock at this board — must NOT be able to mint moderators.
+    $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.board.assign_moderators'], (int) $board['id']);
+    $this->withCapabilitiesEnforced();
+
+    $this->actingAs($deputy);
+    $this->assertRedirect($this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => $target['username']]));
+    self::assertTrue((new \App\Repository\BoardModeratorRepository($this->db))->isModerator((int) $board['id'], (int) $target['id']));
+}
+
+public function test_board_roster_manage_members_key_can_add_member_under_enforce(): void
+{
+    $admin = $this->makeAdmin();
+    $deputy = $this->makeUser();
+    $target = $this->makeUser();
+    $board = $this->makeBoard($this->makeCategory(), ['visibility' => 'private']);
+    $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.board.manage_members'], (int) $board['id']);
+    $this->withCapabilitiesEnforced();
+
+    $this->actingAs($deputy);
+    $this->assertRedirect($this->post('/admin/boards/' . $board['id'] . '/members', ['username' => $target['username']]));
+    self::assertTrue((new \App\Repository\BoardMemberRepository($this->db))->isMember((int) $board['id'], (int) $target['id']));
+}
+
+public function test_unrelated_board_role_cannot_change_rosters_under_enforce(): void
+{
+    $admin = $this->makeAdmin();
+    $deputy = $this->makeUser();
+    $target = $this->makeUser();
+    $board = $this->makeBoard($this->makeCategory());
     $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.thread.lock'], (int) $board['id']);
     $this->withCapabilitiesEnforced();
 
     $this->actingAs($deputy);
-    $response = $this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => $target['username']]);
-    self::assertContains($response->status(), [403, 404]); // requireAdmin already 403s — this pins it stays refused under enforce
+    $this->assertStatus(403, $this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => $target['username']]));
 }
 ```
 
-(Find the real roster route: `grep -n 'moderators' src/Core/App.php`. The deputy isn't an admin so `requireAdmin()` refuses at the controller — the pin proves the swap doesn't accidentally open the roster to board-scoped grants through some other path.)
+(Find the real roster routes: `grep -n 'moderators\|members' src/Core/App.php`. These are intentionally positive tests: before the controller/service swap a delegated actor still dies at `AdminController::requireAdmin()`, which is the bug this task removes for the four POST command endpoints.)
 
-- [ ] **Step 2: Run — parity pin**
+- [ ] **Step 2: Run to verify failures**
 
 Run: `vendor/bin/phpunit tests/Integration/Core/AppEnforcementCutoverTest.php --filter roster`
-Expected: PASS pre-swap (pin; keep green after).
+Expected: FAIL — the positive delegated roster tests return 403 before `AdminController` is changed from `requireAdmin()` to service-level capability authorization.
 
 - [ ] **Step 3: Swap + invalidate**
 
-`AdminService`: add `?AuthorityGate $authority = null` + `?CapabilityResolver $resolver = null` ctor params (container passes both; `AuthorityGate` unconditionally, resolver unconditionally — it is always bound). In `assignModerator`/`unassignModerator`, after the existing `assertAdmin` line, add the gate assert with the key and board target — legacy closure `fn (): bool => $admin->isAdmin()`:
+`AdminController`: for only the four board-roster POST actions (`assignModerator`, `unassignModerator`, `addMember`, `removeMember`), replace the leading `$admin = $this->requireAdmin();` with `$actor = $this->requireUser();` and pass `$actor` to `AdminService`. Leave `editBoard()`, the board edit template, and the rest of `/admin` on `requireAdmin()` — this task cuts over the command endpoints, not the whole admin console.
+
+`AdminService`: add `?AuthorityGate $authority = null` + `?CapabilityResolver $resolver = null` ctor params (container passes both; `AuthorityGate` unconditionally, resolver unconditionally — it is always bound). In `assignModerator`/`unassignModerator`, replace the existing `assertAdmin` line with a roster-authority helper that preserves state-first behavior and uses the gate with the key and board target — legacy closure `fn (): bool => $actor->isAdmin()`:
 
 ```php
+$this->writeGate->assertCanWrite($actor);
 $this->gate()->assert(
-    fn (): bool => $admin->isAdmin(),
-    $admin,
+    fn (): bool => $actor->isAdmin(),
+    $actor,
     'core.board.assign_moderators',
     ['board_id' => $boardId],
     'AdminService::assignModerator',
-    'Admin access required.',
+    'Administrator access required.',
 );
 ```
 
-(`unassignModerator` site string accordingly; `addMember`/`removeMember` use `'core.board.manage_members'`.) After each successful mutation (same method, after the transaction), call `$this->resolver?->invalidate();`.
+(`unassignModerator` site string accordingly; `addMember`/`removeMember` use `'core.board.manage_members'`.) Rename the method variables from `$admin` to `$actor` or be very careful not to imply admin-only semantics; audit `actor_id` remains `$actor->id()`. After each successful mutation (same method, after the transaction), call `$this->resolver?->invalidate();`.
 
 `RoleService`: add `?CapabilityResolver $resolver = null` ctor param (container passes it); call `$this->resolver?->invalidate();` at the end of `create`, `update`, and `clone`.
 
@@ -1125,7 +1190,7 @@ namespace App\Security;
  * Keys with LIVE route enforcement after Increment 6. The role editor refuses
  * to grant anything outside this set ("honesty clamp"): a granted capability
  * must actually work. Grows as later increments cut more surface over
- * (admin-console keys are the recorded follow-up). Spec:
+ * (remaining admin-console keys are the recorded follow-up). Spec:
  * docs/superpowers/specs/2026-07-04-inc6-resolver-enforcement-cutover-design.md §3.
  */
 final class EnforcedCapabilities
@@ -1351,6 +1416,28 @@ public function test_grant_requires_reauth_scope_id_and_custom_role(): void
     catch (ValidationException $e) { self::assertArrayHasKey('role', $e->errors); }
 }
 
+public function test_grant_refuses_custom_role_with_unenforced_capability_even_if_row_predates_the_clamp(): void
+{
+    $admin = $this->userEntity($this->makeAdmin());
+    $subject = $this->makeUser();
+    $roles = new RoleRepository($this->db);
+    $roleId = $roles->create([
+        'role_key' => 'custom.legacy_suspender',
+        'name' => 'Legacy Suspender',
+        'description' => null,
+        'created_by' => $admin->id(),
+    ]);
+    $ids = (new CapabilityRepository($this->db))->idsByKeys(['core.user.suspend']);
+    (new RoleCapabilityRepository($this->db))->replaceForRole($roleId, array_values($ids));
+
+    try {
+        $this->service()->grant($admin, 'password123', $roleId, $subject['username'], 'site', null, null, null, null);
+        self::fail('pre-existing custom roles with unenforced keys must not be assignable');
+    } catch (ValidationException $e) {
+        self::assertArrayHasKey('capabilities', $e->errors);
+    }
+}
+
 public function test_grantor_ceiling_blocks_and_audits_out_of_scope_grants_tm_pe_02(): void
 {
     $admin = $this->userEntity($this->makeAdmin());
@@ -1395,7 +1482,7 @@ public function test_revoke_is_fast_and_renew_reauths_and_row_locks_are_determin
 }
 ```
 
-(`moderation_log` action-string: read `ModerationLogRepository::log` callers for the exact field names — adjust the audit assertion column names to the real shape.)
+(`moderation_log` action-string: read `ModerationLogRepository::log` callers for the exact field names — adjust the audit assertion column names to the real shape. The stale-role clamp test needs imports for `CapabilityRepository`, `RoleRepository`, and `RoleCapabilityRepository`; it deliberately bypasses `RoleService` to model a custom role row created before Task 9's `EnforcedCapabilities` clamp.)
 
 - [ ] **Step 2: Run to verify failures**
 
@@ -1423,6 +1510,7 @@ use App\Repository\RoleCapabilityRepository;
 use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
 use App\Security\CapabilityResolver;
+use App\Security\EnforcedCapabilities;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
 
@@ -1469,6 +1557,7 @@ final class RoleAssignmentService
         if ($role === null || ($role['kind'] ?? '') !== 'custom') {
             throw new ValidationException(['role' => 'Only custom roles can be assigned here; built-in authority is managed by the board-moderator and member tools.']);
         }
+        $this->assertRoleOnlyContainsEnforcedCapabilities($roleId);
         $subject = $this->users->findByUsername($username);
         if ($subject === null) {
             throw new ValidationException(['username' => 'No such member.']);
@@ -1610,6 +1699,15 @@ final class RoleAssignmentService
         }
     }
 
+    private function assertRoleOnlyContainsEnforcedCapabilities(int $roleId): void
+    {
+        foreach ($this->roleCapabilities->keysForRole($roleId) as $key) {
+            if (!EnforcedCapabilities::has($key)) {
+                throw new ValidationException(['capabilities' => "'" . $key . "' is not yet enforceable; it can be assigned once its routes cut over to the resolver."]);
+            }
+        }
+    }
+
     /** @param array<string,mixed>|null $before @param array<string,mixed> $after */
     private function logHistory(string $event, int $assignmentId, User $actor, ?array $subject, int $roleId, string $scopeType, ?int $scopeId, ?array $before, array $after): void
     {
@@ -1622,8 +1720,8 @@ final class RoleAssignmentService
             'role_id' => $roleId,
             'scope_type' => $scopeType,
             'scope_id' => $scopeId,
-            'before_json' => $before === null ? null : json_encode($before, JSON_UNESCAPED_SLASHES),
-            'after_json' => json_encode($after, JSON_UNESCAPED_SLASHES),
+            'before' => $before,
+            'after' => $after,
         ]);
     }
 
@@ -1642,7 +1740,7 @@ final class RoleAssignmentService
 }
 ```
 
-Add the `use App\Core\Telemetry;` import. Adjust `RoleAssignmentHistoryRepository::log` and `ModerationLogRepository::log` field shapes to the real signatures (read each; `RoleService`/`ModerationService` are the reference callers). Bind in `App::buildContainer` next to `RoleService`, passing the thirteen collaborators (all already bound; Telemetry unconditionally).
+Add the `use App\Core\Telemetry;` import. Keep `RoleAssignmentHistoryRepository::log` on its real `before`/`after` field shape, and mirror `ModerationLogRepository::log` callers for audit fields. Bind in `App::buildContainer` next to `RoleService`, passing the thirteen collaborators (all already bound; Telemetry unconditionally).
 
 - [ ] **Step 4: Run to verify green**
 
@@ -1668,7 +1766,7 @@ git commit -m "feat(capabilities): RoleAssignmentService grant/revoke/renew with
 
 **Interfaces:**
 - Consumes: Task 11's service API.
-- Produces: `POST /admin/roles/{id}/assignments`, `POST /admin/role-assignments/{id}/revoke`, `POST /admin/role-assignments/{id}/renew` — all requireAdmin + flag-gated (404 dark) + noindex + CSRF; 422 re-renders keep typed input.
+- Produces: `POST /admin/roles/{id}/assignments`, `POST /admin/role-assignments/{id}/revoke`, `POST /admin/role-assignments/{id}/renew` — all requireAdmin + flag-gated (404 dark) + noindex + CSRF; grant and renew validation failures re-render 422 with typed input preserved (revoke is narrowing-only and can use a flash redirect).
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1748,6 +1846,25 @@ final class AppRoleAssignmentTest extends TestCase
         $this->assertStatus(422, $r);
         $this->assertSeeText($r, 'keep me'); // anti-draft-loss: typed input survives
     }
+
+    public function test_renew_validation_error_rerenders_422_preserving_input(): void
+    {
+        ['roleId' => $roleId] = $this->seedRole();
+        $subject = $this->makeUser();
+        $this->post('/admin/roles/' . $roleId . '/assignments', [
+            'username' => $subject['username'], 'scope_type' => 'site', 'scope_id' => '',
+            'starts_at' => '', 'ends_at' => gmdate('Y-m-d H:i', time() + 3600),
+            'reason' => 'pilot', 'current_password' => 'password123',
+        ]);
+        $assignmentId = (int) $this->db->fetchValue('SELECT id FROM role_assignments ORDER BY id DESC LIMIT 1');
+
+        $r = $this->post('/admin/role-assignments/' . $assignmentId . '/renew', [
+            'ends_at' => 'not-a-date', 'current_password' => 'password123',
+        ]);
+
+        $this->assertStatus(422, $r);
+        $this->assertSeeText($r, 'not-a-date');
+    }
 }
 ```
 
@@ -1770,7 +1887,7 @@ $router->post('/admin/role-assignments/{id}/revoke', [AdminRoleController::class
 $router->post('/admin/role-assignments/{id}/renew', [AdminRoleController::class, 'renewAssignment']);
 ```
 
-`AdminRoleController` — three actions (mirror `create`'s shape: requireAdmin → gate → try/catch ValidationException → 422 re-render via `roleEditView` with `assignment_errors`/`assignment_old`):
+`AdminRoleController` — three actions (mirror `create`'s shape: requireAdmin → gate → try/catch ValidationException. Grant and renew re-render via `roleEditView` with 422 and old assignment input; revoke may flash+redirect because its form is narrowing-only and has no required typed state):
 
 ```php
 /** @param array<string,string> $params */
@@ -1823,7 +1940,39 @@ public function revokeAssignment(Request $request, array $params): Response
 }
 ```
 
-(`renewAssignment` mirrors revoke with the `current_password` + `ends_at` fields and success flash `'Assignment renewed.'`; FOR UPDATE stays inside the service only — controllers use the plain `find()` from Task 10.)
+`renewAssignment` mirrors the lookup part of revoke, but **not** the error shape: on `ValidationException`, re-render the role edit page with status 422 so the attempted expiry survives:
+
+```php
+/** @param array<string,string> $params */
+public function renewAssignment(Request $request, array $params): Response
+{
+    $admin = $this->requireAdmin();
+    $this->gate();
+    $id = (int) ($params['id'] ?? 0);
+    $row = $this->container->get(\App\Repository\RoleAssignmentRepository::class)->find($id);
+    if ($row === null) {
+        throw new NotFoundException('Assignment not found.');
+    }
+    $roleId = (int) $row['role_id'];
+
+    try {
+        $this->container->get(RoleAssignmentService::class)->renew(
+            $admin,
+            (string) $request->post('current_password', ''),
+            $id,
+            $request->str('ends_at'),
+        );
+        return $this->noindex($this->redirectWithFlash('/admin/roles/' . $roleId, 'Assignment renewed.'));
+    } catch (ValidationException $e) {
+        return $this->roleEditView($roleId, $e->errors, [
+            'renew_assignment_id' => $id,
+            'renew' => ['ends_at' => $request->str('ends_at')],
+        ], 422);
+    }
+}
+```
+
+(FOR UPDATE stays inside the service only — controllers use the plain `find()` from Task 10. Import `NotFoundException` if the controller does not already have it.)
 
 `roleEditView` additions: pass `'assignments' => $this->container->get(RoleAssignmentService::class)->listForRole($roleId)` plus `'boards' => $this->container->get(\App\Repository\BoardRepository::class)->all()` (read the repo for its list method name) into the view data.
 
@@ -1843,7 +1992,7 @@ public function revokeAssignment(Request $request, array $params): Response
       <?php if ($a['status'] !== 'revoked'): ?>
       <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/revoke"><?= $this->csrfField() ?><button type="submit">Revoke</button></form>
       <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/renew"><?= $this->csrfField() ?>
-        <input type="text" name="ends_at" placeholder="YYYY-MM-DD HH:MM" required>
+        <input type="text" name="ends_at" placeholder="YYYY-MM-DD HH:MM" value="<?= (int) ($old['renew_assignment_id'] ?? 0) === (int) $a['id'] ? $e((string) ($old['renew']['ends_at'] ?? '')) : '' ?>" required>
         <input type="password" name="current_password" placeholder="Your password" required>
         <button type="submit">Renew</button>
       </form>
@@ -1895,7 +2044,7 @@ git commit -m "feat(capabilities): no-JS assignment grant/revoke/renew admin sur
 
 **Interfaces:**
 - Consumes: `LastOwnerGuard::assertNotLastOwnerForUpdate(User $user, string $field)`; `ProtectedOwnerRepository::designateOrReactivate(int, ?int)`.
-- Produces: `POST /admin/users/{id}/role` (flag-INDEPENDENT); `UserRepository::setRole(int, string): void`; `ProtectedOwnerRepository::deactivate(int): bool`; `SessionRepository::revokeAllForUser(int): int`.
+- Produces: `POST /admin/users/{id}/role` (flag-INDEPENDENT); `UserRepository::setRole(int, string): void`; `ProtectedOwnerRepository::deactivate(int): bool`; `SessionRepository::revokeAllForUser(int): void`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1961,6 +2110,13 @@ final class AppChangeRoleTest extends TestCase
         $owners = new \App\Repository\ProtectedOwnerRepository($this->db);
         $owners->designate((int) $owner1['id'], null);
         $owners->designate((int) $owner2['id'], null);
+        (new \App\Repository\SessionRepository($this->db))->create([
+            'id' => hash('sha256', 'target-session-' . $owner2['id']),
+            'user_id' => (int) $owner2['id'],
+            'csrf_secret' => bin2hex(random_bytes(32)),
+            'user_agent' => 'phpunit-target',
+            'expires_at' => gmdate('Y-m-d H:i:s', time() + 86400),
+        ]);
         $this->actingAs($owner1);
 
         $this->assertRedirect($this->post('/admin/users/' . $owner2['id'] . '/role', [
@@ -1968,7 +2124,10 @@ final class AppChangeRoleTest extends TestCase
         ]));
         self::assertSame('user', $this->users()->find((int) $owner2['id'])['role']);
         self::assertFalse($owners->isActiveOwner((int) $owner2['id']));
-        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM sessions WHERE user_id = ?', [(int) $owner2['id']]));
+        self::assertSame(0, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM sessions WHERE user_id = ? AND revoked_at IS NULL',
+            [(int) $owner2['id']],
+        ));
     }
 
     public function test_promote_to_admin_designates_protected_owner(): void
@@ -2017,9 +2176,9 @@ public function deactivate(int $userId): bool
 `SessionRepository`: if a revoke-all method is missing, append:
 
 ```php
-public function revokeAllForUser(int $userId): int
+public function revokeAllForUser(int $userId): void
 {
-    return $this->db->run('DELETE FROM sessions WHERE user_id = ?', [$userId])->rowCount();
+    $this->db->run('UPDATE sessions SET revoked_at = UTC_TIMESTAMP() WHERE user_id = ? AND revoked_at IS NULL', [$userId]);
 }
 ```
 
@@ -2032,8 +2191,11 @@ public function changeRole(User $admin, string $currentPassword, int $userId, st
     if (!$admin->isAdmin()) {
         throw new ForbiddenException('Admin access required.');
     }
+    if ($this->ownerGuard === null || $this->owners === null || $this->sessions === null || $this->reauth === null || $this->resolver === null) {
+        throw new \LogicException('Role-change dependencies are not wired.');
+    }
     $this->writeGate->assertCanWrite($admin);
-    $this->reauth?->requirePassword($admin, $currentPassword);
+    $this->reauth->requirePassword($admin, $currentPassword);
     if (!in_array($newRole, ['user', 'moderator', 'admin'], true)) {
         throw new ValidationException(['role' => 'Unknown role.']);
     }
@@ -2048,15 +2210,15 @@ public function changeRole(User $admin, string $currentPassword, int $userId, st
 
     $this->db->transaction(function () use ($admin, $target, $userId, $row, $newRole): void {
         if ($target->isAdmin() && $newRole !== 'admin') {
-            $this->ownerGuard?->assertNotLastOwnerForUpdate($target, 'role');
-            $this->owners?->deactivate($userId);
+            $this->ownerGuard->assertNotLastOwnerForUpdate($target, 'role');
+            $this->owners->deactivate($userId);
         }
         $this->users->setRole($userId, $newRole);
         if ($newRole === 'admin') {
-            $this->owners?->designateOrReactivate($userId, $admin->id());
+            $this->owners->designateOrReactivate($userId, $admin->id());
         }
-        $this->sessions?->revokeAllForUser($userId);
-        $this->modLog->log([
+        $this->sessions->revokeAllForUser($userId);
+        $this->log->log([
             'actor_id' => $admin->id(),
             'action' => 'change_role',
             'target_type' => 'user',
@@ -2065,11 +2227,11 @@ public function changeRole(User $admin, string $currentPassword, int $userId, st
             'after' => ['role' => $newRole],
         ]);
     });
-    $this->resolver?->invalidate();
+    $this->resolver->invalidate();
 }
 ```
 
-(Match `modLog->log` field names to the service's existing audit calls — read one. `ForbiddenException`/`ValidationException` imports per the file.)
+(The ctor params stay nullable only to keep existing hand-constructed tests compiling, but `changeRole()` must throw before mutating if any required dependency is absent; do not use nullsafe calls in this method. Match `log->log` field names to the service's existing audit calls — read one. `ForbiddenException`/`ValidationException`/`\LogicException` imports per the file.)
 
 Route (beside the other `/admin/users` registrations): `$router->post('/admin/users/{id}/role', [AdminUserController::class, 'changeRole']);`
 
@@ -2149,7 +2311,7 @@ public function test_capability_removed_from_role_denies_all_assignees_tm_pe_08(
     $this->withCapabilitiesEnforced();
 
     $this->actingAs($deputy);
-    $this->assertRedirect($this->post('/t/' . $t['thread_id'] . '/pin'));    // holds the key (pin toggles, no side effects on posting)
+    $this->assertRedirect($this->post('/mod/t/' . $t['thread_id'] . '/pin'));    // holds the key (pin toggles, no side effects on posting)
 
     // Admin edits the role: pin removed, lock kept.
     $this->actingAs($admin);
@@ -2160,13 +2322,13 @@ public function test_capability_removed_from_role_denies_all_assignees_tm_pe_08(
 
     // Next direct request: every assignee is denied the removed key.
     $this->actingAs($deputy);
-    $this->assertStatus(403, $this->post('/t/' . $t['thread_id'] . '/pin'));
+    $this->assertStatus(403, $this->post('/mod/t/' . $t['thread_id'] . '/pin'));
     // The kept key still works — propagation is per-key, not per-role.
-    $this->assertRedirect($this->post('/t/' . $t['thread_id'] . '/lock'));
+    $this->assertRedirect($this->post('/mod/t/' . $t['thread_id'] . '/lock'));
 }
 ```
 
-(Verify the pin/lock route paths via `grep -n "'/t/{id}" src/Core/App.php` and adjust; the LAST pin request must be a clean 403.)
+(Verify the pin/lock route paths via `grep -n "'/mod/t/{id}" src/Core/App.php` and adjust; the LAST pin request must be a clean 403.)
 
 - [ ] **Step 2: Run to verify it fails/passes for the right reason**
 
@@ -2272,7 +2434,7 @@ git commit -m "test(browser): role-assignment no-JS journey + axe evidence (62-6
 
 - [ ] **Step 1: ADR 0016**
 
-Follow the ADR 0012 header/sign-off pattern (read it). Content: Context (Inc 6 cutover; parity + E1 prerequisites met) → Decisions: (1) taxonomy §7 quirk 5 resolved as the tightening, owner-accepted 2026-07-04, test-pinned in `AppEnforcementCutoverTest`; (2) quirk 6 boundary ratified; (3) cutover breadth = board/content surface, admin console recorded follow-up with the EnforcedCapabilities clamp as bridge; (4) projection stays authoritative, no import migration; (5) change-role action built, LastOwnerGuard demote wiring; (6) CAPABILITIES_MODE two-mode posture. Consequences: enforcement behavior deltas (suspended-staff views), rollback levers, the clamp. Owner acceptance line: accepted 2026-07-04 via the interactive design review (this session's AskUserQuestion decisions).
+Follow the ADR 0012 header/sign-off pattern (read it). Content: Context (Inc 6 cutover; parity + E1 prerequisites met) → Decisions: (1) taxonomy §7 quirk 5 resolved as the tightening, owner-accepted 2026-07-04, test-pinned in `AppEnforcementCutoverTest`; (2) quirk 6 boundary ratified; (3) cutover breadth = board/content surface plus the four board-roster POST command endpoints; the remaining admin console is recorded follow-up with the EnforcedCapabilities clamp as bridge; (4) projection stays authoritative, no import migration; (5) change-role action built, LastOwnerGuard demote wiring; (6) CAPABILITIES_MODE two-mode posture. Consequences: enforcement behavior deltas (suspended-staff views), rollback levers, the clamp. Owner acceptance line: accepted 2026-07-04 via the interactive design review (this session's AskUserQuestion decisions).
 
 - [ ] **Step 2: Runbook `docs/runbooks/capabilities.md`**
 
@@ -2298,7 +2460,7 @@ Capture the command/output transcript into `docs/evidence/phase5/capabilities-fa
 
 - `capability-taxonomy.md` §7 #5: append "**Resolved 2026-07-04 (ADR 0016):** the tightening is accepted; under `CAPABILITIES_MODE=enforce` suspended staff are denied `core.content.view_pending`; pinned by `AppEnforcementCutoverTest`." §7 #6: append "**Ratified 2026-07-04 (ADR 0016).**" §8: add the `DirectMessageService` admin override of member DM-off preference as a recorded non-capability bypass. Re-anchor the §4 lines your tasks touched (at minimum `SolvedAnswerService::authorize:195`, `assertStaff:284`, `AntiAbuseService:62`, the ModerationService drift) and bump the doc's pinned commit reference.
 - `requirement-ledger.json`: GA-DOD-10 → `"state": "R4"`, evidence += `tests/Integration/Core/AppEnforcementCutoverTest.php`, `docs/runbooks/capabilities.md`; notes: enforcement landed Inc 6, mode-gated, two divergences resolved via ADR 0016. GA-DOD-11 → `"state": "R4"`, evidence: `src/Service/RoleAssignmentService.php`, `tests/Integration/Service/RoleAssignmentServiceTest.php`, `tests/Integration/Core/AppRoleAssignmentTest.php`, `tests/browser/role-assignments.spec.ts`, `docs/runbooks/capabilities.md`; notes: R5 at staged enablement. GA-DOD-12 → `"state": "R3"`, evidence: `tests/Integration/Core/AppChangeRoleTest.php` (+ keep existing notes, append: demote path wired Inc 6; provider-unlink Inc 8, invitations Inc 9). Run `vendor/bin/phpunit tests/Unit/Core/Phase5EvidenceMapTest.php` → PASS.
-- `PHASE_5_STATUS.md`: replace the sentence `Increment 6 (enforcement cutover) stays blocked until shadow soak.` with `Increment 6 (P5-08/09 enforcement cutover + assignment lifecycle) landed 2026-07-04 deploy-dark: AuthorityGate mode lever (CAPABILITIES_MODE, shadow default), per-action keys across the board/content surface, grant/revoke/renew with grantor ceiling, change-role owner-loss guard, ADR 0016; the shadow soak is a §13.1 enablement step (runbook: docs/runbooks/capabilities.md).` Add an "## Increment 6 landed (2026-07-04)" section following the Inc 4/7 section format: bullets for seam/mode, cutover surface, clamp, assignment lifecycle, change-role, evidence (test counts from Task 14's run, parity re-run numbers, budget lines, browser/a11y counts, upgrade 17/17), and the deferred list (admin-console cutover, expiry sweeper, import). Update the `**Last updated:**` line and the suite numbers in the header.
+- `PHASE_5_STATUS.md`: replace the sentence `Increment 6 (enforcement cutover) stays blocked until shadow soak.` with `Increment 6 (P5-08/09 enforcement cutover + assignment lifecycle) landed 2026-07-04 deploy-dark: AuthorityGate mode lever (CAPABILITIES_MODE, shadow default), per-action keys across the board/content surface plus board-roster POST commands, grant/revoke/renew with grantor ceiling, change-role owner-loss guard, ADR 0016; the shadow soak is a §13.1 enablement step (runbook: docs/runbooks/capabilities.md).` Add an "## Increment 6 landed (2026-07-04)" section following the Inc 4/7 section format: bullets for seam/mode, cutover surface, clamp, assignment lifecycle, change-role, evidence (test counts from Task 14's run, parity re-run numbers, budget lines, browser/a11y counts, upgrade 17/17), and the deferred list (remaining admin-console cutover, expiry sweeper, import). Update the `**Last updated:**` line and the suite numbers in the header.
 - deploy-dark inventory doc: +3 flag-gated routes (assignments), +1 flag-independent admin route (change-role — listed as not-flag-gated), counts reconciled.
 
 - [ ] **Step 5: Final gates + commit**
