@@ -102,9 +102,20 @@ final class AuthController extends Controller
 
         $token = (string) $request->post('mfa_token', '');
         $limiter = $this->container->get(RateLimitService::class);
+        $mfa = $this->container->get(MfaService::class);
+        // Resolve the challenge's account (without consuming it) so the guess
+        // budget is bounded PER ACCOUNT. Otherwise an attacker who already has the
+        // password mints a fresh token per attempt and each token would hand out a
+        // fresh per-token budget — an unbounded, silent 2FA brute-force.
+        $account = $mfa->challengeUser($token);
         try {
-            $limiter->enforceSubject('mfa_login', $request, hash('sha256', $token));
-            $result = $this->container->get(MfaService::class)->completeLoginChallenge($token, (string) $request->post('code', ''));
+            if ($account !== null) {
+                $limiter->enforce('mfa_account', $request, $account);
+            } else {
+                // Unknown/expired token: throttle by client IP so garbage attempts can't be hammered.
+                $limiter->enforceSubject('mfa_login', $request, hash('sha256', $token));
+            }
+            $result = $mfa->completeLoginChallenge($token, (string) $request->post('code', ''));
         } catch (HttpException) {
             return $this->view('auth/mfa', [
                 'token' => $token,
@@ -119,7 +130,9 @@ final class AuthController extends Controller
             ], 422);
         }
 
-        $limiter->clearSubject('mfa_login', $request, hash('sha256', $token));
+        if ($account !== null) {
+            $limiter->clear('mfa_account', $request, $account);
+        }
         $this->session()->login($result['user']);
         return $this->redirect($this->safeNext($result['next']));
     }

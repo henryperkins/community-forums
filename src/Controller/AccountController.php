@@ -14,6 +14,7 @@ use App\Repository\UserProfileFieldRepository;
 use App\Service\AccountLifecycleService;
 use App\Service\AccountService;
 use App\Service\MfaService;
+use App\Service\RateLimitService;
 use App\Service\PasskeyService;
 use App\Service\ProfileMediaService;
 
@@ -204,6 +205,7 @@ final class AccountController extends Controller
     public function updateSecurity(Request $request, array $params): Response
     {
         $user = $this->requireUser();
+        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
         try {
             $this->container->get(AccountService::class)->changePassword($user, $request->allInput());
         } catch (ValidationException $e) {
@@ -218,6 +220,7 @@ final class AccountController extends Controller
     public function startTotpEnrollment(Request $request, array $params): Response
     {
         $user = $this->requireUser();
+        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
         try {
             $setup = $this->container->get(MfaService::class)
                 ->startEnrollment($user, (string) $request->post('current_password', ''));
@@ -232,6 +235,7 @@ final class AccountController extends Controller
     public function confirmTotpEnrollment(Request $request, array $params): Response
     {
         $user = $this->requireUser();
+        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
         try {
             $codes = $this->container->get(MfaService::class)->confirmEnrollment(
                 $user,
@@ -242,6 +246,8 @@ final class AccountController extends Controller
             return $this->securityView($user, ['errors' => $e->errors], 422);
         }
 
+        // Enabling a second factor evicts sessions that never satisfied it.
+        $this->revokeOtherSessionsFor($user);
         return $this->securityView($user, ['new_recovery_codes' => $codes]);
     }
 
@@ -249,6 +255,7 @@ final class AccountController extends Controller
     public function rotateRecoveryCodes(Request $request, array $params): Response
     {
         $user = $this->requireUser();
+        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
         try {
             $codes = $this->container->get(MfaService::class)
                 ->rotateRecoveryCodes($user, (string) $request->post('current_password', ''));
@@ -263,6 +270,7 @@ final class AccountController extends Controller
     public function disableTotp(Request $request, array $params): Response
     {
         $user = $this->requireUser();
+        $this->container->get(RateLimitService::class)->enforce('mfa_settings', $request, $user);
         try {
             $this->container->get(MfaService::class)->disable(
                 $user,
@@ -273,6 +281,8 @@ final class AccountController extends Controller
             return $this->securityView($user, ['errors' => $e->errors], 422);
         }
 
+        // Disabling a second factor evicts other sessions (SESS-1 parity with enable).
+        $this->revokeOtherSessionsFor($user);
         return $this->redirectWithFlash('/settings/security', 'Two-factor authentication has been disabled.');
     }
 

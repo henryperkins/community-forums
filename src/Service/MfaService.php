@@ -99,6 +99,21 @@ final class MfaService
         return $this->mfa->createLoginChallenge($user->id(), $this->safeNext($nextPath), $request->ip(), $request->userAgent());
     }
 
+    /**
+     * Resolve the account behind a still-valid login challenge WITHOUT consuming
+     * it, so the caller can throttle second-factor guesses per account rather than
+     * per challenge token (a fresh token must not buy a fresh guess budget).
+     */
+    public function challengeUser(string $token): ?User
+    {
+        $challenge = $this->mfa->findValidLoginChallenge($token);
+        if ($challenge === null) {
+            return null;
+        }
+        $user = $this->users->findEntity((int) $challenge['user_id']);
+        return $user === null || $user->isBanned() ? null : $user;
+    }
+
     /** @return array{user:User,next:string,method:string} */
     public function completeLoginChallenge(string $token, string $code): array
     {
@@ -113,6 +128,8 @@ final class MfaService
 
         $method = $this->verifySecondFactor($user->id(), $code);
         if ($method === null) {
+            // De-silence failed second factors so brute-force leaves an audit trail.
+            $this->log($user->id(), 'mfa_login_failed', null, ['method' => 'unknown']);
             throw new ValidationException(['code' => 'Enter a valid authenticator or recovery code.']);
         }
         if (!$this->mfa->consumeLoginChallenge((int) $challenge['id'])) {

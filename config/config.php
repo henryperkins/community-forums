@@ -206,6 +206,8 @@ return [
         'composer_suggest' => [120, 60],
         'password_reset' => [5, 3600],
         'mfa_login' => [5, 900],
+        'mfa_account' => [8, 900],   // per-account 2FA-guess ceiling: bounds brute-force across freshly minted challenge tokens/IPs
+
         'passkey_challenge' => [30, 900],
         'passkey_login' => [10, 900],
         'mfa_settings' => [10, 900],
