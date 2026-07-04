@@ -1,8 +1,10 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-07-03 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
+**Date:** 2026-07-04 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
 profile-media graduation reconciled; Phase 5 passkeys row reconciled with
-`PHASE_5_STATUS.md`; custom-emoji graduation reconciled)
+`PHASE_5_STATUS.md`; custom-emoji graduation reconciled; **2026-07-04
+`split_merge` + `custom_profile_fields` graduations reconciled** — both flipped
+default-ON 2026-07-03 and now carry the full acceptance-evidence packages)
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -18,14 +20,17 @@ Runtime source of truth: `src/Core/FeatureFlags.php`.
 
 ## Source Code Audit
 
-Audited 2026-07-03 against `src/Core/FeatureFlags.php`, literal
+Audited 2026-07-04 against `src/Core/FeatureFlags.php`, literal
 `FeatureFlags::enabled('...')` call sites in `src/`, and shared
 `$features[...]` consumers in templates/bootstrapping code.
 
-- `FeatureFlags::DEFAULTS` declares 57 flags: 35 default `true`, 22 default
-  `false`.
-- This deploy-dark inventory has 39 table rows: all 22 current default-dark
-  flags, plus 17 retained graduated flags that are default-ON and
+- `FeatureFlags::DEFAULTS` declares 57 flags: 37 default `true`, 20 default
+  `false`. (`split_merge` and `custom_profile_fields` flipped `false`→`true` on
+  2026-07-03; the admin feature-inventory canary in
+  `tests/Integration/Admin/AppAdminFeaturesTest.php` enforces the `37`/`20`
+  split.)
+- This deploy-dark inventory has 39 table rows: all 20 current default-dark
+  flags, plus 19 retained graduated flags that are default-ON and
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
@@ -72,12 +77,12 @@ Audited 2026-07-03 against `src/Core/FeatureFlags.php`, literal
 | `polls` | One-poll-per-thread no-JS create/vote/close/result flow | **Graduated 2026-06-30 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `25-poll-voted`, `.poll-panel` axe pass, runbook `docs/runbooks/polls.md`. Retained here for traceability. |
 | `custom_emoji` | Operator-managed shortcode assets and optional reactions | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppCustomEmojiGiphyTest` (available-by-default + rollback, Markdown rendering, reaction compatibility), `AppPhase4CarryoverFoundationTest`, browser `48-custom-emoji-admin`/`49-custom-emoji-thread`, `.custom-emoji-panel`/`.post-body`/`.reactions` axe passes, runbook `docs/runbooks/custom_emoji.md`. Retained here for traceability. |
 | `slash_giphy` | Progressive slash insertion and client-side GIPHY picker config | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; **inert until `giphy_public_key` is set**; reversible via `features` override or by clearing the key). Acceptance evidence: `AppCustomEmojiGiphyTest` (incl. operator-rollback re-gate), `AppPhase4CarryoverFoundationTest`, browser `26-slash-menu`/`27-giphy-inserted`, `.composer-slash-menu` axe + keyboard pass, runbook `docs/runbooks/slash_giphy.md`. Retained here for traceability. |
-| `split_merge` | Moderator split/merge routes, redirects, audit, touched-counter repair | Deploy-dark; awaiting browser/runbook evidence and larger repair rehearsal |
+| `split_merge` | Moderator split/merge routes, redirects, audit, touched-counter repair | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override; routes 404 when disabled). Acceptance evidence: `AppThreadSplitMergeTest`, `AppThreadSplitMergeRehearsalTest` (seeded-scale zero-counter-drift; `docs/evidence/split-merge-repair-rehearsal.md`), `AppFeatureFlagTest` (default-on + operator rollback to 404), browser `50-split-merge-panel`/`51-thread-merged`, `.sm-panel` axe pass, runbook `docs/runbooks/split_merge.md`. Retained here for traceability. |
 | `profile_media` | Avatar upload/removal, signature hardening, moderator avatar/signature removal | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppProfileMediaTest` (available-by-default + rollback, self/admin removal, local-media retirement), `AppFeatureFlagTest`, `AppModerationAppealsTest` (`clear_avatar` appealability), browser `46-profile-media-avatar`/`47-profile-media-moderation`, `.profile-media-panel`/`.profile-media-card` axe passes, runbook `docs/runbooks/profile_media.md`. Retained here for traceability. |
 | `board_folders` | Private personal board folders | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `bookmark_folders` | Private folders for starred/bookmarked threads | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `saved_feeds` | Private saved feed filters and digest-composition groundwork | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
-| `custom_profile_fields` | Bounded extra public profile fields | Deploy-dark; awaiting browser/a11y evidence and profile/privacy copy review |
+| `custom_profile_fields` | Bounded extra public profile fields | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override; the `/settings/account` panel + public *Profile details* section render-gate on the flag). Acceptance evidence: `AppBoardFoldersSavedFeedsTest` (public-profile render + bounded 422), `AppFeatureFlagTest` (default-on + operator rollback hides the panel while core editing survives), browser `52-custom-profile-fields-edit`/`53-custom-profile-fields-profile`, `.custom-profile-fields` axe pass, runbook `docs/runbooks/custom_profile_fields.md`, privacy/copy review `docs/evidence/custom-profile-fields-privacy-review.md`. Retained here for traceability. |
 | `account_lifecycle` | Export, deactivate/reactivate, 30-day deletion request/cancel, purge/anonymization | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppAccountLifecycleTest`, `AppFeatureFlagTest` (default-on + operator rollback), browser `35-account-lifecycle`/`36-account-deletion-scheduled` (no-JS member journey), `/settings/account/lifecycle` axe pass, runbook `docs/runbooks/account_lifecycle.md`. Retained here for traceability. |
 | `automated_context` | Since-last-read context and suggested related topics | Deploy-dark; awaiting browser/no-JS evidence, replay/disable runbook, worker proof, and stale-link policy |
 
@@ -216,22 +221,39 @@ still listed as "Need: runbook" do not yet.
      `46-profile-media-avatar` + `47-profile-media-moderation`; scoped axe scans
      for `.profile-media-panel` and `.profile-media-card`; operator runbook
      `docs/runbooks/profile_media.md`.
-9. **`custom_profile_fields`** — bounded extra public profile fields
-   (migration `0062`).
-   - Have: focused coverage in `AppBoardFoldersSavedFeedsTest` (the `0062`
-     slice).
-   - Need: browser/a11y evidence + the profile/privacy copy review — the first
-     entry blocked on a product-owner step rather than engineering.
+9. **`custom_profile_fields`** — ✓ **Graduated 2026-07-03 (default-ON).** Up to
+   three member-authored `label`/`value` profile facts (migration `0062`),
+   editable on `/settings/account` and rendered on the public profile.
+   - Evidence completed: `AppBoardFoldersSavedFeedsTest` (public-profile render,
+     XSS escaping, and the bounded-`422` slice), `AppFeatureFlagTest`
+     (`test_custom_profile_fields_is_available_by_default_and_can_be_disabled` —
+     default-on rendering plus operator rollback hiding the panel while core
+     profile editing survives), and the admin feature-inventory count canary in
+     `AppAdminFeaturesTest`; desktop+mobile browser captures
+     `52-custom-profile-fields-edit`/`53-custom-profile-fields-profile` driven by
+     `tests/browser/gate-a.spec.ts`; a `.custom-profile-fields` scoped axe pass in
+     `tests/browser/a11y.spec.ts`; operator runbook
+     `docs/runbooks/custom_profile_fields.md`; and the profile/privacy copy review
+     `docs/evidence/custom-profile-fields-privacy-review.md` (the product step this
+     entry was previously blocked on).
 
 ### Tier 4 — require operational rehearsals beyond Playwright
 
-10. **`split_merge`** — moderator thread split/merge over the existing
-    thread-operation/redirect schema, with audit and touched thread/board
-    counters maintained inside the transaction.
-    - Have: `AppThreadSplitMergeTest`; in-transaction counter maintenance landed
-      in the 2026-06-30 slice.
-    - Need: browser + runbook evidence + the larger seeded-scale repair
-      rehearsal.
+10. **`split_merge`** — ✓ **Graduated 2026-07-03 (default-ON).** Moderator thread
+    split/merge over the existing thread-operation/redirect schema, with audit and
+    touched thread/board counters maintained inside the transaction.
+    - Evidence completed: `AppThreadSplitMergeTest`; the seeded-scale
+      zero-counter-drift `AppThreadSplitMergeRehearsalTest`
+      (`docs/evidence/split-merge-repair-rehearsal.md`) — the "larger seeded-scale
+      repair rehearsal" this entry previously listed as outstanding;
+      `AppFeatureFlagTest` (default-on plus operator rollback re-gating both
+      `/mod/t/{id}/split` and `/merge` routes to 404), and the admin
+      feature-inventory count canary in `AppAdminFeaturesTest`; desktop+mobile
+      browser captures `50-split-merge-panel`/`51-thread-merged` (create topic +
+      reply → split the reply out → merge it back) driven by
+      `tests/browser/gate-a.spec.ts`; a `.sm-panel` scoped axe pass in
+      `tests/browser/a11y.spec.ts`; operator runbook
+      `docs/runbooks/split_merge.md`.
 11. **`expanded_files`** — PDF/text-family uploads with content sniffing,
     scan-pending default, quarantine helpers, stale-scan cleanup, and
     download-only `nosniff` delivery.
@@ -395,9 +417,28 @@ as of 2026-07-03.
   `docs/runbooks/custom_emoji.md`. It is retained here for traceability and
   remains reversible via the `features` override; disabling the flag stops new
   catalogue mutations and shortcode rendering while preserving existing rows.
+- `split_merge` graduated out of deploy-dark on 2026-07-03: its `FeatureFlags`
+  default is now `true`. Acceptance completed the browser + runbook + seeded-scale
+  repair-rehearsal items its readiness entry had listed as outstanding — the
+  `AppThreadSplitMergeRehearsalTest` zero-counter-drift rehearsal
+  (`docs/evidence/split-merge-repair-rehearsal.md`), the desktop/mobile browser
+  journey (`50-split-merge-panel` / `51-thread-merged`, driven by
+  `tests/browser/gate-a.spec.ts`), a `.sm-panel` axe pass, and the operator
+  runbook `docs/runbooks/split_merge.md`. It is retained here for traceability and
+  remains reversible via the `features` override; disabling the flag re-gates both
+  restructure routes to 404 but never reverses a split or merge already performed.
+- `custom_profile_fields` graduated out of deploy-dark on 2026-07-03: its
+  `FeatureFlags` default is now `true`. Acceptance completed the browser/a11y
+  evidence and the profile/privacy copy review its readiness entry was blocked on
+  — the desktop/mobile captures (`52-custom-profile-fields-edit` /
+  `53-custom-profile-fields-profile`, driven by `tests/browser/gate-a.spec.ts`),
+  a `.custom-profile-fields` axe pass, the operator runbook
+  `docs/runbooks/custom_profile_fields.md`, and the privacy review
+  `docs/evidence/custom-profile-fields-privacy-review.md`. It is retained here for
+  traceability and remains reversible via the `features` override; disabling the
+  flag hides the editor and the public *Profile details* section while preserving
+  stored `user_profile_fields` rows.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
   decision. `group_dms` and `community_memory` additionally require an
-  intentional-enablement decision on top of their evidence packages, and
-  `custom_profile_fields` is blocked on a profile/privacy copy review rather
-  than engineering work.
+  intentional-enablement decision on top of their evidence packages.
