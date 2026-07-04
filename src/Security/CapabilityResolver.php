@@ -19,6 +19,13 @@ use App\Service\LegacyAuthorityProjection;
  */
 final class CapabilityResolver
 {
+    /** @var array<string,CapabilityDecision> */
+    private array $decisionMemo = [];
+    /** @var array<string,array{grants:list<array<string,mixed>>,site_rank:int}> */
+    private array $bundleMemo = [];
+    /** @var array<int,?array<string,mixed>> */
+    private array $boardMemo = [];
+
     public function __construct(
         private RoleCapabilityRepository $roleCapabilities,
         private RoleAssignmentRepository $assignments,
@@ -34,31 +41,53 @@ final class CapabilityResolver
     /** @param array{board_id?:int,owner_id?:int,user_id?:int,category_id?:int} $target */
     public function can(?User $actor, string $capability, array $target = [], ?\DateTimeImmutable $at = null): CapabilityDecision
     {
+        $memoKey = implode('|', [
+            $capability,
+            $actor?->id() ?? 'guest',
+            $target['board_id'] ?? '',
+            $target['owner_id'] ?? '',
+            $target['user_id'] ?? '',
+            $target['category_id'] ?? '',
+            $at?->format('YmdHi') ?? 'now',
+        ]);
+        if (isset($this->decisionMemo[$memoKey])) {
+            return $this->decisionMemo[$memoKey];
+        }
+
         $meta = CapabilityCatalog::all()[$capability] ?? null;
         if ($meta === null) {
-            return CapabilityDecision::deny($capability, 'unknown_capability', 'Unknown capability keys fail dark.');
+            $decision = CapabilityDecision::deny($capability, 'unknown_capability', 'Unknown capability keys fail dark.');
+            return $this->decisionMemo[$memoKey] = $decision;
         }
 
         $at ??= new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
         $actorCanWrite = $actor !== null && $this->writeGate->canWrite($actor);
         $isActiveOwner = $meta['protected'] && $actor !== null && $this->owners->isActiveOwner($actor->id());
 
-        $bundle = $this->projection->bundleFor($actor);
-        $grants = $bundle['grants'];
-        if ($actor !== null) {
-            foreach ($this->assignments->rowsForUser($actor->id()) as $row) {
-                $grants[] = [
-                    'kind' => 'role',
-                    'role_key' => (string) $row['role_key'],
-                    'capability_key' => null,
-                    'scope_type' => (string) $row['scope_type'],
-                    'scope_id' => $row['scope_id'] === null ? null : (int) $row['scope_id'],
-                    'starts_at' => $row['starts_at'],
-                    'ends_at' => $row['ends_at'],
-                    'source' => 'assignment',
-                ];
+        $actorKey = $actor !== null ? 'u' . $actor->id() : 'guest';
+        if (isset($this->bundleMemo[$actorKey])) {
+            $bundle = $this->bundleMemo[$actorKey];
+        } else {
+            $bundle = $this->projection->bundleFor($actor);
+            $grants = $bundle['grants'];
+            if ($actor !== null) {
+                foreach ($this->assignments->rowsForUser($actor->id()) as $row) {
+                    $grants[] = [
+                        'kind' => 'role',
+                        'role_key' => (string) $row['role_key'],
+                        'capability_key' => null,
+                        'scope_type' => (string) $row['scope_type'],
+                        'scope_id' => $row['scope_id'] === null ? null : (int) $row['scope_id'],
+                        'starts_at' => $row['starts_at'],
+                        'ends_at' => $row['ends_at'],
+                        'source' => 'assignment',
+                    ];
+                }
             }
+            $bundle = ['grants' => $grants, 'site_rank' => $bundle['site_rank']];
+            $this->bundleMemo[$actorKey] = $bundle;
         }
+        $grants = $bundle['grants'];
 
         $ctx = [
             'board' => null,
@@ -71,7 +100,12 @@ final class CapabilityResolver
 
         $boardId = (int) ($target['board_id'] ?? 0);
         if ($boardId > 0) {
-            $board = $this->boards->find($boardId);
+            if (array_key_exists($boardId, $this->boardMemo)) {
+                $board = $this->boardMemo[$boardId];
+            } else {
+                $board = $this->boards->find($boardId);
+                $this->boardMemo[$boardId] = $board;
+            }
             if ($board !== null) {
                 $isMember = $actor !== null && $this->members->isMember($boardId, $actor->id());
                 $ctx['board'] = $board;
@@ -81,7 +115,7 @@ final class CapabilityResolver
             }
         }
 
-        return CapabilityRules::decide(
+        $decision = CapabilityRules::decide(
             $capability,
             $meta,
             $actor,
@@ -93,5 +127,19 @@ final class CapabilityResolver
             $ctx,
             $at,
         );
+
+        return $this->decisionMemo[$memoKey] = $decision;
+    }
+
+    /**
+     * Clears all per-request memos. Callers (grant/revoke/role-edit/change-role)
+     * must invoke this after any authority mutation so it is observed within the
+     * same request; between requests the resolver is a fresh instance.
+     */
+    public function invalidate(): void
+    {
+        $this->decisionMemo = [];
+        $this->bundleMemo = [];
+        $this->boardMemo = [];
     }
 }
