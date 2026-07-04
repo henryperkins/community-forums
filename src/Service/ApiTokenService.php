@@ -12,6 +12,7 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\ApiTokenRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\UserRepository;
 use App\Security\ApiPrincipal;
 use App\Security\ApiScopes;
 use App\Security\ReauthGate;
@@ -34,6 +35,7 @@ final class ApiTokenService
         private ReauthGate $reauth,
         private WriteGate $writeGate,
         private ?PackageCredentialAuthGuard $packageAuthGuard = null,
+        private ?UserRepository $users = null,
     ) {
     }
 
@@ -117,6 +119,20 @@ final class ApiTokenService
         // package tokens must not touch last_used_at.
         if ($this->packageAuthGuard !== null && !$this->packageAuthGuard->allowsApiToken((int) $row['id'])) {
             return null;
+        }
+        // State beats role: a token dies with its owner's ability to act. Suspended
+        // owners may still read (this surface is read-only); banned/deactivated/
+        // deleted owners cannot authenticate at all. A denied token is not touched.
+        if ($this->users !== null) {
+            $owner = $this->users->findEntity((int) $row['created_by']);
+            if ($owner === null
+                || $owner->isBanned()
+                || $owner->isDeactivated()
+                || $owner->isPendingDeletion()
+                || $owner->status() === 'deleted'
+            ) {
+                return null;
+            }
         }
         $this->tokens->touchLastUsed((int) $row['id']);
         $scopes = json_decode((string) $row['scopes'], true);

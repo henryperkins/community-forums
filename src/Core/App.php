@@ -804,6 +804,7 @@ final class App
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
             $c->get(PackageCredentialAuthGuard::class),
+            $c->get(UserRepository::class),
         ));
         $c->bind(ServiceSecretRepository::class, fn (Container $c) => new ServiceSecretRepository($c->get(Database::class)));
         $c->bind(SecretVault::class, fn (Container $c) => new SecretVault(

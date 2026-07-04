@@ -38,6 +38,33 @@ final class ApiReadEndpointsTest extends TestCase
         return $this->requestWithServer('GET', $path, [], $query, $server);
     }
 
+    public function test_token_follows_owner_account_state(): void
+    {
+        (new SettingRepository($this->db))->set('features', ['api_tokens' => true]);
+        $svc = new ApiTokenService(
+            $this->db, new ApiTokenRepository($this->db), new ModerationLogRepository($this->db),
+            new FeatureFlags(new SettingRepository($this->db)), $this->config,
+            new ReauthGate(new PasswordHasher()), new WriteGate(),
+        );
+        $adminRow = $this->makeAdmin(['password' => 'password123']);
+        $token = $svc->mint($this->userEntity($adminRow), 'password123', 'ci', ['read:boards'], null)['token'];
+        $id = (int) $adminRow['id'];
+
+        self::assertSame(200, $this->apiGet('/api/v1/me', $token)->status());
+
+        // Suspended owner may still read (spec: "suspended can read").
+        $this->db->run("UPDATE users SET status = 'suspended' WHERE id = ?", [$id]);
+        self::assertSame(200, $this->apiGet('/api/v1/me', $token)->status(), 'a suspended owner may still read');
+
+        // Banned owner: the token must stop authenticating (state beats role).
+        $this->db->run("UPDATE users SET status = 'banned' WHERE id = ?", [$id]);
+        self::assertSame(401, $this->apiGet('/api/v1/me', $token)->status(), 'a banned owner kills the token');
+
+        // Deactivated owner is likewise dead.
+        $this->db->run("UPDATE users SET status = 'deactivated' WHERE id = ?", [$id]);
+        self::assertSame(401, $this->apiGet('/api/v1/me', $token)->status(), 'a deactivated owner kills the token');
+    }
+
     public function test_me_requires_a_valid_token(): void
     {
         $token = $this->mintToken(['read:boards']); // /me ignores scopes, but mint needs >= 1
