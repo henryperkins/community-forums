@@ -1,16 +1,60 @@
 # Phase 5 Status
 
 **Status:** **Gate A prerequisite work in progress - Milestone 0 decisions accepted for the release train, foundation schema landed, migration ledger reconciled, TOTP/recovery implemented before passkey enforcement, all four B2 sub-projects (service-secret registry, read-only API tokens, webhook delivery, first-party hook producers) landed deploy-dark, and the Foundation increment (F1-F11) is COMPLETE.** Increment 1 (P5-08 resolver shadow), Increment 2 (P5-01 registry protocol + package identity), Increment 3 (P5-02 package install/manifest/lifecycle), and Increment 4 (P5-03 declarative theme packages) landed 2026-07-02 behind dark flags. Increment 7 (P5-11 passkeys) landed 2026-07-03 behind the dark `passkeys` flag — enrollment/sign-in/step-up/recovery with CDP browser evidence; GA-DOD-13 at R4; SLICE-TOTP retrofit paid. Increment 5 (P5-04 integration runtime + P5-07-A security-response console) landed 2026-07-03 behind the dark `package_registry` flag — install-scoped settings, secret storage, read-only API tokens, package-owned webhook delivery, publisher trust/key lifecycle, exact-digest review, advisories, and the flag-independent `package_execution_disabled` brake; GA-DOD-08 at R4, GA-DOD-09 at R3, and the four B2 slices (SLICE-API-TOKENS/WEBHOOKS/SERVICE-SECRETS/FIRST-PARTY-HOOKS) paid up to R4 with the SP0 adversarial suites. Inc 4 remains deploy-dark: only reviewed declarative theme packages can affect external CSS, no remote code executes, and integrations remain Inc 5. Increment 6 (enforcement cutover) stays blocked until shadow soak. Provider, invitation, sandbox, governance, service-principal, and verified-link behavior remains gated until each workstream has release evidence. The WYSIWYG composer stream that shipped alongside Inc 4 (PR #33) graduated on 2026-07-02: `wysiwyg_composer` is now default-ON (`docs/runbooks/wysiwyg_composer.md`); the gate-a browser-evidence seed pins the textarea baseline, and `wysiwyg-composer.spec.ts` proves the GA default with no override.
-**Last updated:** 2026-07-03
-**Branch:** `main`
+**Last updated:** 2026-07-04
+**Branch:** `main` (review hardening on `phase5-review-hardening`, unmerged — see follow-ups below)
 **Suite:** Prior Inc 4 closeout gates were green on 2026-07-02. `vendor/bin/phpunit tests/Unit/Core/ThreatModelIndexTest.php tests/Unit/Core/Phase5EvidenceMapTest.php` -> **7 tests / 33 assertions**. `vendor/bin/phpunit tests/Integration/Core/AppThemePackageTest.php` -> **12 tests / 91 assertions**. Post-fix focused Phase 5/theme group -> **27 tests / 225 assertions**. `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions**. `vendor/bin/phpunit --no-progress` -> **1268 tests / 6619 assertions** on two consecutive reused-schema runs. Increment 7 focused gates through Task 19 (2026-07-03): passkey PHP regression set (`Phase5BudgetReportServiceTest`, `WebAuthnPolicyTest`, and the three `AppPasskey*` suites) -> **45 tests / 326 assertions**; `ThreatModelIndexTest` + `Phase5EvidenceMapTest` -> **7 tests / 33 assertions**; `tests/browser/passkeys.spec.ts` -> **4 passed** across desktop + mobile. `APP_ENV=testing php bin/console verify:phase5-budgets` -> **registry.signature_verify_p95 0.548 ms MEASURED (PASS); package.install_update_p95 46.1962 ms MEASURED (PASS); theme.build_apply_p95 8.5253 ms MEASURED (PASS); resolver.p95 3.7825 ms MEASURED (PASS); webauthn.ceremony_p95 2.1703 ms MEASURED (PASS); registry.snapshot_freshness CONFIG; registry.fetch_p95 staged-enablement pending**. Task 20 closeout (2026-07-03) is green: `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1384 tests / 7225 assertions**, and `vendor/bin/phpunit --no-progress` -> **1384 tests / 7225 assertions** (reused-schema); `cd tests/browser && npm run evidence` -> **57 passed / 1 skipped**, `npm run a11y` -> **18 passed**, `npx playwright test passkeys.spec.ts totp.spec.ts` -> **6 passed** across desktop + mobile; `APP_ENV=testing php bin/console verify:phase5-budgets` -> **webauthn.ceremony_p95 2.2343 ms MEASURED (PASS)** against the 2000 ms D11 target (a re-run under concurrent test load transiently flagged the unrelated `resolver.p95` at 6.60 ms, then MEASURED (PASS) at 4.50 ms idle — measurement noise; the resolver is untouched by this branch); `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** (no new migration in Inc 7). Regenerated screenshots and the timing-only budget report were restored (not committed) per the deploy-dark evidence policy. Prior Inc 4 gate: `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0072_phase5_theme_packages`. `DB_DATABASE=${DB_TEST_DATABASE:-retroboards_test} php bin/console worker:packages` -> **checked=0 quarantined=0 disabled=0 purged=0 updates=0 skipped=1** while dark. `tests/backup/rehearse.sh` default container mode could not run because Docker is unavailable; documented host mode with `retroboards_test` -> `retroboards_e2e` passed: **109 tables / 290 rows / 179986-byte backup restored byte-for-byte and booted**. Browser evidence from Inc 4: `npm run evidence` -> **53 passed / 1 skipped** and `npm run a11y` -> **14 passed** across desktop + mobile. Increment 5 closeout (2026-07-03): three closeout guards (`ThreatModelIndexTest` + `Phase5EvidenceMapTest` + `MigrationLedgerTest`) -> **12 tests / 53 assertions**; `AppFeatureFlagTest` -> **28 tests / 263 assertions** (every Inc 5 route 404s while `package_registry` is dark); `vendor/bin/phpunit --no-progress` -> **1558 tests / 7946 assertions** on two consecutive runs (identical); `cd tests/browser && npm run evidence:integrations` -> **16 passed** (integration settings/credential reveal, API tokens, webhooks, security console) and `npm run a11y` -> **22 passed / 2 skipped** across desktop + mobile; security-console screenshots captured at `docs/evidence/browser/{desktop,mobile}/60-package-security-console.png` and `61-package-publisher-detail.png`. **Inc 5 closeout-readiness follow-ups (2026-07-03, branch `inc5-closeout-followups`, unmerged):** a 35-agent adversarial audit (`docs/evidence/phase5/inc5-closeout-readiness-audit.md`) confirmed 0 blockers and drove fixes for one content-boundary gap + the actionable minors — anonymous authorship is now masked in every first-party domain-event payload (`WebhookEvents::maskAnonymousAuthor`), `moderation.auto_action` only fires for public boards, credential provisioning fails closed with a 422 (not a 500) when `api_tokens` is dark, the integration settings 422 preserves typed edits, and SecretVault store/rotate-blocked-vs-reveal/revoke/prune/usableSecrets-work asymmetry is now regression-pinned. `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1573 tests / 8002 assertions** (1559 baseline + 14 new). `APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade --force` -> **17/17 checks passed** through migration `0073_phase5_package_integrations` (the previously-unrecorded Inc 5 migration rehearsal). Five hardening nits (WriteGate on suspend/export, brake-predicate DRY, GCM AAD, inert crypto-agility columns, obfuscated-IP egress corpus) are recorded as deferred in the audit doc.
+
+## Phase 5 review follow-ups (2026-07-04, branch `phase5-review-hardening`, unmerged)
+
+A comprehensive Phase 5 review (9 adversarial subagents across the security-critical
+surfaces, plus independent verification of the crown-jewel code and the full suite)
+found **no Critical and no live-High** defects: the WebAuthn verifier, Ed25519 trust
+chain, AES-256-GCM vault, SSRF resolve-then-pin, declarative theme sandbox, deploy-dark
+discipline, and migrations `0049`–`0073` are all correct and fail-closed, and Gate A is
+correctly **not** claimed done. The review's actionable findings are fixed here (TDD,
+red→green); the full suite is **1585 tests / 8070 assertions** green (1573 baseline + 12 new).
+
+- **A1–A3 (LIVE) — MFA hardening** (`f915269`): TOTP second-factor guessing was bounded
+  only per challenge token, so an attacker with the password could brute-force TOTP with
+  unlimited fresh 5-guess budgets, no lockout, silently. Now a per-account
+  `mfa_account [8,900]` throttle bounds it across tokens/IPs, failed second factors are
+  audited (`mfa_login_failed`), the TOTP settings + password-change endpoints carry the
+  `mfa_settings` limiter, and enabling/disabling TOTP revokes other sessions.
+- **E1 (latent, `capabilities`) — resolver fail-open** (`49db9a8`):
+  `CapabilityRules::scopeSatisfies` returned true for a board/category-scoped grant with
+  no target in context; now fails closed (site-scoped grants still hold). Must land before
+  the Inc 6 enforcement cutover; the parity corpus never exercised it (always supplies a
+  board id), so a unit case pins it.
+- **C1/C2 (latent, egress) — SSRF** (`f737a67`): added the missing IPv6 DENY ranges
+  (`::/96`, `2002::/16`, `64:ff9b::/96`) and made the guard ignore a `/0` allowlist entry.
+  One fix for every `EgressGuard` consumer (webhooks, link previews, registry).
+- **F1 (latent, `api_tokens`)** (`7191c96`): API-token auth now refuses a token whose owner
+  is banned/deactivated/deleted (suspended may still read) — pre-positioned before any
+  write/PII scope is added.
+- **D1/G1/G2 (latent, `package_registry`)** (`65203bd`): advisory ingest refuses a stale
+  (older `issued_at`) replay; the theme asset scanner caps pixel dimensions before the GD
+  decode; the publisher key-revoke flash no longer overstates its effect.
+
+**Deferred (owner decision / lower priority):**
+- **G1 deep cascade** — retroactively force-disabling a compromised publisher's installed
+  packages on *key* revoke needs a semantics decision (per-release key linkage vs "no usable
+  signing key ⇒ fail closed") before `package_registry` graduates. Today "suspend publisher"
+  is the cascading control (the flash now says so).
+- **B3 — `APP_KEY` rotation** currently makes every stored SecretVault/TOTP secret
+  undecryptable (fail-closed 500, never wrong plaintext); the inert `cipher`/`key_version`
+  columns need a key-version migration path documented in the ops runbook before
+  `service_secrets` graduates.
+- **I4 — evidence reproducibility**: plain `npm run evidence` skips the Phase 5
+  dark-surface specs (they `test.skip()` unless `RB_BROWSER_DARK_SURFACES=1`); run the
+  targeted `evidence:*` scripts for dark-surface PNGs.
 
 ## Gate A entry-gate artifacts (recorded 2026-06-30; accepted 2026-07-01)
 
 The remaining `PHASE_5_PLAN.md` §2 entry-gate artifacts are recorded; **ADR 0012**
 (`docs/adr/0012-phase-5-gate-a-entry-gate-artifacts.md`) carries the gate record and
 the owner sign-offs (received 2026-06-30), **accepted 2026-07-01** on the owner's
-final acceptance pass. The acceptance ADR is renumbered **0013**.
+final acceptance pass. The acceptance is recorded inline in that same **ADR 0012** — there is no separate acceptance ADR (`docs/adr/0013` is the WYSIWYG composer ADR).
 
 - **A1 — capability taxonomy** → `docs/phase5/capability-taxonomy.md`: 54 `core.*`
   keys (hybrid granularity), scope/risk per the `0050` ENUMs, 5 non-delegable

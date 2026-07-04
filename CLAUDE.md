@@ -21,7 +21,7 @@ Two process rules that are easy to violate:
 - **"Done" requires evidence (DESIGN §13).** Adding a column/table is *not* shipping a feature — behavior must be enforced and tested. UI-visible work needs Playwright/browser evidence *in addition to* PHPUnit. "Inert schema is not evidence."
 - **`P0`–`P3` are MoSCoW priority tiers, not phase numbers** (DECISIONS §2). A `P3` item can ship in any later phase. Only when a doc clearly writes `P1…P7` as a sequence does it mean Phase 1…7.
 
-Delivery is sequenced in seven **phases** (`PHASE_N_PLAN.md`), each a "release train" split into **Gate A** (minimum release) and **Gate B** (extended slice) with entry/exit gates and a carryover ledger. Deferrals are recorded in `docs/adr/000N-*.md` (never silently dropped); proof artifacts live in `docs/evidence/`. Current state is in `PHASE_4_STATUS.md`.
+Delivery is sequenced in seven **phases** (`PHASE_N_PLAN.md`), each a "release train" split into **Gate A** (minimum release) and **Gate B** (extended slice) with entry/exit gates and a carryover ledger. Deferrals are recorded in `docs/adr/000N-*.md` (never silently dropped); proof artifacts live in `docs/evidence/`. Current state is in `PHASE_5_STATUS.md`.
 
 ## Commands
 
