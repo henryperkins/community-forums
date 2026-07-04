@@ -910,6 +910,7 @@ final class App
             $c->get(BoardMemberRepository::class),
             $c->get(BoardPolicy::class),
             $c->get(WriteGate::class),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(PersonalOrganizationService::class, fn (Container $c) => new PersonalOrganizationService(
             $c->get(Database::class),
@@ -1154,6 +1155,7 @@ final class App
             $c->get(ReputationLedgerService::class),
             $c->get(FirstPartyHookRegistry::class),
             (int) $config->get('community.solved_bonus', 5),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(ThreadWorkflowService::class, fn (Container $c) => new ThreadWorkflowService(
             $c->get(Database::class),
@@ -1165,6 +1167,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(FeatureFlags::class),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(ThreadSplitMergeService::class, fn (Container $c) => new ThreadSplitMergeService(
             $c->get(Database::class),

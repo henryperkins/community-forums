@@ -6,6 +6,7 @@ namespace Tests\Integration\Core;
 
 use App\Core\App;
 use App\Core\Config;
+use App\Repository\BoardModeratorRepository;
 use App\Repository\CapabilityRepository;
 use App\Repository\RoleAssignmentHistoryRepository;
 use App\Repository\RoleAssignmentRepository;
@@ -154,6 +155,88 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->withCapabilitiesEnforced();
         $response = $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'Nope', 'body' => 'Denied by floor.']);
         self::assertSame(403, $response->status()); // pin: enforced status === legacy status
+    }
+
+    /**
+     * Phase 5 Inc 6 Task 6 — parity pin (spec §8 parity evidence), dual-path.
+     * The route is POST /posts/{id}/accept (SolvedController::accept), gated by
+     * the `community` flag (grep confirms no separate `mark_solved` flag exists
+     * — FeatureFlags.php's `community` entry's own comment lists "solved").
+     * Accepting the OPENING post always throws a ValidationException regardless
+     * of authorization (SolvedAnswerService::mark, "opening post cannot be the
+     * accepted answer") which the controller also turns into a redirect, so a
+     * naive test using the thread's first post would "pass" for the wrong
+     * reason; a genuine reply post is used instead (mirrors
+     * AppBadgeSolvedTest::test_accept_answer_awards_bonus_badge_and_notifies).
+     * Covers BOTH dual-path halves: the OP accepting on their own thread
+     * (owner branch) and a real board moderator accepting on a thread they
+     * don't own (moderator branch); a stranger is refused either way. Passes
+     * before AND after the SolvedAnswerService::authorize() swap by
+     * construction — the swap must not move this needle.
+     */
+    public function test_dual_path_solved_still_works_for_op_and_board_mod_under_enforce(): void
+    {
+        $this->makeAdmin(); // satisfy the first-run setup gate
+        $board = $this->makeBoard($this->makeCategory());
+        $op = $this->makeUser();
+        $mod = $this->makeUser();
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $mod['id']);
+        $bystander = $this->makeUser();
+        $answerer = $this->makeUser();
+
+        $opThread = $this->makeThread($board, $op);
+        $opReplyId = $this->posting()->reply($this->userEntity($answerer), $opThread['thread_id'], ['body' => 'An answer for the OP.']);
+        $strangersThread = $this->makeThread($board, $this->makeUser());
+        $modReplyId = $this->posting()->reply($this->userEntity($answerer), $strangersThread['thread_id'], ['body' => 'An answer for the mod.']);
+        $this->withCapabilitiesEnforced(['community' => true]);
+
+        // OP path allowed (dual-path owner branch).
+        $this->actingAs($op);
+        $this->assertRedirect($this->post('/posts/' . $opReplyId . '/accept'));
+
+        // Board moderator path allowed on a thread they do not own (dual-path moderator branch).
+        $this->actingAs($mod);
+        $this->assertRedirect($this->post('/posts/' . $modReplyId . '/accept'));
+
+        // A bystander (neither OP nor moderator) is refused on either thread.
+        $this->actingAs($bystander);
+        $this->assertStatus(403, $this->post('/posts/' . $opReplyId . '/accept'));
+    }
+
+    /**
+     * Phase 5 Inc 6 Task 6 — attempted discriminating test for the dual-path
+     * swap. See task-6-report.md "Discriminating test" section for the full
+     * empirical finding: `CapabilityRules::DUAL_PATH_BOARD_AUTHORITY` (an
+     * explicit allowlist restricting the non-owner/"board-wide" half of a
+     * dual-path decision to `system.moderator`/`system.admin` ROLE-kind grants
+     * only — never a custom role, even one holding the exact matching
+     * capability key) means a deputy's board-scoped grant of ONLY
+     * `core.thread.mark_solved` can authorize the OWNER path (their own
+     * threads) but never the moderator path (someone else's thread) — by the
+     * same non-broadening design captured in
+     * docs/phase5/capability-taxonomy.md §6 ("board-wide use comes only
+     * through a board-scoped moderator assignment"). This assertion is
+     * therefore a NEGATIVE pin, not a red→green proof: 403 before the swap
+     * (legacy `authorize()` has no such grant concept) AND 403 after (the
+     * resolver enforces the identical non-broadening rule). Confirmed by
+     * running this test against both the pre-swap and post-swap tree.
+     */
+    public function test_deputy_with_mark_solved_only_grant_cannot_accept_strangers_thread_under_enforce(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $stranger = $this->makeUser();
+        $answerer = $this->makeUser();
+        $t = $this->makeThread($board, $stranger);
+        $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'An answer.']);
+
+        $roleId = $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.thread.mark_solved'], (int) $board['id']);
+        self::assertGreaterThan(0, $roleId);
+        $this->withCapabilitiesEnforced(['community' => true]);
+
+        $this->actingAs($deputy);
+        $this->assertStatus(403, $this->post('/posts/' . $replyId . '/accept'));
     }
 
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
