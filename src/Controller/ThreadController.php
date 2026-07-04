@@ -161,8 +161,34 @@ final class ThreadController extends Controller
 
         $canWriteUser = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user);
+        // Coarse "is this user a moderator of this board" fact — kept for
+        // solved-answer eligibility below (not one of the per-button controls).
+        // The moderation TOOLBAR must never gate an individual button on this
+        // coarse flag (Phase 5 Inc 6 Task 4b): a custom role holding only one
+        // capability key must still see only its own control. Each button below
+        // gets its own canModerate() check against its specific key; under
+        // legacy/shadow mode AuthorityGate ignores the key entirely, so every
+        // per-action flag collapses back to this same coarse boolean and an
+        // existing board moderator/admin keeps seeing every control exactly as
+        // before (see AuthorityGate::allows()).
         $canModerateBoard = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
+        $canPin = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.pin');
+        $canLock = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.lock');
+        // core.thread.move has no thread-view control to gate yet — moving a
+        // thread to another board isn't reachable from templates/thread.php or
+        // templates/partials/post.php today (only /admin/boards/{id}/move exists,
+        // which is unrelated board-reordering, not this capability). Computed
+        // here and exposed as can_move so a future move-thread control can
+        // consume it without another controller change.
+        $canMove = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.move');
+        $canSplitMerge = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.split_merge');
+        $canDeletePosts = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.post.delete_any');
 
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
         // may accept/clear an answer; everyone sees the accepted marker.
@@ -222,7 +248,11 @@ final class ThreadController extends Controller
             $tagRepo = $this->container->get(TagRepository::class);
             $threadTags = $tagRepo->forThread((int) $thread['id']);
             if ($user !== null && $this->container->get(WriteGate::class)->canWrite($user)) {
-                $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'])
+                // Moderator arm checks the SAME capability the member arm is
+                // gated by (core.thread.tag) instead of the coarse default key,
+                // so a custom role granted only core.thread.tag can edit tags
+                // even in a board where it holds no ordinary posting rights.
+                $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.tag')
                     || $this->container->get(BoardPolicy::class)->canPost(
                         ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
                         $user,
@@ -256,7 +286,7 @@ final class ThreadController extends Controller
             $summaryHistory = $memory->summaries((int) $thread['id']);
             $related = $memory->relatedForViewer((int) $thread['id'], $user);
             $canCurateMemory = $user !== null
-                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
+                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.memory.curate');
             $canCurateWiki = $canCurateMemory && (int) ($thread['board_wiki_enabled'] ?? 0) === 1;
             if ($canCurateWiki) {
                 foreach ($posts as $post) {
@@ -293,6 +323,11 @@ final class ThreadController extends Controller
             'locked' => $locked,
             'is_admin' => $user?->isAdmin() ?? false,
             'can_moderate_board' => $canModerateBoard,
+            'can_pin' => $canPin,
+            'can_lock' => $canLock,
+            'can_move' => $canMove,
+            'can_split_merge' => $canSplitMerge,
+            'can_delete_posts' => $canDeletePosts,
             'engagement' => $engagement,
             'show_signatures' => $reading['show_signatures'],
             'show_avatars' => $reading['show_avatars'],

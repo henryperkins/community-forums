@@ -70,6 +70,65 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->assertStatus(403, $this->post('/posts/' . $postId . '/delete'));      // ungranted key refuses
     }
 
+    /**
+     * Phase 5 Inc 6 Task 4b: the thread-view moderation toolbar used to gate every
+     * button behind one coarse can_moderate_board flag (core.post.delete_any), so a
+     * custom role holding only core.thread.lock was authorized to POST
+     * /mod/t/{id}/lock (proven by the sibling test above) but the Lock control never
+     * rendered — an invisible-but-authorized control is unusable in this
+     * server-rendered, no-API-client app. Each control must render off its own
+     * capability key instead.
+     */
+    public function test_lock_only_deputy_sees_lock_control_but_not_delete_or_pin_in_thread_ui(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $author = $this->makeUser();
+        $t = $this->makeThread($board, $author);
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? ORDER BY id LIMIT 1', [$t['thread_id']]);
+
+        // Custom role holding ONLY core.thread.lock, assigned at this board.
+        $roleId = $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.thread.lock'], (int) $board['id']);
+        self::assertGreaterThan(0, $roleId);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $page = $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']);
+
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'action="/mod/t/' . $t['thread_id'] . '/lock"');
+        $this->assertDontSeeText($page, 'action="/mod/t/' . $t['thread_id'] . '/pin"');
+        $this->assertDontSeeText($page, 'action="/posts/' . $postId . '/delete"');
+    }
+
+    /**
+     * No-regression pin (Task 4b requirement #4): a legacy admin must still see
+     * every control exactly as before the per-button split. Under legacy/shadow
+     * mode, AuthorityGate::allows() ignores the capability key entirely (see
+     * src/Security/AuthorityGate.php) — every new per-action flag collapses back
+     * to the same coarse boolean an admin has always evaluated true for.
+     * Complements AppThreadUxAuditTest::test_board_moderator_sees_pin_lock_and_remove_controls,
+     * which exercises the identical canModerate() OR-branch via an assigned
+     * board_moderators row instead of the global admin role.
+     */
+    public function test_admin_thread_page_still_shows_pin_lock_and_delete_controls(): void
+    {
+        $admin = $this->makeAdmin();
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $t = $this->makeThread($board, $author);
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? ORDER BY id LIMIT 1', [$t['thread_id']]);
+
+        $this->actingAs($admin);
+        $page = $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']);
+
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'action="/mod/t/' . $t['thread_id'] . '/pin"');
+        $this->assertSeeText($page, 'action="/mod/t/' . $t['thread_id'] . '/lock"');
+        $this->assertSeeText($page, 'action="/posts/' . $postId . '/delete"');
+    }
+
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
     private function makeCustomRoleWithAssignment(array $adminRow, array $subjectRow, array $keys, int $boardId): int
     {
