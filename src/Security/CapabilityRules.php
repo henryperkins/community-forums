@@ -192,14 +192,19 @@ final class CapabilityRules
         if ($scopeClass === 'category') {
             return match ($grantScope) {
                 'site' => true,
-                'category' => $ctx['category_id'] === null || $grantId === (int) $ctx['category_id'],
+                // Fail closed: without a category target a category-scoped grant
+                // cannot be confirmed to apply, so it must not satisfy the key.
+                'category' => $ctx['category_id'] !== null && $grantId === (int) $ctx['category_id'],
                 default => false,
             };
         }
 
         $board = $ctx['board'];
         if ($board === null) {
-            return true;
+            // Fail closed: with no board target, only a genuinely site-wide grant
+            // holds. A board/category-scoped grant must NOT read as authority over
+            // every board (that fail-open would become a live bypass at Inc 6).
+            return $grantScope === 'site';
         }
 
         return match ($grantScope) {

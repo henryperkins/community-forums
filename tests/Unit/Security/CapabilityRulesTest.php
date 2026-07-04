@@ -200,6 +200,35 @@ final class CapabilityRulesTest extends TestCase
         self::assertSame('no_grant', $d->source);
     }
 
+    public function test_narrower_scoped_capability_fails_closed_without_its_target_context(): void
+    {
+        $u = $this->user();
+        $holding = ['system.moderator', 'system.admin'];
+
+        // A board-scoped moderator grant must NOT satisfy a board-scoped capability
+        // when no board is supplied — otherwise it fails OPEN and reads as authority
+        // over every board (the exact class of fail-open that bites at Inc 6 cutover).
+        $boardGrant = [$this->grant(['role_key' => 'system.moderator', 'scope_type' => 'board', 'scope_id' => 3, 'source' => 'assignment'])];
+        $d = $this->decide('core.thread.lock', $u, true, 10, $boardGrant, $holding, $this->ctx());
+        self::assertFalse($d->allowed, 'a board-scoped grant must fail closed with no board in context');
+        self::assertSame('no_grant', $d->source);
+
+        // A category-scoped grant must likewise fail closed with no category context.
+        $catGrant = [$this->grant(['role_key' => 'system.moderator', 'scope_type' => 'category', 'scope_id' => 1, 'source' => 'assignment'])];
+        self::assertFalse(
+            $this->decide('core.board.manage', $u, true, 10, $catGrant, $holding, $this->ctx())->allowed,
+            'a category-scoped grant must fail closed with no category in context',
+        );
+
+        // But a genuinely site-wide grant still holds without a specific target —
+        // that is accurate authority, not an over-grant, so it must stay allowed.
+        $siteGrant = [$this->grant(['role_key' => 'system.admin', 'scope_type' => 'site'])];
+        self::assertTrue(
+            $this->decide('core.thread.lock', $u, true, 10, $siteGrant, ['system.admin'], $this->ctx())->allowed,
+            'a site-scoped grant holds regardless of the specific board',
+        );
+    }
+
     public function test_posting_floor_uses_global_site_rank_only(): void
     {
         $u = $this->user();
