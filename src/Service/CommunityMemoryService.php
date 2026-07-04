@@ -13,6 +13,7 @@ use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Support\Markdown;
@@ -29,7 +30,13 @@ final class CommunityMemoryService
         private WriteGate $writeGate,
         private Markdown $markdown,
         private ?ContentReferenceService $contentReferences = null,
+        private ?AuthorityGate $authority = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     /** @param list<int> $sourcePostIds */
@@ -286,7 +293,15 @@ final class CommunityMemoryService
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        if (!$actor->isAdmin() && !$this->moderators->isModerator((int) $thread['board_id'], $actor->id())) {
+        $boardId = (int) $thread['board_id'];
+        $allowed = $this->gate()->allows(
+            fn (): bool => $actor->isAdmin() || $this->moderators->isModerator($boardId, $actor->id()),
+            $actor,
+            'core.memory.curate',
+            ['board_id' => $boardId],
+            'CommunityMemoryService::assertCurator',
+        );
+        if (!$allowed) {
             throw new ForbiddenException('Moderator access required.');
         }
     }

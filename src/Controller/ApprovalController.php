@@ -107,7 +107,7 @@ final class ApprovalController extends Controller
 
     private function assertCanModerate(\App\Domain\User $mod, int $boardId): void
     {
-        if (!$this->container->get(ModerationService::class)->canModerate($mod, $boardId)) {
+        if (!$this->container->get(ModerationService::class)->canModerate($mod, $boardId, 'core.content.approve')) {
             throw new ForbiddenException('You do not moderate that board.');
         }
     }

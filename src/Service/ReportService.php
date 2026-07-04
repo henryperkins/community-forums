@@ -14,6 +14,7 @@ use App\Repository\NotificationRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReportRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 
@@ -35,7 +36,13 @@ final class ReportService
         private UserRepository $users,
         private WriteGate $writeGate,
         private ?FirstPartyHookRegistry $hooks = null,
+        private ?AuthorityGate $authority = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     public function submitPostReport(User $reporter, int $postId, ?string $reasonCode, string $reason, bool $notifyReporter): void
@@ -73,11 +80,14 @@ final class ReportService
 
     public function canHandle(User $user, array $report): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
         $boardId = $this->reports->boardIdFor($report);
-        return $boardId !== null && $this->boardMods->isModerator($boardId, $user->id());
+        return $this->gate()->allows(
+            fn (): bool => $user->isAdmin() || ($boardId !== null && $this->boardMods->isModerator($boardId, $user->id())),
+            $user,
+            'core.report.handle',
+            ['board_id' => $boardId],
+            'ReportService::canHandle',
+        );
     }
 
     public function claim(User $mod, int $reportId): void

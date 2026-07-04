@@ -66,7 +66,7 @@ final class ModerationService
     /** @return array{thread:array<string,mixed>, pinned:bool} */
     public function togglePin(User $mod, int $threadId): array
     {
-        $thread = $this->requireModeratableThread($mod, $threadId);
+        $thread = $this->requireModeratableThread($mod, $threadId, 'core.thread.pin');
         $pinned = (int) $thread['is_pinned'] === 0;
 
         $this->db->transaction(function () use ($mod, $threadId, $thread, $pinned): void {
@@ -87,7 +87,7 @@ final class ModerationService
     /** @return array{thread:array<string,mixed>, locked:bool} */
     public function toggleLock(User $mod, int $threadId): array
     {
-        $thread = $this->requireModeratableThread($mod, $threadId);
+        $thread = $this->requireModeratableThread($mod, $threadId, 'core.thread.lock');
         $locked = (int) $thread['is_locked'] === 0;
 
         $this->db->transaction(function () use ($mod, $threadId, $thread, $locked): void {
@@ -117,7 +117,7 @@ final class ModerationService
         if ($post === null || (int) $post['is_deleted'] === 1) {
             throw new NotFoundException('Post not found.');
         }
-        $this->assertCanModerate($mod, (int) $post['board_id']);
+        $this->assertCanModerate($mod, (int) $post['board_id'], 'core.post.delete_any');
         $this->assertNotArchived((int) $post['board_id']);
 
         // Removing the opening post removes the whole topic rather than orphaning
@@ -176,7 +176,7 @@ final class ModerationService
         if ($post === null) {
             throw new NotFoundException('Post not found.');
         }
-        $this->assertCanModerate($mod, (int) $post['board_id']);
+        $this->assertCanModerate($mod, (int) $post['board_id'], 'core.post.restore');
         $this->assertNotArchived((int) $post['board_id']);
         if ((int) $post['is_deleted'] === 0) {
             return $post; // already visible
@@ -222,8 +222,8 @@ final class ModerationService
         if ($dest === null) {
             throw new ValidationException(['board_id' => 'Choose a destination board.']);
         }
-        $this->assertCanModerate($mod, $srcBoardId);
-        $this->assertCanModerate($mod, $destBoardId);
+        $this->assertCanModerate($mod, $srcBoardId, 'core.thread.move');
+        $this->assertCanModerate($mod, $destBoardId, 'core.thread.move');
         // A move mutates BOTH boards (counters + last-post caches), so an archived
         // board on either end is read-only: moving content out of a frozen source,
         // or into a frozen destination, are both writes that stay closed.
@@ -261,13 +261,13 @@ final class ModerationService
     }
 
     /** @return array<string,mixed> */
-    private function requireModeratableThread(User $mod, int $threadId): array
+    private function requireModeratableThread(User $mod, int $threadId, string $capability = 'core.post.delete_any'): array
     {
         $thread = $this->threads->find($threadId);
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        $this->assertCanModerate($mod, (int) $thread['board_id']);
+        $this->assertCanModerate($mod, (int) $thread['board_id'], $capability);
         $this->assertNotArchived((int) $thread['board_id']);
         return $thread;
     }
@@ -286,7 +286,7 @@ final class ModerationService
         if ($post === null) {
             throw new NotFoundException('Post not found.');
         }
-        $this->assertCanModerate($mod, (int) $post['board_id']);
+        $this->assertCanModerate($mod, (int) $post['board_id'], 'core.post.reveal_author');
         if ((int) ($post['is_anonymous'] ?? 0) !== 1) {
             throw new ForbiddenException('That post was not posted anonymously.');
         }

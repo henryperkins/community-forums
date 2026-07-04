@@ -1071,6 +1071,7 @@ final class App
             $c->get(UserRepository::class),
             $c->get(WriteGate::class),
             $c->get(FirstPartyHookRegistry::class),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
             $c->get(Database::class),
@@ -1182,6 +1183,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(Markdown::class),
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
+            $c->get(AuthorityGate::class),
         ));
 
         // Session + CSRF.

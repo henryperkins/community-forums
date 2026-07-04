@@ -9,7 +9,6 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardMemberRepository;
-use App\Repository\BoardModeratorRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\SubscriptionRepository;
@@ -23,6 +22,7 @@ use App\Service\CommunityMemoryService;
 use App\Service\ContentReferenceService;
 use App\Service\CustomEmojiService;
 use App\Service\LinkPreviewService;
+use App\Service\ModerationService;
 use App\Service\PollService;
 use App\Service\ReactionService;
 use App\Service\SinceLastReadContextService;
@@ -161,11 +161,8 @@ final class ThreadController extends Controller
 
         $canWriteUser = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user);
-        $canModerateBoard = $canWriteUser
-            && (
-                $user->isAdmin()
-                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
-            );
+        $canModerateBoard = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
 
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
         // may accept/clear an answer; everyone sees the accepted marker.
@@ -181,7 +178,8 @@ final class ThreadController extends Controller
         // Anonymous-author reveal (P2-08): an admin or this board's moderator may
         // unmask an anonymous post; the byline stays masked for everyone — the
         // reveal is a separate audited action.
-        $canRevealAnon = $canModerateBoard;
+        $canRevealAnon = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.post.reveal_author');
 
         // Subscription state for the subscribe control (P2-03).
         $notificationsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('notifications');
@@ -224,8 +222,7 @@ final class ThreadController extends Controller
             $tagRepo = $this->container->get(TagRepository::class);
             $threadTags = $tagRepo->forThread((int) $thread['id']);
             if ($user !== null && $this->container->get(WriteGate::class)->canWrite($user)) {
-                $canEditTags = $user->isAdmin()
-                    || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
+                $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'])
                     || $this->container->get(BoardPolicy::class)->canPost(
                         ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
                         $user,
@@ -258,10 +255,8 @@ final class ThreadController extends Controller
             }
             $summaryHistory = $memory->summaries((int) $thread['id']);
             $related = $memory->relatedForViewer((int) $thread['id'], $user);
-            $canCurateMemory = $user !== null && (
-                $user->isAdmin()
-                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
-            );
+            $canCurateMemory = $user !== null
+                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
             $canCurateWiki = $canCurateMemory && (int) ($thread['board_wiki_enabled'] ?? 0) === 1;
             if ($canCurateWiki) {
                 foreach ($posts as $post) {
@@ -366,7 +361,7 @@ final class ThreadController extends Controller
         if ((int) ($thread['is_pending'] ?? 0) === 1) {
             $isAuthor = $user !== null && $user->owns((int) $thread['user_id']);
             $canMod = $user !== null
-                && $this->container->get(\App\Service\ModerationService::class)->canModerate($user, (int) $thread['board_id']);
+                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.content.view_pending');
             if (!$isAuthor && !$canMod) {
                 throw new NotFoundException('Thread not found.');
             }

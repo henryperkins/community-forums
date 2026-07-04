@@ -254,7 +254,7 @@ final class AppealService
         }
 
         $post = $this->posts->findWithContext((int) $appeal['target_id']);
-        if ($post === null || !$this->moderation->canModerate($actor, (int) $post['board_id'])) {
+        if ($post === null || !$this->moderation->canModerate($actor, (int) $post['board_id'], 'core.appeal.resolve_content')) {
             throw new ForbiddenException('You do not moderate this appeal target.');
         }
     }
