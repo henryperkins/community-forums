@@ -178,6 +178,15 @@ final class RegistryAdvisoryService
         $affectedDigest = $affectedDigest === '' ? null : $affectedDigest;
         $issuedAt = $this->parseIssuedAt($doc->payload['issued_at'] ?? null);
 
+        // Anti-replay (mirrors the snapshot generated_at watermark): a validly-signed
+        // but OLDER advisory for the same uid must not overwrite/de-escalate a newer
+        // one. Replay needs no signing key — only possession of a stale signed
+        // document (e.g. a compromised CDN or a re-ingested advisory file).
+        if ($existing !== null && $issuedAt !== null && $existing['issued_at'] !== null
+            && strtotime((string) $existing['issued_at'] . ' UTC') > strtotime($issuedAt . ' UTC')) {
+            throw new RegistryVerificationException('advisory_replayed', "Advisory $advisoryUid is older than the stored advisory; refusing replay/downgrade.");
+        }
+
         $result = $this->db->transaction(function () use ($registryId, $advisoryUid, $package, $range, $affectedDigest, $severity, $action, $doc, $documentJson, $issuedAt, $operatorId): array {
             $advisoryId = $this->advisories->upsert([
                 'advisory_uid' => $advisoryUid,

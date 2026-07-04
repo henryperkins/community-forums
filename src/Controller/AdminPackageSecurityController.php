@@ -207,7 +207,7 @@ final class AdminPackageSecurityController extends Controller
                 $keyRowId,
                 $request->str('reason'),
             );
-            return $this->noindex($this->redirectWithFlash('/admin/packages/publishers/' . $publisherId, 'Publisher signing key revoked; everything it signed now fails closed.'));
+            return $this->noindex($this->redirectWithFlash('/admin/packages/publishers/' . $publisherId, 'Publisher signing key revoked; it can no longer verify new releases or rotations. Already-installed packages are not disabled by this — suspend the publisher to force-disable them.'));
         } catch (ValidationException $e) {
             return $this->publisherView($publisherId, $e->errors, $request->allInput(), 422);
         }

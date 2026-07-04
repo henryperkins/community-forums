@@ -17,6 +17,7 @@ final class ThemeAssetScanner
     public const MAX_ASSET_BYTES = 131_072;
     public const MAX_TOTAL_BYTES = 262_144;
     public const MAX_ASSETS = 4;
+    public const MAX_PIXELS = 8_000_000; // width*height ceiling: bounds GD's buffer against a decompression bomb
 
     private const MIME_BY_KIND = [
         'png' => 'image/png',
@@ -38,6 +39,17 @@ final class ThemeAssetScanner
         $sniffed = (string) (new \finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
         if ($sniffed !== self::MIME_BY_KIND[$kind]) {
             $this->refuse($name, 'content does not match its declared kind');
+        }
+
+        // Bound dimensions BEFORE GD decodes: a small "decompression bomb"
+        // declaring huge dimensions would otherwise force a multi-gigabyte pixel
+        // buffer allocation at build/preview time.
+        $dims = @getimagesizefromstring($bytes);
+        if ($dims === false || $dims[0] < 1 || $dims[1] < 1) {
+            $this->refuse($name, 'has unreadable image dimensions');
+        }
+        if ($dims[0] * $dims[1] > self::MAX_PIXELS) {
+            $this->refuse($name, 'exceeds the ' . self::MAX_PIXELS . '-pixel limit');
         }
 
         $image = @imagecreatefromstring($bytes);

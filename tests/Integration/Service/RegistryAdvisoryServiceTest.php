@@ -115,6 +115,30 @@ final class RegistryAdvisoryServiceTest extends TestCase
         $this->advisories()->ingest($this->ids['registry_id'], SigningHarness::tamper($bad['json']), $bad['signature'], $bad['key_id']);
     }
 
+    public function test_advisory_replay_with_older_issued_at_is_refused(): void
+    {
+        // A strong, recent advisory lands first and revokes the package.
+        $recent = $this->root->mintAdvisory(['action' => 'revoke', 'severity' => 'critical', 'issued_at' => '2026-07-03T00:00:00Z']);
+        $this->advisories()->ingest($this->ids['registry_id'], $recent['json'], $recent['signature'], $recent['key_id']);
+        self::assertSame('revoked', (new PackageRepository($this->db))->find($this->ids['package_id'])['advisory_status']);
+
+        // Replaying an OLDER, weaker signed advisory for the same uid must be
+        // refused — replay needs no key, only possession of the stale document,
+        // and would otherwise downgrade the auto-block revoke -> blocked.
+        $stale = $this->root->mintAdvisory(['action' => 'block_new', 'severity' => 'high', 'issued_at' => '2026-07-01T00:00:00Z']);
+        try {
+            $this->advisories()->ingest($this->ids['registry_id'], $stale['json'], $stale['signature'], $stale['key_id']);
+            self::fail('expected the stale advisory to be refused as a replay');
+        } catch (RegistryVerificationException) {
+            self::assertTrue(true);
+        }
+        self::assertSame(
+            'revoked',
+            (new PackageRepository($this->db))->find($this->ids['package_id'])['advisory_status'],
+            'a refused replay must not downgrade the package advisory status',
+        );
+    }
+
     public function test_acknowledge_records_actor_and_audit(): void
     {
         $adv = $this->root->mintAdvisory();

@@ -75,6 +75,22 @@ final class ThemeAssetScannerTest extends TestCase
         }
     }
 
+    public function test_pixel_bomb_is_refused_before_gd_decodes_it(): void
+    {
+        // A solid-colour image with huge dimensions compresses to a tiny file — a
+        // decompression bomb: under the byte cap yet must be refused on dimensions
+        // BEFORE GD is asked to allocate its pixel buffer.
+        $bomb = $this->png(3000, 3000); // 9,000,000 px > MAX_PIXELS
+        self::assertLessThanOrEqual(ThemeAssetScanner::MAX_ASSET_BYTES, strlen($bomb));
+
+        try {
+            (new ThemeAssetScanner())->scan('bomb', 'png', $bomb);
+            self::fail('expected refusal');
+        } catch (PackagePolicyException $e) {
+            self::assertSame('theme_asset', $e->code);
+        }
+    }
+
     public function test_oversize_is_refused(): void
     {
         try {
