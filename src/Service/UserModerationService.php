@@ -16,6 +16,7 @@ use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
 use App\Security\WriteGate;
 
 /**
@@ -36,7 +37,13 @@ final class UserModerationService
         private BoardModeratorRepository $boardMods,
         private ?AttachmentRepository $attachments = null,
         private ?FirstPartyHookRegistry $hooks = null,
+        private ?AuthorityGate $authority = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     public function warn(User $actor, int $subjectId, string $reason, ?int $boardId = null): void
@@ -284,9 +291,14 @@ final class UserModerationService
     private function assertStaff(User $actor): void
     {
         $this->writeGate->assertCanWrite($actor);
-        if (!$actor->isAdmin() && $this->boardMods->boardsFor($actor->id()) === []) {
-            throw new ForbiddenException('Staff access required.');
-        }
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin() || $this->boardMods->boardsFor($actor->id()) !== [],
+            $actor,
+            'core.user.warn',
+            [], // site probe: staff-any — admin OR moderates ≥1 board, site-wide
+            'UserModerationService::assertStaff',
+            'Staff access required.', // keep the existing message verbatim
+        );
     }
 
     private function assertAdmin(User $actor): void

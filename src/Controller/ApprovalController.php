@@ -12,6 +12,7 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
+use App\Security\AuthorityGate;
 use App\Service\ModerationService;
 use App\Service\PostingService;
 
@@ -26,9 +27,14 @@ final class ApprovalController extends Controller
     public function queue(Request $request): Response
     {
         $user = $this->requireUser();
-        if (!$user->isModerator()) {
-            throw new ForbiddenException('Moderator access required.');
-        }
+        $this->container->get(AuthorityGate::class)->assert(
+            fn (): bool => $user->isModerator(),
+            $user,
+            'core.content.view_pending',
+            [], // site probe: no board target — board-scoped grants correctly do not qualify
+            'ApprovalController::index',
+            'Moderator access required.', // keep the existing message verbatim
+        );
         $boardIds = $user->isAdmin() ? null : $this->container->get(BoardModeratorRepository::class)->boardsFor($user->id());
 
         return $this->view('mod/approvals', [

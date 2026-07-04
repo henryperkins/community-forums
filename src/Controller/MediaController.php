@@ -13,6 +13,7 @@ use App\Repository\AttachmentRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\ConversationRepository;
 use App\Repository\PostRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Service\AttachmentService;
 use App\Service\RateLimitService;
@@ -201,7 +202,16 @@ final class MediaController extends Controller
             $pending = (int) ($post['is_pending'] ?? 0) === 1;
             if (!$owner) {
                 // Held (pending) post media is restricted to the owner/moderators.
-                if ($pending && !($user !== null && $user->isModerator())) {
+                // allows() (not assert()) is deliberate: a capability denial here
+                // must fall through to the same 404 below, never surface as a
+                // distinguishing 403 (anti-enumeration).
+                if ($pending && !$this->container->get(AuthorityGate::class)->allows(
+                    fn (): bool => $user !== null && $user->isModerator(),
+                    $user,
+                    'core.content.view_pending',
+                    [], // site probe: no board target — board-scoped grants correctly do not qualify
+                    'MediaController::authorizePendingMedia',
+                )) {
                     throw new NotFoundException('Media not found.');
                 }
                 $board = ['id' => (int) $post['board_id'], 'visibility' => (string) $post['board_visibility']];

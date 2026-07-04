@@ -165,6 +165,39 @@ final class AppImageUploadTest extends TestCase
         self::assertSame(404, $this->get('/media/' . $mediaId)->status());
     }
 
+    /**
+     * Phase 5 Inc 6 Task 7: the anti-enumeration property of held-media
+     * delivery must survive the `AuthorityGate` swap in
+     * `MediaController::authorize()` — a denied viewer gets 404 ("Media not
+     * found."), never a 403 that would leak "this id exists but you can't see
+     * it." `AuthorityGate::allows()` (not `assert()`) is used specifically so
+     * a capability denial never turns into a distinguishing 403. This test
+     * passes both before and after the swap by construction (pre-swap,
+     * `CAPABILITIES_MODE` has no effect on this code path at all; post-swap,
+     * the resolver denies a stranger the same as legacy did) — it pins the
+     * invariant rather than proving a red→green tightening.
+     */
+    public function test_held_post_media_stays_404_not_403_under_capabilities_enforce(): void
+    {
+        $cat = $this->makeCategory();
+        $board = $this->makeBoard($cat, ['slug' => 'heldmediaenforce']);
+        $this->db->run('UPDATE boards SET require_approval = 1 WHERE id = ?', [(int) $board['id']]);
+
+        $author = $this->makeUser(['username' => 'helduploader2']);
+        $this->actingAs($author);
+        $json = json_decode($this->postFile('/upload', 'image', $this->fakeUpload($this->pngBytes()))->body(), true);
+        $mediaId = (int) $json['id'];
+        $this->post('/threads', ['board_id' => (int) $board['id'], 'title' => 'held pic enforce', 'body' => "![](/media/{$mediaId})"]);
+
+        $this->withCapabilitiesEnforced();
+
+        // A stranger cannot see held media under enforcement either — 404,
+        // never the tell-tale 403 that would leak "exists but forbidden."
+        $stranger = $this->makeUser(['username' => 'heldstranger2']);
+        $this->actingAs($stranger);
+        self::assertSame(404, $this->get('/media/' . $mediaId)->status());
+    }
+
     public function test_editing_a_post_to_add_an_image_finalizes_and_serves_it(): void
     {
         $cat = $this->makeCategory();

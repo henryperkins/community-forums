@@ -1050,6 +1050,7 @@ final class App
             $c->get(BoardModeratorRepository::class),
             $c->get(AttachmentRepository::class),
             $c->get(FirstPartyHookRegistry::class),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
             $c->get(Database::class),

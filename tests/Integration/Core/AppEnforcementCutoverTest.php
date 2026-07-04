@@ -12,6 +12,7 @@ use App\Repository\RoleAssignmentHistoryRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
 use App\Repository\RoleRepository;
+use App\Repository\SettingRepository;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
@@ -237,6 +238,56 @@ final class AppEnforcementCutoverTest extends TestCase
 
         $this->actingAs($deputy);
         $this->assertStatus(403, $this->post('/posts/' . $replyId . '/accept'));
+    }
+
+    /**
+     * Phase 5 Inc 6 Task 7 — ADR-0016 tightening (capability-taxonomy.md §7
+     * quirk #5). Legacy `ApprovalController::queue()` gates on bare
+     * `isModerator()` with no `WriteGate`, so a suspended global moderator can
+     * still VIEW the pending queue in production even though every pending
+     * ACTION (approve/reject) already runs through `canModerate()` and is
+     * state-blocked. Under `CAPABILITIES_MODE=enforce`, `AuthorityGate`
+     * consults the resolver, and `CapabilityRules::decide()` applies "state
+     * beats role" uniformly (denies any non-state-exempt capability whenever
+     * `!actorCanWrite`) — so this pin FAILS on the pre-swap tree (legacy still
+     * renders the queue for a suspended mod) and PASSES once
+     * `ApprovalController::queue()` routes through the gate. Owner decision
+     * recorded in capability-taxonomy.md §7 #5: accept the (safer) tightening
+     * rather than state-exempt the view paths.
+     */
+    public function test_suspended_global_moderator_loses_pending_views_under_enforce_adr_0016(): void
+    {
+        // A live admin must already exist or every request (including this
+        // GET) is bounced to /setup by App::process()'s first-run gate,
+        // independent of the pending-view check this test targets (see the
+        // sibling tests above).
+        $this->makeAdmin();
+        $mod = $this->makeUser(['role' => 'moderator', 'status' => 'suspended',
+            'suspended_until' => gmdate('Y-m-d H:i:s', time() + 86400)]);
+        $this->withCapabilitiesEnforced(['anti_abuse' => true]);
+
+        $this->actingAs($mod);
+        $this->assertStatus(403, $this->get('/mod/approvals')); // approved tightening: state beats role
+    }
+
+    /**
+     * Shadow-mode sibling: outside `CAPABILITIES_MODE=enforce` the legacy
+     * closure alone decides the outcome (`AuthorityGate::allows()` shadow
+     * branch) — the resolver only ever runs for mismatch telemetry — so the
+     * suspended-global-moderator quirk documented in capability-taxonomy.md §7
+     * #5 is preserved exactly as it behaves in production today.
+     */
+    public function test_suspended_global_moderator_keeps_pending_view_in_shadow_mode(): void
+    {
+        $this->makeAdmin(); // satisfy the first-run setup gate
+        $mod = $this->makeUser(['role' => 'moderator', 'status' => 'suspended',
+            'suspended_until' => gmdate('Y-m-d H:i:s', time() + 86400)]);
+        (new SettingRepository($this->db))->set('features', ['capabilities' => true, 'anti_abuse' => true]);
+        // NOTE: no app rebuild — CAPABILITIES_MODE stays shadow (the default config).
+
+        $this->actingAs($mod);
+        $response = $this->get('/mod/approvals');
+        self::assertNotSame(403, $response->status()); // legacy quirk preserved outside enforce
     }
 
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
