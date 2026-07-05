@@ -19,7 +19,16 @@ use App\Support\Phase5Budgets;
  * BaselineMetricsService — the number the future resolver must beat) and
  * `webhook.delivery_timeout` (a CONFIG cap). Every other D11 budget lists its
  * target and stays PENDING until its increment measures it on this same fixture.
- * Read-only; writes only the evidence file the caller names.
+ *
+ * Read-only by default. The two §11.3 measured-only Inc-6 rows
+ * (`role_assignment.change_propagation_p95`, `permission_simulator.duration_p95`)
+ * are gated behind the opt-in `$includeLifecycleSamples` flag: only then do the
+ * mutating 200-iteration samplers run (inside the caller's rollback transaction)
+ * and only then are those two rows emitted. Minimal-construction consumers
+ * (other budget tests) leave the flag off, so they neither run the benchmark nor
+ * carry the rows — exactly as the other optional samplers omit their rows when
+ * their collaborator is absent. `bin/console verify:phase5-budgets` opts in so
+ * the evidence doc regenerates with both rows.
  */
 final class Phase5BudgetReportService
 {
@@ -40,6 +49,7 @@ final class Phase5BudgetReportService
         private ?PackageUpdateService $packageUpdates = null,
         private ?PackageArtifactStore $packageStore = null,
         private ?ThemeStateService $themeState = null,
+        private bool $includeLifecycleSamples = false,
     ) {
     }
 
@@ -100,19 +110,29 @@ final class Phase5BudgetReportService
     }
 
     /**
-     * §11.3 measured-only (no D11 gate). Always measured — the sampler builds its
-     * own fixture, so `verify:phase5-budgets` re-emits this row every run instead
-     * of ever losing it. Memoized so the in-transaction rows() measurement is the
-     * one reused by the post-rollback render() (mirrors packageSample/themeSample).
+     * §11.3 measured-only (no D11 gate). Opt-in only: null unless the caller set
+     * `$includeLifecycleSamples`, because this sampler mutates and runs a
+     * 200-iteration benchmark. When opted in it builds its own fixture, so
+     * `verify:phase5-budgets` re-emits this row every run instead of ever losing
+     * it. Memoized so the in-transaction rows() measurement is the one reused by
+     * the post-rollback render() (mirrors packageSample/themeSample).
      */
-    private function propagationSample(): array
+    private function propagationSample(): ?array
     {
+        if (!$this->includeLifecycleSamples) {
+            return null;
+        }
+
         return $this->propagationSample ??= (new BaselineMetricsService($this->db))->measureAssignmentChangePropagation();
     }
 
-    /** §11.3 measured-only (no D11 gate). Always measured on the F9 fixture. */
-    private function simulatorSample(): array
+    /** §11.3 measured-only (no D11 gate). Opt-in only (see propagationSample). */
+    private function simulatorSample(): ?array
     {
+        if (!$this->includeLifecycleSamples) {
+            return null;
+        }
+
         return $this->simulatorSample ??= (new BaselineMetricsService($this->db))->measureSimulatorDuration();
     }
 
@@ -130,11 +150,17 @@ final class Phase5BudgetReportService
 
             if ($key === 'role_assignment.change_propagation_p95') {
                 $sample = $this->propagationSample();
+                if ($sample === null) {
+                    continue; // opt-in only — omitted (and un-benchmarked) for minimal consumers
+                }
                 $measured = $sample['p95'] . ' ms revoke→can pair (' . $sample['samples'] . ' iterations, '
                     . $sample['anomalies'] . '/' . $sample['samples'] . ' stale-after-revoke)';
                 $status = 'MEASURED (no D11 target)';
             } elseif ($key === 'permission_simulator.duration_p95') {
                 $sample = $this->simulatorSample();
+                if ($sample === null) {
+                    continue; // opt-in only — omitted (and un-benchmarked) for minimal consumers
+                }
                 $measured = $sample['p95'] . ' ms simulate() call (' . $sample['samples'] . ' iterations, F9 fixture)';
                 $status = 'MEASURED (no D11 target)';
             } elseif ($key === 'resolver.p95') {
@@ -219,12 +245,16 @@ final class Phase5BudgetReportService
         $out .= '- WebAuthn ceremony p50/p95/p99 (ms): ' . $webauthnSample['p50'] . ' / ' . $webauthnSample['p95'] . ' / ' . $webauthnSample['p99']
             . ' · route/job: `' . $webauthnSample['route_or_job'] . '` · samples: ' . $webauthnSample['samples'] . "\n";
         $propagationSample = $this->propagationSample();
-        $out .= '- Assignment-change propagation p50/p95/p99 (ms): ' . $propagationSample['p50'] . ' / ' . $propagationSample['p95'] . ' / ' . $propagationSample['p99']
-            . ' · route/job: `' . $propagationSample['route_or_job'] . '` · iterations: ' . $propagationSample['samples']
-            . ' · stale-after-revoke: ' . $propagationSample['anomalies'] . "\n";
+        if ($propagationSample !== null) {
+            $out .= '- Assignment-change propagation p50/p95/p99 (ms): ' . $propagationSample['p50'] . ' / ' . $propagationSample['p95'] . ' / ' . $propagationSample['p99']
+                . ' · route/job: `' . $propagationSample['route_or_job'] . '` · iterations: ' . $propagationSample['samples']
+                . ' · stale-after-revoke: ' . $propagationSample['anomalies'] . "\n";
+        }
         $simulatorSample = $this->simulatorSample();
-        $out .= '- Simulator duration p50/p95/p99 (ms): ' . $simulatorSample['p50'] . ' / ' . $simulatorSample['p95'] . ' / ' . $simulatorSample['p99']
-            . ' · route/job: `' . $simulatorSample['route_or_job'] . '` · iterations: ' . $simulatorSample['samples'] . "\n";
+        if ($simulatorSample !== null) {
+            $out .= '- Simulator duration p50/p95/p99 (ms): ' . $simulatorSample['p50'] . ' / ' . $simulatorSample['p95'] . ' / ' . $simulatorSample['p99']
+                . ' · route/job: `' . $simulatorSample['route_or_job'] . '` · iterations: ' . $simulatorSample['samples'] . "\n";
+        }
         $out .= '- Queries: ' . $env['query_count'] . ' · query time (ms): ' . $env['query_time_ms']
              . ' · peak mem (bytes): ' . $env['peak_memory_bytes'] . ' · error rate: ' . $env['error_rate'] . "\n\n";
         $out .= "## Budgets vs D11 targets (ADR 0004 D11)\n\n";
@@ -233,21 +263,23 @@ final class Phase5BudgetReportService
         foreach ($this->rows() as $r) {
             $out .= '| `' . $r['key'] . '` | ' . $r['metric'] . ' | ' . $r['target'] . ' | ' . $r['measured'] . ' | ' . $r['status'] . " |\n";
         }
-        $out .= "\n## Measured-only metrics (§11.3, no D11 gate)\n\n";
-        $out .= "PHASE_5_PLAN §11.3 requires \"assignment-change propagation\" and \"simulator\n";
-        $out .= "duration\" to be measured; ADR 0004 D11 sets no gate value for either, so both\n";
-        $out .= "carry status `MEASURED (no D11 target)` (no PASS/FAIL). Both are measured fresh\n";
-        $out .= "on every `verify:phase5-budgets` run — the samplers build their own fixtures —\n";
-        $out .= "so run-to-run variance is expected and carries no gate consequence, and the rows\n";
-        $out .= "survive regeneration (they are emitted by the generator, not hand-appended).\n\n";
-        $out .= "- `role_assignment.change_propagation_p95`: per iteration creates a fresh\n";
-        $out .= "  site-scope assignment, then times `RoleAssignmentService::revoke()` immediately\n";
-        $out .= "  followed by `CapabilityResolver::can()` for the revoked subject. Decisions read\n";
-        $out .= "  the live `role_assignments` table and `revoke()` calls `invalidate()` in-request,\n";
-        $out .= "  so propagation is structurally immediate; `stale-after-revoke` is a correctness\n";
-        $out .= "  sentinel (expected 0).\n";
-        $out .= "- `permission_simulator.duration_p95`: times `PermissionSimulatorService::simulate()`\n";
-        $out .= "  cycling the F9 fixture's users/boards.\n";
+        if ($this->includeLifecycleSamples) {
+            $out .= "\n## Measured-only metrics (§11.3, no D11 gate)\n\n";
+            $out .= "PHASE_5_PLAN §11.3 requires \"assignment-change propagation\" and \"simulator\n";
+            $out .= "duration\" to be measured; ADR 0004 D11 sets no gate value for either, so both\n";
+            $out .= "carry status `MEASURED (no D11 target)` (no PASS/FAIL). Both are measured fresh\n";
+            $out .= "on every `verify:phase5-budgets` run — the samplers build their own fixtures —\n";
+            $out .= "so run-to-run variance is expected and carries no gate consequence, and the rows\n";
+            $out .= "survive regeneration (they are emitted by the generator, not hand-appended).\n\n";
+            $out .= "- `role_assignment.change_propagation_p95`: per iteration creates a fresh\n";
+            $out .= "  site-scope assignment, then times `RoleAssignmentService::revoke()` immediately\n";
+            $out .= "  followed by `CapabilityResolver::can()` for the revoked subject. Decisions read\n";
+            $out .= "  the live `role_assignments` table and `revoke()` calls `invalidate()` in-request,\n";
+            $out .= "  so propagation is structurally immediate; `stale-after-revoke` is a correctness\n";
+            $out .= "  sentinel (expected 0).\n";
+            $out .= "- `permission_simulator.duration_p95`: times `PermissionSimulatorService::simulate()`\n";
+            $out .= "  cycling the F9 fixture's users/boards.\n";
+        }
         return $out;
     }
 

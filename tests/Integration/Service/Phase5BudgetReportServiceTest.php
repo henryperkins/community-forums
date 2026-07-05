@@ -19,7 +19,9 @@ final class Phase5BudgetReportServiceTest extends TestCase
         (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed();
         $rows = (new Phase5BudgetReportService($this->db))->rows();
 
-        self::assertCount(count(Phase5Budgets::all()), $rows);
+        // Minimal construction covers every D11 budget EXCEPT the two opt-in
+        // §11.3 lifecycle rows (gated behind $includeLifecycleSamples).
+        self::assertCount(count(Phase5Budgets::all()) - 2, $rows);
 
         $byKey = [];
         foreach ($rows as $r) {
@@ -124,13 +126,14 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertStringContainsString('WebAuthn ceremony p50/p95/p99', $report->render());
     }
 
-    public function test_inc6_measured_only_metrics_are_emitted_by_the_generator(): void
+    public function test_inc6_measured_only_metrics_are_emitted_when_opted_in(): void
     {
-        // Regression guard for the Task 15 silent-loss gap: the two §11.3
-        // measured-only metrics must be produced BY the generator (so a
-        // regeneration re-emits them) — never hand-appended to the evidence file.
+        // Regression guard for the Task 15 silent-loss gap: with the opt-in flag
+        // set (as `verify:phase5-budgets` does), the two §11.3 measured-only
+        // metrics must be produced BY the generator (so a regeneration re-emits
+        // them) — never hand-appended to the evidence file.
         (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed(true);
-        $report = new Phase5BudgetReportService($this->db);
+        $report = new Phase5BudgetReportService($this->db, includeLifecycleSamples: true);
 
         $rows = [];
         foreach ($report->rows() as $row) {
@@ -154,6 +157,27 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertStringContainsString('Assignment-change propagation p50/p95/p99', $md);
         self::assertStringContainsString('Simulator duration p50/p95/p99', $md);
         self::assertStringContainsString('Measured-only metrics (§11.3, no D11 gate)', $md);
+    }
+
+    public function test_inc6_lifecycle_samplers_are_gated_off_by_default(): void
+    {
+        // Proves the opt-in gate: a minimal-construction consumer (every other
+        // budget test, PackageInstallBudgetTest, ThemeBudgetTest) neither runs the
+        // 200-iteration mutating benchmark nor carries the two rows. Guards against
+        // the samplers being re-wired unconditionally.
+        (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed(true);
+        $report = new Phase5BudgetReportService($this->db);
+
+        $keys = array_column($report->rows(), 'key');
+        self::assertNotContains('role_assignment.change_propagation_p95', $keys);
+        self::assertNotContains('permission_simulator.duration_p95', $keys);
+
+        $md = $report->render();
+        self::assertStringNotContainsString('Assignment-change propagation p50/p95/p99', $md);
+        self::assertStringNotContainsString('Simulator duration p50/p95/p99', $md);
+        self::assertStringNotContainsString('Measured-only metrics (§11.3, no D11 gate)', $md);
+        // The resolver gate row is unaffected by the lifecycle gate.
+        self::assertStringContainsString('resolver.p95', $md);
     }
 
     public function test_assignment_change_propagation_sampler_is_immediate_and_writes_nothing_durable(): void

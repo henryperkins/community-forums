@@ -11,15 +11,15 @@
 - Hardware class: unknown · OS/isolation: Linux
 - Fixture: phase5_fixture_v2 · role assignments: 4
 - Window: 200 iterations · concurrency: 1 · cache: cold
-- Legacy read p50/p95/p99 (ms): 0.9239 / 1.1757 / 1.5216
-- Resolver p50/p95/p99 (ms): 0.0009 / 0.9695 / 2.1062 · route/job: `capability_resolver_can`
-- Signature verify p50/p95/p99 (ms): 0.4173 / 0.5715 / 0.5888 · route/job: `registry_signature_verify`
-- Package install/update p50/p95/p99 (ms): 22.7822 / 52.8179 / 52.8179 · route/job: `package_install_update` · samples: 8
-- Theme build/apply p50/p95/p99 (ms): 5.8555 / 6.407 / 6.407 · route/job: `theme_build_apply` · samples: 8
-- WebAuthn ceremony p50/p95/p99 (ms): 1.6236 / 2.1508 / 2.2821 · route/job: `webauthn_ceremony_assertion_verify` · samples: 200
-- Assignment-change propagation p50/p95/p99 (ms): 3.1948 / 5.1539 / 6.976 · route/job: `role_assignment_change_propagation` · iterations: 200 · stale-after-revoke: 0
-- Simulator duration p50/p95/p99 (ms): 1.1843 / 2.8246 / 3.2444 · route/job: `permission_simulator_simulate` · iterations: 200
-- Queries: 600 · query time (ms): 188.1623 · peak mem (bytes): 4194304 · error rate: 0
+- Legacy read p50/p95/p99 (ms): 1.07 / 2.1127 / 4.1235
+- Resolver p50/p95/p99 (ms): 0.0011 / 1.6936 / 6.3601 · route/job: `capability_resolver_can`
+- Signature verify p50/p95/p99 (ms): 0.5016 / 0.5846 / 0.6404 · route/job: `registry_signature_verify`
+- Package install/update p50/p95/p99 (ms): 25.5938 / 48.7317 / 48.7317 · route/job: `package_install_update` · samples: 8
+- Theme build/apply p50/p95/p99 (ms): 7.6974 / 10.7607 / 10.7607 · route/job: `theme_build_apply` · samples: 8
+- WebAuthn ceremony p50/p95/p99 (ms): 2.126 / 2.3509 / 2.4703 · route/job: `webauthn_ceremony_assertion_verify` · samples: 200
+- Assignment-change propagation p50/p95/p99 (ms): 4.014 / 9.7599 / 14.3926 · route/job: `role_assignment_change_propagation` · iterations: 200 · stale-after-revoke: 0
+- Simulator duration p50/p95/p99 (ms): 1.3507 / 3.5838 / 6.5603 · route/job: `permission_simulator_simulate` · iterations: 200
+- Queries: 600 · query time (ms): 244.9603 · peak mem (bytes): 4194304 · error rate: 0
 
 ## Budgets vs D11 targets (ADR 0004 D11)
 
@@ -27,13 +27,13 @@
 |---|---|---|---|---|
 | `registry.snapshot_freshness` | Registry snapshot freshness tolerance | 86400 s (max) | 86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal) | CONFIG |
 | `registry.fetch_p95` | Registry fetch duration | 2000 ms (p95) | — | PENDING (staged-enablement) |
-| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5715 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
-| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 52.8179 ms install/update (8 samples) | MEASURED (PASS) |
-| `theme.build_apply_p95` | Theme build + activate (declarative package) | 10000 ms (p95) | 6.407 ms theme build/apply (8 samples) | MEASURED (PASS) |
-| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 0.9695 ms resolver (baseline 1.1757 ms legacy) | MEASURED (PASS) |
-| `role_assignment.change_propagation_p95` | Assignment-change propagation (revoke → resolver decision) | no D11 target (measurement only) | 5.1539 ms revoke→can pair (200 iterations, 0/200 stale-after-revoke) | MEASURED (no D11 target) |
-| `permission_simulator.duration_p95` | Permission simulator (simulate() call) | no D11 target (measurement only) | 2.8246 ms simulate() call (200 iterations, F9 fixture) | MEASURED (no D11 target) |
-| `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | 2.1508 ms WebAuthn assertion verify (200 samples) | MEASURED (PASS) |
+| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5846 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
+| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 48.7317 ms install/update (8 samples) | MEASURED (PASS) |
+| `theme.build_apply_p95` | Theme build + activate (declarative package) | 10000 ms (p95) | 10.7607 ms theme build/apply (8 samples) | MEASURED (PASS) |
+| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 1.6936 ms resolver (baseline 2.1127 ms legacy) | MEASURED (PASS) |
+| `role_assignment.change_propagation_p95` | Assignment-change propagation (revoke → resolver decision) | no D11 target (measurement only) | 9.7599 ms revoke→can pair (200 iterations, 0/200 stale-after-revoke) | MEASURED (no D11 target) |
+| `permission_simulator.duration_p95` | Permission simulator (simulate() call) | no D11 target (measurement only) | 3.5838 ms simulate() call (200 iterations, F9 fixture) | MEASURED (no D11 target) |
+| `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | 2.3509 ms WebAuthn assertion verify (200 samples) | MEASURED (PASS) |
 | `oidc.discovery_p95_cached` | OIDC discovery/JWKS (cached) | 2000 ms (p95) | — | PENDING (inc8) |
 | `oidc.discovery_p95_cold` | OIDC discovery/JWKS (cold) | 5000 ms (p95) | — | PENDING (inc8) |
 | `invitation.redemption_p95` | Invitation redemption | 500 ms (p95) | — | PENDING (inc9) |
