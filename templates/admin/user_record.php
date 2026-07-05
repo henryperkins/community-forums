@@ -91,6 +91,34 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
     </section>
 
     <section class="card">
+        <h2>Role</h2>
+        <?php if (!empty($errs['role']) && $ctx === 'change_role'): ?>
+            <p class="field-error"><?= $e($errs['role']) ?></p>
+        <?php endif; ?>
+        <?php
+            $roleOld = $ctx === 'change_role' ? (string) ($old['role'] ?? '') : '';
+            $roleSel = $roleOld !== '' ? $roleOld : (string) $subject['role'];
+        ?>
+        <form method="post" action="/admin/users/<?= $uid ?>/role" class="stacked">
+            <?= $this->csrfField() ?>
+            <label class="field">
+                <span>Role</span>
+                <select name="role" class="input">
+                    <option value="user"<?= $roleSel === 'user' ? ' selected' : '' ?>>user</option>
+                    <option value="moderator"<?= $roleSel === 'moderator' ? ' selected' : '' ?>>moderator</option>
+                    <option value="admin"<?= $roleSel === 'admin' ? ' selected' : '' ?>>admin</option>
+                </select>
+            </label>
+            <label class="field">
+                <span>Your current password</span>
+                <input type="password" name="current_password" class="input" required>
+            </label>
+            <?= $ferr('change_role', 'current_password') ?>
+            <div class="form-actions"><button class="btn danger" type="submit">Change role</button></div>
+        </form>
+    </section>
+
+    <section class="card">
         <h2>Staff actions</h2>
         <h3>Issue a warning</h3>
         <form method="post" action="/admin/users/<?= $uid ?>/warn" class="stacked">

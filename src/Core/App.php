@@ -1052,6 +1052,11 @@ final class App
             $c->get(AttachmentRepository::class),
             $c->get(FirstPartyHookRegistry::class),
             $c->get(AuthorityGate::class),
+            $c->get(LastOwnerGuard::class),
+            $c->get(ProtectedOwnerRepository::class),
+            $c->get(SessionRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(CapabilityResolver::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
             $c->get(Database::class),
@@ -2029,6 +2034,9 @@ final class App
         $r->post('/admin/users/{id}/suspend', [AdminUserController::class, 'suspend']);
         $r->post('/admin/users/{id}/ban', [AdminUserController::class, 'ban']);
         $r->post('/admin/users/{id}/lift', [AdminUserController::class, 'lift']);
+        // users.role mutation (TM-PE-07): flag-INDEPENDENT — users.role exists
+        // regardless of Phase 5, so this works with `capabilities` dark.
+        $r->post('/admin/users/{id}/role', [AdminUserController::class, 'changeRole']);
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);

@@ -237,6 +237,12 @@ final class UserRepository
         );
     }
 
+    /** In-app role mutation (ADMIN §5.2 change-role, TM-PE-07): UserModerationService::changeRole. */
+    public function setRole(int $id, string $role): void
+    {
+        $this->db->run('UPDATE users SET role = ? WHERE id = ?', [$role, $id]);
+    }
+
     public function anonymizeDeletedAccount(int $id): void
     {
         $this->db->run(
