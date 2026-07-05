@@ -37,8 +37,21 @@ truth that the Foundation increment turns into code:
 This catalogue was derived from a full read-only inventory of the authorization
 surface (`Controller::requireUser/requireAdmin`, `ModerationService::canModerate`,
 `WriteGate`, `BoardPolicy`, every `Admin*Controller`, and the service layer) at
-the working tree of commit `5fee422`. Citations are `file:line` anchors, not a
-frozen snapshot.
+the working tree of commit `5fee422`; re-anchored 2026-07-05 (Increment 6,
+commit `628ef4d`) for every site the enforcement cutover touched (§4.2/§4.3
+dual-path and moderation citations, §7 #3). Citations are `file:line` anchors,
+not a frozen snapshot.
+
+> **Known citation drift (recorded, not fixed here):** the code-owned golden
+> matrix this file feeds, `src/Service/CapabilityInventoryService::MATRIX`, was
+> transcribed from this taxonomy at A1-authoring time and has **not** been
+> re-anchored to match — most of its `file:line` values (e.g. `core.user.warn`
+> still cites `UserModerationService.php:179`; the real `assertStaff()` guard is
+> now at line 358) are stale by the same drift documented below. Fixing that
+> array is source-code maintenance outside this docs-closure task's scope
+> (`CapabilityInventoryCoverageTest` validates key coverage, not line-number
+> accuracy, so nothing is silently broken by the drift); recorded here as a
+> follow-up rather than left implicit.
 
 ## 2. Schema contract (`0050`) — these are the taxonomy fields
 
@@ -97,9 +110,9 @@ site; the F3 coverage test enumerates the complete set.
 | `core.content.react` | board | low | 1 | 0 | React to posts, star threads, vote in polls. | user, can-read (`EngagementController.php:32,71`; `PollService::vote:80`) |
 | `core.content.report` | board | low | 1 | 0 | Report a post or message to moderators. | user (`ReportController.php:29`; `DirectMessageService::reportMessage:207`) |
 | `core.thread.tag` | board | low | 1 | 0 | Add or change tags on a thread you can post in. | canPost (`TagController::updateThread:149`; flag `tags`) |
-| `core.thread.mark_solved` | board | low | 1 | 0 | Accept/clear the answer on a thread — your own thread (any member) or any thread in a board you moderate. | author OR board-mod (`SolvedAnswerService::assertCanAccept:196`; flag `community`) — **dual-path** |
-| `core.poll.manage` | board | low | 1 | 0 | Create or close polls on a thread — your own thread (any member) or any thread in a board you moderate. | author OR board-mod (`PollService::canManageThread:151`; flag `polls`) — **dual-path** |
-| `core.thread.manage_workflow` | board | low | 1 | 0 | Manage a thread's workflow (status + assignment): authors change non-final statuses and self-(un)assign in self-assignment boards; staff set staff-only statuses (`decision_made`/`archived`) and assign other members. | author/self OR staff (`ThreadWorkflowService.php:197,217,236`; flag `topic_workflow`) — **dual-path** |
+| `core.thread.mark_solved` | board | low | 1 | 0 | Accept/clear the answer on a thread — your own thread (any member) or any thread in a board you moderate. | author OR board-mod (`SolvedAnswerService::authorize:202`; flag `community`) — **dual-path** |
+| `core.poll.manage` | board | low | 1 | 0 | Create or close polls on a thread — your own thread (any member) or any thread in a board you moderate. | author OR board-mod (`PollService::canManageThread:172`; flag `polls`) — **dual-path** |
+| `core.thread.manage_workflow` | board | low | 1 | 0 | Manage a thread's workflow (status + assignment): authors change non-final statuses and self-(un)assign in self-assignment boards; staff set staff-only statuses (`decision_made`/`archived`) and assign other members. | author/self OR staff (`ThreadWorkflowService::authorizeStatus:244` dual-path, `::canStaffAssign:284` staff-only; flag `topic_workflow`) — **dual-path** |
 | `core.message.participate` | self | low | 1 | 0 | Send and manage your own DMs and group conversations (incl. group-owner actions). | user + eligibility (`DirectMessageService.php:57,80,336`; flags `dms`,`group_dms`) |
 | `core.upload.create` | self | low | 1 | 0 | Upload images and files in the composer. | user (`MediaController.php:31,70`; flags `uploads`,`expanded_files`) |
 | `core.draft.manage_own` | self | low | 1 | 0 | Save and restore your own composer drafts. | owner (`DraftController.php:23`; flags `drafts`,`server_drafts`) |
@@ -120,19 +133,19 @@ site; the F3 coverage test enumerates the complete set.
 
 | Key | scope | risk | D | P | Description | Authority today (primary site) |
 |---|---|---|---|---|---|---|
-| `core.post.delete_any` | board | medium | 1 | 0 | Delete any member's post in a board you moderate. | canModerate (`ModerationService::deletePost:97`) |
-| `core.post.restore` | board | medium | 1 | 0 | Restore a soft-deleted post. | canModerate (`ModerationService::restorePost:139`) |
-| `core.thread.lock` | board | medium | 1 | 0 | Lock or unlock a thread. | canModerate (`ModerationService::toggleLock:76`) |
-| `core.thread.pin` | board | medium | 1 | 0 | Pin or unpin a thread. | canModerate (`ModerationService::togglePin:55`) |
-| `core.thread.move` | board | medium | 1 | 0 | Move a thread (moderator on both boards). | canModerate ×2 (`ModerationService::moveThread:177`) |
-| `core.thread.split_merge` | board | medium | 1 | 0 | Split or merge threads (moderator on both). | canModerate ×2 (`ThreadSplitMergeService.php:35,114`; flag `split_merge`) |
-| `core.post.reveal_author` | board | **high** | 1 | 0 | Reveal the author of an anonymous post. | canModerate (`ModerationService::revealAuthor:249`) — deanonymization |
-| `core.content.approve` | board | medium | 1 | 0 | Approve or reject held/pending content. | canModerate (`ApprovalController.php:67,86`; flag `anti_abuse`) |
-| `core.content.view_pending` | board | low | 1 | 0 | View held/pending content awaiting moderation. | canModerate / global-mod (`ApprovalController.php:29`; `ThreadController.php:366`; `MediaController.php:204`) — **dual legacy authority, §7** |
-| `core.report.handle` | board | medium | 1 | 0 | Triage reports: view queue, claim, resolve, dismiss. | board-mod of report's board (`ReportService::canHandle:74`; flag `moderation_queue`) |
-| `core.appeal.resolve_content` | board | medium | 1 | 0 | Resolve appeals against post/content actions. | board-mod of target's board (`AppealService::assertCanResolve:256`; flag `appeals`) |
-| `core.memory.curate` | board | medium | 1 | 0 | Curate community memory: summaries, related topics, wiki posts. | board-mod curator (`CommunityMemoryService::assertCurator:284`; flag `community_memory`) |
-| `core.user.warn` | **site** | medium | 1 | 0 | Issue a formal warning and add staff notes to a member. | **staff-any** (admin OR mod of *any* board), targets site-wide (`UserModerationService::assertStaff:179`; flag `moderation_queue`) — **legacy quirk, §7** |
+| `core.post.delete_any` | board | medium | 1 | 0 | Delete any member's post in a board you moderate. | canModerate (`ModerationService::deletePost:109`) |
+| `core.post.restore` | board | medium | 1 | 0 | Restore a soft-deleted post. | canModerate (`ModerationService::restorePost:173`) |
+| `core.thread.lock` | board | medium | 1 | 0 | Lock or unlock a thread. | canModerate (`ModerationService::toggleLock:88`) |
+| `core.thread.pin` | board | medium | 1 | 0 | Pin or unpin a thread. | canModerate (`ModerationService::togglePin:67`) |
+| `core.thread.move` | board | medium | 1 | 0 | Move a thread (moderator on both boards). | canModerate ×2 (`ModerationService::moveThread:211`) |
+| `core.thread.split_merge` | board | medium | 1 | 0 | Split or merge threads (moderator on both). | canModerate ×2 (`ThreadSplitMergeService.php:35,114,117`; flag `split_merge`) |
+| `core.post.reveal_author` | board | **high** | 1 | 0 | Reveal the author of an anonymous post. | canModerate (`ModerationService::revealAuthor:283`) — deanonymization |
+| `core.content.approve` | board | medium | 1 | 0 | Approve or reject held/pending content. | canModerate (`ApprovalController::assertCanModerate:114`; flag `anti_abuse`) |
+| `core.content.view_pending` | board | low | 1 | 0 | View held/pending content awaiting moderation. | canModerate / global-mod (`ApprovalController::index:33`; `ThreadController.php:417`; `MediaController::authorizePendingMedia:211`) — **dual legacy authority, §7** |
+| `core.report.handle` | board | medium | 1 | 0 | Triage reports: view queue, claim, resolve, dismiss. | board-mod of report's board (`ReportService::canHandle:81`; flag `moderation_queue`) |
+| `core.appeal.resolve_content` | board | medium | 1 | 0 | Resolve appeals against post/content actions. | board-mod of target's board (`AppealService::assertCanResolve:247`; flag `appeals`) |
+| `core.memory.curate` | board | medium | 1 | 0 | Curate community memory: summaries, related topics, wiki posts. | board-mod curator (`CommunityMemoryService::assertCurator:289`; flag `community_memory`) |
+| `core.user.warn` | **site** | medium | 1 | 0 | Issue a formal warning and add staff notes to a member. | **staff-any** (admin OR mod of *any* board), targets site-wide (`UserModerationService::assertStaff:358`; flag `moderation_queue`) — **legacy quirk, §7** |
 
 ### 4.4 Administration — anchor role `system.admin`
 
@@ -226,8 +239,11 @@ change is a separate, owner-approved decision after parity is clean.
    scope; the legacy projection grants it to anyone with ≥1 board-mod assignment.
 3. **Vestigial global `users.role='moderator'`.** A global moderator with no
    `board_moderators` row passes `isModerator()` exemptions (anti-abuse bypass
-   `AntiAbuseService.php:53`, approval-queue *view* `ApprovalController.php:29`,
-   upload-floor bypass + pending-media view `MediaController.php:39,204`,
+   `AntiAbuseService.php:62`, approval-queue *view* `ApprovalController::index:31`
+   [the `core.content.view_pending` site-probe's *legacy* argument, since Inc 6 —
+   see quirk 5 below], upload-floor bypass `MediaController.php:40` + pending-media
+   view `MediaController::authorizePendingMedia:209` [same treatment as the
+   approval queue: the legacy closure passed into the capability probe],
    DM-throttle bypass `DirectMessageService.php:287`) yet `canModerate` is false
    everywhere. The projection must **not** broaden this into board powers.
 4. **Dual pending-view authority.** `core.content.view_pending` is gated by
@@ -246,6 +262,15 @@ change is a separate, owner-approved decision after parity is clean.
    decision at the Increment 6 route cutover: state-exempt the view paths to
    preserve the quirk, or accept the (safer) tightening as an approved change.
    Until then the routes keep their legacy gates and nothing changes.
+
+   **Resolved 2026-07-04 (ADR 0016):** the tightening is accepted; under
+   `CAPABILITIES_MODE=enforce` suspended staff are denied
+   `core.content.view_pending`; pinned by
+   `AppEnforcementCutoverTest::test_suspended_global_moderator_loses_pending_views_under_enforce_adr_0016`
+   (with `test_suspended_global_moderator_keeps_pending_view_in_shadow_mode`
+   pinning the shadow-mode companion: the legacy quirk stays intact while
+   `CAPABILITIES_MODE=shadow`, the default). Live-rehearsed on the local dev
+   instance: `docs/evidence/phase5/capabilities-fallback-rehearsal.md`.
 6. **Content-state closes are service-owned sub-rules, not capabilities.**
    *(Recorded 2026-07-02, Inc 1 review.)* Archived-board freezes
    (`ModerationService::assertNotArchived`, `ReactionService.php:78`,
@@ -258,6 +283,10 @@ change is a separate, owner-approved decision after parity is clean.
    `core.thread.tag`). The Inc-1 parity oracle mirrors the same boundary, so
    the corpus proves parity of capability-holding predicates; per-action
    content-state behavior remains covered by the services' own tests.
+
+   **Ratified 2026-07-04 (ADR 0016).** No behavior or modeling change; the
+   boundary above is confirmed as the intended, permanent shape, not a
+   placeholder pending a future decision.
 
 ## 8. Explicitly NOT capabilities (out of catalogue)
 
@@ -279,6 +308,13 @@ exclusion":
   moderation of them* is `core.user.manage`.
 - **Profile fields** — owner-only self-edit folded into `core.account.manage_self`;
   admin override is `core.user.manage`.
+- **DM allow-none admin override** (`DirectMessageService.php:276`,
+  `assertCanContact`) — a recipient's `allow_dms='none'` preference blocks a new
+  conversation from anyone except an admin (`!$sender->isAdmin()`). This is a
+  bare role check, not routed through any capability key, and is **not** cut
+  over by Increment 6 (recorded as a deliberate non-goal,
+  `docs/superpowers/specs/2026-07-04-inc6-resolver-enforcement-cutover-design.md`
+  §2/§10) — an uncatalogued bypass, unchanged.
 - **Bootstrap/auth/unsubscribe** (setup, login/register/reset/verify, signed
   unsubscribe/OAuth-state tokens) — guest- or token-authenticated, not role
   capabilities.
