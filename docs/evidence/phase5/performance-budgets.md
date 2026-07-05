@@ -11,13 +11,13 @@
 - Hardware class: unknown · OS/isolation: Linux
 - Fixture: phase5_fixture_v2 · role assignments: 4
 - Window: 200 iterations · concurrency: 1 · cache: cold
-- Legacy read p50/p95/p99 (ms): 1.0209 / 1.8534 / 3.7804
-- Resolver p50/p95/p99 (ms): 2.0175 / 3.7825 / 4.3278 · route/job: `capability_resolver_can`
-- Signature verify p50/p95/p99 (ms): 0.3845 / 0.548 / 0.5667 · route/job: `registry_signature_verify`
-- Package install/update p50/p95/p99 (ms): 27.7249 / 46.1962 / 46.1962 · route/job: `package_install_update` · samples: 8
-- Theme build/apply p50/p95/p99 (ms): 6.9049 / 8.5253 / 8.5253 · route/job: `theme_build_apply` · samples: 8
-- WebAuthn ceremony p50/p95/p99 (ms): 2.0175 / 2.1703 / 2.2235 · route/job: `webauthn_ceremony_assertion_verify` · samples: 200
-- Queries: 600 · query time (ms): 230.2422 · peak mem (bytes): 4194304 · error rate: 0
+- Legacy read p50/p95/p99 (ms): 0.9306 / 1.256 / 1.6652
+- Resolver p50/p95/p99 (ms): 0.0007 / 0.9366 / 1.8365 · route/job: `capability_resolver_can`
+- Signature verify p50/p95/p99 (ms): 0.3722 / 0.5206 / 0.5609 · route/job: `registry_signature_verify`
+- Package install/update p50/p95/p99 (ms): 25.2573 / 77.0145 / 77.0145 · route/job: `package_install_update` · samples: 8
+- Theme build/apply p50/p95/p99 (ms): 6.0903 / 11.4377 / 11.4377 · route/job: `theme_build_apply` · samples: 8
+- WebAuthn ceremony p50/p95/p99 (ms): 2.1069 / 2.281 / 2.3552 · route/job: `webauthn_ceremony_assertion_verify` · samples: 200
+- Queries: 600 · query time (ms): 193.5687 · peak mem (bytes): 4194304 · error rate: 0
 
 ## Budgets vs D11 targets (ADR 0004 D11)
 
@@ -25,13 +25,120 @@
 |---|---|---|---|---|
 | `registry.snapshot_freshness` | Registry snapshot freshness tolerance | 86400 s (max) | 86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal) | CONFIG |
 | `registry.fetch_p95` | Registry fetch duration | 2000 ms (p95) | — | PENDING (staged-enablement) |
-| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.548 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
-| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 46.1962 ms install/update (8 samples) | MEASURED (PASS) |
-| `theme.build_apply_p95` | Theme build + activate (declarative package) | 10000 ms (p95) | 8.5253 ms theme build/apply (8 samples) | MEASURED (PASS) |
-| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 3.7825 ms resolver (baseline 1.8534 ms legacy) | MEASURED (PASS) |
-| `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | 2.1703 ms WebAuthn assertion verify (200 samples) | MEASURED (PASS) |
+| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5206 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
+| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 77.0145 ms install/update (8 samples) | MEASURED (PASS) |
+| `theme.build_apply_p95` | Theme build + activate (declarative package) | 10000 ms (p95) | 11.4377 ms theme build/apply (8 samples) | MEASURED (PASS) |
+| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 0.9366 ms resolver (baseline 1.256 ms legacy) | MEASURED (PASS) |
+| `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | 2.281 ms WebAuthn assertion verify (200 samples) | MEASURED (PASS) |
 | `oidc.discovery_p95_cached` | OIDC discovery/JWKS (cached) | 2000 ms (p95) | — | PENDING (inc8) |
 | `oidc.discovery_p95_cold` | OIDC discovery/JWKS (cold) | 5000 ms (p95) | — | PENDING (inc8) |
 | `invitation.redemption_p95` | Invitation redemption | 500 ms (p95) | — | PENDING (inc9) |
 | `webhook.delivery_timeout` | Webhook delivery timeout | 5000 ms (max) | 5000 ms configured | CONFIG |
 | `sandbox.walltime_default` | Sandbox execution wall-time (default) | 2000 ms (max) | — | PENDING (gate_b) |
+| `role_assignment.change_propagation_p95` | Assignment-change propagation (revoke → resolver decision) | no D11 target (§11.3 requires measurement only) | 6.1205 ms revoke+can() pair (200 iterations, 0/200 anomalies) | MEASURED (no D11 target) |
+| `permission_simulator.duration_p95` | `PermissionSimulatorService::simulate()` call | no D11 target (§11.3 requires measurement only) | 3.3079 ms simulate() call (200 iterations, F9 fixture, 0 errors) | MEASURED (no D11 target) |
+
+## Task 15 — no-target measurements (§11.3, no D11 gate value)
+
+PHASE_5_PLAN §11.3 requires "assignment-change propagation" and "simulator
+duration" to be measured; ADR 0004 D11 sets no gate value for either, so both
+are recorded as evidence only (`MEASURED (no D11 target)`). The two rows above
+are appended by hand — they are not yet wired into `Phase5BudgetReportService`
+/ `Phase5Budgets`, so the next `bin/console verify:phase5-budgets` run will
+regenerate everything above this section from scratch and will **not**
+reproduce these two rows or this section until that generator is extended to
+know about them.
+
+Environment for both measurements: PHP 8.3.6, `DB_TEST_DATABASE=retroboards_test`
+(MariaDB 10.11.14), hardware class unknown / Linux, not isolated — repeated
+local runs show run-to-run p95 variance (see ranges below); each number below
+is one representative run, not an average across runs.
+
+### Assignment-change propagation
+
+Structurally near-zero: `CapabilityResolver` decisions read the live
+`role_assignments` table on every call, and `RoleAssignmentService::revoke()`
+calls `$resolver->invalidate()` in the same request, so there is no
+request-local cache to go stale. What's measured here is the wall-clock
+latency of that revoke-then-decide pair, with `RoleAssignmentService` and
+`CapabilityResolver` constructed exactly as
+`tests/Integration/Service/RoleAssignmentServiceTest.php` builds them, run
+against `DB_TEST_DATABASE` inside one transaction that is rolled back at the
+end (no rows persisted; DB left unchanged).
+
+- 200 iterations; each iteration grants a fresh site-scope `role_assignments`
+  row for a plain `user`-role subject (untimed direct-repository insert, not
+  part of the measured window), then times `revoke()` immediately followed by
+  `resolver->can()` for the same capability/subject.
+- Recorded run: p50 3.6577 ms / **p95 6.1205 ms** / p99 7.1909 ms / max
+  16.8402 ms; 0/200 iterations still showed `allowed !== false` after the
+  revoke (no propagation staleness observed).
+- Three consecutive local runs of the same script: p95 ∈ {6.1205, 6.4715,
+  9.6156} ms — same order of magnitude, no p95 anywhere near a concerning
+  multi-ms-per-request cost.
+
+Measured loop (throwaway script; one-time fixture setup — admin/subject users,
+a custom role holding `core.thread.lock` — omitted; see
+`RoleAssignmentServiceTest` for the equivalent construction):
+
+```php
+$iterations = 200;
+$samples = [];
+$anomalies = 0;
+for ($i = 0; $i < $iterations; $i++) {
+    // Untimed: a fresh site-scope assignment to revoke this iteration.
+    $assignmentId = $assignments->create([
+        'subject_id' => $subjectId,
+        'role_id' => $roleId,
+        'scope_type' => 'site',
+        'scope_id' => null,
+    ]);
+
+    $t0 = hrtime(true);
+    $service->revoke($admin, $assignmentId, 'bench');
+    $decision = $resolver->can($subject, 'core.thread.lock', []);
+    $samples[] = (hrtime(true) - $t0) / 1_000_000; // ns -> ms
+
+    if ($decision->allowed !== false) {
+        $anomalies++;
+    }
+}
+```
+
+### Simulator duration
+
+`PermissionSimulatorService::simulate()` measured on the Foundation F9 fixture
+(`Phase5FixtureSeeder`, the same corpus `verify:phase5-budgets` seeds and
+measures the resolver against), with the simulator constructed exactly as
+`tests/Integration/Service/PermissionSimulatorTest.php` builds it, against
+`DB_TEST_DATABASE`, inside one transaction rolled back at the end.
+
+- 200 iterations, cycling the 10 seeded fixture users as `actorRef` and the 4
+  seeded fixture boards as the target board (`i % count()`), capability
+  `core.thread.lock`, viewer `p5fix_admin`, `at=null`.
+- Recorded run: p50 1.1172 ms / **p95 3.3079 ms** / p99 3.6893 ms / max
+  5.0034 ms; 0/200 `simulate()` calls returned an error.
+- Three consecutive local runs of the same script: p95 ∈ {3.3079, 3.8818,
+  4.9564} ms.
+
+Measured loop (throwaway script; fixture seeding omitted — one
+`(new Phase5FixtureSeeder($db, new SettingRepository($db), 'testing'))->seed(true)`
+call before the loop):
+
+```php
+$iterations = 200;
+$samples = [];
+$errors = 0;
+for ($i = 0; $i < $iterations; $i++) {
+    $actorRef = (string) $fixtureUsers[$i % count($fixtureUsers)]['username'];
+    $boardId = (int) $fixtureBoards[$i % count($fixtureBoards)]['id'];
+
+    $t0 = hrtime(true);
+    $result = $simulator->simulate($viewer, $actorRef, 'core.thread.lock', $boardId, null);
+    $samples[] = (hrtime(true) - $t0) / 1_000_000; // ns -> ms
+
+    if ($result['error'] !== null) {
+        $errors++;
+    }
+}
+```
