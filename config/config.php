@@ -193,6 +193,13 @@ return [
         'spam_hold_score' => (float) Env::get('ANTIABUSE_SPAM_HOLD_SCORE', '0.9'),
     ],
 
+    // Phase 5 Inc 6: capability-resolver posture. Flags gate availability only
+    // (DECISIONS); this mode decides whether the resolver ENFORCES or only
+    // shadow-compares while `capabilities` is enabled. shadow|enforce.
+    'capabilities' => [
+        'mode' => Env::get('CAPABILITIES_MODE', 'shadow'),
+    ],
+
     // Named rate-limit policies (P3-05): [max_attempts, decay_seconds]. The
     // central RateLimitService keys these per account+client-ip.
     'rate_limits' => [

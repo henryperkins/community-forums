@@ -13,6 +13,7 @@ use App\Core\ValidationException;
 use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Service\BadgeService;
 use App\Service\ModerationService;
@@ -187,6 +188,7 @@ final class PostController extends Controller
     {
         $user = $this->currentUser();
         $policy = $this->container->get(BoardPolicy::class);
+        $gate = $this->container->get(AuthorityGate::class);
         $boards = $this->container->get(BoardRepository::class)->allOrdered();
         $memberBoardIds = $user !== null
             ? array_flip($this->container->get(\App\Repository\BoardMemberRepository::class)->boardIdsFor($user->id()))
@@ -194,7 +196,13 @@ final class PostController extends Controller
         return array_values(array_filter(
             $boards,
             fn (array $b): bool => $user !== null
-                && $policy->canPost($b, $user, isset($memberBoardIds[(int) $b['id']]))
+                && $gate->allows(
+                    fn (): bool => $policy->canPost($b, $user, isset($memberBoardIds[(int) $b['id']])),
+                    $user,
+                    'core.thread.create',
+                    ['board_id' => (int) $b['id']],
+                    'PostController::postableBoards',
+                )
                 && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
         ));
     }

@@ -15,6 +15,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 
@@ -43,7 +44,13 @@ final class SolvedAnswerService
         private ReputationLedgerService $reputation,
         private ?FirstPartyHookRegistry $hooks = null,
         private int $solvedBonus = 5,
+        private ?AuthorityGate $authority = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     /** Mark $postId as the accepted answer of $threadId. */
@@ -194,10 +201,18 @@ final class SolvedAnswerService
     /** @param array<string,mixed> $thread */
     private function authorize(User $actor, array $thread): void
     {
-        $isOp = (int) $thread['user_id'] === $actor->id();
+        $boardId = (int) $thread['board_id'];
+        $threadAuthorId = (int) $thread['user_id'];
+        $isOp = $threadAuthorId === $actor->id();
         $isMod = $actor->isAdmin()
-            || $this->boardModerators->isModerator((int) $thread['board_id'], $actor->id());
-        if (!$isOp && !$isMod) {
+            || $this->boardModerators->isModerator($boardId, $actor->id());
+        if (!$this->gate()->allows(
+            fn (): bool => $isOp || $isMod,
+            $actor,
+            'core.thread.mark_solved',
+            ['board_id' => $boardId, 'owner_id' => $threadAuthorId],
+            'SolvedAnswerService::authorize',
+        )) {
             throw new ForbiddenException('Only the topic author or a moderator can accept an answer.');
         }
     }

@@ -54,7 +54,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         // popover pattern: native <details>, existing forms verbatim).
         $hasThreadOverflow = (($notifications_on ?? false) && $current_user !== null)
             || (($accepted_post_id ?? null) !== null && !empty($can_mark_solved))
-            || !empty($can_moderate_board);
+            || !empty($can_pin) || !empty($can_lock);
         $hasThreadActions = ((($engagement ?? false) && $current_user !== null)) || $hasThreadOverflow;
         ?>
         <?php if ($hasThreadActions): ?>
@@ -93,16 +93,20 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                                     <button class="dm-menu-item" type="submit"><span>Clear accepted answer</span></button>
                                 </form>
                             <?php endif; ?>
-                            <?php if (!empty($can_moderate_board)): ?>
+                            <?php if (!empty($can_pin) || !empty($can_lock)): ?>
                                 <div class="dm-menu-sep"></div>
+                                <?php if (!empty($can_pin)): ?>
                                 <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
                                     <?= $this->csrfField() ?>
                                     <button class="dm-menu-item" type="submit"><span><?= (int) $thread['is_pinned'] === 1 ? 'Unpin' : 'Pin' ?></span></button>
                                 </form>
+                                <?php endif; ?>
+                                <?php if (!empty($can_lock)): ?>
                                 <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock">
                                     <?= $this->csrfField() ?>
                                     <button class="dm-menu-item danger" type="submit"><span><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></span></button>
                                 </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                     </details>
@@ -360,7 +364,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 </form>
             </details>
         <?php endif; ?>
-        <?php if (!empty($features['split_merge']) && !empty($can_moderate_board)): ?>
+        <?php if (!empty($features['split_merge']) && !empty($can_split_merge)): ?>
             <?php $movablePosts = array_values(array_filter($posts ?? [], static fn ($post): bool => (int) ($post['is_op'] ?? 0) !== 1)); ?>
             <?php // Closed by default (§5b) — the same disclosure treatment as Edit
                   // tags / Add poll, instead of a permanently open two-form panel. ?>
@@ -456,7 +460,7 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                     'accepted' => ($accepted_post_id ?? null) === (int) $p['id'],
                     'can_mark_solved' => $can_mark_solved ?? false,
                     'can_reveal_anon' => $can_reveal_anon ?? false,
-                    'can_moderate_board' => $can_moderate_board ?? false,
+                    'can_delete_posts' => $can_delete_posts ?? false,
                     'can_curate_memory' => $can_curate_memory ?? false,
                     'can_curate_wiki' => $can_curate_wiki ?? false,
                     'wiki_revisions' => ($wiki_revisions_by_post ?? [])[(int) $p['id']] ?? [],

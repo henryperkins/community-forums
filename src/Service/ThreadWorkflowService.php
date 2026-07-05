@@ -16,6 +16,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\ThreadAssignmentRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
 use App\Security\WriteGate;
 
 final class ThreadWorkflowService
@@ -39,7 +40,13 @@ final class ThreadWorkflowService
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
         private FeatureFlags $flags,
+        private ?AuthorityGate $authority = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     public function setStatus(User $actor, int $threadId, string $status, ?string $reason = null): void
@@ -204,11 +211,26 @@ final class ThreadWorkflowService
         return $thread;
     }
 
-    /** @param array<string,mixed> $thread */
+    /**
+     * [STATE-KEEP]: the status-vocabulary/transition rules below (which current
+     * or target statuses require staff) are untouched — only the authority
+     * predicate is routed through the gate. `$isStaff` (used by all three
+     * guards) is already gate-routed transitively via canStaffAssign(), with
+     * NO owner_id in its target — a board-only "is staff" check, so it cannot
+     * let the OP slip through the two staff-only guards below. Only the final
+     * guard (open/needs_answer/solved transitions) is a genuine dual-path
+     * decision, so it alone gets its own gate call WITH owner_id, collapsing
+     * the original `!$isOp && !$isStaff` into one resolver-backed call (De
+     * Morgan's negation of the same expression, reframed as an "allows" test).
+     *
+     * @param array<string,mixed> $thread
+     */
     private function authorizeStatus(User $actor, array $thread, string $status): void
     {
-        $isOp = (int) $thread['user_id'] === $actor->id();
-        $isStaff = $this->canStaffAssign($actor, (int) $thread['board_id']);
+        $boardId = (int) $thread['board_id'];
+        $threadAuthorId = (int) $thread['user_id'];
+        $isOp = $threadAuthorId === $actor->id();
+        $isStaff = $this->canStaffAssign($actor, $boardId);
         $current = (string) ($thread['status'] ?? 'open');
         if (in_array($current, ['decision_made', 'archived'], true) && !$isStaff) {
             throw new ForbiddenException('Only staff can change a staff-set topic status.');
@@ -219,7 +241,13 @@ final class ThreadWorkflowService
             }
             return;
         }
-        if (!$isOp && !$isStaff) {
+        if (!$this->gate()->allows(
+            fn (): bool => $isOp || $isStaff,
+            $actor,
+            'core.thread.manage_workflow',
+            ['board_id' => $boardId, 'owner_id' => $threadAuthorId],
+            'ThreadWorkflowService::authorizeStatus',
+        )) {
             throw new ForbiddenException('Only the topic author or a moderator can change topic status.');
         }
     }
@@ -244,9 +272,22 @@ final class ThreadWorkflowService
         throw new ForbiddenException('You cannot assign this topic.');
     }
 
+    /**
+     * Board-only "is staff" check (no owner_id) — used both directly (assign/
+     * unassign flows) and as the staff half of authorizeStatus's dual-path
+     * decision. Deliberately NOT passed an owner_id: this must stay a pure
+     * staff predicate so the two staff-only guards in authorizeStatus can't be
+     * satisfied by a thread's own author.
+     */
     private function canStaffAssign(User $actor, int $boardId): bool
     {
-        return $actor->isAdmin() || $this->boardModerators->isModerator($boardId, $actor->id());
+        return $this->gate()->allows(
+            fn (): bool => $actor->isAdmin() || $this->boardModerators->isModerator($boardId, $actor->id()),
+            $actor,
+            'core.thread.manage_workflow',
+            ['board_id' => $boardId],
+            'ThreadWorkflowService::canStaffAssign',
+        );
     }
 
     /** @param array<string,mixed> $assignee */

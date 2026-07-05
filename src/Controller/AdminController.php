@@ -9,12 +9,14 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
+use App\Security\BoardPolicy;
 use App\Service\AdminDashboardService;
 use App\Service\AdminService;
 use App\Service\CustomEmojiService;
@@ -184,59 +186,130 @@ final class AdminController extends Controller
     }
 
     // ---- Board roster: moderators + members (P2-08) -----------------------
+    //
+    // Phase 5 Inc 6 Task 8: these four command endpoints are authorized at the
+    // SERVICE layer (AdminService asserts core.board.assign_moderators /
+    // core.board.manage_members via AuthorityGate, state-first, legacy closure
+    // admin-only) so a custom role holding the matching key can manage a
+    // board's roster once CAPABILITIES_MODE=enforce. Every other /admin action
+    // — including editBoard()/the board edit GET view below — stays on
+    // requireAdmin(); this cuts over the four POST commands only, not the
+    // admin console.
+
+    // The four roster commands authorize inside AdminService (state-then-
+    // capability) BEFORE that service resolves the board row, so a non-admin is
+    // denied with 403 whether or not the board exists. The controller must NOT
+    // boardOrFail() up front: doing so 404s a missing id before authorization
+    // and turns the 404-vs-403 split into a board-id existence oracle over
+    // hidden/private boards (review V1). The row is resolved only once the
+    // service has authorized — in the catch block (a ValidationException only
+    // fires after the service's own boardOrFail passed, so it provably exists)
+    // and on the success path.
 
     /** @param array<string,string> $params */
     public function assignModerator(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $actor = $this->requireUser();
+        $boardId = (int) ($params['id'] ?? 0);
         $username = $request->str('username');
         try {
-            $this->container->get(AdminService::class)->assignModerator($admin, (int) $board['id'], $username);
+            $this->container->get(AdminService::class)->assignModerator($actor, $boardId, $username);
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator', $username);
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Moderator assigned.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Moderator assigned.');
     }
 
     /** @param array<string,string> $params */
     public function unassignModerator(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $actor = $this->requireUser();
+        $boardId = (int) ($params['id'] ?? 0);
         try {
-            $this->container->get(AdminService::class)->unassignModerator($admin, (int) $board['id'], $request->int('user_id'));
+            $this->container->get(AdminService::class)->unassignModerator($actor, $boardId, $request->int('user_id'));
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator');
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Moderator removed.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Moderator removed.');
     }
 
     /** @param array<string,string> $params */
     public function addMember(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $actor = $this->requireUser();
+        $boardId = (int) ($params['id'] ?? 0);
         $username = $request->str('username');
         try {
-            $this->container->get(AdminService::class)->addMember($admin, (int) $board['id'], $username);
+            $this->container->get(AdminService::class)->addMember($actor, $boardId, $username);
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member', $username);
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Member added.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Member added.');
     }
 
     /** @param array<string,string> $params */
     public function removeMember(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $actor = $this->requireUser();
+        $boardId = (int) ($params['id'] ?? 0);
         try {
-            $this->container->get(AdminService::class)->removeMember($admin, (int) $board['id'], $request->int('user_id'));
+            $this->container->get(AdminService::class)->removeMember($actor, $boardId, $request->int('user_id'));
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member');
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Member removed.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Member removed.');
+    }
+
+    /**
+     * Success response for a roster command. An admin keeps the console flow
+     * (redirect back to the admin-only board edit page). A capability-holding
+     * non-admin deputy — who cannot see /admin/boards/{id}/edit (still
+     * requireAdmin()) — is flashed the same confirmation and sent to a page
+     * they can actually view, never the admin console.
+     *
+     * @param array<string,mixed> $board
+     */
+    private function rosterDone(User $actor, array $board, string $message): Response
+    {
+        if ($actor->isAdmin()) {
+            return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', $message);
+        }
+        return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $message);
+    }
+
+    /**
+     * Where a NON-ADMIN roster deputy lands after a command (success or a
+     * validation error): the board's own page when they can read it, otherwise
+     * the community home. Never the admin/board_edit console — rendering that
+     * for a non-admin would leak admin-only surface (board settings, the admin
+     * nav, the "Admin mode" pill). We resolve their real read access (a
+     * manage_members deputy on a private board is typically NOT a member, so
+     * /c/{slug} would 404 for them) and fall back to '/', which any signed-in
+     * user can see, carrying the confirmation in the flash.
+     *
+     * @param array<string,mixed> $board
+     */
+    private function rosterDeputyExit(User $actor, array $board): string
+    {
+        $isMember = $this->container->get(BoardMemberRepository::class)->isMember((int) $board['id'], $actor->id());
+        $canRead = $this->container->get(BoardPolicy::class)->canRead($board, $actor, $isMember);
+        return $canRead ? '/c/' . (string) $board['slug'] : '/';
     }
 
     /**

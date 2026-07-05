@@ -19,7 +19,9 @@ final class Phase5BudgetReportServiceTest extends TestCase
         (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed();
         $rows = (new Phase5BudgetReportService($this->db))->rows();
 
-        self::assertCount(count(Phase5Budgets::all()), $rows);
+        // Minimal construction covers every D11 budget EXCEPT the two opt-in
+        // §11.3 lifecycle rows (gated behind $includeLifecycleSamples).
+        self::assertCount(count(Phase5Budgets::all()) - 2, $rows);
 
         $byKey = [];
         foreach ($rows as $r) {
@@ -122,6 +124,86 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertSame('MEASURED (PASS)', $rows['webauthn.ceremony_p95']['status']);
         self::assertStringContainsString('ms WebAuthn assertion verify', $rows['webauthn.ceremony_p95']['measured']);
         self::assertStringContainsString('WebAuthn ceremony p50/p95/p99', $report->render());
+    }
+
+    public function test_inc6_measured_only_metrics_are_emitted_when_opted_in(): void
+    {
+        // Regression guard for the Task 15 silent-loss gap: with the opt-in flag
+        // set (as `verify:phase5-budgets` does), the two §11.3 measured-only
+        // metrics must be produced BY the generator (so a regeneration re-emits
+        // them) — never hand-appended to the evidence file.
+        (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed(true);
+        $report = new Phase5BudgetReportService($this->db, includeLifecycleSamples: true);
+
+        $rows = [];
+        foreach ($report->rows() as $row) {
+            $rows[$row['key']] = $row;
+        }
+
+        self::assertArrayHasKey('role_assignment.change_propagation_p95', $rows);
+        self::assertArrayHasKey('permission_simulator.duration_p95', $rows);
+        self::assertSame('MEASURED (no D11 target)', $rows['role_assignment.change_propagation_p95']['status']);
+        self::assertSame('MEASURED (no D11 target)', $rows['permission_simulator.duration_p95']['status']);
+        self::assertStringContainsString('no D11 target', $rows['role_assignment.change_propagation_p95']['target']);
+        self::assertStringContainsString('revoke→can pair', $rows['role_assignment.change_propagation_p95']['measured']);
+        self::assertStringContainsString('stale-after-revoke', $rows['role_assignment.change_propagation_p95']['measured']);
+        self::assertStringContainsString('simulate() call', $rows['permission_simulator.duration_p95']['measured']);
+
+        // …and the rendered document carries both rows, both envelope lines, and
+        // the methodology note — so `verify:phase5-budgets` regenerates them.
+        $md = $report->render();
+        self::assertStringContainsString('`role_assignment.change_propagation_p95`', $md);
+        self::assertStringContainsString('`permission_simulator.duration_p95`', $md);
+        self::assertStringContainsString('Assignment-change propagation p50/p95/p99', $md);
+        self::assertStringContainsString('Simulator duration p50/p95/p99', $md);
+        self::assertStringContainsString('Measured-only metrics (§11.3, no D11 gate)', $md);
+    }
+
+    public function test_inc6_lifecycle_samplers_are_gated_off_by_default(): void
+    {
+        // Proves the opt-in gate: a minimal-construction consumer (every other
+        // budget test, PackageInstallBudgetTest, ThemeBudgetTest) neither runs the
+        // 200-iteration mutating benchmark nor carries the two rows. Guards against
+        // the samplers being re-wired unconditionally.
+        (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed(true);
+        $report = new Phase5BudgetReportService($this->db);
+
+        $keys = array_column($report->rows(), 'key');
+        self::assertNotContains('role_assignment.change_propagation_p95', $keys);
+        self::assertNotContains('permission_simulator.duration_p95', $keys);
+
+        $md = $report->render();
+        self::assertStringNotContainsString('Assignment-change propagation p50/p95/p99', $md);
+        self::assertStringNotContainsString('Simulator duration p50/p95/p99', $md);
+        self::assertStringNotContainsString('Measured-only metrics (§11.3, no D11 gate)', $md);
+        // The resolver gate row is unaffected by the lifecycle gate.
+        self::assertStringContainsString('resolver.p95', $md);
+    }
+
+    public function test_assignment_change_propagation_sampler_is_immediate_and_writes_nothing_durable(): void
+    {
+        $before = (int) $this->db->fetchValue('SELECT COUNT(*) FROM users');
+        $sample = (new BaselineMetricsService($this->db))->measureAssignmentChangePropagation(25);
+
+        self::assertSame('role_assignment_change_propagation', $sample['route_or_job']);
+        self::assertSame(25, $sample['samples']);
+        self::assertSame(0, $sample['anomalies'], 'a revoked grant must never still resolve as allowed');
+        self::assertGreaterThan(0.0, $sample['p95']);
+        // The sampler mutates only inside the per-test transaction; the outer
+        // suite rolls it back. Within this test the synthetic admin/subject exist,
+        // so the count is strictly greater — proving the loop actually ran.
+        self::assertGreaterThan($before, (int) $this->db->fetchValue('SELECT COUNT(*) FROM users'));
+    }
+
+    public function test_simulator_duration_sampler_runs_on_the_f9_fixture(): void
+    {
+        (new Phase5FixtureSeeder($this->db, new SettingRepository($this->db), 'testing'))->seed(true);
+        $sample = (new BaselineMetricsService($this->db))->measureSimulatorDuration(40);
+
+        self::assertSame('permission_simulator_simulate', $sample['route_or_job']);
+        self::assertSame(40, $sample['samples']);
+        self::assertGreaterThan(0.0, $sample['p95']);
+        self::assertSame(0.0, $sample['error_rate'], 'every fixture actor resolves without a simulate() error');
     }
 
     public function test_inc2_registry_rows_measure_and_config(): void

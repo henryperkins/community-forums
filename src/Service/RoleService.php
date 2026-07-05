@@ -14,6 +14,8 @@ use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
 use App\Repository\RoleRepository;
 use App\Security\CapabilityCatalog;
+use App\Security\CapabilityResolver;
+use App\Security\EnforcedCapabilities;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
 
@@ -31,6 +33,7 @@ final class RoleService
         private RoleAssignmentHistoryRepository $history,
         private ReauthGate $reauth,
         private WriteGate $writeGate,
+        private ?CapabilityResolver $resolver = null,
     ) {
     }
 
@@ -42,7 +45,7 @@ final class RoleService
         [$name, $description, $keys, $ids] = $this->validateDefinition($name, $description, $capabilityKeys);
         $roleKey = $this->newRoleKey($name);
 
-        return $this->insertGuarded($name, $description, $keys, function () use ($admin, $name, $description, $keys, $ids, $roleKey): int {
+        $roleId = $this->insertGuarded($name, $description, $keys, function () use ($admin, $name, $description, $keys, $ids, $roleKey): int {
             $roleId = $this->roles->create([
                 'role_key' => $roleKey,
                 'name' => $name,
@@ -61,6 +64,8 @@ final class RoleService
 
             return $roleId;
         });
+        $this->resolver?->invalidate();
+        return $roleId;
     }
 
     /** @param list<string> $capabilityKeys */
@@ -85,6 +90,7 @@ final class RoleService
                 'reason' => 'update',
             ]);
         });
+        $this->resolver?->invalidate();
     }
 
     public function clone(User $admin, string $currentPassword, int $sourceRoleId, string $name): int
@@ -101,10 +107,25 @@ final class RoleService
             throw new ValidationException(['role' => 'The source role has no capabilities to clone.']);
         }
 
-        [$name, , $keys, $ids] = $this->validateDefinition($name, null, $sourceKeys);
+        // Clone copies from an existing role, not a human hand-pick, so filter
+        // the source's keys down to the enforceable set rather than rejecting
+        // the whole clone (create/update correctly REJECT a human's non-enforced
+        // pick). Every system anchor's cumulative set always carries baseline
+        // keys outside the enforced set (e.g. core.board.read), so without this
+        // the documented "clone one to adapt it" path would 422 for every
+        // system role. See App\Security\EnforcedCapabilities.
+        $enforceable = array_values(array_filter(
+            $sourceKeys,
+            static fn (string $k): bool => EnforcedCapabilities::has($k),
+        ));
+        if ($enforceable === []) {
+            throw new ValidationException(['role' => 'The source role has no enforceable capabilities to clone yet.']);
+        }
+
+        [$name, , $keys, $ids] = $this->validateDefinition($name, null, $enforceable);
         $roleKey = $this->newRoleKey($name);
 
-        return $this->insertGuarded($name, null, $keys, function () use ($admin, $source, $name, $keys, $ids, $roleKey): int {
+        $roleId = $this->insertGuarded($name, null, $keys, function () use ($admin, $source, $name, $keys, $ids, $roleKey): int {
             $roleId = $this->roles->create([
                 'role_key' => $roleKey,
                 'name' => $name,
@@ -123,6 +144,8 @@ final class RoleService
 
             return $roleId;
         });
+        $this->resolver?->invalidate();
+        return $roleId;
     }
 
     /** @return list<array{role:array<string,mixed>,capability_count:int,impact:int}> */
@@ -219,6 +242,9 @@ final class RoleService
             if ($meta['protected'] || !$meta['delegable']) {
                 $errors['capabilities'] = "$key is protected/non-delegable and can never be placed in a role.";
                 break;
+            }
+            if (!EnforcedCapabilities::has($key)) {
+                $errors['capabilities'] = "'" . $key . "' is not yet enforceable; it can be granted once its routes cut over to the resolver.";
             }
         }
 

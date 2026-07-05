@@ -32,7 +32,7 @@ final class ThreadSplitMergeService
         if ($source === null || (int) $source['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        if (!$this->moderation->canModerate($actor, (int) $source['board_id'])) {
+        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], 'core.thread.split_merge')) {
             throw new ForbiddenException('You do not moderate this board.');
         }
 
@@ -111,10 +111,10 @@ final class ThreadSplitMergeService
         if ($source === null || $target === null || (int) $source['is_deleted'] === 1 || (int) $target['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        if (!$this->moderation->canModerate($actor, (int) $source['board_id'])) {
+        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], 'core.thread.split_merge')) {
             throw new ForbiddenException('You do not moderate the source board.');
         }
-        if (!$this->moderation->canModerate($actor, (int) $target['board_id'])) {
+        if (!$this->moderation->canModerate($actor, (int) $target['board_id'], 'core.thread.split_merge')) {
             throw new ForbiddenException('You do not moderate the target board.');
         }
 

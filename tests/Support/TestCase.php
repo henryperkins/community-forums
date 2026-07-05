@@ -14,6 +14,7 @@ use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\PostRepository;
 use App\Repository\SessionRepository;
+use App\Repository\SettingRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\ArrayRateLimiter;
@@ -235,6 +236,20 @@ abstract class TestCase extends BaseTestCase
     {
         $this->cookies = [];
         $this->csrfSecret = null;
+    }
+
+    /**
+     * Phase 5 Inc 6: enable the capabilities flag (settings override) and rebuild
+     * the kernel with CAPABILITIES_MODE=enforce so routes decide via the resolver.
+     *
+     * @param array<string,bool> $extraFlags additional feature-flag overrides
+     */
+    protected function withCapabilitiesEnforced(array $extraFlags = []): void
+    {
+        (new SettingRepository($this->db))->set('features', ['capabilities' => true] + $extraFlags);
+        $items = $this->config->all();
+        $items['capabilities']['mode'] = 'enforce';
+        $this->app = new App(new Config($items), $this->db, $this->rateLimiter);
     }
 
     // ---- Seeding ----------------------------------------------------------

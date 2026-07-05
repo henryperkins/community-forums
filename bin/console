@@ -661,7 +661,9 @@ try {
                 new WriteGate(),
                 new ModerationLogRepository($db),
             );
-            $report = new Phase5BudgetReportService($db, $resolver, new TrustChainVerifier(), $lifecycle, $updates, $benchStore, $budgetThemeState);
+            // includeLifecycleSamples: opt in so the evidence doc regenerates with
+            // the two §11.3 measured-only Inc-6 rows (propagation + simulator).
+            $report = new Phase5BudgetReportService($db, $resolver, new TrustChainVerifier(), $lifecycle, $updates, $benchStore, $budgetThemeState, true);
             $path = $root . '/docs/evidence/phase5/performance-budgets.md';
             try {
                 // Non-mutating: seed + measure inside a transaction that is always

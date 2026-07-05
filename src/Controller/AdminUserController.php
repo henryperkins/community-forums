@@ -231,6 +231,37 @@ final class AdminUserController extends Controller
     }
 
     /**
+     * In-app role change (ADMIN §5.2, TM-PE-07). UNGATED like the rest of this
+     * controller — the route is flag-independent of `capabilities`. Unlike
+     * suspend/ban, an admin may target themselves or another admin (that's the
+     * point: demoting the last protected owner must be reachable and refused by
+     * the service, not hidden by the controller).
+     *
+     * @param array<string,string> $params
+     */
+    public function changeRole(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        $this->requireSubject($id); // 404 before any write
+        try {
+            $this->container->get(UserModerationService::class)->changeRole(
+                $admin,
+                // Raw, not str(): reauth must verify the password exactly as
+                // stored/typed. str() trims, which every other reauth site
+                // avoids and which would reject a legitimate space-edged
+                // password (review V8).
+                (string) $request->post('current_password', ''),
+                $id,
+                $request->str('role'),
+            );
+        } catch (ValidationException $e) {
+            return $this->record($id, $e, 422, 'change_role', ['role' => $request->str('role')]);
+        }
+        return $this->redirectWithFlash('/admin/users/' . $id, 'Role updated.');
+    }
+
+    /**
      * Render the per-user admin record (ADMIN §5.2).
      *
      * @param array<string,string> $old typed input to re-render (anti-draft-loss);

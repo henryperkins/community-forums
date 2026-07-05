@@ -93,4 +93,10 @@ final class ProtectedOwnerRepository
             [$designatedBy, $userId],
         )->rowCount() > 0;
     }
+
+    /** Demote-path reconcile: the owner row must not outlive the authority it mirrors. */
+    public function deactivate(int $userId): bool
+    {
+        return $this->db->run('UPDATE protected_owners SET is_active = 0 WHERE user_id = ?', [$userId])->rowCount() > 0;
+    }
 }

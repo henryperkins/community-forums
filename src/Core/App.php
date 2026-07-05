@@ -142,6 +142,7 @@ use App\Repository\WebAuthnChallengeRepository;
 use App\Repository\WebAuthnCredentialRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\ClientIdentifier;
 use App\Security\CapabilityResolver;
@@ -230,6 +231,7 @@ use App\Service\Registry\RegistryTransport;
 use App\Service\Registry\RegistryTrustService;
 use App\Service\ResolverShadow;
 use App\Service\ReputationLedgerService;
+use App\Service\RoleAssignmentService;
 use App\Service\RoleService;
 use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
@@ -909,6 +911,7 @@ final class App
             $c->get(BoardMemberRepository::class),
             $c->get(BoardPolicy::class),
             $c->get(WriteGate::class),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(PersonalOrganizationService::class, fn (Container $c) => new PersonalOrganizationService(
             $c->get(Database::class),
@@ -1048,6 +1051,12 @@ final class App
             $c->get(BoardModeratorRepository::class),
             $c->get(AttachmentRepository::class),
             $c->get(FirstPartyHookRegistry::class),
+            $c->get(AuthorityGate::class),
+            $c->get(LastOwnerGuard::class),
+            $c->get(ProtectedOwnerRepository::class),
+            $c->get(SessionRepository::class),
+            $c->get(ReauthGate::class),
+            $c->get(CapabilityResolver::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
             $c->get(Database::class),
@@ -1070,6 +1079,7 @@ final class App
             $c->get(UserRepository::class),
             $c->get(WriteGate::class),
             $c->get(FirstPartyHookRegistry::class),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
             $c->get(Database::class),
@@ -1152,6 +1162,7 @@ final class App
             $c->get(ReputationLedgerService::class),
             $c->get(FirstPartyHookRegistry::class),
             (int) $config->get('community.solved_bonus', 5),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(ThreadWorkflowService::class, fn (Container $c) => new ThreadWorkflowService(
             $c->get(Database::class),
@@ -1163,6 +1174,7 @@ final class App
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(FeatureFlags::class),
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(ThreadSplitMergeService::class, fn (Container $c) => new ThreadSplitMergeService(
             $c->get(Database::class),
@@ -1181,6 +1193,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(Markdown::class),
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
+            $c->get(AuthorityGate::class),
         ));
 
         // Session + CSRF.
@@ -1255,6 +1268,18 @@ final class App
             $c->get(CapabilityResolver::class),
             $c->get(Telemetry::class),
         ));
+        $c->bind(AuthorityGate::class, function (Container $c) use ($config): AuthorityGate {
+            if (!$c->get(FeatureFlags::class)->enabled('capabilities')) {
+                return AuthorityGate::legacy();
+            }
+            $enforce = $config->get('capabilities.mode', 'shadow') === 'enforce';
+            return new AuthorityGate(
+                $c->get(CapabilityResolver::class),
+                $enforce ? null : $c->get(ResolverShadow::class),
+                $c->get(Telemetry::class),
+                $enforce ? AuthorityGate::MODE_ENFORCE : AuthorityGate::MODE_SHADOW,
+            );
+        });
         $c->bind(RoleService::class, fn (Container $c) => new RoleService(
             $c->get(Database::class),
             $c->get(RoleRepository::class),
@@ -1264,6 +1289,22 @@ final class App
             $c->get(RoleAssignmentHistoryRepository::class),
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
+            $c->get(CapabilityResolver::class),
+        ));
+        $c->bind(RoleAssignmentService::class, fn (Container $c) => new RoleAssignmentService(
+            $c->get(Database::class),
+            $c->get(RoleRepository::class),
+            $c->get(RoleCapabilityRepository::class),
+            $c->get(RoleAssignmentRepository::class),
+            $c->get(RoleAssignmentHistoryRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(CategoryRepository::class),
+            $c->get(CapabilityResolver::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Telemetry::class),
         ));
         $c->bind(PermissionSimulatorService::class, fn (Container $c) => new PermissionSimulatorService(
             $c->get(CapabilityResolver::class),
@@ -1593,7 +1634,7 @@ final class App
             $c->get(FirstPartyHookRegistry::class),
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
             $c->get(FeatureFlags::class)->enabled('link_previews') ? $c->get(LinkPreviewService::class) : null,
-            $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(ResolverShadow::class) : null,
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -1606,7 +1647,7 @@ final class App
             $c->get(BoardRepository::class),
             $c->get(UserRepository::class),
             $c->get(FirstPartyHookRegistry::class),
-            $c->get(FeatureFlags::class)->enabled('capabilities') ? $c->get(ResolverShadow::class) : null,
+            $c->get(AuthorityGate::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
@@ -1618,6 +1659,8 @@ final class App
             $c->get(UserRepository::class),
             $c->get(BoardModeratorRepository::class),
             $c->get(BoardMemberRepository::class),
+            $c->get(AuthorityGate::class),
+            $c->get(CapabilityResolver::class),
         ));
         $c->bind(AdminDashboardService::class, fn (Container $c) => new AdminDashboardService(
             $c->get(Database::class),
@@ -1857,6 +1900,9 @@ final class App
         $r->get('/admin/roles/{id}', [AdminRoleController::class, 'edit']);
         $r->post('/admin/roles/{id}', [AdminRoleController::class, 'update']);
         $r->post('/admin/roles/{id}/clone', [AdminRoleController::class, 'clone']);
+        $r->post('/admin/roles/{id}/assignments', [AdminRoleController::class, 'assign']);
+        $r->post('/admin/role-assignments/{id}/revoke', [AdminRoleController::class, 'revokeAssignment']);
+        $r->post('/admin/role-assignments/{id}/renew', [AdminRoleController::class, 'renewAssignment']);
         $r->get('/admin/themes', [AdminThemeController::class, 'index']);
         $r->get('/admin/themes/safe-mode', [AdminThemeController::class, 'safeModeForm']);
         $r->post('/admin/themes/safe-mode', [AdminThemeController::class, 'safeMode']);
@@ -1988,6 +2034,9 @@ final class App
         $r->post('/admin/users/{id}/suspend', [AdminUserController::class, 'suspend']);
         $r->post('/admin/users/{id}/ban', [AdminUserController::class, 'ban']);
         $r->post('/admin/users/{id}/lift', [AdminUserController::class, 'lift']);
+        // users.role mutation (TM-PE-07): flag-INDEPENDENT — users.role exists
+        // regardless of Phase 5, so this works with `capabilities` dark.
+        $r->post('/admin/users/{id}/role', [AdminUserController::class, 'changeRole']);
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);
         $r->post('/mod/t/{id}/lock', [ModerationController::class, 'lock']);

@@ -17,10 +17,17 @@ namespace App\Support;
  * foundation report and filled by its increment.
  * `registry.fetch_p95` needs a live registry endpoint over the network; it is
  * measured at staged enablement, not on the local fixture.
+ *
+ * A `target` of `null` marks a **measured-only** metric: PHASE_5_PLAN §11.3
+ * requires the measurement, but ADR 0004 D11 sets no gate value, so the report
+ * renders it `MEASURED (no D11 target)` with no PASS/FAIL. The two Inc-6
+ * resolver-lifecycle metrics (`role_assignment.change_propagation_p95`,
+ * `permission_simulator.duration_p95`) are the only such entries; the report
+ * generator measures them fresh every run so they survive regeneration.
  */
 final class Phase5Budgets
 {
-    /** @var array<string,array{metric:string,target:int,unit:string,statistic:string,measurable_at:string}> */
+    /** @var array<string,array{metric:string,target:?int,unit:string,statistic:string,measurable_at:string}> */
     private const BUDGETS = [
         'registry.snapshot_freshness'    => ['metric' => 'Registry snapshot freshness tolerance',        'target' => 86400, 'unit' => 's',  'statistic' => 'max', 'measurable_at' => 'inc2'],
         'registry.fetch_p95'             => ['metric' => 'Registry fetch duration',                       'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'staged-enablement'],
@@ -29,6 +36,9 @@ final class Phase5Budgets
         // ADR 0004 D11 covers declarative package operations under the 10s p95 umbrella.
         'theme.build_apply_p95'          => ['metric' => 'Theme build + activate (declarative package)',  'target' => 10000, 'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc4'],
         'resolver.p95'                   => ['metric' => 'Capability resolver decision',                  'target' => 5,     'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'foundation'],
+        // §11.3 measured-only (no D11 gate) — Inc 6 resolver-enforcement cutover.
+        'role_assignment.change_propagation_p95' => ['metric' => 'Assignment-change propagation (revoke → resolver decision)', 'target' => null, 'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc6'],
+        'permission_simulator.duration_p95'      => ['metric' => 'Permission simulator (simulate() call)',                     'target' => null, 'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc6'],
         'webauthn.ceremony_p95'          => ['metric' => 'WebAuthn/TOTP ceremony (server time)',          'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc7'],
         'oidc.discovery_p95_cached'      => ['metric' => 'OIDC discovery/JWKS (cached)',                  'target' => 2000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc8'],
         'oidc.discovery_p95_cold'        => ['metric' => 'OIDC discovery/JWKS (cold)',                    'target' => 5000,  'unit' => 'ms', 'statistic' => 'p95', 'measurable_at' => 'inc8'],
@@ -37,7 +47,7 @@ final class Phase5Budgets
         'sandbox.walltime_default'       => ['metric' => 'Sandbox execution wall-time (default)',         'target' => 2000,  'unit' => 'ms', 'statistic' => 'max', 'measurable_at' => 'gate_b'],
     ];
 
-    /** @return array<string,array{metric:string,target:int,unit:string,statistic:string,measurable_at:string}> */
+    /** @return array<string,array{metric:string,target:?int,unit:string,statistic:string,measurable_at:string}> */
     public static function all(): array
     {
         return self::BUDGETS;
@@ -49,7 +59,7 @@ final class Phase5Budgets
         return array_keys(self::BUDGETS);
     }
 
-    /** @return array{metric:string,target:int,unit:string,statistic:string,measurable_at:string} */
+    /** @return array{metric:string,target:?int,unit:string,statistic:string,measurable_at:string} */
     public static function get(string $key): array
     {
         if (!isset(self::BUDGETS[$key])) {
@@ -58,7 +68,8 @@ final class Phase5Budgets
         return self::BUDGETS[$key];
     }
 
-    public static function target(string $key): int
+    /** Null for measured-only metrics that carry no D11 gate value (§11.3). */
+    public static function target(string $key): ?int
     {
         return self::get($key)['target'];
     }

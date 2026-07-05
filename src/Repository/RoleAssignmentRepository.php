@@ -53,6 +53,71 @@ final class RoleAssignmentRepository
         );
     }
 
+    /** @return array<string,mixed>|null */
+    public function find(int $id): ?array
+    {
+        return $this->db->fetch('SELECT * FROM role_assignments WHERE id = ?', [$id]);
+    }
+
+    /**
+     * The existing non-revoked assignment for this exact (subject, role, scope),
+     * if any — used to refuse a duplicate grant. `scope_id <=> ?` is the NULL-safe
+     * equality operator so a second site-scoped (scope_id IS NULL) grant is caught
+     * too. Revoked rows are excluded so a revoke-then-regrant is allowed.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function findActiveDuplicate(int $subjectId, int $roleId, string $scopeType, ?int $scopeId): ?array
+    {
+        return $this->db->fetch(
+            "SELECT * FROM role_assignments
+             WHERE subject_type = 'user' AND subject_id = ? AND role_id = ?
+               AND scope_type = ? AND scope_id <=> ?
+               AND revoked_at IS NULL
+             LIMIT 1",
+            [$subjectId, $roleId, $scopeType, $scopeId],
+        );
+    }
+
+    /** @return array<string,mixed>|null */
+    public function findForUpdate(int $id): ?array
+    {
+        return $this->db->fetch('SELECT * FROM role_assignments WHERE id = ? FOR UPDATE', [$id]);
+    }
+
+    public function revoke(int $id, int $revokedBy): void
+    {
+        $this->db->run(
+            'UPDATE role_assignments
+             SET revoked_at = UTC_TIMESTAMP(), revoked_by = ?, assignment_version = assignment_version + 1
+             WHERE id = ? AND revoked_at IS NULL',
+            [$revokedBy, $id],
+        );
+    }
+
+    public function updateEndsAt(int $id, string $endsAt): void
+    {
+        $this->db->run(
+            'UPDATE role_assignments
+             SET ends_at = ?, assignment_version = assignment_version + 1
+             WHERE id = ?',
+            [$endsAt, $id],
+        );
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function listForRole(int $roleId): array
+    {
+        return $this->db->fetchAll(
+            "SELECT ra.*, u.username
+             FROM role_assignments ra
+             JOIN users u ON u.id = ra.subject_id AND ra.subject_type = 'user'
+             WHERE ra.role_id = ?
+             ORDER BY ra.id DESC",
+            [$roleId],
+        );
+    }
+
     /**
      * @param list<int> $roleIds
      * @return array<int,int>

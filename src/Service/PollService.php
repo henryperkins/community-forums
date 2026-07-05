@@ -12,6 +12,7 @@ use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\ThreadRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 
@@ -24,7 +25,13 @@ final class PollService
         private BoardMemberRepository $members,
         private BoardPolicy $policy,
         private WriteGate $writeGate,
+        private ?AuthorityGate $authority = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     /** @param array<string,mixed> $input */
@@ -164,9 +171,17 @@ final class PollService
     /** @param array<string,mixed> $thread */
     public function canManageThread(User $actor, array $thread): bool
     {
-        return (int) $thread['user_id'] === $actor->id()
-            || $actor->isAdmin()
-            || $this->moderators->isModerator((int) $thread['board_id'], $actor->id());
+        $boardId = (int) $thread['board_id'];
+        $threadAuthorId = (int) $thread['user_id'];
+        return $this->gate()->allows(
+            fn (): bool => $threadAuthorId === $actor->id()
+                || $actor->isAdmin()
+                || $this->moderators->isModerator($boardId, $actor->id()),
+            $actor,
+            'core.poll.manage',
+            ['board_id' => $boardId, 'owner_id' => $threadAuthorId],
+            'PollService::canManageThread',
+        );
     }
 
     /** @return array<string,mixed> */

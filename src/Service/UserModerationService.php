@@ -15,7 +15,13 @@ use App\Repository\AttachmentRepository;
 use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\ProtectedOwnerRepository;
+use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
+use App\Security\CapabilityResolver;
+use App\Security\LastOwnerGuard;
+use App\Security\ReauthGate;
 use App\Security\WriteGate;
 
 /**
@@ -36,7 +42,18 @@ final class UserModerationService
         private BoardModeratorRepository $boardMods,
         private ?AttachmentRepository $attachments = null,
         private ?FirstPartyHookRegistry $hooks = null,
+        private ?AuthorityGate $authority = null,
+        private ?LastOwnerGuard $ownerGuard = null,
+        private ?ProtectedOwnerRepository $owners = null,
+        private ?SessionRepository $sessions = null,
+        private ?ReauthGate $reauth = null,
+        private ?CapabilityResolver $resolver = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     public function warn(User $actor, int $subjectId, string $reason, ?int $boardId = null): void
@@ -142,6 +159,63 @@ final class UserModerationService
             );
             $this->audit($actor, 'lift', (int) $subject['id'], null);
         });
+    }
+
+    /**
+     * In-app `users.role` mutation (ADMIN §5.2, TM-PE-07). Reauth-gated like the
+     * other high-impact admin actions. Demoting an admin who is the last active
+     * protected owner is blocked by LastOwnerGuard inside the same transaction
+     * that would perform the demotion — TOCTOU-safe via the guard's FOR UPDATE
+     * lock. A demoted owner's protected_owners row is deactivated so it cannot
+     * outlive the authority it mirrors; a promotion to admin (re)designates one.
+     * Every path revokes the target's sessions and writes one change_role audit
+     * row, then invalidates the CapabilityResolver's per-request memo so the
+     * mutation is observed within the same request.
+     *
+     * @param 'user'|'moderator'|'admin' $newRole
+     */
+    public function changeRole(User $admin, string $currentPassword, int $userId, string $newRole): void
+    {
+        if (!$admin->isAdmin()) {
+            throw new ForbiddenException('Admin access required.');
+        }
+        if ($this->ownerGuard === null || $this->owners === null || $this->sessions === null || $this->reauth === null || $this->resolver === null) {
+            throw new \LogicException('Role-change dependencies are not wired.');
+        }
+        $this->writeGate->assertCanWrite($admin);
+        $this->reauth->requirePassword($admin, $currentPassword);
+        if (!in_array($newRole, ['user', 'moderator', 'admin'], true)) {
+            throw new ValidationException(['role' => 'Unknown role.']);
+        }
+        $row = $this->users->find($userId);
+        if ($row === null || ($row['status'] ?? '') === 'deleted') {
+            throw new ValidationException(['role' => 'No such member.']);
+        }
+        if (($row['role'] ?? '') === $newRole) {
+            throw new ValidationException(['role' => 'The member already has this role.']);
+        }
+        $target = User::fromRow($row);
+
+        $this->db->transaction(function () use ($admin, $target, $userId, $row, $newRole): void {
+            if ($target->isAdmin() && $newRole !== 'admin') {
+                $this->ownerGuard->assertNotLastOwnerForUpdate($target, 'role');
+                $this->owners->deactivate($userId);
+            }
+            $this->users->setRole($userId, $newRole);
+            if ($newRole === 'admin') {
+                $this->owners->designateOrReactivate($userId, $admin->id());
+            }
+            $this->sessions->revokeAllForUser($userId);
+            $this->log->log([
+                'actor_id' => $admin->id(),
+                'action' => 'change_role',
+                'target_type' => 'user',
+                'target_id' => $userId,
+                'before' => ['role' => (string) $row['role']],
+                'after' => ['role' => $newRole],
+            ]);
+        });
+        $this->resolver->invalidate();
     }
 
     /**
@@ -284,9 +358,14 @@ final class UserModerationService
     private function assertStaff(User $actor): void
     {
         $this->writeGate->assertCanWrite($actor);
-        if (!$actor->isAdmin() && $this->boardMods->boardsFor($actor->id()) === []) {
-            throw new ForbiddenException('Staff access required.');
-        }
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin() || $this->boardMods->boardsFor($actor->id()) !== [],
+            $actor,
+            'core.user.warn',
+            [], // site probe: staff-any — admin OR moderates ≥1 board, site-wide
+            'UserModerationService::assertStaff',
+            'Staff access required.', // keep the existing message verbatim
+        );
     }
 
     private function assertAdmin(User $actor): void

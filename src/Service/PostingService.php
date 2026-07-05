@@ -18,6 +18,7 @@ use App\Repository\IdempotencyRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
@@ -51,8 +52,13 @@ final class PostingService
         private ?FirstPartyHookRegistry $hooks = null,
         private ?ContentReferenceService $contentReferences = null,
         private ?LinkPreviewService $linkPreviews = null,
-        private ?ResolverShadow $shadow = null,
+        private ?AuthorityGate $authority = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     /**
@@ -86,9 +92,13 @@ final class PostingService
         if ($board === null) {
             throw new ValidationException(['board_id' => 'Choose a board to post in.'], $input);
         }
-        $canPost = $this->policy->canPost($board, $user, $this->isBoardMember($boardId, $user->id()));
-        $this->shadow?->compare($canPost, $user, 'core.thread.create', ['board_id' => $boardId], 'PostingService::createThread');
-        if (!$canPost) {
+        if (!$this->gate()->allows(
+            fn (): bool => $this->policy->canPost($board, $user, $this->isBoardMember($boardId, $user->id())),
+            $user,
+            'core.thread.create',
+            ['board_id' => $boardId],
+            'PostingService::createThread',
+        )) {
             throw new ForbiddenException('You cannot post in this board.');
         }
 
@@ -209,9 +219,13 @@ final class PostingService
             'post_min_role' => $thread['board_post_min_role'] ?? 'user',
             'is_archived' => (int) ($thread['board_is_archived'] ?? 0),
         ];
-        $canPost = $this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id()));
-        $this->shadow?->compare($canPost, $user, 'core.post.create', ['board_id' => (int) $thread['board_id']], 'PostingService::reply');
-        if (!$canPost) {
+        if (!$this->gate()->allows(
+            fn (): bool => $this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id())),
+            $user,
+            'core.post.create',
+            ['board_id' => (int) $thread['board_id']],
+            'PostingService::reply',
+        )) {
             throw new ForbiddenException('You cannot post in this board.');
         }
         if ((int) $thread['is_locked'] === 1) {

@@ -6,11 +6,25 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Domain\User;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
+use App\Repository\CapabilityRepository;
+use App\Repository\CategoryRepository;
+use App\Repository\ModerationLogRepository;
+use App\Repository\ProtectedOwnerRepository;
+use App\Repository\RoleAssignmentHistoryRepository;
+use App\Repository\RoleAssignmentRepository;
+use App\Repository\RoleCapabilityRepository;
+use App\Repository\RoleRepository;
 use App\Repository\UserRepository;
+use App\Security\BoardPolicy;
 use App\Security\CapabilityResolver;
 use App\Security\PasswordHasher;
+use App\Security\ReauthGate;
 use App\Security\WebAuthn\RelyingParty;
 use App\Security\WebAuthn\WebAuthnVerifier;
+use App\Security\WriteGate;
 use App\Service\Packages\PackageArtifactStore;
 use App\Service\Packages\PackageLifecycleService;
 use App\Service\Packages\PackageUpdateService;
@@ -135,6 +149,216 @@ final class BaselineMetricsService
             'queue_age' => null,
             'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
         ];
+    }
+
+    /**
+     * §11.3 "assignment-change propagation" — measured-only (ADR 0004 D11 sets no
+     * gate). Structurally near-zero: decisions read the live `role_assignments`
+     * table and `RoleAssignmentService::revoke()` calls `$resolver->invalidate()`
+     * in-request, so there is no cache to go stale. What's timed is the wall-clock
+     * of that revoke-then-decide pair, with `RoleAssignmentService` +
+     * `CapabilityResolver` constructed exactly as
+     * `tests/Integration/Service/RoleAssignmentServiceTest.php` builds them. The
+     * `anomalies` count (decisions still `allowed` after revoke) is a correctness
+     * sentinel — expected 0. Mutates, so it must run inside the caller's rollback
+     * transaction (same contract as measureInstallUpdate/measureThemeBuildApply).
+     *
+     * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
+     */
+    public function measureAssignmentChangePropagation(int $iterations = 200): array
+    {
+        if (!$this->db->pdo()->inTransaction()) {
+            throw new \RuntimeException('Assignment-change propagation sampling must run inside a caller-owned rollback transaction.');
+        }
+        $iterations = max(1, $iterations);
+
+        $users = new UserRepository($this->db);
+        $roles = new RoleRepository($this->db);
+        $roleCapabilities = new RoleCapabilityRepository($this->db);
+        $assignments = new RoleAssignmentRepository($this->db);
+        $resolver = $this->buildResolver();
+        $service = new RoleAssignmentService(
+            $this->db,
+            $roles,
+            $roleCapabilities,
+            $assignments,
+            new RoleAssignmentHistoryRepository($this->db),
+            $users,
+            new BoardRepository($this->db),
+            new CategoryRepository($this->db),
+            $resolver,
+            new ReauthGate(new PasswordHasher()),
+            new WriteGate(),
+            new ModerationLogRepository($this->db),
+        );
+
+        // One-time fixture (untimed): an admin revoker, a subject, and a custom
+        // role holding an enforced capability so pre-revoke the grant is live.
+        $suffix = bin2hex(random_bytes(4));
+        $hash = (new PasswordHasher())->hash('password123');
+        $adminId = $users->create([
+            'username' => 'propbench_admin_' . $suffix,
+            'email' => 'propbench_admin_' . $suffix . '@example.test',
+            'password_hash' => $hash,
+            'display_name' => null,
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+        $admin = User::fromRow((array) $users->find($adminId));
+        $subjectId = $users->create([
+            'username' => 'propbench_subject_' . $suffix,
+            'email' => 'propbench_subject_' . $suffix . '@example.test',
+            'password_hash' => $hash,
+            'display_name' => null,
+            'role' => 'user',
+            'status' => 'active',
+        ]);
+        $subject = User::fromRow((array) $users->find($subjectId));
+        $roleId = $roles->create([
+            'role_key' => 'custom.propbench_' . $suffix,
+            'name' => 'Propagation Bench Role',
+            'description' => null,
+            'created_by' => null,
+        ]);
+        $roleCapabilities->replaceForRole(
+            $roleId,
+            array_values((new CapabilityRepository($this->db))->idsByKeys(['core.thread.lock'])),
+        );
+
+        $samples = [];
+        $anomalies = 0;
+        for ($i = 0; $i < $iterations; $i++) {
+            // Untimed: a fresh site-scope assignment to revoke this iteration.
+            $assignmentId = $assignments->create([
+                'subject_id' => $subjectId,
+                'role_id' => $roleId,
+                'scope_type' => 'site',
+                'scope_id' => null,
+            ]);
+
+            $t0 = hrtime(true);
+            $service->revoke($admin, $assignmentId, 'propagation-bench');
+            $decision = $resolver->can($subject, 'core.thread.lock', []);
+            $samples[] = (hrtime(true) - $t0) / 1_000_000;
+
+            if ($decision->allowed !== false) {
+                $anomalies++;
+            }
+        }
+
+        return [
+            'route_or_job' => 'role_assignment_change_propagation',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($this->db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'synthetic custom-role revoke→can pairs',
+            'role_assignment_count' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM role_assignments'),
+            'installed_package_count' => 0,
+            'concurrency' => 1,
+            'cache_state' => 'cold (invalidate() per revoke)',
+            'window' => $iterations . ' iterations',
+            'samples' => count($samples),
+            'anomalies' => $anomalies,
+            'p50' => self::percentile($samples, 50),
+            'p95' => self::percentile($samples, 95),
+            'p99' => self::percentile($samples, 99),
+            'query_count' => null,
+            'query_time_ms' => round(array_sum($samples), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => $samples === [] ? 0.0 : round($anomalies / count($samples), 4),
+        ];
+    }
+
+    /**
+     * §11.3 "simulator duration" — measured-only (ADR 0004 D11 sets no gate).
+     * Times `PermissionSimulatorService::simulate()` on the Foundation F9 fixture
+     * (the same corpus the resolver budget measures on), with the simulator
+     * constructed exactly as `tests/Integration/Service/PermissionSimulatorTest.php`
+     * builds it. Read-only; when the F9 fixture is absent it returns an empty
+     * sample (p95 0.0) rather than throwing, matching measureResolver.
+     *
+     * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
+     */
+    public function measureSimulatorDuration(int $iterations = 200): array
+    {
+        $iterations = max(1, $iterations);
+
+        $userRepo = new UserRepository($this->db);
+        $boardRepo = new BoardRepository($this->db);
+        $simulator = new PermissionSimulatorService(
+            $this->buildResolver(),
+            $userRepo,
+            $boardRepo,
+            new BoardMemberRepository($this->db),
+            new BoardPolicy(),
+        );
+
+        $fixtureUsers = $this->db->fetchAll("SELECT username FROM users WHERE username LIKE 'p5fix\\_%' ORDER BY id ASC");
+        $fixtureBoards = $this->db->fetchAll("SELECT id FROM boards WHERE slug LIKE 'p5fix\\_%' ORDER BY id ASC");
+        $viewerRow = $userRepo->findByUsername('p5fix_admin');
+        $viewer = $viewerRow !== null ? User::fromRow($viewerRow) : null;
+
+        $samples = [];
+        $errors = 0;
+        if ($fixtureUsers !== [] && $fixtureBoards !== [] && $viewer !== null) {
+            for ($i = 0; $i < $iterations; $i++) {
+                $actorRef = (string) $fixtureUsers[$i % count($fixtureUsers)]['username'];
+                $boardId = (int) $fixtureBoards[$i % count($fixtureBoards)]['id'];
+
+                $t0 = hrtime(true);
+                $result = $simulator->simulate($viewer, $actorRef, 'core.thread.lock', $boardId, null);
+                $samples[] = (hrtime(true) - $t0) / 1_000_000;
+
+                if ($result['error'] !== null) {
+                    $errors++;
+                }
+            }
+        }
+
+        return [
+            'route_or_job' => 'permission_simulator_simulate',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($this->db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'phase5_fixture_v' . Phase5FixtureSeeder::FIXTURE_VERSION,
+            'role_assignment_count' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM role_assignments'),
+            'installed_package_count' => 0,
+            'concurrency' => 1,
+            'cache_state' => 'cold',
+            'window' => count($samples) . ' iterations',
+            'samples' => count($samples),
+            'p50' => self::percentile($samples, 50),
+            'p95' => self::percentile($samples, 95),
+            'p99' => self::percentile($samples, 99),
+            'query_count' => null,
+            'query_time_ms' => round(array_sum($samples), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
+        ];
+    }
+
+    /**
+     * Builds a fresh DB-backed resolver from `$this->db` — the same eight-arg
+     * construction the resolver family of tests uses. Each call returns a new
+     * instance (its own decision memo), which is what the simulator/propagation
+     * samplers want.
+     */
+    private function buildResolver(): CapabilityResolver
+    {
+        return new CapabilityResolver(
+            new RoleCapabilityRepository($this->db),
+            new RoleAssignmentRepository($this->db),
+            new LegacyAuthorityProjection(new BoardModeratorRepository($this->db)),
+            new ProtectedOwnerRepository($this->db),
+            new BoardRepository($this->db),
+            new BoardMemberRepository($this->db),
+            new BoardPolicy(),
+            new WriteGate(),
+        );
     }
 
     /**

@@ -10,11 +10,24 @@ use PHPUnit\Framework\TestCase;
 final class Phase5BudgetsTest extends TestCase
 {
     private const STATISTICS = ['p50', 'p95', 'p99', 'max'];
-    private const PHASES = ['foundation', 'inc1', 'inc2', 'inc3', 'inc4', 'inc5', 'inc7', 'inc8', 'inc9', 'gate_b', 'staged-enablement'];
+    private const PHASES = ['foundation', 'inc1', 'inc2', 'inc3', 'inc4', 'inc5', 'inc6', 'inc7', 'inc8', 'inc9', 'gate_b', 'staged-enablement'];
+
+    /** Measured-only metrics (§11.3) that carry no ADR 0004 D11 gate value. */
+    private const NO_TARGET = ['role_assignment.change_propagation_p95', 'permission_simulator.duration_p95'];
 
     public function test_catalogue_encodes_all_d11_budgets_plus_theme_build_apply_derivative(): void
     {
-        self::assertCount(12, Phase5Budgets::all(), 'ADR 0004 D11 lists 11 numeric budgets plus the Inc 4 theme build/apply measurement under the declarative-package umbrella');
+        self::assertCount(14, Phase5Budgets::all(), 'ADR 0004 D11 lists 11 numeric budgets plus the Inc 4 theme build/apply derivative and the two Inc 6 measured-only §11.3 metrics');
+    }
+
+    public function test_inc6_measured_only_metrics_are_present_and_target_less(): void
+    {
+        foreach (self::NO_TARGET as $key) {
+            $b = Phase5Budgets::get($key);
+            self::assertNull($b['target'], "$key must carry no D11 gate value (measured-only)");
+            self::assertNull(Phase5Budgets::target($key), "$key target() must be null");
+            self::assertSame('inc6', $b['measurable_at'], "$key is produced by the Inc 6 cutover");
+        }
     }
 
     public function test_key_targets_match_adr_0004_d11(): void
@@ -36,8 +49,12 @@ final class Phase5BudgetsTest extends TestCase
     public function test_every_budget_has_a_valid_shape(): void
     {
         foreach (Phase5Budgets::all() as $key => $b) {
-            self::assertIsInt($b['target'], "$key target");
-            self::assertGreaterThan(0, $b['target'], "$key target > 0");
+            if (in_array($key, self::NO_TARGET, true)) {
+                self::assertNull($b['target'], "$key is measured-only (null target)");
+            } else {
+                self::assertIsInt($b['target'], "$key target");
+                self::assertGreaterThan(0, $b['target'], "$key target > 0");
+            }
             self::assertContains($b['statistic'], self::STATISTICS, "$key statistic");
             self::assertContains($b['measurable_at'], self::PHASES, "$key measurable_at");
             self::assertNotSame('', trim($b['unit']), "$key unit");

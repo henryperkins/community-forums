@@ -2,9 +2,10 @@
 <?php
 $owner = $current_user !== null && $current_user->id() === (int) $p['user_id'];
 // Board moderators — not just global admins — get the mod controls; the caller's
-// can_moderate_board flag already folds in admin-any. Keep an isAdmin fallback so
-// any render path that doesn't thread the flag still shows admins their controls.
-$canModerate = (!empty($can_moderate_board) || ($current_user?->isAdmin() ?? false)) && !$owner;
+// can_delete_posts flag (core.post.delete_any) already folds in admin-any. Keep an
+// isAdmin fallback so any render path that doesn't thread the flag still shows
+// admins their controls.
+$canModerate = (!empty($can_delete_posts) || ($current_user?->isAdmin() ?? false)) && !$owner;
 $isAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
 // Public byline is ALWAYS masked when anonymous; a mod "reveal" is a separate
 // audited action (flash), never an un-mask of this render.

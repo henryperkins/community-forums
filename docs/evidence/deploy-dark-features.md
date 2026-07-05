@@ -4,7 +4,11 @@
 profile-media graduation reconciled; Phase 5 passkeys row reconciled with
 `PHASE_5_STATUS.md`; custom-emoji graduation reconciled; **2026-07-04
 `split_merge` + `custom_profile_fields` graduations reconciled** — both flipped
-default-ON 2026-07-03 and now carry the full acceptance-evidence packages)
+default-ON 2026-07-03 and now carry the full acceptance-evidence packages;
+**2026-07-05 Increment 6 (capabilities enforcement cutover) reconciled** — +3
+routes newly flag-gated by the existing `capabilities` flag, +1 admin route
+added with no flag gate at all, both reconciled below and against
+`PHASE_5_STATUS.md`)
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -45,6 +49,19 @@ Audited 2026-07-04 against `src/Core/FeatureFlags.php`, literal
   `moderation_queue`, `community`, `oauth`, `presence`, `announcements`,
   `rich_composer`, `drafts`, `uploads`, `anti_abuse`, `branding`, `seo`, and
   `product_tour`.
+- **Increment 6 reconciliation (2026-07-05):** the `capabilities` flag itself is
+  unchanged (still one of the 20 default-dark flags; the `37`/`20` split above
+  is unaffected) — Inc 6 added 3 *routes* under that existing flag
+  (`POST /admin/roles/{id}/assignments`, `POST /admin/role-assignments/{id}/revoke`,
+  `POST /admin/role-assignments/{id}/renew`; see the `capabilities` row below).
+  Separately, `UserModerationService::changeRole()`
+  (`POST /admin/users/{id}/role`) is a **new admin route with no feature-flag
+  gate at all** — by design (ADR 0016 decision 5): it manages `users.role`,
+  which exists independent of Phase 5, so there is nothing to gate dark. It is
+  intentionally absent from every table below (nothing to roll back via a
+  `features` override) and is reachable — confirmed 422, not 404 — even with
+  `capabilities` fully off
+  (`docs/evidence/phase5/capabilities-fallback-rehearsal.md`).
 
 ## Phase 3 / Phase 3 Carryover
 
@@ -312,7 +329,7 @@ as of 2026-07-03.
 |---|---|---|
 | `package_registry` | Signed registry, package catalogue/install/update foundation, integration + security-response consoles | Deploy-dark; Inc 2/3 implementation landed — signed trust chain, snapshots/advisories, staff catalogue, install/consent/enable/update/rollback/uninstall/export, health worker, browser/axe evidence, and runbook. Inc 5 landed the non-theme runtime bridges behind the same flag — install-scoped settings/secret storage, read-only API tokens, package-owned webhooks, the publisher-trust + local-review consoles, and the `/admin/packages/security` security-response console with a **flag-independent** emergency execution brake (`PACKAGE_EXECUTION_DISABLED` / `package_execution_disabled` setting pauses every package-owned webhook + denies credential auth while leaving view/revoke/export/uninstall intact), with browser/axe evidence (`60`/`61`). Enabled packages are eligibility only until their runtimes are enabled. |
 | `package_themes` | Declarative theme packages, preview, activation, safe mode, rollback | Deploy-dark; Inc 4 implementation landed behind `package_themes` — strict theme manifest block, token/asset/contrast gates, deterministic digest-addressed CSS builds, admin preview isolation, password-reauth activation/LKG rollback, flag-independent safe mode, fail-safe deactivation/repair, browser/axe evidence, and runbook. Rollback contract unchanged: set `features.package_themes=false` or enter safe mode; active/LKG rows are preserved. |
-| `capabilities` | DB-backed roles/capability resolver and scoped grants | Deploy-dark; foundation + Increment 1 resolver shadow landed — catalogue/role-map seed (`0066`), protected-owner spine, `CapabilityResolver` + fail-open `ResolverShadow`, zero-mismatch parity corpus (`docs/evidence/phase5/resolver-parity.md`), no-JS role editor/simulator with browser/axe evidence. Live authorization is still legacy; enforcement cutover is Increment 6 after shadow soak |
+| `capabilities` | DB-backed roles/capability resolver and scoped grants | Deploy-dark; foundation + Increment 1 resolver shadow landed — catalogue/role-map seed (`0066`), protected-owner spine, `CapabilityResolver` + fail-open `ResolverShadow`, zero-mismatch parity corpus (`docs/evidence/phase5/resolver-parity.md`), no-JS role editor/simulator with browser/axe evidence. **Increment 6 (2026-07-05) landed the enforcement cutover** — `AuthorityGate` (`legacy`/`shadow`/`enforce`, posture via `CAPABILITIES_MODE`) now backs ~30 board/content call sites plus the 4 board-roster POST commands; the flag continues to gate 3 *new* routes dark (`POST /admin/roles/{id}/assignments`, `POST /admin/role-assignments/{id}/revoke`, `POST /admin/role-assignments/{id}/renew` — scoped-assignment grant/revoke/renew) — 404 while `capabilities` is off, regardless of `CAPABILITIES_MODE`. ADR 0016, runbook `docs/runbooks/capabilities.md`. |
 | `passkeys` | WebAuthn registration, sign-in, credential management, step-up, recovery fallback | Deploy-dark; Inc 7 implementation landed behind `passkeys` on 2026-07-03 — enrollment/list/rename/revoke, sign-in, step-up, TOTP/recovery fallback compatibility, CDP browser evidence, runbook, and requirement-ledger R4 evidence are present. Broad enablement remains pending staged acceptance (`GA-DOD-13` R5). |
 | `provider_registry` | Generic OIDC and provider registry expansion | Deploy-dark; schema landed (`0052`, google/apple/github seeded as dark builtin rows); generic-OIDC implementation pending; A2 is accepted as GitLab.com (`docs/phase5/first-oidc-provider.md`); P5-12 implementation and end-to-end provider evidence remain pending |
 | `invitations` | Invitation lifecycle and invite-based registration | Deploy-dark; schema landed inert (`0053`, hash-only tokens); lifecycle implementation pending |

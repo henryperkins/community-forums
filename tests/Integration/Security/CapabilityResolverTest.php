@@ -109,6 +109,10 @@ final class CapabilityResolverTest extends TestCase
             'scope_id' => (int) $board['id'],
             'ends_at' => '2026-01-01 00:00:00',
         ]);
+        // Inc 6 (P5-08 Task 3): the resolver now memoizes per request, so a raw
+        // authority mutation must invalidate() before the next can() call can
+        // observe it — the exact contract the grant/revoke services will follow.
+        $resolver->invalidate();
         self::assertFalse($resolver->can($u, 'core.thread.lock', $target)->allowed);
 
         $assign->create([
@@ -118,6 +122,7 @@ final class CapabilityResolverTest extends TestCase
             'scope_id' => (int) $board['id'],
             'starts_at' => '2030-01-01 00:00:00',
         ]);
+        $resolver->invalidate();
         self::assertFalse($resolver->can($u, 'core.thread.lock', $target)->allowed);
 
         $active = $assign->create([
@@ -126,15 +131,18 @@ final class CapabilityResolverTest extends TestCase
             'scope_type' => 'board',
             'scope_id' => (int) $board['id'],
         ]);
+        $resolver->invalidate();
         $d = $resolver->can($u, 'core.thread.lock', $target);
         self::assertTrue($d->allowed);
         self::assertSame('system.moderator', $d->roleKey);
         self::assertSame('board', $d->scopeType);
 
         $this->db->run('UPDATE role_assignments SET revoked_at = UTC_TIMESTAMP() WHERE id IN (' . (int) $active . ',' . (int) $expired . ')');
+        $resolver->invalidate();
         self::assertFalse($resolver->can($u, 'core.thread.lock', $target)->allowed);
 
         $assign->create(['subject_id' => (int) $user['id'], 'role_id' => $adminRoleId, 'scope_type' => 'category', 'scope_id' => $cat]);
+        $resolver->invalidate();
         self::assertTrue($resolver->can($u, 'core.board.manage', ['category_id' => $cat])->allowed);
         self::assertFalse($resolver->can($u, 'core.board.manage', ['category_id' => $otherCat])->allowed);
         self::assertTrue($resolver->can($u, 'core.thread.lock', $target)->allowed);
@@ -151,6 +159,7 @@ final class CapabilityResolverTest extends TestCase
         self::assertFalse($resolver->can($admin, 'core.owner.transfer')->allowed);
 
         (new ProtectedOwnerRepository($this->db))->designate((int) $adminRow['id']);
+        $resolver->invalidate(); // Inc 6 Task 3: mutation must invalidate the warm memo.
         self::assertTrue($resolver->can($admin, 'core.owner.transfer')->allowed);
         self::assertTrue($resolver->can($admin, 'core.trust.manage_keys')->allowed);
     }
@@ -168,6 +177,7 @@ final class CapabilityResolverTest extends TestCase
         self::assertTrue($resolver->can(User::fromRow($author), 'core.thread.mark_solved', $ownCtx)->allowed);
         self::assertFalse($resolver->can(User::fromRow($other), 'core.thread.mark_solved', $ownCtx)->allowed);
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $other['id']);
+        $resolver->invalidate(); // Inc 6 Task 3: mutation must invalidate the warm memo.
         self::assertTrue($resolver->can(User::fromRow($other), 'core.thread.mark_solved', $ownCtx)->allowed);
 
         self::assertTrue($resolver->can(User::fromRow($author), 'core.post.edit_own', ['owner_id' => (int) $author['id']])->allowed);
@@ -210,5 +220,59 @@ final class CapabilityResolverTest extends TestCase
             $resolver->can(User::fromRow($helper), 'core.thread.mark_solved', $ownThread)->allowed,
             'the author path still works through a custom role',
         );
+    }
+
+    public function test_memo_serves_repeat_decisions_and_invalidate_clears_it(): void
+    {
+        $modRow = $this->makeUser();
+        $mod = $this->userEntity($modRow);
+        $board = $this->makeBoard($this->makeCategory());
+        $resolver = $this->resolver();
+        $target = ['board_id' => (int) $board['id']];
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modRow['id']);
+
+        self::assertTrue($resolver->can($mod, 'core.thread.lock', $target)->allowed);
+
+        // Mutate DB-read authority behind the memo's back. This would be visible to
+        // a fresh resolver call immediately if bundle/decision memoization were not
+        // active within the request.
+        $this->db->run('DELETE FROM board_moderators WHERE board_id = ? AND user_id = ?', [(int) $board['id'], (int) $modRow['id']]);
+
+        // Memoized: still allowed within this request scope...
+        self::assertTrue($resolver->can($mod, 'core.thread.lock', $target)->allowed);
+        // ...until invalidated.
+        $resolver->invalidate();
+        self::assertFalse($resolver->can($mod, 'core.thread.lock', $target)->allowed);
+    }
+
+    public function test_expiry_denies_despite_warm_memo_tm_pe_03(): void
+    {
+        $user = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+
+        // Custom role holding core.thread.lock, following this file's existing
+        // custom-role pattern (see test_custom_roles_confer_owner_path_only_for_dual_path_keys):
+        // RoleRepository::create + RoleCapabilityRepository::replaceForRole.
+        $roles = new RoleRepository($this->db);
+        $roleId = $roles->create(['role_key' => 'custom.expirytest', 'name' => 'Expiry Test', 'description' => null, 'created_by' => null]);
+        (new RoleCapabilityRepository($this->db))->replaceForRole(
+            $roleId,
+            array_values((new CapabilityRepository($this->db))->idsByKeys(['core.thread.lock'])),
+        );
+        (new RoleAssignmentRepository($this->db))->create([
+            'subject_id' => (int) $user['id'],
+            'role_id' => $roleId,
+            'scope_type' => 'board',
+            'scope_id' => (int) $board['id'],
+            'ends_at' => gmdate('Y-m-d H:i:s', time() + 3600),
+        ]);
+        $resolver = $this->resolver();
+        $entity = $this->userEntity($user);
+        $target = ['board_id' => (int) $board['id']];
+
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        self::assertTrue($resolver->can($entity, 'core.thread.lock', $target, $now)->allowed);
+        // Two hours later the grant is expired: a warm memo must NOT resurrect it.
+        self::assertFalse($resolver->can($entity, 'core.thread.lock', $target, $now->modify('+2 hours'))->allowed);
     }
 }

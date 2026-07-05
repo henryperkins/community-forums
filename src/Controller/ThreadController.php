@@ -9,13 +9,13 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardMemberRepository;
-use App\Repository\BoardModeratorRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Service\PreferenceService;
@@ -23,6 +23,7 @@ use App\Service\CommunityMemoryService;
 use App\Service\ContentReferenceService;
 use App\Service\CustomEmojiService;
 use App\Service\LinkPreviewService;
+use App\Service\ModerationService;
 use App\Service\PollService;
 use App\Service\ReactionService;
 use App\Service\SinceLastReadContextService;
@@ -96,12 +97,23 @@ final class ThreadController extends Controller
         $isMember = $user !== null
             && $this->container->get(BoardMemberRepository::class)->isMember((int) $thread['board_id'], $user->id());
         $locked = (int) $thread['is_locked'] === 1;
+        // Shared for both posting-floor sites below (reply gate + tag member arm)
+        // so a custom role's core.post.create/core.thread.tag grant is honored
+        // under enforce (Phase 5 Inc 6 Task 5) without re-fetching from the container.
+        $policy = $this->container->get(BoardPolicy::class);
+        $gate = $this->container->get(AuthorityGate::class);
         $canReply = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)
-            && $this->container->get(BoardPolicy::class)->canPost(
-                ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+            && $gate->allows(
+                fn (): bool => $policy->canPost(
+                    ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                    $user,
+                    $isMember,
+                ),
                 $user,
-                $isMember,
+                'core.post.create',
+                ['board_id' => (int) $thread['board_id']],
+                'ThreadController::renderThread',
             )
             && !$locked;
 
@@ -161,27 +173,52 @@ final class ThreadController extends Controller
 
         $canWriteUser = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user);
-        $canModerateBoard = $canWriteUser
-            && (
-                $user->isAdmin()
-                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
-            );
+        // The moderation TOOLBAR must never gate an individual button on a coarse
+        // "is a moderator" flag (Phase 5 Inc 6 Task 4b): a custom role holding only
+        // one capability key must still see only its own control. Each button below
+        // gets its own canModerate() check against its specific key; under
+        // legacy/shadow mode AuthorityGate ignores the key entirely, so every
+        // per-action flag collapses back to the same coarse boolean and an existing
+        // board moderator/admin keeps seeing every control exactly as before (see
+        // AuthorityGate::allows()).
+        $canPin = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.pin');
+        $canLock = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.lock');
+        // core.thread.move has no thread-view control to gate yet — moving a
+        // thread to another board isn't reachable from templates/thread.php or
+        // templates/partials/post.php today (only /admin/boards/{id}/move exists,
+        // which is unrelated board-reordering, not this capability). Computed
+        // here and exposed as can_move so a future move-thread control can
+        // consume it without another controller change.
+        $canMove = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.move');
+        $canSplitMerge = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.split_merge');
+        $canDeletePosts = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.post.delete_any');
 
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
-        // may accept/clear an answer; everyone sees the accepted marker.
+        // may accept/clear an answer; everyone sees the accepted marker. The
+        // moderator arm keys on core.thread.mark_solved — the exact capability
+        // SolvedAnswerService::authorize enforces on the write path — not the
+        // coarse delete_any flag, so a per-action deputy never sees an Accept
+        // control their key cannot exercise (review V3). The OP arm below covers
+        // the owner half of this dual-path capability.
         $community = (bool) $this->container->get(FeatureFlags::class)->enabled('community');
         $acceptedPostId = $thread['accepted_answer_post_id'] !== null ? (int) $thread['accepted_answer_post_id'] : null;
         $canMarkSolved = $community && $user !== null
             && $canWriteUser
             && (
                 (int) $thread['user_id'] === $user->id()
-                || $canModerateBoard
+                || $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.mark_solved')
             );
 
         // Anonymous-author reveal (P2-08): an admin or this board's moderator may
         // unmask an anonymous post; the byline stays masked for everyone — the
         // reveal is a separate audited action.
-        $canRevealAnon = $canModerateBoard;
+        $canRevealAnon = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.post.reveal_author');
 
         // Subscription state for the subscribe control (P2-03).
         $notificationsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('notifications');
@@ -224,12 +261,21 @@ final class ThreadController extends Controller
             $tagRepo = $this->container->get(TagRepository::class);
             $threadTags = $tagRepo->forThread((int) $thread['id']);
             if ($user !== null && $this->container->get(WriteGate::class)->canWrite($user)) {
-                $canEditTags = $user->isAdmin()
-                    || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
-                    || $this->container->get(BoardPolicy::class)->canPost(
-                        ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                // Moderator arm checks the SAME capability the member arm is
+                // gated by (core.thread.tag) instead of the coarse default key,
+                // so a custom role granted only core.thread.tag can edit tags
+                // even in a board where it holds no ordinary posting rights.
+                $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.tag')
+                    || $gate->allows(
+                        fn (): bool => $policy->canPost(
+                            ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
+                            $user,
+                            $isMember,
+                        ),
                         $user,
-                        $isMember,
+                        'core.thread.tag',
+                        ['board_id' => (int) $thread['board_id']],
+                        'ThreadController::renderThread',
                     );
             }
             if ($canEditTags) {
@@ -258,10 +304,8 @@ final class ThreadController extends Controller
             }
             $summaryHistory = $memory->summaries((int) $thread['id']);
             $related = $memory->relatedForViewer((int) $thread['id'], $user);
-            $canCurateMemory = $user !== null && (
-                $user->isAdmin()
-                || $this->container->get(BoardModeratorRepository::class)->isModerator((int) $thread['board_id'], $user->id())
-            );
+            $canCurateMemory = $user !== null
+                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.memory.curate');
             $canCurateWiki = $canCurateMemory && (int) ($thread['board_wiki_enabled'] ?? 0) === 1;
             if ($canCurateWiki) {
                 foreach ($posts as $post) {
@@ -297,7 +341,11 @@ final class ThreadController extends Controller
             'can_reply' => $canReply,
             'locked' => $locked,
             'is_admin' => $user?->isAdmin() ?? false,
-            'can_moderate_board' => $canModerateBoard,
+            'can_pin' => $canPin,
+            'can_lock' => $canLock,
+            'can_move' => $canMove,
+            'can_split_merge' => $canSplitMerge,
+            'can_delete_posts' => $canDeletePosts,
             'engagement' => $engagement,
             'show_signatures' => $reading['show_signatures'],
             'show_avatars' => $reading['show_avatars'],
@@ -362,11 +410,17 @@ final class ThreadController extends Controller
             throw new NotFoundException('Thread not found.');
         }
         // A held (pending) thread is not public yet: only its author or a
-        // moderator of the board may load it (mirrors the held-media gate). P3-05.
+        // moderator of THIS board may load it (mirrors the held-media gate). P3-05.
+        // Board-scoped canModerate() (not the site-wide core.content.view_pending
+        // key): the legacy projection grants every global moderator a site-scoped
+        // view_pending to match the bare isModerator() site probes at /mod/approvals
+        // and the held-media view, and a site grant satisfies any board target — so
+        // keying this board-scoped view on it would let an unassigned global
+        // moderator open held threads they never could pre-cutover (review S1).
         if ((int) ($thread['is_pending'] ?? 0) === 1) {
             $isAuthor = $user !== null && $user->owns((int) $thread['user_id']);
             $canMod = $user !== null
-                && $this->container->get(\App\Service\ModerationService::class)->canModerate($user, (int) $thread['board_id']);
+                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
             if (!$isAuthor && !$canMod) {
                 throw new NotFoundException('Thread not found.');
             }

@@ -14,6 +14,7 @@ use App\Repository\FollowRepository;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
+use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 
@@ -73,9 +74,16 @@ final class BoardController extends Controller
             unset($t);
         }
 
+        $gate = $this->container->get(AuthorityGate::class);
         $canPost = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user)
-            && $policy->canPost($board, $user, $isMember);
+            && $gate->allows(
+                fn (): bool => $policy->canPost($board, $user, $isMember),
+                $user,
+                'core.thread.create',
+                ['board_id' => (int) $board['id']],
+                'BoardController::show',
+            );
         $expandedFeeds = $this->container->get(FeatureFlags::class)->enabled('expanded_feeds');
         $isFollowingBoard = $user !== null
             && $expandedFeeds
