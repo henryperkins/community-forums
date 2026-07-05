@@ -173,18 +173,14 @@ final class ThreadController extends Controller
 
         $canWriteUser = $user !== null
             && $this->container->get(WriteGate::class)->canWrite($user);
-        // Coarse "is this user a moderator of this board" fact — kept for
-        // solved-answer eligibility below (not one of the per-button controls).
-        // The moderation TOOLBAR must never gate an individual button on this
-        // coarse flag (Phase 5 Inc 6 Task 4b): a custom role holding only one
-        // capability key must still see only its own control. Each button below
+        // The moderation TOOLBAR must never gate an individual button on a coarse
+        // "is a moderator" flag (Phase 5 Inc 6 Task 4b): a custom role holding only
+        // one capability key must still see only its own control. Each button below
         // gets its own canModerate() check against its specific key; under
         // legacy/shadow mode AuthorityGate ignores the key entirely, so every
-        // per-action flag collapses back to this same coarse boolean and an
-        // existing board moderator/admin keeps seeing every control exactly as
-        // before (see AuthorityGate::allows()).
-        $canModerateBoard = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
+        // per-action flag collapses back to the same coarse boolean and an existing
+        // board moderator/admin keeps seeing every control exactly as before (see
+        // AuthorityGate::allows()).
         $canPin = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.pin');
         $canLock = $user !== null
@@ -203,14 +199,19 @@ final class ThreadController extends Controller
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.post.delete_any');
 
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
-        // may accept/clear an answer; everyone sees the accepted marker.
+        // may accept/clear an answer; everyone sees the accepted marker. The
+        // moderator arm keys on core.thread.mark_solved — the exact capability
+        // SolvedAnswerService::authorize enforces on the write path — not the
+        // coarse delete_any flag, so a per-action deputy never sees an Accept
+        // control their key cannot exercise (review V3). The OP arm below covers
+        // the owner half of this dual-path capability.
         $community = (bool) $this->container->get(FeatureFlags::class)->enabled('community');
         $acceptedPostId = $thread['accepted_answer_post_id'] !== null ? (int) $thread['accepted_answer_post_id'] : null;
         $canMarkSolved = $community && $user !== null
             && $canWriteUser
             && (
                 (int) $thread['user_id'] === $user->id()
-                || $canModerateBoard
+                || $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.mark_solved')
             );
 
         // Anonymous-author reveal (P2-08): an admin or this board's moderator may
@@ -340,7 +341,6 @@ final class ThreadController extends Controller
             'can_reply' => $canReply,
             'locked' => $locked,
             'is_admin' => $user?->isAdmin() ?? false,
-            'can_moderate_board' => $canModerateBoard,
             'can_pin' => $canPin,
             'can_lock' => $canLock,
             'can_move' => $canMove,
@@ -410,11 +410,17 @@ final class ThreadController extends Controller
             throw new NotFoundException('Thread not found.');
         }
         // A held (pending) thread is not public yet: only its author or a
-        // moderator of the board may load it (mirrors the held-media gate). P3-05.
+        // moderator of THIS board may load it (mirrors the held-media gate). P3-05.
+        // Board-scoped canModerate() (not the site-wide core.content.view_pending
+        // key): the legacy projection grants every global moderator a site-scoped
+        // view_pending to match the bare isModerator() site probes at /mod/approvals
+        // and the held-media view, and a site grant satisfies any board target — so
+        // keying this board-scoped view on it would let an unassigned global
+        // moderator open held threads they never could pre-cutover (review S1).
         if ((int) ($thread['is_pending'] ?? 0) === 1) {
             $isAuthor = $user !== null && $user->owns((int) $thread['user_id']);
             $canMod = $user !== null
-                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.content.view_pending');
+                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
             if (!$isAuthor && !$canMod) {
                 throw new NotFoundException('Thread not found.');
             }

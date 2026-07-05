@@ -196,70 +196,84 @@ final class AdminController extends Controller
     // requireAdmin(); this cuts over the four POST commands only, not the
     // admin console.
 
+    // The four roster commands authorize inside AdminService (state-then-
+    // capability) BEFORE that service resolves the board row, so a non-admin is
+    // denied with 403 whether or not the board exists. The controller must NOT
+    // boardOrFail() up front: doing so 404s a missing id before authorization
+    // and turns the 404-vs-403 split into a board-id existence oracle over
+    // hidden/private boards (review V1). The row is resolved only once the
+    // service has authorized — in the catch block (a ValidationException only
+    // fires after the service's own boardOrFail passed, so it provably exists)
+    // and on the success path.
+
     /** @param array<string,string> $params */
     public function assignModerator(Request $request, array $params): Response
     {
         $actor = $this->requireUser();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $boardId = (int) ($params['id'] ?? 0);
         $username = $request->str('username');
         try {
-            $this->container->get(AdminService::class)->assignModerator($actor, (int) $board['id'], $username);
+            $this->container->get(AdminService::class)->assignModerator($actor, $boardId, $username);
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
             if (!$actor->isAdmin()) {
                 return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
             }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator', $username);
         }
-        return $this->rosterDone($actor, $board, 'Moderator assigned.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Moderator assigned.');
     }
 
     /** @param array<string,string> $params */
     public function unassignModerator(Request $request, array $params): Response
     {
         $actor = $this->requireUser();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $boardId = (int) ($params['id'] ?? 0);
         try {
-            $this->container->get(AdminService::class)->unassignModerator($actor, (int) $board['id'], $request->int('user_id'));
+            $this->container->get(AdminService::class)->unassignModerator($actor, $boardId, $request->int('user_id'));
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
             if (!$actor->isAdmin()) {
                 return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
             }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator');
         }
-        return $this->rosterDone($actor, $board, 'Moderator removed.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Moderator removed.');
     }
 
     /** @param array<string,string> $params */
     public function addMember(Request $request, array $params): Response
     {
         $actor = $this->requireUser();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $boardId = (int) ($params['id'] ?? 0);
         $username = $request->str('username');
         try {
-            $this->container->get(AdminService::class)->addMember($actor, (int) $board['id'], $username);
+            $this->container->get(AdminService::class)->addMember($actor, $boardId, $username);
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
             if (!$actor->isAdmin()) {
                 return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
             }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member', $username);
         }
-        return $this->rosterDone($actor, $board, 'Member added.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Member added.');
     }
 
     /** @param array<string,string> $params */
     public function removeMember(Request $request, array $params): Response
     {
         $actor = $this->requireUser();
-        $board = $this->boardOrFail((int) ($params['id'] ?? 0));
+        $boardId = (int) ($params['id'] ?? 0);
         try {
-            $this->container->get(AdminService::class)->removeMember($actor, (int) $board['id'], $request->int('user_id'));
+            $this->container->get(AdminService::class)->removeMember($actor, $boardId, $request->int('user_id'));
         } catch (ValidationException $e) {
+            $board = $this->boardOrFail($boardId);
             if (!$actor->isAdmin()) {
                 return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
             }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member');
         }
-        return $this->rosterDone($actor, $board, 'Member removed.');
+        return $this->rosterDone($actor, $this->boardOrFail($boardId), 'Member removed.');
     }
 
     /**

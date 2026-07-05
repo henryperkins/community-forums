@@ -247,7 +247,11 @@ final class AdminUserController extends Controller
         try {
             $this->container->get(UserModerationService::class)->changeRole(
                 $admin,
-                $request->str('current_password'),
+                // Raw, not str(): reauth must verify the password exactly as
+                // stored/typed. str() trims, which every other reauth site
+                // avoids and which would reject a legitimate space-edged
+                // password (review V8).
+                (string) $request->post('current_password', ''),
                 $id,
                 $request->str('role'),
             );

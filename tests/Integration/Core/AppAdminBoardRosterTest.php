@@ -287,4 +287,30 @@ final class AppAdminBoardRosterTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/boards/999999/members', ['username' => 'alice']));
         $this->assertStatus(404, $this->post('/admin/boards/999999/members/remove', ['user_id' => (int) $this->alice['id']]));
     }
+
+    /**
+     * Review V1 — no board-id existence oracle on the roster commands. A
+     * non-admin must get the SAME denial (403) whether the target board exists
+     * or not; otherwise the 404-for-missing vs 403-for-existing split lets any
+     * signed-in member enumerate which board ids exist — including the hidden
+     * and private boards /c/{slug} deliberately 404-masks. The four commands
+     * therefore authorize (in AdminService, state-then-capability) BEFORE the
+     * controller resolves the board row. This is live even with the
+     * `capabilities` flag OFF (the shipped default), so the test runs unflagged;
+     * the admin path above still legitimately 404s (it authorizes first, then
+     * learns the board is missing).
+     */
+    public function test_non_admin_roster_post_to_missing_board_is_403_not_404_no_existence_oracle_v1(): void
+    {
+        $this->actingAs($this->alice); // a plain member: not an admin, not a board moderator
+
+        // An existing (private) board the member cannot manage → 403.
+        $this->assertStatus(403, $this->post('/admin/boards/' . $this->privateBoard['id'] . '/moderators', ['username' => 'bob']));
+
+        // A nonexistent id → identically 403, revealing nothing about existence.
+        $this->assertStatus(403, $this->post('/admin/boards/999999/moderators', ['username' => 'bob']));
+        $this->assertStatus(403, $this->post('/admin/boards/999999/moderators/remove', ['user_id' => (int) $this->alice['id']]));
+        $this->assertStatus(403, $this->post('/admin/boards/999999/members', ['username' => 'bob']));
+        $this->assertStatus(403, $this->post('/admin/boards/999999/members/remove', ['user_id' => (int) $this->alice['id']]));
+    }
 }

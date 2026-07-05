@@ -520,6 +520,101 @@ further by the `CAPABILITIES_MODE` posture lever. Branch `phase5-inc6-enforcemen
   authoritative by design — "no migration ships" is permanent for Gate A, not
   a stopgap).
 
+### Pre-merge review hardening (2026-07-05, on `phase5-inc6-enforcement`)
+
+A max-effort multi-agent review of PR #38 (10 finder angles → adversarial
+verify → sweep, 15 findings) surfaced no Critical and one authority-broadening
+High; nine findings were fixed on the branch under TDD (each red-first), the
+rest recorded below. Full suite after the fixes: **1649 tests / 8349
+assertions** green (11 new regression tests). Fixes:
+
+- **S1 (High) — pending-thread view broadening.** Under `enforce`, the
+  held-thread gate keyed on `core.content.view_pending`, which the legacy
+  projection grants *site-wide* to every `role='moderator'` user (to mirror the
+  bare `isModerator()` site probes at `/mod/approvals` and held media), so a
+  vestigial global moderator with **no** board assignment could open held
+  threads they never could pre-cutover (404→200) — a delta ADR 0016 does not
+  record and taxonomy quirk 3 forbids. Fix: `ThreadController` decides the
+  held-thread gate with the board-scoped coarse `canModerate($user,$boardId)`
+  (its exact pre-cutover check), so the site-wide projection grant no longer
+  satisfies it; author / assigned board-mod / admin are unaffected. Also
+  removes a per-view shadow-mismatch source.
+- **V1 (live while dark) — roster board-id existence oracle.** The four
+  board-roster POST commands ran `boardOrFail()` (404) before authorization, so
+  a non-admin saw 404-for-missing vs 403-for-existing — enumerating hidden and
+  private board ids, live even with the flag off. Fix: authorize in
+  `AdminService` (which already gates before its own `boardOrFail`) *before* the
+  controller resolves the row; a non-admin now gets a uniform 403.
+- **V8 (live while dark) — change-role reauth trimmed the password.**
+  `AdminUserController::changeRole` read the reauth password via `str()`
+  (trims), the only reauth site to do so; a legitimately space-edged password
+  could never pass. Fix: raw `post()`, matching every other reauth site.
+- **S3 — duplicate active assignment.** `grant()` had no duplicate guard and
+  `role_assignments` has no unique key, so a double-clicked assign minted two
+  identical active grants; revoking one left the twin silently authorizing. Fix:
+  `RoleAssignmentRepository::findActiveDuplicate` pre-check in `grant()` (mirrors
+  `addMember`'s guard). *Residual:* a true cross-connection double-submit can
+  still race the read — a DB partial-unique guarantee is a follow-up.
+- **S2 — renew ignored the row's start.** Renewing a scheduled assignment to an
+  expiry before its own `starts_at` succeeded, minting an ends≤starts window
+  that can never activate. Fix: `renew()` cross-checks the new expiry against
+  the row's `starts_at`.
+- **V5 — renew error swallowed on a concurrently-revoked row.** The renew error
+  paragraphs sat inside the `status!=='revoked'` guard, so the "Revoked
+  assignments cannot be renewed" error (which only fires when the row *is*
+  revoked) never rendered. Fix: the row's error block renders outside that
+  guard.
+- **V4 — category scope mislabelled.** The assignments table resolved every
+  `scope_id` through the board-name map, so a category-scoped grant showed an
+  unrelated board's name. Fix: a category-name map, branched on `scope_type`
+  (controller now passes `categories`).
+- **V9 — history reason always NULL.** `logHistory()` never set the top-level
+  `reason`, so `role_assignment_history.reason` stayed NULL for every lifecycle
+  event (the value survived only inside `after_json`). Fix: thread `reason`
+  through to the dedicated column for grant/revoke.
+- **V3 — mark-solved phantom control.** The accept/clear-answer display flag
+  keyed on the coarse `can_moderate_board` (`core.post.delete_any`) while the
+  write path enforces `core.thread.mark_solved`, so a `delete_any`-only deputy
+  saw an Accept control that always 403'd. Fix: the moderator arm keys on
+  `core.thread.mark_solved` (matching `SolvedAnswerService::authorize`); the now
+  fully-unused `can_moderate_board` view flag was dropped. Also removes a
+  shadow-mismatch source.
+
+**Review follow-ups (recorded, not fixed here):**
+
+- **V7 (medium) — `canEditTags` telemetry noise.** The moderator arm pairs the
+  staff-only legacy closure with the user-baseline key `core.thread.tag`, so
+  under shadow/enforce almost every ordinary-member thread view emits a
+  `resolver.*_mismatch` — a class the runbook calls a stop-the-line parity bug,
+  making a clean shadow soak unreachable. Deferred because a correct fix is a
+  design question (whether staff may tag on boards they cannot post in) that
+  risks changing tag-edit authority; needs its own pass plus a parity-oracle
+  update. Live outcome is unchanged in all modes (the OR with the member arm).
+- **Queue discovery for custom deputies (medium).** `/mod/approvals` gates on
+  `core.content.view_pending` but still row-scopes via legacy `board_moderators`
+  (empty queue for a custom deputy), and `/mod/reports` was not cut over
+  (`core.report.handle` deputy 404s). Belongs with the deferred `/admin`
+  console / queue-discovery increment; both fail *closed*.
+- **`CAPABILITIES_MODE` unknown value → silent shadow (low, fail-safe).** No
+  trim/case-normalize or unknown-value rejection; a typo'd mode silently runs
+  shadow. Runbook step 4's pilot grant detects it functionally. Follow-up:
+  normalize + log/reject unknown, and surface the effective mode operationally.
+- **Capability keys as free string literals (medium hazard, latent).** No
+  per-key constants and no test scanning call-site literals against the
+  catalogue; a typo'd key fail-darks under enforce (denies everyone incl.
+  admins) invisibly to CI. Follow-up: `Cap::*` constants + a literal-vs-catalogue
+  invariant test.
+- **Resolver memo gaps + `postableBoards` N+1 (efficiency, within budget).**
+  `isMember()`/`roleKeysHolding()` are unmemoized on the decision-miss path
+  (~10 duplicate queries per authed thread render under shadow/enforce);
+  `postableBoards` re-resolves per board on the 422 compose re-render. p95 has
+  3× headroom, so non-blocking. Follow-up: memoize both alongside the existing
+  per-request memos.
+- **Minor cleanups.** Duplicated roster gate/deputy-catch blocks
+  (`AdminService`×4, `AdminController`×4), the dead `core.post.delete_any`
+  defaults on `ModerationService`'s private helpers, and ~10 hand-wired
+  `CapabilityResolver` construction sites — DRY-only, no behavior change.
+
 ## Product-owner approvals recorded
 
 This instruction accepts ADR 0004 as the Milestone-0 decision record using its

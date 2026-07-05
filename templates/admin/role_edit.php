@@ -93,6 +93,13 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
     foreach (($boards ?? []) as $b) {
         $boardNames[(int) $b['id']] = (string) $b['name'];
     }
+    // Categories and boards auto-increment independently, so scope_id must be
+    // resolved against the map matching the assignment's scope_type — resolving a
+    // category scope_id through the board map shows an unrelated board's name (V4).
+    $categoryNames = [];
+    foreach (($categories ?? []) as $c) {
+        $categoryNames[(int) $c['id']] = (string) $c['name'];
+    }
     ?>
     <section class="card">
         <h2>Assignments</h2>
@@ -105,7 +112,12 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
             <?php foreach ($assignments as $a): ?>
                 <tr>
                     <td><a href="/u/<?= $e($a['username']) ?>">@<?= $e($a['username']) ?></a></td>
-                    <td><?= $e((string) $a['scope_type']) ?><?php if ($a['scope_id'] !== null): ?> &mdash; <?= $e($boardNames[(int) $a['scope_id']] ?? ('#' . (int) $a['scope_id'])) ?><?php endif; ?></td>
+                    <td><?= $e((string) $a['scope_type']) ?><?php if ($a['scope_id'] !== null): ?> &mdash; <?php
+                        $scopeId = (int) $a['scope_id'];
+                        $scopeName = ((string) $a['scope_type'] === 'category')
+                            ? ($categoryNames[$scopeId] ?? ('#' . $scopeId))
+                            : ($boardNames[$scopeId] ?? ('#' . $scopeId));
+                        ?><?= $e($scopeName) ?><?php endif; ?></td>
                     <td><?= $e((string) ($a['starts_at'] ?? 'now')) ?> &rarr; <?= $e((string) ($a['ends_at'] ?? 'no expiry')) ?></td>
                     <td><span class="state state-<?= $e((string) $a['status']) ?>"><?= $e((string) $a['status']) ?></span></td>
                     <td>
@@ -120,11 +132,14 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
                             <input type="password" class="input" name="current_password" placeholder="Your password" autocomplete="current-password" required>
                             <button class="btn btn-small" type="submit">Renew</button>
                         </form>
+                        <?php endif; ?>
                         <?php if ($renewAssignmentId === (int) $a['id']): ?>
+                            <?php // Errors render OUTSIDE the status!=='revoked' guard: a renew that
+                                  // fails BECAUSE the row was concurrently revoked must still show its
+                                  // 'assignment' error, not vanish with the form (review V5). ?>
                             <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
                             <?php if (!empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
                             <?php if (!empty($errors['assignment'])): ?><p class="field-error"><?= $e($errors['assignment']) ?></p><?php endif; ?>
-                        <?php endif; ?>
                         <?php endif; ?>
                     </td>
                 </tr>

@@ -83,6 +83,16 @@ final class RoleAssignmentService
         $this->assertGrantorCeiling($admin, $roleId, $scopeType, $scopeId);
 
         return (int) $this->db->transaction(function () use ($admin, $subjectId, $roleId, $scopeType, $scopeId, $startsAt, $endsAt, $reason): int {
+            // Refuse a second identical (subject, role, scope) grant — a
+            // double-clicked form would otherwise mint a twin that the resolver's
+            // allow-if-any-grant union keeps honoring after the first is revoked,
+            // so the admin believes authority was withdrawn when it was not
+            // (review S3). Mirrors AdminService::addMember's already-a-member
+            // guard. (A concurrent double-submit across two connections can still
+            // race this read; a DB partial-unique guarantee is a follow-up.)
+            if ($this->assignments->findActiveDuplicate($subjectId, $roleId, $scopeType, $scopeId) !== null) {
+                throw new ValidationException(['username' => 'That member already holds this role at this scope; revoke or renew the existing assignment instead.']);
+            }
             $id = $this->assignments->create([
                 'subject_id' => $subjectId,
                 'role_id' => $roleId,
@@ -95,7 +105,7 @@ final class RoleAssignmentService
             ]);
             $this->logHistory('grant', $id, $admin, $subjectId, $roleId, $scopeType, $scopeId, null, [
                 'starts_at' => $startsAt, 'ends_at' => $endsAt, 'reason' => $reason,
-            ]);
+            ], $reason);
             $this->audit($admin, 'assign_role', $subjectId, [
                 'assignment_id' => $id, 'role_id' => $roleId, 'scope_type' => $scopeType, 'scope_id' => $scopeId,
             ]);
@@ -128,6 +138,7 @@ final class RoleAssignmentService
                 $row['scope_id'] === null ? null : (int) $row['scope_id'],
                 $row,
                 ['reason' => $reason],
+                $reason,
             );
             $this->audit($admin, 'revoke_role', (int) $row['subject_id'], [
                 'assignment_id' => $assignmentId, 'role_id' => (int) $row['role_id'],
@@ -152,6 +163,15 @@ final class RoleAssignmentService
             $row = $this->assignments->findForUpdate($assignmentId);
             if ($row === null || $row['revoked_at'] !== null) {
                 throw new ValidationException(['assignment' => 'Revoked assignments cannot be renewed; create a new grant.']);
+            }
+            // Cross-check the new expiry against the row's OWN start (validateWindow
+            // only saw the expiry and the current clock). Renewing a scheduled
+            // assignment to an expiry before its start would mint an ends<=starts
+            // window CapabilityRules::windowValid() can never satisfy — a grant that
+            // silently never activates, a shape grant() itself rejects (review S2).
+            // Both are normalized 'Y-m-d H:i:s' UTC strings, so the compare is lexical.
+            if ($row['starts_at'] !== null && $endsAt <= (string) $row['starts_at']) {
+                throw new ValidationException(['ends_at' => 'The expiry must be after the assignment start.']);
             }
             $this->assignments->updateEndsAt($assignmentId, $endsAt);
             $this->logHistory(
@@ -296,7 +316,7 @@ final class RoleAssignmentService
     }
 
     /** @param array<string,mixed>|null $before @param array<string,mixed> $after */
-    private function logHistory(string $event, int $assignmentId, User $actor, ?int $subjectId, int $roleId, string $scopeType, ?int $scopeId, ?array $before, array $after): void
+    private function logHistory(string $event, int $assignmentId, User $actor, ?int $subjectId, int $roleId, string $scopeType, ?int $scopeId, ?array $before, array $after, ?string $reason = null): void
     {
         $this->history->log([
             'assignment_id' => $assignmentId,
@@ -309,6 +329,10 @@ final class RoleAssignmentService
             'scope_id' => $scopeId,
             'before' => $before,
             'after' => $after,
+            // The dedicated reason column, distinct from the value inside
+            // after_json, so audit queries can read it without JSON extraction
+            // (review V9; renew carries no reason and passes null).
+            'reason' => $reason,
         ]);
     }
 

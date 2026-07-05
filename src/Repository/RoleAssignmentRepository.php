@@ -59,6 +59,26 @@ final class RoleAssignmentRepository
         return $this->db->fetch('SELECT * FROM role_assignments WHERE id = ?', [$id]);
     }
 
+    /**
+     * The existing non-revoked assignment for this exact (subject, role, scope),
+     * if any — used to refuse a duplicate grant. `scope_id <=> ?` is the NULL-safe
+     * equality operator so a second site-scoped (scope_id IS NULL) grant is caught
+     * too. Revoked rows are excluded so a revoke-then-regrant is allowed.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function findActiveDuplicate(int $subjectId, int $roleId, string $scopeType, ?int $scopeId): ?array
+    {
+        return $this->db->fetch(
+            "SELECT * FROM role_assignments
+             WHERE subject_type = 'user' AND subject_id = ? AND role_id = ?
+               AND scope_type = ? AND scope_id <=> ?
+               AND revoked_at IS NULL
+             LIMIT 1",
+            [$subjectId, $roleId, $scopeType, $scopeId],
+        );
+    }
+
     /** @return array<string,mixed>|null */
     public function findForUpdate(int $id): ?array
     {

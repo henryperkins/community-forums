@@ -469,6 +469,116 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->assertRedirect($this->post('/mod/t/' . $t['thread_id'] . '/lock'));
     }
 
+    /**
+     * Phase 5 Inc 6 review V3 — the accept-answer display flag used to key on the
+     * coarse can_moderate_board (core.post.delete_any) while the write path
+     * (SolvedAnswerService::authorize) enforces core.thread.mark_solved, so a
+     * custom deputy holding only core.post.delete_any saw an "Accept as answer"
+     * control on every reply that always 403'd. The control must render off its
+     * own key, matching the enforced write path.
+     */
+    public function test_delete_any_only_deputy_sees_no_accept_answer_control_under_enforce_v3(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $author = $this->makeUser();
+        $answerer = $this->makeUser();
+        $t = $this->makeThread($board, $author);
+        $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'An answer.']);
+
+        $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.post.delete_any'], (int) $board['id']);
+        $this->withCapabilitiesEnforced(['community' => true]);
+
+        $this->actingAs($deputy);
+        $page = $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']);
+        $this->assertStatus(200, $page);
+        // Sanity: the deputy IS a real delete_any holder (their own control renders).
+        $this->assertSeeText($page, 'action="/posts/' . $replyId . '/delete"');
+        // …but must NOT see the accept-answer control their key cannot exercise.
+        $this->assertDontSeeText($page, 'action="/posts/' . $replyId . '/accept"');
+    }
+
+    /**
+     * Positive companion for V3: an assigned board moderator (the persona the
+     * write path DOES authorize on others' threads) still sees the accept control.
+     */
+    public function test_board_moderator_sees_accept_answer_control_under_enforce_v3(): void
+    {
+        $this->makeAdmin();
+        $mod = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $mod['id']);
+        $author = $this->makeUser();
+        $answerer = $this->makeUser();
+        $t = $this->makeThread($board, $author);
+        $replyId = $this->posting()->reply($this->userEntity($answerer), $t['thread_id'], ['body' => 'An answer.']);
+        $this->withCapabilitiesEnforced(['community' => true]);
+
+        $this->actingAs($mod);
+        $page = $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']);
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'action="/posts/' . $replyId . '/accept"');
+    }
+
+    /**
+     * Phase 5 Inc 6 review S1 — no silent authority broadening at cutover.
+     * A global moderator (users.role='moderator') with NO board_moderators
+     * assignment could NOT open a held (is_pending=1) thread before the
+     * cutover: the gate was board-scoped canModerate(), which for such a user
+     * evaluates isAdmin() || isModerator(thisBoard) === false. The resolver
+     * must reproduce that exactly. It previously did not: the legacy projection
+     * grants every role='moderator' user a SITE-scoped core.content.view_pending
+     * (to mirror the bare isModerator() site probes at /mod/approvals and the
+     * held-media view), and a site grant satisfies any board target — so keying
+     * the thread view on core.content.view_pending flipped 404→200 under
+     * enforce. ADR 0016 records suspended-staff pending-view LOSS as the ONLY
+     * live delta; this pins that there is no matching global-moderator GAIN.
+     */
+    public function test_enforce_mode_does_not_grant_unassigned_global_moderator_pending_thread_view_s1(): void
+    {
+        $this->makeAdmin(); // satisfy the first-run setup gate
+        $board = $this->makeBoard($this->makeCategory());
+        $author = $this->makeUser();
+        $t = $this->makeThread($board, $author);
+        // Hold the thread — no held-content seeding helper exists, flip it directly.
+        $this->db->run('UPDATE threads SET is_pending = 1 WHERE id = ?', [$t['thread_id']]);
+
+        $globalMod = $this->makeUser(['role' => 'moderator']); // zero board_moderators rows
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($globalMod);
+        $this->assertStatus(404, $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']));
+    }
+
+    /**
+     * Companion parity pin for S1: tightening the global-moderator case must
+     * NOT withdraw pending-view from the three personas that always held it —
+     * the author of the held thread, an assigned board moderator, and an admin.
+     */
+    public function test_enforce_mode_keeps_pending_thread_view_for_author_board_mod_and_admin_s1(): void
+    {
+        $admin = $this->makeAdmin();
+        $board = $this->makeBoard($this->makeCategory());
+        $author = $this->makeUser();
+        $boardMod = $this->makeUser();
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $boardMod['id']);
+        $t = $this->makeThread($board, $author);
+        $this->db->run('UPDATE threads SET is_pending = 1 WHERE id = ?', [$t['thread_id']]);
+        $this->withCapabilitiesEnforced();
+
+        $slug = '/t/' . $t['thread_id'] . '-' . $t['slug'];
+
+        $this->actingAs($author);
+        $this->assertStatus(200, $this->get($slug));   // author sees their own held thread
+
+        $this->actingAs($boardMod);
+        $this->assertStatus(200, $this->get($slug));   // assigned board moderator sees it
+
+        $this->actingAs($admin);
+        $this->assertStatus(200, $this->get($slug));   // admin sees it
+    }
+
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
     private function makeCustomRoleWithAssignment(array $adminRow, array $subjectRow, array $keys, int $boardId): int
     {

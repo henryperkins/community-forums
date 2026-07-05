@@ -10,6 +10,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
 use App\Repository\BoardRepository;
+use App\Repository\CategoryRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
 use App\Security\CapabilityCatalog;
@@ -279,6 +280,7 @@ final class AdminRoleController extends Controller
             'catalogue' => $this->delegableCatalogue(),
             'assignments' => $this->container->get(RoleAssignmentService::class)->listForRole($roleId),
             'boards' => $this->container->get(BoardRepository::class)->allOrdered(),
+            'categories' => $this->container->get(CategoryRepository::class)->all(),
             'errors' => $errors,
             'old' => $old,
         ], $status));

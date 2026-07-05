@@ -200,6 +200,84 @@ final class RoleAssignmentServiceTest extends TestCase
         self::assertGreaterThan(0, $ok);
     }
 
+    public function test_grant_refuses_a_duplicate_active_assignment_for_the_same_scope_s3(): void
+    {
+        $admin = $this->userEntity($this->makeAdmin());
+        $subject = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $roleId = $this->makeRole(['core.thread.lock']);
+
+        $first = $this->service()->grant($admin, 'password123', $roleId, $subject['username'], 'board', (int) $board['id'], null, null, null);
+        self::assertGreaterThan(0, $first);
+
+        // A second identical (subject, role, scope) grant — e.g. a double-clicked
+        // form or a retried POST — must refuse, not mint a twin the resolver's
+        // allow-if-any-grant union would keep honoring after the first is revoked
+        // (review S3). Mirrors AdminService::addMember's already-a-member guard.
+        try {
+            $this->service()->grant($admin, 'password123', $roleId, $subject['username'], 'board', (int) $board['id'], null, null, null);
+            self::fail('a duplicate active assignment must refuse');
+        } catch (ValidationException $e) {
+            self::assertArrayHasKey('username', $e->errors);
+        }
+
+        self::assertSame(1, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM role_assignments WHERE subject_id = ? AND role_id = ? AND scope_type = 'board' AND scope_id = ?",
+            [(int) $subject['id'], $roleId, (int) $board['id']],
+        ));
+
+        // Revoking the first frees the slot: a fresh grant then succeeds, and a
+        // different scope was never blocked in the first place.
+        $this->service()->revoke($admin, $first, null);
+        $second = $this->service()->grant($admin, 'password123', $roleId, $subject['username'], 'board', (int) $board['id'], null, null, null);
+        self::assertGreaterThan(0, $second);
+    }
+
+    public function test_renew_refuses_expiry_before_a_scheduled_assignments_start_s2(): void
+    {
+        $admin = $this->userEntity($this->makeAdmin());
+        $subject = $this->makeUser();
+        $roleId = $this->makeRole(['core.thread.lock']);
+        // A scheduled assignment: starts well in the future.
+        $startsAt = gmdate('Y-m-d H:i:s', time() + 30 * 86400);
+        $id = $this->service()->grant($admin, 'password123', $roleId, $subject['username'], 'site', null, $startsAt, null, null);
+
+        // Renewing to an expiry BEFORE the row's own start is a window grant()
+        // itself rejects ("expiry must be after the start"); renew must reject it
+        // too rather than mint a can-never-activate window with a clean audit
+        // trail (review S2). The expiry is still in the future, so it clears the
+        // separate future-check — only the cross-check against starts_at catches it.
+        $endsBeforeStart = gmdate('Y-m-d H:i:s', time() + 10 * 86400);
+        try {
+            $this->service()->renew($admin, 'password123', $id, $endsBeforeStart);
+            self::fail('renew must refuse an expiry before the start');
+        } catch (ValidationException $e) {
+            self::assertArrayHasKey('ends_at', $e->errors);
+        }
+    }
+
+    public function test_grant_and_revoke_record_the_reason_in_the_history_column_v9(): void
+    {
+        $admin = $this->userEntity($this->makeAdmin());
+        $subject = $this->makeUser();
+        $roleId = $this->makeRole(['core.thread.lock']);
+        $id = $this->service()->grant($admin, 'password123', $roleId, $subject['username'], 'site', null, null, null, 'incident 42 pilot');
+
+        // The dedicated role_assignment_history.reason column (which pre-existing
+        // role_edit events populate) must carry the admin-entered reason, not sit
+        // NULL with the value buried only inside after_json (review V9).
+        self::assertSame('incident 42 pilot', $this->db->fetchValue(
+            "SELECT reason FROM role_assignment_history WHERE assignment_id = ? AND event = 'grant'",
+            [$id],
+        ));
+
+        $this->service()->revoke($admin, $id, 'rotated out');
+        self::assertSame('rotated out', $this->db->fetchValue(
+            "SELECT reason FROM role_assignment_history WHERE assignment_id = ? AND event = 'revoke'",
+            [$id],
+        ));
+    }
+
     public function test_revoke_is_fast_and_renew_reauths_and_row_locks_are_deterministic(): void
     {
         $admin = $this->userEntity($this->makeAdmin());

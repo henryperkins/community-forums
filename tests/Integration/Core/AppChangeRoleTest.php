@@ -25,6 +25,24 @@ final class AppChangeRoleTest extends TestCase
         ));
     }
 
+    public function test_reauth_accepts_a_password_with_edge_whitespace_v8(): void
+    {
+        // Review V8: the reauth password must be read raw, exactly like every
+        // other reauth site (login, the role editor, package/theme forms all use
+        // $request->post()). $request->str() trims, so an admin whose real
+        // password carries leading/trailing spaces — stored and verified
+        // untrimmed everywhere else — could never pass THIS one form.
+        $admin = $this->makeAdmin(['password' => '  spaced pw  ']);
+        $member = $this->makeUser();
+        $this->actingAs($admin);
+
+        $r = $this->post('/admin/users/' . $member['id'] . '/role', [
+            'role' => 'moderator', 'current_password' => '  spaced pw  ',
+        ]);
+        $this->assertRedirect($r);
+        self::assertSame('moderator', $this->users()->find((int) $member['id'])['role']);
+    }
+
     public function test_wrong_password_refuses_and_role_is_unchanged(): void
     {
         $admin = $this->makeAdmin();
