@@ -73,4 +73,38 @@ final class RoleAssignmentRepositoryTest extends TestCase
         $after = json_decode((string) $rows[0]['after_json'], true);
         self::assertSame(['core.thread.lock'], $after['capabilities']);
     }
+
+    public function test_revoke_stamps_and_bumps_version(): void
+    {
+        $user = $this->makeUser();
+        $admin = $this->makeAdmin();
+        $roles = new RoleRepository($this->db);
+        $roleId = (int) $roles->findByKey('system.moderator')['id'];
+        $repo = new RoleAssignmentRepository($this->db);
+        $id = $repo->create(['subject_id' => (int) $user['id'], 'role_id' => $roleId]);
+
+        $repo->revoke($id, (int) $admin['id']);
+
+        $row = $repo->findForUpdate($id);
+        self::assertNotNull($row);
+        self::assertNotNull($row['revoked_at']);
+        self::assertSame((int) $admin['id'], (int) $row['revoked_by']);
+        self::assertSame(2, (int) $row['assignment_version']);
+    }
+
+    public function test_update_ends_at_bumps_version_and_list_for_role_includes_all_states(): void
+    {
+        $user = $this->makeUser();
+        $roles = new RoleRepository($this->db);
+        $roleId = (int) $roles->findByKey('system.moderator')['id'];
+        $repo = new RoleAssignmentRepository($this->db);
+        $id = $repo->create(['subject_id' => (int) $user['id'], 'role_id' => $roleId]);
+
+        $repo->updateEndsAt($id, gmdate('Y-m-d H:i:s', time() + 3600));
+        $rows = $repo->listForRole($roleId);
+
+        self::assertCount(1, $rows);
+        self::assertSame($user['username'], $rows[0]['username']);
+        self::assertSame(2, (int) $rows[0]['assignment_version']);
+    }
 }
