@@ -1895,6 +1895,9 @@ final class App
         $r->get('/admin/roles/{id}', [AdminRoleController::class, 'edit']);
         $r->post('/admin/roles/{id}', [AdminRoleController::class, 'update']);
         $r->post('/admin/roles/{id}/clone', [AdminRoleController::class, 'clone']);
+        $r->post('/admin/roles/{id}/assignments', [AdminRoleController::class, 'assign']);
+        $r->post('/admin/role-assignments/{id}/revoke', [AdminRoleController::class, 'revokeAssignment']);
+        $r->post('/admin/role-assignments/{id}/renew', [AdminRoleController::class, 'renewAssignment']);
         $r->get('/admin/themes', [AdminThemeController::class, 'index']);
         $r->get('/admin/themes/safe-mode', [AdminThemeController::class, 'safeModeForm']);
         $r->post('/admin/themes/safe-mode', [AdminThemeController::class, 'safeMode']);

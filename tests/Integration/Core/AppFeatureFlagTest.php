@@ -149,12 +149,21 @@ final class AppFeatureFlagTest extends TestCase
     {
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/roles'));
+        // P5-09 scoped-assignment mutation routes (IDs are synthetic/nonexistent
+        // here — the gate() flag-check runs before any row lookup, so this
+        // proves the flag darkness, not a not-found).
+        $this->assertStatus(404, $this->post('/admin/roles/1/assignments', ['username' => 'x', 'current_password' => 'password123']));
+        $this->assertStatus(404, $this->post('/admin/role-assignments/1/revoke', []));
+        $this->assertStatus(404, $this->post('/admin/role-assignments/1/renew', ['ends_at' => '2030-01-01 00:00', 'current_password' => 'password123']));
 
         $this->setFlags(['capabilities' => true]);
         self::assertNotSame(404, $this->get('/admin/roles')->status());
 
         $this->setFlags(['capabilities' => false]);
         $this->assertStatus(404, $this->get('/admin/roles'));
+        $this->assertStatus(404, $this->post('/admin/roles/1/assignments', ['username' => 'x', 'current_password' => 'password123']));
+        $this->assertStatus(404, $this->post('/admin/role-assignments/1/revoke', []));
+        $this->assertStatus(404, $this->post('/admin/role-assignments/1/renew', ['ends_at' => '2030-01-01 00:00', 'current_password' => 'password123']));
     }
 
     public function test_passkeys_flag_gates_ceremony_routes(): void
