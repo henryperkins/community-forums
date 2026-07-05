@@ -149,22 +149,40 @@ final class RoleServiceTest extends TestCase
     {
         $svc = $this->service();
         $admin = $this->admin();
-        // Source is a custom role built from enforced keys, not a system anchor:
-        // every system role's DB-seeded set is cumulative (guest ⊂ user ⊂
-        // moderator ⊂ admin per CapabilityCatalog::roleCapabilities()) and so
-        // always carries baseline keys outside EnforcedCapabilities (e.g.
-        // core.board.read) — the Task 9 clamp now refuses to clone those.
-        $sourceId = $svc->create($admin, 'password123', 'Clone Source', null, ['core.thread.lock', 'core.thread.pin']);
+        $modId = (int) (new RoleRepository($this->db))->findByKey('system.moderator')['id'];
 
-        $cloneId = $svc->clone($admin, 'password123', $sourceId, 'Source Clone');
+        $cloneId = $svc->clone($admin, 'password123', $modId, 'Mod Clone');
         $role = (new RoleRepository($this->db))->find($cloneId);
         self::assertSame('custom', $role['kind']);
 
-        $sourceKeys = (new RoleCapabilityRepository($this->db))->keysForRole($sourceId);
+        // clone() filters the source to the enforceable set, so the clone holds
+        // a strict subset of the source's cumulative keys (baseline keys like
+        // core.board.read are dropped) — every cloned key still traces back to
+        // the source, none invented.
+        $sourceKeys = (new RoleCapabilityRepository($this->db))->keysForRole($modId);
         $cloneKeys = (new RoleCapabilityRepository($this->db))->keysForRole($cloneId);
-        sort($sourceKeys);
-        sort($cloneKeys);
-        self::assertSame($sourceKeys, $cloneKeys);
+        self::assertNotEmpty($cloneKeys);
+        self::assertSame([], array_values(array_diff($cloneKeys, $sourceKeys)), 'no key invented by clone');
+        self::assertLessThan(count($sourceKeys), count($cloneKeys), 'non-enforceable baseline keys were filtered out');
+    }
+
+    public function test_clone_of_system_role_copies_only_enforceable_keys(): void
+    {
+        $svc = $this->service();
+        $admin = $this->admin();
+        $modId = (int) (new RoleRepository($this->db))->findByKey('system.moderator')['id'];
+
+        // Cloning a system anchor now SUCCEEDS: clone() filters the source's
+        // cumulative keys down to the enforceable set instead of 422-ing on the
+        // baseline keys every system role carries (core.board.read, etc.). This
+        // is the documented "clone one to adapt it" path.
+        $cloneId = $svc->clone($admin, 'password123', $modId, 'Mod Deputy');
+        $role = (new RoleRepository($this->db))->find($cloneId);
+        self::assertSame('custom', $role['kind']);
+
+        $cloneKeys = (new RoleCapabilityRepository($this->db))->keysForRole($cloneId);
+        self::assertContains('core.thread.lock', $cloneKeys);   // enforced moderation key kept
+        self::assertNotContains('core.board.read', $cloneKeys); // non-enforceable baseline key dropped
     }
 
     public function test_create_rejects_a_key_without_live_enforcement(): void

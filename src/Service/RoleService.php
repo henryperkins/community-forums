@@ -107,7 +107,22 @@ final class RoleService
             throw new ValidationException(['role' => 'The source role has no capabilities to clone.']);
         }
 
-        [$name, , $keys, $ids] = $this->validateDefinition($name, null, $sourceKeys);
+        // Clone copies from an existing role, not a human hand-pick, so filter
+        // the source's keys down to the enforceable set rather than rejecting
+        // the whole clone (create/update correctly REJECT a human's non-enforced
+        // pick). Every system anchor's cumulative set always carries baseline
+        // keys outside the enforced set (e.g. core.board.read), so without this
+        // the documented "clone one to adapt it" path would 422 for every
+        // system role. See App\Security\EnforcedCapabilities.
+        $enforceable = array_values(array_filter(
+            $sourceKeys,
+            static fn (string $k): bool => EnforcedCapabilities::has($k),
+        ));
+        if ($enforceable === []) {
+            throw new ValidationException(['role' => 'The source role has no enforceable capabilities to clone yet.']);
+        }
+
+        [$name, , $keys, $ids] = $this->validateDefinition($name, null, $enforceable);
         $roleKey = $this->newRoleKey($name);
 
         $roleId = $this->insertGuarded($name, null, $keys, function () use ($admin, $source, $name, $keys, $ids, $roleKey): int {

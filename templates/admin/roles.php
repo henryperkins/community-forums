@@ -13,7 +13,8 @@ $this->section('title', 'Roles');
     <div class="admin-pane">
     <p class="muted">Definitions are recorded but <strong>inert</strong>: nothing enforces them until the
     capability resolver passes parity and is enabled. System roles are protected
-    compatibility anchors and cannot be edited; clone one to adapt it.</p>
+    compatibility anchors and cannot be edited; clone one to adapt it
+    (cloning copies only currently-enforceable capabilities).</p>
 
     <section class="card">
         <h2>Roles</h2>

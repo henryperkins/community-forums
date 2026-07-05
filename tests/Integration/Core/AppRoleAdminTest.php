@@ -133,19 +133,9 @@ final class AppRoleAdminTest extends TestCase
         $this->enable();
         $this->actingAs($this->makeAdmin());
         $roles = new RoleRepository($this->db);
-        // Clone source is a custom role built from enforced keys, not a system
-        // anchor: every system role's seeded set is cumulative (guest ⊂ user ⊂
-        // moderator ⊂ admin) and always carries baseline keys outside
-        // EnforcedCapabilities (e.g. core.board.read), which the Task 9 clamp
-        // now refuses to clone.
-        $this->post('/admin/roles', [
-            'name' => 'Clone Source',
-            'capabilities' => ['core.thread.lock', 'core.thread.pin'],
-            'current_password' => 'password123',
-        ]);
-        $sourceId = (int) $roles->findByKey('custom.clone_source')['id'];
+        $modId = (int) $roles->findByKey('system.moderator')['id'];
 
-        $resp = $this->post('/admin/roles/' . $sourceId . '/clone', [
+        $resp = $this->post('/admin/roles/' . $modId . '/clone', [
             'name' => 'Mod Copy',
             'current_password' => 'password123',
         ]);
