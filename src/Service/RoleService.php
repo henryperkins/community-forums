@@ -14,6 +14,7 @@ use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
 use App\Repository\RoleRepository;
 use App\Security\CapabilityCatalog;
+use App\Security\CapabilityResolver;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
 
@@ -31,6 +32,7 @@ final class RoleService
         private RoleAssignmentHistoryRepository $history,
         private ReauthGate $reauth,
         private WriteGate $writeGate,
+        private ?CapabilityResolver $resolver = null,
     ) {
     }
 
@@ -42,7 +44,7 @@ final class RoleService
         [$name, $description, $keys, $ids] = $this->validateDefinition($name, $description, $capabilityKeys);
         $roleKey = $this->newRoleKey($name);
 
-        return $this->insertGuarded($name, $description, $keys, function () use ($admin, $name, $description, $keys, $ids, $roleKey): int {
+        $roleId = $this->insertGuarded($name, $description, $keys, function () use ($admin, $name, $description, $keys, $ids, $roleKey): int {
             $roleId = $this->roles->create([
                 'role_key' => $roleKey,
                 'name' => $name,
@@ -61,6 +63,8 @@ final class RoleService
 
             return $roleId;
         });
+        $this->resolver?->invalidate();
+        return $roleId;
     }
 
     /** @param list<string> $capabilityKeys */
@@ -85,6 +89,7 @@ final class RoleService
                 'reason' => 'update',
             ]);
         });
+        $this->resolver?->invalidate();
     }
 
     public function clone(User $admin, string $currentPassword, int $sourceRoleId, string $name): int
@@ -104,7 +109,7 @@ final class RoleService
         [$name, , $keys, $ids] = $this->validateDefinition($name, null, $sourceKeys);
         $roleKey = $this->newRoleKey($name);
 
-        return $this->insertGuarded($name, null, $keys, function () use ($admin, $source, $name, $keys, $ids, $roleKey): int {
+        $roleId = $this->insertGuarded($name, null, $keys, function () use ($admin, $source, $name, $keys, $ids, $roleKey): int {
             $roleId = $this->roles->create([
                 'role_key' => $roleKey,
                 'name' => $name,
@@ -123,6 +128,8 @@ final class RoleService
 
             return $roleId;
         });
+        $this->resolver?->invalidate();
+        return $roleId;
     }
 
     /** @return list<array{role:array<string,mixed>,capability_count:int,impact:int}> */

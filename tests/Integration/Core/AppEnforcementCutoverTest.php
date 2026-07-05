@@ -290,6 +290,68 @@ final class AppEnforcementCutoverTest extends TestCase
         self::assertNotSame(403, $response->status()); // legacy quirk preserved outside enforce
     }
 
+    /**
+     * Phase 5 Inc 6 Task 8 — board-roster POST command endpoints cut over to
+     * service-layer capability authorization. Before this task both actions
+     * are gated only by AdminController::requireAdmin(), so a deputy holding
+     * ONLY core.board.assign_moderators dies at the controller with 403
+     * before AdminService is ever reached — a genuine RED. After the swap the
+     * controller merely requires a logged-in user and AdminService itself
+     * asserts the capability (state-first; legacy closure stays admin-only,
+     * so legacy/shadow behavior is unchanged).
+     */
+    public function test_board_roster_assign_moderators_key_can_assign_board_moderator_under_enforce(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $target = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.board.assign_moderators'], (int) $board['id']);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $this->assertRedirect($this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => $target['username']]));
+        self::assertTrue((new \App\Repository\BoardModeratorRepository($this->db))->isModerator((int) $board['id'], (int) $target['id']));
+    }
+
+    /**
+     * Sibling of the above for core.board.manage_members on a private board
+     * (the capability that matters most there — public boards need no
+     * membership row for read access).
+     */
+    public function test_board_roster_manage_members_key_can_add_member_under_enforce(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $target = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory(), ['visibility' => 'private']);
+        $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.board.manage_members'], (int) $board['id']);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $this->assertRedirect($this->post('/admin/boards/' . $board['id'] . '/members', ['username' => $target['username']]));
+        self::assertTrue((new \App\Repository\BoardMemberRepository($this->db))->isMember((int) $board['id'], (int) $target['id']));
+    }
+
+    /**
+     * Negative control: a custom role holding an unrelated capability
+     * (core.thread.lock) assigned at the same board must NOT satisfy
+     * core.board.assign_moderators. 403 both before this task's swap (dies at
+     * requireAdmin()) and after (the resolver denies — no qualifying grant).
+     */
+    public function test_unrelated_board_role_cannot_change_rosters_under_enforce(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $target = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.thread.lock'], (int) $board['id']);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $this->assertStatus(403, $this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => $target['username']]));
+    }
+
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
     private function makeCustomRoleWithAssignment(array $adminRow, array $subjectRow, array $keys, int $boardId): int
     {

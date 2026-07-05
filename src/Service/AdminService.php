@@ -16,6 +16,8 @@ use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Security\AuthorityGate;
+use App\Security\CapabilityResolver;
 use App\Security\WriteGate;
 use App\Support\Str;
 
@@ -45,7 +47,14 @@ final class AdminService
         private UserRepository $users,
         private BoardModeratorRepository $boardMods,
         private BoardMemberRepository $boardMembers,
+        private ?AuthorityGate $authority = null,
+        private ?CapabilityResolver $resolver = null,
     ) {
+    }
+
+    private function gate(): AuthorityGate
+    {
+        return $this->authority ?? AuthorityGate::legacy();
     }
 
     public function setSiteName(User $admin, string $name): void
@@ -470,9 +479,17 @@ final class AdminService
      * board-scoped (ModerationService::canModerate), so an admin is intentionally
      * rejected here — admins already moderate every board.
      */
-    public function assignModerator(User $admin, int $boardId, string $username): void
+    public function assignModerator(User $actor, int $boardId, string $username): void
     {
-        $this->assertAdmin($admin);
+        $this->writeGate->assertCanWrite($actor);
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin(),
+            $actor,
+            'core.board.assign_moderators',
+            ['board_id' => $boardId],
+            'AdminService::assignModerator',
+            'Administrator access required.',
+        );
         $this->boardOrFail($boardId);
         $user = $this->resolveMember($username);
         $userId = (int) $user['id'];
@@ -487,10 +504,10 @@ final class AdminService
         // Log inside the transaction and only when a row actually changed, so the
         // audit entry is exactly-once even if two identical requests race past the
         // pre-check above (the INSERT IGNORE absorbs the loser, rowCount 0).
-        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
+        $this->db->transaction(function () use ($actor, $boardId, $userId, $user): void {
             if ($this->boardMods->assign($boardId, $userId) > 0) {
                 $this->log->log([
-                    'actor_id' => $admin->id(),
+                    'actor_id' => $actor->id(),
                     'action' => 'assign_moderator',
                     'target_type' => 'board',
                     'target_id' => $boardId,
@@ -498,21 +515,30 @@ final class AdminService
                 ]);
             }
         });
+        $this->resolver?->invalidate();
     }
 
-    public function unassignModerator(User $admin, int $boardId, int $userId): void
+    public function unassignModerator(User $actor, int $boardId, int $userId): void
     {
-        $this->assertAdmin($admin);
+        $this->writeGate->assertCanWrite($actor);
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin(),
+            $actor,
+            'core.board.assign_moderators',
+            ['board_id' => $boardId],
+            'AdminService::unassignModerator',
+            'Administrator access required.',
+        );
         $this->boardOrFail($boardId);
         if (!$this->boardMods->isModerator($boardId, $userId)) {
             throw new ValidationException(['moderator' => 'That member does not moderate this board.']);
         }
         $user = $this->users->find($userId);
 
-        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
+        $this->db->transaction(function () use ($actor, $boardId, $userId, $user): void {
             if ($this->boardMods->unassign($boardId, $userId) > 0) {
                 $this->log->log([
-                    'actor_id' => $admin->id(),
+                    'actor_id' => $actor->id(),
                     'action' => 'unassign_moderator',
                     'target_type' => 'board',
                     'target_id' => $boardId,
@@ -520,6 +546,7 @@ final class AdminService
                 ]);
             }
         });
+        $this->resolver?->invalidate();
     }
 
     /**
@@ -527,9 +554,17 @@ final class AdminService
      * a harmless no-op for access (everyone can already read), so it is allowed
      * but the UI explains where membership actually matters.
      */
-    public function addMember(User $admin, int $boardId, string $username): void
+    public function addMember(User $actor, int $boardId, string $username): void
     {
-        $this->assertAdmin($admin);
+        $this->writeGate->assertCanWrite($actor);
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin(),
+            $actor,
+            'core.board.manage_members',
+            ['board_id' => $boardId],
+            'AdminService::addMember',
+            'Administrator access required.',
+        );
         $this->boardOrFail($boardId);
         $user = $this->resolveMember($username);
         $userId = (int) $user['id'];
@@ -538,10 +573,10 @@ final class AdminService
             throw new ValidationException(['username' => '@' . $user['username'] . ' is already a member of this board.']);
         }
 
-        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
-            if ($this->boardMembers->add($boardId, $userId, $admin->id()) > 0) {
+        $this->db->transaction(function () use ($actor, $boardId, $userId, $user): void {
+            if ($this->boardMembers->add($boardId, $userId, $actor->id()) > 0) {
                 $this->log->log([
-                    'actor_id' => $admin->id(),
+                    'actor_id' => $actor->id(),
                     'action' => 'add_member',
                     'target_type' => 'board',
                     'target_id' => $boardId,
@@ -549,21 +584,30 @@ final class AdminService
                 ]);
             }
         });
+        $this->resolver?->invalidate();
     }
 
-    public function removeMember(User $admin, int $boardId, int $userId): void
+    public function removeMember(User $actor, int $boardId, int $userId): void
     {
-        $this->assertAdmin($admin);
+        $this->writeGate->assertCanWrite($actor);
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin(),
+            $actor,
+            'core.board.manage_members',
+            ['board_id' => $boardId],
+            'AdminService::removeMember',
+            'Administrator access required.',
+        );
         $this->boardOrFail($boardId);
         if (!$this->boardMembers->isMember($boardId, $userId)) {
             throw new ValidationException(['member' => 'That member is not on this board.']);
         }
         $user = $this->users->find($userId);
 
-        $this->db->transaction(function () use ($admin, $boardId, $userId, $user): void {
+        $this->db->transaction(function () use ($actor, $boardId, $userId, $user): void {
             if ($this->boardMembers->remove($boardId, $userId) > 0) {
                 $this->log->log([
-                    'actor_id' => $admin->id(),
+                    'actor_id' => $actor->id(),
                     'action' => 'remove_member',
                     'target_type' => 'board',
                     'target_id' => $boardId,
@@ -571,6 +615,7 @@ final class AdminService
                 ]);
             }
         });
+        $this->resolver?->invalidate();
     }
 
     /** @return array<string,mixed> the existing board row, or 404. */

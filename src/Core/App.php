@@ -1283,6 +1283,7 @@ final class App
             $c->get(RoleAssignmentHistoryRepository::class),
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
+            $c->get(CapabilityResolver::class),
         ));
         $c->bind(PermissionSimulatorService::class, fn (Container $c) => new PermissionSimulatorService(
             $c->get(CapabilityResolver::class),
@@ -1637,6 +1638,8 @@ final class App
             $c->get(UserRepository::class),
             $c->get(BoardModeratorRepository::class),
             $c->get(BoardMemberRepository::class),
+            $c->get(AuthorityGate::class),
+            $c->get(CapabilityResolver::class),
         ));
         $c->bind(AdminDashboardService::class, fn (Container $c) => new AdminDashboardService(
             $c->get(Database::class),

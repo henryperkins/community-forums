@@ -184,15 +184,24 @@ final class AdminController extends Controller
     }
 
     // ---- Board roster: moderators + members (P2-08) -----------------------
+    //
+    // Phase 5 Inc 6 Task 8: these four command endpoints are authorized at the
+    // SERVICE layer (AdminService asserts core.board.assign_moderators /
+    // core.board.manage_members via AuthorityGate, state-first, legacy closure
+    // admin-only) so a custom role holding the matching key can manage a
+    // board's roster once CAPABILITIES_MODE=enforce. Every other /admin action
+    // — including editBoard()/the board edit GET view below — stays on
+    // requireAdmin(); this cuts over the four POST commands only, not the
+    // admin console.
 
     /** @param array<string,string> $params */
     public function assignModerator(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
+        $actor = $this->requireUser();
         $board = $this->boardOrFail((int) ($params['id'] ?? 0));
         $username = $request->str('username');
         try {
-            $this->container->get(AdminService::class)->assignModerator($admin, (int) $board['id'], $username);
+            $this->container->get(AdminService::class)->assignModerator($actor, (int) $board['id'], $username);
         } catch (ValidationException $e) {
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator', $username);
         }
@@ -202,10 +211,10 @@ final class AdminController extends Controller
     /** @param array<string,string> $params */
     public function unassignModerator(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
+        $actor = $this->requireUser();
         $board = $this->boardOrFail((int) ($params['id'] ?? 0));
         try {
-            $this->container->get(AdminService::class)->unassignModerator($admin, (int) $board['id'], $request->int('user_id'));
+            $this->container->get(AdminService::class)->unassignModerator($actor, (int) $board['id'], $request->int('user_id'));
         } catch (ValidationException $e) {
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator');
         }
@@ -215,11 +224,11 @@ final class AdminController extends Controller
     /** @param array<string,string> $params */
     public function addMember(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
+        $actor = $this->requireUser();
         $board = $this->boardOrFail((int) ($params['id'] ?? 0));
         $username = $request->str('username');
         try {
-            $this->container->get(AdminService::class)->addMember($admin, (int) $board['id'], $username);
+            $this->container->get(AdminService::class)->addMember($actor, (int) $board['id'], $username);
         } catch (ValidationException $e) {
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member', $username);
         }
@@ -229,10 +238,10 @@ final class AdminController extends Controller
     /** @param array<string,string> $params */
     public function removeMember(Request $request, array $params): Response
     {
-        $admin = $this->requireAdmin();
+        $actor = $this->requireUser();
         $board = $this->boardOrFail((int) ($params['id'] ?? 0));
         try {
-            $this->container->get(AdminService::class)->removeMember($admin, (int) $board['id'], $request->int('user_id'));
+            $this->container->get(AdminService::class)->removeMember($actor, (int) $board['id'], $request->int('user_id'));
         } catch (ValidationException $e) {
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member');
         }
