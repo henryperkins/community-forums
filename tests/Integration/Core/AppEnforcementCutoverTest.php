@@ -429,6 +429,46 @@ final class AppEnforcementCutoverTest extends TestCase
         self::assertTrue((new \App\Repository\BoardMemberRepository($this->db))->isMember((int) $board['id'], (int) $target['id']));
     }
 
+    /**
+     * Phase 5 Inc 6 Task 14 — acceptance pin (TM-PE-08): editing a role's
+     * capability set propagates per-key to every assignee on their very next
+     * request, with no cache to invalidate and no re-login required. Each
+     * App::handle() call builds a fresh per-request container, so the
+     * resolver it hands to AuthorityGate reads role_capabilities live — the
+     * admin's update (which also bumps roles.version) is visible to the
+     * deputy's next dispatch through the same already-built $this->app.
+     * Deliberately per-KEY, not per-role: pin is removed from the role while
+     * lock is kept, and only pin is denied afterward — proves the resolver
+     * re-evaluates the capability set rather than caching a stale "deputy can
+     * moderate this board" boolean.
+     */
+    public function test_capability_removed_from_role_denies_all_assignees_tm_pe_08(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $author = $this->makeUser();
+        $t = $this->makeThread($board, $author);
+        $roleId = $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.thread.pin', 'core.thread.lock'], (int) $board['id']);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $this->assertRedirect($this->post('/mod/t/' . $t['thread_id'] . '/pin'));    // holds the key (pin toggles, no side effects on posting)
+
+        // Admin edits the role: pin removed, lock kept.
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/admin/roles/' . $roleId, [
+            'name' => 'Deputy', 'description' => '', 'capabilities' => ['core.thread.lock'],
+            'current_password' => 'password123',
+        ]));
+
+        // Next direct request: every assignee is denied the removed key.
+        $this->actingAs($deputy);
+        $this->assertStatus(403, $this->post('/mod/t/' . $t['thread_id'] . '/pin'));
+        // The kept key still works — propagation is per-key, not per-role.
+        $this->assertRedirect($this->post('/mod/t/' . $t['thread_id'] . '/lock'));
+    }
+
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
     private function makeCustomRoleWithAssignment(array $adminRow, array $subjectRow, array $keys, int $boardId): int
     {
