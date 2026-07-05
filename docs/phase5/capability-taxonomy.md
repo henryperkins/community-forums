@@ -129,7 +129,7 @@ site; the F3 coverage test enumerates the complete set.
 
 ### 4.3 Moderation (board-scoped via `canModerate`) — anchor role `system.moderator`
 
-`canModerate(user, boardId)` = `WriteGate.canWrite(user) && (isAdmin || board_moderators(boardId))` (`src/Service/ModerationService.php:46`).
+`canModerate(user, boardId)` = `WriteGate.canWrite(user) && (isAdmin || board_moderators(boardId))` (`src/Service/ModerationService.php:54`).
 
 | Key | scope | risk | D | P | Description | Authority today (primary site) |
 |---|---|---|---|---|---|---|
@@ -154,7 +154,7 @@ site; the F3 coverage test enumerates the complete set.
 | `core.user.suspend` | site | high | 1 | 0 | Suspend a member and lift suspensions (not self/another admin). | admin (`UserModerationService::suspend/assertAdmin:69,187`) |
 | `core.user.ban` | site | high | 1 | 0 | Ban a member and lift bans. | admin (`UserModerationService::ban:86`) |
 | `core.user.manage` | site | medium | 1 | 0 | Administer member records: directory/record view, set cosmetic title, clear signature, manual badge grant/revoke. | admin (`AdminUserController.php:32,56,70,86,102`) |
-| `core.appeal.resolve_user` | site | high | 1 | 0 | Resolve appeals against account actions (warn/suspend/ban). | admin (`AppealService::assertCanResolve:249`) |
+| `core.appeal.resolve_user` | site | high | 1 | 0 | Resolve appeals against account actions (warn/suspend/ban). | admin (`AppealService::assertCanResolve:247`) |
 | `core.category.manage` | site | medium | 1 | 0 | Create, edit, delete, reorder categories. | admin (`AdminController.php:76`; `AdminService`) |
 | `core.board.manage` | category | medium | 1 | 0 | Create, edit, delete, archive boards, move them between categories, and reorder boards within a category; set a board's posting floor. | admin (`AdminService::createBoard:198`,`updateBoard:229`,`reorderBoards:334`,`moveBoard:369`) |
 | `core.board.assign_moderators` | board | high | 1 | 0 | Assign or remove board moderators. | admin (`AdminService::*Moderator:466,496`) — grants authority |
