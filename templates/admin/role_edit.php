@@ -37,10 +37,11 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
 
             <fieldset>
                 <legend>Capabilities</legend>
-                <?php foreach ($catalogue as $key => $meta): ?>
+                <?php foreach ($catalogue as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
                     <label>
-                        <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?>>
+                        <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
                         <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
+                        <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
                     </label>
                 <?php endforeach; ?>
             </fieldset>

@@ -52,11 +52,12 @@ $this->section('title', 'Roles');
             <fieldset>
                 <legend>Capabilities (delegable only; protected authority is never offered)</legend>
                 <?php $checked = (array) ($old['capabilities'] ?? []); ?>
-                <?php foreach ($catalogue as $key => $meta): ?>
+                <?php foreach ($catalogue as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
                     <label>
-                        <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?>>
+                        <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
                         <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
                         <?php if ($meta['risk'] === 'high'): ?><span class="pill">high risk</span><?php endif; ?>
+                        <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
                     </label>
                 <?php endforeach; ?>
             </fieldset>

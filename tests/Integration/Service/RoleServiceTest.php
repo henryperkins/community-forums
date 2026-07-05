@@ -149,17 +149,29 @@ final class RoleServiceTest extends TestCase
     {
         $svc = $this->service();
         $admin = $this->admin();
-        $modId = (int) (new RoleRepository($this->db))->findByKey('system.moderator')['id'];
+        // Source is a custom role built from enforced keys, not a system anchor:
+        // every system role's DB-seeded set is cumulative (guest ⊂ user ⊂
+        // moderator ⊂ admin per CapabilityCatalog::roleCapabilities()) and so
+        // always carries baseline keys outside EnforcedCapabilities (e.g.
+        // core.board.read) — the Task 9 clamp now refuses to clone those.
+        $sourceId = $svc->create($admin, 'password123', 'Clone Source', null, ['core.thread.lock', 'core.thread.pin']);
 
-        $cloneId = $svc->clone($admin, 'password123', $modId, 'Mod Clone');
+        $cloneId = $svc->clone($admin, 'password123', $sourceId, 'Source Clone');
         $role = (new RoleRepository($this->db))->find($cloneId);
         self::assertSame('custom', $role['kind']);
 
-        $sourceKeys = (new RoleCapabilityRepository($this->db))->keysForRole($modId);
+        $sourceKeys = (new RoleCapabilityRepository($this->db))->keysForRole($sourceId);
         $cloneKeys = (new RoleCapabilityRepository($this->db))->keysForRole($cloneId);
         sort($sourceKeys);
         sort($cloneKeys);
         self::assertSame($sourceKeys, $cloneKeys);
+    }
+
+    public function test_create_rejects_a_key_without_live_enforcement(): void
+    {
+        $admin = $this->admin();
+        $this->expectException(ValidationException::class);
+        $this->service()->create($admin, 'password123', 'Suspender', null, ['core.user.suspend']);
     }
 
     public function test_list_with_meta_reports_counts_and_impact(): void

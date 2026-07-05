@@ -15,6 +15,7 @@ use App\Repository\RoleCapabilityRepository;
 use App\Repository\RoleRepository;
 use App\Security\CapabilityCatalog;
 use App\Security\CapabilityResolver;
+use App\Security\EnforcedCapabilities;
 use App\Security\ReauthGate;
 use App\Security\WriteGate;
 
@@ -226,6 +227,9 @@ final class RoleService
             if ($meta['protected'] || !$meta['delegable']) {
                 $errors['capabilities'] = "$key is protected/non-delegable and can never be placed in a role.";
                 break;
+            }
+            if (!EnforcedCapabilities::has($key)) {
+                $errors['capabilities'] = "'" . $key . "' is not yet enforceable; it can be granted once its routes cut over to the resolver.";
             }
         }
 
