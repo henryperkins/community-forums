@@ -9,12 +9,14 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
+use App\Security\BoardPolicy;
 use App\Service\AdminDashboardService;
 use App\Service\AdminService;
 use App\Service\CustomEmojiService;
@@ -203,9 +205,12 @@ final class AdminController extends Controller
         try {
             $this->container->get(AdminService::class)->assignModerator($actor, (int) $board['id'], $username);
         } catch (ValidationException $e) {
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator', $username);
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Moderator assigned.');
+        return $this->rosterDone($actor, $board, 'Moderator assigned.');
     }
 
     /** @param array<string,string> $params */
@@ -216,9 +221,12 @@ final class AdminController extends Controller
         try {
             $this->container->get(AdminService::class)->unassignModerator($actor, (int) $board['id'], $request->int('user_id'));
         } catch (ValidationException $e) {
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'moderator');
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Moderator removed.');
+        return $this->rosterDone($actor, $board, 'Moderator removed.');
     }
 
     /** @param array<string,string> $params */
@@ -230,9 +238,12 @@ final class AdminController extends Controller
         try {
             $this->container->get(AdminService::class)->addMember($actor, (int) $board['id'], $username);
         } catch (ValidationException $e) {
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member', $username);
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Member added.');
+        return $this->rosterDone($actor, $board, 'Member added.');
     }
 
     /** @param array<string,string> $params */
@@ -243,9 +254,48 @@ final class AdminController extends Controller
         try {
             $this->container->get(AdminService::class)->removeMember($actor, (int) $board['id'], $request->int('user_id'));
         } catch (ValidationException $e) {
+            if (!$actor->isAdmin()) {
+                return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $e->first());
+            }
             return $this->boardEditView($board, $e->errors, $board, 422, $e->first(), 'member');
         }
-        return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', 'Member removed.');
+        return $this->rosterDone($actor, $board, 'Member removed.');
+    }
+
+    /**
+     * Success response for a roster command. An admin keeps the console flow
+     * (redirect back to the admin-only board edit page). A capability-holding
+     * non-admin deputy — who cannot see /admin/boards/{id}/edit (still
+     * requireAdmin()) — is flashed the same confirmation and sent to a page
+     * they can actually view, never the admin console.
+     *
+     * @param array<string,mixed> $board
+     */
+    private function rosterDone(User $actor, array $board, string $message): Response
+    {
+        if ($actor->isAdmin()) {
+            return $this->redirectWithFlash('/admin/boards/' . (int) $board['id'] . '/edit', $message);
+        }
+        return $this->redirectWithFlash($this->rosterDeputyExit($actor, $board), $message);
+    }
+
+    /**
+     * Where a NON-ADMIN roster deputy lands after a command (success or a
+     * validation error): the board's own page when they can read it, otherwise
+     * the community home. Never the admin/board_edit console — rendering that
+     * for a non-admin would leak admin-only surface (board settings, the admin
+     * nav, the "Admin mode" pill). We resolve their real read access (a
+     * manage_members deputy on a private board is typically NOT a member, so
+     * /c/{slug} would 404 for them) and fall back to '/', which any signed-in
+     * user can see, carrying the confirmation in the flash.
+     *
+     * @param array<string,mixed> $board
+     */
+    private function rosterDeputyExit(User $actor, array $board): string
+    {
+        $isMember = $this->container->get(BoardMemberRepository::class)->isMember((int) $board['id'], $actor->id());
+        $canRead = $this->container->get(BoardPolicy::class)->canRead($board, $actor, $isMember);
+        return $canRead ? '/c/' . (string) $board['slug'] : '/';
     }
 
     /**

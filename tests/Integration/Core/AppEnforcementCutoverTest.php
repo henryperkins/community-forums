@@ -352,6 +352,83 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->assertStatus(403, $this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => $target['username']]));
     }
 
+    /**
+     * Phase 5 Inc 6 Task 8 follow-up (info-disclosure). Switching the four
+     * roster POST actions from requireAdmin() to requireUser() left their
+     * ValidationException branch re-rendering the admin-only admin/board_edit
+     * template. A capability-holding NON-ADMIN deputy who trips a validation
+     * error (here: an unknown username) must NOT be shown that admin surface —
+     * they are redirected off the admin console instead, with the error in the
+     * flash. Marker: templates/admin/board_edit.php's "Admin mode" pill.
+     */
+    public function test_non_admin_roster_deputy_validation_error_redirects_off_admin_console_no_disclosure(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory()); // public → deputy can read it
+        $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.board.assign_moderators'], (int) $board['id']);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $response = $this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => 'ghost-nobody']);
+
+        // A redirect, NOT a 200 that renders the admin board-edit console.
+        $this->assertRedirect($response);
+        $this->assertDontSeeText($response, 'Admin mode');
+        $this->assertDontSeeText($response, 'Assignment mode');
+        self::assertStringStartsNotWith('/admin', (string) $response->getHeader('location'));
+        // Landed on the board's own page (public → readable), carrying the error in the flash.
+        self::assertSame('/c/' . $board['slug'], $response->getHeader('location'));
+    }
+
+    /**
+     * Follow-up (broken-flow): on SUCCESS the roster actions used to redirect
+     * every actor to /admin/boards/{id}/edit — still requireAdmin() — so a
+     * successful non-admin deputy's browser followed straight into a 403. The
+     * deputy must be sent somewhere they can actually see instead.
+     */
+    public function test_non_admin_roster_deputy_success_does_not_redirect_into_admin_path(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $target = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.board.assign_moderators'], (int) $board['id']);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $response = $this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => $target['username']]);
+
+        $this->assertRedirect($response);
+        self::assertStringStartsNotWith('/admin', (string) $response->getHeader('location'));
+        self::assertSame('/c/' . $board['slug'], $response->getHeader('location'));
+        // The command still took effect.
+        self::assertTrue((new \App\Repository\BoardModeratorRepository($this->db))->isModerator((int) $board['id'], (int) $target['id']));
+    }
+
+    /**
+     * Follow-up (fallback): a manage_members deputy on a PRIVATE board is not
+     * themselves a board member, so /c/{slug} would 404 for them. They must
+     * fall back to '/', which any signed-in user can see — never the admin
+     * console, never a 404 dead-end.
+     */
+    public function test_non_admin_manage_members_deputy_on_private_board_exits_to_home(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser();
+        $target = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory(), ['visibility' => 'private']);
+        $this->makeCustomRoleWithAssignment($admin, $deputy, ['core.board.manage_members'], (int) $board['id']);
+        $this->withCapabilitiesEnforced();
+
+        $this->actingAs($deputy);
+        $response = $this->post('/admin/boards/' . $board['id'] . '/members', ['username' => $target['username']]);
+
+        $this->assertRedirect($response);
+        self::assertSame('/', $response->getHeader('location'));
+        self::assertTrue((new \App\Repository\BoardMemberRepository($this->db))->isMember((int) $board['id'], (int) $target['id']));
+    }
+
     /** @param array<string,mixed> $adminRow @param array<string,mixed> $subjectRow @param list<string> $keys */
     private function makeCustomRoleWithAssignment(array $adminRow, array $subjectRow, array $keys, int $boardId): int
     {
