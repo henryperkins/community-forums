@@ -231,6 +231,7 @@ use App\Service\Registry\RegistryTransport;
 use App\Service\Registry\RegistryTrustService;
 use App\Service\ResolverShadow;
 use App\Service\ReputationLedgerService;
+use App\Service\RoleAssignmentService;
 use App\Service\RoleService;
 use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
@@ -1284,6 +1285,21 @@ final class App
             $c->get(ReauthGate::class),
             $c->get(WriteGate::class),
             $c->get(CapabilityResolver::class),
+        ));
+        $c->bind(RoleAssignmentService::class, fn (Container $c) => new RoleAssignmentService(
+            $c->get(Database::class),
+            $c->get(RoleRepository::class),
+            $c->get(RoleCapabilityRepository::class),
+            $c->get(RoleAssignmentRepository::class),
+            $c->get(RoleAssignmentHistoryRepository::class),
+            $c->get(UserRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(CategoryRepository::class),
+            $c->get(CapabilityResolver::class),
+            $c->get(ReauthGate::class),
+            $c->get(WriteGate::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(Telemetry::class),
         ));
         $c->bind(PermissionSimulatorService::class, fn (Container $c) => new PermissionSimulatorService(
             $c->get(CapabilityResolver::class),
