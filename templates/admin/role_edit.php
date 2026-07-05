@@ -5,6 +5,15 @@ $this->section('title', 'Role: ' . ($row['role']['name'] ?? ''));
 $role = $row['role'];
 $isSystem = ((string) $role['kind']) === 'system';
 $checked = (array) ($old['capabilities'] ?? $current_keys);
+// This page hosts four forms (edit-definition, clone, per-row renew, assign)
+// that share one flat $errors bag and some field names (current_password,
+// ends_at). Scope each form's error paragraphs to the failure that produced
+// them via mutually exclusive context flags, so e.g. a renew reauth error lands
+// on its row only — never duplicated on the edit-definition or assign forms.
+$renewAssignmentId = (int) ($old['renew_assignment_id'] ?? 0);
+$renewErrorContext = isset($old['renew_assignment_id']);
+$assignErrorContext = isset($old['assignment']);
+$defErrorContext = !$renewErrorContext && !$assignErrorContext;
 ?>
 <div class="admin">
     <header class="admin-head">
@@ -28,12 +37,12 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
             <label>Name
                 <input type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? $role['name']) ?>" required>
             </label>
-            <?php if (!empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <?php if ($defErrorContext && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
 
             <label>Description (optional)
                 <input type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? ($role['description'] ?? '')) ?>">
             </label>
-            <?php if (!empty($errors['description'])): ?><p class="field-error"><?= $e($errors['description']) ?></p><?php endif; ?>
+            <?php if ($defErrorContext && !empty($errors['description'])): ?><p class="field-error"><?= $e($errors['description']) ?></p><?php endif; ?>
 
             <fieldset>
                 <legend>Capabilities</legend>
@@ -45,12 +54,12 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
                     </label>
                 <?php endforeach; ?>
             </fieldset>
-            <?php if (!empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
+            <?php if ($defErrorContext && !empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
 
             <label>Confirm your password
                 <input type="password" name="current_password" autocomplete="current-password" required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?php if ($defErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
 
             <div class="form-actions"><button class="btn" type="submit">Save (bumps version)</button></div>
         </form>
@@ -84,8 +93,6 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
     foreach (($boards ?? []) as $b) {
         $boardNames[(int) $b['id']] = (string) $b['name'];
     }
-    $renewAssignmentId = (int) ($old['renew_assignment_id'] ?? 0);
-    $renewErrorContext = isset($old['renew_assignment_id']);
     ?>
     <section class="card">
         <h2>Assignments</h2>
@@ -114,6 +121,7 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
                             <button class="btn btn-small" type="submit">Renew</button>
                         </form>
                         <?php if ($renewAssignmentId === (int) $a['id']): ?>
+                            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
                             <?php if (!empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
                             <?php if (!empty($errors['assignment'])): ?><p class="field-error"><?= $e($errors['assignment']) ?></p><?php endif; ?>
                         <?php endif; ?>
@@ -130,10 +138,12 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
         <h2>Assign this role</h2>
         <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/assignments" class="stacked">
             <?= $this->csrfField() ?>
+            <?php if ($assignErrorContext && !empty($errors['role'])): ?><p class="field-error"><?= $e($errors['role']) ?></p><?php endif; ?>
+            <?php if ($assignErrorContext && !empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
             <label>Member username
                 <input type="text" name="username" maxlength="32" value="<?= $e((string) ($old['assignment']['username'] ?? '')) ?>" required>
             </label>
-            <?php if (!empty($errors['username'])): ?><p class="field-error"><?= $e($errors['username']) ?></p><?php endif; ?>
+            <?php if ($assignErrorContext && !empty($errors['username'])): ?><p class="field-error"><?= $e($errors['username']) ?></p><?php endif; ?>
 
             <label>Scope
                 <select name="scope_type">
@@ -142,7 +152,7 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
                     <?php endforeach; ?>
                 </select>
             </label>
-            <?php if (!empty($errors['scope_type'])): ?><p class="field-error"><?= $e($errors['scope_type']) ?></p><?php endif; ?>
+            <?php if ($assignErrorContext && !empty($errors['scope_type'])): ?><p class="field-error"><?= $e($errors['scope_type']) ?></p><?php endif; ?>
 
             <label>Board/category id <span class="muted">(leave blank for site-wide)</span>
                 <input type="text" name="scope_id" list="assignment-board-options" value="<?= $e((string) ($old['assignment']['scope_id'] ?? '')) ?>">
@@ -150,17 +160,17 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
                     <?php foreach (($boards ?? []) as $b): ?><option value="<?= (int) $b['id'] ?>" label="<?= $e((string) $b['name']) ?>"><?php endforeach; ?>
                 </datalist>
             </label>
-            <?php if (!empty($errors['scope_id'])): ?><p class="field-error"><?= $e($errors['scope_id']) ?></p><?php endif; ?>
+            <?php if ($assignErrorContext && !empty($errors['scope_id'])): ?><p class="field-error"><?= $e($errors['scope_id']) ?></p><?php endif; ?>
 
             <label>Starts (UTC) <span class="muted">(optional — blank starts now)</span>
                 <input type="text" name="starts_at" placeholder="YYYY-MM-DD HH:MM" value="<?= $e((string) ($old['assignment']['starts_at'] ?? '')) ?>">
             </label>
-            <?php if (!$renewErrorContext && !empty($errors['starts_at'])): ?><p class="field-error"><?= $e($errors['starts_at']) ?></p><?php endif; ?>
+            <?php if ($assignErrorContext && !empty($errors['starts_at'])): ?><p class="field-error"><?= $e($errors['starts_at']) ?></p><?php endif; ?>
 
             <label>Ends (UTC) <span class="muted">(optional — blank never expires)</span>
                 <input type="text" name="ends_at" placeholder="YYYY-MM-DD HH:MM" value="<?= $e((string) ($old['assignment']['ends_at'] ?? '')) ?>">
             </label>
-            <?php if (!$renewErrorContext && !empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
+            <?php if ($assignErrorContext && !empty($errors['ends_at'])): ?><p class="field-error"><?= $e($errors['ends_at']) ?></p><?php endif; ?>
 
             <label>Reason (optional)
                 <input type="text" name="reason" maxlength="255" value="<?= $e((string) ($old['assignment']['reason'] ?? '')) ?>">
@@ -169,7 +179,7 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
             <label>Confirm your password
                 <input type="password" name="current_password" autocomplete="current-password" required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?php if ($assignErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
 
             <div class="form-actions"><button class="btn" type="submit">Assign role</button></div>
         </form>

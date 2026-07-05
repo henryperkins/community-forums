@@ -90,4 +90,31 @@ final class AppRoleAssignmentTest extends TestCase
         $this->assertStatus(422, $r);
         $this->assertSeeText($r, 'not-a-date');
     }
+
+    public function test_renew_wrong_password_rerenders_422_with_error_on_the_renewed_row(): void
+    {
+        // renew() reauths BEFORE touching the window, so a wrong password is the
+        // single most likely renew failure. The reauth error must surface on the
+        // row being renewed (anti-draft-loss), with the typed expiry preserved.
+        ['roleId' => $roleId] = $this->seedRole();
+        $subject = $this->makeUser();
+        $this->post('/admin/roles/' . $roleId . '/assignments', [
+            'username' => $subject['username'], 'scope_type' => 'site', 'scope_id' => '',
+            'starts_at' => '', 'ends_at' => gmdate('Y-m-d H:i', time() + 3600),
+            'reason' => 'pilot', 'current_password' => 'password123',
+        ]);
+        $assignmentId = (int) $this->db->fetchValue('SELECT id FROM role_assignments ORDER BY id DESC LIMIT 1');
+
+        $typedExpiry = gmdate('Y-m-d H:i', time() + 7200);
+        $r = $this->post('/admin/role-assignments/' . $assignmentId . '/renew', [
+            'ends_at' => $typedExpiry, 'current_password' => 'wrong-password',
+        ]);
+
+        $this->assertStatus(422, $r);
+        $this->assertSeeText($r, 'current password is incorrect'); // reauth error is shown, not swallowed
+        $this->assertSeeText($r, $typedExpiry); // anti-draft-loss: typed expiry survives on the row
+        // On the correct row ONLY: the shared errors bag must not bleed the reauth
+        // message onto the edit-definition or assign forms on the same page.
+        self::assertSame(1, substr_count($r->body(), 'Your current password is incorrect.'));
+    }
 }
