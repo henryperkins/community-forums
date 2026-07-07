@@ -262,7 +262,7 @@ final class ModerationService
     }
 
     /** @return array<string,mixed> */
-    private function requireModeratableThread(User $mod, int $threadId, string $capability = Cap::POST_DELETE_ANY): array
+    private function requireModeratableThread(User $mod, int $threadId, string $capability): array
     {
         $thread = $this->threads->find($threadId);
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
@@ -313,7 +313,7 @@ final class ModerationService
         ];
     }
 
-    private function assertCanModerate(User $mod, int $boardId, string $capability = Cap::POST_DELETE_ANY): void
+    private function assertCanModerate(User $mod, int $boardId, string $capability): void
     {
         $this->writeGate->assertCanWrite($mod);
         if (!$this->canModerate($mod, $boardId, $capability)) {

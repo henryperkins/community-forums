@@ -54,16 +54,7 @@ final class AuthorityGateTest extends TestCase
 
     private function resolver(): CapabilityResolver
     {
-        return new CapabilityResolver(
-            new RoleCapabilityRepository($this->db),
-            new RoleAssignmentRepository($this->db),
-            new LegacyAuthorityProjection(new BoardModeratorRepository($this->db)),
-            new ProtectedOwnerRepository($this->db),
-            new BoardRepository($this->db),
-            new BoardMemberRepository($this->db),
-            new BoardPolicy(),
-            new WriteGate(),
-        );
+        return $this->capabilityResolver();
     }
 
     public function test_legacy_mode_returns_legacy_verbatim_and_never_consults_a_resolver(): void

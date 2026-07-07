@@ -26,16 +26,7 @@ final class PermissionSimulatorTest extends TestCase
 {
     private function service(): PermissionSimulatorService
     {
-        $resolver = new CapabilityResolver(
-            new RoleCapabilityRepository($this->db),
-            new RoleAssignmentRepository($this->db),
-            new LegacyAuthorityProjection(new BoardModeratorRepository($this->db)),
-            new ProtectedOwnerRepository($this->db),
-            $this->boards(),
-            new BoardMemberRepository($this->db),
-            new BoardPolicy(),
-            new WriteGate(),
-        );
+        $resolver = $this->capabilityResolver();
 
         return new PermissionSimulatorService(
             $resolver,

@@ -59,16 +59,7 @@ final class RoleAssignmentServiceTest extends TestCase
     /** Mirrors CapabilityResolverTest's builder (Task 1). */
     private function resolver(): CapabilityResolver
     {
-        return new CapabilityResolver(
-            new RoleCapabilityRepository($this->db),
-            new RoleAssignmentRepository($this->db),
-            new LegacyAuthorityProjection(new BoardModeratorRepository($this->db)),
-            new ProtectedOwnerRepository($this->db),
-            new BoardRepository($this->db),
-            new BoardMemberRepository($this->db),
-            new BoardPolicy(),
-            new WriteGate(),
-        );
+        return $this->capabilityResolver();
     }
 
     /**

@@ -26,16 +26,7 @@ final class CapabilityResolverTest extends TestCase
 {
     private function resolver(): CapabilityResolver
     {
-        return new CapabilityResolver(
-            new RoleCapabilityRepository($this->db),
-            new RoleAssignmentRepository($this->db),
-            new LegacyAuthorityProjection(new BoardModeratorRepository($this->db)),
-            new ProtectedOwnerRepository($this->db),
-            $this->boards(),
-            new BoardMemberRepository($this->db),
-            new BoardPolicy(),
-            new WriteGate(),
-        );
+        return $this->capabilityResolver();
     }
 
     public function test_legacy_projection_end_to_end_matrix(): void

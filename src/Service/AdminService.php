@@ -480,17 +480,27 @@ final class AdminService
      * board-scoped (ModerationService::canModerate), so an admin is intentionally
      * rejected here — admins already moderate every board.
      */
-    public function assignModerator(User $actor, int $boardId, string $username): void
+    /**
+     * Shared authority gate for the four roster commands. Runs BEFORE the
+     * caller's boardOrFail so a non-admin gets a uniform 403 whether or not
+     * the board id exists (no hidden/private board-id oracle — V1).
+     */
+    private function assertRosterAuthority(User $actor, int $boardId, string $capability, string $site): void
     {
         $this->writeGate->assertCanWrite($actor);
         $this->gate()->assert(
             fn (): bool => $actor->isAdmin(),
             $actor,
-            Cap::BOARD_ASSIGN_MODERATORS,
+            $capability,
             ['board_id' => $boardId],
-            'AdminService::assignModerator',
+            $site,
             'Administrator access required.',
         );
+    }
+
+    public function assignModerator(User $actor, int $boardId, string $username): void
+    {
+        $this->assertRosterAuthority($actor, $boardId, Cap::BOARD_ASSIGN_MODERATORS, 'AdminService::assignModerator');
         $this->boardOrFail($boardId);
         $user = $this->resolveMember($username);
         $userId = (int) $user['id'];
@@ -521,15 +531,7 @@ final class AdminService
 
     public function unassignModerator(User $actor, int $boardId, int $userId): void
     {
-        $this->writeGate->assertCanWrite($actor);
-        $this->gate()->assert(
-            fn (): bool => $actor->isAdmin(),
-            $actor,
-            Cap::BOARD_ASSIGN_MODERATORS,
-            ['board_id' => $boardId],
-            'AdminService::unassignModerator',
-            'Administrator access required.',
-        );
+        $this->assertRosterAuthority($actor, $boardId, Cap::BOARD_ASSIGN_MODERATORS, 'AdminService::unassignModerator');
         $this->boardOrFail($boardId);
         if (!$this->boardMods->isModerator($boardId, $userId)) {
             throw new ValidationException(['moderator' => 'That member does not moderate this board.']);
@@ -557,15 +559,7 @@ final class AdminService
      */
     public function addMember(User $actor, int $boardId, string $username): void
     {
-        $this->writeGate->assertCanWrite($actor);
-        $this->gate()->assert(
-            fn (): bool => $actor->isAdmin(),
-            $actor,
-            Cap::BOARD_MANAGE_MEMBERS,
-            ['board_id' => $boardId],
-            'AdminService::addMember',
-            'Administrator access required.',
-        );
+        $this->assertRosterAuthority($actor, $boardId, Cap::BOARD_MANAGE_MEMBERS, 'AdminService::addMember');
         $this->boardOrFail($boardId);
         $user = $this->resolveMember($username);
         $userId = (int) $user['id'];
@@ -590,15 +584,7 @@ final class AdminService
 
     public function removeMember(User $actor, int $boardId, int $userId): void
     {
-        $this->writeGate->assertCanWrite($actor);
-        $this->gate()->assert(
-            fn (): bool => $actor->isAdmin(),
-            $actor,
-            Cap::BOARD_MANAGE_MEMBERS,
-            ['board_id' => $boardId],
-            'AdminService::removeMember',
-            'Administrator access required.',
-        );
+        $this->assertRosterAuthority($actor, $boardId, Cap::BOARD_MANAGE_MEMBERS, 'AdminService::removeMember');
         $this->boardOrFail($boardId);
         if (!$this->boardMembers->isMember($boardId, $userId)) {
             throw new ValidationException(['member' => 'That member is not on this board.']);

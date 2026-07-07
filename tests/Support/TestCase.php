@@ -11,6 +11,11 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Domain\User;
 use App\Repository\BoardRepository;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
+use App\Repository\ProtectedOwnerRepository;
+use App\Repository\RoleAssignmentRepository;
+use App\Repository\RoleCapabilityRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\PostRepository;
 use App\Repository\SessionRepository;
@@ -19,8 +24,10 @@ use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\ArrayRateLimiter;
 use App\Security\BoardPolicy;
+use App\Security\CapabilityResolver;
 use App\Security\PasswordHasher;
 use App\Security\WriteGate;
+use App\Service\LegacyAuthorityProjection;
 use App\Service\PostingService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
@@ -250,6 +257,25 @@ abstract class TestCase extends BaseTestCase
         $items = $this->config->all();
         $items['capabilities']['mode'] = 'enforce';
         $this->app = new App(new Config($items), $this->db, $this->rateLimiter);
+    }
+
+
+    /**
+     * The canonical hand-wired CapabilityResolver for tests that bypass the
+     * container (mirrors the App::buildContainer() binding).
+     */
+    protected function capabilityResolver(): CapabilityResolver
+    {
+        return new CapabilityResolver(
+            new RoleCapabilityRepository($this->db),
+            new RoleAssignmentRepository($this->db),
+            new LegacyAuthorityProjection(new BoardModeratorRepository($this->db)),
+            new ProtectedOwnerRepository($this->db),
+            new BoardRepository($this->db),
+            new BoardMemberRepository($this->db),
+            new BoardPolicy(),
+            new WriteGate(),
+        );
     }
 
     // ---- Seeding ----------------------------------------------------------
