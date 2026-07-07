@@ -61,9 +61,13 @@ final class IdentityProviderService
             $errors['display_name'] = 'Display name is required (up to 190 characters).';
         }
 
-        $issuer = rtrim(trim((string) ($input['issuer'] ?? '')), '/');
-        if (!self::validIssuer($issuer)) {
-            $errors['issuer'] = 'Issuer must be a clean HTTPS URL — no query string or fragment.';
+        // Stored VERBATIM (trimmed only): discovery and the id_token `iss`
+        // claim must byte-equal the pin, and spec-legal issuers can carry a
+        // trailing slash (e.g. Auth0 tenants) — stripping it would make such
+        // an IdP permanently fail `issuer_mismatch`.
+        $issuer = trim((string) ($input['issuer'] ?? ''));
+        if (!self::validIssuer($issuer) || strlen($issuer) > 512) {
+            $errors['issuer'] = 'Issuer must be a clean HTTPS URL (up to 512 characters) — no query string or fragment.';
         }
 
         $clientId = trim((string) ($input['client_id'] ?? ''));
@@ -77,8 +81,8 @@ final class IdentityProviderService
         }
 
         $claimMap = trim((string) ($input['claim_map_json'] ?? ''));
-        if ($claimMap !== '' && !is_array(json_decode($claimMap, true))) {
-            $errors['claim_map_json'] = 'Claim map must be a JSON object (or left empty).';
+        if ($claimMap !== '' && (strlen($claimMap) > 65535 || !is_array(json_decode($claimMap, true)))) {
+            $errors['claim_map_json'] = 'Claim map must be a JSON object of at most 64 KB (or left empty).';
         }
 
         // §E hard sequencing rule 1: no vault, no providers.
@@ -114,7 +118,7 @@ final class IdentityProviderService
         });
     }
 
-    /** @return array<string,mixed> the fresh row */
+    /** @return array<string,mixed> the row, with is_enabled updated */
     public function setEnabled(User $admin, string $currentPassword, int $id, bool $enabled): array
     {
         $this->reauth->requirePassword($admin, $currentPassword);
@@ -139,14 +143,17 @@ final class IdentityProviderService
             ]);
         });
 
-        $fresh = $this->providers->find($id);
-        return $fresh ?? $row;
+        $row['is_enabled'] = $enabled ? 1 : 0;
+        return $row;
     }
 
     /**
      * Explicit connectivity probe: discovery + JWKS through the pinned path.
      * A pass primes both caches (so the first member flow needs no fetch);
-     * any refusal or outage records `down` — never throws.
+     * any refusal or outage records `down` — never throws for connectivity.
+     * Builtin rows are refused like every other console mutation: they are
+     * env-configured reference data, and probing one would fire live fetches
+     * and overwrite its health/caches.
      *
      * @return array{status:string, detail:string}
      */
@@ -155,6 +162,9 @@ final class IdentityProviderService
         $row = $this->providers->find($id);
         if ($row === null) {
             throw new NotFoundException('Provider not found.');
+        }
+        if ((string) $row['type'] !== 'generic_oidc') {
+            throw new ValidationException(['provider' => 'Builtin providers are configured through environment variables, not the console.']);
         }
 
         try {

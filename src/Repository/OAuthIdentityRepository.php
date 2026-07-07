@@ -69,6 +69,12 @@ final class OAuthIdentityRepository
         );
     }
 
+    private const SOLE_METHOD_FROM = "FROM users u
+             JOIN oauth_identities oi ON oi.user_id = u.id AND oi.provider = ?
+             WHERE u.password_hash IS NULL
+               AND u.status NOT IN ('deleted', 'banned')
+               AND NOT EXISTS (SELECT 1 FROM webauthn_credentials wc WHERE wc.user_id = u.id AND wc.revoked_at IS NULL)";
+
     /**
      * Accounts whose only sign-in method is the named OAuth provider.
      *
@@ -76,6 +82,44 @@ final class OAuthIdentityRepository
      * @return list<array{id:int,username:string,email:string}>
      */
     public function soleMethodAccounts(string $provider, ?array $usableProviders = null): array
+    {
+        $query = $this->soleMethodQuery($provider, $usableProviders);
+        if ($query === null) {
+            return [];
+        }
+        [$extraSql, $params] = $query;
+
+        return $this->db->fetchAll(
+            'SELECT u.id, u.username, u.email ' . self::SOLE_METHOD_FROM . " {$extraSql} ORDER BY u.id",
+            $params,
+        );
+    }
+
+    /**
+     * Count-only twin of soleMethodAccounts() — identical predicates, no
+     * hydration (the console index shows just the number, per provider row).
+     *
+     * @param list<string>|array<int,string>|null $usableProviders
+     */
+    public function soleMethodCount(string $provider, ?array $usableProviders = null): int
+    {
+        $query = $this->soleMethodQuery($provider, $usableProviders);
+        if ($query === null) {
+            return 0;
+        }
+        [$extraSql, $params] = $query;
+
+        return (int) $this->db->fetchValue(
+            'SELECT COUNT(*) ' . self::SOLE_METHOD_FROM . " {$extraSql}",
+            $params,
+        );
+    }
+
+    /**
+     * @param list<string>|array<int,string>|null $usableProviders
+     * @return array{0:string,1:list<string>}|null null = the provider itself is not usable, so its removal locks nobody out
+     */
+    private function soleMethodQuery(string $provider, ?array $usableProviders): ?array
     {
         $extraSql = '';
         $params = [$provider];
@@ -85,7 +129,7 @@ final class OAuthIdentityRepository
         } else {
             $usable = self::providerList($usableProviders);
             if (!in_array($provider, $usable, true)) {
-                return [];
+                return null;
             }
             $otherUsable = array_values(array_filter($usable, static fn (string $p): bool => $p !== $provider));
             if ($otherUsable !== []) {
@@ -94,18 +138,7 @@ final class OAuthIdentityRepository
                 array_push($params, ...$otherUsable);
             }
         }
-
-        return $this->db->fetchAll(
-            "SELECT u.id, u.username, u.email
-             FROM users u
-             JOIN oauth_identities oi ON oi.user_id = u.id AND oi.provider = ?
-             WHERE u.password_hash IS NULL
-               AND u.status NOT IN ('deleted', 'banned')
-               AND NOT EXISTS (SELECT 1 FROM webauthn_credentials wc WHERE wc.user_id = u.id AND wc.revoked_at IS NULL)
-               {$extraSql}
-             ORDER BY u.id",
-            $params,
-        );
+        return [$extraSql, $params];
     }
 
     /**

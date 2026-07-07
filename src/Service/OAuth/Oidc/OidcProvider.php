@@ -28,6 +28,9 @@ final class OidcProvider implements OAuthProvider
     public const DISCOVERY_TTL_SECONDS = 86400;
     public const SCOPES = 'openid profile email';
 
+    /** @var array<string,mixed>|null the request-lifetime resolved discovery document */
+    private ?array $doc = null;
+
     /** @param array<string,mixed> $row identity_providers row */
     public function __construct(
         private array $row,
@@ -61,8 +64,10 @@ final class OidcProvider implements OAuthProvider
 
     public function authorizeUrl(string $redirectUri, string $state, string $codeChallenge, string $nonce): string
     {
-        $doc = $this->document();
-        return (string) $doc['authorization_endpoint'] . '?' . http_build_query([
+        $endpoint = (string) $this->document()['authorization_endpoint'];
+        // RFC 6749 §3.1: the advertised endpoint may already carry a query
+        // component (e.g. Azure B2C policy endpoints) — retain it, join with &.
+        return $endpoint . (str_contains($endpoint, '?') ? '&' : '?') . http_build_query([
             'client_id' => (string) $this->row['client_id'],
             'redirect_uri' => $redirectUri,
             'response_type' => 'code',
@@ -99,10 +104,13 @@ final class OidcProvider implements OAuthProvider
         try {
             $claims = $this->verifyToken($idToken, $keys, (string) $expectedNonce);
         } catch (OidcVerificationException $e) {
-            if ($e->reason !== 'unknown_kid') {
+            // Rotation: exactly one forced refresh through the pinned URL.
+            // `unknown_kid` is the explicit signal; a signature failure can be
+            // the same rotation when the IdP omits `kid` (RFC 7515 allows it)
+            // or re-keys under a reused kid, so it earns the same single retry.
+            if (!in_array($e->reason, ['unknown_kid', 'signature_invalid'], true)) {
                 throw $e;
             }
-            // Rotation: exactly one forced refresh through the pinned URL.
             $claims = $this->verifyToken($idToken, $this->jwks->refresh($this->row, $jwksUri), (string) $expectedNonce);
         }
 
@@ -123,9 +131,19 @@ final class OidcProvider implements OAuthProvider
         );
     }
 
-    /** @return array<string,mixed> the validated (or validly cached) discovery document */
+    /**
+     * The validated (or validly cached) discovery document, resolved at most
+     * once per instance — exchange() and identity() run in the same callback
+     * request and must not fetch (or UPDATE the row cache) twice.
+     *
+     * @return array<string,mixed>
+     */
     private function document(): array
     {
+        if ($this->doc !== null) {
+            return $this->doc;
+        }
+
         $cached = json_decode((string) ($this->row['discovery_cache_json'] ?? ''), true);
         if (!is_array($cached)
             || !isset($cached['authorization_endpoint'], $cached['token_endpoint'], $cached['jwks_uri'])
@@ -133,7 +151,7 @@ final class OidcProvider implements OAuthProvider
             $cached = null;
         }
         if ($cached !== null && $this->discoveryFresh()) {
-            return $cached;
+            return $this->doc = $cached;
         }
 
         $discoveryUrl = (string) ($this->row['discovery_url'] ?? '');
@@ -143,12 +161,12 @@ final class OidcProvider implements OAuthProvider
             throw $e;
         } catch (\Throwable $e) {
             if ($cached !== null) {
-                return $cached; // outage: stale beats down
+                return $this->doc = $cached; // outage: stale beats down
             }
             throw $e;
         }
         $this->providers->cacheDiscovery((int) $this->row['id'], (string) json_encode($doc));
-        return $doc;
+        return $this->doc = $doc;
     }
 
     private function discoveryFresh(): bool

@@ -451,12 +451,6 @@ final class BaselineMetricsService
     }
 
     /**
-     * Measures full server-side WebAuthn assertion verification from a committed
-     * public-only fixture: base64url decode, CBOR/COSE parse, and OpenSSL verify.
-     *
-     * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
-     */
-    /**
      * Inc 8 (P5-12) — the D11 `oidc.discovery_p95_cached/cold` samplers. Builds
      * its own bench provider row (removed afterwards; run inside the caller's
      * rollback transaction for byte-identical DBs).
@@ -600,6 +594,12 @@ final class BaselineMetricsService
         ];
     }
 
+    /**
+     * Measures full server-side WebAuthn assertion verification from a committed
+     * public-only fixture: base64url decode, CBOR/COSE parse, and OpenSSL verify.
+     *
+     * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
+     */
     public function measureWebauthnCeremony(?string $fixturePath = null): array
     {
         $rp = new RelyingParty('http://localhost:8000', null, 'testing');

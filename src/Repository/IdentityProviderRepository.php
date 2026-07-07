@@ -47,6 +47,22 @@ final class IdentityProviderRepository
     }
 
     /**
+     * Narrow sign-in-menu rows (key + label of providers that could run a
+     * flow right now) — never hydrates the MEDIUMTEXT cache columns, so the
+     * per-request shell stays cheap.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function loginMenuRows(): array
+    {
+        return $this->db->fetchAll(
+            "SELECT provider_key, display_name FROM identity_providers
+             WHERE type = 'generic_oidc' AND is_enabled = 1 AND client_id <> '' AND client_secret_ref <> ''
+             ORDER BY display_name ASC, id ASC",
+        );
+    }
+
+    /**
      * @param array{provider_key:string,display_name:string,issuer:string,client_id:string,client_secret_ref:string,claim_map_json?:?string} $data
      */
     public function create(array $data): int

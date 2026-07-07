@@ -553,15 +553,13 @@ final class App
             $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
         }
 
-        // Configured OAuth providers power the "Sign in with …" buttons.
+        // Configured OAuth providers power the "Sign in with …" buttons. The
+        // narrow menu never hydrates registry cache blobs or builds provider
+        // objects — this runs on EVERY request, and only /login consumes it.
         $oauthProviders = [];
         try {
             if (!empty($features['oauth'])) {
-                foreach ($container->get(ProviderRegistry::class)->all() as $name => $provider) {
-                    if ($provider->isConfigured()) {
-                        $oauthProviders[] = ['name' => $name, 'label' => $provider->label()];
-                    }
-                }
+                $oauthProviders = $container->get(ProviderRegistry::class)->loginMenu();
             }
         } catch (Throwable) {
             $oauthProviders = [];
@@ -1599,6 +1597,13 @@ final class App
             $c->get(ModerationLogRepository::class),
             $config,
         ));
+        // One owner for "providers a member can sign in with right now": the
+        // oauth master flag gates the whole set. Both lockout guards (oauth
+        // unlink, passkey delete) receive THIS closure so they can never
+        // disagree about whether removing a method locks a member out.
+        $usableProviderNames = static fn (): array => $c->get(FeatureFlags::class)->enabled('oauth')
+            ? $c->get(ProviderRegistry::class)->configuredNames()
+            : [];
         $c->bind(PasskeyService::class, fn (Container $c) => new PasskeyService(
             $c->get(WebAuthnCredentialRepository::class),
             $c->get(WebAuthnChallengeRepository::class),
@@ -1615,9 +1620,7 @@ final class App
             $config,
             $c->get(Database::class),
             $c->get(Telemetry::class),
-            fn (): array => $c->get(FeatureFlags::class)->enabled('oauth')
-                ? $c->get(ProviderRegistry::class)->configuredNames()
-                : [],
+            $usableProviderNames,
         ));
         $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
             $c->get(UserPreferenceRepository::class),
@@ -1643,8 +1646,9 @@ final class App
         ));
         $c->bind(ProviderRegistry::class, function (Container $c) use ($config) {
             // Registry-backed generic-OIDC providers join only when the P5-12
-            // flag is on; the loader itself fails dark inside ProviderRegistry.
+            // flag is on; both loaders fail dark inside ProviderRegistry.
             $dynamic = null;
+            $menu = null;
             if ($c->get(FeatureFlags::class)->enabled('provider_registry')) {
                 $dynamic = function () use ($c): array {
                     $providers = [];
@@ -1662,8 +1666,9 @@ final class App
                     }
                     return $providers;
                 };
+                $menu = fn (): array => $c->get(IdentityProviderRepository::class)->loginMenuRows();
             }
-            return new ProviderRegistry((array) $config->get('oauth', []), $c->get(OAuthHttpClient::class), $dynamic);
+            return new ProviderRegistry((array) $config->get('oauth', []), $c->get(OAuthHttpClient::class), $dynamic, $menu);
         });
         $c->bind(OAuthService::class, fn (Container $c) => new OAuthService(
             $c->get(Database::class),
@@ -1671,9 +1676,7 @@ final class App
             $c->get(UserRepository::class),
             $c->get(SettingRepository::class),
             $c->get(FirstPartyHookRegistry::class),
-            fn (): array => $c->get(FeatureFlags::class)->enabled('oauth')
-                ? $c->get(ProviderRegistry::class)->configuredNames()
-                : [],
+            $usableProviderNames,
         ));
         $c->bind(PostingService::class, fn (Container $c) => new PostingService(
             $c->get(Database::class),

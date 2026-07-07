@@ -238,6 +238,36 @@ final class JwtVerifierTest extends TestCase
         self::assertSame([], JwtVerifier::unverifiedHeader('garbage'));
     }
 
+    public function test_jwk_with_a_spurious_leading_zero_modulus_still_verifies(): void
+    {
+        // RFC 7518 mandates minimal octets for n/e, but sloppy IdPs pad them;
+        // the DER builder canonicalises (same rule as WebAuthn's CoseKey), so
+        // the padded form must select the same key material.
+        $details = openssl_pkey_get_details(self::keyA());
+        self::assertIsArray($details);
+        $jwks = ['keys' => [[
+            'kty' => 'RSA',
+            'use' => 'sig',
+            'alg' => 'RS256',
+            'kid' => 'kid-a',
+            'n' => self::b64u("\x00" . (string) $details['rsa']['n']),
+            'e' => self::b64u((string) $details['rsa']['e']),
+        ]]];
+
+        self::assertSame('sub-1', $this->verify($this->token($this->claims()), jwks: $jwks)['sub']);
+    }
+
+    public function test_padded_signature_segment_is_rejected(): void
+    {
+        // JWS segments are unpadded base64url (RFC 7515); the strict shared
+        // decoder refuses padded re-encodings of an otherwise valid signature.
+        $jwt = $this->token($this->claims());
+        [$h, $p, $s] = explode('.', $jwt);
+
+        $this->expectExceptionObject(new OidcVerificationException('signature_invalid'));
+        $this->verify($h . '.' . $p . '.' . $s . '==');
+    }
+
     // ---- helpers ------------------------------------------------------------
 
     /** @param array<string,mixed> $overrides */

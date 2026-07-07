@@ -70,8 +70,26 @@ class HttpClient
             curl_close($ch);
             throw new RuntimeException('OAuth HTTP request failed: ' . $err);
         }
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         curl_close($ch);
-        $decoded = json_decode((string) $raw, true);
+        return static::decodeResponse((string) $raw, $status);
+    }
+
+    /**
+     * An HTTP error status without a parseable JSON body (a load balancer's
+     * maintenance page, a gateway error) is a FAILED FETCH and throws like a
+     * transport error, so callers' stale-cache outage fallbacks apply. An
+     * error status WITH a JSON body still returns it — OAuth token endpoints
+     * speak structured errors (e.g. invalid_grant) over 400s.
+     *
+     * @return array<string,mixed>
+     */
+    protected static function decodeResponse(string $raw, int $status): array
+    {
+        $decoded = json_decode($raw, true);
+        if ($status >= 400 && !is_array($decoded)) {
+            throw new RuntimeException('OAuth HTTP request failed: HTTP ' . $status);
+        }
         return is_array($decoded) ? $decoded : [];
     }
 

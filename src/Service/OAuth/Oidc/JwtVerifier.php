@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace App\Service\OAuth\Oidc;
 
 use App\Core\OidcVerificationException;
+use App\Support\Base64Url;
 
 /**
  * Issuer-pinned OIDC id_token verifier (P5-12, ADR 0004 D8): RS256 signature
  * over a caller-supplied JWKS, then iss / aud / azp / nonce / exp / iat / nbf
  * with a fixed leeway. Pure — no network, no DB, no clock unless `$now` is
  * omitted. Refusals throw OidcVerificationException with a stable reason;
- * `unknown_kid` is the one the caller may answer with a single forced JWKS
- * refresh (TM-ID-03's rotation arm).
+ * `unknown_kid` and `signature_invalid` are the ones the caller may answer
+ * with a single forced JWKS refresh (TM-ID-03's rotation arm — the latter
+ * because kid-less single-key IdPs rotate too).
  *
  * Only RS256 is implemented. The allowlist parameter can narrow but never
  * widen that — `none` and HMAC-family confusion forgeries are refused before
@@ -195,8 +197,15 @@ final class JwtVerifier
 
     private static function asn1Int(string $raw): string
     {
+        // Canonical minimal DER (same rule as WebAuthn's CoseKey builder):
+        // strip any JWK-carried leading zeros, then re-add exactly one to
+        // keep the INTEGER positive when the high bit is set.
+        $raw = ltrim($raw, "\x00");
+        if ($raw === '') {
+            $raw = "\x00";
+        }
         if ((ord($raw[0]) & 0x80) !== 0) {
-            $raw = "\x00" . $raw; // keep the INTEGER positive
+            $raw = "\x00" . $raw;
         }
         return "\x02" . self::asn1Len(strlen($raw)) . $raw;
     }
@@ -225,8 +234,8 @@ final class JwtVerifier
 
     private static function b64uDecode(string $b64u): ?string
     {
-        $padded = str_pad(strtr($b64u, '-_', '+/'), (int) (ceil(strlen($b64u) / 4) * 4), '=');
-        $raw = base64_decode($padded, true);
-        return $raw === false ? null : $raw;
+        // Strict shared decoder (rejects padding and non-canonical encodings,
+        // as RFC 7515 requires for JWS segments).
+        return Base64Url::decode($b64u);
     }
 }

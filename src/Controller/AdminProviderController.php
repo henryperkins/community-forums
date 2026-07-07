@@ -59,7 +59,11 @@ final class AdminProviderController extends Controller
         $this->requireAdmin();
         $this->gate();
 
-        $result = $this->container->get(IdentityProviderService::class)->healthProbe((int) ($params['id'] ?? 0));
+        try {
+            $result = $this->container->get(IdentityProviderService::class)->healthProbe((int) ($params['id'] ?? 0));
+        } catch (ValidationException $e) {
+            return $this->providersView($e->errors, [], 422);
+        }
         return $this->noindex($this->redirectWithFlash(
             '/admin/providers',
             'Provider health: ' . $result['status'] . ' — ' . $result['detail'],
@@ -80,7 +84,14 @@ final class AdminProviderController extends Controller
                 true,
             );
         } catch (ValidationException $e) {
-            return $this->providersView($e->errors, [], 422);
+            // A reauth failure must surface beside the row's own inline form,
+            // not under the unrelated add-provider form's password field.
+            $errors = $e->errors;
+            if (isset($errors['current_password'])) {
+                $errors['enable_password'] = $errors['current_password'];
+                unset($errors['current_password']);
+            }
+            return $this->providersView($errors, [], 422, (int) ($params['id'] ?? 0));
         }
         return $this->noindex($this->redirectWithFlash('/admin/providers', $row['display_name'] . ' is now offered at sign-in.'));
     }
@@ -126,18 +137,18 @@ final class AdminProviderController extends Controller
     }
 
     /** @param array<string,string> $errors @param array<string,mixed> $old */
-    private function providersView(array $errors = [], array $old = [], int $status = 200): Response
+    private function providersView(array $errors = [], array $old = [], int $status = 200, ?int $enableErrorId = null): Response
     {
         $identities = $this->container->get(OAuthIdentityRepository::class);
         $registry = $this->container->get(ProviderRegistry::class);
-        $usableProviders = $registry->configuredNames();
+        $usableProviders = $this->usableProviderNames();
 
         $rows = [];
         foreach ($this->container->get(IdentityProviderRepository::class)->all() as $row) {
             $key = (string) $row['provider_key'];
             $builtin = (string) $row['type'] !== 'generic_oidc';
             $rows[] = $row + [
-                'sole_method_count' => count($identities->soleMethodAccounts($key, $usableProviders)),
+                'sole_method_count' => $identities->soleMethodCount($key, self::includingProvider($usableProviders, $key)),
                 'env_configured' => $builtin && ($registry->get($key)?->isConfigured() ?? false),
             ];
         }
@@ -146,6 +157,7 @@ final class AdminProviderController extends Controller
             'rows' => $rows,
             'errors' => $errors,
             'old' => $old,
+            'enable_error_id' => $enableErrorId,
         ], $status));
     }
 
@@ -156,16 +168,41 @@ final class AdminProviderController extends Controller
         if ($row === null || (string) $row['type'] !== 'generic_oidc') {
             throw new NotFoundException('Provider not found.');
         }
+        $key = (string) $row['provider_key'];
 
         return $this->noindex($this->view('admin/provider_disable', [
             'row' => $row,
             'sole_accounts' => $this->container->get(OAuthIdentityRepository::class)
-                ->soleMethodAccounts(
-                    (string) $row['provider_key'],
-                    $this->container->get(ProviderRegistry::class)->configuredNames(),
-                ),
+                ->soleMethodAccounts($key, self::includingProvider($this->usableProviderNames(), $key)),
             'errors' => $errors,
         ], $status));
+    }
+
+    /**
+     * The enforcement-side definition of "usable sign-in provider" (mirrors
+     * the App.php closures feeding the unlink/passkey lockout guards): the
+     * `oauth` master flag gates whether ANY provider is usable at all.
+     *
+     * @return list<string>
+     */
+    private function usableProviderNames(): array
+    {
+        return $this->container->get(FeatureFlags::class)->enabled('oauth')
+            ? $this->container->get(ProviderRegistry::class)->configuredNames()
+            : [];
+    }
+
+    /**
+     * The listed row's own key always counts as usable for ITS OWN column:
+     * a disabled provider must keep reporting the members who depend on it
+     * (sole-method lockout), not drop to a reassuring 0.
+     *
+     * @param list<string> $usable
+     * @return list<string>
+     */
+    private static function includingProvider(array $usable, string $provider): array
+    {
+        return in_array($provider, $usable, true) ? $usable : [...$usable, $provider];
     }
 
     private function noindex(Response $response): Response

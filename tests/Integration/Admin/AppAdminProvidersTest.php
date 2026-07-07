@@ -126,6 +126,55 @@ final class AppAdminProvidersTest extends TestCase
         self::assertNull($this->providers()->findByKey('gitlab'), 'no row landed from any rejected attempt');
     }
 
+    public function test_trailing_slash_issuer_is_stored_verbatim_and_probes_ok(): void
+    {
+        // Spec-legal issuers can end in '/' (e.g. Auth0 tenants) and both the
+        // discovery echo and the id_token `iss` claim must byte-equal the pin,
+        // so the console must never normalise the slash away.
+        $this->enableFlags();
+        $this->actingAs($this->admin);
+        $http = new ScriptedOAuthHttpClient();
+        $this->withOAuthHttp($http);
+        $slashed = self::ISSUER . '/';
+        $http->script(self::WELL_KNOWN, [
+            'issuer' => $slashed,
+            'authorization_endpoint' => 'https://idp.test/oauth/authorize',
+            'token_endpoint' => 'https://idp.test/oauth/token',
+            'jwks_uri' => self::JWKS,
+        ]);
+        $http->script(self::JWKS, ['keys' => [['kty' => 'RSA', 'use' => 'sig', 'kid' => 'k1', 'n' => 'AQAB', 'e' => 'AQAB']]]);
+
+        $this->assertRedirect(
+            $this->post('/admin/providers', $this->createInput(['provider_key' => 'slashy', 'issuer' => $slashed])),
+            '/admin/providers',
+        );
+        $row = $this->providers()->findByKey('slashy');
+        self::assertSame($slashed, $row['issuer'], 'the issuer pin is stored exactly as published');
+
+        $this->assertRedirect($this->post('/admin/providers/' . (int) $row['id'] . '/test', []), '/admin/providers');
+        self::assertSame('ok', $this->providers()->find((int) $row['id'])['health_status'], 'a slash-carrying issuer probes healthy end to end');
+    }
+
+    public function test_oversized_issuer_and_claim_map_are_422_not_500(): void
+    {
+        $this->enableFlags();
+        $this->actingAs($this->admin);
+        $secretsBefore = (int) $this->db->fetchValue('SELECT COUNT(*) FROM service_secrets', []);
+
+        $long = 'https://idp.test/' . str_repeat('a', 600);
+        self::assertSame(422, $this->post('/admin/providers', $this->createInput(['issuer' => $long]))->status());
+
+        $bigMap = '{"email":"' . str_repeat('x', 70000) . '"}';
+        self::assertSame(422, $this->post('/admin/providers', $this->createInput(['claim_map_json' => $bigMap]))->status());
+
+        self::assertNull($this->providers()->findByKey('gitlab'), 'no row landed');
+        self::assertSame(
+            $secretsBefore,
+            (int) $this->db->fetchValue('SELECT COUNT(*) FROM service_secrets', []),
+            'a rejected create never stores an orphaned vault secret',
+        );
+    }
+
     public function test_create_requires_the_service_secrets_flag_first(): void
     {
         // §E hard sequencing rule 1: the vault must exist before providers.
@@ -210,6 +259,76 @@ final class AppAdminProvidersTest extends TestCase
 
         self::assertSame(422, $res->status());
         self::assertSame(0, (int) $this->providers()->findByKey('google')['is_enabled']);
+    }
+
+    public function test_builtin_rows_cannot_be_probed_from_the_console(): void
+    {
+        $this->enableFlags();
+        $this->actingAs($this->admin);
+        // Any network attempt would throw ('unscripted URL') and record `down`
+        // — the guard must refuse before the probe ever runs.
+        $this->withOAuthHttp(new ScriptedOAuthHttpClient());
+        $google = $this->providers()->findByKey('google');
+
+        $res = $this->post('/admin/providers/' . (int) $google['id'] . '/test', []);
+
+        self::assertSame(422, $res->status());
+        $after = $this->providers()->findByKey('google');
+        self::assertSame($google['health_status'], $after['health_status'], 'no health write on a refused builtin probe');
+        self::assertNull($after['discovery_cache_json'] ?? null, 'no cache write onto the env-managed reference row');
+    }
+
+    public function test_enable_reauth_error_renders_beside_the_row_form(): void
+    {
+        $this->enableFlags();
+        $this->actingAs($this->admin);
+        $id = $this->createProviderRow('rowerr', 'RowErr IdP');
+
+        $res = $this->post('/admin/providers/' . $id . '/enable', ['current_password' => 'wrong']);
+
+        self::assertSame(422, $res->status());
+        $body = $res->body();
+        self::assertSame(
+            1,
+            substr_count($body, 'Your current password is incorrect.'),
+            'the reauth error renders exactly once',
+        );
+        self::assertLessThan(
+            (int) strpos($body, 'Add an OIDC provider'),
+            (int) strpos($body, 'Your current password is incorrect.'),
+            'the error sits in the provider rows table (beside the submitted form), not under the add form',
+        );
+    }
+
+    public function test_sole_method_count_survives_disable_and_oauth_flag_rollback(): void
+    {
+        $this->enableFlags();
+        $this->actingAs($this->admin);
+        $id = $this->createProviderRow('solo2', 'Solo2 IdP', enabled: true);
+        $soleId = $this->users()->create([
+            'username' => 'solo2only', 'email' => 'solo2@example.test',
+            'password_hash' => null, 'display_name' => null, 'role' => 'user', 'status' => 'active',
+        ]);
+        (new OAuthIdentityRepository($this->db))->create([
+            'user_id' => $soleId, 'provider' => 'solo2', 'provider_user_id' => 'sub-11', 'provider_config_id' => $id,
+        ]);
+
+        // Disabling is exactly when the lockout number matters — it must not
+        // drop to a reassuring 0 because the provider left the usable set.
+        $this->providers()->setEnabled($id, false);
+        self::assertStringContainsString(
+            'data-sole-count="1"',
+            $this->get('/admin/providers')->body(),
+            'a disabled provider still reports the members who depend on it',
+        );
+
+        // And the console's usable-set must track enforcement (oauth master flag).
+        (new SettingRepository($this->db))->set('features', ['provider_registry' => true, 'service_secrets' => true, 'oauth' => false]);
+        self::assertStringContainsString(
+            'data-sole-count="1"',
+            $this->get('/admin/providers')->body(),
+            'the count matches enforcement even with the oauth flag off',
+        );
     }
 
     public function test_disable_confirm_lists_sole_method_accounts_before_disable(): void

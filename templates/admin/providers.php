@@ -37,7 +37,7 @@ $this->section('title', 'Sign-in providers');
                             <span class="muted"><?= $e(human_datetime((string) $r['health_checked_at'])) ?></span>
                         <?php endif; ?>
                     </td>
-                    <td><?= (int) $r['sole_method_count'] ?></td>
+                    <td data-sole-count="<?= (int) $r['sole_method_count'] ?>"><?= (int) $r['sole_method_count'] ?></td>
                     <td>
                         <?php if ($builtin): ?>
                             <?= !empty($r['env_configured']) ? 'Configured' : 'Not configured' ?>
@@ -57,6 +57,9 @@ $this->section('title', 'Sign-in providers');
                                     <label>Your password
                                         <input type="password" name="current_password" autocomplete="current-password" required>
                                     </label>
+                                    <?php if (($enable_error_id ?? null) === $id && !empty($errors['enable_password'])): ?>
+                                        <p class="field-error" role="alert"><?= $e($errors['enable_password']) ?></p>
+                                    <?php endif; ?>
                                     <button class="btn btn-small" type="submit">Enable</button>
                                 </form>
                             <?php else: ?>
@@ -93,7 +96,7 @@ $this->section('title', 'Sign-in providers');
                 <input type="url" name="issuer" maxlength="512" value="<?= $e($old['issuer'] ?? '') ?>"
                        placeholder="https://gitlab.com" required>
             </label>
-            <p class="muted">Discovery is resolved from <code>{issuer}/.well-known/openid-configuration</code>; the JWKS URL must be same-origin with this issuer.</p>
+            <p class="muted">Discovery is resolved from <code>{issuer}/.well-known/openid-configuration</code>; the JWKS URL must be same-origin with this issuer. Enter the issuer exactly as the IdP publishes it — a trailing slash is significant.</p>
             <?php if (!empty($errors['issuer'])): ?><p class="field-error"><?= $e($errors['issuer']) ?></p><?php endif; ?>
 
             <label>Client ID

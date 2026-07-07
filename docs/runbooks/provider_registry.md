@@ -60,7 +60,9 @@ check the count before doing that, for the same reason).
    fragment; discovery resolves from
    `{issuer}/.well-known/openid-configuration`), client id, client secret
    (straight to the vault), optional claim map (renames the cosmetic claims
-   only — the subject claim is always `sub`).
+   only — the subject claim is always `sub`). Enter the issuer **exactly as
+   the IdP publishes it** — a trailing slash is significant (Auth0-style
+   issuers end in `/`; the discovery echo and `iss` claim must byte-match).
 4. New providers land **disabled**. Run **Test connection** — it fetches and
    validates the discovery document (document issuer must equal the pinned
    issuer; endpoints HTTPS; JWKS URI same-origin with the issuer) and the
@@ -90,13 +92,17 @@ logging in and linking explicitly (TM-ID-04).
 
 - **Discovery/JWKS outage:** flows fail soft (redirect back to `/login` with
   a retry message, never a 500). Fresh caches (24 h TTL) keep working; a
-  stale cache is used as fallback when the fetch fails, so a brief IdP outage
-  does not break sign-in for cached providers.
-- **JWKS rotation:** an id_token with an unknown `kid` triggers exactly one
-  forced refresh from the pinned JWKS URL, then verification proceeds. No
-  operator action needed. A fetch is never made to a URL that is not
-  same-origin with the pinned issuer — even if a cached document says
-  otherwise (TM-ID-03).
+  stale cache is used as fallback when the fetch fails — transport errors
+  *and* HTTP error responses without a JSON body (load-balancer maintenance
+  pages, gateway errors) both count as failed fetches — so a brief IdP outage
+  does not break sign-in for cached providers. A *successful* fetch of an
+  invalid or wrong-issuer document still fails closed.
+- **JWKS rotation:** an id_token with an unknown `kid` — or a signature
+  failure against the cached key, which is what rotation looks like from an
+  IdP that omits `kid` — triggers exactly one forced refresh from the pinned
+  JWKS URL, then verification proceeds. No operator action needed. A fetch is
+  never made to a URL that is not same-origin with the pinned issuer — even
+  if a cached document says otherwise (TM-ID-03).
 - **Secret rotation:** rotate the client secret at the IdP, then rotate the
   vault reference (`svcsec_*`) via the vault's rotate path with its grace
   window; the provider row itself does not change.

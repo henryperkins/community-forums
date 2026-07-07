@@ -90,6 +90,24 @@ final class AppOidcProviderTest extends TestCase
         $this->assertRedirectContains($res, '/login');
     }
 
+    public function test_authorize_endpoint_with_existing_query_joins_with_ampersand(): void
+    {
+        // RFC 6749 §3.1: the advertised endpoint may carry a query component
+        // (e.g. Azure B2C policy endpoints) which the client must retain.
+        $this->provisionProvider(primeCaches: false);
+        $endpoint = self::AUTHORIZE . '?policy=b2c_1_signin';
+        $this->providers()->cacheDiscovery($this->configId, (string) json_encode(
+            $this->discoveryDoc(['authorization_endpoint' => $endpoint]),
+        ));
+
+        $res = $this->get('/auth/gitlab/redirect');
+
+        self::assertSame(302, $res->status());
+        $location = (string) $res->getHeader('Location');
+        self::assertStringStartsWith($endpoint . '&client_id=', $location, 'the endpoint query survives; ours joins with &');
+        self::assertSame(1, substr_count($location, '?'), 'exactly one query separator in the authorize URL');
+    }
+
     // ---- happy path ---------------------------------------------------------
 
     public function test_happy_path_creates_account_with_registry_linkage_and_pkce_proof(): void
@@ -221,6 +239,42 @@ final class AppOidcProviderTest extends TestCase
         self::assertCount(1, $jwksFetches, 'exactly one forced refresh, from the pinned URL');
     }
 
+    public function test_kidless_token_rotation_refreshes_once_and_succeeds(): void
+    {
+        // RFC 7515 makes `kid` optional: a single-key IdP that omits it still
+        // rotates. The stale cached key fails the signature, which must earn
+        // the same single pinned refresh that unknown_kid gets.
+        $this->provisionProvider(); // cache holds kid-1's key
+        $this->http->script(self::JWKS, $this->jwksDoc('kid-2'));
+
+        $q = $this->startFlow();
+        $res = $this->completeCallback($q, [
+            'id_token' => $this->signToken($this->claims(['nonce' => $q['nonce']]), kid: 'kid-2', omitKid: true),
+        ]);
+
+        $this->assertRedirect($res, '/');
+        $jwksFetches = array_values(array_filter($this->http->urls(), fn (string $u) => $u === self::JWKS));
+        self::assertCount(1, $jwksFetches, 'exactly one forced refresh answers a kid-less rotation');
+    }
+
+    public function test_stale_discovery_is_resolved_once_per_callback(): void
+    {
+        $this->provisionProvider();
+        $q = $this->startFlow(); // rides the primed cache — zero fetches
+        // Age the row cache so the CALLBACK request sees it expired.
+        $this->db->run(
+            'UPDATE identity_providers SET discovery_cached_at = DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY) WHERE id = ?',
+            [$this->configId],
+        );
+        $this->http->script(self::WELL_KNOWN, $this->discoveryDoc());
+
+        $res = $this->completeCallback($q, ['id_token' => $this->idToken(['nonce' => $q['nonce']])]);
+
+        $this->assertRedirect($res, '/');
+        $discoveryFetches = array_values(array_filter($this->http->urls(), fn (string $u) => $u === self::WELL_KNOWN));
+        self::assertCount(1, $discoveryFetches, 'exchange() and identity() share one resolved document per callback');
+    }
+
     public function test_tampered_cache_cannot_move_jwks_off_issuer(): void
     {
         $this->provisionProvider();
@@ -301,6 +355,33 @@ final class AppOidcProviderTest extends TestCase
             (new OAuthIdentityRepository($this->db))->findByProvider('gitlab', '4213'),
             'identities are retained across disable',
         );
+    }
+
+    public function test_disabled_provider_identity_stays_visible_and_unlinkable(): void
+    {
+        $this->provisionProvider();
+        $q = $this->startFlow();
+        $this->completeCallback($q, ['id_token' => $this->idToken(['nonce' => $q['nonce']])]); // signed in as the new member
+
+        $this->providers()->setEnabled($this->configId, false);
+
+        // Identities are retained by design; the member must still see the
+        // linkage and reach Disconnect even though the provider is gone from
+        // sign-in.
+        $body = $this->get('/settings/connections')->body();
+        self::assertStringContainsString('GitLab', $body, 'the retained identity keeps its operator label');
+        self::assertStringContainsString('name="provider" value="gitlab"', $body, 'the Disconnect form still targets it');
+
+        // With a password in place, disconnecting the retained identity works.
+        $identity = (new OAuthIdentityRepository($this->db))->findByProvider('gitlab', '4213');
+        $this->db->run(
+            'UPDATE users SET password_hash = ? WHERE id = ?',
+            [password_hash('pw-123456', PASSWORD_DEFAULT), (int) $identity['user_id']],
+        );
+        $res = $this->post('/settings/connections/unlink', ['provider' => 'gitlab']);
+        $this->assertRedirect($res, '/settings/connections');
+        self::assertStringContainsString('Disconnected GitLab.', $this->get('/settings/connections')->body(), 'the flash uses the label, not the slug');
+        self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('gitlab', '4213'));
     }
 
     public function test_dark_provider_registry_flag_hides_even_enabled_rows(): void
@@ -422,10 +503,14 @@ final class AppOidcProviderTest extends TestCase
         return $this->signToken($this->claims($overrides), $kid);
     }
 
-    /** @param array<string,mixed> $claims */
-    private function signToken(array $claims, string $kid = 'kid-1'): string
+    /** @param array<string,mixed> $claims $omitKid signs with $kid's key but leaves the header kid-less (RFC 7515 optional) */
+    private function signToken(array $claims, string $kid = 'kid-1', bool $omitKid = false): string
     {
-        $h = self::b64u((string) json_encode(['alg' => 'RS256', 'typ' => 'JWT', 'kid' => $kid]));
+        $header = ['alg' => 'RS256', 'typ' => 'JWT'];
+        if (!$omitKid) {
+            $header['kid'] = $kid;
+        }
+        $h = self::b64u((string) json_encode($header));
         $p = self::b64u((string) json_encode($claims));
         openssl_sign($h . '.' . $p, $sig, self::key($kid), OPENSSL_ALGO_SHA256);
         return $h . '.' . $p . '.' . self::b64u($sig);
