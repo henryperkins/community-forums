@@ -1615,6 +1615,9 @@ final class App
             $config,
             $c->get(Database::class),
             $c->get(Telemetry::class),
+            fn (): array => $c->get(FeatureFlags::class)->enabled('oauth')
+                ? $c->get(ProviderRegistry::class)->configuredNames()
+                : [],
         ));
         $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
             $c->get(UserPreferenceRepository::class),
@@ -1668,6 +1671,9 @@ final class App
             $c->get(UserRepository::class),
             $c->get(SettingRepository::class),
             $c->get(FirstPartyHookRegistry::class),
+            fn (): array => $c->get(FeatureFlags::class)->enabled('oauth')
+                ? $c->get(ProviderRegistry::class)->configuredNames()
+                : [],
         ));
         $c->bind(PostingService::class, fn (Container $c) => new PostingService(
             $c->get(Database::class),

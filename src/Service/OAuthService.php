@@ -34,13 +34,18 @@ use App\Service\OAuth\NormalizedIdentity;
  */
 final class OAuthService
 {
+    /** @var (callable():list<string>)|null */
+    private $usableProviderNames;
+
     public function __construct(
         private Database $db,
         private OAuthIdentityRepository $identities,
         private UserRepository $users,
         private SettingRepository $settings,
         private ?FirstPartyHookRegistry $hooks = null,
+        ?callable $usableProviderNames = null,
     ) {
+        $this->usableProviderNames = $usableProviderNames;
     }
 
     /**
@@ -138,9 +143,8 @@ final class OAuthService
     public function unlink(User $user, string $provider): bool
     {
         $hasPassword = $user->passwordHash() !== null;
-        $identityCount = $this->identities->countForUser($user->id());
-        // After removing this provider, remaining = (identityCount - 1) + password.
-        if (!$hasPassword && $identityCount <= 1) {
+        $remainingProviders = $this->remainingProviderCountAfterUnlink($user->id(), $provider);
+        if (!$hasPassword && $remainingProviders <= 0) {
             throw new ValidationException(['provider' => 'Set a password first — this is your only way to sign in.']);
         }
         return $this->identities->delete($user->id(), $provider);
@@ -214,5 +218,32 @@ final class OAuthService
             return null;
         }
         return substr($email, 0, strpos($email, '@'));
+    }
+
+    private function remainingProviderCountAfterUnlink(int $userId, string $provider): int
+    {
+        if ($this->usableProviderNames === null) {
+            $identityCount = $this->identities->countForUser($userId);
+            return $identityCount - 1;
+        }
+
+        $usable = $this->usableProviderNames();
+        $usableCount = $this->identities->countUsableForUser($userId, $usable);
+        $removingUsable = in_array($provider, $usable, true)
+            && $this->identities->existsForUserProvider($userId, $provider);
+        return $usableCount - ($removingUsable ? 1 : 0);
+    }
+
+    /** @return list<string> */
+    private function usableProviderNames(): array
+    {
+        $names = [];
+        foreach (($this->usableProviderNames)() as $name) {
+            $name = trim((string) $name);
+            if ($name !== '') {
+                $names[$name] = $name;
+            }
+        }
+        return array_values($names);
     }
 }

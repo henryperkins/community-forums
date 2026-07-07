@@ -146,6 +146,35 @@ final class AppOAuthTest extends TestCase
         self::assertSame(0, (new OAuthIdentityRepository($this->db))->countForUser($id));
     }
 
+    public function test_unlink_ignores_disabled_provider_identities_when_protecting_the_last_method(): void
+    {
+        $svc = new OAuthService(
+            $this->db,
+            new OAuthIdentityRepository($this->db),
+            new UserRepository($this->db),
+            $this->settings(),
+            null,
+            static fn (): array => ['google'],
+        );
+        $id = $this->users()->create([
+            'username' => 'oauthdisabledfallback', 'email' => 'oauthdisabledfallback@example.test',
+            'password_hash' => null, 'display_name' => null, 'role' => 'user', 'status' => 'active',
+        ]);
+        $svc->linkToUser($id, $this->identity('sub-primary'));
+        $svc->linkToUser($id, new NormalizedIdentity('backup', 'sub-disabled', null, false, null, null));
+        $user = $this->users()->findEntity($id);
+
+        try {
+            $svc->unlink($user, 'google');
+            self::fail('Expected unlinking the only usable OAuth method to be blocked.');
+        } catch (\App\Core\ValidationException $e) {
+            self::assertArrayHasKey('provider', $e->errors);
+        }
+
+        self::assertNotNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-primary'));
+        self::assertNotNull((new OAuthIdentityRepository($this->db))->findByProvider('backup', 'sub-disabled'));
+    }
+
     public function test_username_generation_avoids_collisions(): void
     {
         $svc = $this->svc();

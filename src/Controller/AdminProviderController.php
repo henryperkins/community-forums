@@ -130,13 +130,14 @@ final class AdminProviderController extends Controller
     {
         $identities = $this->container->get(OAuthIdentityRepository::class);
         $registry = $this->container->get(ProviderRegistry::class);
+        $usableProviders = $registry->configuredNames();
 
         $rows = [];
         foreach ($this->container->get(IdentityProviderRepository::class)->all() as $row) {
             $key = (string) $row['provider_key'];
             $builtin = (string) $row['type'] !== 'generic_oidc';
             $rows[] = $row + [
-                'sole_method_count' => count($identities->soleMethodAccounts($key)),
+                'sole_method_count' => count($identities->soleMethodAccounts($key, $usableProviders)),
                 'env_configured' => $builtin && ($registry->get($key)?->isConfigured() ?? false),
             ];
         }
@@ -159,7 +160,10 @@ final class AdminProviderController extends Controller
         return $this->noindex($this->view('admin/provider_disable', [
             'row' => $row,
             'sole_accounts' => $this->container->get(OAuthIdentityRepository::class)
-                ->soleMethodAccounts((string) $row['provider_key']),
+                ->soleMethodAccounts(
+                    (string) $row['provider_key'],
+                    $this->container->get(ProviderRegistry::class)->configuredNames(),
+                ),
             'errors' => $errors,
         ], $status));
     }

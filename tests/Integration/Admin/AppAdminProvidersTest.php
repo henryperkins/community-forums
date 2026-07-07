@@ -217,8 +217,10 @@ final class AppAdminProvidersTest extends TestCase
         $this->enableFlags();
         $this->actingAs($this->admin);
         $id = $this->createProviderRow('solo', 'Solo IdP', enabled: true);
+        $disabledFallbackId = $this->createProviderRow('backup', 'Disabled Backup IdP', enabled: false);
 
-        // An account whose ONLY sign-in method is this provider…
+        // An account whose only USABLE sign-in method is this provider: the
+        // secondary identity is disabled, so it must not hide the lockout.
         $soleId = $this->users()->create([
             'username' => 'soloonly', 'email' => 'solo@example.test',
             'password_hash' => null, 'display_name' => null, 'role' => 'user', 'status' => 'active',
@@ -226,6 +228,10 @@ final class AppAdminProvidersTest extends TestCase
         (new OAuthIdentityRepository($this->db))->create([
             'user_id' => $soleId, 'provider' => 'solo', 'provider_user_id' => 'sub-9',
             'provider_config_id' => $id,
+        ]);
+        (new OAuthIdentityRepository($this->db))->create([
+            'user_id' => $soleId, 'provider' => 'backup', 'provider_user_id' => 'sub-disabled',
+            'provider_config_id' => $disabledFallbackId,
         ]);
         // …and one with a password too (must NOT be listed).
         $mixed = $this->makeUser(['username' => 'mixeduser']);
