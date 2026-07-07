@@ -80,6 +80,16 @@ rather than trusting the env file.
   `isModerator()` for everyone except suspended staff — see Decision 1).
 - **Authority-granting:** assign/unassign a board moderator, add/remove a
   private-board member (`AdminService`) — the 4 board-roster POST commands.
+- **Queue discovery (2026-07-07 follow-up):** `/mod/approvals` row scope and
+  the `/mod/reports` door+rows derive from
+  `ModerationService::moderableBoardIds()` — a per-board gate check on the
+  queue's *action* key (`core.content.approve` / `core.report.handle`) — so
+  a custom deputy's board- or site-scoped grant surfaces its rows under
+  `enforce`, and the approvals door additionally admits (enforce-only) a
+  deputy with ≥1 discovered board. Legacy/shadow doors and rows are
+  byte-identical to pre-cutover: global moderators still see an empty
+  approvals page and 404 at `/mod/reports`, and assigned board moderators
+  still cannot open `/mod/approvals` outside enforce.
 - **NOT cut over (recorded, not silent):** the board read gate
   (`BoardPolicy::canRead`/`isListed` — union-then-narrow means a grant can
   never broaden a read, so cutover there is a no-op by construction);

@@ -9,9 +9,10 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Domain\User;
-use App\Repository\BoardModeratorRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReportRepository;
+use App\Security\Cap;
+use App\Service\ModerationService;
 use App\Service\ReportService;
 
 /**
@@ -43,11 +44,14 @@ final class ReportController extends Controller
     public function queue(Request $request): Response
     {
         $user = $this->requireModeration();
-        $boardIds = $user->isAdmin() ? [] : $this->container->get(BoardModeratorRepository::class)->boardsFor($user->id());
-        if (!$user->isAdmin() && $boardIds === []) {
-            throw new NotFoundException('Not found.'); // not a moderator of anything
+        // Queue discovery through the gate (core.report.handle — the queue's
+        // action key): legacy/shadow reproduce admin-or-assigned exactly;
+        // under enforce a custom deputy's grant surfaces their boards.
+        $scope = $this->container->get(ModerationService::class)->moderableBoardIds($user, Cap::REPORT_HANDLE);
+        if ($scope === []) {
+            throw new NotFoundException('Not found.'); // not a handler of anything
         }
-        $reports = $this->container->get(ReportRepository::class)->queue($user->isAdmin(), $boardIds, 100);
+        $reports = $this->container->get(ReportRepository::class)->queue($scope === null, $scope ?? [], 100);
         return $this->view('mod/reports', ['reports' => $reports, 'reasons' => self::REASONS]);
     }
 

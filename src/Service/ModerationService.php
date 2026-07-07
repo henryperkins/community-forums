@@ -64,6 +64,39 @@ final class ModerationService
         );
     }
 
+    /**
+     * Queue discovery (Inc 6 follow-up): the boards on which $user holds
+     * $capability, asked through the gate per board so every mode answers
+     * consistently — legacy/shadow reproduce admin-or-assigned exactly,
+     * while enforce lets a custom deputy's board- or site-scoped grant
+     * surface its rows. Returns null for site-wide authority (no row
+     * filter), [] for none.
+     *
+     * @return ?list<int>
+     */
+    public function moderableBoardIds(User $user, string $capability): ?array
+    {
+        if ($this->gate()->allows(
+            fn (): bool => $user->isAdmin(),
+            $user,
+            $capability,
+            [], // site probe: board-scoped grants deliberately do not qualify
+            'ModerationService::moderableBoardIds',
+        )) {
+            return null;
+        }
+
+        $ids = [];
+        foreach ($this->boards->allOrdered() as $board) {
+            $boardId = (int) $board['id'];
+            if ($this->canModerate($user, $boardId, $capability)) {
+                $ids[] = $boardId;
+            }
+        }
+
+        return $ids;
+    }
+
     /** @return array{thread:array<string,mixed>, pinned:bool} */
     public function togglePin(User $mod, int $threadId): array
     {

@@ -8,7 +8,6 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
-use App\Repository\BoardModeratorRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
@@ -28,19 +27,30 @@ final class ApprovalController extends Controller
     public function queue(Request $request): Response
     {
         $user = $this->requireUser();
-        $this->container->get(AuthorityGate::class)->assert(
+        $gate = $this->container->get(AuthorityGate::class);
+        // Row scope: the boards whose pending rows this actor may act on
+        // (core.content.approve — the queue's action key), discovered through
+        // the gate per board. Legacy/shadow reproduce admin-or-assigned
+        // exactly; under enforce a custom deputy's grants surface here.
+        $scope = $this->container->get(ModerationService::class)->moderableBoardIds($user, Cap::CONTENT_APPROVE);
+        $sitePass = $gate->allows(
             fn (): bool => $user->isModerator(),
             $user,
             Cap::CONTENT_VIEW_PENDING,
             [], // site probe: no board target — board-scoped grants correctly do not qualify
             'ApprovalController::index',
-            'Moderator access required.', // keep the existing message verbatim
         );
-        $boardIds = $user->isAdmin() ? null : $this->container->get(BoardModeratorRepository::class)->boardsFor($user->id());
+        // Door: the legacy site probe verbatim, plus — under enforce only — a
+        // deputy whose grants surfaced at least one board's rows. Custom
+        // deputies exist only once the resolver decides; the legacy/shadow
+        // door stays byte-identical to pre-cutover behavior.
+        if (!$sitePass && !($gate->mode() === AuthorityGate::MODE_ENFORCE && $scope !== [])) {
+            throw new ForbiddenException('Moderator access required.'); // keep the existing message verbatim
+        }
 
         return $this->view('mod/approvals', [
-            'pending_threads' => $this->container->get(ThreadRepository::class)->listPending($boardIds, 100),
-            'pending_posts' => $this->container->get(PostRepository::class)->listPending($boardIds, 100),
+            'pending_threads' => $this->container->get(ThreadRepository::class)->listPending($scope, 100),
+            'pending_posts' => $this->container->get(PostRepository::class)->listPending($scope, 100),
         ]);
     }
 
