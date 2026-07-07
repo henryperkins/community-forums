@@ -820,7 +820,62 @@ parity report were restored, not committed, per convention.
 5. **`oauth` remains the master flag:** generic providers require both
    `oauth` (Phase 2, default-ON) and `provider_registry`.
 
-## Product-owner approvals recorded
+### Pre-merge review hardening (2026-07-07, merged with PR #39)
+
+A max-effort multi-agent review (8 finder angles → 25 verified candidates:
+24 confirmed / 1 refuted) fixed ten findings before merge, all deploy-dark:
+
+- **Issuer pin stored verbatim** — `create()` no longer strips a trailing
+  slash; spec-legal slash-carrying issuers (Auth0-style) previously failed
+  `issuer_mismatch` forever. Length bounds added for `issuer` (512) and
+  `claim_map_json` (64 KB) BEFORE the vault write — an oversized value used
+  to 500 after the secret was stored (orphaned `svcsec_*`, typed form lost).
+- **Authorize URL query join** — an `authorization_endpoint` already carrying
+  a query (RFC 6749 §3.1, e.g. Azure B2C) now joins with `&`, not a second `?`.
+- **Stale-cache fallback now covers HTTP-error outages** — the OAuth
+  `HttpClient` treats an HTTP ≥400 response without a JSON body as a failed
+  fetch (thrown like a transport error), so JwksCache/discovery stale-on-outage
+  applies to the most common outage shape (LB maintenance pages); structured
+  JSON error bodies (token-endpoint `invalid_grant`) still return.
+- **Kid-less rotation recovery** — a `signature_invalid` against the cached
+  key now earns the same single pinned JWKS refresh as `unknown_kid` (RFC
+  7515 makes `kid` optional; single-key IdPs rotate too).
+- **Discovery resolved once per callback** — `OidcProvider::document()` is
+  memoized per instance; exchange()+identity() no longer double-fetch/double-
+  UPDATE on a stale cache (a transient failure on the second fetch aborted
+  sign-in after the code was consumed).
+- **Builtin probe guard** — `healthProbe()` now refuses non-`generic_oidc`
+  rows like every other console mutation (a hand-crafted POST could fire live
+  fetches and overwrite health/caches on env-managed builtin rows).
+- **Sole-method counts tell the truth for disabled rows** — the console
+  passes the enforcement-side usable set (oauth-flag-gated, matching the
+  App.php lockout closures) UNION the row's own key, so a disabled provider
+  keeps reporting its dependent members instead of dropping to 0; the index
+  uses a new COUNT-only `soleMethodCount()` (no per-row hydration N+1).
+- **Retained identities stay visible** — `/settings/connections` renders a
+  linked identity whose registry provider was disabled (or flag rolled back)
+  with its label and Disconnect form; previously it vanished undisconnectably.
+- **Row-scoped reauth errors** — a wrong password on a row's inline Enable
+  form renders beside that row, not under the add-provider form.
+- **Member-facing labels** — OAuth flash messages use the provider `label()`
+  seam (slugs like `acme_sso` no longer leak); plus hygiene: per-request
+  shell builds the sign-in menu from a narrow name+label query (no MEDIUMTEXT
+  cache hydration per request), one shared usable-provider closure feeds both
+  lockout guards, `JwtVerifier` reuses the strict `App\Support\Base64Url`
+  decoder and emits canonical minimal-DER integers (CoseKey rule), and the
+  orphaned WebAuthn docblock/`setEnabled()` re-SELECT were cleaned up.
+
+**Deferred (recorded, not fixed here):** extract one shared RSA-SPKI DER
+builder for CoseKey + JwtVerifier (WebAuthn is outside this PR's diff);
+resolve `provider_config_id` at link time for builtin providers (post-0074
+builtin links store NULL — a decision-#32 cutover prerequisite, no production
+reader today); remove the legacy null-usable-set fallbacks (test-only);
+derive RESERVED_KEYS from ProviderRegistry + make its silent builtin-shadow
+drop loud; a single `isConsoleManaged()` predicate for the four
+`type !== 'generic_oidc'` sites (the enum already holds a third value
+`package`); hoist the triplicated JWT/JWKS test fixtures into tests/Support;
+hoist the 8× duplicated `noindex()` helper into the base Controller; cap the
+disable-confirm sole-method listing for very large SSO installs.
 
 This instruction accepts ADR 0004 as the Milestone-0 decision record using its
 recommended defaults unless a later owner scope-change record overrides them. It
