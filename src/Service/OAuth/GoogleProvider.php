@@ -26,6 +26,11 @@ final class GoogleProvider implements OAuthProvider
         return 'google';
     }
 
+    public function label(): string
+    {
+        return 'Google';
+    }
+
     public function isConfigured(): bool
     {
         return $this->clientId !== '' && $this->clientSecret !== '';
@@ -59,7 +64,7 @@ final class GoogleProvider implements OAuthProvider
         ]);
     }
 
-    public function identity(array $tokens): NormalizedIdentity
+    public function identity(array $tokens, ?string $expectedNonce = null): NormalizedIdentity
     {
         $claims = HttpClient::decodeJwtPayload((string) ($tokens['id_token'] ?? ''));
         return new NormalizedIdentity(

@@ -19,6 +19,7 @@ use App\Controller\AdminPackageLifecycleController;
 use App\Controller\AdminPackageSecurityController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
+use App\Controller\AdminProviderController;
 use App\Controller\AdminRoleController;
 use App\Controller\AdminThemeController;
 use App\Controller\AdminUserController;
@@ -83,6 +84,7 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\IdentityProviderRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ModerationAppealRepository;
 use App\Repository\ConversationRepository;
@@ -193,12 +195,19 @@ use App\Service\FeedService;
 use App\Service\FollowService;
 use App\Service\LegacyAuthorityProjection;
 use App\Service\LinkPreviewService;
+use App\Service\IdentityProviderService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
 use App\Service\PasskeyService;
+use App\Service\OAuth\HttpClient as OAuthHttpClient;
 use App\Service\OAuth\ProviderRegistry;
+use App\Service\OAuth\Oidc\ClaimMapper;
+use App\Service\OAuth\Oidc\JwksCache;
+use App\Service\OAuth\Oidc\JwtVerifier;
+use App\Service\OAuth\Oidc\OidcDiscovery;
+use App\Service\OAuth\Oidc\OidcProvider;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageCredentialAuthGuard;
 use App\Service\Packages\PackageIntegrationService;
@@ -274,6 +283,7 @@ final class App
         private Config $config,
         private ?Database $database = null,
         private ?RateLimiter $rateLimiter = null,
+        private ?OAuthHttpClient $oauthHttpClient = null,
     ) {
         $this->router = $this->buildRouter();
     }
@@ -543,11 +553,13 @@ final class App
             $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
         }
 
-        // Configured OAuth providers power the "Sign in with …" buttons.
+        // Configured OAuth providers power the "Sign in with …" buttons. The
+        // narrow menu never hydrates registry cache blobs or builds provider
+        // objects — this runs on EVERY request, and only /login consumes it.
         $oauthProviders = [];
         try {
             if (!empty($features['oauth'])) {
-                $oauthProviders = $container->get(ProviderRegistry::class)->configuredNames();
+                $oauthProviders = $container->get(ProviderRegistry::class)->loginMenu();
             }
         } catch (Throwable) {
             $oauthProviders = [];
@@ -1585,6 +1597,13 @@ final class App
             $c->get(ModerationLogRepository::class),
             $config,
         ));
+        // One owner for "providers a member can sign in with right now": the
+        // oauth master flag gates the whole set. Both lockout guards (oauth
+        // unlink, passkey delete) receive THIS closure so they can never
+        // disagree about whether removing a method locks a member out.
+        $usableProviderNames = static fn (): array => $c->get(FeatureFlags::class)->enabled('oauth')
+            ? $c->get(ProviderRegistry::class)->configuredNames()
+            : [];
         $c->bind(PasskeyService::class, fn (Container $c) => new PasskeyService(
             $c->get(WebAuthnCredentialRepository::class),
             $c->get(WebAuthnChallengeRepository::class),
@@ -1601,19 +1620,63 @@ final class App
             $config,
             $c->get(Database::class),
             $c->get(Telemetry::class),
+            $usableProviderNames,
         ));
         $c->bind(PreferenceService::class, fn (Container $c) => new PreferenceService(
             $c->get(UserPreferenceRepository::class),
             (int) $config->get('pagination.threads_per_page', 20),
             (int) $config->get('pagination.posts_per_page', 20),
         ));
-        $c->bind(ProviderRegistry::class, fn () => new ProviderRegistry((array) $config->get('oauth', [])));
+        $c->bind(OAuthHttpClient::class, fn () => $this->oauthHttpClient ?? new OAuthHttpClient());
+        $c->bind(IdentityProviderService::class, fn (Container $c) => new IdentityProviderService(
+            $c->get(Database::class),
+            $c->get(IdentityProviderRepository::class),
+            $c->get(SecretVault::class),
+            $c->get(OidcDiscovery::class),
+            $c->get(JwksCache::class),
+            $c->get(ReauthGate::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(FeatureFlags::class),
+        ));
+        $c->bind(IdentityProviderRepository::class, fn (Container $c) => new IdentityProviderRepository($c->get(Database::class)));
+        $c->bind(OidcDiscovery::class, fn (Container $c) => new OidcDiscovery($c->get(OAuthHttpClient::class)));
+        $c->bind(JwksCache::class, fn (Container $c) => new JwksCache(
+            $c->get(IdentityProviderRepository::class),
+            $c->get(OAuthHttpClient::class),
+        ));
+        $c->bind(ProviderRegistry::class, function (Container $c) use ($config) {
+            // Registry-backed generic-OIDC providers join only when the P5-12
+            // flag is on; both loaders fail dark inside ProviderRegistry.
+            $dynamic = null;
+            $menu = null;
+            if ($c->get(FeatureFlags::class)->enabled('provider_registry')) {
+                $dynamic = function () use ($c): array {
+                    $providers = [];
+                    foreach ($c->get(IdentityProviderRepository::class)->enabledGenericOidc() as $row) {
+                        $providers[] = new OidcProvider(
+                            $row,
+                            $c->get(IdentityProviderRepository::class),
+                            $c->get(OidcDiscovery::class),
+                            $c->get(JwksCache::class),
+                            new JwtVerifier(),
+                            new ClaimMapper(),
+                            $c->get(SecretVault::class),
+                            $c->get(OAuthHttpClient::class),
+                        );
+                    }
+                    return $providers;
+                };
+                $menu = fn (): array => $c->get(IdentityProviderRepository::class)->loginMenuRows();
+            }
+            return new ProviderRegistry((array) $config->get('oauth', []), $c->get(OAuthHttpClient::class), $dynamic, $menu);
+        });
         $c->bind(OAuthService::class, fn (Container $c) => new OAuthService(
             $c->get(Database::class),
             $c->get(OAuthIdentityRepository::class),
             $c->get(UserRepository::class),
             $c->get(SettingRepository::class),
             $c->get(FirstPartyHookRegistry::class),
+            $usableProviderNames,
         ));
         $c->bind(PostingService::class, fn (Container $c) => new PostingService(
             $c->get(Database::class),
@@ -1902,6 +1965,13 @@ final class App
         $r->post('/admin/roles/{id}/assignments', [AdminRoleController::class, 'assign']);
         $r->post('/admin/role-assignments/{id}/revoke', [AdminRoleController::class, 'revokeAssignment']);
         $r->post('/admin/role-assignments/{id}/renew', [AdminRoleController::class, 'renewAssignment']);
+        // Identity-provider registry console (P5-12) — deploy-dark behind provider_registry.
+        $r->get('/admin/providers', [AdminProviderController::class, 'index']);
+        $r->post('/admin/providers', [AdminProviderController::class, 'create']);
+        $r->post('/admin/providers/{id}/test', [AdminProviderController::class, 'test']);
+        $r->post('/admin/providers/{id}/enable', [AdminProviderController::class, 'enable']);
+        $r->get('/admin/providers/{id}/disable', [AdminProviderController::class, 'disableConfirm']);
+        $r->post('/admin/providers/{id}/disable', [AdminProviderController::class, 'disable']);
         $r->get('/admin/themes', [AdminThemeController::class, 'index']);
         $r->get('/admin/themes/safe-mode', [AdminThemeController::class, 'safeModeForm']);
         $r->post('/admin/themes/safe-mode', [AdminThemeController::class, 'safeMode']);

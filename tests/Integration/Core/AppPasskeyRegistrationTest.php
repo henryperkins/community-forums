@@ -282,6 +282,26 @@ final class AppPasskeyRegistrationTest extends TestCase
         $this->assertRedirect($this->post("/settings/security/passkeys/{$id}/revoke", ['current_password' => 'password123']), '/settings/security');
     }
 
+    public function test_passkey_removal_ignores_unusable_oauth_identities_when_protecting_the_last_method(): void
+    {
+        $user = $this->makeUser();
+        $this->actingAs($user);
+        [$cred, $id] = $this->enroll('Only usable key');
+        $this->db->run('UPDATE users SET password_hash = NULL WHERE id = ?', [(int) $user['id']]);
+        $this->db->run(
+            "INSERT INTO oauth_identities (user_id, provider, provider_user_id, created_at) VALUES (?, 'github', 'gh-disabled', UTC_TIMESTAMP())",
+            [(int) $user['id']],
+        );
+
+        $stepOptions = json_decode($this->post('/settings/security/passkeys/step-up-challenge', [])->body(), true)['options'];
+        $blocked = $this->post("/settings/security/passkeys/{$id}/revoke", [
+            'passkey_assertion' => $this->harness->assertionPayload($cred, (string) Base64Url::decode($stepOptions['challenge']), 2),
+        ]);
+
+        $this->assertStatus(422, $blocked);
+        $this->assertSeeText($this->get('/settings/security'), 'Only usable key');
+    }
+
     public function test_final_owner_last_method_removal_carries_the_owner_block(): void
     {
         $admin = $this->makeAdmin();

@@ -29,7 +29,10 @@ final class Phase5BudgetReportServiceTest extends TestCase
         }
         self::assertSame('BASELINE', $byKey['resolver.p95']['status']);
         self::assertNotSame('—', $byKey['resolver.p95']['measured'], 'resolver baseline is a real number');
-        self::assertStringContainsString('PENDING', $byKey['oidc.discovery_p95_cold']['status']);
+        // Inc 8 graduated the two oidc rows from PENDING to measured-by-default;
+        // registry.fetch_p95 remains the canonical still-PENDING example.
+        self::assertStringContainsString('MEASURED', $byKey['oidc.discovery_p95_cold']['status']);
+        self::assertStringContainsString('PENDING', $byKey['registry.fetch_p95']['status']);
         self::assertStringContainsString('5', $byKey['resolver.p95']['target']); // "5 ms"
     }
 
@@ -124,6 +127,44 @@ final class Phase5BudgetReportServiceTest extends TestCase
         self::assertSame('MEASURED (PASS)', $rows['webauthn.ceremony_p95']['status']);
         self::assertStringContainsString('ms WebAuthn assertion verify', $rows['webauthn.ceremony_p95']['measured']);
         self::assertStringContainsString('WebAuthn ceremony p50/p95/p99', $report->render());
+    }
+
+    public function test_oidc_discovery_rows_measure_cached_and_cold_paths(): void
+    {
+        // Inc 8 (P5-12): both D11 oidc rows measure on every report run.
+        $report = new Phase5BudgetReportService($this->db);
+        $rows = [];
+        foreach ($report->rows() as $row) {
+            $rows[$row['key']] = $row;
+        }
+
+        self::assertSame('MEASURED (PASS)', $rows['oidc.discovery_p95_cached']['status']);
+        self::assertStringContainsString('ms cached discovery+JWKS', $rows['oidc.discovery_p95_cached']['measured']);
+        self::assertSame('MEASURED (PASS)', $rows['oidc.discovery_p95_cold']['status']);
+        self::assertStringContainsString('ms cold discovery+JWKS', $rows['oidc.discovery_p95_cold']['measured']);
+    }
+
+    public function test_oidc_discovery_sampler_exercises_cache_hit_and_cold_fetch_paths(): void
+    {
+        $svc = new BaselineMetricsService($this->db);
+
+        $cached = $svc->measureOidcDiscovery(cold: false, iterations: 25);
+        self::assertSame('oidc_discovery_cached', $cached['route_or_job']);
+        self::assertSame(25, $cached['samples']);
+        self::assertSame(0.0, $cached['error_rate'], 'cache-only path must never fetch (the bench transport throws)');
+        self::assertGreaterThan(0, $cached['p95']);
+
+        $cold = $svc->measureOidcDiscovery(cold: true, iterations: 25);
+        self::assertSame('oidc_discovery_cold', $cold['route_or_job']);
+        self::assertSame(25, $cold['samples']);
+        self::assertSame(0.0, $cold['error_rate']);
+        self::assertGreaterThanOrEqual($cached['p50'], $cold['p50'] + 0.5, 'cold path (fetch+persist) should not be cheaper than a cache hit beyond jitter');
+
+        // The sampler cleans up its bench provider row.
+        self::assertFalse(
+            $this->db->fetchValue("SELECT 1 FROM identity_providers WHERE provider_key LIKE 'oidc-bench-%' LIMIT 1") !== false,
+            'bench rows are removed after measurement',
+        );
     }
 
     public function test_inc6_measured_only_metrics_are_emitted_when_opted_in(): void

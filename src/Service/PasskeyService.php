@@ -33,6 +33,9 @@ final class PasskeyService
     private const LOGIN_ALLOW_CREDENTIAL_SLOTS = self::MAX_ACTIVE_CREDENTIALS;
     private const LOGIN_TRANSPORT_HINTS = ['internal', 'hybrid', 'usb', 'nfc', 'ble'];
 
+    /** @var (callable():list<string>)|null */
+    private $usableProviderNames;
+
     public function __construct(
         private readonly WebAuthnCredentialRepository $credentials,
         private readonly WebAuthnChallengeRepository $challenges,
@@ -49,7 +52,9 @@ final class PasskeyService
         private readonly Config $config,
         private readonly Database $db,
         private readonly ?Telemetry $telemetry = null,
+        ?callable $usableProviderNames = null,
     ) {
+        $this->usableProviderNames = $usableProviderNames;
     }
 
     public static function sessionBinding(Session $session): string
@@ -75,7 +80,7 @@ final class PasskeyService
         return [
             'credentials' => $rows,
             'has_password' => $user->passwordHash() !== null,
-            'has_provider' => $this->oauthIdentities->countForUser($user->id()) > 0,
+            'has_provider' => $this->hasUsableOAuthProvider($user),
         ];
     }
 
@@ -345,7 +350,7 @@ final class PasskeyService
 
             $fresh = $this->users->findEntity($user->id());
             $hasPassword = $fresh !== null && $fresh->passwordHash() !== null;
-            $hasProvider = $this->oauthIdentities->countForUser($user->id()) > 0;
+            $hasProvider = $this->hasUsableOAuthProvider($user);
             if (count($rows) === 1 && !$hasPassword && !$hasProvider) {
                 $this->lastOwnerGuard->assertNotLastOwnerForUpdate($user, 'passkey');
                 throw new ValidationException(['passkey' => 'Add a password or another passkey before removing your only way to sign in.']);
@@ -451,6 +456,28 @@ final class PasskeyService
             throw new ValidationException(['passkey' => 'The passkey response could not be read.']);
         }
         return $challenge;
+    }
+
+    private function hasUsableOAuthProvider(User $user): bool
+    {
+        if ($this->usableProviderNames === null) {
+            return $this->oauthIdentities->countForUser($user->id()) > 0;
+        }
+
+        return $this->oauthIdentities->countUsableForUser($user->id(), $this->usableProviderNames()) > 0;
+    }
+
+    /** @return list<string> */
+    private function usableProviderNames(): array
+    {
+        $names = [];
+        foreach (($this->usableProviderNames)() as $name) {
+            $name = trim((string) $name);
+            if ($name !== '') {
+                $names[$name] = $name;
+            }
+        }
+        return array_values($names);
     }
 
     /** @param array<string,mixed> $context */

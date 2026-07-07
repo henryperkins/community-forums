@@ -29,6 +29,11 @@ final class GitHubProvider implements OAuthProvider
         return 'github';
     }
 
+    public function label(): string
+    {
+        return 'GitHub';
+    }
+
     public function isConfigured(): bool
     {
         return $this->clientId !== '' && $this->clientSecret !== '';
@@ -59,7 +64,7 @@ final class GitHubProvider implements OAuthProvider
         ]);
     }
 
-    public function identity(array $tokens): NormalizedIdentity
+    public function identity(array $tokens, ?string $expectedNonce = null): NormalizedIdentity
     {
         $token = (string) ($tokens['access_token'] ?? '');
         $user = $token !== '' ? $this->http->getJson(self::API_USER, $token) : [];

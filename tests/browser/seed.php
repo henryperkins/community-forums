@@ -67,6 +67,7 @@ $evidenceFeatures = [
     'split_merge' => true, // GA default-on (2026-07-03); listed explicitly so the moderator split/merge restructure surface is captured
     'custom_profile_fields' => true, // GA default-on (2026-07-03); listed explicitly so the /settings/account custom-fields + public-profile surface is captured
     'capabilities' => true, // Inc 1 (P5-08): role editor + simulator browser evidence (shadow-only)
+    'provider_registry' => true, // Inc 8 (P5-12): identity-provider console + generic-OIDC sign-in-button evidence (service_secrets above is its §E prerequisite)
     'package_registry' => true, // Inc 2 (P5-01): staff catalogue browse evidence (read-only)
     'package_themes' => true, // Inc 4 (P5-03): package theme preview/activate/safe-mode/rollback evidence
     'wysiwyg_composer' => false, // GA default-on (2026-07-02) but pinned OFF for the evidence baseline: gate-a + server-drafts journeys drive textarea.composer-input directly (fill/drop/toBeVisible), which a mounted Milkdown hides; the rich surface's browser evidence lives in wysiwyg-composer.spec.ts + the a11y.spec.ts scans, which toggle the flag per test

@@ -9,6 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Repository\IdentityProviderRepository;
 use App\Repository\OAuthIdentityRepository;
 use App\Service\AccountService;
 use App\Service\MfaService;
@@ -39,7 +40,13 @@ final class OAuthController extends Controller
         $challenge = $this->base64url(hash('sha256', $verifier, true));
         $link = $this->currentUser() !== null;
 
-        $url = $provider->authorizeUrl($this->callbackUri($provider->name()), $state, $challenge, $nonce);
+        try {
+            $url = $provider->authorizeUrl($this->callbackUri($provider->name()), $state, $challenge, $nonce);
+        } catch (Throwable) {
+            // Generic OIDC resolves its endpoints via discovery; a provider
+            // outage on the redirect leg must fail soft, never 500.
+            return $this->failFlow('That sign-in option is temporarily unavailable. Please try again shortly.');
+        }
 
         $response = $this->redirect($url, 302);
         $this->writeStateCookie($response, [
@@ -71,7 +78,7 @@ final class OAuthController extends Controller
 
         try {
             $tokens = $provider->exchange($code, (string) ($payload['verifier'] ?? ''), $this->callbackUri($provider->name()));
-            $identity = $provider->identity($tokens);
+            $identity = $provider->identity($tokens, (string) ($payload['nonce'] ?? ''));
         } catch (Throwable) {
             return $this->failFlow('We could not complete sign-in with that provider. Please try again.');
         }
@@ -79,7 +86,7 @@ final class OAuthController extends Controller
         $current = !empty($payload['link']) ? $this->currentUser() : null;
         $outcome = $this->container->get(OAuthService::class)->resolve($identity, $current);
 
-        return $this->handleOutcome($outcome, $provider->name());
+        return $this->handleOutcome($outcome, $provider->label());
     }
 
     /** Connections settings page: linked providers + available ones + set-password. */
@@ -97,7 +104,15 @@ final class OAuthController extends Controller
         }
         $providers = [];
         foreach ($registry->all() as $name => $p) {
-            $providers[] = ['name' => $name, 'configured' => $p->isConfigured(), 'linked' => isset($linked[$name])];
+            $providers[] = ['name' => $name, 'label' => $p->label(), 'configured' => $p->isConfigured(), 'linked' => isset($linked[$name])];
+        }
+        // A linked identity whose registry provider was since disabled (or the
+        // flag rolled back) is retained by design — it must stay visible and
+        // disconnectable, never silently vanish from the page.
+        foreach (array_keys($linked) as $name) {
+            if ($registry->get((string) $name) === null) {
+                $providers[] = ['name' => (string) $name, 'label' => $this->providerLabel((string) $name), 'configured' => false, 'linked' => true];
+            }
         }
 
         return $this->view('account/connections', [
@@ -120,7 +135,7 @@ final class OAuthController extends Controller
         } catch (ValidationException $e) {
             return $this->redirectWithFlash('/settings/connections', $e->first());
         }
-        return $this->redirectWithFlash('/settings/connections', 'Disconnected ' . ucfirst($provider) . '.');
+        return $this->redirectWithFlash('/settings/connections', 'Disconnected ' . $this->providerLabel($provider) . '.');
     }
 
     /** OAuth-only accounts add an email/password method (USER §2.4). */
@@ -156,7 +171,7 @@ final class OAuthController extends Controller
     }
 
     /** @param array{action:string, user?:\App\Domain\User, email?:string} $outcome */
-    private function handleOutcome(array $outcome, string $provider): Response
+    private function handleOutcome(array $outcome, string $label): Response
     {
         switch ($outcome['action']) {
             case 'login':
@@ -171,25 +186,23 @@ final class OAuthController extends Controller
                     break;
                 }
                 $this->session()->login($outcome['user']);
-                $response = $this->redirectWithFlash('/', 'Signed in with ' . ucfirst($provider) . '.');
+                $response = $this->redirectWithFlash('/', 'Signed in with ' . $label . '.');
                 break;
             case 'created':
                 $this->session()->login($outcome['user']);
-                $response = $this->redirectWithFlash('/', $outcome['action'] === 'created'
-                    ? 'Welcome! Your account is ready.'
-                    : 'Signed in with ' . ucfirst($provider) . '.');
+                $response = $this->redirectWithFlash('/', 'Welcome! Your account is ready.');
                 break;
             case 'linked':
-                $response = $this->redirectWithFlash('/settings/connections', 'Connected ' . ucfirst($provider) . '.');
+                $response = $this->redirectWithFlash('/settings/connections', 'Connected ' . $label . '.');
                 break;
             case 'already_linked':
-                $response = $this->redirectWithFlash('/settings/connections', ucfirst($provider) . ' is already connected.');
+                $response = $this->redirectWithFlash('/settings/connections', $label . ' is already connected.');
                 break;
             case 'already_linked_elsewhere':
-                $response = $this->redirectWithFlash('/settings/connections', 'That ' . ucfirst($provider) . ' account is linked to a different user.');
+                $response = $this->redirectWithFlash('/settings/connections', 'That ' . $label . ' account is linked to a different user.');
                 break;
             case 'collision':
-                $response = $this->redirectWithFlash('/login', 'An account with this email already exists. Log in, then connect ' . ucfirst($provider) . ' from settings.');
+                $response = $this->redirectWithFlash('/login', 'An account with this email already exists. Log in, then connect ' . $label . ' from settings.');
                 break;
             case 'registration_closed':
                 $response = $this->redirectWithFlash('/login', 'New registrations are currently closed, so an account could not be created.');
@@ -202,6 +215,30 @@ final class OAuthController extends Controller
         }
         $this->forgetStateCookie($response);
         return $response;
+    }
+
+    /**
+     * Member-facing display name for a provider key. Live providers answer
+     * via the registry seam; a disabled/removed registry provider still has
+     * its operator-set display name on the row; ucfirst(key) is the last
+     * resort (and the pre-P5-12 behavior for unconfigured builtins).
+     */
+    private function providerLabel(string $provider): string
+    {
+        $label = $this->container->get(ProviderRegistry::class)->get($provider)?->label();
+        if ($label !== null && $label !== '') {
+            return $label;
+        }
+        try {
+            $row = $this->container->get(IdentityProviderRepository::class)->findByKey($provider);
+            $stored = is_array($row) ? (string) ($row['display_name'] ?? '') : '';
+            if ($stored !== '') {
+                return $stored;
+            }
+        } catch (Throwable) {
+            // pre-migration table — fall through to the generic form
+        }
+        return ucfirst($provider);
     }
 
     private function failFlow(string $message): Response

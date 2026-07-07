@@ -27,6 +27,11 @@ final class AppleProvider implements OAuthProvider
         return 'apple';
     }
 
+    public function label(): string
+    {
+        return 'Apple';
+    }
+
     public function isConfigured(): bool
     {
         return $this->clientId !== '' && $this->clientSecret !== '';
@@ -59,7 +64,7 @@ final class AppleProvider implements OAuthProvider
         ]);
     }
 
-    public function identity(array $tokens): NormalizedIdentity
+    public function identity(array $tokens, ?string $expectedNonce = null): NormalizedIdentity
     {
         $claims = HttpClient::decodeJwtPayload((string) ($tokens['id_token'] ?? ''));
         return new NormalizedIdentity(
