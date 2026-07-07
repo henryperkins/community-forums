@@ -73,16 +73,17 @@ final class OAuthIdentityRepository
     }
 
     /**
-     * @param array{user_id:int,provider:string,provider_user_id:string,email?:?string,email_verified?:bool,avatar_url?:?string} $data
+     * @param array{user_id:int,provider:string,provider_user_id:string,email?:?string,email_verified?:bool,avatar_url?:?string,provider_config_id?:?int} $data
      */
     public function create(array $data): int
     {
         return $this->db->insert(
-            'INSERT INTO oauth_identities (user_id, provider, provider_user_id, email, email_verified, avatar_url, created_at, last_login_at)
-             VALUES (:uid, :provider, :puid, :email, :verified, :avatar, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
+            'INSERT INTO oauth_identities (user_id, provider, provider_config_id, provider_user_id, email, email_verified, avatar_url, created_at, last_login_at)
+             VALUES (:uid, :provider, :config_id, :puid, :email, :verified, :avatar, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
             [
                 'uid' => $data['user_id'],
                 'provider' => $data['provider'],
+                'config_id' => $data['provider_config_id'] ?? null,
                 'puid' => $data['provider_user_id'],
                 'email' => $data['email'] ?? null,
                 'verified' => !empty($data['email_verified']) ? 1 : 0,

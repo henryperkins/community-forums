@@ -11,11 +11,11 @@
         <div class="settings-pane">
     <section class="card">
         <h2>Connected accounts</h2>
-        <p class="muted">Link Google, GitHub, or Apple to sign in faster. Email/password always stays available.</p>
+        <p class="muted">Link a sign-in provider to sign in faster. Email/password always stays available.</p>
         <ul class="connections-list">
             <?php foreach ($providers as $p): ?>
                 <li class="connection-row">
-                    <span class="connection-name"><?= $e(ucfirst($p['name'])) ?></span>
+                    <span class="connection-name"><?= $e($p['label'] ?? ucfirst($p['name'])) ?></span>
                     <?php if ($p['linked']): ?>
                         <span class="pill">Connected</span>
                         <?php $row = $linked[$p['name']] ?? null; ?>

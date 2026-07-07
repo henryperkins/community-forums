@@ -145,6 +145,31 @@ final class AppFeatureFlagTest extends TestCase
         self::assertFalse($overridden->enabled('passkeys'), 'enabling one Phase 5 flag must not enable others');
     }
 
+    public function test_provider_registry_flag_gates_generic_oidc_routes(): void
+    {
+        // An ENABLED registry row must stay invisible while the P5-12 flag is
+        // dark: no /auth routes, no sign-in button. (Full-flow coverage lives
+        // in AppOidcProviderTest; this is the canonical dark pin.)
+        $id = (new \App\Repository\IdentityProviderRepository($this->db))->create([
+            'provider_key' => 'darkidp',
+            'display_name' => 'Dark IdP',
+            'issuer' => 'https://dark.idp.test',
+            'client_id' => 'client-x',
+            'client_secret_ref' => 'svcsec_dark',
+        ]);
+        (new \App\Repository\IdentityProviderRepository($this->db))->setEnabled($id, true);
+
+        $this->assertStatus(404, $this->get('/auth/darkidp/redirect'));
+        $this->assertStatus(404, $this->get('/auth/darkidp/callback', ['code' => 'x', 'state' => 'y']));
+        self::assertStringNotContainsString('/auth/darkidp/redirect', $this->get('/login')->body());
+
+        $this->setFlags(['provider_registry' => true]);
+        self::assertStringContainsString('/auth/darkidp/redirect', $this->get('/login')->body(), 'flag on: the enabled row surfaces');
+
+        $this->setFlags(['provider_registry' => false]);
+        $this->assertStatus(404, $this->get('/auth/darkidp/redirect'));
+    }
+
     public function test_capabilities_flag_gates_role_routes(): void
     {
         $this->actingAs($this->makeAdmin());

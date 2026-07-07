@@ -83,6 +83,7 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\IdentityProviderRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ModerationAppealRepository;
 use App\Repository\ConversationRepository;
@@ -198,7 +199,13 @@ use App\Service\MfaService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
 use App\Service\PasskeyService;
+use App\Service\OAuth\HttpClient as OAuthHttpClient;
 use App\Service\OAuth\ProviderRegistry;
+use App\Service\OAuth\Oidc\ClaimMapper;
+use App\Service\OAuth\Oidc\JwksCache;
+use App\Service\OAuth\Oidc\JwtVerifier;
+use App\Service\OAuth\Oidc\OidcDiscovery;
+use App\Service\OAuth\Oidc\OidcProvider;
 use App\Service\Packages\PackageAcquisitionService;
 use App\Service\Packages\PackageCredentialAuthGuard;
 use App\Service\Packages\PackageIntegrationService;
@@ -274,6 +281,7 @@ final class App
         private Config $config,
         private ?Database $database = null,
         private ?RateLimiter $rateLimiter = null,
+        private ?OAuthHttpClient $oauthHttpClient = null,
     ) {
         $this->router = $this->buildRouter();
     }
@@ -547,7 +555,11 @@ final class App
         $oauthProviders = [];
         try {
             if (!empty($features['oauth'])) {
-                $oauthProviders = $container->get(ProviderRegistry::class)->configuredNames();
+                foreach ($container->get(ProviderRegistry::class)->all() as $name => $provider) {
+                    if ($provider->isConfigured()) {
+                        $oauthProviders[] = ['name' => $name, 'label' => $provider->label()];
+                    }
+                }
             }
         } catch (Throwable) {
             $oauthProviders = [];
@@ -1607,7 +1619,37 @@ final class App
             (int) $config->get('pagination.threads_per_page', 20),
             (int) $config->get('pagination.posts_per_page', 20),
         ));
-        $c->bind(ProviderRegistry::class, fn () => new ProviderRegistry((array) $config->get('oauth', [])));
+        $c->bind(OAuthHttpClient::class, fn () => $this->oauthHttpClient ?? new OAuthHttpClient());
+        $c->bind(IdentityProviderRepository::class, fn (Container $c) => new IdentityProviderRepository($c->get(Database::class)));
+        $c->bind(OidcDiscovery::class, fn (Container $c) => new OidcDiscovery($c->get(OAuthHttpClient::class)));
+        $c->bind(JwksCache::class, fn (Container $c) => new JwksCache(
+            $c->get(IdentityProviderRepository::class),
+            $c->get(OAuthHttpClient::class),
+        ));
+        $c->bind(ProviderRegistry::class, function (Container $c) use ($config) {
+            // Registry-backed generic-OIDC providers join only when the P5-12
+            // flag is on; the loader itself fails dark inside ProviderRegistry.
+            $dynamic = null;
+            if ($c->get(FeatureFlags::class)->enabled('provider_registry')) {
+                $dynamic = function () use ($c): array {
+                    $providers = [];
+                    foreach ($c->get(IdentityProviderRepository::class)->enabledGenericOidc() as $row) {
+                        $providers[] = new OidcProvider(
+                            $row,
+                            $c->get(IdentityProviderRepository::class),
+                            $c->get(OidcDiscovery::class),
+                            $c->get(JwksCache::class),
+                            new JwtVerifier(),
+                            new ClaimMapper(),
+                            $c->get(SecretVault::class),
+                            $c->get(OAuthHttpClient::class),
+                        );
+                    }
+                    return $providers;
+                };
+            }
+            return new ProviderRegistry((array) $config->get('oauth', []), $c->get(OAuthHttpClient::class), $dynamic);
+        });
         $c->bind(OAuthService::class, fn (Container $c) => new OAuthService(
             $c->get(Database::class),
             $c->get(OAuthIdentityRepository::class),

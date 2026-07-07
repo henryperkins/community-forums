@@ -246,6 +246,16 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * Phase 5 Inc 8: rebuild the kernel with a scripted outbound OAuth/OIDC
+     * HTTP client (the App constructor's fourth test seam) so provider flows
+     * run end-to-end without the network.
+     */
+    protected function withOAuthHttp(\App\Service\OAuth\HttpClient $http): void
+    {
+        $this->app = new App($this->config, $this->db, $this->rateLimiter, $http);
+    }
+
+    /**
      * Phase 5 Inc 6: enable the capabilities flag (settings override) and rebuild
      * the kernel with CAPABILITIES_MODE=enforce so routes decide via the resolver.
      *

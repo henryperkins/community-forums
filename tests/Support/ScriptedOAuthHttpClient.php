@@ -31,6 +31,13 @@ final class ScriptedOAuthHttpClient extends HttpClient
         }
     }
 
+    /** Drop anything pending for the URL and script fresh — per-leg re-scripting. */
+    public function replace(string $url, array|Throwable ...$responses): void
+    {
+        unset($this->queues[$url]);
+        $this->script($url, ...$responses);
+    }
+
     public function getJson(string $url, ?string $bearer = null): array
     {
         $this->calls[] = ['method' => 'GET', 'url' => $url];

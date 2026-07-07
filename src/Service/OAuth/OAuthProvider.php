@@ -14,6 +14,9 @@ interface OAuthProvider
 {
     public function name(): string;
 
+    /** Human-facing button/label text ("GitLab", not "gitlab"). */
+    public function label(): string;
+
     /** Configured only when it has the credentials needed to run a flow. */
     public function isConfigured(): bool;
 
@@ -31,9 +34,12 @@ interface OAuthProvider
     public function exchange(string $code, string $codeVerifier, string $redirectUri): array;
 
     /**
-     * Map a token set to the normalised identity.
+     * Map a token set to the normalised identity. `$expectedNonce` is the
+     * flow's nonce from the signed state cookie — generic OIDC providers MUST
+     * verify it against the id_token (TM-ID-02); the Phase-2 builtins receive
+     * their tokens over the verified-TLS back channel and ignore it.
      *
      * @param array<string,mixed> $tokens
      */
-    public function identity(array $tokens): NormalizedIdentity;
+    public function identity(array $tokens, ?string $expectedNonce = null): NormalizedIdentity;
 }

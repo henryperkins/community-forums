@@ -39,7 +39,13 @@ final class OAuthController extends Controller
         $challenge = $this->base64url(hash('sha256', $verifier, true));
         $link = $this->currentUser() !== null;
 
-        $url = $provider->authorizeUrl($this->callbackUri($provider->name()), $state, $challenge, $nonce);
+        try {
+            $url = $provider->authorizeUrl($this->callbackUri($provider->name()), $state, $challenge, $nonce);
+        } catch (Throwable) {
+            // Generic OIDC resolves its endpoints via discovery; a provider
+            // outage on the redirect leg must fail soft, never 500.
+            return $this->failFlow('That sign-in option is temporarily unavailable. Please try again shortly.');
+        }
 
         $response = $this->redirect($url, 302);
         $this->writeStateCookie($response, [
@@ -71,7 +77,7 @@ final class OAuthController extends Controller
 
         try {
             $tokens = $provider->exchange($code, (string) ($payload['verifier'] ?? ''), $this->callbackUri($provider->name()));
-            $identity = $provider->identity($tokens);
+            $identity = $provider->identity($tokens, (string) ($payload['nonce'] ?? ''));
         } catch (Throwable) {
             return $this->failFlow('We could not complete sign-in with that provider. Please try again.');
         }
@@ -97,7 +103,7 @@ final class OAuthController extends Controller
         }
         $providers = [];
         foreach ($registry->all() as $name => $p) {
-            $providers[] = ['name' => $name, 'configured' => $p->isConfigured(), 'linked' => isset($linked[$name])];
+            $providers[] = ['name' => $name, 'label' => $p->label(), 'configured' => $p->isConfigured(), 'linked' => isset($linked[$name])];
         }
 
         return $this->view('account/connections', [

@@ -114,6 +114,7 @@ final class OAuthService
                 'email' => $id->email,
                 'email_verified' => $id->emailVerified,
                 'avatar_url' => $id->avatarUrl,
+                'provider_config_id' => $id->providerConfigId,
             ]);
             // A provider-verified email also verifies the local account's email.
             if ($id->emailVerified && $id->email !== null) {
