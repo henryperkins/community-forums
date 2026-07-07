@@ -275,4 +275,75 @@ final class CapabilityResolverTest extends TestCase
         // Two hours later the grant is expired: a warm memo must NOT resurrect it.
         self::assertFalse($resolver->can($entity, 'core.thread.lock', $target, $now->modify('+2 hours'))->allowed);
     }
+
+    public function test_membership_lookups_are_memoized_per_request_until_invalidate(): void
+    {
+        $cat = $this->makeCategory('MemberMemo');
+        $private = $this->makeBoard($cat, ['visibility' => 'private']);
+        $member = $this->makeUser();
+        $members = new BoardMemberRepository($this->db);
+        $members->add((int) $private['id'], (int) $member['id'], null);
+
+        $resolver = $this->resolver();
+        $entity = $this->userEntity($member);
+        $target = ['board_id' => (int) $private['id']];
+
+        self::assertTrue($resolver->can($entity, 'core.content.report', $target)->allowed);
+
+        // Mutate the row directly (no invalidate): within the request the
+        // membership answer stays memoized even for a different capability.
+        $this->db->run('DELETE FROM board_members WHERE board_id = ? AND user_id = ?', [(int) $private['id'], (int) $member['id']]);
+        self::assertTrue($resolver->can($entity, 'core.content.react', $target)->allowed);
+
+        // After the documented invalidate() the fresh state is observed.
+        $resolver->invalidate();
+        self::assertFalse($resolver->can($entity, 'core.content.react', $target)->allowed);
+    }
+
+    public function test_role_key_lookups_are_memoized_per_request_until_invalidate(): void
+    {
+        $cat = $this->makeCategory('RoleKeysMemo');
+        $public = $this->makeBoard($cat);
+        $user = $this->makeUser();
+
+        $resolver = $this->resolver();
+        $entity = $this->userEntity($user);
+
+        self::assertTrue($resolver->can($entity, 'core.thread.create', ['board_id' => (int) $public['id']])->allowed);
+
+        // Strip the capability from every role directly (no invalidate): a
+        // different-target decision still uses the memoized role-key set.
+        $this->db->run(
+            'DELETE rc FROM role_capabilities rc
+             JOIN capabilities c ON c.id = rc.capability_id
+             WHERE c.capability_key = ?',
+            ['core.thread.create'],
+        );
+        $other = $this->makeBoard($cat);
+        self::assertTrue($resolver->can($entity, 'core.thread.create', ['board_id' => (int) $other['id']])->allowed);
+
+        $resolver->invalidate();
+        self::assertFalse($resolver->can($entity, 'core.thread.create', ['board_id' => (int) $other['id']])->allowed);
+    }
+
+    public function test_primed_board_rows_and_membership_short_circuit_lookups(): void
+    {
+        $cat = $this->makeCategory('Priming');
+        $private = $this->makeBoard($cat, ['visibility' => 'private']);
+        $user = $this->makeUser();
+
+        $resolver = $this->resolver();
+        $entity = $this->userEntity($user);
+
+        // A primed board row is authoritative: this id does not exist in the
+        // DB, so a non-primed resolver could never apply its private read gate.
+        $ghost = ['id' => 999999, 'category_id' => (int) $cat, 'visibility' => 'private', 'post_min_role' => 'user', 'is_archived' => 0];
+        $resolver->primeBoards([$ghost]);
+        self::assertFalse($resolver->can($entity, 'core.thread.create', ['board_id' => 999999])->allowed);
+
+        // Primed membership is authoritative: the DB says non-member (deny on
+        // a private board), the primed map says member (allow).
+        $resolver->primeMembership((int) $user['id'], [(int) $private['id']], [(int) $private['id']]);
+        self::assertTrue($resolver->can($entity, 'core.content.report', ['board_id' => (int) $private['id']])->allowed);
+    }
 }

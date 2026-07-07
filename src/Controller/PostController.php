@@ -194,6 +194,18 @@ final class PostController extends Controller
         $memberBoardIds = $user !== null
             ? array_flip($this->container->get(\App\Repository\BoardMemberRepository::class)->boardIdsFor($user->id()))
             : [];
+        if ($user !== null && $gate->mode() !== AuthorityGate::MODE_LEGACY) {
+            // Everything the per-board decisions need is already in hand —
+            // prime the resolver memos so shadow/enforce does not re-fetch
+            // each board row and membership per board (the 422 re-render N+1).
+            $resolver = $this->container->get(\App\Security\CapabilityResolver::class);
+            $resolver->primeBoards($boards);
+            $resolver->primeMembership(
+                $user->id(),
+                array_keys($memberBoardIds),
+                array_map(static fn (array $b): int => (int) $b['id'], $boards),
+            );
+        }
         return array_values(array_filter(
             $boards,
             fn (array $b): bool => $user !== null

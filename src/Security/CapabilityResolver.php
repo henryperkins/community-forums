@@ -25,6 +25,10 @@ final class CapabilityResolver
     private array $bundleMemo = [];
     /** @var array<int,?array<string,mixed>> */
     private array $boardMemo = [];
+    /** @var array<string,bool> "b{boardId}|{actorKey}" => isMember */
+    private array $memberMemo = [];
+    /** @var array<string,list<string>> capability => role keys holding it */
+    private array $roleKeysMemo = [];
 
     public function __construct(
         private RoleCapabilityRepository $roleCapabilities,
@@ -107,7 +111,9 @@ final class CapabilityResolver
                 $this->boardMemo[$boardId] = $board;
             }
             if ($board !== null) {
-                $isMember = $actor !== null && $this->members->isMember($boardId, $actor->id());
+                $isMember = $actor !== null
+                    && ($this->memberMemo['b' . $boardId . '|' . $actorKey]
+                        ??= $this->members->isMember($boardId, $actor->id()));
                 $ctx['board'] = $board;
                 $ctx['board_member'] = $isMember;
                 $ctx['board_readable'] = $this->policy->canRead($board, $actor, $isMember);
@@ -123,12 +129,42 @@ final class CapabilityResolver
             $isActiveOwner,
             $bundle['site_rank'],
             $grants,
-            $this->roleCapabilities->roleKeysHolding($capability),
+            $this->roleKeysMemo[$capability] ??= $this->roleCapabilities->roleKeysHolding($capability),
             $ctx,
             $at,
         );
 
         return $this->decisionMemo[$memoKey] = $decision;
+    }
+
+    /**
+     * Pre-seed the board-row memo from rows the caller already fetched
+     * (e.g. PostController::postableBoards iterating allOrdered()), so
+     * per-board decisions skip the per-id re-fetch.
+     *
+     * @param list<array<string,mixed>> $rows board rows keyed by their 'id'
+     */
+    public function primeBoards(array $rows): void
+    {
+        foreach ($rows as $row) {
+            $this->boardMemo[(int) $row['id']] = $row;
+        }
+    }
+
+    /**
+     * Pre-seed the membership memo from a single boardIdsFor() fetch: every
+     * id in $memberBoardIds is a membership, every other id in $allBoardIds
+     * is a non-membership.
+     *
+     * @param list<int> $memberBoardIds
+     * @param list<int> $allBoardIds
+     */
+    public function primeMembership(int $userId, array $memberBoardIds, array $allBoardIds): void
+    {
+        $memberSet = array_flip($memberBoardIds);
+        foreach ($allBoardIds as $boardId) {
+            $this->memberMemo['b' . (int) $boardId . '|u' . $userId] = isset($memberSet[(int) $boardId]);
+        }
     }
 
     /**
@@ -141,5 +177,7 @@ final class CapabilityResolver
         $this->decisionMemo = [];
         $this->bundleMemo = [];
         $this->boardMemo = [];
+        $this->memberMemo = [];
+        $this->roleKeysMemo = [];
     }
 }
