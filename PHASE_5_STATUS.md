@@ -580,7 +580,9 @@ assertions** green (11 new regression tests). Fixes:
   fully-unused `can_moderate_board` view flag was dropped. Also removes a
   shadow-mismatch source.
 
-**Review follow-ups (recorded, not fixed here):**
+**Review follow-ups (recorded, not fixed here — all six resolved 2026-07-07
+on `phase5-inc6-followups`; see "Inc 6 follow-ups resolved" below. The list
+is kept verbatim as the original record):**
 
 - **V7 (medium) — `canEditTags` telemetry noise.** The moderator arm pairs the
   staff-only legacy closure with the user-baseline key `core.thread.tag`, so
@@ -614,6 +616,89 @@ assertions** green (11 new regression tests). Fixes:
   (`AdminService`×4, `AdminController`×4), the dead `core.post.delete_any`
   defaults on `ModerationService`'s private helpers, and ~10 hand-wired
   `CapabilityResolver` construction sites — DRY-only, no behavior change.
+
+## Inc 6 follow-ups resolved (2026-07-07, branch `phase5-inc6-followups`)
+
+All six recorded pre-merge follow-ups above are fixed (TDD, red→green), plus
+the doc-staleness findings from the 2026-07-07 phase review:
+
+- **V7 — canEditTags shadow noise → phantom control removed.** The write path
+  (`TagController::updateThread`, `[STATE-KEEP]`) already answered the design
+  question: posting rights are the single tagging gate, no staff carve-out.
+  The display flag's staff-only moderator arm was therefore a phantom control
+  (rendered, then 403 on submit) and the source of the per-member-view
+  mismatch noise. Display is now the same single `canPost`-closure gate the
+  write path uses (archive-aware); `core.thread.tag` stays a CAN_POST_GATED
+  member-baseline key; no resolver/oracle change. Taxonomy quirk 7 records
+  the resolution; `AppThreadTagDisplayTest` pins display ⟷ write agreement.
+  **The shadow soak is unblocked.**
+- **Queue discovery** (pulled forward from the deferred `/admin`-console
+  increment per the follow-up instruction): `/mod/approvals` row scope and
+  the `/mod/reports` door+rows derive from
+  `ModerationService::moderableBoardIds()` — a per-board gate check on the
+  queue's *action* key (`core.content.approve`/`core.report.handle`).
+  Legacy/shadow doors and rows are byte-identical to pre-cutover (pinned);
+  under enforce a custom deputy's grant surfaces its rows, the approvals
+  door additionally admits (enforce-only) a deputy with ≥1 discovered board,
+  and a vestigial global moderator gains **no** rows (dedicated
+  no-broadening test — the projection's site-wide `view_pending` mirror
+  cannot leak into row scope because discovery keys on the action).
+  `AppModQueueDiscoveryTest`; runbook cutover-surface updated.
+- **`CAPABILITIES_MODE` normalization**: `AuthorityGate::fromConfig()` trims/
+  case-folds; unknown values (incl. `legacy`, which is the flag-off state,
+  not a posture) run fail-safe shadow and emit
+  `capabilities.mode_invalid {raw, effective}`; `/admin/roles` displays the
+  effective posture (replacing the pre-Inc-6 "inert" copy). Runbook updated.
+- **`Cap::*` per-key constants + literal scanner**: `src/Security/Cap.php`
+  (54 constants, catalogue-parity-pinned by `CapTest`); the 19 enforcement
+  files reference constants (typo = fatal, not silent fail-dark);
+  `CapabilityLiteralsTest` validates every remaining quoted
+  `core.<area>.<action>` literal in `src/` against the catalogue with a
+  planted-typo self-test (definitional tables keep literals by design).
+- **Resolver memo gaps + `postableBoards` N+1**: `isMember()`/
+  `roleKeysHolding()` now sit in per-request memos (cleared by the same
+  `invalidate()`), and `postableBoards` primes the board-row/membership
+  memos from fetches it already holds (`primeBoards`/`primeMembership`;
+  legacy mode never constructs the resolver, so priming is skipped).
+  `resolver.p95` measured **0.4655 ms** post-change (5 ms budget).
+- **Minor cleanups**: `AdminService::assertRosterAuthority()` +
+  `AdminController::rosterCommand()` collapse the 4×2 duplicated roster
+  blocks (V1 authorize-before-boardOrFail ordering preserved in the doc
+  comments); dead private-helper defaults removed; the five default-shaped
+  hand-wired test resolvers delegate to `TestCase::capabilityResolver()`
+  (`ResolverShadowTest` keeps its parameterized bad-DB builder).
+
+**Gates (2026-07-07):** `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` →
+**1670 tests / 8587 assertions**, and the reused-schema run → **1670 / 8587**
+(identical). `php bin/console verify:resolver-parity` → **1551 tuples, 1551
+agreed, 0 mismatches** (no resolver-semantics change; regenerated timing-only
+report restored, not committed). `APP_ENV=testing php bin/console
+verify:phase5-budgets` → all owned D11 rows **MEASURED (PASS)**;
+`resolver.p95` **0.4655 ms** (memoization), `webauthn.ceremony_p95` 2.0911 ms.
+`APP_ENV=testing DB_DATABASE=retroboards_e2e php bin/console verify:upgrade
+--force` → **17/17** (no new migration — still through `0073`).
+`cd tests/browser && CAPABILITIES_MODE=enforce RB_BROWSER_DARK_SURFACES=1
+bash prepare.sh && … npx playwright test role-assignments.spec.ts` →
+**4 passed** (desktop + mobile): the two prior Inc 6 journeys plus a new
+deputy-queue-discovery journey — admin creates two approval-required boards,
+grants carol an approve-only custom role on one, bob's topics are held, carol
+enters `/mod/approvals` via discovery, sees only her board's hold (axe-clean;
+PNG `65-deputy-approvals-queue`), approves it, and still 404s at
+`/mod/reports`; the roles page asserts "Resolver posture: enforce". The new
+axe scan surfaced a **pre-existing site-wide contrast defect**: the gold
+monogram bucket (`--gold-700` #9A7530 ink on `--gold-100` #F4EBCF, 3.55:1 at
+11.5 px) — fixed by a new `--gold-800` #6B5120 ink for `.mono-2`/`.mono-6`/
+`.badge-staff` (6.2:1 / 5.3:1; chip grounds are theme-invariant so dark mode
+is unaffected; `.reaction-on` deliberately untouched — its dark-mode ground
+is translucent-dark and a darker ink would regress it there). Regenerated
+PNGs `62`–`64` were restored, not committed, per the evidence convention;
+`65` is new and committed.
+
+Still open from the Inc 6 closeout "Deferred (recorded, not silent)" list
+(unchanged by this batch): the `/admin` console cutover itself, the
+symmetric revoke/renew authority ceiling, the expiry sweeper non-goal, the
+S3 cross-connection double-submit residual (DB partial-unique guard), and
+no legacy-assignment import (permanent).
 
 ## Product-owner approvals recorded
 

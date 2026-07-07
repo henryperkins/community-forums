@@ -21,7 +21,7 @@
     --green-200: #BCD0BF; --green-100: #DCE8DD; --green-050: #EDF3ED;
     --river-900: #1E3040; --river-700: #2C4D63; --river-500: #3F6E89;
     --river-400: #5E8CA6; --river-200: #BAD2DF; --river-100: #DCE9F0;
-    --gold-700: #9A7530; --gold-600: #B08A3A; --gold-500: #C29A44;
+    --gold-800: #6B5120; --gold-700: #9A7530; --gold-600: #B08A3A; --gold-500: #C29A44;
     --gold-400: #D2B062; --gold-200: #EAD9A8; --gold-100: #F4EBCF;
     --twilight-900: #161D24; --twilight-800: #1E2730; --twilight-700: #283440;
     --leaf: #4E7459; --amber: #B7842F; --rust: #9C4A33; --slate: #3F6E89;
@@ -285,7 +285,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     vertical-align: middle;
 }
 .badge-muted { background: var(--surface-3); color: var(--text-muted); }
-.badge-staff { background: var(--gold-100); color: var(--gold-700); border: 1px solid var(--gold-200); }
+.badge-staff { background: var(--gold-100); color: var(--gold-800); border: 1px solid var(--gold-200); }
 
 .flash {
     background: var(--surface-done);
@@ -428,11 +428,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
    rotating through green / river / gold / mist (no neon, per the register). */
 .mono-0 { background: var(--green-100);     color: var(--green-800); }
 .mono-1 { background: var(--river-100);     color: var(--river-700); }
-.mono-2 { background: var(--gold-100);      color: var(--gold-700); }
+.mono-2 { background: var(--gold-100);      color: var(--gold-800); }
 .mono-3 { background: var(--mist-200);      color: var(--ink-700); }
 .mono-4 { background: var(--green-200);     color: var(--green-900); }
 .mono-5 { background: var(--river-200);     color: var(--river-900); }
-.mono-6 { background: var(--gold-200);      color: var(--gold-700); }
+.mono-6 { background: var(--gold-200);      color: var(--gold-800); }
 .mono-7 { background: var(--parchment-200); color: var(--ink-700); }
 .mono-8 { background: var(--green-050);     color: var(--green-700); }
 .mono-9 { background: var(--river-100);     color: var(--river-700); }

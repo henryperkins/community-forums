@@ -157,3 +157,94 @@ test('admin role assignment: no-JS grant surfaces the deputy lock control, then 
 
   await exitThemeSafeMode(page);
 });
+
+/**
+ * Inc 6 follow-up (queue discovery): an approve-only deputy reaches the
+ * approvals queue scoped to exactly their granted board. Requires
+ * CAPABILITIES_MODE=enforce like the deputy half above — under shadow the
+ * legacy door (bare isModerator()) still decides and carol would be 403'd.
+ */
+test('deputy queue discovery: approve-only deputy reaches their scoped approvals queue (axe-clean)', async ({ page }, info) => {
+  const suffix = `${info.project.name}-${Date.now()}`;
+
+  await login(page, 'admin@retro.test');
+  await enterThemeSafeMode(page);
+
+  // The roles page surfaces the effective posture (Inc 6 follow-up).
+  await visit(page, '/admin/roles');
+  await expect(page.locator('p', { hasText: 'Resolver posture:' })).toContainText('enforce');
+
+  // Two fresh approval-required boards: carol will be scoped to one only.
+  const makeApprovalBoard = async (name: string): Promise<{ id: string; slug: string }> => {
+    await visit(page, '/admin/structure');
+    const form = page.locator('form[action="/admin/boards"]');
+    await form.locator('input[name="name"]').fill(name);
+    await form.locator('button[type="submit"]').click();
+    const row = page.locator('li.admin-board-row', { hasText: name }).first();
+    await row.getByRole('link', { name: 'Edit' }).click();
+    await page.waitForURL(/\/admin\/boards\/\d+\/edit$/);
+    const boardId = new URL(page.url()).pathname.match(/(\d+)\/edit$/)![1];
+    const slug = await page.inputValue('input[name="slug"]');
+    await page.check('input[name="require_approval"]');
+    await page.click(`form[action="/admin/boards/${boardId}"] button:has-text("Save board")`);
+    return { id: boardId, slug };
+  };
+  const scopedBoard = `Queue scoped ${suffix}`;
+  const foreignBoard = `Queue foreign ${suffix}`;
+  const scoped = await makeApprovalBoard(scopedBoard);
+  const foreign = await makeApprovalBoard(foreignBoard);
+  const scopedBoardId = scoped.id;
+
+  // Role holding ONLY core.content.approve, granted to carol on the scoped board.
+  await visit(page, '/admin/roles');
+  const roleName = `Approvals deputy (${suffix})`;
+  await page.fill('input[name="name"]', roleName);
+  await page.check('input[name="capabilities[]"][value="core.content.approve"]');
+  await page.fill('input[name="current_password"]', 'password123');
+  await page.click('form[action="/admin/roles"] button[type="submit"]');
+  await page.locator('table tbody tr', { hasText: roleName }).getByRole('link', { name: 'Edit' }).click();
+  await page.waitForURL(/\/admin\/roles\/\d+$/);
+  await page.fill('input[name="username"]', 'carol');
+  await page.selectOption('select[name="scope_type"]', 'board');
+  await page.fill('input[name="scope_id"]', scopedBoardId);
+  await page.fill('input[name="reason"]', 'Browser evidence: queue discovery');
+  await page.fill('form[action$="/assignments"] input[name="current_password"]', 'password123');
+  await page.click('form[action$="/assignments"] button[type="submit"]');
+  await expect(page.locator('table tbody tr', { hasText: '@carol' })).toContainText('active');
+
+  // bob (no staff standing on these boards) posts one topic into each — held.
+  await login(page, 'bob@retro.test');
+  const scopedTitle = `Scoped approval probe ${suffix}`;
+  const foreignTitle = `Foreign approval probe ${suffix}`;
+  const postHeld = async (slug: string, title: string): Promise<void> => {
+    await visit(page, `/c/${slug}`);
+    await page.locator('details.composer-details > summary').click();
+    await page.fill('input[name="title"]', title);
+    await page.fill('textarea[name="body"]', 'Queue-discovery browser evidence body.');
+    await page.getByRole('button', { name: 'Create topic' }).click();
+    await expect(page.getByText('awaiting moderator approval')).toBeVisible();
+  };
+  await postHeld(scoped.slug, scopedTitle);
+  await postHeld(foreign.slug, foreignTitle);
+
+  // carol: the door opens via discovery, rows are scoped, approval works.
+  await login(page, 'carol@retro.test');
+  await visit(page, '/mod/approvals');
+  await expect(page.getByText(scopedTitle)).toBeVisible();
+  await expect(page.getByText(foreignTitle)).toHaveCount(0);
+  await expectNoSeriousA11yViolations(page, info);
+  await shot(page, info, '65-deputy-approvals-queue');
+  await page.locator('li', { hasText: scopedTitle }).getByRole('button', { name: 'Approve' }).first().click();
+  await expect(page.getByRole('status').getByText('Topic approved and published.')).toBeVisible();
+
+  // carol holds approve, not report.handle: the reports queue stays closed.
+  const reports = await page.goto('/mod/reports');
+  expect(reports!.status()).toBe(404);
+
+  // Leave the shared evidence DB clean: admin releases the foreign hold.
+  await login(page, 'admin@retro.test');
+  await visit(page, '/mod/approvals');
+  await page.locator('li', { hasText: foreignTitle }).getByRole('button', { name: 'Approve' }).first().click();
+  await expect(page.getByRole('status').getByText('Topic approved and published.')).toBeVisible();
+  await exitThemeSafeMode(page);
+});
