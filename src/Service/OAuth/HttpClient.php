@@ -28,17 +28,21 @@ class HttpClient
     }
 
     /**
-     * GET with a bearer token, parse a JSON response.
+     * GET, parse a JSON response. `$bearer` is optional — OIDC discovery and
+     * JWKS documents are public.
      *
      * @return array<string,mixed>
      */
-    public function getJson(string $url, string $bearer): array
+    public function getJson(string $url, ?string $bearer = null): array
     {
-        return $this->request('GET', $url, null, [
-            'Authorization: Bearer ' . $bearer,
+        $headers = [
             'Accept: application/json',
             'User-Agent: RetroBoards',
-        ]);
+        ];
+        if ($bearer !== null) {
+            array_unshift($headers, 'Authorization: Bearer ' . $bearer);
+        }
+        return $this->request('GET', $url, null, $headers);
     }
 
     /**

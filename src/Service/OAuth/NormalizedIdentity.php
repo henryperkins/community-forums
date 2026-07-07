@@ -19,6 +19,8 @@ final class NormalizedIdentity
         public readonly bool $emailVerified,
         public readonly ?string $displayName,
         public readonly ?string $avatarUrl,
+        /** Registry linkage for registry-backed providers (P5-12); builtins pass null. */
+        public readonly ?int $providerConfigId = null,
     ) {
     }
 }
