@@ -287,6 +287,20 @@ change is a separate, owner-approved decision after parity is clean.
    **Ratified 2026-07-04 (ADR 0016).** No behavior or modeling change; the
    boundary above is confirmed as the intended, permanent shape, not a
    placeholder pending a future decision.
+7. **Tag editing has no staff carve-out — posting rights are the single
+   tagging gate.** *(Recorded 2026-07-07, Inc 6 follow-up V7.)* The write
+   path (`TagController::updateThread`, `[STATE-KEEP]`) deliberately gates
+   tagging on `BoardPolicy::canPost` alone: staff cannot tag threads in
+   boards they cannot post into (posting floor, archived, read gate), and
+   never could. The pre-fix thread-view display flag additionally carried a
+   staff-only moderator arm — a phantom control (rendered, then 403 on
+   submit) whose legacy-staff-closure × user-baseline `core.thread.tag`
+   pairing emitted a resolver shadow mismatch on nearly every member
+   thread view, making a clean shadow soak unreachable. Resolved by making
+   the display flag the same single `canPost`-closure gate the write path
+   uses (`AppThreadTagDisplayTest` pins display ⟷ write agreement);
+   `core.thread.tag` stays a CAN_POST_GATED member-baseline key with no
+   board-authority half.
 
 ## 8. Explicitly NOT capabilities (out of catalogue)
 

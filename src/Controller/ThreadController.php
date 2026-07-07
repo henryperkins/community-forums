@@ -262,22 +262,28 @@ final class ThreadController extends Controller
             $tagRepo = $this->container->get(TagRepository::class);
             $threadTags = $tagRepo->forThread((int) $thread['id']);
             if ($user !== null && $this->container->get(WriteGate::class)->canWrite($user)) {
-                // Moderator arm checks the SAME capability the member arm is
-                // gated by (core.thread.tag) instead of the coarse default key,
-                // so a custom role granted only core.thread.tag can edit tags
-                // even in a board where it holds no ordinary posting rights.
-                $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_TAG)
-                    || $gate->allows(
-                        fn (): bool => $policy->canPost(
-                            ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
-                            $user,
-                            $isMember,
-                        ),
+                // Display mirrors TagController::updateThread one-to-one:
+                // posting rights are the single tagging gate — no staff
+                // carve-out ([STATE-KEEP]) — so there is exactly one arm. A
+                // staff-only moderator arm here was a phantom control (shown,
+                // then 403 on submit) and, paired with the user-baseline
+                // core.thread.tag key, emitted a resolver shadow mismatch on
+                // nearly every member thread view (V7).
+                $canEditTags = $gate->allows(
+                    fn (): bool => $policy->canPost(
+                        [
+                            'visibility' => $thread['board_visibility'],
+                            'post_min_role' => $thread['board_post_min_role'] ?? 'user',
+                            'is_archived' => $thread['board_is_archived'] ?? 0,
+                        ],
                         $user,
-                        Cap::THREAD_TAG,
-                        ['board_id' => (int) $thread['board_id']],
-                        'ThreadController::renderThread',
-                    );
+                        $isMember,
+                    ),
+                    $user,
+                    Cap::THREAD_TAG,
+                    ['board_id' => (int) $thread['board_id']],
+                    'ThreadController::renderThread',
+                );
             }
             if ($canEditTags) {
                 $allTags = $tagRepo->allEnabled();
