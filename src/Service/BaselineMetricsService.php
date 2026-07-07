@@ -4,24 +4,36 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Config;
 use App\Core\Database;
+use App\Core\FeatureFlags;
 use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\IdentityProviderRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\RoleAssignmentHistoryRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
 use App\Repository\RoleRepository;
+use App\Repository\ServiceSecretRepository;
+use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\CapabilityResolver;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
+use App\Security\SecretBox;
+use App\Service\OAuth\HttpClient as OAuthHttpClient;
+use App\Service\OAuth\Oidc\ClaimMapper;
+use App\Service\OAuth\Oidc\JwksCache;
+use App\Service\OAuth\Oidc\JwtVerifier;
+use App\Service\OAuth\Oidc\OidcDiscovery;
+use App\Service\OAuth\Oidc\OidcProvider;
 use App\Security\WebAuthn\RelyingParty;
 use App\Security\WebAuthn\WebAuthnVerifier;
 use App\Security\WriteGate;
@@ -444,6 +456,150 @@ final class BaselineMetricsService
      *
      * @return array<string,mixed> the PHASE_5_PLAN measurement envelope
      */
+    /**
+     * Inc 8 (P5-12) — the D11 `oidc.discovery_p95_cached/cold` samplers. Builds
+     * its own bench provider row (removed afterwards; run inside the caller's
+     * rollback transaction for byte-identical DBs).
+     *
+     * Cached: the per-sign-in hot path — provider-row load, cached discovery
+     * document through the real OidcProvider::authorizeUrl(), and a JWKS cache
+     * hit. The bench transport throws on ANY fetch, proving the path is
+     * cache-only. Cold: the full resolution per iteration — discovery fetch +
+     * validation + persist, then the pinned JWKS refresh + persist — over an
+     * in-process canned transport. Remote-IdP network RTT is environment-owned
+     * and excluded; the D11 ceilings exist to catch app-side pathology
+     * (per-login refetch loops, quadratic parsing), which this measures.
+     *
+     * @return array<string,mixed> §11.3 measurement-envelope row
+     */
+    public function measureOidcDiscovery(bool $cold, int $iterations = 200): array
+    {
+        $providers = new IdentityProviderRepository($this->db);
+        $issuer = 'https://oidc-bench.idp.test';
+        $wellKnown = $issuer . '/.well-known/openid-configuration';
+        $jwksUri = $issuer . '/oauth/discovery/keys';
+        $doc = [
+            'issuer' => $issuer,
+            'authorization_endpoint' => $issuer . '/oauth/authorize',
+            'token_endpoint' => $issuer . '/oauth/token',
+            'jwks_uri' => $jwksUri,
+        ];
+        $jwks = ['keys' => [['kty' => 'RSA', 'use' => 'sig', 'kid' => 'bench-k1', 'n' => 'AQAB', 'e' => 'AQAB']]];
+
+        // Canned in-process transport; unscripted URLs throw (the cached arm
+        // scripts nothing, so any fetch there fails the sample loudly).
+        $transport = new class($cold ? [$wellKnown => $doc, $jwksUri => $jwks] : []) extends OAuthHttpClient {
+            /** @param array<string,array<string,mixed>> $responses */
+            public function __construct(private array $responses)
+            {
+            }
+
+            public function getJson(string $url, ?string $bearer = null): array
+            {
+                return $this->responses[$url]
+                    ?? throw new \RuntimeException('oidc bench: unexpected fetch ' . $url);
+            }
+
+            public function postForm(string $url, array $form, array $headers = []): array
+            {
+                throw new \RuntimeException('oidc bench: unexpected POST ' . $url);
+            }
+        };
+
+        $benchKey = 'oidc-bench-' . bin2hex(random_bytes(4));
+        $id = $providers->create([
+            'provider_key' => $benchKey,
+            'display_name' => 'OIDC bench IdP',
+            'issuer' => $issuer,
+            'client_id' => 'bench-client',
+            'client_secret_ref' => 'svcsec_bench',
+        ]);
+
+        $discovery = new OidcDiscovery($transport);
+        $jwksCache = new JwksCache($providers, $transport);
+        // Never invoked by the discovery scope; present because OidcProvider
+        // requires the collaborator.
+        $vault = new SecretVault(
+            $this->db,
+            new ServiceSecretRepository($this->db),
+            new SecretBox(str_repeat('a', 64)),
+            new ModerationLogRepository($this->db),
+            new FeatureFlags(new SettingRepository($this->db)),
+            new Config([]),
+        );
+
+        if (!$cold) {
+            $providers->cacheDiscovery($id, (string) json_encode($doc));
+            $providers->cacheJwks($id, (string) json_encode($jwks));
+        }
+
+        $samples = [];
+        $errors = 0;
+        for ($i = 0; $i < $iterations; $i++) {
+            if ($cold) {
+                // Bench scaffolding, outside the timer: force every iteration cold.
+                $this->db->run(
+                    'UPDATE identity_providers SET discovery_cache_json = NULL, discovery_cached_at = NULL,
+                            jwks_cache_json = NULL, jwks_cached_at = NULL WHERE id = ?',
+                    [$id],
+                );
+            }
+
+            $t0 = hrtime(true);
+            try {
+                $row = $providers->find($id) ?? throw new \RuntimeException('bench row vanished');
+                if ($cold) {
+                    $fetched = $discovery->fetch($issuer);
+                    $providers->cacheDiscovery($id, (string) json_encode($fetched));
+                    $jwksCache->refresh($row, (string) $fetched['jwks_uri']);
+                } else {
+                    $provider = new OidcProvider(
+                        $row,
+                        $providers,
+                        $discovery,
+                        $jwksCache,
+                        new JwtVerifier(),
+                        new ClaimMapper(),
+                        $vault,
+                        $transport,
+                    );
+                    $provider->authorizeUrl('https://forum.test/auth/' . $benchKey . '/callback', 'state', 'challenge', 'nonce');
+                    $jwksCache->keys($row, $jwksUri);
+                }
+            } catch (\Throwable) {
+                $errors++;
+            }
+            $samples[] = (hrtime(true) - $t0) / 1_000_000;
+        }
+
+        $this->db->run('DELETE FROM identity_providers WHERE id = ?', [$id]);
+
+        return [
+            'route_or_job' => $cold ? 'oidc_discovery_cold' : 'oidc_discovery_cached',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($this->db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => $cold
+                ? 'bench generic-OIDC row; full discovery+JWKS fetch/validate/persist per iteration; in-process transport (remote RTT excluded)'
+                : 'bench generic-OIDC row; row load + cached discovery via OidcProvider::authorizeUrl + JWKS cache hit (transport throws on any fetch)',
+            'role_assignment_count' => 0,
+            'installed_package_count' => 0,
+            'concurrency' => 1,
+            'cache_state' => $cold ? 'cold' : 'warm',
+            'window' => $iterations . ' iterations',
+            'samples' => count($samples),
+            'p50' => self::percentile($samples, 50),
+            'p95' => self::percentile($samples, 95),
+            'p99' => self::percentile($samples, 99),
+            'query_count' => $cold ? 4 * $iterations : 1 * $iterations,
+            'query_time_ms' => round(array_sum($samples), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
+        ];
+    }
+
     public function measureWebauthnCeremony(?string $fixturePath = null): array
     {
         $rp = new RelyingParty('http://localhost:8000', null, 'testing');

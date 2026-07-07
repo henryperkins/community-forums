@@ -38,6 +38,8 @@ final class Phase5BudgetReportService
     private ?array $packageSample = null;
     private ?array $themeSample = null;
     private ?array $webauthnSample = null;
+    private ?array $oidcCachedSample = null;
+    private ?array $oidcColdSample = null;
     private ?array $propagationSample = null;
     private ?array $simulatorSample = null;
 
@@ -107,6 +109,15 @@ final class Phase5BudgetReportService
     private function webauthnSample(): array
     {
         return $this->webauthnSample ??= (new BaselineMetricsService($this->db))->measureWebauthnCeremony();
+    }
+
+    /** Inc 8 — cheap self-fixturing sampler, so it runs on every report. */
+    private function oidcSample(bool $cold): array
+    {
+        if ($cold) {
+            return $this->oidcColdSample ??= (new BaselineMetricsService($this->db))->measureOidcDiscovery(true);
+        }
+        return $this->oidcCachedSample ??= (new BaselineMetricsService($this->db))->measureOidcDiscovery(false);
     }
 
     /**
@@ -193,6 +204,14 @@ final class Phase5BudgetReportService
             } elseif ($key === 'webauthn.ceremony_p95') {
                 $sample = $this->webauthnSample();
                 $measured = $sample['p95'] . ' ms WebAuthn assertion verify (' . $sample['samples'] . ' samples)';
+                $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+            } elseif ($key === 'oidc.discovery_p95_cached') {
+                $sample = $this->oidcSample(false);
+                $measured = $sample['p95'] . ' ms cached discovery+JWKS (' . $sample['samples'] . ' iterations; row load + authorizeUrl + JWKS cache hit)';
+                $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+            } elseif ($key === 'oidc.discovery_p95_cold') {
+                $sample = $this->oidcSample(true);
+                $measured = $sample['p95'] . ' ms cold discovery+JWKS (' . $sample['samples'] . ' iterations; fetch+validate+persist, in-process transport — remote RTT excluded)';
                 $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
             } elseif ($key === 'registry.snapshot_freshness') {
                 $measured = '86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal)';
