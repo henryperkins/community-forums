@@ -19,6 +19,7 @@ use App\Controller\AdminPackageLifecycleController;
 use App\Controller\AdminPackageSecurityController;
 use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
+use App\Controller\AdminProviderController;
 use App\Controller\AdminRoleController;
 use App\Controller\AdminThemeController;
 use App\Controller\AdminUserController;
@@ -194,6 +195,7 @@ use App\Service\FeedService;
 use App\Service\FollowService;
 use App\Service\LegacyAuthorityProjection;
 use App\Service\LinkPreviewService;
+use App\Service\IdentityProviderService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NotificationService;
@@ -1620,6 +1622,16 @@ final class App
             (int) $config->get('pagination.posts_per_page', 20),
         ));
         $c->bind(OAuthHttpClient::class, fn () => $this->oauthHttpClient ?? new OAuthHttpClient());
+        $c->bind(IdentityProviderService::class, fn (Container $c) => new IdentityProviderService(
+            $c->get(Database::class),
+            $c->get(IdentityProviderRepository::class),
+            $c->get(SecretVault::class),
+            $c->get(OidcDiscovery::class),
+            $c->get(JwksCache::class),
+            $c->get(ReauthGate::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(FeatureFlags::class),
+        ));
         $c->bind(IdentityProviderRepository::class, fn (Container $c) => new IdentityProviderRepository($c->get(Database::class)));
         $c->bind(OidcDiscovery::class, fn (Container $c) => new OidcDiscovery($c->get(OAuthHttpClient::class)));
         $c->bind(JwksCache::class, fn (Container $c) => new JwksCache(
@@ -1944,6 +1956,13 @@ final class App
         $r->post('/admin/roles/{id}/assignments', [AdminRoleController::class, 'assign']);
         $r->post('/admin/role-assignments/{id}/revoke', [AdminRoleController::class, 'revokeAssignment']);
         $r->post('/admin/role-assignments/{id}/renew', [AdminRoleController::class, 'renewAssignment']);
+        // Identity-provider registry console (P5-12) — deploy-dark behind provider_registry.
+        $r->get('/admin/providers', [AdminProviderController::class, 'index']);
+        $r->post('/admin/providers', [AdminProviderController::class, 'create']);
+        $r->post('/admin/providers/{id}/test', [AdminProviderController::class, 'test']);
+        $r->post('/admin/providers/{id}/enable', [AdminProviderController::class, 'enable']);
+        $r->get('/admin/providers/{id}/disable', [AdminProviderController::class, 'disableConfirm']);
+        $r->post('/admin/providers/{id}/disable', [AdminProviderController::class, 'disable']);
         $r->get('/admin/themes', [AdminThemeController::class, 'index']);
         $r->get('/admin/themes/safe-mode', [AdminThemeController::class, 'safeModeForm']);
         $r->post('/admin/themes/safe-mode', [AdminThemeController::class, 'safeMode']);

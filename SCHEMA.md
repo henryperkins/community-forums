@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.34 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-07
+**Status:** v1.35 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-07
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -473,7 +473,7 @@ CREATE TABLE moderation_log (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   actor_id    BIGINT UNSIGNED NULL,                         -- NULL = system/automated action (ADMIN §3.8/§10.2)
   action      VARCHAR(40)     NOT NULL,                     -- pin, lock, delete_post, ban, anon_reveal, ...
-  target_type ENUM('thread','post','user','board','category','setting','service_secret','api_token','webhook','registry','package') NOT NULL,
+  target_type ENUM('thread','post','user','board','category','setting','service_secret','api_token','webhook','registry','package','publisher','identity_provider') NOT NULL,  -- widened by 0057/0068/0070 (…registry/package), 0073 (+publisher), 0075 (+identity_provider)
   target_id   BIGINT UNSIGNED NOT NULL,
   reason      VARCHAR(255)    NULL,
   before_json JSON            NULL,                         -- ADMIN §10.2 (edit snapshot)
@@ -1203,6 +1203,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.35 | 2026-07-07 | Phase 5 Increment 8 migration `0075_phase5_provider_admin_audit`: widened `moderation_log.target_type` with `identity_provider` (provider console create/enable/disable audit rows — mirrors the 0073 `publisher` widen). Also reconciled the §"moderation_log" CREATE block, which had lagged the `0073` `publisher` widen. `identity_providers` rows are now animated by the P5-12 console + generic-OIDC sign-in behind the dark `provider_registry` flag. |
 | v1.34 | 2026-07-07 | Phase 5 Increment 8 migration `0074_phase5_provider_identity_backfill`: added `identity_providers.discovery_cache_json`/`discovery_cached_at` (OIDC discovery-document cache beside the 0052 JWKS cache) and backfilled `oauth_identities.provider_config_id` via `provider_aliases` → `identity_providers` (idempotent, NULL-linkage-only; unmapped provider strings stay unlinked rather than guessed). Account resolution remains string-keyed; `0052` seeds `google`/`apple`/`github` now resolve linkage on upgrade. Additive DDL + reversible DML; verified by `AppProviderRegistryMigrationTest` + `verify:upgrade`. |
 | v1.33 | 2026-07-03 | Phase 5 Increment 5 migration `0073_phase5_package_integrations`: added `installed_package_settings` (per-install non-secret `value_json` + `svcsec_*` secret references) and `installed_package_credentials` (package-owned api_token/webhook links), and widened `package_history.event` (+`settings_update`/`credential_mint`/`credential_revoke`) and `moderation_log.target_type` (+`publisher`). Additive-only; verified via `verify:upgrade`. Migration number follows `0072_phase5_theme_packages`. |
 | v1.32 | 2026-07-03 | `0051` tables activated by Inc 7 passkeys (no schema change): `PasskeyService` and the WebAuthn repositories now read/write credentials and challenges behind the dark `passkeys` flag; RP ID/origin policy remains config-derived. |
