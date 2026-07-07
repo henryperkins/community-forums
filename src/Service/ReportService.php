@@ -16,6 +16,7 @@ use App\Repository\ReportRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Security\WriteGate;
 
 /**
@@ -84,7 +85,7 @@ final class ReportService
         return $this->gate()->allows(
             fn (): bool => $user->isAdmin() || ($boardId !== null && $this->boardMods->isModerator($boardId, $user->id())),
             $user,
-            'core.report.handle',
+            Cap::REPORT_HANDLE,
             ['board_id' => $boardId],
             'ReportService::canHandle',
         );

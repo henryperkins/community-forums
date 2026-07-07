@@ -16,6 +16,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Security\WriteGate;
 
 /**
@@ -80,7 +81,7 @@ final class BoardController extends Controller
             && $gate->allows(
                 fn (): bool => $policy->canPost($board, $user, $isMember),
                 $user,
-                'core.thread.create',
+                Cap::THREAD_CREATE,
                 ['board_id' => (int) $board['id']],
                 'BoardController::show',
             );

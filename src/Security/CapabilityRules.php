@@ -13,10 +13,10 @@ use App\Domain\User;
 final class CapabilityRules
 {
     /** @var list<string> */
-    private const STATE_EXEMPT = ['core.board.read', 'core.account.manage_self'];
+    private const STATE_EXEMPT = [Cap::BOARD_READ, Cap::ACCOUNT_MANAGE_SELF];
 
     /** @var list<string> */
-    private const DUAL_PATH = ['core.thread.mark_solved', 'core.poll.manage', 'core.thread.manage_workflow'];
+    private const DUAL_PATH = [Cap::THREAD_MARK_SOLVED, Cap::POLL_MANAGE, Cap::THREAD_MANAGE_WORKFLOW];
 
     /**
      * Roles whose grants confer BOARD-WIDE dual-path authority (acting on other
@@ -31,10 +31,10 @@ final class CapabilityRules
     private const DUAL_PATH_BOARD_AUTHORITY = ['system.moderator', 'system.admin'];
 
     /** @var list<string> */
-    private const CAN_POST_GATED = ['core.thread.create', 'core.post.create', 'core.thread.tag'];
+    private const CAN_POST_GATED = [Cap::THREAD_CREATE, Cap::POST_CREATE, Cap::THREAD_TAG];
 
     /** @var list<string> */
-    private const READ_GATED = ['core.board.read', 'core.content.react', 'core.content.report'];
+    private const READ_GATED = [Cap::BOARD_READ, Cap::CONTENT_REACT, Cap::CONTENT_REPORT];
 
     /**
      * @param array{scope:string,risk:string,delegable:bool,protected:bool} $meta

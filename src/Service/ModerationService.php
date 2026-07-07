@@ -17,6 +17,7 @@ use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\Cap;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 
@@ -51,7 +52,7 @@ final class ModerationService
     }
 
     /** Non-throwing capability check (admin anywhere, or assigned board moderator). */
-    public function canModerate(User $user, int $boardId, string $capability = 'core.post.delete_any'): bool
+    public function canModerate(User $user, int $boardId, string $capability = Cap::POST_DELETE_ANY): bool
     {
         return $this->gate()->allows(
             fn (): bool => $this->writeGate->canWrite($user)
@@ -66,7 +67,7 @@ final class ModerationService
     /** @return array{thread:array<string,mixed>, pinned:bool} */
     public function togglePin(User $mod, int $threadId): array
     {
-        $thread = $this->requireModeratableThread($mod, $threadId, 'core.thread.pin');
+        $thread = $this->requireModeratableThread($mod, $threadId, Cap::THREAD_PIN);
         $pinned = (int) $thread['is_pinned'] === 0;
 
         $this->db->transaction(function () use ($mod, $threadId, $thread, $pinned): void {
@@ -87,7 +88,7 @@ final class ModerationService
     /** @return array{thread:array<string,mixed>, locked:bool} */
     public function toggleLock(User $mod, int $threadId): array
     {
-        $thread = $this->requireModeratableThread($mod, $threadId, 'core.thread.lock');
+        $thread = $this->requireModeratableThread($mod, $threadId, Cap::THREAD_LOCK);
         $locked = (int) $thread['is_locked'] === 0;
 
         $this->db->transaction(function () use ($mod, $threadId, $thread, $locked): void {
@@ -117,7 +118,7 @@ final class ModerationService
         if ($post === null || (int) $post['is_deleted'] === 1) {
             throw new NotFoundException('Post not found.');
         }
-        $this->assertCanModerate($mod, (int) $post['board_id'], 'core.post.delete_any');
+        $this->assertCanModerate($mod, (int) $post['board_id'], Cap::POST_DELETE_ANY);
         $this->assertNotArchived((int) $post['board_id']);
 
         // Removing the opening post removes the whole topic rather than orphaning
@@ -176,7 +177,7 @@ final class ModerationService
         if ($post === null) {
             throw new NotFoundException('Post not found.');
         }
-        $this->assertCanModerate($mod, (int) $post['board_id'], 'core.post.restore');
+        $this->assertCanModerate($mod, (int) $post['board_id'], Cap::POST_RESTORE);
         $this->assertNotArchived((int) $post['board_id']);
         if ((int) $post['is_deleted'] === 0) {
             return $post; // already visible
@@ -222,8 +223,8 @@ final class ModerationService
         if ($dest === null) {
             throw new ValidationException(['board_id' => 'Choose a destination board.']);
         }
-        $this->assertCanModerate($mod, $srcBoardId, 'core.thread.move');
-        $this->assertCanModerate($mod, $destBoardId, 'core.thread.move');
+        $this->assertCanModerate($mod, $srcBoardId, Cap::THREAD_MOVE);
+        $this->assertCanModerate($mod, $destBoardId, Cap::THREAD_MOVE);
         // A move mutates BOTH boards (counters + last-post caches), so an archived
         // board on either end is read-only: moving content out of a frozen source,
         // or into a frozen destination, are both writes that stay closed.
@@ -261,7 +262,7 @@ final class ModerationService
     }
 
     /** @return array<string,mixed> */
-    private function requireModeratableThread(User $mod, int $threadId, string $capability = 'core.post.delete_any'): array
+    private function requireModeratableThread(User $mod, int $threadId, string $capability = Cap::POST_DELETE_ANY): array
     {
         $thread = $this->threads->find($threadId);
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
@@ -286,7 +287,7 @@ final class ModerationService
         if ($post === null) {
             throw new NotFoundException('Post not found.');
         }
-        $this->assertCanModerate($mod, (int) $post['board_id'], 'core.post.reveal_author');
+        $this->assertCanModerate($mod, (int) $post['board_id'], Cap::POST_REVEAL_AUTHOR);
         if ((int) ($post['is_anonymous'] ?? 0) !== 1) {
             throw new ForbiddenException('That post was not posted anonymously.');
         }
@@ -312,7 +313,7 @@ final class ModerationService
         ];
     }
 
-    private function assertCanModerate(User $mod, int $boardId, string $capability = 'core.post.delete_any'): void
+    private function assertCanModerate(User $mod, int $boardId, string $capability = Cap::POST_DELETE_ANY): void
     {
         $this->writeGate->assertCanWrite($mod);
         if (!$this->canModerate($mod, $boardId, $capability)) {

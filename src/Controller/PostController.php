@@ -15,6 +15,7 @@ use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Service\BadgeService;
 use App\Service\ModerationService;
 use App\Service\PostingService;
@@ -199,7 +200,7 @@ final class PostController extends Controller
                 && $gate->allows(
                     fn (): bool => $policy->canPost($b, $user, isset($memberBoardIds[(int) $b['id']])),
                     $user,
-                    'core.thread.create',
+                    Cap::THREAD_CREATE,
                     ['board_id' => (int) $b['id']],
                     'PostController::postableBoards',
                 )

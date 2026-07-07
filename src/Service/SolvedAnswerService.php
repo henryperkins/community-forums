@@ -16,6 +16,7 @@ use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\Cap;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 
@@ -209,7 +210,7 @@ final class SolvedAnswerService
         if (!$this->gate()->allows(
             fn (): bool => $isOp || $isMod,
             $actor,
-            'core.thread.mark_solved',
+            Cap::THREAD_MARK_SOLVED,
             ['board_id' => $boardId, 'owner_id' => $threadAuthorId],
             'SolvedAnswerService::authorize',
         )) {

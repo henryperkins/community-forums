@@ -17,6 +17,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\Cap;
 use App\Security\CapabilityResolver;
 use App\Security\WriteGate;
 use App\Support\Str;
@@ -485,7 +486,7 @@ final class AdminService
         $this->gate()->assert(
             fn (): bool => $actor->isAdmin(),
             $actor,
-            'core.board.assign_moderators',
+            Cap::BOARD_ASSIGN_MODERATORS,
             ['board_id' => $boardId],
             'AdminService::assignModerator',
             'Administrator access required.',
@@ -524,7 +525,7 @@ final class AdminService
         $this->gate()->assert(
             fn (): bool => $actor->isAdmin(),
             $actor,
-            'core.board.assign_moderators',
+            Cap::BOARD_ASSIGN_MODERATORS,
             ['board_id' => $boardId],
             'AdminService::unassignModerator',
             'Administrator access required.',
@@ -560,7 +561,7 @@ final class AdminService
         $this->gate()->assert(
             fn (): bool => $actor->isAdmin(),
             $actor,
-            'core.board.manage_members',
+            Cap::BOARD_MANAGE_MEMBERS,
             ['board_id' => $boardId],
             'AdminService::addMember',
             'Administrator access required.',
@@ -593,7 +594,7 @@ final class AdminService
         $this->gate()->assert(
             fn (): bool => $actor->isAdmin(),
             $actor,
-            'core.board.manage_members',
+            Cap::BOARD_MANAGE_MEMBERS,
             ['board_id' => $boardId],
             'AdminService::removeMember',
             'Administrator access required.',

@@ -15,13 +15,13 @@ final class EnforcedCapabilities
 {
     /** @var list<string> */
     private const KEYS = [
-        'core.thread.create', 'core.post.create', 'core.thread.tag',
-        'core.thread.mark_solved', 'core.poll.manage', 'core.thread.manage_workflow',
-        'core.post.delete_any', 'core.post.restore', 'core.thread.lock', 'core.thread.pin',
-        'core.thread.move', 'core.thread.split_merge', 'core.post.reveal_author',
-        'core.content.approve', 'core.content.view_pending', 'core.report.handle',
-        'core.appeal.resolve_content', 'core.memory.curate', 'core.user.warn',
-        'core.board.assign_moderators', 'core.board.manage_members',
+        Cap::THREAD_CREATE, Cap::POST_CREATE, Cap::THREAD_TAG,
+        Cap::THREAD_MARK_SOLVED, Cap::POLL_MANAGE, Cap::THREAD_MANAGE_WORKFLOW,
+        Cap::POST_DELETE_ANY, Cap::POST_RESTORE, Cap::THREAD_LOCK, Cap::THREAD_PIN,
+        Cap::THREAD_MOVE, Cap::THREAD_SPLIT_MERGE, Cap::POST_REVEAL_AUTHOR,
+        Cap::CONTENT_APPROVE, Cap::CONTENT_VIEW_PENDING, Cap::REPORT_HANDLE,
+        Cap::APPEAL_RESOLVE_CONTENT, Cap::MEMORY_CURATE, Cap::USER_WARN,
+        Cap::BOARD_ASSIGN_MODERATORS, Cap::BOARD_MANAGE_MEMBERS,
     ];
 
     /** @return list<string> */

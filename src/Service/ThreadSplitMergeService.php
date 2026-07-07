@@ -12,6 +12,7 @@ use App\Domain\User;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
+use App\Security\Cap;
 use App\Support\Str;
 
 final class ThreadSplitMergeService
@@ -32,7 +33,7 @@ final class ThreadSplitMergeService
         if ($source === null || (int) $source['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], 'core.thread.split_merge')) {
+        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
             throw new ForbiddenException('You do not moderate this board.');
         }
 
@@ -111,10 +112,10 @@ final class ThreadSplitMergeService
         if ($source === null || $target === null || (int) $source['is_deleted'] === 1 || (int) $target['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
-        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], 'core.thread.split_merge')) {
+        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
             throw new ForbiddenException('You do not moderate the source board.');
         }
-        if (!$this->moderation->canModerate($actor, (int) $target['board_id'], 'core.thread.split_merge')) {
+        if (!$this->moderation->canModerate($actor, (int) $target['board_id'], Cap::THREAD_SPLIT_MERGE)) {
             throw new ForbiddenException('You do not moderate the target board.');
         }
 

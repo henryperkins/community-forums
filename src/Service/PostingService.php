@@ -20,6 +20,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
 use App\Support\Markdown;
@@ -95,7 +96,7 @@ final class PostingService
         if (!$this->gate()->allows(
             fn (): bool => $this->policy->canPost($board, $user, $this->isBoardMember($boardId, $user->id())),
             $user,
-            'core.thread.create',
+            Cap::THREAD_CREATE,
             ['board_id' => $boardId],
             'PostingService::createThread',
         )) {
@@ -222,7 +223,7 @@ final class PostingService
         if (!$this->gate()->allows(
             fn (): bool => $this->policy->canPost($board, $user, $this->isBoardMember((int) $thread['board_id'], $user->id())),
             $user,
-            'core.post.create',
+            Cap::POST_CREATE,
             ['board_id' => (int) $thread['board_id']],
             'PostingService::reply',
         )) {

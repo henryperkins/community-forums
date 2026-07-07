@@ -19,6 +19,7 @@ use App\Repository\ProtectedOwnerRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\Cap;
 use App\Security\CapabilityResolver;
 use App\Security\LastOwnerGuard;
 use App\Security\ReauthGate;
@@ -361,7 +362,7 @@ final class UserModerationService
         $this->gate()->assert(
             fn (): bool => $actor->isAdmin() || $this->boardMods->boardsFor($actor->id()) !== [],
             $actor,
-            'core.user.warn',
+            Cap::USER_WARN,
             [], // site probe: staff-any — admin OR moderates ≥1 board, site-wide
             'UserModerationService::assertStaff',
             'Staff access required.', // keep the existing message verbatim

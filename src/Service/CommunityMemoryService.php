@@ -15,6 +15,7 @@ use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Security\WriteGate;
 use App\Support\Markdown;
 
@@ -297,7 +298,7 @@ final class CommunityMemoryService
         $allowed = $this->gate()->allows(
             fn (): bool => $actor->isAdmin() || $this->moderators->isModerator($boardId, $actor->id()),
             $actor,
-            'core.memory.curate',
+            Cap::MEMORY_CURATE,
             ['board_id' => $boardId],
             'CommunityMemoryService::assertCurator',
         );

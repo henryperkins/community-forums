@@ -17,6 +17,7 @@ use App\Repository\ThreadAssignmentRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\Cap;
 use App\Security\WriteGate;
 
 final class ThreadWorkflowService
@@ -244,7 +245,7 @@ final class ThreadWorkflowService
         if (!$this->gate()->allows(
             fn (): bool => $isOp || $isStaff,
             $actor,
-            'core.thread.manage_workflow',
+            Cap::THREAD_MANAGE_WORKFLOW,
             ['board_id' => $boardId, 'owner_id' => $threadAuthorId],
             'ThreadWorkflowService::authorizeStatus',
         )) {
@@ -284,7 +285,7 @@ final class ThreadWorkflowService
         return $this->gate()->allows(
             fn (): bool => $actor->isAdmin() || $this->boardModerators->isModerator($boardId, $actor->id()),
             $actor,
-            'core.thread.manage_workflow',
+            Cap::THREAD_MANAGE_WORKFLOW,
             ['board_id' => $boardId],
             'ThreadWorkflowService::canStaffAssign',
         );

@@ -15,6 +15,7 @@ use App\Repository\ConversationRepository;
 use App\Repository\PostRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Service\AttachmentService;
 use App\Service\RateLimitService;
 
@@ -208,7 +209,7 @@ final class MediaController extends Controller
                 if ($pending && !$this->container->get(AuthorityGate::class)->allows(
                     fn (): bool => $user !== null && $user->isModerator(),
                     $user,
-                    'core.content.view_pending',
+                    Cap::CONTENT_VIEW_PENDING,
                     [], // site probe: no board target — board-scoped grants correctly do not qualify
                     'MediaController::authorizePendingMedia',
                 )) {

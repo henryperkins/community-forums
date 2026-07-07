@@ -17,6 +17,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\ThreadUserRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Security\WriteGate;
 use App\Service\PreferenceService;
 use App\Service\CommunityMemoryService;
@@ -111,7 +112,7 @@ final class ThreadController extends Controller
                     $isMember,
                 ),
                 $user,
-                'core.post.create',
+                Cap::POST_CREATE,
                 ['board_id' => (int) $thread['board_id']],
                 'ThreadController::renderThread',
             )
@@ -182,9 +183,9 @@ final class ThreadController extends Controller
         // board moderator/admin keeps seeing every control exactly as before (see
         // AuthorityGate::allows()).
         $canPin = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.pin');
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_PIN);
         $canLock = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.lock');
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_LOCK);
         // core.thread.move has no thread-view control to gate yet — moving a
         // thread to another board isn't reachable from templates/thread.php or
         // templates/partials/post.php today (only /admin/boards/{id}/move exists,
@@ -192,11 +193,11 @@ final class ThreadController extends Controller
         // here and exposed as can_move so a future move-thread control can
         // consume it without another controller change.
         $canMove = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.move');
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_MOVE);
         $canSplitMerge = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.split_merge');
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_SPLIT_MERGE);
         $canDeletePosts = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.post.delete_any');
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::POST_DELETE_ANY);
 
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
         // may accept/clear an answer; everyone sees the accepted marker. The
@@ -211,14 +212,14 @@ final class ThreadController extends Controller
             && $canWriteUser
             && (
                 (int) $thread['user_id'] === $user->id()
-                || $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.mark_solved')
+                || $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_MARK_SOLVED)
             );
 
         // Anonymous-author reveal (P2-08): an admin or this board's moderator may
         // unmask an anonymous post; the byline stays masked for everyone — the
         // reveal is a separate audited action.
         $canRevealAnon = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.post.reveal_author');
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::POST_REVEAL_AUTHOR);
 
         // Subscription state for the subscribe control (P2-03).
         $notificationsOn = (bool) $this->container->get(FeatureFlags::class)->enabled('notifications');
@@ -265,7 +266,7 @@ final class ThreadController extends Controller
                 // gated by (core.thread.tag) instead of the coarse default key,
                 // so a custom role granted only core.thread.tag can edit tags
                 // even in a board where it holds no ordinary posting rights.
-                $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.thread.tag')
+                $canEditTags = $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_TAG)
                     || $gate->allows(
                         fn (): bool => $policy->canPost(
                             ['visibility' => $thread['board_visibility'], 'post_min_role' => $thread['board_post_min_role'] ?? 'user'],
@@ -273,7 +274,7 @@ final class ThreadController extends Controller
                             $isMember,
                         ),
                         $user,
-                        'core.thread.tag',
+                        Cap::THREAD_TAG,
                         ['board_id' => (int) $thread['board_id']],
                         'ThreadController::renderThread',
                     );
@@ -305,7 +306,7 @@ final class ThreadController extends Controller
             $summaryHistory = $memory->summaries((int) $thread['id']);
             $related = $memory->relatedForViewer((int) $thread['id'], $user);
             $canCurateMemory = $user !== null
-                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], 'core.memory.curate');
+                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::MEMORY_CURATE);
             $canCurateWiki = $canCurateMemory && (int) ($thread['board_wiki_enabled'] ?? 0) === 1;
             if ($canCurateWiki) {
                 foreach ($posts as $post) {

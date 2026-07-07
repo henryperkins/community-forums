@@ -13,6 +13,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
+use App\Security\Cap;
 use App\Service\ModerationService;
 use App\Service\PostingService;
 
@@ -30,7 +31,7 @@ final class ApprovalController extends Controller
         $this->container->get(AuthorityGate::class)->assert(
             fn (): bool => $user->isModerator(),
             $user,
-            'core.content.view_pending',
+            Cap::CONTENT_VIEW_PENDING,
             [], // site probe: no board target — board-scoped grants correctly do not qualify
             'ApprovalController::index',
             'Moderator access required.', // keep the existing message verbatim
@@ -113,7 +114,7 @@ final class ApprovalController extends Controller
 
     private function assertCanModerate(\App\Domain\User $mod, int $boardId): void
     {
-        if (!$this->container->get(ModerationService::class)->canModerate($mod, $boardId, 'core.content.approve')) {
+        if (!$this->container->get(ModerationService::class)->canModerate($mod, $boardId, Cap::CONTENT_APPROVE)) {
             throw new ForbiddenException('You do not moderate that board.');
         }
     }

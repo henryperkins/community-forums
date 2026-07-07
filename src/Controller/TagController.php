@@ -16,6 +16,7 @@ use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Security\WriteGate;
 use App\Service\FollowService;
 use App\Support\Str;
@@ -181,7 +182,7 @@ final class TagController extends Controller
                 $isMember,
             ),
             $user,
-            'core.thread.tag',
+            Cap::THREAD_TAG,
             ['board_id' => $boardId],
             'TagController::updateThread',
         );

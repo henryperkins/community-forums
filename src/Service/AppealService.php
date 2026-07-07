@@ -15,6 +15,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\PostRepository;
 use App\Repository\UserRepository;
+use App\Security\Cap;
 
 final class AppealService
 {
@@ -254,7 +255,7 @@ final class AppealService
         }
 
         $post = $this->posts->findWithContext((int) $appeal['target_id']);
-        if ($post === null || !$this->moderation->canModerate($actor, (int) $post['board_id'], 'core.appeal.resolve_content')) {
+        if ($post === null || !$this->moderation->canModerate($actor, (int) $post['board_id'], Cap::APPEAL_RESOLVE_CONTENT)) {
             throw new ForbiddenException('You do not moderate this appeal target.');
         }
     }

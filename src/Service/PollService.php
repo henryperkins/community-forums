@@ -14,6 +14,7 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
+use App\Security\Cap;
 use App\Security\WriteGate;
 
 final class PollService
@@ -178,7 +179,7 @@ final class PollService
                 || $actor->isAdmin()
                 || $this->moderators->isModerator($boardId, $actor->id()),
             $actor,
-            'core.poll.manage',
+            Cap::POLL_MANAGE,
             ['board_id' => $boardId, 'owner_id' => $threadAuthorId],
             'PollService::canManageThread',
         );
