@@ -39,6 +39,41 @@ final class AuthorityGate
         return new self(null, null, null, self::MODE_LEGACY);
     }
 
+    /**
+     * Build the flag-on gate from the raw CAPABILITIES_MODE config value.
+     * The config vocabulary is shadow|enforce (trim/case-insensitive) — the
+     * flag-off `legacy` state is not a configurable posture. Unknown values
+     * run the fail-safe shadow posture and emit `capabilities.mode_invalid`
+     * so a typo'd mode is visible instead of silently observing.
+     */
+    public static function fromConfig(string $raw, CapabilityResolver $resolver, ResolverShadow $shadow, Telemetry $telemetry): self
+    {
+        if (!self::isKnownConfigMode($raw)) {
+            $telemetry->emit('capabilities.mode_invalid', [
+                'raw' => substr(trim($raw), 0, 32),
+                'effective' => self::MODE_SHADOW,
+            ]);
+        }
+        $mode = self::normalizeConfigMode($raw);
+
+        return new self(
+            $resolver,
+            $mode === self::MODE_ENFORCE ? null : $shadow,
+            $telemetry,
+            $mode,
+        );
+    }
+
+    public static function normalizeConfigMode(string $raw): string
+    {
+        return self::isKnownConfigMode($raw) ? strtolower(trim($raw)) : self::MODE_SHADOW;
+    }
+
+    public static function isKnownConfigMode(string $raw): bool
+    {
+        return in_array(strtolower(trim($raw)), [self::MODE_SHADOW, self::MODE_ENFORCE], true);
+    }
+
     public function mode(): string
     {
         return $this->mode;

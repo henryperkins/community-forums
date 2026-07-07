@@ -13,6 +13,7 @@ use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
+use App\Security\AuthorityGate;
 use App\Security\CapabilityCatalog;
 use App\Service\PermissionSimulatorService;
 use App\Service\RoleAssignmentService;
@@ -261,6 +262,7 @@ final class AdminRoleController extends Controller
         return $this->noindex($this->view('admin/roles', [
             'rows' => $this->container->get(RoleService::class)->listWithMeta(),
             'catalogue' => $this->delegableCatalogue(),
+            'mode' => $this->container->get(AuthorityGate::class)->mode(),
             'errors' => $errors,
             'old' => $old,
         ], $status));

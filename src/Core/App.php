@@ -1272,12 +1272,11 @@ final class App
             if (!$c->get(FeatureFlags::class)->enabled('capabilities')) {
                 return AuthorityGate::legacy();
             }
-            $enforce = $config->get('capabilities.mode', 'shadow') === 'enforce';
-            return new AuthorityGate(
+            return AuthorityGate::fromConfig(
+                (string) $config->get('capabilities.mode', 'shadow'),
                 $c->get(CapabilityResolver::class),
-                $enforce ? null : $c->get(ResolverShadow::class),
+                $c->get(ResolverShadow::class),
                 $c->get(Telemetry::class),
-                $enforce ? AuthorityGate::MODE_ENFORCE : AuthorityGate::MODE_SHADOW,
             );
         });
         $c->bind(RoleService::class, fn (Container $c) => new RoleService(

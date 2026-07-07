@@ -126,4 +126,34 @@ final class AuthorityGateTest extends TestCase
         $this->expectExceptionMessage('You cannot moderate this board.');
         $gate->assert(fn (): bool => false, $member, 'core.post.delete_any', ['board_id' => (int) $board['id']], 'test', 'You cannot moderate this board.');
     }
+
+    public function test_from_config_normalizes_case_and_whitespace(): void
+    {
+        $telemetry = $this->telemetry();
+        $resolver = $this->resolver();
+        $shadow = new ResolverShadow($resolver, $telemetry);
+
+        $gate = AuthorityGate::fromConfig(' ENFORCE ', $resolver, $shadow, $telemetry);
+        self::assertSame(AuthorityGate::MODE_ENFORCE, $gate->mode());
+
+        $gate = AuthorityGate::fromConfig('Shadow', $resolver, $shadow, $telemetry);
+        self::assertSame(AuthorityGate::MODE_SHADOW, $gate->mode());
+
+        self::assertSame([], $this->eventNames(), 'known modes must not emit telemetry');
+    }
+
+    public function test_from_config_unknown_mode_runs_shadow_and_emits_telemetry(): void
+    {
+        $telemetry = $this->telemetry();
+        $resolver = $this->resolver();
+        $gate = AuthorityGate::fromConfig('enfroce', $resolver, new ResolverShadow($resolver, $telemetry), $telemetry);
+
+        self::assertSame(AuthorityGate::MODE_SHADOW, $gate->mode());
+        self::assertContains('capabilities.mode_invalid', $this->eventNames());
+
+        // The fallback gate still behaves as shadow: legacy decides.
+        $member = $this->userEntity($this->makeUser());
+        $board = $this->makeBoard($this->makeCategory());
+        self::assertTrue($gate->allows(fn (): bool => true, $member, 'core.post.delete_any', ['board_id' => (int) $board['id']], 'test'));
+    }
 }

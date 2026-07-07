@@ -172,4 +172,19 @@ final class AppRoleAdminTest extends TestCase
         ]);
         $this->assertSeeText($resp, 'Denied');
     }
+
+    public function test_roles_page_surfaces_the_effective_resolver_posture(): void
+    {
+        $this->enable();
+        $this->actingAs($this->makeAdmin());
+        $resp = $this->get('/admin/roles');
+        $this->assertStatus(200, $resp);
+        $this->assertSeeText($resp, 'Resolver posture');
+        $this->assertSeeText($resp, 'shadow');
+
+        $this->withCapabilitiesEnforced();
+        $resp = $this->get('/admin/roles');
+        $this->assertStatus(200, $resp);
+        $this->assertSeeText($resp, 'enforce');
+    }
 }

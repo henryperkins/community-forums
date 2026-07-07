@@ -11,8 +11,11 @@ $this->section('title', 'Roles');
     <?= $this->partial('admin/_nav', ['active' => 'roles', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
-    <p class="muted">Definitions are recorded but <strong>inert</strong>: nothing enforces them until the
-    capability resolver passes parity and is enabled. System roles are protected
+    <p class="muted">Resolver posture: <strong><?= $e($mode ?? 'shadow') ?></strong>
+    (<code>CAPABILITIES_MODE</code>). Under <code>shadow</code> the legacy rules decide and the
+    resolver only shadow-compares; under <code>enforce</code> the resolver decides and fails
+    closed. Unknown mode values run <code>shadow</code> and emit
+    <code>capabilities.mode_invalid</code> telemetry. System roles are protected
     compatibility anchors and cannot be edited; clone one to adapt it
     (cloning copies only currently-enforceable capabilities).</p>
 

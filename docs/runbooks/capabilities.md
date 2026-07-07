@@ -24,6 +24,14 @@ service instances get in unit tests and what the container binds when the flag
 is off — the resolver is structurally unreachable in that mode, not merely
 unconsulted.
 
+Mode values are normalized (trimmed, case-folded), so ` ENFORCE ` works. An
+**unknown** value (typo, or `legacy` — which is the flag-off state, not a
+configurable posture) runs the fail-safe `shadow` posture and emits
+`capabilities.mode_invalid {raw, effective}` telemetry instead of failing
+silently. The **effective** posture is displayed on `/admin/roles`
+("Resolver posture: …") — check it after any `CAPABILITIES_MODE` change
+rather than trusting the env file.
+
 ## Staged rollout (§13.1)
 
 1. **Enable the flag in shadow** (`features.capabilities=true`,
