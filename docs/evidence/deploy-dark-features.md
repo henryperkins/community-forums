@@ -1,6 +1,6 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-07-04 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
+**Date:** 2026-07-05 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
 profile-media graduation reconciled; Phase 5 passkeys row reconciled with
 `PHASE_5_STATUS.md`; custom-emoji graduation reconciled; **2026-07-04
 `split_merge` + `custom_profile_fields` graduations reconciled** — both flipped
@@ -323,7 +323,7 @@ Phase 5 flags are gated on their own workstreams' Milestone-0 approvals and
 acceptance evidence (`PHASE_5_PLAN.md` §2/§13), so they are not part of the
 graduation readiness ranking above. Per-flag implementation states (R0–R5) are
 machine-tracked in `docs/phase5/requirement-ledger.json`; the summary below is
-as of 2026-07-03.
+as of 2026-07-05.
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
