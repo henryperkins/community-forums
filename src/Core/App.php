@@ -85,6 +85,7 @@ use App\Repository\BoardRepository;
 use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\IdentityProviderRepository;
+use App\Repository\InvitationRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ModerationAppealRepository;
 use App\Repository\ConversationRepository;
@@ -197,6 +198,7 @@ use App\Service\FollowService;
 use App\Service\LegacyAuthorityProjection;
 use App\Service\LinkPreviewService;
 use App\Service\IdentityProviderService;
+use App\Service\InvitationService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NotificationService;
@@ -1644,6 +1646,15 @@ final class App
             $c->get(FeatureFlags::class),
         ));
         $c->bind(IdentityProviderRepository::class, fn (Container $c) => new IdentityProviderRepository($c->get(Database::class)));
+        $c->bind(InvitationRepository::class, fn (Container $c) => new InvitationRepository($c->get(Database::class)));
+        $c->bind(InvitationService::class, fn (Container $c) => new InvitationService(
+            $c->get(Database::class),
+            $c->get(InvitationRepository::class),
+            $c->get(AuthService::class),
+            $c->get(BoardRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(ModerationLogRepository::class),
+        ));
         $c->bind(OidcDiscovery::class, fn (Container $c) => new OidcDiscovery($c->get(OAuthHttpClient::class)));
         $c->bind(JwksCache::class, fn (Container $c) => new JwksCache(
             $c->get(IdentityProviderRepository::class),
