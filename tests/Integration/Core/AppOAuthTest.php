@@ -206,6 +206,20 @@ final class AppOAuthTest extends TestCase
         self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-closed'));
     }
 
+    public function test_unknown_persisted_registration_mode_blocks_a_brand_new_oauth_signup(): void
+    {
+        // A corrupt setting or future restrictive mode must not fail open.
+        $this->settings()->set('registration_mode', 'banana');
+        $before = $this->users()->count();
+
+        $out = $this->svc()->resolve($this->identity('sub-unknown-mode'), null);
+
+        self::assertSame('registration_closed', $out['action']);
+        self::assertArrayNotHasKey('user', $out);
+        self::assertSame($before, $this->users()->count());
+        self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-unknown-mode'));
+    }
+
     public function test_closed_registration_still_lets_an_existing_identity_log_in(): void
     {
         // Provision the account while sign-ups are open…

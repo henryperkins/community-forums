@@ -29,17 +29,19 @@ final class RegistrationPolicy
     ) {
     }
 
-    /** The stored operator choice, clamped to a known mode. */
+    /** The stored operator choice, preserved for diagnostics/UI even if unknown. */
     public function configuredMode(): string
     {
-        $mode = $this->settings->getString('registration_mode', 'open');
-        return in_array($mode, self::MODES, true) ? $mode : 'open';
+        return $this->settings->getString('registration_mode', 'open');
     }
 
     /** What enforcement actually applies right now. */
     public function effectiveMode(): string
     {
         $mode = $this->configuredMode();
+        if (!in_array($mode, self::MODES, true)) {
+            return 'closed';
+        }
         if ($mode === 'invite' && !$this->flags->enabled('invitations')) {
             return 'closed';
         }

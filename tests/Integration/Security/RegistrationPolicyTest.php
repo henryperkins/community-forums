@@ -51,10 +51,10 @@ final class RegistrationPolicyTest extends TestCase
         self::assertSame('invite', $this->policy()->effectiveMode());
     }
 
-    public function test_unknown_stored_mode_clamps_to_open(): void
+    public function test_unknown_stored_mode_is_preserved_but_enforces_closed(): void
     {
         (new SettingRepository($this->db))->set('registration_mode', 'banana');
-        self::assertSame('open', $this->policy()->configuredMode());
-        self::assertSame('open', $this->policy()->effectiveMode());
+        self::assertSame('banana', $this->policy()->configuredMode());
+        self::assertSame('closed', $this->policy()->effectiveMode());
     }
 }
