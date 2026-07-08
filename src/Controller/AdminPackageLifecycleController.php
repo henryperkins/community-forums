@@ -278,11 +278,6 @@ final class AdminPackageLifecycleController extends Controller
         }
     }
 
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
-
     private function lifecycle(): PackageLifecycleService
     {
         return $this->container->get(PackageLifecycleService::class);

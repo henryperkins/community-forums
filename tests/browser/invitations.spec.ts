@@ -81,6 +81,22 @@ async function expectNoSeriousA11yViolations(page: Page, info: TestInfo): Promis
   expect(violations, `${info.project.name} ${page.url()} serious/critical axe violations`).toEqual([]);
 }
 
+// Timeout-safe restore for the shared evidence DB: Playwright abandons a
+// timed-out test body (its finally may never run), but afterAll hooks still
+// execute — without this, a hang after setRegistrationMode('invite') would
+// leave the DB invite-only and cascade failures into the specs that follow.
+test.afterAll(async ({ browser }) => {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+    await setRegistrationMode(page, 'open');
+    await exitThemeSafeMode(page);
+  } finally {
+    await context.close();
+  }
+});
+
 test('invitations: show-once issue + revoke console, invite-only registration, uniform invalid banner (axe-clean)', async ({ page }, info) => {
   const who = `${info.project.name}${Date.now().toString(36)}`.replace(/[^a-zA-Z0-9]/g, '').slice(-12);
 

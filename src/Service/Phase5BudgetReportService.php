@@ -53,6 +53,7 @@ final class Phase5BudgetReportService
         private ?PackageArtifactStore $packageStore = null,
         private ?ThemeStateService $themeState = null,
         private bool $includeLifecycleSamples = false,
+        private bool $includeInvitationSample = false,
     ) {
     }
 
@@ -149,14 +150,16 @@ final class Phase5BudgetReportService
     }
 
     /**
-     * Inc 9 — self-fixturing but user-creating (a 200-iteration redemption
-     * bench that registers real accounts), so it is opt-in with the other
-     * lifecycle samplers; `verify:phase5-budgets` opts in and re-emits the
-     * row every run. Memoized so rows() and render() share one measurement.
+     * Inc 9 — self-fixturing but expensive (each iteration registers a real
+     * account with a PRODUCTION-COST Argon2id hash), so it has its OWN opt-in
+     * rather than piggybacking on the shared lifecycle switch: lifecycle-only
+     * callers (the Inc 6 report tests) must not pay this bench.
+     * `verify:phase5-budgets` opts in and re-emits the row every run.
+     * Memoized so rows() and render() share one measurement.
      */
     private function invitationSample(): ?array
     {
-        if (!$this->includeLifecycleSamples) {
+        if (!$this->includeInvitationSample) {
             return null;
         }
 
@@ -232,7 +235,7 @@ final class Phase5BudgetReportService
             } elseif ($key === 'invitation.redemption_p95') {
                 $sample = $this->invitationSample();
                 if ($sample !== null) {
-                    $measured = $sample['p95'] . ' ms invite redeem+register (' . $sample['samples'] . ' samples; token check + guarded consume + account create incl. password hash + board grant + audit)';
+                    $measured = $sample['p95'] . ' ms invite redeem+register (' . $sample['samples'] . ' samples; token check + guarded consume + account create incl. production-cost Argon2id hash + board grant + audit)';
                     $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
                 }
             } elseif ($key === 'registry.snapshot_freshness') {

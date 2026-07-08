@@ -67,6 +67,16 @@ abstract class Controller
         return Response::redirect($to, $status);
     }
 
+    /**
+     * Exclude a response from indexing — admin consoles and credential/
+     * invitation-bearing surfaces (PHASE_5_PLAN §103). Hoisted here from nine
+     * per-console copies (Inc 8 deferred follow-up, resolved Inc 9).
+     */
+    protected function noindex(Response $response): Response
+    {
+        return $response->header('X-Robots-Tag', 'noindex');
+    }
+
     protected function redirectWithFlash(string $to, string $message): Response
     {
         $this->flash()->add($message);

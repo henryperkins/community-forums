@@ -49,14 +49,22 @@ final class InvitationRepository
         return $this->db->fetch('SELECT * FROM invitations WHERE token_hash = ?', [$hash]);
     }
 
-    /** @return array<int,array<string,mixed>> newest first, with creator handle for the console */
+    /**
+     * Newest first, with the creator handle for the console. Clamped to the
+     * newest 200 rows: invitations are never purged (revoked/expired rows are
+     * retained by design), so an uncapped scan would grow for the life of the
+     * install; the console is an issuance surface, not an archive browser.
+     *
+     * @return array<int,array<string,mixed>>
+     */
     public function all(): array
     {
         return $this->db->fetchAll(
             'SELECT i.*, u.username AS creator_username
                FROM invitations i
           LEFT JOIN users u ON u.id = i.created_by
-           ORDER BY i.id DESC',
+           ORDER BY i.id DESC
+              LIMIT 200',
         );
     }
 

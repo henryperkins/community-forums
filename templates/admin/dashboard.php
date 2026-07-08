@@ -62,7 +62,7 @@
                 <span>Registration</span>
                 <select name="registration_mode" class="input">
                     <?php $regModeNotes = ['open' => '', 'invite' => ' (invitation required)', 'closed' => ' (no new sign-ups)']; ?>
-                    <?php foreach (($registration_modes ?? ['open', 'invite', 'closed']) as $m): ?>
+                    <?php foreach (($registration_modes ?? \App\Security\RegistrationPolicy::MODES) as $m): ?>
                         <option value="<?= $e($m) ?>"<?= ($registration_mode ?? 'open') === $m ? ' selected' : '' ?>><?= $e(ucfirst($m) . ($regModeNotes[$m] ?? '')) ?></option>
                     <?php endforeach; ?>
                 </select>

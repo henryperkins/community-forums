@@ -24,11 +24,6 @@ final class AdminPackagesController extends Controller
         }
     }
 
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
-
     /** @param array<string,string> $params */
     public function index(Request $request, array $params): Response
     {

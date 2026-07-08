@@ -106,11 +106,13 @@ final class OAuthService
         // the invitation must be redeemed on /register first, then the provider
         // linked from settings.
         $mode = $this->registrationPolicy->effectiveMode();
-        if ($mode === 'closed') {
-            return ['action' => 'registration_closed'];
-        }
         if ($mode === 'invite') {
             return ['action' => 'registration_invite_only'];
+        }
+        if ($mode !== 'open') {
+            // Default-deny: `closed` and any future restrictive mode must
+            // never fail open into silent account provisioning.
+            return ['action' => 'registration_closed'];
         }
         $user = $this->createFromIdentity($id);
         return ['action' => 'created', 'user' => $user];

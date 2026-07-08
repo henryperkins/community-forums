@@ -233,17 +233,130 @@ final class AppInvitationsTest extends TestCase
         self::assertStringContainsString($valid['token'], $body); // hidden field round-trips the token
     }
 
-    public function test_invite_probing_is_rate_limited(): void
+    public function test_invite_probing_is_rate_limited_at_register_and_landing_stays_a_pure_redirect(): void
     {
-        // TM-IN-01: enumeration probes trip the invite_redeem policy.
+        // TM-IN-01: enumeration probes trip the invite_redeem policy at the
+        // verdict endpoint (/register); the landing link does no token work
+        // and stays a friendly redirect even for an exhausted client.
         $this->enableInvitations();
         $this->makeAdmin();
         $this->withRateLimit('invite_redeem', 2, 900);
 
-        $this->get('/invite/' . str_repeat('a', 64));
-        $this->get('/invite/' . str_repeat('b', 64));
-        $blocked = $this->get('/invite/' . str_repeat('c', 64));
+        $this->get('/register', ['invite' => str_repeat('a', 64)]);
+        $this->get('/register', ['invite' => str_repeat('b', 64)]);
+        $blocked = $this->get('/register', ['invite' => str_repeat('c', 64)]);
         $this->assertStatus(429, $blocked);
+
+        $landing = $this->get('/invite/' . str_repeat('d', 64));
+        $this->assertRedirect($landing, '/register?invite=' . str_repeat('d', 64));
+        self::assertSame('noindex', $landing->getHeader('x-robots-tag'));
+    }
+
+    public function test_rate_limited_post_is_uniform_and_keeps_the_draft(): void
+    {
+        // After the invite_redeem window trips, the 429 body must not reveal
+        // token validity (no preview) and must keep the typed draft + token.
+        $this->enableInvitations();
+        $this->setMode('invite');
+        $valid = $this->issueInvitation();
+        $this->withRateLimit('invite_redeem', 1, 900);
+        $this->get('/register'); // seed CSRF without charging the policy
+
+        $first = $this->post('/register', $this->registerFields('probe1', 'probe1@example.test') + ['invite' => str_repeat('e', 64)]);
+        $this->assertStatus(422, $first); // consumed the single unit
+
+        foreach (['valid' => $valid['token'], 'invalid' => str_repeat('f', 64)] as $kind => $token) {
+            $res = $this->post('/register', $this->registerFields('limited' . $kind, $kind . '@example.test') + ['invite' => $token]);
+            $this->assertStatus(429, $res);
+            self::assertStringContainsString('Too many invitation attempts', $res->body(), $kind);
+            self::assertStringContainsString('limited' . $kind, $res->body(), "draft lost for $kind token");
+            self::assertStringContainsString($token, $res->body(), "token dropped for $kind");
+            self::assertStringContainsString('name="username"', $res->body(), "form suppressed for $kind token");
+            self::assertStringNotContainsString('been invited', $res->body(), "validity leaked for $kind token");
+        }
+    }
+
+    public function test_dead_token_is_dropped_so_the_retry_can_succeed(): void
+    {
+        // Open mode: a 422 for the token's own death must keep the draft but
+        // drop the dead token, so resubmitting the re-rendered form works.
+        $this->enableInvitations();
+        $this->setMode('open');
+        $expired = $this->issueInvitation();
+        $this->db->run("UPDATE invitations SET expires_at = '2020-01-01 00:00:00' WHERE id = ?", [$expired['id']]);
+        $this->get('/register');
+
+        $res = $this->post('/register', $this->registerFields('retryer', 'retryer@example.test') + ['invite' => $expired['token']]);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('retryer', $res->body());
+        self::assertStringContainsString('name="username"', $res->body());
+        self::assertStringNotContainsString($expired['token'], $res->body(), 'a dead token must not be re-embedded');
+
+        $retry = $this->post('/register', $this->registerFields('retryer', 'retryer@example.test'));
+        $this->assertRedirect($retry, '/');
+    }
+
+    public function test_invite_mode_error_rerenders_keep_the_typed_draft(): void
+    {
+        $this->enableInvitations();
+        $this->setMode('invite');
+        $invite = $this->issueInvitation(['max_uses' => '5']);
+        $this->get('/register', ['invite' => $invite['token']]);
+
+        // Field error: draft + still-valid token + form all survive.
+        $res = $this->post('/register', ['username' => 'keepme', 'email' => 'keepme@example.test', 'password' => 'x', 'password_confirm' => 'x', 'invite' => $invite['token']]);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('keepme', $res->body());
+        self::assertStringContainsString($invite['token'], $res->body());
+        self::assertStringContainsString('name="username"', $res->body());
+
+        // Token-less POST carrying a draft: the 403 must still render the draft
+        // (anti-draft-loss) rather than suppressing the form.
+        $this->get('/register');
+        $res = $this->post('/register', $this->registerFields('draftful', 'draftful@example.test'));
+        $this->assertStatus(403, $res);
+        self::assertStringContainsString('invitation', $res->body());
+        self::assertStringContainsString('draftful', $res->body());
+        self::assertStringContainsString('name="username"', $res->body());
+    }
+
+    public function test_rate_limited_get_keeps_the_token_and_stays_noindex(): void
+    {
+        // A 429 on GET /register?invite=… must not silently degrade the next
+        // submit into a plain grant-less signup, and must stay out of indexes.
+        $this->enableInvitations();
+        $this->setMode('open');
+        $invite = $this->issueInvitation();
+        $this->withRateLimit('invite_redeem', 1, 900);
+
+        $this->get('/register', ['invite' => $invite['token']]);
+        $blocked = $this->get('/register', ['invite' => $invite['token']]);
+        $this->assertStatus(429, $blocked);
+        self::assertStringContainsString($invite['token'], $blocked->body(), 'the grant must not be silently dropped');
+        self::assertSame('noindex', $blocked->getHeader('x-robots-tag'));
+    }
+
+    public function test_token_bearing_renders_stay_noindex_while_dark(): void
+    {
+        $this->setMode('open'); // features.invitations stays dark
+        $this->makeAdmin();
+        $res = $this->get('/register', ['invite' => str_repeat('a', 64)]);
+        $this->assertStatus(200, $res);
+        self::assertSame('noindex', $res->getHeader('x-robots-tag'));
+    }
+
+    public function test_array_shaped_invite_parameters_are_treated_as_absent(): void
+    {
+        $this->enableInvitations();
+        $this->setMode('open');
+        $this->makeAdmin();
+
+        // Strict PHPUnit turns the 'Array to string conversion' E_WARNING red.
+        $this->assertStatus(200, $this->get('/register', ['invite' => ['x']]));
+
+        $this->get('/register');
+        $res = $this->post('/register', $this->registerFields('arrayproof', 'arrayproof@example.test') + ['invite' => ['x', 'y']]);
+        $this->assertRedirect($res, '/'); // malformed carrier = no token; plain signup
     }
 
     public function test_full_invite_registration_flow_in_invite_mode(): void

@@ -204,35 +204,43 @@ final class AuthController extends Controller
             return $this->redirect('/');
         }
         $mode = $this->container->get(RegistrationPolicy::class)->effectiveMode();
-        $invite = $this->inviteContext(trim((string) $request->query('invite', '')));
+        $raw = $request->query('invite', '');
+        $rawToken = is_string($raw) ? trim($raw) : ''; // ?invite[]=x must not warn/coerce to 'Array'
+        $token = $this->container->get(FeatureFlags::class)->enabled('invitations') ? $rawToken : '';
 
-        if ($invite['token'] !== '') {
-            // A token in the query is a redemption attempt — probing counts
-            // against the same policy as /invite/{token} (TM-IN-01).
+        if ($token !== '') {
+            // Probing is limited BEFORE any token lookup (TM-IN-01), and the
+            // limited response is uniform: no preview — the token is kept via
+            // `old` so a legitimate invitee's later submit still carries the
+            // grant instead of silently degrading to a plain signup.
             try {
-                $this->container->get(RateLimitService::class)->enforce('invite_redeem', $request);
+                $this->container->get(RateLimitService::class)->enforce(InvitationService::LIMIT_REDEEM, $request);
             } catch (HttpException) {
-                return $this->registerView($mode, ['token' => '', 'valid' => false], ['invite' => 'Too many invitation attempts. Please try again later.'], [], 429);
+                return $this->registerView($mode, ['token' => $token, 'valid' => true],
+                    ['invite' => 'Too many invitation attempts. Please try again later.'],
+                    ['invite' => $token], 429, true);
             }
         }
 
-        $errors = $invite['token'] !== '' && !$invite['valid']
+        $invite = $this->inviteContext($token);
+        $errors = $token !== '' && !$invite['valid']
             ? ['invite' => InvitationService::INVALID_MESSAGE]
             : [];
-        return $this->registerView($mode, $invite, $errors, []);
+        return $this->registerView($mode, $invite, $errors, [], 200, $rawToken !== '');
     }
 
     /**
-     * Public invite landing (P5-13): normalize into the register flow. The
-     * validity verdict is rendered by /register so every probe path shares
-     * one uniform response; the redirect itself reveals nothing.
+     * Public invite landing (P5-13): a pure normalizing redirect into
+     * /register, which owns both the rate limit and the uniform verdict.
+     * No token work happens here, so an exhausted client still lands on the
+     * friendly register page instead of a bare kernel 429, and a legitimate
+     * journey is charged once per request that actually evaluates the token.
      */
     public function invite(Request $request, array $params): Response
     {
         $this->gateInvitations();
-        $this->container->get(RateLimitService::class)->enforce('invite_redeem', $request);
         $token = trim((string) ($params['token'] ?? ''));
-        return $this->redirect('/register?invite=' . urlencode($token))->header('X-Robots-Tag', 'noindex');
+        return $this->noindex($this->redirect('/register?invite=' . urlencode($token)));
     }
 
     /** @param array<string,string> $params */
@@ -243,37 +251,41 @@ final class AuthController extends Controller
         }
 
         $mode = $this->container->get(RegistrationPolicy::class)->effectiveMode();
-        $inviteToken = $this->container->get(FeatureFlags::class)->enabled('invitations')
-            ? trim((string) $request->post('invite', ''))
-            : ''; // dark flag: tokens are inert, plain-mode rules apply
+        $raw = $request->post('invite', '');
+        $rawToken = is_string($raw) ? trim($raw) : ''; // array-shaped input = no token
+        $inviteToken = $this->container->get(FeatureFlags::class)->enabled('invitations') ? $rawToken : '';
+        $tokenInRequest = $rawToken !== '';
 
-        // Registration mode (P3-05 / P5-13): `closed` is absolute — a valid
-        // invitation does not reopen it; `invite` requires a token.
-        if ($mode === 'closed') {
-            return $this->registerView($mode, ['token' => '', 'valid' => false], [], [], 403);
+        // Registration mode (P3-05 / P5-13), default-deny: only `open` and
+        // `invite` admit anyone — a future restrictive mode must not fail
+        // open — and `closed` is absolute (a valid invitation cannot reopen
+        // it). Blocked notices come from the template's own state chain; a
+        // typed draft still re-renders inside the form (anti-draft-loss).
+        if ($mode !== 'open' && $mode !== 'invite') {
+            return $this->registerView($mode, ['token' => '', 'valid' => false], [], $this->oldRegister($request), 403, $tokenInRequest);
         }
         if ($mode === 'invite' && $inviteToken === '') {
-            return $this->registerView($mode, ['token' => '', 'valid' => false],
-                ['invite' => 'Registration is by invitation only. Use your invitation link to sign up.'],
-                $this->oldRegister($request), 403);
+            return $this->registerView($mode, ['token' => '', 'valid' => false], [], $this->oldRegister($request), 403, $tokenInRequest);
         }
 
         $limiter = $this->container->get(RateLimitService::class);
         if ($inviteToken !== '') {
             try {
-                $limiter->enforce('invite_redeem', $request);
+                $limiter->enforce(InvitationService::LIMIT_REDEEM, $request);
             } catch (HttpException) {
-                return $this->registerView($mode, $this->inviteContext($inviteToken),
+                // Uniform limited response (TM-IN-01): no token lookup, and
+                // both the draft and the token survive for the retry.
+                return $this->registerView($mode, ['token' => $inviteToken, 'valid' => true],
                     ['invite' => 'Too many invitation attempts. Please try again later.'],
-                    $this->oldRegister($request) + ['invite' => $inviteToken], 429);
+                    $this->oldRegister($request) + ['invite' => $inviteToken], 429, true);
             }
         }
         try {
             $limiter->enforce('register', $request);
         } catch (HttpException) {
-            return $this->registerView($mode, $this->inviteContext($inviteToken),
+            return $this->registerView($mode, ['token' => $inviteToken, 'valid' => $inviteToken !== ''],
                 ['email' => 'Too many sign-up attempts from your network. Please try again later.'],
-                $this->oldRegister($request) + ['invite' => $inviteToken], 429);
+                $this->oldRegister($request) + ['invite' => $inviteToken], 429, $tokenInRequest);
         }
 
         try {
@@ -281,7 +293,19 @@ final class AuthController extends Controller
                 ? $this->container->get(InvitationService::class)->redeem($inviteToken, $request->allInput(), $request->ip())
                 : $this->container->get(AuthService::class)->register($request->allInput());
         } catch (ValidationException $e) {
-            return $this->registerView($mode, $this->inviteContext($inviteToken), $e->errors, $e->old, 422);
+            $old = $e->old;
+            if (isset($e->errors['invite'])) {
+                // The token itself is dead: drop it so the re-rendered form's
+                // next submit can succeed (open mode) instead of re-failing
+                // forever on an unremovable hidden field.
+                unset($old['invite']);
+                $invite = ['token' => '', 'valid' => false];
+            } else {
+                // Field errors: the transaction rolled the consumed use back,
+                // so the token is still live — keep it without re-probing.
+                $invite = ['token' => $inviteToken, 'valid' => $inviteToken !== ''];
+            }
+            return $this->registerView($mode, $invite, $e->errors, $old, 422, $tokenInRequest);
         }
 
         $this->session()->login($user);
@@ -313,16 +337,20 @@ final class AuthController extends Controller
 
     /**
      * Render auth/register for the mode × invite matrix. The form is
-     * suppressed when registration cannot possibly succeed (closed, or
-     * invite-mode without a currently-valid token).
+     * suppressed only on PRISTINE blocked renders (closed, or invite-mode
+     * without a currently-valid token): when a typed draft is present the
+     * form always renders — anti-draft-loss beats the blocked state.
      *
      * @param array{token:string, valid:bool} $invite
      * @param array<string,string> $errors
      * @param array<string,mixed> $old
      */
-    private function registerView(string $mode, array $invite, array $errors, array $old, int $status = 200): Response
+    private function registerView(string $mode, array $invite, array $errors, array $old, int $status = 200, bool $tokenInRequest = false): Response
     {
-        $blocked = $mode === 'closed' || ($mode === 'invite' && !$invite['valid']);
+        $hasDraft = trim((string) ($old['username'] ?? '')) !== ''
+            || trim((string) ($old['email'] ?? '')) !== ''
+            || trim((string) ($old['display_name'] ?? '')) !== '';
+        $blocked = ($mode === 'closed' || ($mode === 'invite' && !$invite['valid'])) && !$hasDraft;
         $response = $this->view('auth/register', [
             'errors' => $errors,
             'old' => $old,
@@ -331,9 +359,11 @@ final class AuthController extends Controller
             'invite_valid' => $invite['valid'],
             'registration_blocked' => $blocked,
         ], $status);
-        // Invitation-bearing renders stay out of indexes (PHASE_5_PLAN §103).
-        return ($invite['token'] !== '' || ($old['invite'] ?? '') !== '')
-            ? $response->header('X-Robots-Tag', 'noindex')
+        // Invitation-bearing renders stay out of indexes (PHASE_5_PLAN §103),
+        // keyed on the RAW request token too so limiter or flag state can
+        // never drop the header from a URL that carries a secret.
+        return ($tokenInRequest || $invite['token'] !== '' || ($old['invite'] ?? '') !== '')
+            ? $this->noindex($response)
             : $response;
     }
 

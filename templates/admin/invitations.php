@@ -35,13 +35,14 @@ $this->section('title', 'Invitations');
             </label>
             <?php if (!empty($errors['domain'])): ?><p class="field-error"><?= $e($errors['domain']) ?></p><?php endif; ?>
 
-            <label>Max uses (1–100, default 1)
-                <input type="number" name="max_uses" min="1" max="100" value="<?= $e($old['max_uses'] ?? '') ?>">
+            <?php $maxUses = (int) ($limits['max_uses'] ?? 100); $maxDays = (int) ($limits['max_expiry_days'] ?? 365); $defaultDays = (int) ($limits['default_expiry_days'] ?? 14); ?>
+            <label>Max uses (1–<?= $maxUses ?>, default 1)
+                <input type="number" name="max_uses" min="1" max="<?= $maxUses ?>" value="<?= $e($old['max_uses'] ?? '') ?>">
             </label>
             <?php if (!empty($errors['max_uses'])): ?><p class="field-error"><?= $e($errors['max_uses']) ?></p><?php endif; ?>
 
-            <label>Expires in days (1–365, default 14)
-                <input type="number" name="expires_in_days" min="1" max="365" value="<?= $e($old['expires_in_days'] ?? '') ?>">
+            <label>Expires in days (1–<?= $maxDays ?>, default <?= $defaultDays ?>)
+                <input type="number" name="expires_in_days" min="1" max="<?= $maxDays ?>" value="<?= $e($old['expires_in_days'] ?? '') ?>">
             </label>
             <?php if (!empty($errors['expires_in_days'])): ?><p class="field-error"><?= $e($errors['expires_in_days']) ?></p><?php endif; ?>
 

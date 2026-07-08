@@ -140,6 +140,36 @@ final class InvitationServiceTest extends TestCase
         }
     }
 
+    public function test_create_rejects_malformed_domains_and_coerced_board_ids(): void
+    {
+        $admin = $this->adminEntity();
+        $service = $this->service();
+
+        // Label-wise domain validity: a typo here mints an invitation that no
+        // valid email address could ever satisfy (silently unredeemable).
+        foreach (['example..com', '-example.com', 'example-.com', 'exam_ple.com', '.example.com'] as $bad) {
+            try {
+                $service->create($admin, ['domain' => $bad]);
+                self::fail("domain '$bad' must be rejected");
+            } catch (ValidationException $e) {
+                self::assertArrayHasKey('domain', $e->errors, $bad);
+            }
+        }
+        $ok = $service->create($admin, ['domain' => 'sub.example.co.uk']);
+        self::assertSame('sub.example.co.uk', $this->row($ok['id'])['domain']);
+
+        // Board ids get the same strict round-trip as the numeric siblings.
+        $board = $this->makeBoard($this->makeCategory(), []);
+        foreach (['0' . $board['id'], $board['id'] . 'abc', '+' . $board['id']] as $bad) {
+            try {
+                $service->create($admin, ['onboarding_board_id' => $bad]);
+                self::fail("board id '$bad' must be rejected");
+            } catch (ValidationException $e) {
+                self::assertArrayHasKey('onboarding_board_id', $e->errors, $bad);
+            }
+        }
+    }
+
     public function test_create_defaults_expiry_to_fourteen_days_and_never_stores_a_role(): void
     {
         // onboarding_role_id is deliberately not part of the issuance surface

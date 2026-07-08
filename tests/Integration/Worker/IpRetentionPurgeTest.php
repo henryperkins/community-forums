@@ -37,13 +37,33 @@ final class IpRetentionPurgeTest extends TestCase
             [hash('sha256', $sid), (int) $author['id'], bin2hex(random_bytes(16)), inet_pton('203.0.113.9'), gmdate('Y-m-d H:i:s', time() - 100 * 86400), gmdate('Y-m-d H:i:s', time() + 86400)],
         );
 
+        // Invitation redemptions (P5-13, Inc 9) capture IPs too: one past the
+        // cutoff, one fresh, on a throwaway invitation row.
+        $inviteId = (int) $this->db->insert(
+            "INSERT INTO invitations (token_hash, max_uses, expires_at) VALUES (?, 1, '2030-01-01 00:00:00')",
+            [hash('sha256', 'purge-fixture-token')],
+        );
+        $this->db->run(
+            'INSERT INTO invitation_redemptions (invitation_id, user_id, ip, redeemed_at) VALUES (?, ?, ?, ?)',
+            [$inviteId, (int) $author['id'], inet_pton('203.0.113.7'), gmdate('Y-m-d H:i:s', time() - 100 * 86400)],
+        );
+        $this->db->run(
+            'INSERT INTO invitation_redemptions (invitation_id, user_id, ip, redeemed_at) VALUES (?, ?, ?, UTC_TIMESTAMP())',
+            [$inviteId, (int) $author['id'], inet_pton('203.0.113.8')],
+        );
+
         $purger = new IpRetentionPurger($this->db, new ModerationLogRepository($this->db), 90);
         $stats = $purger->run();
 
         self::assertSame(1, $stats['posts']);
         self::assertSame(1, $stats['sessions']);
+        self::assertSame(1, $stats['invitation_redemptions']);
         self::assertNull($this->db->fetchValue('SELECT ip FROM posts WHERE id = ?', [$oldPostId]));
         self::assertNotNull($this->db->fetchValue('SELECT ip FROM posts WHERE id = ?', [$freshPostId]));
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM invitation_redemptions WHERE invitation_id = ? AND ip IS NULL',
+            [$inviteId],
+        ), 'only the past-cutoff redemption IP is anonymised');
 
         // Audited with a system actor.
         self::assertNotFalse($this->db->fetchValue(
@@ -54,5 +74,6 @@ final class IpRetentionPurgeTest extends TestCase
         $again = $purger->run();
         self::assertSame(0, $again['posts']);
         self::assertSame(0, $again['sessions']);
+        self::assertSame(0, $again['invitation_redemptions']);
     }
 }

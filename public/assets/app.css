@@ -1841,9 +1841,15 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 }
 .auth-links a {
     color: var(--brand);
-    /* Inside muted body text the brand color alone can miss the 3:1
-       link-vs-text contrast (WCAG 1.4.1 / axe link-in-text-block) — keep the
-       link distinguishable without relying on color. */
+}
+/* Links inside muted/notice prose can miss the 3:1 link-vs-text contrast
+   (WCAG 1.4.1 / axe link-in-text-block) when relying on color alone — one
+   shared rule instead of per-surface patches, so the next muted-prose link
+   ships compliant by default. */
+.auth-links a,
+.notice a,
+.muted a,
+.empty a {
     text-decoration: underline;
     text-underline-offset: 2px;
 }

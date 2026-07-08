@@ -40,7 +40,7 @@ final class AdminInvitationController extends Controller
         $this->gate();
 
         try {
-            $this->container->get(RateLimitService::class)->enforce('invite_create', $request, $admin);
+            $this->container->get(RateLimitService::class)->enforce(InvitationService::LIMIT_CREATE, $request, $admin);
         } catch (HttpException) {
             return $this->consoleView(
                 ['create' => 'Too many invitations created just now. Please wait before issuing more.'],
@@ -102,14 +102,14 @@ final class AdminInvitationController extends Controller
         return $this->noindex($this->view('admin/invitations', [
             'rows' => $this->container->get(InvitationService::class)->list(),
             'boards' => $this->container->get(BoardRepository::class)->allOrdered(),
+            'limits' => [
+                'max_uses' => InvitationService::MAX_USES_CEILING,
+                'max_expiry_days' => InvitationService::MAX_EXPIRY_DAYS,
+                'default_expiry_days' => InvitationService::DEFAULT_EXPIRY_DAYS,
+            ],
             'errors' => $errors,
             'old' => $old,
             'new_invitation' => $newInvitation,
         ], $status));
-    }
-
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
     }
 }

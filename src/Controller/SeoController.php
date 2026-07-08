@@ -76,6 +76,7 @@ final class SeoController extends Controller
             'Disallow: /register',
             'Disallow: /reset',
             'Disallow: /verify',
+            'Disallow: /invite', // token-bearing invitation landing URLs (P5-13)
             'Allow: /',
         ];
         // Only advertise the sitemap when the SEO subsystem is enabled (else it 404s).

@@ -29,10 +29,17 @@ final class InvitationService
 {
     public const INVALID_MESSAGE = 'This invitation link is invalid or no longer active.';
 
+    // Named rate-limit policies (config `rate_limits`). RateLimitService
+    // silently no-ops on unknown names, so every call site references these
+    // constants instead of retyping the fail-open string.
+    public const LIMIT_CREATE = 'invite_create';
+    public const LIMIT_REDEEM = 'invite_redeem';
+
+    public const DEFAULT_EXPIRY_DAYS = 14;        // invitations always expire
+    public const MAX_EXPIRY_DAYS = 365;
+    public const MAX_USES_CEILING = 100;
+
     private const TOKEN_BYTES = 32;               // 64 lowercase hex chars
-    private const DEFAULT_EXPIRY_DAYS = 14;       // invitations always expire
-    private const MAX_EXPIRY_DAYS = 365;
-    private const MAX_USES_CEILING = 100;
 
     public function __construct(
         private Database $db,
@@ -79,7 +86,10 @@ final class InvitationService
         if ($email !== '' && (filter_var($email, FILTER_VALIDATE_EMAIL) === false || strlen($email) > 255)) {
             $errors['email'] = 'Enter a valid email address to bind, or leave blank.';
         }
-        if ($domain !== '' && (strlen($domain) > 190 || preg_match('/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/', $domain) !== 1)) {
+        // Label-wise validity (no empty labels, no edge hyphens): a typo like
+        // "example..com" would otherwise mint an invitation no valid email
+        // address can ever satisfy — silently unredeemable.
+        if ($domain !== '' && (strlen($domain) > 190 || preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/', $domain) !== 1)) {
             $errors['domain'] = 'Enter a bare domain like example.com, or leave blank.';
         }
         $maxUses = $maxUsesRaw === '' ? 1 : (int) $maxUsesRaw;
@@ -91,7 +101,7 @@ final class InvitationService
             $errors['expires_in_days'] = 'Expiry must be between 1 and ' . self::MAX_EXPIRY_DAYS . ' days.';
         }
         $boardId = $boardRaw === '' ? null : (int) $boardRaw;
-        if ($boardId !== null && $this->boards->find($boardId) === null) {
+        if ($boardId !== null && ((string) $boardId !== $boardRaw || $this->boards->find($boardId) === null)) {
             $errors['onboarding_board_id'] = 'That board does not exist.';
         }
         if ($errors !== []) {
@@ -134,10 +144,21 @@ final class InvitationService
         return ['id' => $id, 'token' => $token];
     }
 
+    /**
+     * One clock for validity decisions: the DB's. `consumeUse` compares
+     * `expires_at` against UTC_TIMESTAMP(), so preview/list must too — with
+     * web-host/DB clock skew the two gates would otherwise disagree near
+     * expiry (console says Active, every redemption refuses, or vice versa).
+     */
+    private function nowUtc(): string
+    {
+        return (string) $this->db->fetchValue('SELECT UTC_TIMESTAMP()');
+    }
+
     /** @return array<int,array<string,mixed>> console rows with a derived `status` */
     public function list(): array
     {
-        $now = gmdate('Y-m-d H:i:s');
+        $now = $this->nowUtc();
         $rows = [];
         foreach ($this->invitations->all() as $row) {
             $row['status'] = $this->status($row, $now);
@@ -252,7 +273,7 @@ final class InvitationService
             return null;
         }
         $row = $this->invitations->findByTokenHash(self::hash($rawToken));
-        if ($row === null || $this->status($row, gmdate('Y-m-d H:i:s')) !== 'active') {
+        if ($row === null || $this->status($row, $this->nowUtc()) !== 'active') {
             return null;
         }
         return $row;

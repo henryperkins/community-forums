@@ -204,9 +204,4 @@ final class AdminProviderController extends Controller
     {
         return in_array($provider, $usable, true) ? $usable : [...$usable, $provider];
     }
-
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
 }
