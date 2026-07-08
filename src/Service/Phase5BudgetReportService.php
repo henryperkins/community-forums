@@ -42,6 +42,7 @@ final class Phase5BudgetReportService
     private ?array $oidcColdSample = null;
     private ?array $propagationSample = null;
     private ?array $simulatorSample = null;
+    private ?array $invitationSample = null;
 
     public function __construct(
         private Database $db,
@@ -147,6 +148,21 @@ final class Phase5BudgetReportService
         return $this->simulatorSample ??= (new BaselineMetricsService($this->db))->measureSimulatorDuration();
     }
 
+    /**
+     * Inc 9 — self-fixturing but user-creating (a 200-iteration redemption
+     * bench that registers real accounts), so it is opt-in with the other
+     * lifecycle samplers; `verify:phase5-budgets` opts in and re-emits the
+     * row every run. Memoized so rows() and render() share one measurement.
+     */
+    private function invitationSample(): ?array
+    {
+        if (!$this->includeLifecycleSamples) {
+            return null;
+        }
+
+        return $this->invitationSample ??= (new BaselineMetricsService($this->db))->measureInvitationRedemption();
+    }
+
     /** @return array<int,array{key:string,metric:string,target:string,measured:string,status:string}> */
     public function rows(): array
     {
@@ -213,6 +229,12 @@ final class Phase5BudgetReportService
                 $sample = $this->oidcSample(true);
                 $measured = $sample['p95'] . ' ms cold discovery+JWKS (' . $sample['samples'] . ' iterations; fetch+validate+persist, in-process transport — remote RTT excluded)';
                 $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+            } elseif ($key === 'invitation.redemption_p95') {
+                $sample = $this->invitationSample();
+                if ($sample !== null) {
+                    $measured = $sample['p95'] . ' ms invite redeem+register (' . $sample['samples'] . ' samples; token check + guarded consume + account create incl. password hash + board grant + audit)';
+                    $status = ((float) $sample['p95']) <= (float) $b['target'] ? 'MEASURED (PASS)' : 'MEASURED (FAIL)';
+                }
             } elseif ($key === 'registry.snapshot_freshness') {
                 $measured = '86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal)';
                 $status = 'CONFIG';
@@ -273,6 +295,11 @@ final class Phase5BudgetReportService
         if ($simulatorSample !== null) {
             $out .= '- Simulator duration p50/p95/p99 (ms): ' . $simulatorSample['p50'] . ' / ' . $simulatorSample['p95'] . ' / ' . $simulatorSample['p99']
                 . ' · route/job: `' . $simulatorSample['route_or_job'] . '` · iterations: ' . $simulatorSample['samples'] . "\n";
+        }
+        $invitationSample = $this->invitationSample();
+        if ($invitationSample !== null) {
+            $out .= '- Invitation redemption p50/p95/p99 (ms): ' . $invitationSample['p50'] . ' / ' . $invitationSample['p95'] . ' / ' . $invitationSample['p99']
+                . ' · route/job: `' . $invitationSample['route_or_job'] . '` · samples: ' . $invitationSample['samples'] . "\n";
         }
         $out .= '- Queries: ' . $env['query_count'] . ' · query time (ms): ' . $env['query_time_ms']
              . ' · peak mem (bytes): ' . $env['peak_memory_bytes'] . ' · error rate: ' . $env['error_rate'] . "\n\n";

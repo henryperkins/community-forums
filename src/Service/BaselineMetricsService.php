@@ -14,6 +14,7 @@ use App\Repository\BoardRepository;
 use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\IdentityProviderRepository;
+use App\Repository\InvitationRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\RoleAssignmentHistoryRepository;
@@ -587,6 +588,99 @@ final class BaselineMetricsService
             'p95' => self::percentile($samples, 95),
             'p99' => self::percentile($samples, 99),
             'query_count' => $cold ? 4 * $iterations : 1 * $iterations,
+            'query_time_ms' => round(array_sum($samples), 4),
+            'peak_memory_bytes' => memory_get_peak_usage(true),
+            'queue_age' => null,
+            'error_rate' => $samples === [] ? 0.0 : round($errors / count($samples), 4),
+        ];
+    }
+
+    /**
+     * D11 `invitation.redemption_p95` (P5-13, Inc 9): the full production
+     * redemption path per iteration — uniform token check, guarded consume,
+     * `AuthService::register` (INCLUDING the real password hash, which
+     * dominates), redemption row, board grant, audit. Issuance happens
+     * outside the timer (its budget is not the redemption budget).
+     *
+     * Self-fixturing (bench admin + board from `$this->db`), but it CREATES
+     * user rows, so it must run inside the caller's rollback transaction
+     * (mirrors measureInstallUpdate).
+     *
+     * @return array<string,mixed> §11.3 measurement-envelope row
+     */
+    public function measureInvitationRedemption(int $iterations = 200): array
+    {
+        if (!$this->db->pdo()->inTransaction()) {
+            throw new \RuntimeException('Invitation redemption sampling must run inside a caller-owned rollback transaction.');
+        }
+
+        $users = new UserRepository($this->db);
+        $service = new InvitationService(
+            $this->db,
+            new InvitationRepository($this->db),
+            new AuthService($users, new PasswordHasher(), new Config([])),
+            new BoardRepository($this->db),
+            new BoardMemberRepository($this->db),
+            new ModerationLogRepository($this->db),
+        );
+
+        $suffix = bin2hex(random_bytes(4));
+        $adminId = $users->create([
+            'username' => 'invbenchadmin' . $suffix,
+            'email' => 'invbenchadmin' . $suffix . '@bench.test',
+            'password_hash' => null,
+            'display_name' => null,
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+        $admin = $users->findEntity($adminId) ?? throw new \RuntimeException('bench admin vanished');
+
+        $categoryId = (new CategoryRepository($this->db))->create('Invite bench ' . $suffix, 999);
+        $boardId = (new BoardRepository($this->db))->create([
+            'category_id' => $categoryId,
+            'name' => 'Invite bench board',
+            'slug' => 'invite-bench-' . $suffix,
+            'visibility' => 'public',
+        ]);
+
+        $samples = [];
+        $errors = 0;
+        for ($i = 0; $i < $iterations; $i++) {
+            // Bench scaffolding, outside the timer: a fresh single-use invitation.
+            $invite = $service->create($admin, ['onboarding_board_id' => (string) $boardId]);
+            $input = [
+                'username' => 'invbench' . $i . $suffix,
+                'email' => 'invbench' . $i . $suffix . '@bench.test',
+                'password' => 'bench-password-123',
+                'password_confirm' => 'bench-password-123',
+            ];
+
+            $t0 = hrtime(true);
+            try {
+                $service->redeem($invite['token'], $input, '203.0.113.7');
+            } catch (\Throwable) {
+                $errors++;
+            }
+            $samples[] = (hrtime(true) - $t0) / 1_000_000;
+        }
+
+        return [
+            'route_or_job' => 'invitation_redemption',
+            'hardware_class' => getenv('RB_HARDWARE_CLASS') ?: 'unknown',
+            'os_isolation_profile' => PHP_OS_FAMILY,
+            'php_version' => PHP_VERSION,
+            'db_version' => (string) ($this->db->fetchValue('SELECT VERSION()') ?? ''),
+            'data_fixture' => 'fresh single-use board-granting invitation per iteration; timed region = preview + guarded consume + register (real password hash) + redemption row + board grant + audit',
+            'role_assignment_count' => 0,
+            'installed_package_count' => 0,
+            'concurrency' => 1,
+            'cache_state' => 'warm',
+            'window' => $iterations . ' iterations',
+            'samples' => count($samples),
+            'p50' => self::percentile($samples, 50),
+            'p95' => self::percentile($samples, 95),
+            'p99' => self::percentile($samples, 99),
+            'query_count' => 9 * $iterations,
             'query_time_ms' => round(array_sum($samples), 4),
             'peak_memory_bytes' => memory_get_peak_usage(true),
             'queue_age' => null,

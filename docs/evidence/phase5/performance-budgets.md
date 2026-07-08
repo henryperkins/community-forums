@@ -11,15 +11,16 @@
 - Hardware class: unknown · OS/isolation: Linux
 - Fixture: phase5_fixture_v2 · role assignments: 4
 - Window: 200 iterations · concurrency: 1 · cache: cold
-- Legacy read p50/p95/p99 (ms): 0.8808 / 1.1839 / 1.5234
-- Resolver p50/p95/p99 (ms): 0.0009 / 0.4543 / 1.5468 · route/job: `capability_resolver_can`
-- Signature verify p50/p95/p99 (ms): 0.3986 / 0.5457 / 0.6284 · route/job: `registry_signature_verify`
-- Package install/update p50/p95/p99 (ms): 24.2235 / 41.3251 / 41.3251 · route/job: `package_install_update` · samples: 8
-- Theme build/apply p50/p95/p99 (ms): 5.3773 / 6.8788 / 6.8788 · route/job: `theme_build_apply` · samples: 8
-- WebAuthn ceremony p50/p95/p99 (ms): 1.4329 / 1.8257 / 2.1914 · route/job: `webauthn_ceremony_assertion_verify` · samples: 200
-- Assignment-change propagation p50/p95/p99 (ms): 3.3405 / 4.0004 / 4.3479 · route/job: `role_assignment_change_propagation` · iterations: 200 · stale-after-revoke: 0
-- Simulator duration p50/p95/p99 (ms): 1.0749 / 2.1829 / 4.2909 · route/job: `permission_simulator_simulate` · iterations: 200
-- Queries: 600 · query time (ms): 181.2083 · peak mem (bytes): 4194304 · error rate: 0
+- Legacy read p50/p95/p99 (ms): 0.9053 / 1.27 / 1.9696
+- Resolver p50/p95/p99 (ms): 0.0008 / 0.4068 / 1.436 · route/job: `capability_resolver_can`
+- Signature verify p50/p95/p99 (ms): 0.4704 / 0.5682 / 0.6172 · route/job: `registry_signature_verify`
+- Package install/update p50/p95/p99 (ms): 22.8463 / 52.218 / 52.218 · route/job: `package_install_update` · samples: 8
+- Theme build/apply p50/p95/p99 (ms): 4.9246 / 8.904 / 8.904 · route/job: `theme_build_apply` · samples: 8
+- WebAuthn ceremony p50/p95/p99 (ms): 1.3528 / 1.7414 / 1.821 · route/job: `webauthn_ceremony_assertion_verify` · samples: 200
+- Assignment-change propagation p50/p95/p99 (ms): 2.8781 / 3.8414 / 4.5759 · route/job: `role_assignment_change_propagation` · iterations: 200 · stale-after-revoke: 0
+- Simulator duration p50/p95/p99 (ms): 0.9963 / 1.5455 / 2.8588 · route/job: `permission_simulator_simulate` · iterations: 200
+- Invitation redemption p50/p95/p99 (ms): 4.3485 / 5.59 / 7.35 · route/job: `invitation_redemption` · samples: 200
+- Queries: 600 · query time (ms): 184.7751 · peak mem (bytes): 4194304 · error rate: 0
 
 ## Budgets vs D11 targets (ADR 0004 D11)
 
@@ -27,16 +28,16 @@
 |---|---|---|---|---|
 | `registry.snapshot_freshness` | Registry snapshot freshness tolerance | 86400 s (max) | 86400 s enforced at ingest (freshness_window clamp + expired_snapshot refusal) | CONFIG |
 | `registry.fetch_p95` | Registry fetch duration | 2000 ms (p95) | — | PENDING (staged-enablement) |
-| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5457 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
-| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 41.3251 ms install/update (8 samples) | MEASURED (PASS) |
-| `theme.build_apply_p95` | Theme build + activate (declarative package) | 10000 ms (p95) | 6.8788 ms theme build/apply (8 samples) | MEASURED (PASS) |
-| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 0.4543 ms resolver (baseline 1.1839 ms legacy) | MEASURED (PASS) |
-| `role_assignment.change_propagation_p95` | Assignment-change propagation (revoke → resolver decision) | no D11 target (measurement only) | 4.0004 ms revoke→can pair (200 iterations, 0/200 stale-after-revoke) | MEASURED (no D11 target) |
-| `permission_simulator.duration_p95` | Permission simulator (simulate() call) | no D11 target (measurement only) | 2.1829 ms simulate() call (200 iterations, F9 fixture) | MEASURED (no D11 target) |
-| `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | 1.8257 ms WebAuthn assertion verify (200 samples) | MEASURED (PASS) |
-| `oidc.discovery_p95_cached` | OIDC discovery/JWKS (cached) | 2000 ms (p95) | 0.7275 ms cached discovery+JWKS (200 iterations; row load + authorizeUrl + JWKS cache hit) | MEASURED (PASS) |
-| `oidc.discovery_p95_cold` | OIDC discovery/JWKS (cold) | 5000 ms (p95) | 1.2766 ms cold discovery+JWKS (200 iterations; fetch+validate+persist, in-process transport — remote RTT excluded) | MEASURED (PASS) |
-| `invitation.redemption_p95` | Invitation redemption | 500 ms (p95) | — | PENDING (inc9) |
+| `registry.signature_verify_p95` | Signature verification per package | 250 ms (p95) | 0.5682 ms verify (in-memory rb-registry-snapshot.v1 (100 packages, 22124 bytes)) | MEASURED (PASS) |
+| `package.install_update_p95` | Declarative package install/update | 10000 ms (p95) | 52.218 ms install/update (8 samples) | MEASURED (PASS) |
+| `theme.build_apply_p95` | Theme build + activate (declarative package) | 10000 ms (p95) | 8.904 ms theme build/apply (8 samples) | MEASURED (PASS) |
+| `resolver.p95` | Capability resolver decision | 5 ms (p95) | 0.4068 ms resolver (baseline 1.27 ms legacy) | MEASURED (PASS) |
+| `role_assignment.change_propagation_p95` | Assignment-change propagation (revoke → resolver decision) | no D11 target (measurement only) | 3.8414 ms revoke→can pair (200 iterations, 0/200 stale-after-revoke) | MEASURED (no D11 target) |
+| `permission_simulator.duration_p95` | Permission simulator (simulate() call) | no D11 target (measurement only) | 1.5455 ms simulate() call (200 iterations, F9 fixture) | MEASURED (no D11 target) |
+| `webauthn.ceremony_p95` | WebAuthn/TOTP ceremony (server time) | 2000 ms (p95) | 1.7414 ms WebAuthn assertion verify (200 samples) | MEASURED (PASS) |
+| `oidc.discovery_p95_cached` | OIDC discovery/JWKS (cached) | 2000 ms (p95) | 0.4832 ms cached discovery+JWKS (200 iterations; row load + authorizeUrl + JWKS cache hit) | MEASURED (PASS) |
+| `oidc.discovery_p95_cold` | OIDC discovery/JWKS (cold) | 5000 ms (p95) | 1.3122 ms cold discovery+JWKS (200 iterations; fetch+validate+persist, in-process transport — remote RTT excluded) | MEASURED (PASS) |
+| `invitation.redemption_p95` | Invitation redemption | 500 ms (p95) | 5.59 ms invite redeem+register (200 samples; token check + guarded consume + account create incl. password hash + board grant + audit) | MEASURED (PASS) |
 | `webhook.delivery_timeout` | Webhook delivery timeout | 5000 ms (max) | 5000 ms configured | CONFIG |
 | `sandbox.walltime_default` | Sandbox execution wall-time (default) | 2000 ms (max) | — | PENDING (gate_b) |
 
