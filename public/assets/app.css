@@ -1841,6 +1841,11 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 }
 .auth-links a {
     color: var(--brand);
+    /* Inside muted body text the brand color alone can miss the 3:1
+       link-vs-text contrast (WCAG 1.4.1 / axe link-in-text-block) — keep the
+       link distinguishable without relying on color. */
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 .oauth-buttons {
     margin: 18px 0 4px;
