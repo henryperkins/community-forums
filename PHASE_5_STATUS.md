@@ -886,6 +886,90 @@ carryovers, not shipped behavior.
 additional OIDC provider (`docs/phase5/first-oidc-provider.md`) — the last open
 §2 entry-gate decision; P5-12/Inc 8 end-to-end acceptance is decision-unblocked.
 
+## Increment 9 landed (2026-07-08) - P5-13 invitations, deploy-dark
+
+The invitation lifecycle is live behind the dark `invitations` flag (branch
+`phase5-inc9-invitations`): admin-issued, hash-only, expiring, revocable,
+optionally email/domain-bound invitations redeemed atomically with account
+creation — plus an **explicit `registration_mode = invite`** (owner decision
+2026-07-08, `docs/phase5/invitation-defaults.md`). `closed` stays absolute
+(a valid token cannot reopen it) and `invite` **fails closed while the flag
+is dark**, so pausing the subsystem never silently reopens registration.
+
+- **Policy seam** (`src/Security/RegistrationPolicy.php`): one interpreter
+  for `registration_mode` (`open|invite|closed`, `effectiveMode()` degrades
+  `invite` → `closed` while dark) consumed by BOTH account-creation channels
+  — the password form and OAuth provisioning (`OAuthService` returns the new
+  `registration_invite_only` action; returning logins/linking untouched) —
+  so the two paths can never disagree. Dashboard gains the `invite` option
+  plus an "effectively closed" warning while the flag is dark.
+- **Service/repository** (`InvitationService`/`InvitationRepository`):
+  issuance validates email XOR exact-match domain binding, `max_uses` 1–100,
+  mandatory expiry 1–365 days (default 14); 256-bit tokens
+  (`bin2hex(random_bytes(32))`) stored sha256-only and returned exactly once
+  (direct render — never the cookie-backed flash). Redemption is one
+  transaction ordered *uniform validity → binding → guarded
+  `consumeUse` → register → redemption row (packed IP) → board grant →
+  audit*: a concurrent loser exits before creating anything (TM-IN-02), a
+  registration failure rolls the consumed use back, and enumeration is
+  uniform (`INVALID_MESSAGE` for missing/expired/revoked/exhausted,
+  TM-IN-01/03). **No role application, ever** (decision #36): the console
+  never issues `onboarding_role_id` and redemption ignores planted values —
+  forged POST fields and DB-planted role ids both yield ordinary membership
+  only (TM-IN-05); `onboarding_board_id` grants plain board membership.
+- **Operator console** (`/admin/invitations`, flag-gated + admin-only +
+  noindex): issue (show-once link panel), list with derived
+  active/revoked/expired/exhausted status, revoke (idempotent, audited).
+  Issuance is rate-limited (`invite_create` 30/h per admin; TM-IN-07 —
+  member/moderator access is 403 on GET and POST).
+- **Public flow:** `GET /invite/{token}` (noindex, rate-limited, 404 while
+  dark) normalizes into `/register?invite=…`; register renders the
+  mode × validity matrix (invited banner / uniform invalid / invite-required
+  / closed, form suppressed when registration cannot succeed) and keeps the
+  token + typed draft through 422s (anti-draft-loss). `invite_redeem`
+  (30/15 min per client) covers landing + invite-bearing register GET/POST;
+  the standard `register` policy still applies. Invited members still get
+  the verification email — an invitation bypasses nothing (decision #36).
+- **Migration:** `0076` widens `moderation_log.target_type`
+  (+`invitation`; mirrors 0075) for `invitation_created` /
+  `invitation_revoked` / `invitation_redeemed` audit rows; the 0053 tables
+  are animated unchanged. SCHEMA.md → v1.36.
+- **Threat fixtures:** TM-IN-01..07 all implemented
+  (`docs/phase5/threat-models/fixtures.json` → `InvitationServiceTest` +
+  `AppInvitationsTest`), including a real-commit/rollback single-use race
+  proof (harness-transaction-suspended pattern) and hash-only-at-rest scans
+  of rows, audit JSON, and list views (TM-IN-06). Canonical dark pin in
+  `AppFeatureFlagTest`: a planted VALID invitation is inert while dark
+  (ordinary open-mode signup, zero consumption, no grant).
+- **Budget:** `invitation.redemption_p95` **5.59 ms MEASURED (PASS)**
+  (target 500 ms; 200 samples of the full redeem+register path incl. the
+  password hash) via `BaselineMetricsService::measureInvitationRedemption`,
+  wired into `verify:phase5-budgets` with the opt-in lifecycle samplers —
+  every increment-owned Gate A D11 row is now MEASURED (PASS)
+  (GA-DOD-18 → R3).
+- **Browser evidence** (`tests/browser/invitations.spec.ts`, desktop +
+  mobile, axe-clean, in the standard `npm run evidence` set): PNGs `69`-`74`
+  — console show-once + revoke list, invite-mode blocked register,
+  invite-banner redemption, signed-in landing, uniform invalid banner
+  (`docs/evidence/phase5/invitations.md`). The first `/register` axe scan
+  surfaced a pre-existing `link-in-text-block` violation on the auth-card
+  "Log in" link — fixed (`.auth-links a` underline in `app.css`).
+- **Docs:** `docs/phase5/invitation-defaults.md` (the Milestone-0
+  invitation-defaults decision, recorded + owner-accepted),
+  `docs/runbooks/invitations.md` (enable, **invitation pause** = flag off
+  per decision #40 with an effect matrix, bulk revoke, rate-limit tuning,
+  token hygiene, troubleshooting), GA-DOD-16 → **R4**, F5 note resolved
+  (no LastOwnerGuard mutation site exists because redemption grants no
+  authority — explicit, not silent).
+
+**Deferred (explicit):** onboarding-role grants via invitation (schema
+affordance stays inert pending an owner-approved policy — decision #36);
+member-created invitations (issuance stays admin-only; a future policy
+setting); carrying an invite token through the OAuth first-login flow
+(invite-mode OAuth users redeem on /register first, then link); a console
+bulk-revoke affordance (runbook documents the SQL sweep). R5 at staged
+enablement.
+
 ## Blocking conflicts surfaced (R0 — need a Milestone-0 decision)
 
 These were found during the readiness audit and are recorded in ADR 0004 Part B:
@@ -974,7 +1058,17 @@ These were found during the readiness audit and are recorded in ADR 0004 Part B:
   signing harness + registry fixtures, `ReauthGate`, `Telemetry`/`LogRedactor`,
   the all-flags-off core-survival regression, and six recorded-pending-review
   threat-model dossiers.
-- **All other Phase 5 subsystems (providers, invitations, sandbox, governance,
+- **Provider registry / generic OIDC (Inc 8, P5-12):** R4 — see
+  `docs/phase5/requirement-ledger.json` (GA-DOD-14/15) and
+  `docs/evidence/phase5/oidc-provider-registry.md`. Deploy-dark behind
+  `provider_registry`; R5 at staged enablement.
+- **Invitations (Inc 9, P5-13):** R4 — see
+  `docs/phase5/requirement-ledger.json` (GA-DOD-16),
+  `docs/evidence/phase5/invitations.md`, and
+  `docs/phase5/invitation-defaults.md`. Deploy-dark behind `invitations`;
+  TM-IN-01..07 implemented, `invitation.redemption_p95` MEASURED (PASS),
+  browser/axe evidence `69`-`74`, runbook recorded. R5 at staged enablement.
+- **All other Phase 5 subsystems (sandbox, governance,
   service principals, verified links):** R0/R1 — pending implementation and
   workstream-specific evidence.
 
@@ -1061,8 +1155,16 @@ landed" sections above for the full record):
    2026-07-07**, deploy-dark behind `provider_registry`;
    `soleMethodAccounts()` is wired into the provider-disable confirm page as
    originally required (see "Increment 8 landed" above).
-4. **Invitations**
-   (P5-13, Inc 9).
+4. ~~**Invitations** (P5-13, Inc 9)~~ — **landed 2026-07-08**, deploy-dark
+   behind `invitations` with an explicit `registration_mode = invite`
+   (see "Increment 9 landed" above).
+
+With the staged §13.1 increment list complete through Inc 9, the remaining
+Gate A work is **P5-16 closeout evidence** (GA-DOD-17 accessibility sweep,
+GA-DOD-19 runbook rehearsals, GA-DOD-20 regression/route matrix, GA-DOD-21/22/23
+defect sweep + doc index + owner acceptance) and then staged enablement (R5)
+per subsystem; Gate B workstreams (P5-05/06 sandbox, P5-10 governance,
+P5-14/15) stay reserved behind their dark flags.
 
 ## Operating note
 
