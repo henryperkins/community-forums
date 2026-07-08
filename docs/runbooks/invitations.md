@@ -68,7 +68,7 @@ No data change is needed to pause or resume; rows and audit history persist.
 | Policy | Default | Covers |
 |---|---|---|
 | `invite_create` | 30 / hour per admin | console issuance bursts (TM-IN-07) |
-| `invite_redeem` | 30 / 15 min per client | `/invite/*` hits + invite-bearing register GET/POST (TM-IN-01) |
+| `invite_redeem` | 30 / 15 min per client | invite-bearing `/register` GET/POST — the single verdict endpoint. `/invite/*` is a pure redirect and charges nothing, so a journey pays once per token evaluation (TM-IN-01) |
 | `register` | 5 / hour per client | still applies to every registration POST |
 
 ## Troubleshooting
@@ -88,8 +88,11 @@ No data change is needed to pause or resume; rows and audit history persist.
 - `moderation_log` actions: `invitation_created`, `invitation_revoked`,
   `invitation_redeemed` (target_type `invitation` since 0076).
 - `invitation_redemptions` rows tie each account to its invitation (packed IP,
-  UTC timestamp).
-- Budget: `invitation.redemption_p95` = 5.59 ms (target 500 ms) —
+  UTC timestamp). `worker:purge-ips` anonymises `invitation_redemptions.ip`
+  once it is older than the retention window — same policy and window as
+  `sessions.ip` / `posts.ip` (ADMIN §5.5), audited with the system actor.
+- Budget: `invitation.redemption_p95` = 461.79 ms (target 500 ms; 60 samples
+  with a production-cost Argon2id hash inside the timed region) —
   `docs/evidence/phase5/performance-budgets.md`, re-measured by
   `php bin/console verify:phase5-budgets`.
 

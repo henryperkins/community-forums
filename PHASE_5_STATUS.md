@@ -922,12 +922,13 @@ is dark**, so pausing the subsystem never silently reopens registration.
   active/revoked/expired/exhausted status, revoke (idempotent, audited).
   Issuance is rate-limited (`invite_create` 30/h per admin; TM-IN-07 —
   member/moderator access is 403 on GET and POST).
-- **Public flow:** `GET /invite/{token}` (noindex, rate-limited, 404 while
-  dark) normalizes into `/register?invite=…`; register renders the
+- **Public flow:** `GET /invite/{token}` (noindex, 404 while dark) is a
+  pure normalizing redirect into `/register?invite=…`; register renders the
   mode × validity matrix (invited banner / uniform invalid / invite-required
-  / closed, form suppressed when registration cannot succeed) and keeps the
-  token + typed draft through 422s (anti-draft-loss). `invite_redeem`
-  (30/15 min per client) covers landing + invite-bearing register GET/POST;
+  / closed, form suppressed only on pristine blocked renders) and keeps the
+  token + typed draft through 422s and 429s (anti-draft-loss). `invite_redeem`
+  (30/15 min per client) covers invite-bearing register GET/POST — the single
+  verdict endpoint, charged once per token evaluation (hardening below);
   the standard `register` policy still applies. Invited members still get
   the verification email — an invitation bypasses nothing (decision #36).
 - **Migration:** `0076` widens `moderation_log.target_type`
@@ -941,10 +942,13 @@ is dark**, so pausing the subsystem never silently reopens registration.
   of rows, audit JSON, and list views (TM-IN-06). Canonical dark pin in
   `AppFeatureFlagTest`: a planted VALID invitation is inert while dark
   (ordinary open-mode signup, zero consumption, no grant).
-- **Budget:** `invitation.redemption_p95` **5.59 ms MEASURED (PASS)**
-  (target 500 ms; 200 samples of the full redeem+register path incl. the
-  password hash) via `BaselineMetricsService::measureInvitationRedemption`,
-  wired into `verify:phase5-budgets` with the opt-in lifecycle samplers —
+- **Budget:** `invitation.redemption_p95` **461.79 ms MEASURED (PASS)**
+  (target 500 ms; 60 samples of the full redeem+register path with a
+  **production-cost Argon2id hash** inside the timed region — the harness's
+  process-wide hasher weakening is suspended for the bench; see the
+  hardening below, which replaced the original harness-weakened 5.59 ms
+  figure) via `BaselineMetricsService::measureInvitationRedemption`,
+  wired into `verify:phase5-budgets` behind its own opt-in —
   every increment-owned Gate A D11 row is now MEASURED (PASS)
   (GA-DOD-18 → R3).
 - **Browser evidence** (`tests/browser/invitations.spec.ts`, desktop +
@@ -969,6 +973,107 @@ setting); carrying an invite token through the OAuth first-login flow
 (invite-mode OAuth users redeem on /register first, then link); a console
 bulk-revoke affordance (runbook documents the SQL sweep). R5 at staged
 enablement.
+
+### Pre-merge review hardening (2026-07-08, merged with PR #40)
+
+A max-effort multi-agent review (10 finder angles → 46 raw candidates
+converging on 15 fix clusters, every one applied TDD) hardened the branch
+before merge, all deploy-dark:
+
+- **Honest budget measurement (§13 evidence integrity — the headline).**
+  The originally published 5.59 ms p95 was measured under the harness's
+  process-wide Argon2id weakening (both the test bootstrap and
+  `verify:phase5-budgets` downgrade `PasswordHasher` for fixture speed), so
+  the "includes the real password hash" claim was false — production cost
+  is ~80× higher. `measureInvitationRedemption` now suspends the override
+  inside its timed region and restores it in a `finally` (restoration
+  pinned by test), runs 60 production-cost iterations, and no longer
+  fabricates `query_count` (was a hardcoded 9×iterations estimate).
+  Republished: **461.79 ms p95 (PASS)** vs the 500 ms target. The report
+  row also moved behind its own `includeInvitationSample` opt-in — the
+  pre-existing Inc 6 lifecycle report tests had started silently paying a
+  200-registration hash-heavy bench.
+- **POST-429 validity oracle closed (TM-IN-01).** The rate-limited register
+  POST/GET previously still ran `inviteContext()` and could render the
+  valid-token banner, so a client past the cap could keep reading token
+  validity off 429 bodies — defeating the cap's purpose. Limited responses
+  are now uniform (no token lookup, no preview, identical body for valid
+  and invalid tokens — pinned both ways), while the draft AND the token
+  survive for the retry.
+- **Anti-draft-loss on blocked renders.** Invite-mode POST failures (token
+  died mid-draft; token-less POST carrying a draft) suppressed the whole
+  form via `registration_blocked`, silently discarding the typed draft —
+  violating the repo invariant. The form now always renders when a draft is
+  present (suppression is for pristine renders only); the blocked notice
+  comes from the template's own state chain.
+- **Dead token dropped so the retry can succeed.** A 422 caused by the
+  token's own death (`errors['invite']`) now removes the token from `old`
+  — the re-rendered form's next submit succeeds in open mode instead of
+  re-failing forever on an unremovable hidden field. Field-level 422s keep
+  the still-live token **without re-probing it**.
+- **GET-429 grant bypass closed.** An open-mode `GET /register?invite=…`
+  429 used to render a live plain form: the invitee would register with the
+  grant never consumed (board membership silently lost). The limited GET
+  keeps the token in the form (and the response noindex).
+- **Landing double-charge removed.** `/invite/{token}` no longer charges
+  `invite_redeem` before redirecting into `/register` (which charged
+  again): the landing is a pure normalizing redirect — one charge per
+  request that actually evaluates a token, and an exhausted client lands on
+  the friendly register page instead of a bare kernel 429.
+- **One clock for expiry.** `preview()`/`list()` judged expiry with PHP
+  `gmdate()` while `consumeUse` compares against DB `UTC_TIMESTAMP()` —
+  under web-host/DB clock skew the console and the redemption gate disagree
+  near expiry (console says Active, every redemption refuses, or vice
+  versa). All validity decisions now use the DB clock.
+- **Redemption-IP retention gap (privacy).** This increment is the first
+  writer of `invitation_redemptions.ip`, but `worker:purge-ips` only
+  anonymised `sessions.ip`/`posts.ip` — redemption IPs would have been
+  retained forever. The purger now covers the new column (idempotent,
+  audited in the same system-actor row, tested), and the runbook documents
+  the coverage.
+- **Default-deny registration modes.** Both mode consumers (the register
+  POST and OAuth provisioning) treated any unknown mode as `open`, so a
+  hypothetical future restrictive mode would ship fail-open. Both now
+  allow-list `open`/`invite` and deny the rest; the dashboard select
+  derives its options from `RegistrationPolicy::MODES`.
+- **Indexing hygiene.** `/invite` joined the robots.txt Disallow list
+  (token-bearing URLs); the `X-Robots-Tag: noindex` decision is keyed on
+  the RAW request token, so limiter or flag state can never drop the header
+  from a URL that carries a secret (429 and dark-flag renders pinned).
+- **Domain-binding regex.** Label-wise validation (no empty labels, no edge
+  hyphens): `example..com` previously minted an invitation no valid email
+  address could ever satisfy — silently unredeemable. Board ids get the
+  same strict string round-trip as the other numeric fields.
+- **Array-shaped parameters.** `?invite[]=x` / array-shaped POST bodies no
+  longer raise an E_WARNING (strict-PHPUnit red) or coerce to `'Array'` —
+  malformed carriers are treated as absent.
+- **Console list clamp.** Invitations are never purged (revoked/expired
+  rows are retained by design), so the console list's unbounded scan would
+  grow for the life of the install — clamped to the newest 200 rows.
+- **`noindex()` hoist (Inc 8 deferred follow-up resolved).** This PR would
+  have added the 9th per-console copy; the helper moved into the base
+  `Controller` and all nine private copies are gone.
+- **Hygiene.** Rate-limit policy names became constants
+  (`InvitationService::LIMIT_CREATE`/`LIMIT_REDEEM` — the limiter fails
+  open on a typo'd name); the console form ranges render from the service
+  constants instead of hardcoded 1–100 / 1–365; the auth-card
+  link-contrast fix generalized into one shared muted-prose rule
+  (`.auth-links/.notice/.muted/.empty a` — root cause instead of a third
+  leaf-selector patch); the browser spec's mode/theme restore moved to a
+  timeout-safe `afterAll` (a hang after `setRegistrationMode('invite')`
+  would have left the shared evidence DB invite-only for every following
+  spec).
+
+**Deferred (recorded, not fixed here):** hoist the triplicated invitation
+test-fixture builders (issue/redeem helpers duplicated across the three
+invitation test files) into `tests/Support`; console pagination if a real
+archive-browsing need ever outgrows the 200-row clamp.
+
+**Gates at merge:** suite 1826 tests / 9376 assertions green ×2 consecutive
+(was 1819/9315 at closeout); invitations.spec.ts 2 passed (desktop+mobile,
+axe-clean; PNGs 69/70/73 re-shot for the shared muted-prose link rule,
+71/72/74 pixel-identical); `verify:phase5-budgets` re-measured every owned
+row within target (invitation p95 461.79 ms = 7.6% headroom under 500 ms).
 
 ## Blocking conflicts surfaced (R0 — need a Milestone-0 decision)
 
