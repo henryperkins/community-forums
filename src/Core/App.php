@@ -7,6 +7,7 @@ namespace App\Core;
 use App\Controller\AccountController;
 use App\Controller\AdminAnnouncementController;
 use App\Controller\AdminApiTokenController;
+use App\Controller\AdminInvitationController;
 use App\Controller\AdminBadgeRuleController;
 use App\Controller\AdminController;
 use App\Controller\AdminCustomEmojiController;
@@ -1972,6 +1973,11 @@ final class App
         $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
         $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
         $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
+
+        // Invitation lifecycle console (P5-13, Inc 9) — dark behind `invitations`.
+        $r->get('/admin/invitations', [AdminInvitationController::class, 'index']);
+        $r->post('/admin/invitations', [AdminInvitationController::class, 'create']);
+        $r->post('/admin/invitations/{id}/revoke', [AdminInvitationController::class, 'revoke']);
         $r->get('/admin/roles', [AdminRoleController::class, 'index']);
         $r->post('/admin/roles', [AdminRoleController::class, 'create']);
         $r->get('/admin/roles/simulator', [AdminRoleController::class, 'simulator']);

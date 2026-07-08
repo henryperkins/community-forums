@@ -205,6 +205,8 @@ return [
     'rate_limits' => [
         'login' => [10, 900],
         'register' => [5, 3600],
+        'invite_create' => [30, 3600],   // admin invitation issuance burst guard (P5-13, TM-IN-07)
+        'invite_redeem' => [30, 900],    // invite token probing/redemption per client (P5-13, TM-IN-01)
         'post' => [30, 600],
         'dm' => [20, 600],
         'dm_report' => [10, 600],
