@@ -164,6 +164,82 @@ final class InvitationService
     }
 
     /**
+     * Atomic redemption + registration (PHASE_5_PLAN §8.5). One transaction,
+     * ordered: uniform validity check → binding check → guarded consumeUse →
+     * AuthService::register → redemption row → board grant → audit.
+     *
+     * Consume-before-register means a concurrent loser exits before creating
+     * anything, and a later registration failure rolls the consumed use back
+     * with the transaction. `onboarding_role_id` is NEVER applied — an
+     * invitation is onboarding evidence, not authority (decision #36;
+     * TM-IN-05) — while `onboarding_board_id` grants plain board membership.
+     *
+     * @param array<string,mixed> $input the /register POST fields
+     * @throws ValidationException uniform `invite` error, binding `email`
+     *         error, or the registration field errors — always carrying `old`
+     *         (typed draft + the invite token) for the 422 re-render
+     */
+    public function redeem(string $rawToken, array $input, ?string $ip): User
+    {
+        $old = [
+            'username' => trim((string) ($input['username'] ?? '')),
+            'email' => trim((string) ($input['email'] ?? '')),
+            'display_name' => trim((string) ($input['display_name'] ?? '')),
+            'invite' => $rawToken,
+        ];
+
+        return $this->db->transaction(function () use ($rawToken, $input, $ip, $old): User {
+            $row = $this->preview($rawToken);
+            if ($row === null) {
+                throw new ValidationException(['invite' => self::INVALID_MESSAGE], $old);
+            }
+
+            $email = strtolower(trim((string) ($input['email'] ?? '')));
+            if ($row['email'] !== null && strcasecmp((string) $row['email'], $email) !== 0) {
+                throw new ValidationException(['email' => 'This invitation is for a different email address.'], $old);
+            }
+            if ($row['domain'] !== null) {
+                $at = strrpos($email, '@');
+                $submittedDomain = $at === false ? '' : substr($email, $at + 1);
+                if (strcasecmp($submittedDomain, (string) $row['domain']) !== 0) {
+                    throw new ValidationException(['email' => 'This invitation requires an email address at ' . $row['domain'] . '.'], $old);
+                }
+            }
+
+            if ($this->invitations->consumeUse((int) $row['id']) !== 1) {
+                // Lost a concurrent race, or the row's state changed since preview.
+                throw new ValidationException(['invite' => self::INVALID_MESSAGE], $old);
+            }
+
+            try {
+                $user = $this->auth->register($input);
+            } catch (ValidationException $e) {
+                // Re-carry the invite token so the 422 re-render keeps the link
+                // alive; the transaction rollback restores the consumed use.
+                throw new ValidationException($e->errors, $e->old + ['invite' => $rawToken]);
+            }
+
+            $this->invitations->recordRedemption((int) $row['id'], $user->id(), $ip);
+            if ($row['onboarding_board_id'] !== null && $this->boards->find((int) $row['onboarding_board_id']) !== null) {
+                $this->boardMembers->add(
+                    (int) $row['onboarding_board_id'],
+                    $user->id(),
+                    $row['created_by'] !== null ? (int) $row['created_by'] : null,
+                );
+            }
+            // onboarding_role_id deliberately ignored (see docblock).
+            $this->log->log([
+                'actor_id' => $user->id(),
+                'action' => 'invitation_redeemed',
+                'target_type' => 'invitation',
+                'target_id' => (int) $row['id'],
+                'after' => ['user_id' => $user->id()],
+            ]);
+            return $user;
+        });
+    }
+
+    /**
      * Look up a token for display purposes. Returns the row only when the
      * invitation is redeemable RIGHT NOW; every invalid reason — unknown,
      * malformed, expired, revoked, exhausted — collapses to null (TM-IN-01).

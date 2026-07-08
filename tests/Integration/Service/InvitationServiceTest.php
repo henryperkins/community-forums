@@ -214,6 +214,192 @@ final class InvitationServiceTest extends TestCase
         self::assertSame('exhausted', $statuses[$exhausted]);
     }
 
+    // ---- redemption (TM-IN-02..05) ----------------------------------------
+
+    /** @return array<string,string> */
+    private function registerInput(string $handle, string $email): array
+    {
+        return [
+            'username' => $handle,
+            'email' => $email,
+            'password' => 'password123',
+            'password_confirm' => 'password123',
+        ];
+    }
+
+    public function test_redeem_creates_member_records_redemption_and_grants_board(): void
+    {
+        $admin = $this->adminEntity();
+        $board = $this->makeBoard($this->makeCategory(), []);
+        $service = $this->service();
+        $invite = $service->create($admin, ['onboarding_board_id' => (string) $board['id'], 'max_uses' => '2']);
+
+        $user = $service->redeem($invite['token'], $this->registerInput('invitee1', 'invitee1@example.test'), '203.0.113.9');
+
+        self::assertSame('user', (string) $this->users()->find($user->id())['role']);
+        self::assertSame(1, (int) $this->row($invite['id'])['used_count']);
+        self::assertTrue((new BoardMemberRepository($this->db))->isMember((int) $board['id'], $user->id()));
+
+        $redemption = $this->db->fetch('SELECT * FROM invitation_redemptions WHERE invitation_id = ?', [$invite['id']]);
+        self::assertNotNull($redemption);
+        self::assertSame($user->id(), (int) $redemption['user_id']);
+        self::assertSame(inet_pton('203.0.113.9'), $redemption['ip']);
+
+        $audit = $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE target_type = 'invitation' AND target_id = ? AND action = 'invitation_redeemed' AND actor_id = ?",
+            [$invite['id'], $user->id()],
+        );
+        self::assertSame(1, (int) $audit);
+    }
+
+    public function test_redeem_rejects_bound_email_mismatch_before_consuming_a_use(): void
+    {
+        $admin = $this->adminEntity();
+        $service = $this->service();
+        $invite = $service->create($admin, ['email' => 'right@example.test']);
+
+        try {
+            $service->redeem($invite['token'], $this->registerInput('wrongmail', 'wrong@example.test'), null);
+            self::fail('mismatched bound email must be rejected');
+        } catch (ValidationException $e) {
+            self::assertArrayHasKey('email', $e->errors);
+            self::assertSame('wrongmail', $e->old['username'] ?? null, 'typed draft must survive the failure');
+        }
+        // Binding is checked BEFORE the use is consumed (assertable inside the
+        // harness transaction — no rollback involved).
+        self::assertSame(0, (int) $this->row($invite['id'])['used_count']);
+        self::assertFalse($this->users()->emailExists('wrong@example.test'));
+    }
+
+    public function test_redeem_rejects_bound_domain_mismatch_including_subdomains(): void
+    {
+        $admin = $this->adminEntity();
+        $service = $this->service();
+        $invite = $service->create($admin, ['domain' => 'example.com', 'max_uses' => '5']);
+
+        foreach (['a@other.com', 'a@sub.example.com'] as $bad) {
+            try {
+                $service->redeem($invite['token'], $this->registerInput('d' . md5($bad), $bad), null);
+                self::fail("$bad must be rejected by the domain binding");
+            } catch (ValidationException $e) {
+                self::assertArrayHasKey('email', $e->errors);
+            }
+        }
+        self::assertSame(0, (int) $this->row($invite['id'])['used_count']);
+
+        // Case-insensitive exact match is accepted.
+        $user = $service->redeem($invite['token'], $this->registerInput('dominvitee', 'ok@EXAMPLE.com'), null);
+        self::assertSame('user', (string) $this->users()->find($user->id())['role']);
+    }
+
+    public function test_redeem_expired_revoked_exhausted_yield_uniform_error_and_no_account(): void
+    {
+        $admin = $this->adminEntity();
+        $service = $this->service();
+
+        $expired = $service->create($admin, []);
+        $this->db->run("UPDATE invitations SET expires_at = '2020-01-01 00:00:00' WHERE id = ?", [$expired['id']]);
+        $revoked = $service->create($admin, []);
+        $service->revoke($admin, $revoked['id']);
+        $exhausted = $service->create($admin, []);
+        $this->db->run('UPDATE invitations SET used_count = max_uses WHERE id = ?', [$exhausted['id']]);
+
+        $messages = [];
+        foreach (['expired' => $expired, 'revoked' => $revoked, 'exhausted' => $exhausted] as $state => $invite) {
+            try {
+                $service->redeem($invite['token'], $this->registerInput('u' . $state, $state . '@example.test'), null);
+                self::fail("$state token must not redeem");
+            } catch (ValidationException $e) {
+                $messages[] = $e->errors['invite'] ?? '(missing)';
+            }
+            self::assertFalse($this->users()->emailExists($state . '@example.test'), "no account for $state token");
+        }
+        // Uniform: every invalid reason produces the identical message (TM-IN-01/03).
+        self::assertSame([InvitationService::INVALID_MESSAGE], array_values(array_unique($messages)));
+    }
+
+    public function test_redeem_never_applies_a_planted_onboarding_role(): void
+    {
+        // TM-IN-05 (stored half): even a DB-planted onboarding_role_id — which
+        // the console can no longer issue — must not grant a role. Redemption
+        // yields ordinary membership only.
+        $admin = $this->adminEntity();
+        $service = $this->service();
+        $invite = $service->create($admin, []);
+        $roleId = $this->db->insert(
+            "INSERT INTO roles (role_key, name, kind) VALUES ('custom.planted-privileged', 'Planted Privileged', 'custom')",
+            [],
+        );
+        $this->db->run('UPDATE invitations SET onboarding_role_id = ? WHERE id = ?', [$roleId, $invite['id']]);
+
+        $user = $service->redeem($invite['token'], $this->registerInput('plantedrole', 'plantedrole@example.test'), null);
+
+        self::assertSame('user', (string) $this->users()->find($user->id())['role']);
+        self::assertSame(0, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM role_assignments WHERE subject_type = 'user' AND subject_id = ?",
+            [$user->id()],
+        ));
+    }
+
+    public function test_single_use_token_admits_exactly_one_account_with_real_transactions(): void
+    {
+        // TM-IN-02: with REAL commit/rollback semantics (the harness rollback
+        // transaction is suspended — PackageInstallBudgetTest precedent), a
+        // single-use token admits exactly one account, and a registration
+        // validation failure rolls its consumed use back.
+        $this->pdo->rollBack();
+
+        $adminId = null;
+        $userAId = null;
+        $inviteIds = [];
+        try {
+            $admin = $this->adminEntity();
+            $adminId = $admin->id();
+            $service = $this->service();
+
+            $single = $service->create($admin, []);
+            $inviteIds[] = $single['id'];
+
+            $userA = $service->redeem($single['token'], $this->registerInput('raceone', 'one@race.test'), null);
+            $userAId = $userA->id();
+            self::assertTrue($this->users()->emailExists('one@race.test'));
+
+            try {
+                $service->redeem($single['token'], $this->registerInput('racetwo', 'two@race.test'), null);
+                self::fail('second redemption of a single-use token must fail');
+            } catch (ValidationException $e) {
+                self::assertSame(InvitationService::INVALID_MESSAGE, $e->errors['invite'] ?? null);
+            }
+            self::assertFalse($this->users()->emailExists('two@race.test'), 'the losing redemption must leave no account behind');
+            self::assertSame(1, (int) $this->db->fetchValue('SELECT used_count FROM invitations WHERE id = ?', [$single['id']]));
+            self::assertSame(1, (new InvitationRepository($this->db))->redemptionCount($single['id']));
+
+            // A post-consume registration failure must restore the use.
+            $fresh = $service->create($admin, []);
+            $inviteIds[] = $fresh['id'];
+            try {
+                $service->redeem($fresh['token'], ['username' => 'shortpw', 'email' => 'short@race.test', 'password' => 'nope', 'password_confirm' => 'nope'], null);
+                self::fail('registration validation failure expected');
+            } catch (ValidationException $e) {
+                self::assertArrayHasKey('password', $e->errors);
+            }
+            self::assertSame(0, (int) $this->db->fetchValue('SELECT used_count FROM invitations WHERE id = ?', [$fresh['id']]), 'rollback must restore the consumed use');
+        } finally {
+            // Manual cleanup — this work COMMITTED. Order respects FKs.
+            if ($inviteIds !== []) {
+                $in = implode(',', array_map('intval', $inviteIds));
+                $this->db->run("DELETE FROM moderation_log WHERE target_type = 'invitation' AND target_id IN ($in)", []);
+                $this->db->run("DELETE FROM invitations WHERE id IN ($in)", []);
+            }
+            foreach ([$userAId, $adminId] as $uid) {
+                if ($uid !== null) {
+                    $this->db->run('DELETE FROM users WHERE id = ?', [$uid]);
+                }
+            }
+            $this->pdo->beginTransaction();
+        }
+    }
+
     public function test_preview_is_uniformly_null_for_every_invalid_reason(): void
     {
         $admin = $this->adminEntity();
