@@ -101,6 +101,13 @@ at each mutation site when its subsystem lands): **role revoke/demote** (Increme
 **passkey removal** (Increment 7), **sole-provider unlink** (Increment 8, alongside
 `OAuthService::unlink`'s existing login-method guard), **invitations** (Increment 9).
 
+Increment 9 resolution (2026-07-08): the anticipated invitation hook is **N/A by
+design**, not silently dropped — Inc 9 redemption grants no roles and removes no
+access (`onboarding_role_id` is neither issued nor applied; no approved
+onboarding-role policy exists — decision #36, `docs/phase5/invitation-defaults.md`),
+so invitations have no owner-threatening mutation site. The hook becomes relevant
+only if role-granting redemption ever ships under an approved policy.
+
 ## Adversarial review (post-implementation)
 
 After the nine plan tasks landed, the full ~1,000-line F3/F5 diff was put through a

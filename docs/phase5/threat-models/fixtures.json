@@ -43,12 +43,12 @@
     { "id": "TM-SE-05", "model": "secret-handling.md", "fixture": "forced vault failure yields svcsec reference only, no plaintext", "owner": "Inc5", "status": "implemented", "test": "tests/Integration/Service/SecretVaultRedactionTest.php" },
     { "id": "TM-SE-06", "model": "secret-handling.md", "fixture": "provider test-flow response and logs free of client secret", "owner": "Inc8", "status": "stub" },
     { "id": "TM-SE-07", "model": "secret-handling.md", "fixture": "vault-unreadable DR rehearsal re-keys webhooks/providers without data loss", "owner": "Inc10", "status": "stub" },
-    { "id": "TM-IN-01", "model": "invitation-privilege.md", "fixture": "token enumeration rejected and rate-limited; DB holds no raw token", "owner": "Inc9", "status": "stub" },
-    { "id": "TM-IN-02", "model": "invitation-privilege.md", "fixture": "two concurrent redemptions of a single-use token yield exactly one account", "owner": "Inc9", "status": "stub" },
-    { "id": "TM-IN-03", "model": "invitation-privilege.md", "fixture": "expired and revoked tokens fail with no account created", "owner": "Inc9", "status": "stub" },
-    { "id": "TM-IN-04", "model": "invitation-privilege.md", "fixture": "mismatched email and mismatched domain both rejected", "owner": "Inc9", "status": "stub" },
-    { "id": "TM-IN-05", "model": "invitation-privilege.md", "fixture": "forged role/grant fields in redemption POST yield ordinary membership only", "owner": "Inc9", "status": "stub" },
-    { "id": "TM-IN-06", "model": "invitation-privilege.md", "fixture": "post-create, token absent from DB/logs/list views", "owner": "Inc9", "status": "stub" },
-    { "id": "TM-IN-07", "model": "invitation-privilege.md", "fixture": "member issuance denied by default; burst issuance rate-limited", "owner": "Inc9", "status": "stub" }
+    { "id": "TM-IN-01", "model": "invitation-privilege.md", "fixture": "token enumeration rejected and rate-limited; DB holds no raw token", "owner": "Inc9", "status": "implemented", "test": "tests/Integration/Core/AppInvitationsTest.php" },
+    { "id": "TM-IN-02", "model": "invitation-privilege.md", "fixture": "two concurrent redemptions of a single-use token yield exactly one account", "owner": "Inc9", "status": "implemented", "test": "tests/Integration/Service/InvitationServiceTest.php" },
+    { "id": "TM-IN-03", "model": "invitation-privilege.md", "fixture": "expired and revoked tokens fail with no account created", "owner": "Inc9", "status": "implemented", "test": "tests/Integration/Service/InvitationServiceTest.php" },
+    { "id": "TM-IN-04", "model": "invitation-privilege.md", "fixture": "mismatched email and mismatched domain both rejected", "owner": "Inc9", "status": "implemented", "test": "tests/Integration/Service/InvitationServiceTest.php" },
+    { "id": "TM-IN-05", "model": "invitation-privilege.md", "fixture": "forged role/grant fields in redemption POST yield ordinary membership only", "owner": "Inc9", "status": "implemented", "test": "tests/Integration/Core/AppInvitationsTest.php" },
+    { "id": "TM-IN-06", "model": "invitation-privilege.md", "fixture": "post-create, token absent from DB/logs/list views", "owner": "Inc9", "status": "implemented", "test": "tests/Integration/Core/AppInvitationsTest.php" },
+    { "id": "TM-IN-07", "model": "invitation-privilege.md", "fixture": "member issuance denied by default; burst issuance rate-limited", "owner": "Inc9", "status": "implemented", "test": "tests/Integration/Core/AppInvitationsTest.php" }
   ]
 }
