@@ -15,6 +15,7 @@ use App\Security\RegistrationPolicy;
 use App\Security\WebAuthn\WebAuthnException;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
+use App\Service\InvitationService;
 use App\Service\MfaService;
 use App\Service\PasskeyService;
 use App\Service\PasswordResetService;
@@ -202,16 +203,36 @@ final class AuthController extends Controller
         if ($this->currentUser() !== null) {
             return $this->redirect('/');
         }
-        return $this->view('auth/register', ['errors' => [], 'old' => [], 'registration_closed' => $this->registrationClosed()]);
+        $mode = $this->container->get(RegistrationPolicy::class)->effectiveMode();
+        $invite = $this->inviteContext(trim((string) $request->query('invite', '')));
+
+        if ($invite['token'] !== '') {
+            // A token in the query is a redemption attempt — probing counts
+            // against the same policy as /invite/{token} (TM-IN-01).
+            try {
+                $this->container->get(RateLimitService::class)->enforce('invite_redeem', $request);
+            } catch (HttpException) {
+                return $this->registerView($mode, ['token' => '', 'valid' => false], ['invite' => 'Too many invitation attempts. Please try again later.'], [], 429);
+            }
+        }
+
+        $errors = $invite['token'] !== '' && !$invite['valid']
+            ? ['invite' => InvitationService::INVALID_MESSAGE]
+            : [];
+        return $this->registerView($mode, $invite, $errors, []);
     }
 
     /**
-     * Whether sign-ups are effectively closed (P3-05 mode; P5-13 `invite`
-     * degrades to closed while the invitations flag is dark — fail closed).
+     * Public invite landing (P5-13): normalize into the register flow. The
+     * validity verdict is rendered by /register so every probe path shares
+     * one uniform response; the redirect itself reveals nothing.
      */
-    private function registrationClosed(): bool
+    public function invite(Request $request, array $params): Response
     {
-        return $this->container->get(RegistrationPolicy::class)->effectiveMode() === 'closed';
+        $this->gateInvitations();
+        $this->container->get(RateLimitService::class)->enforce('invite_redeem', $request);
+        $token = trim((string) ($params['token'] ?? ''));
+        return $this->redirect('/register?invite=' . urlencode($token))->header('X-Robots-Tag', 'noindex');
     }
 
     /** @param array<string,string> $params */
@@ -221,34 +242,99 @@ final class AuthController extends Controller
             return $this->redirect('/');
         }
 
-        // Registration mode (P3-05): an admin may close public sign-ups entirely.
-        if ($this->registrationClosed()) {
-            return $this->view('auth/register', [
-                'errors' => ['email' => 'Registration is currently closed.'],
-                'old' => [],
-                'registration_closed' => true,
-            ], 403);
+        $mode = $this->container->get(RegistrationPolicy::class)->effectiveMode();
+        $inviteToken = $this->container->get(FeatureFlags::class)->enabled('invitations')
+            ? trim((string) $request->post('invite', ''))
+            : ''; // dark flag: tokens are inert, plain-mode rules apply
+
+        // Registration mode (P3-05 / P5-13): `closed` is absolute — a valid
+        // invitation does not reopen it; `invite` requires a token.
+        if ($mode === 'closed') {
+            return $this->registerView($mode, ['token' => '', 'valid' => false], [], [], 403);
+        }
+        if ($mode === 'invite' && $inviteToken === '') {
+            return $this->registerView($mode, ['token' => '', 'valid' => false],
+                ['invite' => 'Registration is by invitation only. Use your invitation link to sign up.'],
+                $this->oldRegister($request), 403);
         }
 
         $limiter = $this->container->get(RateLimitService::class);
+        if ($inviteToken !== '') {
+            try {
+                $limiter->enforce('invite_redeem', $request);
+            } catch (HttpException) {
+                return $this->registerView($mode, $this->inviteContext($inviteToken),
+                    ['invite' => 'Too many invitation attempts. Please try again later.'],
+                    $this->oldRegister($request) + ['invite' => $inviteToken], 429);
+            }
+        }
         try {
             $limiter->enforce('register', $request);
         } catch (HttpException) {
-            return $this->view('auth/register', [
-                'errors' => ['email' => 'Too many sign-up attempts from your network. Please try again later.'],
-                'old' => $this->oldRegister($request),
-            ], 429);
+            return $this->registerView($mode, $this->inviteContext($inviteToken),
+                ['email' => 'Too many sign-up attempts from your network. Please try again later.'],
+                $this->oldRegister($request) + ['invite' => $inviteToken], 429);
         }
 
         try {
-            $user = $this->container->get(AuthService::class)->register($request->allInput());
+            $user = $inviteToken !== ''
+                ? $this->container->get(InvitationService::class)->redeem($inviteToken, $request->allInput(), $request->ip())
+                : $this->container->get(AuthService::class)->register($request->allInput());
         } catch (ValidationException $e) {
-            return $this->view('auth/register', ['errors' => $e->errors, 'old' => $e->old], 422);
+            return $this->registerView($mode, $this->inviteContext($inviteToken), $e->errors, $e->old, 422);
         }
 
         $this->session()->login($user);
         $this->container->get(EmailVerificationService::class)->issue($user->id(), $user->email());
         return $this->redirectWithFlash('/', 'Welcome to the community, ' . $user->displayName() . '! Please check your email to verify your address.');
+    }
+
+    private function gateInvitations(): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('invitations')) {
+            throw new NotFoundException('Not found.');
+        }
+    }
+
+    /**
+     * Resolve an invite token for display. `valid` collapses every invalid
+     * reason to false (uniform — TM-IN-01); dark flag means no token at all.
+     *
+     * @return array{token:string, valid:bool}
+     */
+    private function inviteContext(string $token): array
+    {
+        if ($token === '' || !$this->container->get(FeatureFlags::class)->enabled('invitations')) {
+            return ['token' => '', 'valid' => false];
+        }
+        $valid = $this->container->get(InvitationService::class)->preview($token) !== null;
+        return ['token' => $token, 'valid' => $valid];
+    }
+
+    /**
+     * Render auth/register for the mode × invite matrix. The form is
+     * suppressed when registration cannot possibly succeed (closed, or
+     * invite-mode without a currently-valid token).
+     *
+     * @param array{token:string, valid:bool} $invite
+     * @param array<string,string> $errors
+     * @param array<string,mixed> $old
+     */
+    private function registerView(string $mode, array $invite, array $errors, array $old, int $status = 200): Response
+    {
+        $blocked = $mode === 'closed' || ($mode === 'invite' && !$invite['valid']);
+        $response = $this->view('auth/register', [
+            'errors' => $errors,
+            'old' => $old,
+            'registration_mode' => $mode,
+            'invite_token' => $invite['valid'] ? $invite['token'] : '',
+            'invite_valid' => $invite['valid'],
+            'registration_blocked' => $blocked,
+        ], $status);
+        // Invitation-bearing renders stay out of indexes (PHASE_5_PLAN §103).
+        return ($invite['token'] !== '' || ($old['invite'] ?? '') !== '')
+            ? $response->header('X-Robots-Tag', 'noindex')
+            : $response;
     }
 
     /** @param array<string,string> $params */

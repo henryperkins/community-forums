@@ -1836,6 +1836,7 @@ final class App
         $r->post('/login/passkey', [AuthController::class, 'passkeyLogin']);
         $r->get('/register', [AuthController::class, 'showRegister']);
         $r->post('/register', [AuthController::class, 'register']);
+        $r->get('/invite/{token}', [AuthController::class, 'invite']); // P5-13 invite landing (dark behind `invitations`)
         $r->post('/logout', [AuthController::class, 'logout']);
 
         // Forgotten-password recovery (P2 Gate A "account recovery").

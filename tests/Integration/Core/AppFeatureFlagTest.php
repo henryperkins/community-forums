@@ -170,6 +170,49 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->get('/auth/darkidp/redirect'));
     }
 
+    public function test_invitations_flag_gates_invitation_routes_and_redemption(): void
+    {
+        // Canonical dark pin for P5-13: routes 404 and a planted VALID
+        // invitation stays inert — an open-mode signup that carries a token
+        // completes as an ORDINARY registration (no consumption, no grant).
+        $adminRow = $this->makeAdmin();
+        $admin = (new \App\Repository\UserRepository($this->db))->findEntity((int) $adminRow['id']);
+        self::assertNotNull($admin);
+        $board = $this->makeBoard($this->makeCategory(), []);
+        $service = new \App\Service\InvitationService(
+            $this->db,
+            new \App\Repository\InvitationRepository($this->db),
+            new \App\Service\AuthService(new \App\Repository\UserRepository($this->db), new \App\Security\PasswordHasher(), $this->config),
+            $this->boards(),
+            new BoardMemberRepository($this->db),
+            new \App\Repository\ModerationLogRepository($this->db),
+        );
+        $invite = $service->create($admin, ['onboarding_board_id' => (string) $board['id']]);
+
+        $this->actingAs($adminRow);
+        $this->assertStatus(404, $this->get('/admin/invitations'));
+        $this->logoutClient();
+        $this->assertStatus(404, $this->get('/invite/' . $invite['token']));
+
+        $this->get('/register');
+        $res = $this->post('/register', [
+            'username' => 'darkordinary',
+            'email' => 'darkordinary@example.test',
+            'password' => 'password123',
+            'password_confirm' => 'password123',
+            'invite' => $invite['token'],
+        ]);
+        $this->assertRedirect($res, '/');
+        $user = (new \App\Repository\UserRepository($this->db))->findByUsername('darkordinary');
+        self::assertNotNull($user, 'open-mode signup still works while the flag is dark');
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT used_count FROM invitations WHERE id = ?', [$invite['id']]), 'the token must stay unconsumed while dark');
+        self::assertFalse((new BoardMemberRepository($this->db))->isMember((int) $board['id'], (int) $user['id']), 'no grant while dark');
+
+        $this->setFlags(['invitations' => true]);
+        $this->logoutClient();
+        $this->assertRedirect($this->get('/invite/' . $invite['token']), '/register?invite=' . $invite['token']);
+    }
+
     public function test_capabilities_flag_gates_role_routes(): void
     {
         $this->actingAs($this->makeAdmin());
