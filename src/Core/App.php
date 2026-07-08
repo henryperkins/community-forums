@@ -154,6 +154,7 @@ use App\Security\FileRateLimiter;
 use App\Security\LastOwnerGuard;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
+use App\Security\RegistrationPolicy;
 use App\Security\RateLimiter;
 use App\Security\Registry\TrustChainVerifier;
 use App\Security\Packages\ManifestValidator;
@@ -777,6 +778,10 @@ final class App
         ));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
         $c->bind(ReauthGate::class, fn (Container $c) => new ReauthGate($c->get(PasswordHasher::class)));
+        $c->bind(RegistrationPolicy::class, fn (Container $c) => new RegistrationPolicy(
+            $c->get(SettingRepository::class),
+            $c->get(FeatureFlags::class),
+        ));
         $c->bind(Telemetry::class, fn () => new Telemetry($config));
         $c->bind(SecretBox::class, fn () => new SecretBox((string) $config->get('app.key', '')));
         $c->bind(Totp::class, fn () => new Totp());
@@ -1674,7 +1679,7 @@ final class App
             $c->get(Database::class),
             $c->get(OAuthIdentityRepository::class),
             $c->get(UserRepository::class),
-            $c->get(SettingRepository::class),
+            $c->get(RegistrationPolicy::class),
             $c->get(FirstPartyHookRegistry::class),
             $usableProviderNames,
         ));

@@ -10,8 +10,8 @@ use App\Core\ValidationException;
 use App\Core\FeatureFlags;
 use App\Core\HttpException;
 use App\Core\NotFoundException;
-use App\Repository\SettingRepository;
 use App\Security\RateLimiter;
+use App\Security\RegistrationPolicy;
 use App\Security\WebAuthn\WebAuthnException;
 use App\Service\AuthService;
 use App\Service\EmailVerificationService;
@@ -205,10 +205,13 @@ final class AuthController extends Controller
         return $this->view('auth/register', ['errors' => [], 'old' => [], 'registration_closed' => $this->registrationClosed()]);
     }
 
-    /** Whether an admin has closed public sign-ups (P3-05 registration mode). */
+    /**
+     * Whether sign-ups are effectively closed (P3-05 mode; P5-13 `invite`
+     * degrades to closed while the invitations flag is dark — fail closed).
+     */
     private function registrationClosed(): bool
     {
-        return $this->container->get(SettingRepository::class)->getString('registration_mode', 'open') === 'closed';
+        return $this->container->get(RegistrationPolicy::class)->effectiveMode() === 'closed';
     }
 
     /** @param array<string,string> $params */

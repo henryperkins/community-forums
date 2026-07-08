@@ -61,10 +61,14 @@
             <label class="field">
                 <span>Registration</span>
                 <select name="registration_mode" class="input">
-                    <?php foreach (($registration_modes ?? ['open', 'closed']) as $m): ?>
-                        <option value="<?= $e($m) ?>"<?= ($registration_mode ?? 'open') === $m ? ' selected' : '' ?>><?= $e(ucfirst($m)) ?><?= $m === 'closed' ? ' (no new sign-ups)' : '' ?></option>
+                    <?php $regModeNotes = ['open' => '', 'invite' => ' (invitation required)', 'closed' => ' (no new sign-ups)']; ?>
+                    <?php foreach (($registration_modes ?? ['open', 'invite', 'closed']) as $m): ?>
+                        <option value="<?= $e($m) ?>"<?= ($registration_mode ?? 'open') === $m ? ' selected' : '' ?>><?= $e(ucfirst($m) . ($regModeNotes[$m] ?? '')) ?></option>
                     <?php endforeach; ?>
                 </select>
+                <?php if (($registration_mode ?? 'open') === 'invite' && empty($invitations_flag_on)): ?>
+                    <span class="field-error">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</span>
+                <?php endif; ?>
             </label>
             <label class="field">
                 <span>Anti-abuse enforcement</span>

@@ -19,6 +19,7 @@ use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
 use App\Security\Cap;
 use App\Security\CapabilityResolver;
+use App\Security\RegistrationPolicy;
 use App\Security\WriteGate;
 use App\Support\Str;
 
@@ -33,8 +34,8 @@ final class AdminService
     private const ROLES = ['user', 'moderator', 'admin'];
     private const ASSIGNMENT_MODES = ['off', 'self', 'staff'];
 
-    /** Registration modes enforced by AuthController (P3-05). */
-    public const REGISTRATION_MODES = ['open', 'closed'];
+    /** Registration modes (P3-05 + P5-13 `invite`) — interpreted by RegistrationPolicy. */
+    public const REGISTRATION_MODES = RegistrationPolicy::MODES;
     /** Anti-abuse enforcement postures (AntiAbuseService::mode), safest first. */
     public const ANTIABUSE_MODES = ['observe', 'flag', 'hold', 'block'];
 

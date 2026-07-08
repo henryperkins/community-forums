@@ -47,6 +47,7 @@ final class AdminController extends Controller
             'antiabuse_mode' => $settings->getString('antiabuse_mode', 'observe'),
             'antiabuse_blocked_words' => (array) $settings->get('antiabuse_blocked_words', []),
             'registration_modes' => AdminService::REGISTRATION_MODES,
+            'invitations_flag_on' => $this->container->get(FeatureFlags::class)->enabled('invitations'),
             'antiabuse_modes' => AdminService::ANTIABUSE_MODES,
         ]);
     }
