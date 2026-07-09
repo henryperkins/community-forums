@@ -931,8 +931,9 @@ is dark**, so pausing the subsystem never silently reopens registration.
   token + typed draft through 422s and 429s (anti-draft-loss). `invite_redeem`
   (30/15 min per client) covers invite-bearing register GET/POST — the single
   verdict endpoint, charged once per token evaluation (hardening below);
-  the standard `register` policy still applies. Invited members still get
-  the verification email — an invitation bypasses nothing (decision #36).
+  the stricter standard `register` policy applies only to uninvited public
+  signups. Invited members still get the verification email — an invitation
+  bypasses nothing (decision #36).
 - **Migration:** `0076` widens `moderation_log.target_type`
   (+`invitation`; mirrors 0075) for `invitation_created` /
   `invitation_revoked` / `invitation_redeemed` audit rows; the 0053 tables
