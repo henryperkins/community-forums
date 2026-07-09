@@ -2,7 +2,8 @@
 
 ## What the flag gates
 
-`features.invitations` (default **OFF** — deploy-dark) gates:
+`features.invitations` graduated to default-ON on 2026-07-09 —
+operator-reversible via `features.invitations=false`. It gates:
 
 - `/admin/invitations` — the operator console (issue / list / revoke).
 - `/invite/{token}` — the public landing link (redirects into `/register`).
@@ -69,7 +70,7 @@ No data change is needed to pause or resume; rows and audit history persist.
 |---|---|---|
 | `invite_create` | 30 / hour per admin | console issuance bursts (TM-IN-07) |
 | `invite_redeem` | 30 / 15 min per client | invite-bearing `/register` GET/POST — the single verdict endpoint. `/invite/*` is a pure redirect and charges nothing, so a journey pays once per token evaluation (TM-IN-01) |
-| `register` | 5 / hour per client | still applies to every registration POST |
+| `register` | 5 / hour per client | uninvited public `/register` POSTs only; invite-bearing POSTs use `invite_redeem` instead to avoid shared-NAT lockout |
 
 ## Troubleshooting
 

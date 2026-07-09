@@ -59,7 +59,7 @@ final class FeatureFlags
         'community_memory' => false,   // summaries, related topics, wiki revisions
         'content_references' => true,  // persisted board/thread/post references + read-gated cards — GA default-on (2026-07-02; reversible via features override)
 
-        // ── Phase 4 carryover completion (deploy-dark, independently reversible)
+        // ── Phase 4 carryover completion (mixed: graduated default-on, rest dark)
         'link_previews' => false,      // allowlisted server-fetched URL metadata + purge/refresh
         'expanded_files' => false,     // PDF/text-family uploads behind scanner/quarantine gates
         'polls' => true,               // one poll per thread, no-JS vote/result flows — GA default-on (2026-06-30; reversible via features override)
@@ -74,28 +74,29 @@ final class FeatureFlags
         'account_lifecycle' => true,   // self-serve export/deactivate/reactivate/30-day-grace delete — GA default-on (2026-07-02; ADR 0006; reversible via features override)
         'automated_context' => false,  // since-last-read context + suggested related topics
 
-        // ── Phase 5 Gate A (deploy-dark foundation/workstreams) ─────────────
-        // These gate availability of the Phase 5 ecosystem/identity/governance
-        // subsystems. They stay OFF until each workstream has its Milestone-0
-        // trust approvals and acceptance evidence (PHASE_5_PLAN §2/§13). The
-        // foundation migrations (0049–0053) are additive and inert; B2 behavior
-        // remains unavailable while its service flags are dark.
-        'package_registry' => false,  // signed registry, package catalogue/install/update (P5-01/02/04)
-        'package_themes' => false,    // declarative theme packages + preview/safe-mode (P5-03)
-        'capabilities' => false,      // DB-backed roles/capability resolver, scoped grants (P5-08/09)
-        'passkeys' => false,          // WebAuthn registration/sign-in/step-up (P5-11)
-        'provider_registry' => false, // generic OIDC + provider registry expansion (P5-12)
-        'invitations' => false,       // invitation lifecycle / invite-based registration (P5-13)
+        // -- Phase 5 Gate A (accepted; default-on, independently reversible) -----
+        // Gate A closed on 2026-07-09 (ADR 0018). Defaults apply to any install
+        // without an explicit `features.<flag>` override — fresh and upgraded
+        // alike; operators can still roll each one back through the `features`
+        // setting. Package execution also has a flag-independent emergency brake
+        // (`PACKAGE_EXECUTION_DISABLED` / `package_execution_disabled`).
+        'package_registry' => true,   // signed registry, package catalogue/install/update (P5-01/02/04)
+        'package_themes' => true,     // declarative theme packages + preview/safe-mode (P5-03)
+        'capabilities' => true,       // DB-backed roles/capability resolver, scoped grants (P5-08/09)
+        'passkeys' => true,           // WebAuthn registration/sign-in/step-up (P5-11)
+        'provider_registry' => true,  // generic OIDC + provider registry expansion (P5-12)
+        'invitations' => true,        // invitation lifecycle / invite-based registration (P5-13)
 
-        // ── Phase 5 Gate A — B2 trusted-extension foundation (deploy-dark) ─
-        // Encrypted service-secret registry (SecretVault). Doubles as a write
-        // kill switch: dark blocks store/rotate; reveal/revoke/prune still work.
-        'service_secrets' => false,   // reversible secret vault for providers/webhooks (B2 sub-project 1)
-        'api_tokens' => false,        // admin/service Bearer API tokens + read-only /api/v1 (B2 sub-project 2)
-        'webhooks' => false,          // outbound webhook delivery engine + admin UI (B2 sub-project 3)
-        'first_party_hooks' => false, // code-only first-party hooks + domain webhook producers (B2 sub-project 4)
+        // -- Phase 5 Gate A - B2 trusted-extension support (default-on) ----------
+        // Encrypted service-secret registry (SecretVault). Operators can roll writes
+        // back via `features.service_secrets=false`; reveal/revoke/prune stay available.
+        'service_secrets' => true,    // reversible secret vault for providers/webhooks (B2 sub-project 1)
+        'api_tokens' => true,         // admin/service Bearer API tokens + read-only /api/v1 (B2 sub-project 2)
+        'webhooks' => true,           // outbound webhook delivery engine + admin UI (B2 sub-project 3)
+        'first_party_hooks' => true,  // code-only first-party hooks + domain webhook producers (B2 sub-project 4)
 
-        // ── Phase 5 Gate B (reserved; dark until Gate A is accepted) ───────
+        // ── Phase 5 Gate B (reserved; dark until each workstream lands its own
+        // release evidence — ADR 0018 accepts Gate A only) ──────────────────
         'server_extensions' => false, // sandboxed isolated server-extension runtime (P5-05/06)
         'governance' => false,        // operator groups, approvals, access review (P5-10)
         'service_principals' => false,// remote-app service identities (P5-14)
@@ -105,6 +106,8 @@ final class FeatureFlags
     /** @var array<string,bool>|null */
     private ?array $cache = null;
 
+    private bool $overridesCorrupt = false;
+
     public function __construct(private SettingRepository $settings)
     {
     }
@@ -113,6 +116,33 @@ final class FeatureFlags
     {
         $map = $this->cache ??= $this->load();
         return $map[$flag] ?? false;
+    }
+
+    /**
+     * True when a `features` settings row exists but is not a JSON object, so
+     * every stored override is being ignored and code defaults are in effect.
+     */
+    public function overridesCorrupt(): bool
+    {
+        $this->cache ??= $this->load();
+        return $this->overridesCorrupt;
+    }
+
+    /**
+     * Normalize one stored override value. Overrides are hand-edited JSON, so
+     * honor operator intent for string shapes ("false"/"off" roll back, not
+     * (bool)-truthy) and fail DARK on anything unrecognizable — garbage in the
+     * override map must never enable a surface.
+     */
+    public static function normalizeOverride(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (!is_scalar($value)) {
+            return false;
+        }
+        return filter_var((string) $value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 
     /** @return array<string,bool> */
@@ -131,12 +161,22 @@ final class FeatureFlags
     private function load(): array
     {
         $map = self::DEFAULTS;
-        $overrides = $this->settings->get('features', []);
-        if (is_array($overrides)) {
-            foreach ($overrides as $key => $value) {
-                if (is_string($key)) {
-                    $map[$key] = (bool) $value;
-                }
+        // null covers both "no row" and a row MariaDB's json_valid CHECK could
+        // not have stored anyway; a present non-array (e.g. a double-encoded
+        // JSON string) means every stored rollback is being ignored — log it,
+        // because the defaults it falls back to are ON for graduated flags.
+        $overrides = $this->settings->get('features', null);
+        if ($overrides === null) {
+            return $map;
+        }
+        if (!is_array($overrides)) {
+            $this->overridesCorrupt = true;
+            error_log('[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)');
+            return $map;
+        }
+        foreach ($overrides as $key => $value) {
+            if (is_string($key)) {
+                $map[$key] = self::normalizeOverride($value);
             }
         }
         return $map;

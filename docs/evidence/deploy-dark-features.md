@@ -11,8 +11,12 @@ added with no flag gate at all, both reconciled below and against
 `PHASE_5_STATUS.md`; **2026-07-09 Increments 8–9 reconciled** —
 `provider_registry` (Inc 8, generic OIDC, PR #39) and `invitations` (Inc 9,
 PR #40) landed deploy-dark and are now *consumed*, no longer inert/reserved;
-the Source Code Audit below is re-run to 2026-07-09 (53 literal `enabled()`
-keys) and the `invitations` row carries its two-pass pre-merge review hardening)
+**2026-07-09 Phase 5 Gate A/B2 default-on authorization reconciled** — accepted
+Gate A and B2 support flags now default-ON (any install without an explicit
+override) while Gate B and
+unfinished Phase 3/4 carryovers remain default-dark; the Source Code Audit below
+is re-run to 2026-07-09 (53 literal `enabled()` keys) and the `invitations` row
+carries its two-pass pre-merge review hardening.
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -38,13 +42,13 @@ Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
 `FeatureFlags::enabled('...')` call sites in `src/`, and shared
 `$features[...]` consumers in templates/bootstrapping code.
 
-- `FeatureFlags::DEFAULTS` declares 57 flags: 37 default `true`, 20 default
-  `false`. (`split_merge` and `custom_profile_fields` flipped `false`→`true` on
-  2026-07-03; the admin feature-inventory canary in
-  `tests/Integration/Admin/AppAdminFeaturesTest.php` enforces the `37`/`20`
+- `FeatureFlags::DEFAULTS` declares 57 flags: 47 default `true`, 10 default
+  `false`. (Phase 5 Gate A/B2 support flipped `false`->`true` on 2026-07-09;
+  the admin feature-inventory canary in
+  `tests/Integration/Admin/AppAdminFeaturesTest.php` enforces the `47`/`10`
   split.)
-- This deploy-dark inventory has 39 table rows: all 20 current default-dark
-  flags, plus 19 retained graduated flags that are default-ON and
+- This deploy-dark inventory has 39 table rows: all 10 current default-dark
+  flags, plus 29 retained graduated flags that are default-ON and
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
@@ -61,10 +65,9 @@ Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
   `moderation_queue`, `community`, `oauth`, `presence`, `announcements`,
   `rich_composer`, `drafts`, `uploads`, `anti_abuse`, `branding`, `seo`, and
   `product_tour`.
-- **Increment 6 reconciliation (2026-07-05):** the `capabilities` flag itself is
-  unchanged (still one of the 20 default-dark flags; the `37`/`20` split above
-  is unaffected) — Inc 6 added 3 *routes* under that existing flag
-  (`POST /admin/roles/{id}/assignments`, `POST /admin/role-assignments/{id}/revoke`,
+- **Increment 6 reconciliation (2026-07-05):** Inc 6 added 3 *routes* under the
+  `capabilities` flag (`POST /admin/roles/{id}/assignments`,
+  `POST /admin/role-assignments/{id}/revoke`,
   `POST /admin/role-assignments/{id}/renew`; see the `capabilities` row below).
   Separately, `UserModerationService::changeRole()`
   (`POST /admin/users/{id}/role`) is a **new admin route with no feature-flag
@@ -74,16 +77,16 @@ Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
   `features` override) and is reachable — confirmed 422, not 404 — even with
   `capabilities` fully off
   (`docs/evidence/phase5/capabilities-fallback-rehearsal.md`).
-- **Increments 8–9 reconciliation (2026-07-09):** the `37`/`20` split is
-  unchanged — `provider_registry` and `invitations` were already default-dark
-  reserved flags, not new ones. Inc 8 (generic OIDC, PR #39, 2026-07-07) and
-  Inc 9 (invitations, PR #40, merged 2026-07-09) wired their runtimes, so both
-  now carry literal `enabled()` reads in `src/` (unique-key count 51 → 53) and
-  their Phase 5 Gate A rows below reflect landed evidence. Inc 9's `invitations`
-  row additionally reflects two pre-merge review-hardening passes merged with
-  PR #40 (honest `invitation.redemption_p95` 461.79 ms under production-cost
-  Argon2id); neither the wiring nor the hardening changes any flag's
-  deploy-dark posture.
+- **Phase 5 Gate A/B2 default flip (2026-07-09):** the default split changed
+  from `37`/`20` to `47`/`10` (applies to any install without an override). Inc 8 (generic OIDC, PR #39,
+  2026-07-07) and Inc 9 (invitations, PR #40, merged 2026-07-09) wired their
+  runtimes, so both now carry literal `enabled()` reads in `src/` (unique-key
+  count 51 -> 53) and their Phase 5 Gate A rows below reflect landed evidence.
+  Inc 9's `invitations` row additionally reflects two pre-merge
+  review-hardening passes merged with PR #40 (honest `invitation.redemption_p95`
+  461.79 ms under production-cost Argon2id). Gate B plus the six unfinished
+  Phase 3/4 carryovers (`custom_css`, `group_dms`, `community_memory`,
+  `link_previews`, `expanded_files`, `automated_context`) remain default-dark.
 
 ## Phase 3 / Phase 3 Carryover
 
@@ -349,16 +352,16 @@ as of 2026-07-09.
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
-| `package_registry` | Signed registry, package catalogue/install/update foundation, integration + security-response consoles | Deploy-dark; Inc 2/3 implementation landed — signed trust chain, snapshots/advisories, staff catalogue, install/consent/enable/update/rollback/uninstall/export, health worker, browser/axe evidence, and runbook. Inc 5 landed the non-theme runtime bridges behind the same flag — install-scoped settings/secret storage, read-only API tokens, package-owned webhooks, the publisher-trust + local-review consoles, and the `/admin/packages/security` security-response console with a **flag-independent** emergency execution brake (`PACKAGE_EXECUTION_DISABLED` / `package_execution_disabled` setting pauses every package-owned webhook + denies credential auth while leaving view/revoke/export/uninstall intact), with browser/axe evidence (`60`/`61`). Enabled packages are eligibility only until their runtimes are enabled. |
-| `package_themes` | Declarative theme packages, preview, activation, safe mode, rollback | Deploy-dark; Inc 4 implementation landed behind `package_themes` — strict theme manifest block, token/asset/contrast gates, deterministic digest-addressed CSS builds, admin preview isolation, password-reauth activation/LKG rollback, flag-independent safe mode, fail-safe deactivation/repair, browser/axe evidence, and runbook. Rollback contract unchanged: set `features.package_themes=false` or enter safe mode; active/LKG rows are preserved. |
-| `capabilities` | DB-backed roles/capability resolver and scoped grants | Deploy-dark; foundation + Increment 1 resolver shadow landed — catalogue/role-map seed (`0066`), protected-owner spine, `CapabilityResolver` + fail-open `ResolverShadow`, zero-mismatch parity corpus (`docs/evidence/phase5/resolver-parity.md`), no-JS role editor/simulator with browser/axe evidence. **Increment 6 (2026-07-05) landed the enforcement cutover** — `AuthorityGate` (`legacy`/`shadow`/`enforce`, posture via `CAPABILITIES_MODE`) now backs ~30 board/content call sites plus the 4 board-roster POST commands; the flag continues to gate 3 *new* routes dark (`POST /admin/roles/{id}/assignments`, `POST /admin/role-assignments/{id}/revoke`, `POST /admin/role-assignments/{id}/renew` — scoped-assignment grant/revoke/renew) — 404 while `capabilities` is off, regardless of `CAPABILITIES_MODE`. ADR 0016, runbook `docs/runbooks/capabilities.md`. |
-| `passkeys` | WebAuthn registration, sign-in, credential management, step-up, recovery fallback | Deploy-dark; Inc 7 implementation landed behind `passkeys` on 2026-07-03 — enrollment/list/rename/revoke, sign-in, step-up, TOTP/recovery fallback compatibility, CDP browser evidence, runbook, and requirement-ledger R4 evidence are present. Broad enablement remains pending staged acceptance (`GA-DOD-13` R5). |
-| `provider_registry` | Generic OIDC and provider registry expansion | Deploy-dark; **Inc 8 implementation landed (2026-07-07)** — generic-OIDC verification core (issuer-pinned discovery → JwksCache → JwtVerifier → ClaimMapper) through the shared OAuth/account-resolution core, `0074` identity backfill + `0075` audit widen, `/admin/providers` console (add with vault-stored secret, health probe, reauth'd enable/disable with the TM-ID-09 sole-method confirm page), TM-ID-01..04 implemented, both oidc D11 rows MEASURED (PASS), browser/axe evidence (`66`-`68`), runbook `docs/runbooks/provider_registry.md`. A2 = GitLab.com as pure configuration (`docs/phase5/first-oidc-provider.md`). §E sequencing: `service_secrets` must be enabled first. |
-| `invitations` | Invitation lifecycle and invite-based registration | Deploy-dark; **Inc 9 implementation landed (2026-07-08)** — admin console (`/admin/invitations`: show-once issue / list / revoke, rate-limited, audited via the `0076` widen), atomic redemption through `/register` + `/invite/{token}` (uniform enumeration, email/exact-domain binding, board grant, **no role application** — decision #36), and the explicit `registration_mode = invite` via `RegistrationPolicy` (closed stays absolute; invite **fails closed while dark**, so the flag doubles as the invitation-pause switch and both the form and OAuth provisioning channels agree). TM-IN-01..07 implemented, `invitation.redemption_p95` 461.79 ms MEASURED (PASS) (production-cost Argon2id), browser/axe evidence (`69`-`74`), runbook `docs/runbooks/invitations.md`, defaults decision `docs/phase5/invitation-defaults.md`. |
-| `service_secrets` | Encrypted service-secret vault for providers/webhooks | Deploy-dark; storage/rotate/revoke/prune seam implemented with focused evidence (R3) and consumed by webhook delivery; doubles as the write/rotate kill switch (reveal/revoke/prune stay available while dark); provider/remote-app consumers deferred |
-| `api_tokens` | Admin/service Bearer tokens and read-only `/api/v1` | Deploy-dark; implemented with focused release evidence (R3) — PHPUnit across flag/schema/service/endpoints/admin plus browser `20`/`21` mint → show-once → revoke; broad enablement pending workstream acceptance |
-| `webhooks` | Outbound webhook delivery engine and admin UI | Deploy-dark; implemented with focused release evidence (R3) — engine/worker/admin PHPUnit plus browser `22`/`23` register → delivery log; broad enablement pending workstream acceptance |
-| `first_party_hooks` | Code-only first-party domain hooks and webhook producers | Deploy-dark; implemented (R3) — public-board domain producers with IDs/state-only payloads; private/hidden-board and DM events suppressed until endpoint-level data-class permissions exist |
+| `package_registry` | Signed registry, package catalogue/install/update foundation, integration + security-response consoles | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.package_registry=false`. Inc 2/3 implementation landed — signed trust chain, snapshots/advisories, staff catalogue, install/consent/enable/update/rollback/uninstall/export, health worker, browser/axe evidence, and runbook. Inc 5 landed the non-theme runtime bridges behind the same flag — install-scoped settings/secret storage, read-only API tokens, package-owned webhooks, the publisher-trust + local-review consoles, and the `/admin/packages/security` security-response console with a **flag-independent** emergency execution brake (`PACKAGE_EXECUTION_DISABLED` / `package_execution_disabled` setting pauses every package-owned webhook + denies credential auth while leaving view/revoke/export/uninstall intact), with browser/axe evidence (`60`/`61`). Enabled packages are eligibility only until their runtimes are enabled. |
+| `package_themes` | Declarative theme packages, preview, activation, safe mode, rollback | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.package_themes=false`. Inc 4 implementation landed behind `package_themes` — strict theme manifest block, token/asset/contrast gates, deterministic digest-addressed CSS builds, admin preview isolation, password-reauth activation/LKG rollback, flag-independent safe mode, fail-safe deactivation/repair, browser/axe evidence, and runbook. Rollback contract unchanged: set `features.package_themes=false` or enter safe mode; active/LKG rows are preserved. |
+| `capabilities` | DB-backed roles/capability resolver and scoped grants | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.capabilities=false`. Foundation + Increment 1 resolver shadow landed — catalogue/role-map seed (`0066`), protected-owner spine, `CapabilityResolver` + fail-open `ResolverShadow`, zero-mismatch parity corpus (`docs/evidence/phase5/resolver-parity.md`), no-JS role editor/simulator with browser/axe evidence. **Increment 6 (2026-07-05) landed the enforcement cutover** — `AuthorityGate` (`legacy`/`shadow`/`enforce`, posture via `CAPABILITIES_MODE`) now backs ~30 board/content call sites plus the 4 board-roster POST commands; disabling the flag still gates 3 *new* routes (`POST /admin/roles/{id}/assignments`, `POST /admin/role-assignments/{id}/revoke`, `POST /admin/role-assignments/{id}/renew` — scoped-assignment grant/revoke/renew) to 404, regardless of `CAPABILITIES_MODE`. ADR 0016, runbook `docs/runbooks/capabilities.md`. |
+| `passkeys` | WebAuthn registration, sign-in, credential management, step-up, recovery fallback | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.passkeys=false`. Inc 7 implementation landed behind `passkeys` on 2026-07-03 — enrollment/list/rename/revoke, sign-in, step-up, TOTP/recovery fallback compatibility, CDP browser evidence, runbook, and requirement-ledger R4 evidence are present. Privileged-MFA enforcement and usernameless sign-in remain Gate B. |
+| `provider_registry` | Generic OIDC and provider registry expansion | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.provider_registry=false`. **Inc 8 implementation landed (2026-07-07)** — generic-OIDC verification core (issuer-pinned discovery -> JwksCache -> JwtVerifier -> ClaimMapper) through the shared OAuth/account-resolution core, `0074` identity backfill + `0075` audit widen, `/admin/providers` console (add with vault-stored secret, health probe, reauth'd enable/disable with the TM-ID-09 sole-method confirm page), TM-ID-01..04 implemented, both oidc D11 rows MEASURED (PASS), browser/axe evidence (`66`-`68`), runbook `docs/runbooks/provider_registry.md`. A2 = GitLab.com as pure configuration (`docs/phase5/first-oidc-provider.md`). Sequencing: `service_secrets` must be live first. |
+| `invitations` | Invitation lifecycle and invite-based registration | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.invitations=false`. **Inc 9 implementation landed (2026-07-08)** — admin console (`/admin/invitations`: show-once issue / list / revoke, rate-limited, audited via the `0076` widen), atomic redemption through `/register` + `/invite/{token}` (uniform enumeration, email/exact-domain binding, board grant, **no role application** — decision #36), and the explicit `registration_mode = invite` via `RegistrationPolicy` (closed stays absolute; invite **fails closed when rolled back**, so the flag doubles as the invitation-pause switch and both the form and OAuth provisioning channels agree). TM-IN-01..07 implemented, `invitation.redemption_p95` 461.79 ms MEASURED (PASS) (production-cost Argon2id), browser/axe evidence (`69`-`74`), runbook `docs/runbooks/invitations.md`, defaults decision `docs/phase5/invitation-defaults.md`. |
+| `service_secrets` | Encrypted service-secret vault for providers/webhooks | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.service_secrets=false`. Storage/rotate/revoke/prune seam implemented with focused evidence (R3) and consumed by webhook delivery; doubles as the write/rotate kill switch (reveal/revoke/prune stay available when rolled back); provider/remote-app consumers deferred |
+| `api_tokens` | Admin/service Bearer tokens and read-only `/api/v1` | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.api_tokens=false`. Implemented with focused release evidence (R3) — PHPUnit across flag/schema/service/endpoints/admin plus browser `20`/`21` mint -> show-once -> revoke; write surfaces remain out of scope |
+| `webhooks` | Outbound webhook delivery engine and admin UI | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.webhooks=false`. Implemented with focused release evidence (R3) — engine/worker/admin PHPUnit plus browser `22`/`23` register -> delivery log; endpoint-level policy still controls what may be delivered |
+| `first_party_hooks` | Code-only first-party domain hooks and webhook producers | **Graduated 2026-07-09 - now default-ON**; operator-reversible via `features.first_party_hooks=false`. Implemented (R3) — public-board domain producers with IDs/state-only payloads; private/hidden-board and DM events suppressed until endpoint-level data-class permissions exist |
 
 ## Phase 5 Gate B / Reserved
 

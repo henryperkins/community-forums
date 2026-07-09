@@ -95,10 +95,12 @@ final class AppProtectedOwnerTest extends TestCase
 
     public function test_capabilities_dark_leaves_account_lifecycle_behavior_unchanged(): void
     {
-        // With capabilities dark (default), the guard is not wired: the legacy
+        // With capabilities rolled back, the guard is not wired: the legacy
         // last-admin rule alone governs, so a lone admin is blocked by the
         // existing check — proving Foundation added no new live behavior.
-        $this->setFlags(['account_lifecycle' => true]); // capabilities stays dark
+        // (capabilities defaults ON since Gate A; the rollback must be explicit
+        // or this test silently duplicates the flag-on leg below.)
+        $this->setFlags(['account_lifecycle' => true, 'capabilities' => false]);
         $admin = $this->makeAdmin(['username' => 'dark_lone_admin']);
         $this->actingAs($admin);
 

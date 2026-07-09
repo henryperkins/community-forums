@@ -2,7 +2,8 @@
 
 ## What the flag gates
 
-`passkeys` (default **OFF**) gates: the Passkeys panel on /settings/security,
+`passkeys` graduated to default-ON on 2026-07-09 — operator-reversible via
+`features.passkeys=false`. It gates: the Passkeys panel on /settings/security,
 the JSON ceremony endpoints (/settings/security/passkeys/*, /login/passkey/*),
 the login-page "Sign in with a passkey" affordance, and /assets/passkeys.js.
 Password, OAuth, TOTP, and recovery sign-in are independent of this flag

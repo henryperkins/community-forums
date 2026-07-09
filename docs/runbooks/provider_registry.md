@@ -2,7 +2,9 @@
 
 ## What the flag gates
 
-`features.provider_registry` (default **false**) gates the whole P5-12 surface:
+`features.provider_registry` graduated to default-ON on 2026-07-09 —
+operator-reversible via `features.provider_registry=false`. It gates the whole
+P5-12 surface:
 
 - `/admin/providers` — the operator console (list, add, test, enable/disable).
 - Registry-backed generic-OIDC providers joining `ProviderRegistry`: their
@@ -12,7 +14,7 @@
 The **builtin** Google/Apple/GitHub sign-in is *not* gated by this flag — it
 stays on the accepted Phase-2 path (`config('oauth')` from `OAUTH_*` env vars,
 under the Phase-2 `oauth` flag). The `oauth` flag is the master switch: if it
-is off, generic providers are dark regardless of `provider_registry`.
+is off, generic providers are unavailable regardless of `provider_registry`.
 
 ## Hard sequencing rule (§E rule 1)
 

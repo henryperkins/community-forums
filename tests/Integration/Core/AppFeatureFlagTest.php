@@ -116,40 +116,168 @@ final class AppFeatureFlagTest extends TestCase
         ]));
     }
 
-    public function test_phase5_foundation_flags_default_dark(): void
+    public function test_phase5_gate_a_defaults_on_and_gate_b_stays_dark(): void
     {
-        // The Phase 5 ecosystem/identity/governance subsystems deploy dark until
-        // their Milestone-0 trust approvals + acceptance evidence land
-        // (PHASE_5_PLAN §2/§13). The 0049–0053 foundation migrations are additive
-        // and inert; no behavior may turn on merely because the tables exist.
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        $phase5 = [
-            // Gate A
-            'package_registry', 'package_themes', 'capabilities', 'passkeys',
-            'provider_registry', 'invitations', 'service_secrets', 'api_tokens', 'webhooks', 'first_party_hooks',
-            // Gate B (reserved)
-            'server_extensions', 'governance', 'service_principals', 'verified_links',
+        $phase5DefaultOn = [
+            'package_registry',
+            'package_themes',
+            'capabilities',
+            'passkeys',
+            'provider_registry',
+            'invitations',
+            'service_secrets',
+            'api_tokens',
+            'webhooks',
+            'first_party_hooks',
         ];
-        foreach ($phase5 as $flag) {
-            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
-        }
-        self::assertArrayHasKey('service_secrets', $flags->all(), 'service_secrets must be a declared flag, not an unknown-key false');
-        self::assertArrayHasKey('api_tokens', $flags->all(), 'api_tokens must be a declared flag');
-        self::assertArrayHasKey('webhooks', $flags->all(), 'webhooks must be a declared flag');
-        self::assertArrayHasKey('first_party_hooks', $flags->all(), 'first_party_hooks must be a declared flag');
+        $phase5DefaultDark = [
+            'server_extensions',
+            'governance',
+            'service_principals',
+            'verified_links',
+        ];
 
-        // The override seam still works per-flag without affecting its neighbours.
-        $this->setFlags(['capabilities' => true]);
+        foreach ($phase5DefaultOn as $flag) {
+            self::assertArrayHasKey($flag, $flags->all(), "$flag should be declared in FeatureFlags::DEFAULTS");
+            self::assertTrue($flags->enabled($flag), "$flag should be default-on after Phase 5 Gate A acceptance");
+        }
+        foreach ($phase5DefaultDark as $flag) {
+            self::assertArrayHasKey($flag, $flags->all(), "$flag should be declared in FeatureFlags::DEFAULTS");
+            self::assertFalse($flags->enabled($flag), "$flag should stay default-dark for Gate B");
+        }
+
+        $defaults = $flags->all();
+        self::assertSame(47, count(array_filter($defaults)), 'fresh installs should now have 47 default-on flags');
+        self::assertSame(10, count($defaults) - count(array_filter($defaults)), 'fresh installs should keep 10 default-dark flags');
+
+        $this->setFlags(['capabilities' => false, 'passkeys' => false]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));
-        self::assertTrue($overridden->enabled('capabilities'));
-        self::assertFalse($overridden->enabled('passkeys'), 'enabling one Phase 5 flag must not enable others');
+        self::assertFalse($overridden->enabled('capabilities'), 'operator rollback should disable capabilities');
+        self::assertFalse($overridden->enabled('passkeys'), 'operator rollback should disable passkeys');
+        self::assertTrue($overridden->enabled('provider_registry'), 'rolling back one Phase 5 flag must not disable its neighbours');
+        self::assertFalse($overridden->enabled('server_extensions'), 'Gate B stays dark without an override');
+
+        // Enable-direction isolation (kept from the pre-graduation test): lighting
+        // one reserved flag via override must not light its siblings.
+        $this->setFlags(['server_extensions' => true]);
+        $gateB = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($gateB->enabled('server_extensions'), 'an explicit override can light a reserved flag');
+        self::assertFalse($gateB->enabled('governance'), 'enabling one reserved flag must not enable its siblings');
+    }
+
+    public function test_phase5_gate_a_surfaces_are_live_with_no_features_override(): void
+    {
+        // The zero-override pin every prior graduation carried: the surfaces must
+        // actually ANSWER on a pristine install, not merely have a TRUE default —
+        // a gate reading the raw setting instead of FeatureFlags::enabled() would
+        // pass the posture test while shipping dark. Deliberately no setFlags().
+        $this->actingAs($this->makeAdmin(['username' => 'p5_default_admin']));
+        foreach ([
+            'package_registry' => '/admin/packages',
+            'package_themes' => '/admin/themes',
+            'capabilities' => '/admin/roles',
+            'provider_registry' => '/admin/providers',
+            'invitations' => '/admin/invitations',
+            'api_tokens' => '/admin/api-tokens',
+            'webhooks' => '/admin/webhooks',
+        ] as $flag => $path) {
+            self::assertNotSame(404, $this->get($path)->status(), "$path must be live by default ($flag)");
+        }
+        self::assertNotSame(404, $this->get('/admin/registries')->status(), '/admin/registries must be live by default (package_registry)');
+
+        // passkeys: the ceremony route answers (not 404) for a member, and guests
+        // see the sign-in affordance. service_secrets/first_party_hooks have no
+        // GET surface; their flag-level defaults are pinned by the posture test.
+        $this->actingAs($this->makeUser(['username' => 'p5_default_member']));
+        self::assertNotSame(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x'])->status());
+        $this->logoutClient();
+        self::assertStringContainsString('data-passkey-signin', $this->get('/login')->body());
+
+        // api_tokens public seam: anonymous /api/v1 is an auth failure, not absent.
+        self::assertSame(401, $this->get('/api/v1/me')->status());
+    }
+
+    public function test_capabilities_rollback_keeps_legacy_authorization_writes_live(): void
+    {
+        // The documented emergency rollback (features.capabilities=false) swaps in
+        // AuthorityGate::legacy() with a null resolver; drive real authorization
+        // WRITES through the kernel on that posture so a legacy-branch regression
+        // (dropped ?->-guard, reordered state-then-capability check) cannot ship
+        // green. Complements the route-404 pins, which never exercise a write.
+        $this->setFlags(['capabilities' => false]);
+        $admin = $this->makeAdmin(['username' => 'legacy_ops_admin']);
+        $mod = $this->makeUser(['username' => 'legacy_board_mod']);
+        $member = $this->makeUser(['username' => 'legacy_member']);
+        $board = $this->makeBoard($this->makeCategory('Legacy Authz'));
+        $thread = $this->makeThread($board, $member, 'Legacy authz thread', 'Opening post.');
+
+        // Roster command (AdminService legacy authority) succeeds for the admin…
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => 'legacy_board_mod']));
+
+        // …and keeps the V1 no-existence-oracle ordering for a non-admin: 403
+        // (authorize first), never 404-for-missing.
+        $this->actingAs($member);
+        $this->assertStatus(403, $this->post('/admin/boards/999999/moderators', ['username' => 'x']));
+
+        // Moderation write via the legacy closure: the just-assigned board mod may
+        // lock (also proves the roster write landed); a plain member may not.
+        $this->actingAs($mod);
+        $this->assertRedirect($this->post('/mod/t/' . $thread['thread_id'] . '/lock'));
+        $this->actingAs($member);
+        $this->assertStatus(403, $this->post('/mod/t/' . $thread['thread_id'] . '/lock'));
+    }
+
+    public function test_override_values_parse_strictly_and_garbage_fails_dark(): void
+    {
+        // Rollback is the primary safety lever now that Gate A defaults on, and the
+        // only production write path is a hand-edited JSON object — so the merge
+        // must honor operator intent for string shapes ("false" must not read ON)
+        // and fail DARK on garbage instead of (bool)-truthy failing open.
+        $this->setFlags([
+            'passkeys' => 'false',
+            'webhooks' => 'off',
+            'invitations' => '0',
+            'api_tokens' => 'true',
+            'capabilities' => '1',
+            'provider_registry' => ['unexpected'],
+            'package_registry' => 'garbage',
+        ]);
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($flags->enabled('passkeys'), 'string "false" must roll the flag back, not read ON');
+        self::assertFalse($flags->enabled('webhooks'), 'string "off" must roll the flag back');
+        self::assertFalse($flags->enabled('invitations'), 'string "0" must roll the flag back');
+        self::assertTrue($flags->enabled('api_tokens'), 'string "true" keeps the flag on');
+        self::assertTrue($flags->enabled('capabilities'), 'string "1" keeps the flag on');
+        self::assertFalse($flags->enabled('provider_registry'), 'a non-scalar override value must fail dark');
+        self::assertFalse($flags->enabled('package_registry'), 'an unrecognizable override value must fail dark');
+    }
+
+    public function test_non_object_features_setting_is_ignored_and_defaults_apply(): void
+    {
+        // A double-encoded write leaves a JSON *string* in settings.features (it
+        // passes MariaDB's json_valid CHECK, unlike malformed JSON). The loader
+        // must ignore it, apply code defaults, and report the corruption.
+        (new SettingRepository($this->db))->set('features', 'not-an-object');
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($flags->enabled('capabilities'), 'defaults apply when the override blob is corrupt');
+        self::assertFalse($flags->enabled('server_extensions'), 'Gate B stays dark when the override blob is corrupt');
+        self::assertTrue($flags->overridesCorrupt(), 'a non-object features value must be reported as corrupt');
+
+        // Replacing the row with a real JSON object clears the condition.
+        $this->setFlags(['passkeys' => false]);
+        $repaired = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($repaired->overridesCorrupt(), 'a JSON-object features value is not corrupt');
+        self::assertFalse($repaired->enabled('passkeys'), 'the repaired override applies');
     }
 
     public function test_provider_registry_flag_gates_generic_oidc_routes(): void
     {
-        // An ENABLED registry row must stay invisible while the P5-12 flag is
-        // dark: no /auth routes, no sign-in button. (Full-flow coverage lives
-        // in AppOidcProviderTest; this is the canonical dark pin.)
+        $this->setFlags(['provider_registry' => false]);
+        // An ENABLED registry row must stay invisible when an operator rolls back the
+        // P5-12 flag: no /auth routes, no sign-in button. Full-flow coverage lives
+        // in AppOidcProviderTest; this is the canonical rollback pin.
         $id = (new \App\Repository\IdentityProviderRepository($this->db))->create([
             'provider_key' => 'darkidp',
             'display_name' => 'Dark IdP',
@@ -172,9 +300,9 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_invitations_flag_gates_invitation_routes_and_redemption(): void
     {
-        // Canonical dark pin for P5-13: routes 404 and a planted VALID
-        // invitation stays inert — an open-mode signup that carries a token
-        // completes as an ORDINARY registration (no consumption, no grant).
+        $this->setFlags(['invitations' => false]);
+        // Canonical rollback pin for P5-13: routes 404 and a planted VALID invitation
+        // stays inert while features.invitations=false.
         $adminRow = $this->makeAdmin();
         $admin = (new \App\Repository\UserRepository($this->db))->findEntity((int) $adminRow['id']);
         self::assertNotNull($admin);
@@ -215,6 +343,7 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_capabilities_flag_gates_role_routes(): void
     {
+        $this->setFlags(['capabilities' => false]);
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/roles'));
         // P5-09 scoped-assignment mutation routes (IDs are synthetic/nonexistent
@@ -236,6 +365,7 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_passkeys_flag_gates_ceremony_routes(): void
     {
+        $this->setFlags(['passkeys' => false]);
         $user = $this->makeUser();
         $this->actingAs($user);
         $this->assertStatus(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x']));
@@ -270,6 +400,7 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_package_registry_flag_gates_catalog_and_registry_routes(): void
     {
+        $this->setFlags(['package_registry' => false]);
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/packages'));
         $this->assertStatus(404, $this->get('/admin/registries'));
@@ -315,8 +446,9 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_package_registry_gates_publisher_console_routes(): void
     {
+        $this->setFlags(['package_registry' => false]);
         $this->actingAs($this->makeAdmin());
-        // Dark by default: gate() → NotFoundException (404, never 403/405) before and after requireAdmin().
+        // Rollback: gate() -> NotFoundException (404, never 403/405) before and after requireAdmin().
         $this->assertStatus(404, $this->get('/admin/packages/publishers/1'));
         foreach ([
             ['/admin/packages/publishers/1/verify', ['current_password' => 'password123']],

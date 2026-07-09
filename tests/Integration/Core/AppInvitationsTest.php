@@ -62,6 +62,7 @@ final class AppInvitationsTest extends TestCase
 
     public function test_console_is_404_while_the_flag_is_dark(): void
     {
+        (new SettingRepository($this->db))->set('features', ['invitations' => false]);
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/invitations'));
         $this->get('/');
@@ -338,7 +339,8 @@ final class AppInvitationsTest extends TestCase
 
     public function test_token_bearing_renders_stay_noindex_while_dark(): void
     {
-        $this->setMode('open'); // features.invitations stays dark
+        (new SettingRepository($this->db))->set('features', ['invitations' => false]);
+        $this->setMode('open');
         $this->makeAdmin();
         $res = $this->get('/register', ['invite' => str_repeat('a', 64)]);
         $this->assertStatus(200, $res);
@@ -466,8 +468,8 @@ final class AppInvitationsTest extends TestCase
 
     public function test_invite_mode_with_a_dark_flag_fails_closed(): void
     {
-        // features.invitations stays dark; a planted valid invitation must not
-        // reopen registration (owner decision 2026-07-08: fail closed).
+        // Explicit invitation rollback must not reopen registration.
+        (new SettingRepository($this->db))->set('features', ['invitations' => false]);
         $this->setMode('invite');
         $invite = $this->issueInvitation();
 

@@ -9,7 +9,7 @@ use Tests\Support\Phase5\RegistryFixtures;
 use Tests\Support\Phase5\SigningHarness;
 use Tests\Support\TestCase;
 
-/** The deploy-dark /admin/packages/security console: overview render + flag-independent emergency brake. */
+/** The flag-gated /admin/packages/security console: overview render + flag-independent emergency brake. */
 final class AppPackageSecurityConsoleTest extends TestCase
 {
     private SigningHarness $root;

@@ -19,7 +19,8 @@ use Tests\Support\TestCase;
  * (secret straight into the vault — §E sequencing: service_secrets first),
  * test its health, and enable/disable it with the TM-ID-09-clause-2 handoff
  * honoured: sole-method accounts are listed BEFORE disable ever happens.
- * Everything sits behind the dark provider_registry flag + admin role +
+ * Everything sits behind the provider_registry flag (default-on since
+ * 2026-07-09; rollback tests set it false explicitly) + admin role +
  * password reauth on mutations.
  */
 final class AppAdminProvidersTest extends TestCase
@@ -40,6 +41,7 @@ final class AppAdminProvidersTest extends TestCase
 
     public function test_flag_dark_hides_every_provider_admin_route(): void
     {
+        (new SettingRepository($this->db))->set('features', ['provider_registry' => false]);
         $this->actingAs($this->admin);
         $this->assertStatus(404, $this->get('/admin/providers'));
         $this->assertStatus(404, $this->post('/admin/providers', []));

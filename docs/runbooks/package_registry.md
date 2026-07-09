@@ -1,6 +1,7 @@
-# Runbook: `package_registry` (Phase 5 Increment 3, Deploy-Dark)
+# Runbook: `package_registry` (Phase 5 Increment 3)
 
-**State:** default off. Enabling provides staff-only catalogue browse, registry
+**State:** graduated to default-ON on 2026-07-09 — operator-reversible via
+`features.package_registry=false`. The default-on surface provides staff-only catalogue browse, registry
 trust controls, signed release acquisition, install/consent/enable/update/
 rollback/uninstall/export flows, and the registry/package workers. Package rows
 remain inert: an enabled package is eligibility only and no theme/integration
@@ -8,10 +9,12 @@ runtime executes until later increments.
 
 ## Enable / Disable / Rollback
 
-- Enable: set `features.package_registry=true` in the settings `features` JSON.
-  Surfaces: `/admin/packages`, `/admin/registries`; workers
-  `worker:registry-refresh` and `worker:packages` start acting.
-- Rollback: set the flag false. Routes return 404, both workers no-op, verified
+- Default-on since 2026-07-09: `/admin/packages`, `/admin/registries`, and the
+  `worker:registry-refresh` / `worker:packages` workers are active unless the
+  flag is rolled back (only installs that previously wrote
+  `features.package_registry=false` need the enable step).
+- Rollback: set the flag false (merge into the `features` JSON per
+  `docs/runbooks/operations.md` §2 — do not clobber other overrides). Routes return 404, both workers no-op, verified
   release bytes and install rows remain inert for investigation or later resume.
 - Independent of the flag: `package_registries.is_enabled=0` disables one source
   without a password. The local blocklist and package disable/pin/export actions
@@ -27,7 +30,7 @@ runtime executes until later increments.
 `worker:registry-refresh` fetches signed snapshots/advisories. `worker:packages`
 verifies installed release bytes, enforces local blocklist/advisories, reports
 notify-policy updates, and purges uninstalled rows after retention lapses. Both
-commands no-op while `package_registry` is dark.
+commands no-op when `package_registry` is rolled back.
 
 ## Install / Consent / Enable
 
@@ -97,7 +100,7 @@ reauthentication.
    If the package is an active theme, enter theme safe mode or deactivate/roll
    back from `/admin/themes` as described in `docs/runbooks/package_themes.md`.
 2. Escalate as needed: acknowledge or ingest advisories, revoke keys, disable
-   the registry source, or dark the `package_registry` flag.
+   the registry source, or roll back the `package_registry` flag.
 3. `force_disable` and `revoke` advisories are enforced by `worker:packages` for
    enabled installs. `block_new`, `force_disable`, and `revoke` cancel blocked
    staged updates.
@@ -122,6 +125,6 @@ The `remote_app`/`automation` integration runtime (install-scoped settings,
 read-only API tokens, package-owned webhooks) and the operator security-response
 console (publisher trust, exact-digest review, advisories, emergency disable,
 transparency) are documented in **`docs/runbooks/package_integrations.md`**.
-Both consume this same `package_registry` flag and stay deploy-dark; the flag-
+Both consume this same `package_registry` flag; the flag-
 independent `package_execution_disabled` brake is the kill switch for package
 execution specifically.

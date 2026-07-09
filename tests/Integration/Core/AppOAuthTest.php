@@ -254,8 +254,9 @@ final class AppOAuthTest extends TestCase
 
     public function test_invite_mode_with_dark_flag_degrades_to_closed_for_oauth(): void
     {
-        // features.invitations stays at its dark default: fail closed.
+        // Explicit invitation rollback must fail closed for OAuth provisioning.
         $this->settings()->set('registration_mode', 'invite');
+        $this->settings()->set('features', ['invitations' => false]);
 
         $out = $this->svc()->resolve($this->identity('sub-invite-dark'), null);
 

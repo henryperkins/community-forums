@@ -2,6 +2,29 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Phase 5 Gate A defaults on
+
+Accepted Phase 5 Gate A and B2 support flags now default on:
+`package_registry`, `package_themes`, `capabilities`, `passkeys`,
+`provider_registry`, `invitations`, `service_secrets`, `api_tokens`, `webhooks`,
+and `first_party_hooks`. The new defaults apply to any install without an
+explicit `features.<flag>` override — fresh and upgraded alike. Each remains
+reversible through the `features` setting; Gate B and unfinished Phase 3/4
+carryovers stay default-off.
+
+**Upgrade notes** (details in ADR 0018):
+
+- Upgrading operators get these ten surfaces live on upgrade; to keep any dark,
+  set `features.<flag>=false` using the merge-preserving recipe in
+  `docs/runbooks/operations.md` §2 (a fresh full-object write clobbers other
+  overrides).
+- A lingering `CAPABILITIES_MODE=enforce` env value — inert while the flag
+  defaulted dark — becomes live resolver enforcement; unset it or roll
+  `capabilities` back until the shadow soak has run.
+- Passkeys need a canonical HTTPS `APP_URL` in production; the login affordance
+  hides itself where the ceremony policy is unsatisfiable, but correct a stale
+  `http://` `APP_URL` (or roll `passkeys` back) before advertising passkeys.
+
 ## [Unreleased] — Phase 5 P5-16 Gate A closeout evidence
 
 P5-16 closeout evidence is collected and indexed at `docs/evidence/phase5/gate-a-closeout.md`; ADR 0017 records product-owner acceptance for Gate A on 2026-07-09, and Gate B workstreams remain reserved.

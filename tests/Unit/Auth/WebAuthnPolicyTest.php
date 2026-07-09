@@ -64,6 +64,17 @@ final class WebAuthnPolicyTest extends TestCase
         new RelyingParty('not-a-url', null, 'production');
     }
 
+    public function test_is_usable_reports_the_ceremony_policy_without_throwing(): void
+    {
+        // Non-throwing twin of assertUsable() for render-time decisions: with
+        // passkeys default-on, the login affordance must not be offered where
+        // the challenge POST is guaranteed to refuse.
+        self::assertFalse((new RelyingParty('http://forum.example.com', null, 'production'))->isUsable());
+        self::assertTrue((new RelyingParty('https://forum.example.com', null, 'production'))->isUsable());
+        self::assertTrue((new RelyingParty('http://localhost:8000', null, 'production'))->isUsable());
+        self::assertTrue((new RelyingParty('http://forum.example.com', null, 'testing'))->isUsable());
+    }
+
     private function verifier(): WebAuthnVerifier
     {
         return new WebAuthnVerifier(new RelyingParty('http://localhost:8000', null, 'testing'));

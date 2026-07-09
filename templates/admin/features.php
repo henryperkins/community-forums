@@ -14,6 +14,10 @@
     <div class="admin-pane">
         <p class="pane-intro">Read-only view of the declared feature flags from <code>src/Core/FeatureFlags.php</code>, their configured overrides in <code>settings.features</code>, and the effective runtime state.</p>
 
+        <?php if (!empty($features_corrupt)): ?>
+            <p class="field-error">The <code>settings.features</code> value is not a JSON object, so all stored feature overrides are being ignored and code defaults are in effect. Rewrite it as a JSON object (see <code>docs/runbooks/operations.md</code> §2) to restore your overrides.</p>
+        <?php endif; ?>
+
         <section class="admin-dashboard-grid" aria-label="Feature flag summary">
             <div class="card queue-card is-static">
                 <span class="queue-card-head">Declared</span>

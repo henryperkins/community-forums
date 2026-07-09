@@ -13,8 +13,8 @@ use InvalidArgumentException;
  * and `installed_package_permissions.kind='data_class'` (0049) stores them.
  * High-risk access is exceptional and separately named; `protected` classes
  * are never grantable to any package. Mirrors CapabilityCatalog: a static
- * catalogue, not a service. Deploy-dark: nothing validates against this until
- * Inc 3 (P5-02 manifest validation) lands.
+ * catalogue, not a service. Validated against by Inc 3 (P5-02) manifest
+ * validation behind the `package_registry` flag (default-on since 2026-07-09).
  *
  * key => [risk(low|medium|high|protected), description, consent (null iff protected)].
  *

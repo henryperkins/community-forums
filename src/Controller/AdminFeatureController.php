@@ -83,7 +83,7 @@ final class AdminFeatureController extends Controller
             }
             $unknownOverrides[] = [
                 'flag' => $flag,
-                'value_text' => (bool) $value ? 'Override on' : 'Override off',
+                'value_text' => FeatureFlags::normalizeOverride($value) ? 'Override on' : 'Override off',
                 'raw_value' => $this->rawValue($value),
             ];
         }
@@ -95,6 +95,7 @@ final class AdminFeatureController extends Controller
         return $this->view('admin/features', [
             'groups' => $rowsByGroup,
             'unknown_overrides' => $unknownOverrides,
+            'features_corrupt' => $flags->overridesCorrupt(),
             'stats' => [
                 'declared' => count($defaults),
                 'default_on' => $defaultOn,
@@ -118,7 +119,7 @@ final class AdminFeatureController extends Controller
         $default = (bool) $defaults[$flag];
         $current = (bool) ($effective[$flag] ?? $default);
         $hasOverride = array_key_exists($flag, $overrides);
-        $override = $hasOverride ? (bool) $overrides[$flag] : null;
+        $override = $hasOverride ? FeatureFlags::normalizeOverride($overrides[$flag]) : null;
 
         return [
             'flag' => $flag,

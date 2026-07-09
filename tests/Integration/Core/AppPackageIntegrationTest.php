@@ -267,7 +267,7 @@ final class AppPackageIntegrationTest extends TestCase
 
     public function test_export_settings_is_dark_without_flag(): void
     {
-        // package_registry stays default-off.
+        // package_registry rollback keeps integration export dark.
         (new SettingRepository($this->db))->set('features', ['package_registry' => false]);
         $this->assertStatus(404, $this->post('/admin/packages/1/integration/export', []));
     }

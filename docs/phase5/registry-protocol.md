@@ -1,10 +1,10 @@
 # RetroBoards registry protocol v1 (P5-01/P5-02/P5-03, Increment 4)
 
-**Status:** Landed 2026-07-02, deploy-dark behind `package_registry` and
-`package_themes`.
+**Status:** Landed 2026-07-02 behind `package_registry` and `package_themes`
+(both default-on since 2026-07-09, ADR 0018; operator-reversible).
 **Scope:** wire contract and verification rules for signed catalogue snapshots,
 advisories, key rotation, release documents, manifest validation, and the
-deploy-dark install/update lifecycle. Inc 4 adds the declarative theme runtime:
+flag-gated install/update lifecycle. Inc 4 adds the declarative theme runtime:
 verified theme packages can build deterministic token-only stylesheets and serve
 them only after explicit operator activation.
 **Authority:** subordinate to `DECISIONS.md` -> `DESIGN.md` -> ADR 0004 (D1-D3)

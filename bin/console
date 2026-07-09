@@ -798,7 +798,7 @@ try {
             $log('  worker:extensions [limit]  Drain queued async server-extension jobs when enabled');
             $log('  worker:secret-prune [limit]  Destroy expired retired service-secret versions (default 100)');
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
-            $log('  worker:registry-refresh  Fetch + verify enabled package-registry snapshots/advisories (no-op while dark)');
+            $log('  worker:registry-refresh  Fetch + verify enabled package-registry snapshots/advisories (no-op if package_registry is rolled back)');
             $log('  worker:packages       Verify installed package digests, enforce advisories/blocklist, purge lapsed uninstalls');
             $log('  verify:phase5-budgets   Seed the F9 fixture and write the D11 budget report (A3)');
             $log('  verify:resolver-parity  Archive the Inc-1 resolver parity corpus (exit 1 on mismatch)');

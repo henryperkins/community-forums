@@ -14,7 +14,7 @@ use App\Service\Packages\PackageSettingsService;
 use App\Service\Packages\PackageUpdateService;
 use App\Service\Registry\RegistryCatalogService;
 
-/** Deploy-dark staff catalogue browse; lifecycle POSTs live in the paired controller. */
+/** Staff catalogue browse (flag-gated by package_registry); lifecycle POSTs live in the paired controller. */
 final class AdminPackagesController extends Controller
 {
     private function gate(): void

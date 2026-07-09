@@ -21,7 +21,7 @@ use App\Service\Registry\RegistryAdvisoryService;
 use App\Service\Registry\RegistryTrustService;
 
 /**
- * Deploy-dark registry trust console: sources, pinned keys, signed rotation,
+ * Registry trust console (flag-gated by package_registry): sources, pinned keys, signed rotation,
  * revocation, local blocklist, and advisory ingest/ack.
  */
 final class AdminRegistryController extends Controller

@@ -295,8 +295,8 @@ final class AppAdminBoardRosterTest extends TestCase
      * signed-in member enumerate which board ids exist — including the hidden
      * and private boards /c/{slug} deliberately 404-masks. The four commands
      * therefore authorize (in AdminService, state-then-capability) BEFORE the
-     * controller resolves the board row. This is live even with the
-     * `capabilities` flag OFF (the shipped default), so the test runs unflagged;
+     * controller resolves the board row. This is live regardless of
+     * the capabilities runtime posture, so the test runs without forcing a mode;
      * the admin path above still legitimately 404s (it authorizes first, then
      * learns the board is missing).
      */

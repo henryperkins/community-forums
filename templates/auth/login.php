@@ -17,7 +17,7 @@
         </label>
         <button class="btn" type="submit">Log in</button>
     </form>
-    <?php if (!empty($features['passkeys'])): ?>
+    <?php if (!empty($passkeys_usable)): ?>
         <div class="passkey-signin"
              data-passkey-signin
              data-challenge-url="/login/passkey/challenge"

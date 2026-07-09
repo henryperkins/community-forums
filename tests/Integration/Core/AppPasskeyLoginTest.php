@@ -48,6 +48,22 @@ final class AppPasskeyLoginTest extends TestCase
         return ['challenge' => (string) Base64Url::decode($options['challenge']), 'options' => $options];
     }
 
+    public function test_login_affordance_is_hidden_when_the_relying_party_is_unusable(): void
+    {
+        // Default-on passkeys must not offer a sign-in button that is guaranteed
+        // to 422 (production behind TLS-at-the-edge with a stale http:// APP_URL):
+        // the affordance renders only when the ceremony policy is satisfiable.
+        $items = $this->config->all();
+        $items['app']['url'] = 'http://forum.example.com';
+        $items['app']['env'] = 'production';
+        $this->app = new \App\Core\App(new \App\Core\Config($items), $this->db, $this->rateLimiter);
+
+        $this->logoutClient();
+        $body = $this->get('/login')->body();
+        self::assertStringNotContainsString('data-passkey-signin', $body, 'unusable RP must hide the passkey affordance');
+        self::assertStringContainsString('name="email"', $body, 'password login stays the baseline');
+    }
+
     public function test_registered_credential_signs_in_the_right_account(): void
     {
         $user = $this->makeUser(['username' => 'pk_login']);
