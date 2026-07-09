@@ -52,7 +52,7 @@ final class AppPhase5CapabilitySeedTest extends TestCase
     public function test_seeding_the_catalogue_does_not_write_a_capabilities_flag_override(): void
     {
         $settings = new SettingRepository($this->db);
-        $flags = new FeatureFlags(new SettingRepository($this->db));
+        $flags = new FeatureFlags($settings);
         $overrides = $settings->get('features', []);
 
         self::assertTrue($flags->enabled('capabilities'), 'capabilities is default-on after Gate A acceptance');

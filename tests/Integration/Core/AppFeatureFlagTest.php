@@ -157,6 +157,76 @@ final class AppFeatureFlagTest extends TestCase
         self::assertFalse($overridden->enabled('passkeys'), 'operator rollback should disable passkeys');
         self::assertTrue($overridden->enabled('provider_registry'), 'rolling back one Phase 5 flag must not disable its neighbours');
         self::assertFalse($overridden->enabled('server_extensions'), 'Gate B stays dark without an override');
+
+        // Enable-direction isolation (kept from the pre-graduation test): lighting
+        // one reserved flag via override must not light its siblings.
+        $this->setFlags(['server_extensions' => true]);
+        $gateB = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($gateB->enabled('server_extensions'), 'an explicit override can light a reserved flag');
+        self::assertFalse($gateB->enabled('governance'), 'enabling one reserved flag must not enable its siblings');
+    }
+
+    public function test_phase5_gate_a_surfaces_are_live_with_no_features_override(): void
+    {
+        // The zero-override pin every prior graduation carried: the surfaces must
+        // actually ANSWER on a pristine install, not merely have a TRUE default —
+        // a gate reading the raw setting instead of FeatureFlags::enabled() would
+        // pass the posture test while shipping dark. Deliberately no setFlags().
+        $this->actingAs($this->makeAdmin(['username' => 'p5_default_admin']));
+        foreach ([
+            'package_registry' => '/admin/packages',
+            'package_themes' => '/admin/themes',
+            'capabilities' => '/admin/roles',
+            'provider_registry' => '/admin/providers',
+            'invitations' => '/admin/invitations',
+            'api_tokens' => '/admin/api-tokens',
+            'webhooks' => '/admin/webhooks',
+        ] as $flag => $path) {
+            self::assertNotSame(404, $this->get($path)->status(), "$path must be live by default ($flag)");
+        }
+        self::assertNotSame(404, $this->get('/admin/registries')->status(), '/admin/registries must be live by default (package_registry)');
+
+        // passkeys: the ceremony route answers (not 404) for a member, and guests
+        // see the sign-in affordance. service_secrets/first_party_hooks have no
+        // GET surface; their flag-level defaults are pinned by the posture test.
+        $this->actingAs($this->makeUser(['username' => 'p5_default_member']));
+        self::assertNotSame(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x'])->status());
+        $this->logoutClient();
+        self::assertStringContainsString('data-passkey-signin', $this->get('/login')->body());
+
+        // api_tokens public seam: anonymous /api/v1 is an auth failure, not absent.
+        self::assertSame(401, $this->get('/api/v1/me')->status());
+    }
+
+    public function test_capabilities_rollback_keeps_legacy_authorization_writes_live(): void
+    {
+        // The documented emergency rollback (features.capabilities=false) swaps in
+        // AuthorityGate::legacy() with a null resolver; drive real authorization
+        // WRITES through the kernel on that posture so a legacy-branch regression
+        // (dropped ?->-guard, reordered state-then-capability check) cannot ship
+        // green. Complements the route-404 pins, which never exercise a write.
+        $this->setFlags(['capabilities' => false]);
+        $admin = $this->makeAdmin(['username' => 'legacy_ops_admin']);
+        $mod = $this->makeUser(['username' => 'legacy_board_mod']);
+        $member = $this->makeUser(['username' => 'legacy_member']);
+        $board = $this->makeBoard($this->makeCategory('Legacy Authz'));
+        $thread = $this->makeThread($board, $member, 'Legacy authz thread', 'Opening post.');
+
+        // Roster command (AdminService legacy authority) succeeds for the admin…
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/admin/boards/' . $board['id'] . '/moderators', ['username' => 'legacy_board_mod']));
+
+        // …and keeps the V1 no-existence-oracle ordering for a non-admin: 403
+        // (authorize first), never 404-for-missing.
+        $this->actingAs($member);
+        $this->assertStatus(403, $this->post('/admin/boards/999999/moderators', ['username' => 'x']));
+
+        // Moderation write via the legacy closure: the just-assigned board mod may
+        // lock (also proves the roster write landed); a plain member may not.
+        $this->actingAs($mod);
+        $this->assertRedirect($this->post('/mod/t/' . $thread['thread_id'] . '/lock'));
+        $this->actingAs($member);
+        $this->assertStatus(403, $this->post('/mod/t/' . $thread['thread_id'] . '/lock'));
     }
 
     public function test_override_values_parse_strictly_and_garbage_fails_dark(): void
