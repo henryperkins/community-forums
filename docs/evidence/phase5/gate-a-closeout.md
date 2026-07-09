@@ -13,7 +13,7 @@
 | GA-DOD-18 | `docs/evidence/phase5/performance-budgets.md` | Captured production-like Gate A budgets; advance R3 -> R4 during ledger reconciliation |
 | GA-DOD-19 | `docs/evidence/phase5/p5-16-runbook-rehearsals.md` | Captured runbook rehearsal evidence for resolver, trust-root, registry, package, theme, owner, passkey, provider, invitation, token, and worker recovery paths |
 | GA-DOD-20 | `docs/evidence/phase5/p5-16-regression-route-matrix.md` | Captured full regression, fresh/reused schema determinism, route-permission matrix, all-flags-off, and package brake evidence |
-| GA-DOD-21 | `docs/evidence/phase5/p5-16-defect-sweep.md` | Collecting defect-sweep evidence |
+| GA-DOD-21 | `docs/evidence/phase5/p5-16-defect-sweep.md` | Captured critical/high marker search, deferred-language search, security regression, and Gate A release-blocker disposition |
 | GA-DOD-22 | This index plus README, CHANGELOG, SCHEMA, capability catalogue, review policy, runbooks, and deploy-dark inventory | Collecting documentation reconciliation evidence |
 | GA-DOD-23 | `docs/adr/0017-phase-5-gate-a-closeout.md` | Not accepted until product-owner acceptance is explicitly recorded |
 
