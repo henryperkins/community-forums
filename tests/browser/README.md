@@ -75,6 +75,9 @@ community (`seed.php`). Playwright then boots `php -S` against that DB and captu
 the screenshots. Override the database or port with `DB_DATABASE` / `E2E_PORT`.
 For a differently named local DB container/client, keep the normal app DB env and
 set `DB_RESET_CONTAINER`, `DB_ROOT_PASSWORD`, and `DB_MYSQL_CLIENT`.
+The local `php -S` profile uses a deterministic test-only `APP_KEY` when one is
+not supplied; set `APP_KEY` explicitly when you need evidence to match an
+external runtime.
 
 For the production-like closeout profile, start the compose stack first:
 

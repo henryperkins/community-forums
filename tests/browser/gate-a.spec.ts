@@ -963,9 +963,12 @@ test('phase 4 badge rules: create, preview, enable, backfill, disable, revoke', 
   await expect(page.getByRole('button', { name: 'Create rule' })).toBeVisible();
 
   // Create a post-count rule (threshold 1, all boards) through the no-JS form.
+  // Pick a badge that the seeded posting users do not already hold; the first
+  // catalogue option is Welcome, which can become fully held by the mobile pass
+  // after invitation/account flows have run in the shared evidence DB.
   // Rules list newest-first, so the rule created here is always the first row.
   const form = page.locator('form.stacked[action="/admin/badge-rules"]');
-  await form.locator('select[name="badge_id"]').selectOption({ index: 0 });
+  await form.locator('select[name="badge_id"]').selectOption({ label: 'Appreciated' });
   await form.locator('select[name="rule_type"]').selectOption('post_count');
   await form.locator('input[name="threshold"]').fill('1');
   await form.getByRole('button', { name: 'Create rule' }).click();
