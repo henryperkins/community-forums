@@ -59,7 +59,7 @@ final class FeatureFlags
         'community_memory' => false,   // summaries, related topics, wiki revisions
         'content_references' => true,  // persisted board/thread/post references + read-gated cards — GA default-on (2026-07-02; reversible via features override)
 
-        // ── Phase 4 carryover completion (deploy-dark, independently reversible)
+        // ── Phase 4 carryover completion (mixed: graduated default-on, rest dark)
         'link_previews' => false,      // allowlisted server-fetched URL metadata + purge/refresh
         'expanded_files' => false,     // PDF/text-family uploads behind scanner/quarantine gates
         'polls' => true,               // one poll per thread, no-JS vote/result flows — GA default-on (2026-06-30; reversible via features override)
@@ -75,8 +75,9 @@ final class FeatureFlags
         'automated_context' => false,  // since-last-read context + suggested related topics
 
         // -- Phase 5 Gate A (accepted; default-on, independently reversible) -----
-        // Gate A closed on 2026-07-09. Fresh installs expose these surfaces by
-        // default; operators can still roll each one back through the `features`
+        // Gate A closed on 2026-07-09 (ADR 0018). Defaults apply to any install
+        // without an explicit `features.<flag>` override — fresh and upgraded
+        // alike; operators can still roll each one back through the `features`
         // setting. Package execution also has a flag-independent emergency brake
         // (`PACKAGE_EXECUTION_DISABLED` / `package_execution_disabled`).
         'package_registry' => true,   // signed registry, package catalogue/install/update (P5-01/02/04)
@@ -94,7 +95,8 @@ final class FeatureFlags
         'webhooks' => true,           // outbound webhook delivery engine + admin UI (B2 sub-project 3)
         'first_party_hooks' => true,  // code-only first-party hooks + domain webhook producers (B2 sub-project 4)
 
-        // ── Phase 5 Gate B (reserved; dark until Gate A is accepted) ───────
+        // ── Phase 5 Gate B (reserved; dark until each workstream lands its own
+        // release evidence — ADR 0018 accepts Gate A only) ──────────────────
         'server_extensions' => false, // sandboxed isolated server-extension runtime (P5-05/06)
         'governance' => false,        // operator groups, approvals, access review (P5-10)
         'service_principals' => false,// remote-app service identities (P5-14)

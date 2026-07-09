@@ -11,8 +11,8 @@ namespace App\Security;
  * from this class, and `CapabilityInventoryService`'s coverage test enforces
  * parity. Mirrors `App\Security\ApiScopes` (a static catalogue, not a service).
  *
- * Deploy-dark: nothing resolves against this until the `capabilities` flag +
- * the resolver (P5-08, Increment 1) land. Reputation/badges/profile fields are
+ * Resolved by the P5-08 capability resolver behind the `capabilities` flag
+ * (default-on since 2026-07-09). Reputation/badges/profile fields are
  * NEVER capabilities (taxonomy §8).
  */
 final class CapabilityCatalog

@@ -22,8 +22,9 @@ use App\Service\Registry\RegistryCatalogService;
  * No-JS operator surface for animating remote_app / automation installs:
  * per-install settings, package-owned credentials, and defensive pause/export.
  * {id} is packages.id; the install row is resolved server-side so an operator
- * cannot target another row. Deploy-dark behind package_registry: gate() throws
- * NotFoundException (404, never 403/405) before AND after requireAdmin().
+ * cannot target another row. Flag-gated by default-on package_registry: gate()
+ * throws NotFoundException (404, never 403/405) before AND after requireAdmin()
+ * when an operator rolls back the flag.
  */
 final class AdminPackageIntegrationController extends Controller
 {

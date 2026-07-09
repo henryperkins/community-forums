@@ -9,10 +9,12 @@ runtime executes until later increments.
 
 ## Enable / Disable / Rollback
 
-- Enable: set `features.package_registry=true` in the settings `features` JSON.
-  Surfaces: `/admin/packages`, `/admin/registries`; workers
-  `worker:registry-refresh` and `worker:packages` start acting.
-- Rollback: set the flag false. Routes return 404, both workers no-op, verified
+- Default-on since 2026-07-09: `/admin/packages`, `/admin/registries`, and the
+  `worker:registry-refresh` / `worker:packages` workers are active unless the
+  flag is rolled back (only installs that previously wrote
+  `features.package_registry=false` need the enable step).
+- Rollback: set the flag false (merge into the `features` JSON per
+  `docs/runbooks/operations.md` §2 — do not clobber other overrides). Routes return 404, both workers no-op, verified
   release bytes and install rows remain inert for investigation or later resume.
 - Independent of the flag: `package_registries.is_enabled=0` disables one source
   without a password. The local blocklist and package disable/pin/export actions

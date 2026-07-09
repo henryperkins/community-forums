@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.36 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-09
+**Status:** v1.37 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-09
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -134,7 +134,7 @@ Those source docs remain the narrative source of truth for *why* each field exis
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
-> Tables 55–77 are the **Phase 5 foundation** (migrations `0049`–`0053`): originally additive and inert so no Gate A feature depended on an undocumented shape (Milestone 1). Accepted Gate A workstreams now default on for fresh installs as of 2026-07-09, and each remains reversible through its `features` override (see §5A and `PHASE_5_STATUS.md`).
+> Tables 55–77 are the **Phase 5 foundation** (migrations `0049`–`0053`): originally additive and inert so no Gate A feature depended on an undocumented shape (Milestone 1). Accepted Gate A workstreams default on as of 2026-07-09 for any install without an explicit `features` override (fresh and upgraded alike), and each remains reversible through that override (see §5A and `PHASE_5_STATUS.md`).
 >
 > Tables 78–80 are the **Gate A TOTP/recovery prerequisite** (migration `0054`):
 > additive, opt-in, and active only for accounts that enroll. They resolve ADR
@@ -802,7 +802,7 @@ CREATE TABLE submission_idempotency (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-> **Phase-3 build note (reconciled 2026-06-28; updated 2026-07-02).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Webhook delivery is built deploy-dark by migration `0057`. Later carryover migrations now build the account-lifecycle, appeals, bookmark-folder, custom-profile-field, and server-draft shapes (`0059`-`0064`; see §4B/§4C). Still **not built** from the original Phase 3 gaps: the automation-rule table and public/untrusted plugin runtime tables.
+> **Phase-3 build note (reconciled 2026-06-28; updated 2026-07-02).** `attachments` and `submission_idempotency` are built (migrations 0043/0044). The columns `threads.is_pending` / `posts.is_pending` / `boards.require_approval` (anti-abuse + board approval holds) and `users.avatar_path` / `users.onboarded_at` appear in the consolidated shapes above but were **not** migrated in Phases 1–2; they are created in Phase 3 by migrations 0045/0046/0042 respectively (per §7 #11: a column's presence in this file is not evidence its migration shipped). `posts.deleted_at` (soft-delete timestamp, gating the attachment-retention grace window) is added by migration 0047. TOTP/recovery is built by migration `0054` as a Phase 5 Gate A prerequisite. Webhook delivery is built by migration `0057` and governed by the `webhooks` flag (default-on since 2026-07-09, ADR 0018). Later carryover migrations now build the account-lifecycle, appeals, bookmark-folder, custom-profile-field, and server-draft shapes (`0059`-`0064`; see §4B/§4C). Still **not built** from the original Phase 3 gaps: the automation-rule table and public/untrusted plugin runtime tables.
 
 ---
 
@@ -907,7 +907,9 @@ schema-only and are explicitly deferred in
 `docs/adr/0003-phase-4-closeout-deferrals.md`. `custom badge rules` and
 `content_references` now have deploy-dark carryover implementation evidence, but
 remain behind flags until the release evidence in
-`docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md` is complete. Summary
+`docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md` is complete (both
+have since graduated default-ON: `badge_rules` 2026-07-02, `content_references`
+2026-07-02). Summary
 retire/restore/source display, wiki revert, and tag merge/visibility behavior
 are implemented in application code.
 
@@ -1208,11 +1210,12 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.37 | 2026-07-09 | **Documentation-only reconciliation after the Phase 5 Gate A default-on acceptance (ADR 0018); no schema shape change.** §5A heading and body, the tables 55–77 index note, §6 Phase-3/Phase-5 rows, and the Phase-3 build-note webhook sentence reworded from deploy-dark to accepted/default-on (reversible via `features` overrides); the defaults apply to any install without an explicit override. Follows the v1.27 pattern for post-graduation reconciliations. |
 | v1.36 | 2026-07-09 | Phase 5 Increment 9 migration `0076_phase5_invitation_audit`: widened `moderation_log.target_type` with `invitation` (issuance/revoke/redemption audit rows — mirrors the 0075 `identity_provider` widen). `invitations`/`invitation_redemptions` rows are now animated by the P5-13 console + invite-mode registration through the accepted `invitations` flag; `registration_mode` gains the explicit `invite` value (settings-backed, no schema change). P5-16 closeout re-ran clean install, full rollback/reapply, `verify:upgrade` 17/17 through `0076`, and backup/restore rehearsal on 2026-07-09. |
-| v1.35 | 2026-07-07 | Phase 5 Increment 8 migration `0075_phase5_provider_admin_audit`: widened `moderation_log.target_type` with `identity_provider` (provider console create/enable/disable audit rows — mirrors the 0073 `publisher` widen). Also reconciled the §"moderation_log" CREATE block, which had lagged the `0073` `publisher` widen. `identity_providers` rows are now animated by the P5-12 console + generic-OIDC sign-in through the accepted `provider_registry` flag. |
+| v1.35 | 2026-07-07 | Phase 5 Increment 8 migration `0075_phase5_provider_admin_audit`: widened `moderation_log.target_type` with `identity_provider` (provider console create/enable/disable audit rows — mirrors the 0073 `publisher` widen). Also reconciled the §"moderation_log" CREATE block, which had lagged the `0073` `publisher` widen. `identity_providers` rows are now animated by the P5-12 console + generic-OIDC sign-in behind the dark `provider_registry` flag (graduated default-on 2026-07-09, v1.37). |
 | v1.34 | 2026-07-07 | Phase 5 Increment 8 migration `0074_phase5_provider_identity_backfill`: added `identity_providers.discovery_cache_json`/`discovery_cached_at` (OIDC discovery-document cache beside the 0052 JWKS cache) and backfilled `oauth_identities.provider_config_id` via `provider_aliases` → `identity_providers` (idempotent, NULL-linkage-only; unmapped provider strings stay unlinked rather than guessed). Account resolution remains string-keyed; `0052` seeds `google`/`apple`/`github` now resolve linkage on upgrade. Additive DDL + reversible DML; verified by `AppProviderRegistryMigrationTest` + `verify:upgrade`. |
 | v1.33 | 2026-07-03 | Phase 5 Increment 5 migration `0073_phase5_package_integrations`: added `installed_package_settings` (per-install non-secret `value_json` + `svcsec_*` secret references) and `installed_package_credentials` (package-owned api_token/webhook links), and widened `package_history.event` (+`settings_update`/`credential_mint`/`credential_revoke`) and `moderation_log.target_type` (+`publisher`). Additive-only; verified via `verify:upgrade`. Migration number follows `0072_phase5_theme_packages`. |
-| v1.32 | 2026-07-03 | `0051` tables activated by Inc 7 passkeys (no schema change): `PasskeyService` and the WebAuthn repositories now read/write credentials and challenges through the accepted `passkeys` flag; RP ID/origin policy remains config-derived. |
+| v1.32 | 2026-07-03 | `0051` tables activated by Inc 7 passkeys (no schema change): `PasskeyService` and the WebAuthn repositories now read/write credentials and challenges behind the dark `passkeys` flag (graduated default-on 2026-07-09, v1.37); RP ID/origin policy remains config-derived. |
 | v1.31 | 2026-07-02 | Phase 5 Increment 4 migration `0072`: added declarative theme package build rows, DB-stored neutralized assets, the single-row active/LKG `theme_state`, and widened `package_history.event` with theme activate/rollback/deactivate events. Migration number follows the existing `0071_content_reference_tags` migration on this branch. |
 | v1.30 | 2026-07-02 | Added migration `0071_content_reference_tags`: widened `content_references.target_type` with `tag` so composer-inserted `/tags/{slug}` links can resolve to read-gated tag cards while `content_references` and `tags` are enabled. |
 | v1.29 | 2026-07-02 | Phase 5 Increment 3 migrations `0069`+`0070`: installed-package lifecycle columns (pin, update_policy manual\|notify, staged update pointer, settings/export/retention/quarantine state, `state`+`'uninstalled'`, history events `update_staged`/`export`/`purge`, permission kinds `api_scope`/`event`) and the P5-07-A review-enforcement tables (`publisher_signing_keys` inert-for-Inc-5, `package_review_decisions`, `package_transparency_log`). |

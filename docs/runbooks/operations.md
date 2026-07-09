@@ -25,29 +25,40 @@ run from the project root on the VPS. `bin/console help` lists every command.
   actions, and OAuth callbacks log with request context and **never** log tokens
   or private message bodies.
 
-## 2. Feature flags — deploy dark, enable, roll back
+## 2. Feature flags — enable, roll back
 
-Flags live in the `features` setting (a JSON object of `flag => bool`); code
-defaults are ON. Per-flag overrides take a subsystem offline **without a data
-change** (its routes 404; the core forum keeps serving). Flags:
-`engagement, notifications, email, mentions, search, dms, moderation_queue,
-community, oauth, presence`.
+Flags live in the `features` setting (a JSON object of `flag => bool`) that
+overrides the per-flag code defaults in `App\Core\FeatureFlags` — mixed since
+Phase 4: graduated subsystems default ON, unaccepted ones stay dark. A `false`
+override takes a subsystem offline **without a data change** (its routes 404;
+the core forum keeps serving); removing a key restores the code default.
+`/admin/features` lists every flag with its default, override, and effective
+state. Override values must be JSON booleans; unrecognizable values fail dark.
 
 ```bash
-# Inspect current overrides
+# Inspect current overrides (decoded; "array ()" means no overrides)
 php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env};
 Env::load(".env"); $c=Config::fromFile("config/config.php");
-echo (new App\Repository\SettingRepository(new Database($c->get("db"))))
-  ->getString("features","{}"),"\n";'
+var_export((new App\Repository\SettingRepository(new Database($c->get("db"))))
+  ->get("features", [])); echo "\n";'
 
-# Disable a feature (example: pause community layer) — set the full object
+# Disable a feature (example: pause community layer) — read-modify-write.
+# NEVER write a fresh object: set("features", ["x"=>false]) replaces the whole
+# JSON and silently re-enables every other rolled-back default-ON flag.
 php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env};
 Env::load(".env"); $c=Config::fromFile("config/config.php");
-(new App\Repository\SettingRepository(new Database($c->get("db"))))
-  ->set("features", ["community"=>false]);'
+$s=new App\Repository\SettingRepository(new Database($c->get("db")));
+$f=(array) $s->get("features", []); $f["community"]=false;
+$s->set("features", $f);'
+
+# Re-enable: remove the key (restores the code default) — or set it true.
+php -r 'require "vendor/autoload.php"; use App\Core\{Config,Database,Env};
+Env::load(".env"); $c=Config::fromFile("config/config.php");
+$s=new App\Repository\SettingRepository(new Database($c->get("db")));
+$f=(array) $s->get("features", []); unset($f["community"]);
+$s->set("features", $f);'
 ```
 
-Re-enable by setting the flag back to `true` (or removing it from the object).
 Rolling a feature back is the **first response** to a logic defect; it is
 covered by `AppFeatureFlagTest`.
 

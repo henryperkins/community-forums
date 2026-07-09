@@ -20,7 +20,7 @@ use App\Service\RoleAssignmentService;
 use App\Service\RoleService;
 
 /**
- * Deploy-dark role definition editor for the Phase 5 capability model.
+ * Role definition editor for the Phase 5 capability model (flag-gated by capabilities).
  */
 final class AdminRoleController extends Controller
 {

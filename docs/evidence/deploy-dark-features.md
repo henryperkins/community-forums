@@ -12,7 +12,8 @@ added with no flag gate at all, both reconciled below and against
 `provider_registry` (Inc 8, generic OIDC, PR #39) and `invitations` (Inc 9,
 PR #40) landed deploy-dark and are now *consumed*, no longer inert/reserved;
 **2026-07-09 Phase 5 Gate A/B2 default-on authorization reconciled** — accepted
-Gate A and B2 support flags now default-ON for fresh installs while Gate B and
+Gate A and B2 support flags now default-ON (any install without an explicit
+override) while Gate B and
 unfinished Phase 3/4 carryovers remain default-dark; the Source Code Audit below
 is re-run to 2026-07-09 (53 literal `enabled()` keys) and the `invitations` row
 carries its two-pass pre-merge review hardening)
@@ -76,8 +77,8 @@ Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
   `features` override) and is reachable — confirmed 422, not 404 — even with
   `capabilities` fully off
   (`docs/evidence/phase5/capabilities-fallback-rehearsal.md`).
-- **Phase 5 Gate A/B2 default flip (2026-07-09):** the fresh-install split
-  changed from `37`/`20` to `47`/`10`. Inc 8 (generic OIDC, PR #39,
+- **Phase 5 Gate A/B2 default flip (2026-07-09):** the default split changed
+  from `37`/`20` to `47`/`10` (applies to any install without an override). Inc 8 (generic OIDC, PR #39,
   2026-07-07) and Inc 9 (invitations, PR #40, merged 2026-07-09) wired their
   runtimes, so both now carry literal `enabled()` reads in `src/` (unique-key
   count 51 -> 53) and their Phase 5 Gate A rows below reflect landed evidence.

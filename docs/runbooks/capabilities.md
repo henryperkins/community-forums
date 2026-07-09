@@ -2,8 +2,15 @@
 
 ## What the flag/mode control
 
-`capabilities` graduated to default-ON on 2026-07-09 — operator-reversible via
-`features.capabilities=false`. It gates **availability**: the `/admin/roles`,
+`capabilities` graduated to default-ON on 2026-07-09 (ADR 0018; applies to any
+install without an explicit override, upgrades included) — operator-reversible
+via `features.capabilities=false`.
+
+> **Upgrade note:** a lingering `CAPABILITIES_MODE=enforce` env value — inert
+> while the flag defaulted dark — becomes **live resolver enforcement** the
+> moment an un-overridden install upgrades past the flip. Unset it (shadow is
+> the default) or set `features.capabilities=false` until you have run the
+> shadow soak below. It gates **availability**: the `/admin/roles`,
 `/admin/roles/{id}`, `/admin/roles/simulator`, `/admin/role-assignments/*`
 routes exist and everything they touch (role editor, permission simulator,
 scoped assignment grant/revoke/renew) stays 404 while dark. `changeRole`

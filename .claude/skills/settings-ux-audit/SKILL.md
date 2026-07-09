@@ -27,7 +27,7 @@ Persona variants matter more than on the admin surface: a plain member (`bob`, `
 
 ## Probe error paths on every form
 
-Malformed/over-length input, stale IDs, double-submit, empty selection → must 422 re-render with typed input preserved (anti-draft-loss), never redirect-and-drop, never 500. Settings-specific probes: wrong current password on email/password change; oversized or wrong-type avatar; wrong TOTP code; verify other sessions are revoked after a credential change (`revokeOtherSessionsFor`); appearance changes must be flash-free (server stamps `data-theme` on `<html>`). Add a no-JS pass (progressive enhancement is a hard requirement), a 390px-viewport pass, and flag checks (`server_drafts`/`drafts` ON; `group_dms`, `appeals`, `custom_css` dark by default — dark features must fail dark, with no dead nav links either way).
+Malformed/over-length input, stale IDs, double-submit, empty selection → must 422 re-render with typed input preserved (anti-draft-loss), never redirect-and-drop, never 500. Settings-specific probes: wrong current password on email/password change; oversized or wrong-type avatar; wrong TOTP code; verify other sessions are revoked after a credential change (`revokeOtherSessionsFor`); appearance changes must be flash-free (server stamps `data-theme` on `<html>`). Add a no-JS pass (progressive enhancement is a hard requirement), a 390px-viewport pass, and flag checks (`server_drafts`/`drafts` ON; `group_dms`, `custom_css` dark by default; `appeals` default-ON since 2026-07-02 — dark features must fail dark, with no dead nav links either way).
 
 ## Report format
 

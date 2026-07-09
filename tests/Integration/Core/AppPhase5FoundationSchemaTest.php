@@ -119,7 +119,7 @@ final class AppPhase5FoundationSchemaTest extends TestCase
     {
         // The owner-approved taxonomy (A1, ADR 0012) is now transcribed in
         // CapabilityCatalog and seeded by migration 0066 (Foundation F3),
-        // deploy-dark behind the `capabilities` flag.
+        // gated by the `capabilities` flag (default-on since 2026-07-09).
         self::assertSame(
             54,
             (int) $this->db->fetchValue('SELECT COUNT(*) FROM capabilities'),

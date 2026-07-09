@@ -1,10 +1,11 @@
-# Phase 5 Gate A Default-On Fresh Install Design
+# Phase 5 Gate A Default-On Design
 
 Date: 2026-07-09
 
 ## Goal
 
-Make accepted Phase 5 Gate A behavior default-on for fresh installs by changing
+Make accepted Phase 5 Gate A behavior default-on (any install without an
+explicit `features` override — fresh and upgraded alike) by changing
 the relevant feature defaults from `false` to `true`, while preserving rollback
 through the `features` override.
 
@@ -61,7 +62,7 @@ Update documentation:
 - `docs/evidence/deploy-dark-features.md`: re-run the source audit summary,
   move the ten flipped flags into retained default-on traceability language, and
   keep the ten still-dark flags visible.
-- `PHASE_5_STATUS.md`: record that Gate A fresh-install defaults are now on,
+- `PHASE_5_STATUS.md`: record that Gate A defaults are now on,
   while Gate B remains reserved.
 - `docs/phase5/requirement-ledger.json`: update rollback/default-posture notes
   where they still say the selected flags are deploy-dark by default.

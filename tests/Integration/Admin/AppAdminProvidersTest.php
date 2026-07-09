@@ -19,7 +19,8 @@ use Tests\Support\TestCase;
  * (secret straight into the vault — §E sequencing: service_secrets first),
  * test its health, and enable/disable it with the TM-ID-09-clause-2 handoff
  * honoured: sole-method accounts are listed BEFORE disable ever happens.
- * Everything sits behind the dark provider_registry flag + admin role +
+ * Everything sits behind the provider_registry flag (default-on since
+ * 2026-07-09; rollback tests set it false explicitly) + admin role +
  * password reauth on mutations.
  */
 final class AppAdminProvidersTest extends TestCase
