@@ -14,6 +14,7 @@ use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
 use App\Service\AuthService;
 use App\Service\InvitationService;
+use App\Service\RepairService;
 use Tests\Support\TestCase;
 
 /**
@@ -58,6 +59,25 @@ final class InvitationServiceTest extends TestCase
         $row = $this->db->fetch('SELECT * FROM invitations WHERE id = ?', [$id]);
         self::assertNotNull($row);
         return $row;
+    }
+
+    // ---- counter integrity -------------------------------------------------
+
+    public function test_repair_reconciles_used_count_from_the_redemption_ledger(): void
+    {
+        // used_count is the denormalised cache of the invitation_redemptions
+        // ledger; `repair` must recompute it from the authoritative rows
+        // (CLAUDE.md: every incremented counter has a matching recompute).
+        $repo = new InvitationRepository($this->db);
+        $id = $this->service()->create($this->adminEntity(), ['max_uses' => '5'])['id'];
+        $repo->recordRedemption($id, null, null);
+        $repo->recordRedemption($id, null, null);
+        $this->db->run('UPDATE invitations SET used_count = 99 WHERE id = ?', [$id]);
+
+        $result = (new RepairService($this->db))->repairAll();
+
+        self::assertArrayHasKey('invitation_used_counts', $result);
+        self::assertSame(2, (int) $this->row($id)['used_count']);
     }
 
     // ---- issuance ----------------------------------------------------------

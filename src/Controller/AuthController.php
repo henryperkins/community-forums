@@ -270,6 +270,11 @@ final class AuthController extends Controller
 
         $limiter = $this->container->get(RateLimitService::class);
         if ($inviteToken !== '') {
+            // Invite redemptions are governed SOLELY by the dedicated invite_redeem
+            // policy — never also by the stricter public-signup `register` cap,
+            // which would lock invited teammates out behind a shared NAT well
+            // within the invite budget. The admin-issued, use-capped invitation is
+            // itself the abuse control on this path.
             try {
                 $limiter->enforce(InvitationService::LIMIT_REDEEM, $request);
             } catch (HttpException) {
@@ -279,13 +284,14 @@ final class AuthController extends Controller
                     ['invite' => 'Too many invitation attempts. Please try again later.'],
                     $this->oldRegister($request) + ['invite' => $inviteToken], 429, true);
             }
-        }
-        try {
-            $limiter->enforce('register', $request);
-        } catch (HttpException) {
-            return $this->registerView($mode, ['token' => $inviteToken, 'valid' => $inviteToken !== ''],
-                ['email' => 'Too many sign-up attempts from your network. Please try again later.'],
-                $this->oldRegister($request) + ['invite' => $inviteToken], 429, $tokenInRequest);
+        } else {
+            try {
+                $limiter->enforce('register', $request);
+            } catch (HttpException) {
+                return $this->registerView($mode, ['token' => '', 'valid' => false],
+                    ['email' => 'Too many sign-up attempts from your network. Please try again later.'],
+                    $this->oldRegister($request), 429, $tokenInRequest);
+            }
         }
 
         try {

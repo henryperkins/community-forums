@@ -57,6 +57,21 @@ final class InvitationService
     }
 
     /**
+     * A trimmed scalar console field. Array-shaped input (e.g. a crafted
+     * `email[]=…` POST) is treated as absent rather than coerced — the same
+     * guard the public invite carrier applies, and it keeps the strict test
+     * suite free of 'Array to string conversion' warnings.
+     *
+     * @param array<string,mixed> $input
+     */
+    private static function stringField(array $input, string $key): string
+    {
+        $value = $input[$key] ?? '';
+
+        return is_string($value) ? trim($value) : '';
+    }
+
+    /**
      * Issue an invitation. The raw token is returned ONCE and never persisted.
      *
      * @param array<string,mixed> $input
@@ -65,11 +80,11 @@ final class InvitationService
      */
     public function create(User $admin, array $input): array
     {
-        $email = strtolower(trim((string) ($input['email'] ?? '')));
-        $domain = strtolower(ltrim(trim((string) ($input['domain'] ?? '')), '@'));
-        $maxUsesRaw = trim((string) ($input['max_uses'] ?? ''));
-        $expiresRaw = trim((string) ($input['expires_in_days'] ?? ''));
-        $boardRaw = trim((string) ($input['onboarding_board_id'] ?? ''));
+        $email = strtolower(self::stringField($input, 'email'));
+        $domain = strtolower(ltrim(self::stringField($input, 'domain'), '@'));
+        $maxUsesRaw = self::stringField($input, 'max_uses');
+        $expiresRaw = self::stringField($input, 'expires_in_days');
+        $boardRaw = self::stringField($input, 'onboarding_board_id');
 
         $errors = [];
         $old = [
@@ -112,7 +127,13 @@ final class InvitationService
         // stored by this console (decision #36 — role grants require a separate
         // authenticated assignment path under an approved policy; none exists).
         $token = bin2hex(random_bytes(self::TOKEN_BYTES));
-        $expiresAt = gmdate('Y-m-d H:i:s', time() + $days * 86400);
+        // One clock for the whole lifecycle: expiry is stamped from the DB's
+        // UTC_TIMESTAMP() — the same clock consumeUse()/status() compare against —
+        // so a web-host/DB clock skew can't shorten or lengthen the real window.
+        // $days is a validated int (1..MAX_EXPIRY_DAYS), safe to inline.
+        $expiresAt = (string) $this->db->fetchValue(
+            'SELECT DATE_ADD(UTC_TIMESTAMP(), INTERVAL ' . $days . ' DAY)',
+        );
 
         $id = $this->db->transaction(function () use ($admin, $token, $email, $domain, $boardId, $maxUses, $expiresAt): int {
             $id = $this->invitations->create([
@@ -147,20 +168,19 @@ final class InvitationService
     /**
      * One clock for validity decisions: the DB's. `consumeUse` compares
      * `expires_at` against UTC_TIMESTAMP(), so preview/list must too — with
-     * web-host/DB clock skew the two gates would otherwise disagree near
-     * expiry (console says Active, every redemption refuses, or vice versa).
+     * web-host/DB clock skew the two gates would otherwise disagree near expiry
+     * (console says Active, every redemption refuses, or vice versa). The row
+     * carries its own `now_utc` (stamped by the same statement that fetched it),
+     * so no separate round-trip is needed.
+     *
+     * @return array<int,array<string,mixed>> console rows with a derived `status`
      */
-    private function nowUtc(): string
-    {
-        return (string) $this->db->fetchValue('SELECT UTC_TIMESTAMP()');
-    }
-
-    /** @return array<int,array<string,mixed>> console rows with a derived `status` */
     public function list(): array
     {
-        $now = $this->nowUtc();
         $rows = [];
         foreach ($this->invitations->all() as $row) {
+            $now = (string) $row['now_utc'];
+            unset($row['now_utc']);
             $row['status'] = $this->status($row, $now);
             $rows[] = $row;
         }
@@ -273,7 +293,12 @@ final class InvitationService
             return null;
         }
         $row = $this->invitations->findByTokenHash(self::hash($rawToken));
-        if ($row === null || $this->status($row, $this->nowUtc()) !== 'active') {
+        if ($row === null) {
+            return null;
+        }
+        $now = (string) $row['now_utc'];
+        unset($row['now_utc']);
+        if ($this->status($row, $now) !== 'active') {
             return null;
         }
         return $row;

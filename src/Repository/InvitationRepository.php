@@ -46,7 +46,9 @@ final class InvitationRepository
     /** @return array<string,mixed>|null */
     public function findByTokenHash(string $hash): ?array
     {
-        return $this->db->fetch('SELECT * FROM invitations WHERE token_hash = ?', [$hash]);
+        // now_utc rides along so the caller evaluates validity against the DB
+        // clock in the same statement (no separate SELECT UTC_TIMESTAMP()).
+        return $this->db->fetch('SELECT *, UTC_TIMESTAMP() AS now_utc FROM invitations WHERE token_hash = ?', [$hash]);
     }
 
     /**
@@ -60,7 +62,7 @@ final class InvitationRepository
     public function all(): array
     {
         return $this->db->fetchAll(
-            'SELECT i.*, u.username AS creator_username
+            'SELECT i.*, u.username AS creator_username, UTC_TIMESTAMP() AS now_utc
                FROM invitations i
           LEFT JOIN users u ON u.id = i.created_by
            ORDER BY i.id DESC

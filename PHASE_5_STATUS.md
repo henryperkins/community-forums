@@ -1075,6 +1075,53 @@ axe-clean; PNGs 69/70/73 re-shot for the shared muted-prose link rule,
 71/72/74 pixel-identical); `verify:phase5-budgets` re-measured every owned
 row within target (invitation p95 461.79 ms = 7.6% headroom under 500 ms).
 
+### Second-pass review hardening (2026-07-09, merged with PR #40)
+
+A fresh max-effort multi-agent review (6 finder angles + a full independent
+read) over the already-hardened branch surfaced five more items, all
+low-severity and deploy-dark, all fixed TDD:
+
+- **Invite redemptions no longer double-charged against the public `register`
+  cap (NAT lockout).** The register POST enforced BOTH the dedicated
+  `invite_redeem` [30/900] policy AND the stricter public-signup `register`
+  [5/3600] cap on every redemption, so an invite-only site onboarding a team
+  behind one shared NAT locked out after the 5th acceptance/hour — well within
+  the invite budget, and the dedicated policy was effectively moot. Invite
+  redemptions now enforce `invite_redeem` only (the admin-issued, use-capped
+  invitation is the abuse control on that path); the general cap still governs
+  uninvited open-mode signups. Pinned by a two-redemptions-behind-one-IP test.
+- **Admin console `create()` array-shape guard.** The first pass guarded the
+  public invite carrier against `?invite[]=…`, but the console's own
+  `email`/`domain`/`max_uses`/`expires_in_days`/`onboarding_board_id` fields
+  still `(string)`-coerced, so a crafted `email[]=…` POST raised five
+  `Array to string conversion` warnings (a strict-suite red waiting to happen).
+  A shared `stringField()` guard now treats array-shaped console fields as
+  absent, matching the public carrier.
+- **`invitations.used_count` reconciliation wired into `repair`.** The
+  denormalised consumption counter had no `RepairService` recompute — unlike
+  every other counter in the system, breaking the CLAUDE.md "every incremented
+  counter has a matching recompute" invariant (the authoritative
+  `invitation_redemptions` ledger's `redemptionCount()` hook was wired only
+  into a test). `repairInvitationUsedCounts()` recomputes `used_count` from the
+  ledger and joins `repairAll()`, so `php bin/console repair` picks it up.
+- **One clock for expiry, completed at the write side.** The first pass moved
+  the read gates (`preview`/`list`) onto the DB clock, but `create()` still
+  STAMPED `expires_at` from PHP `time()`, so an app/DB clock skew shifted the
+  real TTL. Issuance now stamps `expires_at` via
+  `DATE_ADD(UTC_TIMESTAMP(), INTERVAL n DAY)` — the same clock the gates read.
+- **`preview()`/`list()` round-trip folded.** The DB-clock read added a
+  standalone `SELECT UTC_TIMESTAMP()` per preview (i.e. per redemption) and per
+  console render; `now_utc` now rides along in the row-fetch statement
+  (`findByTokenHash`/`all`) with identical single-statement-constant semantics,
+  so `nowUtc()` and its extra round-trip are gone.
+
+**Gates at merge:** suite **1831 tests / 9396 assertions** green ×2 consecutive
+(1828 after the interim `db3beaa` unknown-mode fail-closed commit, plus 3 new
+regression tests); `invitations.spec.ts` **2 passed** (desktop + mobile,
+axe-clean). No schema, template, CSS, or JS change — the six dynamic-content
+evidence PNGs regenerate byte-for-byte-different (fresh token/timestamp) but
+visually identical, so they are left as first-pass-committed.
+
 ## Blocking conflicts surfaced (R0 — need a Milestone-0 decision)
 
 These were found during the readiness audit and are recorded in ADR 0004 Part B:

@@ -359,6 +359,52 @@ final class AppInvitationsTest extends TestCase
         $this->assertRedirect($res, '/'); // malformed carrier = no token; plain signup
     }
 
+    public function test_array_shaped_admin_invite_fields_are_treated_as_absent(): void
+    {
+        // Strict PHPUnit turns the 'Array to string conversion' E_WARNING red;
+        // console create() must guard non-string fields like the public carrier
+        // already does, so a crafted email[]=… POST cannot warn.
+        $this->enableInvitations();
+        $this->actingAs($this->makeAdmin());
+        $this->get('/admin/invitations');
+
+        $res = $this->post('/admin/invitations', [
+            'email' => ['x'],
+            'domain' => ['y'],
+            'max_uses' => ['3'],
+            'expires_in_days' => ['7'],
+            'onboarding_board_id' => ['1'],
+        ]);
+
+        // Array fields are treated as absent → a plain unbound single-use
+        // invitation is issued (show-once token in the response), no warning.
+        $this->assertStatus(200, $res);
+        self::assertSame(1, preg_match('~/invite/[0-9a-f]{64}~', $res->body()));
+    }
+
+    public function test_invite_redemption_is_not_throttled_by_the_general_register_limit(): void
+    {
+        // NAT-lockout guard: invite-only onboarding is governed by the dedicated
+        // invite_redeem policy, NOT the stricter public-signup `register` cap, so
+        // several invitees behind one shared IP can all accept within the hour.
+        $this->enableInvitations();
+        $this->setMode('invite');
+        $this->withRateLimit('register', 1, 3600); // one charge would exhaust it
+
+        $firstInvite = $this->issueInvitation();
+        $secondInvite = $this->issueInvitation();
+
+        $this->get('/register', ['invite' => $firstInvite['token']]);
+        $r1 = $this->post('/register', $this->registerFields('invitee1', 'invitee1@example.test') + ['invite' => $firstInvite['token']]);
+        $this->assertRedirect($r1, '/');
+        $this->logoutClient();
+
+        $this->get('/register', ['invite' => $secondInvite['token']]);
+        $r2 = $this->post('/register', $this->registerFields('invitee2', 'invitee2@example.test') + ['invite' => $secondInvite['token']]);
+        $this->assertRedirect($r2, '/'); // must NOT be a `register` 429
+        self::assertNotNull($this->users()->findByUsername('invitee2'));
+    }
+
     public function test_full_invite_registration_flow_in_invite_mode(): void
     {
         $this->enableInvitations();
