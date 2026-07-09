@@ -7,6 +7,8 @@
 
 **P5-16 closeout suite (2026-07-09):** `RB_TEST_FRESH=1 vendor/bin/phpunit --no-progress` -> **1831 tests / 9396 assertions**, with two reused-schema passes at the same count; focused route-permission matrix -> **240 tests / 2139 assertions**; all-flags-off filter -> **2 tests / 29 assertions**; package-execution-disabled pins -> **25 tests / 93 assertions**; browser evidence -> **71 passed / 1 skipped**, passkeys -> **6 passed**, integrations -> **16 passed**, packages -> **2 passed**, a11y -> **26 passed / 2 skipped**; migration/runbook rehearsal -> clean install, rollback/reapply, and `verify:upgrade` through `0076` all passed; backup/restore -> **114 tables / 310 rows** restored and verified; resolver parity -> **1551/1551, 0 mismatches**; Gate A performance budgets re-measured green; security regression -> **330 tests / 2150 assertions**.
 
+**PR #41 default-on pre-merge suite (2026-07-09):** `composer test` -> **1839 tests / 9453 assertions**, green on two consecutive runs (identical counts), including the pre-merge review's new pins (zero-override liveness, capabilities-rollback authorization writes, strict override-value parsing + corrupt-blob surfacing, RP-usability login-affordance gate, enable-direction flag isolation). This is the post-flip full-suite record ADR 0018's verification section cites; the review's deferred efficiency/structure items are listed under "PR #41 pre-merge review follow-ups".
+
 ## Phase 5 review follow-ups (2026-07-04, merged to main as part of the Inc 6 PR base)
 
 A comprehensive Phase 5 review (9 adversarial subagents across the security-critical

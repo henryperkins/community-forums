@@ -16,7 +16,7 @@ Gate A and B2 support flags now default-ON (any install without an explicit
 override) while Gate B and
 unfinished Phase 3/4 carryovers remain default-dark; the Source Code Audit below
 is re-run to 2026-07-09 (53 literal `enabled()` keys) and the `invitations` row
-carries its two-pass pre-merge review hardening)
+carries its two-pass pre-merge review hardening.
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
