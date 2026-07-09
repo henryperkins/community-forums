@@ -68,4 +68,15 @@ final class RelyingParty
             throw new WebAuthnException('insecure_origin', 'Passkeys require an HTTPS APP_URL in production.');
         }
     }
+
+    /** Non-throwing twin of assertUsable() for render-time decisions. */
+    public function isUsable(): bool
+    {
+        try {
+            $this->assertUsable();
+            return true;
+        } catch (WebAuthnException) {
+            return false;
+        }
+    }
 }

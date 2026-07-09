@@ -569,6 +569,20 @@ final class App
             $oauthProviders = [];
         }
 
+        // Passkey sign-in affordance (P5-11): offered only where the ceremony can
+        // succeed — flag on AND the RelyingParty policy satisfiable (production
+        // with a stale http:// APP_URL would guarantee a 422 on every challenge).
+        // The catch also absorbs an unparseable APP_URL (the constructor throws);
+        // no DB is touched. Only /login consumes this.
+        $passkeysUsable = false;
+        try {
+            if (!empty($features['passkeys'])) {
+                $passkeysUsable = $container->get(RelyingParty::class)->isUsable();
+            }
+        } catch (Throwable) {
+            $passkeysUsable = false;
+        }
+
         // Product tour (P3-11): a signed-in user who hasn't completed it yet gets
         // the tour on enhanced pages. Never throws if the column is pre-migration.
         $needsTour = false;
@@ -628,6 +642,7 @@ final class App
             'nav' => $nav,
             'features' => $features,
             'oauth_providers' => $oauthProviders,
+            'passkeys_usable' => $passkeysUsable,
             'appearance' => $appearance,
             'composing' => $composing,
             'branding' => $branding,
