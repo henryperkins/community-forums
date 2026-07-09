@@ -861,7 +861,7 @@ Every measurement record must include route/job, hardware class, operating-syste
 - [x] Full Phase 1–4 regression and route-permission matrix remains green with all public packages disabled.
 - [x] No critical/high defects remain.
 - [x] README, changelog, schema, capability catalogue, review policy, runbooks, and evidence index are updated.
-- [ ] Gate A product-owner acceptance is recorded.
+- [x] Gate A product-owner acceptance is recorded.
 
 ### Gate B and phase close
 

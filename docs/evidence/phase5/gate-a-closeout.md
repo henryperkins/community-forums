@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-09
 **Scope:** P5-16 closeout evidence for Phase 5 Gate A.
-**Status:** Gate A closeout evidence collected; product-owner acceptance remains separate until recorded in ADR 0017.
+**Status:** Gate A closeout evidence collected and product-owner acceptance recorded in ADR 0017.
 
 ## Evidence Map
 
@@ -15,8 +15,8 @@
 | GA-DOD-20 | `docs/evidence/phase5/p5-16-regression-route-matrix.md` | Evidence collected and linked from requirement ledger |
 | GA-DOD-21 | `docs/evidence/phase5/p5-16-defect-sweep.md` | Evidence collected and linked from requirement ledger |
 | GA-DOD-22 | This index plus README, CHANGELOG, SCHEMA, capability catalogue, review policy, runbooks, and deploy-dark inventory | Evidence collected and linked from requirement ledger |
-| GA-DOD-23 | `docs/adr/0017-phase-5-gate-a-closeout.md` | Not accepted until product-owner acceptance is explicitly recorded |
+| GA-DOD-23 | `docs/adr/0017-phase-5-gate-a-closeout.md` | Accepted and linked from requirement ledger |
 
 ## Completion Rule
 
-Gate A is not complete until all GA-DOD rows required for Gate A are backed by evidence and GA-DOD-23 records explicit product-owner acceptance. Gate B workstreams remain reserved unless a separate acceptance or deferral record says otherwise.
+Gate A closeout acceptance is recorded by GA-DOD-23 and ADR 0017. Gate B workstreams remain reserved unless a separate acceptance or deferral record says otherwise.

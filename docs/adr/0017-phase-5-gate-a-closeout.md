@@ -1,7 +1,7 @@
-# ADR 0017: Phase 5 Gate A Closeout Evidence Ready
+# ADR 0017: Phase 5 Gate A Closeout Accepted
 
 **Date:** 2026-07-09
-**Status:** Evidence ready; product-owner acceptance not recorded
+**Status:** Accepted
 
 ## Context
 
@@ -10,8 +10,8 @@ P5-16 closeout evidence has been collected for Gate A. Evidence entry point:
 
 ## Decision
 
-The evidence package is ready for product-owner review. This ADR does not accept
-Gate A. GA-DOD-23 remains R1 until Henry explicitly records acceptance.
+Henry accepts Phase 5 Gate A on 2026-07-09 based on the linked evidence package.
+This acceptance covers Gate A only and does not implement or accept Gate B.
 
 ## Gate A Evidence
 
@@ -21,7 +21,7 @@ Gate A. GA-DOD-23 remains R1 until Henry explicitly records acceptance.
 - Defect sweep: `docs/evidence/phase5/p5-16-defect-sweep.md`
 - Evidence index: `docs/evidence/phase5/gate-a-closeout.md`
 
-## Explicit Non-Acceptance Boundary
+## Gate B Boundary
 
 Gate B workstreams remain reserved: sandboxed server extensions, governance and
 access review, service principals, verified links, and the public extension SDK.

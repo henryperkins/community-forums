@@ -4,7 +4,7 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
 
 ## [Unreleased] — Phase 5 P5-16 Gate A closeout evidence
 
-P5-16 closeout evidence is collected and indexed at `docs/evidence/phase5/gate-a-closeout.md`; Gate A remains pending explicit product-owner acceptance, and Gate B workstreams remain reserved.
+P5-16 closeout evidence is collected and indexed at `docs/evidence/phase5/gate-a-closeout.md`; ADR 0017 records product-owner acceptance for Gate A on 2026-07-09, and Gate B workstreams remain reserved.
 
 - Browser/a11y/no-JS evidence: `npm run evidence` -> 71 passed / 1 skipped; `npm run evidence:passkeys` -> 6 passed; `npm run evidence:integrations` -> 16 passed; `npm run evidence:packages` -> 2 passed; `npm run a11y` -> 26 passed / 2 skipped.
 - Runbook and migration rehearsal evidence: clean install, full rollback/reapply, and `verify:upgrade --force` passed through `0076_phase5_invitation_audit`; backup/restore rehearsal passed with 114 tables / 310 rows restored and verified; resolver parity was 1551/1551 with 0 mismatches.
