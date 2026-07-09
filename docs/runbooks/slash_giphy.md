@@ -8,7 +8,7 @@ strictly **client-side** GIPHY picker that inserts direct GIPHY media URLs).
 deploy-dark) but **inert until an operator configures `giphy_public_key`**: with
 no key the picker config endpoint 404s and the composer never upgrades, so the
 graduation ships zero behaviour change until an operator opts in. Follows the
-same conventions as `docs/PHASE_2_RUNBOOK.md` §2 and mirrors
+same conventions as `docs/runbooks/operations.md` §2 and mirrors
 `docs/runbooks/polls.md` / `docs/runbooks/server_drafts.md`.
 
 > **Golden rule:** for any provider/privacy/logic defect (bad picker behaviour,
@@ -50,7 +50,7 @@ the slash menu or the config endpoint.
 ## Roll back / re-enable
 
 The flag lives in the `features` setting (JSON `flag => bool`); see
-`docs/PHASE_2_RUNBOOK.md` §2 for the inspect/set snippets. Disabling is the
+`docs/runbooks/operations.md` §2 for the inspect/set snippets. Disabling is the
 **first response** to any defect and is non-destructive (no stored state):
 
 ```bash

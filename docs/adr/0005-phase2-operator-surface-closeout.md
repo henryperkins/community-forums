@@ -10,7 +10,7 @@ silently dropped"). It does **not** accept any item it lists as still deferred.
 
 ## Context
 
-`docs/PHASE_2_STATUS.md:382` (Gate B acceptance checklist) re-scoped the dedicated
+`docs/history/PHASE_1-4_HISTORY.md#phase-2-status` (Gate B acceptance checklist) re-scoped the dedicated
 admin email **delivery dashboard** to Phase 3, while the underlying primitives —
 `statusCounts`, worker stats, and one-click-unsubscribe suppression recovery —
 already shipped in Phase 2. Without the dashboard, operators could observe and

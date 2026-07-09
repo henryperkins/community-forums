@@ -13,7 +13,7 @@ archived-board behavior decision.
 
 ## Required Evidence
 
-- Phase status ledger: `docs/PHASE_2_STATUS.md`
+- Phase status ledger: `docs/history/PHASE_1-4_HISTORY.md#phase-2-status`
 - Browser screenshots: `docs/evidence/browser/{desktop,mobile}/`
 - Browser coverage map: `docs/evidence/browser/README.md`
 - Backup/restore rehearsal: `docs/evidence/backup-restore/README.md` and the

@@ -13,7 +13,7 @@ plugin runtime remains a Phase 5 Gate B deliverable.
 
 ## Required Evidence
 
-- Phase status ledger: `docs/PHASE_3_STATUS.md`
+- Phase status ledger: `docs/history/PHASE_1-4_HISTORY.md#phase-3-status`
 - Closeout evidence note: `docs/evidence/phase3-closeout.md`
 - Browser screenshots: `docs/evidence/browser/{desktop,mobile}/`
 - Production-like browser commands:

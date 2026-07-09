@@ -30,7 +30,7 @@ rather than implied by code.
 
 | Entry-gate item (§2) | State | Note |
 |---|---|---|
-| Phase 4 Gate A/B product-owner acceptance recorded | **MET** | Product-owner instruction accepts the Phase 4 engineering closeout as the entry baseline for Phase 5, with the evidence caveats in `PHASE_4_STATUS.md` preserved. |
+| Phase 4 Gate A/B product-owner acceptance recorded | **MET** | Product-owner instruction accepts the Phase 4 engineering closeout as the entry baseline for Phase 5, with the evidence caveats in `docs/history/PHASE_1-4_HISTORY.md#phase-4-status` preserved. |
 | Every incomplete Phase 4 item has an explicit deferral | **MET** | `docs/adr/0003-phase-4-closeout-deferrals.md` records owner/destination/risk for each and is accepted as the carryover ledger. |
 | Deployed DB reconciled against `SCHEMA.md` | **MET (for Phase 1–4)** | `SCHEMA.md` v1.14 reconciled migration `0048`; this increment adds §5A for `0049`–`0053`. |
 

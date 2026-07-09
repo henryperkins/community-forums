@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Backup → restore rehearsal (PHASE_2_RUNBOOK §7).
+# Backup → restore rehearsal (operations.md §7).
 #
 # Proves a mariadb-dump backup of a populated RetroBoards database restores into a
 # fresh database with NO data loss and a fully intact schema:
@@ -91,7 +91,7 @@ snapshot() {  # snapshot <db> <outfile>  →  "table count checksum" per base ta
   for t in $tables; do printf '%s %s %s\n' "$t" "${CNT[$t]}" "${CKS[$t]}"; done | sort > "$out"
 }
 
-echo "== Backup → restore rehearsal (PHASE_2_RUNBOOK §7) =="
+echo "== Backup → restore rehearsal (operations.md §7) =="
 
 echo "-- 1. Build + seed source DB ($SRC)"
 reset_db "$SRC"

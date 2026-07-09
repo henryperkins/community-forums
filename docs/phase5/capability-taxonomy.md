@@ -327,7 +327,7 @@ exclusion":
   conversation from anyone except an admin (`!$sender->isAdmin()`). This is a
   bare role check, not routed through any capability key, and is **not** cut
   over by Increment 6 (recorded as a deliberate non-goal,
-  `docs/superpowers/specs/2026-07-04-inc6-resolver-enforcement-cutover-design.md`
+  `docs/superpowers/plans/2026-07-04-inc6-resolver-enforcement-cutover.md`
   §2/§10) — an uncatalogued bypass, unchanged.
 - **Bootstrap/auth/unsubscribe** (setup, login/register/reset/verify, signed
   unsubscribe/OAuth-state tokens) — guest- or token-authenticated, not role

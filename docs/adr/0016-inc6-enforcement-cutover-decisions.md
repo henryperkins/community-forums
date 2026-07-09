@@ -39,7 +39,7 @@ Two owner decisions were required to resolve documented legacy quirks
 (`docs/phase5/capability-taxonomy.md` §7 #5/#6, recorded 2026-07-02 at the Inc
 1 review); four more decisions were required to bound this increment's
 breadth, authority source, owner-loss wiring, and rollback story
-(`docs/superpowers/specs/2026-07-04-inc6-resolver-enforcement-cutover-design.md`
+(`docs/superpowers/plans/2026-07-04-inc6-resolver-enforcement-cutover.md`
 §0). A seventh decision — an in-scope discovery, not a deferral — was made
 during execution once per-action route enforcement was found to leave the
 moderation toolbar's *display* still gated on one coarse flag.
@@ -221,7 +221,7 @@ step-by-step in `docs/runbooks/capabilities.md`.
 
 - **Decisions 1–6** — accepted 2026-07-04 via the interactive design review
   (this session's AskUserQuestion decisions); recorded in
-  `docs/superpowers/specs/2026-07-04-inc6-resolver-enforcement-cutover-design.md`
+  `docs/superpowers/plans/2026-07-04-inc6-resolver-enforcement-cutover.md`
   §0.
 - **Decision 7 (Option B per-button display flags)** — accepted 2026-07-05
   during execution, once Task 4's route-only cutover was found to leave

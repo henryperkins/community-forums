@@ -4,7 +4,7 @@ Release/operations runbook for the **topic_workflow** feature (canonical thread
 status, status history, per-thread assignment, and per-user snooze).
 **Default-ON as of 2026-07-01** (the `topic_workflow` flag graduated out of
 deploy-dark); fully reversible via the `features` override. Follows the same
-conventions as `docs/PHASE_2_RUNBOOK.md` §2 and mirrors `docs/runbooks/polls.md`.
+conventions as `docs/runbooks/operations.md` §2 and mirrors `docs/runbooks/polls.md`.
 
 > **Golden rule:** for any logic defect, **disable the `topic_workflow` flag
 > first** (the three POST routes 404, the workflow bar disappears from the thread
@@ -50,7 +50,7 @@ behind `$workflowOn`).
 ## Roll back / re-enable
 
 The flag lives in the `features` setting (JSON `flag => bool`); see
-`docs/PHASE_2_RUNBOOK.md` §2 for the inspect/set snippets. Disabling is the
+`docs/runbooks/operations.md` §2 for the inspect/set snippets. Disabling is the
 **first response** to any defect and is non-destructive (all workflow rows are
 retained and reappear on re-enable):
 

@@ -3,7 +3,7 @@
 Captures Gate A screenshots at a **desktop (1280×800)** and **mobile (390×844)**
 viewport by driving the real, server-rendered app in Chromium. This is the
 "browser capture at desktop/mobile widths" evidence item from
-`docs/PHASE_3_STATUS.md` (Gate A evidence checklist).
+`docs/history/PHASE_1-4_HISTORY.md#phase-3-status` (Gate A evidence checklist).
 
 The baseline navigation still uses server-rendered POST->redirect paths, while
 the Phase 3 journeys also exercise the enhanced JavaScript composer, drafts,

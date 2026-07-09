@@ -2,9 +2,20 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## Documentation consolidation (2026-07-09)
+
+Consolidated the documentation tree with **no code-behavior change** (comment-only source edits). A full grep sweep repointed every **path- and link-form** citation on the live/authoritative surface (spec chain, ADRs, evidence, tests, code) to the new locations:
+
+- **Phase 1–4 history merged** — `docs/PHASE_1_COMPLETION.md`, `docs/PHASE_2_STATUS.md`, `docs/PHASE_3_STATUS.md`, and `PHASE_4_STATUS.md` folded into a single `docs/history/PHASE_1-4_HISTORY.md` (anchored `#phase-1-completion` … `#phase-4-status`); every citation across the spec chain, ADRs, evidence, tests, and code repointed to the anchors.
+- **Phase 1 migration manifest relocated** standalone to `docs/history/PHASE_1_MIGRATIONS.md` — kept intact, as it remains SCHEMA's authoritative Phase‑1 column-cut reference with its `§1–§7` numbering. Path/link-form references were repointed; **bare in-prose mentions** of `PHASE_1_MIGRATIONS` (in the phase plans, `DESIGN.md`, and two code comments) were left as-is — the filename is unchanged, so they still resolve by name.
+- **Design archive consolidated** — `docs/superpowers/specs/` removed, each spec folded into its paired implementation plan (now an *Archived design record*); the five WYSIWYG docs merged into one; added a `docs/superpowers/README.md` index. 38 → 27 files.
+- **Relocated** `docs/PHASE_2_RUNBOOK.md` → `docs/runbooks/operations.md` (live ops runbook) and `admin_ui_review.md` → `docs/history/admin-ux-review-2026-07.md`.
+- **Removed** the unreferenced `docs/design-system/imladris/_scratch/` (a byte-for-byte duplicate of `DESIGN.md` plus scratch PNGs).
+- Net: root `.md` 21 → 18. The `docs/superpowers/` archive and frozen backup-restore logs intentionally retain their historical internal references.
+
 ## [Unreleased] — Phase 4 engineering closeout
 
-Suite green at **456 tests / 1635 assertions** after the Gate A blocker/high-gap fix pass and closeout hardening. Phase 4 is closed in-repo with explicit deferrals; see `PHASE_4_STATUS.md`, `docs/evidence/phase4-gate-a.md`, and `docs/adr/0003-phase-4-closeout-deferrals.md`.
+Suite green at **456 tests / 1635 assertions** after the Gate A blocker/high-gap fix pass and closeout hardening. Phase 4 is closed in-repo with explicit deferrals; see `docs/history/PHASE_1-4_HISTORY.md#phase-4-status`, `docs/evidence/phase4-gate-a.md`, and `docs/adr/0003-phase-4-closeout-deferrals.md`.
 
 ### Fixed
 
@@ -29,11 +40,11 @@ Suite green at **456 tests / 1635 assertions** after the Gate A blocker/high-gap
 
 - Reconciled migration `0048_phase4_gate_a.php` into `SCHEMA.md` v1.14.
 - Added the Phase 4 closeout carryover ledger in `docs/adr/0003-phase-4-closeout-deferrals.md`.
-- Updated `PHASE_4_STATUS.md`, `docs/evidence/phase4-gate-a.md`, and `README.md` for closeout.
+- Updated `docs/history/PHASE_1-4_HISTORY.md#phase-4-status`, `docs/evidence/phase4-gate-a.md`, and `README.md` for closeout.
 
 ## [Unreleased] — Phase 3 Gate A (polish, trust & scale)
 
-Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **405 tests / 1390 assertions**. See `docs/PHASE_3_STATUS.md` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
+Implements the Phase 3 Gate A core slice on top of Phase 2. Suite green at **405 tests / 1390 assertions**. See `docs/history/PHASE_1-4_HISTORY.md#phase-3-status` for the full evidence index, the acceptance-bar audit (§11), and carryover ledger. All migrations additive; every subsystem is behind an independent feature flag.
 
 ### Gate A gap closure (post-audit)
 
@@ -251,8 +262,8 @@ migrations only; with the M6 hardening below the full suite is green at 215 test
   goes from a full scan + filesort (`type=ALL`) to a **filesort-free** index range
   scan — the `reputation DESC, id DESC` order is served directly by the index
   (InnoDB appends the PK), verified by EXPLAIN (`Using where`, no `Using filesort`).
-- **Docs** — `docs/PHASE_2_STATUS.md` evidence index + Gate A/B checklist;
-  `docs/PHASE_2_RUNBOOK.md` operations (pause email, flags, drain/replay queue,
+- **Docs** — `docs/history/PHASE_1-4_HISTORY.md#phase-2-status` evidence index + Gate A/B checklist;
+  `docs/runbooks/operations.md` operations (pause email, flags, drain/replay queue,
   repair counters, rebuild search, restore).
 
 ### Tests
@@ -266,7 +277,7 @@ migrations only; with the M6 hardening below the full suite is green at 215 test
 
 First implemented release. Ships a secure, server-rendered forum core that works
 fully without JavaScript. See `PHASE_1_PLAN.md` for the delivery baseline and
-`docs/PHASE_1_COMPLETION.md` for the acceptance-evidence index.
+`docs/history/PHASE_1-4_HISTORY.md#phase-1-completion` for the acceptance-evidence index.
 
 ### Added
 
@@ -276,7 +287,7 @@ fully without JavaScript. See `PHASE_1_PLAN.md` for the delivery baseline and
   that reports database status.
 - **Migrations** — the 10 Phase-1 tables (`users`, `categories`, `settings`,
   `boards`, `sessions`, `verifications`, `board_slug_history`, `threads`, `posts`,
-  `moderation_log`) as the lean cut from `PHASE_1_MIGRATIONS.md`, runnable via
+  `moderation_log`) as the lean cut from `docs/history/PHASE_1_MIGRATIONS.md`, runnable via
   `bin/console` (`migrate`, `migrate:fresh`, `migrate:rollback`, `migrate:status`).
 - **Read path & shell** — three-pane "Community Inbox" layout, category/board
   index, paginated board thread lists and thread views, monogram avatars, public

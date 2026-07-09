@@ -1,7 +1,7 @@
 # RetroBoards — Phase 1 Migration Manifest
 
 **Status:** v1.1 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-26
-**This file is the authoritative cut of [SCHEMA.md](SCHEMA.md) for the Phase 1 build.** SCHEMA.md owns each table's *final* shape (all phases folded in); this file says **exactly which tables, columns, and indexes the Phase 1 migrations create**, and which columns are **held back** to a later phase (with the phase and reason). Where the two differ, SCHEMA.md is right about the final shape and this file is right about the Phase 1 cut. Source inputs: SCHEMA.md §1–3/§6, PHASE_1_PLAN.md §3, PHASE_2_PLAN.md §3/§7, PHASE_3_PLAN.md §8, DECISIONS.md.
+**This file is the authoritative cut of [SCHEMA.md](../../SCHEMA.md) for the Phase 1 build.** SCHEMA.md owns each table's *final* shape (all phases folded in); this file says **exactly which tables, columns, and indexes the Phase 1 migrations create**, and which columns are **held back** to a later phase (with the phase and reason). Where the two differ, SCHEMA.md is right about the final shape and this file is right about the Phase 1 cut. Source inputs: SCHEMA.md §1–3/§6, PHASE_1_PLAN.md §3, PHASE_2_PLAN.md §3/§7, PHASE_3_PLAN.md §8, DECISIONS.md.
 
 > **Nothing is built yet.** These are migrations to *write*, not a description of an existing database.
 

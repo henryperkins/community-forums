@@ -6,7 +6,7 @@ reactivate**, and a **deletion request** with a 30-day grace window that a
 scheduled worker later turns into an anonymizing **purge**). **Default-ON as of
 2026-07-02** (the `account_lifecycle` flag graduated out of deploy-dark); fully
 reversible via the `features` override. Follows the same conventions as
-`docs/PHASE_2_RUNBOOK.md` §2 and mirrors `docs/runbooks/server_drafts.md` /
+`docs/runbooks/operations.md` §2 and mirrors `docs/runbooks/server_drafts.md` /
 `docs/runbooks/badge_rules.md`.
 
 > **Golden rule:** for any defect in the member-facing flows (export leak, a
@@ -47,7 +47,7 @@ editor at `GET/POST /settings/account`, and the scheduled purge worker.
 ## Roll back / re-enable
 
 The flag lives in the `features` setting (JSON `flag => bool`); see
-`docs/PHASE_2_RUNBOOK.md` §2 for the inspect/set snippets. Disabling is the
+`docs/runbooks/operations.md` §2 for the inspect/set snippets. Disabling is the
 **first response** to any member-flow defect and is non-destructive (account
 statuses and the deletion ledger are retained and the surface reappears on
 re-enable):

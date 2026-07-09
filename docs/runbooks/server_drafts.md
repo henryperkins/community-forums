@@ -7,7 +7,7 @@ revision conflict handling and a no-JS `/drafts` list/discard surface for server
 draft rows).
 **Default-ON as of 2026-07-02** (the `server_drafts` flag graduated out of
 deploy-dark); fully reversible via the `features` override. Scope is fixed by
-ADR 0010; follows the same conventions as `docs/PHASE_2_RUNBOOK.md` §2 and
+ADR 0010; follows the same conventions as `docs/runbooks/operations.md` §2 and
 mirrors `docs/runbooks/topic_workflow.md` / `docs/runbooks/polls.md`.
 
 > **Golden rule:** for any logic defect (bad conflict resolution, sync loops,
@@ -52,7 +52,7 @@ depends on the JSON endpoints.
 ## Roll back / re-enable
 
 The flag lives in the `features` setting (JSON `flag => bool`); see
-`docs/PHASE_2_RUNBOOK.md` §2 for the inspect/set snippets. Disabling is the
+`docs/runbooks/operations.md` §2 for the inspect/set snippets. Disabling is the
 **first response** to any defect and is non-destructive (all `server_drafts`
 rows are retained and reappear on re-enable):
 

@@ -1,4 +1,4 @@
-# Backup → restore evidence (PHASE_2_RUNBOOK §7)
+# Backup → restore evidence (operations.md §7)
 
 Evidence that a `mariadb-dump` backup of a populated RetroBoards database restores
 into a fresh database with **no data loss** and a **fully intact schema** — the

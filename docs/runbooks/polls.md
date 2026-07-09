@@ -3,7 +3,7 @@
 Release/operations runbook for the **polls** feature (one-poll-per-thread,
 no-JS create / vote / close / result). **Default-ON as of 2026-06-30** (the
 `polls` flag graduated out of deploy-dark); fully reversible via the `features`
-override. Follows the same conventions as `docs/PHASE_2_RUNBOOK.md` §2.
+override. Follows the same conventions as `docs/runbooks/operations.md` §2.
 
 > **Golden rule:** for any logic defect, **disable the `polls` flag first**
 > (routes 404, the panel disappears, the rest of the thread keeps serving), then
@@ -24,7 +24,7 @@ Routes (all POST, CSRF-protected): `/t/{id}/poll` (create),
 ## Roll back / re-enable
 
 The flag lives in the `features` setting (JSON `flag => bool`); see
-`docs/PHASE_2_RUNBOOK.md` §2 for the inspect/set snippets. Disabling is the
+`docs/runbooks/operations.md` §2 for the inspect/set snippets. Disabling is the
 **first response** to any defect and is non-destructive (poll rows and votes are
 retained and reappear on re-enable):
 

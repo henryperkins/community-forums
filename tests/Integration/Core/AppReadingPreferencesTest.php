@@ -10,7 +10,7 @@ use Tests\Support\TestCase;
  * P3-01: the reading-display preferences are server-enforced, not write-only.
  * `thread_sort` reorders the board listing, and show_avatars / show_signatures /
  * show_reactions actually hide their elements in the rendered thread + listing.
- * Closes the Gate A "reading toggles do nothing" finding (PHASE_3_STATUS §11).
+ * Closes the Gate A "reading toggles do nothing" finding (docs/history/PHASE_1-4_HISTORY.md#phase-3-status §11).
  *
  * The signed-in topbar always renders exactly one monogram, so avatar assertions
  * compare monogram COUNTS rather than mere presence.

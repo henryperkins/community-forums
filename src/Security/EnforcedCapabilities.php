@@ -9,7 +9,7 @@ namespace App\Security;
  * to grant anything outside this set ("honesty clamp"): a granted capability
  * must actually work. Grows as later increments cut more surface over
  * (remaining admin-console keys are the recorded follow-up). Spec:
- * docs/superpowers/specs/2026-07-04-inc6-resolver-enforcement-cutover-design.md §3.
+ * docs/superpowers/plans/2026-07-04-inc6-resolver-enforcement-cutover.md §3.
  */
 final class EnforcedCapabilities
 {

@@ -6,7 +6,7 @@ vocabulary, previewing who would qualify, and **manually** backfilling or
 revoking the awards, with an append-only award/revoke ledger). **Default-ON as of
 2026-07-02** (the `badge_rules` flag graduated out of deploy-dark); fully
 reversible via the `features` override. Follows the same conventions as
-`docs/PHASE_2_RUNBOOK.md` §2 and mirrors `docs/runbooks/topic_workflow.md` /
+`docs/runbooks/operations.md` §2 and mirrors `docs/runbooks/topic_workflow.md` /
 `docs/runbooks/slash_giphy.md`.
 
 > **Golden rule:** for any logic defect (bad eligibility SQL, wrong awards,
@@ -42,7 +42,7 @@ to it); operators reach it directly at `/admin/badge-rules`.
 ## Roll back / re-enable
 
 The flag lives in the `features` setting (JSON `flag => bool`); see
-`docs/PHASE_2_RUNBOOK.md` §2 for the inspect/set snippets. Disabling is the
+`docs/runbooks/operations.md` §2 for the inspect/set snippets. Disabling is the
 **first response** to any defect and is non-destructive (rules and the award
 ledger are retained and reappear on re-enable):
 

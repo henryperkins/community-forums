@@ -176,7 +176,7 @@ dispatch path.
   exist. No public plugin loading, sandbox, plugin lifecycle schema, or
   third-party PHP execution is included.
 - **B2 decomposition recorded** (design:
-  `docs/superpowers/specs/2026-06-28-service-secret-registry-design.md`): 1)
+  `docs/superpowers/plans/2026-06-28-service-secret-registry.md`): 1)
   service-secret registry — landed, 2) API tokens + scopes — landed, 3) webhook
   delivery — landed, 4) first-party hook registry + producer wiring — landed.
   No public/untrusted PHP execution is included in these Gate A sub-projects.

@@ -11,7 +11,7 @@ Evidence-driven audit of the operator surface (`/admin` + `/mod`). **Review only
 
 - Spec: `ADMIN.md` (permissions §2, moderation §3, boards §4, users §5, theming §6). `DECISIONS.md` wins conflicts. A gap = UI diverges from spec or blocks a real operator task.
 - Before calling anything "missing", check `docs/adr/` and the `PHASE_*_PLAN.md` carryover ledgers. Tracked deferral → cite the ADR. Untracked deferral → that's a finding in itself (no-silent-deferrals rule).
-- **Re-verify prior audits FIRST.** `admin_ui_review.md` (repo root) is the last report — it landed *in the same commit as its fixes* (`e0b0c16`), so never assume a listed finding is resolved: re-test each one empirically and mark it fixed / still broken / regressed before hunting new ones. `git log --oneline -15` shows anything newer.
+- **Re-verify prior audits FIRST.** `docs/history/admin-ux-review-2026-07.md` is the last report — it landed *in the same commit as its fixes* (`e0b0c16`), so never assume a listed finding is resolved: re-test each one empirically and mark it fixed / still broken / regressed before hunting new ones. `git log --oneline -15` shows anything newer.
 - Code map for `file:line` citations: controllers are in `src/Controller/` (not `src/Http/…`) — `Admin*.php` plus, for `/mod`, `ModerationController`, `ReportController`, `ApprovalController`, `AppealController`, `UserModerationController`; templates in `templates/admin/` + `templates/mod/`; business rules in `src/Service/`.
 
 ## Live drive (required — template reading alone is not evidence)
@@ -45,7 +45,7 @@ Severity **critical / major / minor / polish** — do NOT use P0–P3 (those are
 | Mistake | Reality |
 |---|---|
 | Planning around the Playwright MCP plugin | Broken on this host — use `audit-drive.mjs` |
-| Deduping against session memory only | `admin_ui_review.md` at repo root is the shipped report |
+| Deduping against session memory only | `docs/history/admin-ux-review-2026-07.md` is the shipped report |
 | Treating anything missing as a defect | Check ADRs/phase plans first; classify it |
 | Template reading as evidence | The prior audit's top defects (suspend 500, draft-loss family) only surfaced through live bad-input probing |
 | P0–P3 as bug severity | Those are roadmap priority tiers |

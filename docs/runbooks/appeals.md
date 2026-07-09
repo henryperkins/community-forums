@@ -7,7 +7,7 @@ board-scoped queue on `/mod/appeals`, with reversal delegated to the owning
 moderation service and an append-only appeal-event ledger). **Default-ON as of
 2026-07-02** (the `appeals` flag graduated out of deploy-dark); fully reversible
 via the `features` override. Policy is locked by ADR 0007. Follows the same
-conventions as `docs/PHASE_2_RUNBOOK.md` §2 and mirrors
+conventions as `docs/runbooks/operations.md` §2 and mirrors
 `docs/runbooks/badge_rules.md` / `docs/runbooks/account_lifecycle.md`.
 
 > **Golden rule:** for any logic defect (wrong eligibility, a bad reversal, a
@@ -47,7 +47,7 @@ that tab 404s on click; graduation makes the tab resolve.
 ## Roll back / re-enable
 
 The flag lives in the `features` setting (JSON `flag => bool`); see
-`docs/PHASE_2_RUNBOOK.md` §2 for the inspect/set snippets. Disabling is the
+`docs/runbooks/operations.md` §2 for the inspect/set snippets. Disabling is the
 **first response** to any defect and is non-destructive (appeals and their event
 history are retained and reappear on re-enable):
 
