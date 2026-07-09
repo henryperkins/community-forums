@@ -34,7 +34,7 @@ async function expectNoSeriousA11y(page: Page, info: TestInfo, include?: string)
   expect(violations, `${info.project.name} ${page.url()} serious/critical axe violations`).toEqual([]);
 }
 
-test.describe('package security-response console (deploy-dark)', () => {
+test.describe('package security-response console (flag-gated)', () => {
   test.skip(!process.env.RB_BROWSER_DARK_SURFACES, 'requires the dark-surface package seed');
 
   test('operator drives the no-JS package security console and toggles the emergency brake', async ({ page }, info) => {

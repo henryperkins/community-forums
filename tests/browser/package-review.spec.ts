@@ -22,7 +22,7 @@ async function openReviewablePackage(page: Page): Promise<void> {
   await expect(page.locator('form.review-decision-form select[name="decision"]').first()).toBeVisible();
 }
 
-test.describe('package local-review console (deploy-dark)', () => {
+test.describe('package local-review console (flag-gated)', () => {
   test.skip(!process.env.RB_BROWSER_DARK_SURFACES, 'requires the dark-surface package seed');
 
   test('review form renders, is axe-clean, and records without JS', async ({ page }, info: TestInfo) => {
