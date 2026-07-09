@@ -49,9 +49,14 @@ final class AppPhase5CapabilitySeedTest extends TestCase
         self::assertSame(0, $mapped, 'protected capabilities must never appear in role_capabilities');
     }
 
-    public function test_seeding_the_catalogue_does_not_enable_the_capabilities_flag(): void
+    public function test_seeding_the_catalogue_does_not_write_a_capabilities_flag_override(): void
     {
+        $settings = new SettingRepository($this->db);
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        self::assertFalse($flags->enabled('capabilities'), 'catalogue seed must stay deploy-dark');
+        $overrides = $settings->get('features', []);
+
+        self::assertTrue($flags->enabled('capabilities'), 'capabilities is default-on after Gate A acceptance');
+        self::assertIsArray($overrides);
+        self::assertArrayNotHasKey('capabilities', $overrides, 'catalogue seed must not write a feature override');
     }
 }

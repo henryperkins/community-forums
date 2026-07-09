@@ -200,14 +200,16 @@ final class PackageSecurityResponseServiceTest extends TestCase
 
     public function test_execution_disabled_predicate_reflects_setting_and_config_break_glass_independently_of_flag(): void
     {
+        (new SettingRepository($this->db))->set('features', ['package_registry' => false]);
+
         self::assertFalse($this->securityService()->isExecutionDisabled(), 'off by default');
 
-        // Config break-glass forces it on even while package_registry is dark.
+        // Config break-glass forces it on even when package_registry is rolled back.
         $items = $this->config->all();
         $items['packages']['execution_disabled'] = true;
         $breakGlass = $this->securityService(new Config($items));
 
-        self::assertFalse($this->flags()->enabled('package_registry'), 'package_registry is dark');
+        self::assertFalse($this->flags()->enabled('package_registry'), 'package_registry is rolled back');
         self::assertTrue($breakGlass->isExecutionDisabled(), 'config break-glass is flag-independent');
     }
 
