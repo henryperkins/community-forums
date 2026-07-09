@@ -857,10 +857,10 @@ Every measurement record must include route/job, hardware class, operating-syste
 - [ ] Invitation create/revoke/redeem/bind/expire/use-limit/abuse/no-privilege-escalation tests pass.
 - [ ] Accessibility, responsive, keyboard, screen-reader-critical, and no-JS evidence is complete for Gate A surfaces.
 - [ ] Registry/signature/install/theme/role/passkey/provider/invitation budgets pass on production-like fixtures.
-- [ ] Trust-root rotation, package revoke/rollback, registry outage, theme safe mode, resolver fallback, owner recovery, passkey recovery, provider disable, invitation pause, and backup/restore runbooks are rehearsed.
-- [ ] Full Phase 1–4 regression and route-permission matrix remains green with all public packages disabled.
-- [ ] No critical/high defects remain.
-- [ ] README, changelog, schema, capability catalogue, review policy, runbooks, and evidence index are updated.
+- [x] Trust-root rotation, package revoke/rollback, registry outage, theme safe mode, resolver fallback, owner recovery, passkey recovery, provider disable, invitation pause, and backup/restore runbooks are rehearsed.
+- [x] Full Phase 1–4 regression and route-permission matrix remains green with all public packages disabled.
+- [x] No critical/high defects remain.
+- [x] README, changelog, schema, capability catalogue, review policy, runbooks, and evidence index are updated.
 - [ ] Gate A product-owner acceptance is recorded.
 
 ### Gate B and phase close

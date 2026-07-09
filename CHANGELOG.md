@@ -2,6 +2,15 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] — Phase 5 P5-16 Gate A closeout evidence
+
+P5-16 closeout evidence is collected and indexed at `docs/evidence/phase5/gate-a-closeout.md`; Gate A remains pending explicit product-owner acceptance, and Gate B workstreams remain reserved.
+
+- Browser/a11y/no-JS evidence: `npm run evidence` -> 71 passed / 1 skipped; `npm run evidence:passkeys` -> 6 passed; `npm run evidence:integrations` -> 16 passed; `npm run evidence:packages` -> 2 passed; `npm run a11y` -> 26 passed / 2 skipped.
+- Runbook and migration rehearsal evidence: clean install, full rollback/reapply, and `verify:upgrade --force` passed through `0076_phase5_invitation_audit`; backup/restore rehearsal passed with 114 tables / 310 rows restored and verified; resolver parity was 1551/1551 with 0 mismatches.
+- Regression and route evidence: full PHPUnit passed at 1831 tests / 9396 assertions across fresh schema and two reused-schema runs; focused route-permission matrix passed at 240 tests / 2139 assertions; all-flags-off and package-execution-disabled pins passed.
+- Defect sweep evidence: no open critical/high Gate A defects remain; security-focused regression passed at 330 tests / 2150 assertions.
+
 ## Documentation consolidation (2026-07-09)
 
 Consolidated the documentation tree with **no code-behavior change** (comment-only source edits). A full grep sweep repointed every **path- and link-form** citation on the live/authoritative surface (spec chain, ADRs, evidence, tests, code) to the new locations:
