@@ -116,33 +116,47 @@ final class AppFeatureFlagTest extends TestCase
         ]));
     }
 
-    public function test_phase5_foundation_flags_default_dark(): void
+    public function test_phase5_gate_a_defaults_on_and_gate_b_stays_dark(): void
     {
-        // The Phase 5 ecosystem/identity/governance subsystems deploy dark until
-        // their Milestone-0 trust approvals + acceptance evidence land
-        // (PHASE_5_PLAN §2/§13). The 0049–0053 foundation migrations are additive
-        // and inert; no behavior may turn on merely because the tables exist.
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        $phase5 = [
-            // Gate A
-            'package_registry', 'package_themes', 'capabilities', 'passkeys',
-            'provider_registry', 'invitations', 'service_secrets', 'api_tokens', 'webhooks', 'first_party_hooks',
-            // Gate B (reserved)
-            'server_extensions', 'governance', 'service_principals', 'verified_links',
+        $phase5DefaultOn = [
+            'package_registry',
+            'package_themes',
+            'capabilities',
+            'passkeys',
+            'provider_registry',
+            'invitations',
+            'service_secrets',
+            'api_tokens',
+            'webhooks',
+            'first_party_hooks',
         ];
-        foreach ($phase5 as $flag) {
-            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
-        }
-        self::assertArrayHasKey('service_secrets', $flags->all(), 'service_secrets must be a declared flag, not an unknown-key false');
-        self::assertArrayHasKey('api_tokens', $flags->all(), 'api_tokens must be a declared flag');
-        self::assertArrayHasKey('webhooks', $flags->all(), 'webhooks must be a declared flag');
-        self::assertArrayHasKey('first_party_hooks', $flags->all(), 'first_party_hooks must be a declared flag');
+        $phase5DefaultDark = [
+            'server_extensions',
+            'governance',
+            'service_principals',
+            'verified_links',
+        ];
 
-        // The override seam still works per-flag without affecting its neighbours.
-        $this->setFlags(['capabilities' => true]);
+        foreach ($phase5DefaultOn as $flag) {
+            self::assertArrayHasKey($flag, $flags->all(), "$flag should be declared in FeatureFlags::DEFAULTS");
+            self::assertTrue($flags->enabled($flag), "$flag should be default-on after Phase 5 Gate A acceptance");
+        }
+        foreach ($phase5DefaultDark as $flag) {
+            self::assertArrayHasKey($flag, $flags->all(), "$flag should be declared in FeatureFlags::DEFAULTS");
+            self::assertFalse($flags->enabled($flag), "$flag should stay default-dark for Gate B");
+        }
+
+        $defaults = $flags->all();
+        self::assertSame(47, count(array_filter($defaults)), 'fresh installs should now have 47 default-on flags');
+        self::assertSame(10, count($defaults) - count(array_filter($defaults)), 'fresh installs should keep 10 default-dark flags');
+
+        $this->setFlags(['capabilities' => false, 'passkeys' => false]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));
-        self::assertTrue($overridden->enabled('capabilities'));
-        self::assertFalse($overridden->enabled('passkeys'), 'enabling one Phase 5 flag must not enable others');
+        self::assertFalse($overridden->enabled('capabilities'), 'operator rollback should disable capabilities');
+        self::assertFalse($overridden->enabled('passkeys'), 'operator rollback should disable passkeys');
+        self::assertTrue($overridden->enabled('provider_registry'), 'rolling back one Phase 5 flag must not disable its neighbours');
+        self::assertFalse($overridden->enabled('server_extensions'), 'Gate B stays dark without an override');
     }
 
     public function test_provider_registry_flag_gates_generic_oidc_routes(): void

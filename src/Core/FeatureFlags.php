@@ -74,26 +74,25 @@ final class FeatureFlags
         'account_lifecycle' => true,   // self-serve export/deactivate/reactivate/30-day-grace delete — GA default-on (2026-07-02; ADR 0006; reversible via features override)
         'automated_context' => false,  // since-last-read context + suggested related topics
 
-        // ── Phase 5 Gate A (deploy-dark foundation/workstreams) ─────────────
-        // These gate availability of the Phase 5 ecosystem/identity/governance
-        // subsystems. They stay OFF until each workstream has its Milestone-0
-        // trust approvals and acceptance evidence (PHASE_5_PLAN §2/§13). The
-        // foundation migrations (0049–0053) are additive and inert; B2 behavior
-        // remains unavailable while its service flags are dark.
-        'package_registry' => false,  // signed registry, package catalogue/install/update (P5-01/02/04)
-        'package_themes' => false,    // declarative theme packages + preview/safe-mode (P5-03)
-        'capabilities' => false,      // DB-backed roles/capability resolver, scoped grants (P5-08/09)
-        'passkeys' => false,          // WebAuthn registration/sign-in/step-up (P5-11)
-        'provider_registry' => false, // generic OIDC + provider registry expansion (P5-12)
-        'invitations' => false,       // invitation lifecycle / invite-based registration (P5-13)
+        // -- Phase 5 Gate A (accepted; default-on, independently reversible) -----
+        // Gate A closed on 2026-07-09. Fresh installs expose these surfaces by
+        // default; operators can still roll each one back through the `features`
+        // setting. Package execution also has a flag-independent emergency brake
+        // (`PACKAGE_EXECUTION_DISABLED` / `package_execution_disabled`).
+        'package_registry' => true,   // signed registry, package catalogue/install/update (P5-01/02/04)
+        'package_themes' => true,     // declarative theme packages + preview/safe-mode (P5-03)
+        'capabilities' => true,       // DB-backed roles/capability resolver, scoped grants (P5-08/09)
+        'passkeys' => true,           // WebAuthn registration/sign-in/step-up (P5-11)
+        'provider_registry' => true,  // generic OIDC + provider registry expansion (P5-12)
+        'invitations' => true,        // invitation lifecycle / invite-based registration (P5-13)
 
-        // ── Phase 5 Gate A — B2 trusted-extension foundation (deploy-dark) ─
-        // Encrypted service-secret registry (SecretVault). Doubles as a write
-        // kill switch: dark blocks store/rotate; reveal/revoke/prune still work.
-        'service_secrets' => false,   // reversible secret vault for providers/webhooks (B2 sub-project 1)
-        'api_tokens' => false,        // admin/service Bearer API tokens + read-only /api/v1 (B2 sub-project 2)
-        'webhooks' => false,          // outbound webhook delivery engine + admin UI (B2 sub-project 3)
-        'first_party_hooks' => false, // code-only first-party hooks + domain webhook producers (B2 sub-project 4)
+        // -- Phase 5 Gate A - B2 trusted-extension support (default-on) ----------
+        // Encrypted service-secret registry (SecretVault). Operators can roll writes
+        // back via `features.service_secrets=false`; reveal/revoke/prune stay available.
+        'service_secrets' => true,    // reversible secret vault for providers/webhooks (B2 sub-project 1)
+        'api_tokens' => true,         // admin/service Bearer API tokens + read-only /api/v1 (B2 sub-project 2)
+        'webhooks' => true,           // outbound webhook delivery engine + admin UI (B2 sub-project 3)
+        'first_party_hooks' => true,  // code-only first-party hooks + domain webhook producers (B2 sub-project 4)
 
         // ── Phase 5 Gate B (reserved; dark until Gate A is accepted) ───────
         'server_extensions' => false, // sandboxed isolated server-extension runtime (P5-05/06)
