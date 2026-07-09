@@ -147,9 +147,10 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_provider_registry_flag_gates_generic_oidc_routes(): void
     {
-        // An ENABLED registry row must stay invisible while the P5-12 flag is
-        // dark: no /auth routes, no sign-in button. (Full-flow coverage lives
-        // in AppOidcProviderTest; this is the canonical dark pin.)
+        $this->setFlags(['provider_registry' => false]);
+        // An ENABLED registry row must stay invisible when an operator rolls back the
+        // P5-12 flag: no /auth routes, no sign-in button. Full-flow coverage lives
+        // in AppOidcProviderTest; this is the canonical rollback pin.
         $id = (new \App\Repository\IdentityProviderRepository($this->db))->create([
             'provider_key' => 'darkidp',
             'display_name' => 'Dark IdP',
@@ -172,9 +173,9 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_invitations_flag_gates_invitation_routes_and_redemption(): void
     {
-        // Canonical dark pin for P5-13: routes 404 and a planted VALID
-        // invitation stays inert — an open-mode signup that carries a token
-        // completes as an ORDINARY registration (no consumption, no grant).
+        $this->setFlags(['invitations' => false]);
+        // Canonical rollback pin for P5-13: routes 404 and a planted VALID invitation
+        // stays inert while features.invitations=false.
         $adminRow = $this->makeAdmin();
         $admin = (new \App\Repository\UserRepository($this->db))->findEntity((int) $adminRow['id']);
         self::assertNotNull($admin);
@@ -215,6 +216,7 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_capabilities_flag_gates_role_routes(): void
     {
+        $this->setFlags(['capabilities' => false]);
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/roles'));
         // P5-09 scoped-assignment mutation routes (IDs are synthetic/nonexistent
@@ -236,6 +238,7 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_passkeys_flag_gates_ceremony_routes(): void
     {
+        $this->setFlags(['passkeys' => false]);
         $user = $this->makeUser();
         $this->actingAs($user);
         $this->assertStatus(404, $this->post('/settings/security/passkeys/challenge', ['current_password' => 'x']));
@@ -270,6 +273,7 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_package_registry_flag_gates_catalog_and_registry_routes(): void
     {
+        $this->setFlags(['package_registry' => false]);
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/packages'));
         $this->assertStatus(404, $this->get('/admin/registries'));
@@ -315,8 +319,9 @@ final class AppFeatureFlagTest extends TestCase
 
     public function test_package_registry_gates_publisher_console_routes(): void
     {
+        $this->setFlags(['package_registry' => false]);
         $this->actingAs($this->makeAdmin());
-        // Dark by default: gate() → NotFoundException (404, never 403/405) before and after requireAdmin().
+        // Rollback: gate() -> NotFoundException (404, never 403/405) before and after requireAdmin().
         $this->assertStatus(404, $this->get('/admin/packages/publishers/1'));
         foreach ([
             ['/admin/packages/publishers/1/verify', ['current_password' => 'password123']],

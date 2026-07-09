@@ -166,6 +166,7 @@ final class AppAdminModerationTest extends TestCase
 
     public function test_registration_mode_invite_persists_and_dashboard_warns_while_dark(): void
     {
+        $this->settings()->set('features', ['invitations' => false]);
         $this->actingAs($this->admin);
         $this->get('/admin'); // seed CSRF
 

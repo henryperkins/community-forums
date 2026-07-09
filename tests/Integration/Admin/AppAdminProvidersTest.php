@@ -40,6 +40,7 @@ final class AppAdminProvidersTest extends TestCase
 
     public function test_flag_dark_hides_every_provider_admin_route(): void
     {
+        (new SettingRepository($this->db))->set('features', ['provider_registry' => false]);
         $this->actingAs($this->admin);
         $this->assertStatus(404, $this->get('/admin/providers'));
         $this->assertStatus(404, $this->post('/admin/providers', []));

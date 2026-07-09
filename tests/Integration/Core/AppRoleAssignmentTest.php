@@ -30,6 +30,7 @@ final class AppRoleAssignmentTest extends TestCase
 
     public function test_routes_are_dark_without_the_flag(): void
     {
+        (new SettingRepository($this->db))->set('features', ['capabilities' => false]);
         $admin = $this->makeAdmin();
         $this->actingAs($admin);
         $this->assertStatus(404, $this->post('/admin/roles/1/assignments', ['username' => 'x', 'current_password' => 'password123']));

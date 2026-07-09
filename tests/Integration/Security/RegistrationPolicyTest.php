@@ -41,9 +41,10 @@ final class RegistrationPolicyTest extends TestCase
     public function test_invite_is_effective_only_while_the_invitations_flag_is_on(): void
     {
         (new SettingRepository($this->db))->set('registration_mode', 'invite');
+        (new SettingRepository($this->db))->set('features', ['invitations' => false]);
 
-        // Flag dark (deploy default): fail closed, but the configured value survives
-        // so the console keeps showing what the operator chose.
+        // Explicit rollback: fail closed, but the configured value survives so the
+        // console keeps showing what the operator chose.
         self::assertSame('invite', $this->policy()->configuredMode());
         self::assertSame('closed', $this->policy()->effectiveMode());
 

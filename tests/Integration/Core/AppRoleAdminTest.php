@@ -22,6 +22,7 @@ final class AppRoleAdminTest extends TestCase
 
     public function test_routes_are_dark_without_the_flag(): void
     {
+        (new SettingRepository($this->db))->set('features', ['capabilities' => false]);
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/roles'));
         $this->assertStatus(404, $this->post('/admin/roles', ['name' => 'X']));
@@ -147,6 +148,7 @@ final class AppRoleAdminTest extends TestCase
 
     public function test_simulator_get_shows_decision_and_is_flag_gated(): void
     {
+        (new SettingRepository($this->db))->set('features', ['capabilities' => false]);
         $this->actingAs($this->makeAdmin());
         $this->assertStatus(404, $this->get('/admin/roles/simulator'));
 
