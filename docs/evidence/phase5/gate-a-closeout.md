@@ -8,10 +8,10 @@
 
 | Requirement | Evidence file | Current closeout status |
 |---|---|---|
-| GA-DOD-03 | `docs/evidence/phase5/p5-16-runbook-rehearsals.md` + `docs/evidence/backup-restore/rehearsal.log` | Collecting migration clean-install, upgrade, rollback, backup/restore evidence |
+| GA-DOD-03 | `docs/evidence/phase5/p5-16-runbook-rehearsals.md` + `docs/evidence/backup-restore/rehearsal.log` | Captured migration clean-install, rollback/reapply, historical upgrade, and backup/restore evidence |
 | GA-DOD-17 | `docs/evidence/phase5/p5-16-browser-a11y-nojs.md` | Captured browser, a11y, responsive, keyboard, and no-JS evidence |
-| GA-DOD-18 | `docs/evidence/phase5/performance-budgets.md` | Re-measure production-like Gate A budgets; advance R3 -> R4 at this closeout per the row's reserved note |
-| GA-DOD-19 | `docs/evidence/phase5/p5-16-runbook-rehearsals.md` | Collecting runbook rehearsal evidence |
+| GA-DOD-18 | `docs/evidence/phase5/performance-budgets.md` | Captured production-like Gate A budgets; advance R3 -> R4 during ledger reconciliation |
+| GA-DOD-19 | `docs/evidence/phase5/p5-16-runbook-rehearsals.md` | Captured runbook rehearsal evidence for resolver, trust-root, registry, package, theme, owner, passkey, provider, invitation, token, and worker recovery paths |
 | GA-DOD-20 | `docs/evidence/phase5/p5-16-regression-route-matrix.md` | Collecting full regression and route-permission evidence |
 | GA-DOD-21 | `docs/evidence/phase5/p5-16-defect-sweep.md` | Collecting defect-sweep evidence |
 | GA-DOD-22 | This index plus README, CHANGELOG, SCHEMA, capability catalogue, review policy, runbooks, and deploy-dark inventory | Collecting documentation reconciliation evidence |
