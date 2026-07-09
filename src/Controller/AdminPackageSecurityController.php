@@ -20,9 +20,9 @@ use App\Service\Registry\PublisherTrustService;
 use App\Service\Registry\RegistryCatalogService;
 
 /**
- * Local operator security-response console (P5-07-A), deploy-dark behind
- * package_registry: gate() throws NotFoundException (404, never 403/405) before
- * AND after requireAdmin(). No-JS server-rendered forms; every mutation is
+ * Local operator security-response console (P5-07-A), flag-gated by default-on
+ * package_registry: gate() throws NotFoundException (404, never 403/405) when
+ * an operator rolls back the flag. No-JS server-rendered forms; every mutation is
  * reauth-gated in the service layer and re-renders 422 with safe old input.
  */
 final class AdminPackageSecurityController extends Controller

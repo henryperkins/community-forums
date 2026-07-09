@@ -2,7 +2,8 @@
 
 ## What the flag/mode control
 
-`capabilities` (default **OFF**) gates **availability**: the `/admin/roles`,
+`capabilities` graduated to default-ON on 2026-07-09 — operator-reversible via
+`features.capabilities=false`. It gates **availability**: the `/admin/roles`,
 `/admin/roles/{id}`, `/admin/roles/simulator`, `/admin/role-assignments/*`
 routes exist and everything they touch (role editor, permission simulator,
 scoped assignment grant/revoke/renew) stays 404 while dark. `changeRole`

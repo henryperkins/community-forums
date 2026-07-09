@@ -1,6 +1,7 @@
-# Runbook: `package_themes` (Phase 5 Increment 4, Deploy-Dark)
+# Runbook: `package_themes` (Phase 5 Increment 4)
 
-**State:** default off. Enabling exposes the admin theme surface and public
+**State:** graduated to default-ON on 2026-07-09 — operator-reversible via
+`features.package_themes=false`. The default-on surface exposes the admin theme surface and public
 theme-serving routes for verified declarative theme packages. It does not make
 any installed package active by itself; activation is a separate password
 reauthenticated operator action.

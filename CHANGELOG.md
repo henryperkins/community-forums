@@ -2,6 +2,14 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Phase 5 Gate A defaults on for fresh installs
+
+Accepted Phase 5 Gate A and B2 support flags now default on for fresh installs:
+`package_registry`, `package_themes`, `capabilities`, `passkeys`,
+`provider_registry`, `invitations`, `service_secrets`, `api_tokens`, `webhooks`,
+and `first_party_hooks`. Each remains reversible through the `features` setting;
+Gate B and unfinished Phase 3/4 carryovers stay default-off.
+
 ## [Unreleased] — Phase 5 P5-16 Gate A closeout evidence
 
 P5-16 closeout evidence is collected and indexed at `docs/evidence/phase5/gate-a-closeout.md`; ADR 0017 records product-owner acceptance for Gate A on 2026-07-09, and Gate B workstreams remain reserved.

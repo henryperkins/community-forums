@@ -1836,7 +1836,7 @@ final class App
         $r->post('/login/passkey', [AuthController::class, 'passkeyLogin']);
         $r->get('/register', [AuthController::class, 'showRegister']);
         $r->post('/register', [AuthController::class, 'register']);
-        $r->get('/invite/{token}', [AuthController::class, 'invite']); // P5-13 invite landing (dark behind `invitations`)
+        $r->get('/invite/{token}', [AuthController::class, 'invite']); // P5-13 invite landing (flag-gated, default-on 2026-07-09)
         $r->post('/logout', [AuthController::class, 'logout']);
 
         // Forgotten-password recovery (P2 Gate A "account recovery").
@@ -1975,7 +1975,7 @@ final class App
         $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
         $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
 
-        // Invitation lifecycle console (P5-13, Inc 9) — dark behind `invitations`.
+        // Invitation lifecycle console (P5-13, Inc 9) — flag-gated, default-on 2026-07-09.
         $r->get('/admin/invitations', [AdminInvitationController::class, 'index']);
         $r->post('/admin/invitations', [AdminInvitationController::class, 'create']);
         $r->post('/admin/invitations/{id}/revoke', [AdminInvitationController::class, 'revoke']);
@@ -1988,7 +1988,7 @@ final class App
         $r->post('/admin/roles/{id}/assignments', [AdminRoleController::class, 'assign']);
         $r->post('/admin/role-assignments/{id}/revoke', [AdminRoleController::class, 'revokeAssignment']);
         $r->post('/admin/role-assignments/{id}/renew', [AdminRoleController::class, 'renewAssignment']);
-        // Identity-provider registry console (P5-12) — deploy-dark behind provider_registry.
+        // Identity-provider registry console (P5-12) — flag-gated, default-on 2026-07-09.
         $r->get('/admin/providers', [AdminProviderController::class, 'index']);
         $r->post('/admin/providers', [AdminProviderController::class, 'create']);
         $r->post('/admin/providers/{id}/test', [AdminProviderController::class, 'test']);
@@ -2030,7 +2030,7 @@ final class App
         $r->post('/admin/packages/{id}/review', [AdminPackageSecurityController::class, 'recordReview']);
         $r->post('/admin/packages/{id}/export', [AdminPackageLifecycleController::class, 'export']);
         $r->post('/admin/packages/{id}/reverify', [AdminPackageLifecycleController::class, 'reverify']);
-        // Integration runtime (P5-04) — remote_app / automation, deploy-dark behind package_registry.
+        // Integration runtime (P5-04) — remote_app / automation, flag-gated, default-on 2026-07-09.
         $r->post('/admin/packages/{id}/integration/settings',                          [AdminPackageIntegrationController::class, 'saveSettings']);
         $r->post('/admin/packages/{id}/integration/provision',                         [AdminPackageIntegrationController::class, 'provision']);
         $r->post('/admin/packages/{id}/integration/credentials/{credentialId}/rotate', [AdminPackageIntegrationController::class, 'rotateCredential']);
@@ -2127,7 +2127,7 @@ final class App
         $r->post('/admin/users/{id}/ban', [AdminUserController::class, 'ban']);
         $r->post('/admin/users/{id}/lift', [AdminUserController::class, 'lift']);
         // users.role mutation (TM-PE-07): flag-INDEPENDENT — users.role exists
-        // regardless of Phase 5, so this works with `capabilities` dark.
+        // regardless of Phase 5, so this works when `capabilities` is rolled back.
         $r->post('/admin/users/{id}/role', [AdminUserController::class, 'changeRole']);
 
         $r->post('/mod/t/{id}/pin', [ModerationController::class, 'pin']);

@@ -1,8 +1,10 @@
-# Runbook: Package Integrations & Security Response (Phase 5 Increment 5, Deploy-Dark)
+# Runbook: Package Integrations & Security Response (Phase 5 Increment 5)
 
 Covers the `remote_app` / declarative `automation` integration runtime and the
 local security-response console. All surfaces gate on `package_registry`
-(`FeatureFlags::enabled('package_registry')` fails dark → 404); no new flag.
+(`FeatureFlags::enabled('package_registry')` graduated to default-ON on
+2026-07-09 and remains operator-reversible via
+`features.package_registry=false`); no new flag.
 
 ## Hard runtime predecessors
 - `service_secrets` **must** be enabled to mint any credential or write a secret

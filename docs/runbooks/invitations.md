@@ -2,7 +2,8 @@
 
 ## What the flag gates
 
-`features.invitations` (default **OFF** — deploy-dark) gates:
+`features.invitations` graduated to default-ON on 2026-07-09 —
+operator-reversible via `features.invitations=false`. It gates:
 
 - `/admin/invitations` — the operator console (issue / list / revoke).
 - `/invite/{token}` — the public landing link (redirects into `/register`).
