@@ -157,11 +157,6 @@ final class AdminPackageIntegrationController extends Controller
         }
     }
 
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
-
     private function settings(): PackageSettingsService
     {
         return $this->container->get(PackageSettingsService::class);

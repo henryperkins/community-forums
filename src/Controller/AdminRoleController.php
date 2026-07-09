@@ -31,11 +31,6 @@ final class AdminRoleController extends Controller
         }
     }
 
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
-
     /** @return array<string,array{scope:string,risk:string,delegable:bool,protected:bool,description:string,consent:?string}> */
     private function delegableCatalogue(): array
     {

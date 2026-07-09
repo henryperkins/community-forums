@@ -257,11 +257,6 @@ final class AdminPackageSecurityController extends Controller
         }
     }
 
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
-
     /** @return array{0:string,1:string,2:string} document, raw signature bytes, key id */
     private function parseEnvelope(string $raw): array
     {

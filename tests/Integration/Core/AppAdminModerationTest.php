@@ -147,6 +147,43 @@ final class AppAdminModerationTest extends TestCase
         self::assertNull($this->users()->findByUsername('wouldbe'));
     }
 
+    public function test_unknown_persisted_registration_mode_blocks_password_signups(): void
+    {
+        // A corrupt setting or future restrictive mode must not fail open.
+        $this->settings()->set('registration_mode', 'banana');
+
+        $this->assertSeeText($this->get('/register'), 'sign-ups are currently closed');
+        $blocked = $this->post('/register', [
+            'username' => 'unknownmode',
+            'email' => 'unknownmode@example.test',
+            'password' => 'password123',
+            'password_confirm' => 'password123',
+        ]);
+
+        $this->assertStatus(403, $blocked);
+        self::assertNull($this->users()->findByUsername('unknownmode'));
+    }
+
+    public function test_registration_mode_invite_persists_and_dashboard_warns_while_dark(): void
+    {
+        $this->actingAs($this->admin);
+        $this->get('/admin'); // seed CSRF
+
+        $res = $this->post('/admin/settings', ['registration_mode' => 'invite', 'antiabuse_mode' => 'observe']);
+        $this->assertRedirect($res, '/admin');
+        self::assertSame('invite', $this->settings()->getString('registration_mode'));
+
+        // The select offers the new mode, and — with features.invitations still
+        // dark — the dashboard warns that invite mode is effectively closed.
+        $body = $this->get('/admin')->body();
+        self::assertStringContainsString('(invitation required)', $body);
+        self::assertStringContainsString('effectively closed', $body);
+
+        // A bogus mode still clamps to the safe default.
+        $this->post('/admin/settings', ['registration_mode' => 'banana', 'antiabuse_mode' => 'observe']);
+        self::assertSame('open', $this->settings()->getString('registration_mode'));
+    }
+
     public function test_registration_reopens_and_signups_work_again(): void
     {
         $this->settings()->set('registration_mode', 'closed');

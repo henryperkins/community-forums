@@ -9,8 +9,8 @@ use App\Core\ValidationException;
 use App\Domain\User;
 use App\Hook\FirstPartyHookRegistry;
 use App\Repository\OAuthIdentityRepository;
-use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
+use App\Security\RegistrationPolicy;
 use App\Service\OAuth\NormalizedIdentity;
 
 /**
@@ -29,6 +29,7 @@ use App\Service\OAuth\NormalizedIdentity;
  *   already_linked_elsewhere — the identity belongs to a different account
  *   collision              — a local account owns this email; require login to link (never auto-merge)
  *   registration_closed    — public sign-ups are closed; a new account is refused (existing logins still work)
+ *   registration_invite_only — invite-mode site (P5-13); redeem the invitation on /register first
  *   banned                 — the resolved account is banned; refuse
  *   error                  — malformed identity
  */
@@ -41,7 +42,7 @@ final class OAuthService
         private Database $db,
         private OAuthIdentityRepository $identities,
         private UserRepository $users,
-        private SettingRepository $settings,
+        private RegistrationPolicy $registrationPolicy,
         private ?FirstPartyHookRegistry $hooks = null,
         ?callable $usableProviderNames = null,
     ) {
@@ -100,8 +101,17 @@ final class OAuthService
         // the OAuth provisioning channel too, not just the email/password form;
         // otherwise "close sign-ups entirely" would leak a side door. Returning
         // logins (step 1) and linking to a signed-in account (step 2) are
-        // deliberately unaffected — neither creates a new account.
-        if ($this->settings->getString('registration_mode', 'open') === 'closed') {
+        // deliberately unaffected — neither creates a new account. Invite-only
+        // sites (P5-13) likewise provision no accounts from a provider identity:
+        // the invitation must be redeemed on /register first, then the provider
+        // linked from settings.
+        $mode = $this->registrationPolicy->effectiveMode();
+        if ($mode === 'invite') {
+            return ['action' => 'registration_invite_only'];
+        }
+        if ($mode !== 'open') {
+            // Default-deny: `closed` and any future restrictive mode must
+            // never fail open into silent account provisioning.
             return ['action' => 'registration_closed'];
         }
         $user = $this->createFromIdentity($id);

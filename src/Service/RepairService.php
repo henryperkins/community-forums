@@ -39,6 +39,21 @@ final class RepairService
     }
 
     /**
+     * invitations.used_count = number of recorded redemptions (the authoritative
+     * invitation_redemptions ledger, retained even after a redeemer is deleted).
+     * The runtime keeps the two in lockstep transactionally; this is the repair
+     * that recomputes the cache should it ever drift (P5-13 counter invariant).
+     */
+    public function repairInvitationUsedCounts(): int
+    {
+        return $this->db->run(
+            'UPDATE invitations i SET used_count = (
+                SELECT COUNT(*) FROM invitation_redemptions r WHERE r.invitation_id = i.id
+             )',
+        )->rowCount();
+    }
+
+    /**
      * users.reputation is now reconciled from the Phase 4 reputation ledger.
      * The rebuild backfills canonical reaction and accepted-answer events, reverses
      * stale rows, then makes users.reputation agree with active ledger deltas.
@@ -370,6 +385,7 @@ final class RepairService
         return $this->db->transaction(function (): array {
             $out = [
                 'user_post_counts' => $this->repairUserPostCounts(),
+                'invitation_used_counts' => $this->repairInvitationUsedCounts(),
                 'thread_counters' => $this->repairThreadCounters(),
                 'board_counters' => $this->repairBoardCounters(),
                 'thread_statuses' => $this->repairThreadStatuses(),

@@ -191,11 +191,6 @@ final class AdminThemeController extends Controller
         ];
     }
 
-    private function noindex(Response $response): Response
-    {
-        return $response->header('X-Robots-Tag', 'noindex');
-    }
-
     private function themes(): ThemeStateService
     {
         return $this->container->get(ThemeStateService::class);

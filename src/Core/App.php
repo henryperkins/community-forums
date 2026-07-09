@@ -7,6 +7,7 @@ namespace App\Core;
 use App\Controller\AccountController;
 use App\Controller\AdminAnnouncementController;
 use App\Controller\AdminApiTokenController;
+use App\Controller\AdminInvitationController;
 use App\Controller\AdminBadgeRuleController;
 use App\Controller\AdminController;
 use App\Controller\AdminCustomEmojiController;
@@ -85,6 +86,7 @@ use App\Repository\BoardRepository;
 use App\Repository\CapabilityRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\IdentityProviderRepository;
+use App\Repository\InvitationRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ModerationAppealRepository;
 use App\Repository\ConversationRepository;
@@ -154,6 +156,7 @@ use App\Security\FileRateLimiter;
 use App\Security\LastOwnerGuard;
 use App\Security\PasswordHasher;
 use App\Security\ReauthGate;
+use App\Security\RegistrationPolicy;
 use App\Security\RateLimiter;
 use App\Security\Registry\TrustChainVerifier;
 use App\Security\Packages\ManifestValidator;
@@ -196,6 +199,7 @@ use App\Service\FollowService;
 use App\Service\LegacyAuthorityProjection;
 use App\Service\LinkPreviewService;
 use App\Service\IdentityProviderService;
+use App\Service\InvitationService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
 use App\Service\NotificationService;
@@ -777,6 +781,10 @@ final class App
         ));
         $c->bind(PasswordHasher::class, fn () => new PasswordHasher());
         $c->bind(ReauthGate::class, fn (Container $c) => new ReauthGate($c->get(PasswordHasher::class)));
+        $c->bind(RegistrationPolicy::class, fn (Container $c) => new RegistrationPolicy(
+            $c->get(SettingRepository::class),
+            $c->get(FeatureFlags::class),
+        ));
         $c->bind(Telemetry::class, fn () => new Telemetry($config));
         $c->bind(SecretBox::class, fn () => new SecretBox((string) $config->get('app.key', '')));
         $c->bind(Totp::class, fn () => new Totp());
@@ -1639,6 +1647,15 @@ final class App
             $c->get(FeatureFlags::class),
         ));
         $c->bind(IdentityProviderRepository::class, fn (Container $c) => new IdentityProviderRepository($c->get(Database::class)));
+        $c->bind(InvitationRepository::class, fn (Container $c) => new InvitationRepository($c->get(Database::class)));
+        $c->bind(InvitationService::class, fn (Container $c) => new InvitationService(
+            $c->get(Database::class),
+            $c->get(InvitationRepository::class),
+            $c->get(AuthService::class),
+            $c->get(BoardRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(ModerationLogRepository::class),
+        ));
         $c->bind(OidcDiscovery::class, fn (Container $c) => new OidcDiscovery($c->get(OAuthHttpClient::class)));
         $c->bind(JwksCache::class, fn (Container $c) => new JwksCache(
             $c->get(IdentityProviderRepository::class),
@@ -1674,7 +1691,7 @@ final class App
             $c->get(Database::class),
             $c->get(OAuthIdentityRepository::class),
             $c->get(UserRepository::class),
-            $c->get(SettingRepository::class),
+            $c->get(RegistrationPolicy::class),
             $c->get(FirstPartyHookRegistry::class),
             $usableProviderNames,
         ));
@@ -1819,6 +1836,7 @@ final class App
         $r->post('/login/passkey', [AuthController::class, 'passkeyLogin']);
         $r->get('/register', [AuthController::class, 'showRegister']);
         $r->post('/register', [AuthController::class, 'register']);
+        $r->get('/invite/{token}', [AuthController::class, 'invite']); // P5-13 invite landing (dark behind `invitations`)
         $r->post('/logout', [AuthController::class, 'logout']);
 
         // Forgotten-password recovery (P2 Gate A "account recovery").
@@ -1956,6 +1974,11 @@ final class App
         $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
         $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
         $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
+
+        // Invitation lifecycle console (P5-13, Inc 9) — dark behind `invitations`.
+        $r->get('/admin/invitations', [AdminInvitationController::class, 'index']);
+        $r->post('/admin/invitations', [AdminInvitationController::class, 'create']);
+        $r->post('/admin/invitations/{id}/revoke', [AdminInvitationController::class, 'revoke']);
         $r->get('/admin/roles', [AdminRoleController::class, 'index']);
         $r->post('/admin/roles', [AdminRoleController::class, 'create']);
         $r->get('/admin/roles/simulator', [AdminRoleController::class, 'simulator']);

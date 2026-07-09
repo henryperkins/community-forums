@@ -24,6 +24,7 @@ $dark = [
     ['key' => 'themes', 'label' => 'Themes', 'href' => '/admin/themes', 'flag' => 'package_themes'],
     ['key' => 'roles', 'label' => 'Roles', 'href' => '/admin/roles', 'flag' => 'capabilities'],
     ['key' => 'providers', 'label' => 'Sign-in providers', 'href' => '/admin/providers', 'flag' => 'provider_registry'],
+    ['key' => 'invitations', 'label' => 'Invitations', 'href' => '/admin/invitations', 'flag' => 'invitations'],
     ['key' => 'extensions', 'label' => 'Extensions', 'href' => '/admin/extensions', 'flag' => 'server_extensions'],
 ];
 ?>

@@ -207,6 +207,9 @@ final class OAuthController extends Controller
             case 'registration_closed':
                 $response = $this->redirectWithFlash('/login', 'New registrations are currently closed, so an account could not be created.');
                 break;
+            case 'registration_invite_only':
+                $response = $this->redirectWithFlash('/login', 'New accounts require an invitation. Use your invitation link to sign up first, then connect ' . $label . ' from settings.');
+                break;
             case 'banned':
                 $response = $this->redirectWithFlash('/login', 'This account is not permitted to sign in.');
                 break;

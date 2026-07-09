@@ -29,6 +29,7 @@ final class AppSeoVisibilityTest extends TestCase
         $this->assertSeeText($res, 'Disallow: /settings');
         $this->assertSeeText($res, 'Disallow: /admin');
         $this->assertSeeText($res, 'Disallow: /messages');
+        $this->assertSeeText($res, 'Disallow: /invite'); // token-bearing landing URLs (P5-13)
         $this->assertSeeText($res, 'Sitemap:');
     }
 

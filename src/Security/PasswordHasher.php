@@ -41,6 +41,12 @@ final class PasswordHasher
         self::$defaultOptions = $options;
     }
 
+    /** @return array<string,int>|null the current process-wide override (null = PHP secure defaults) */
+    public static function defaultOptions(): ?array
+    {
+        return self::$defaultOptions;
+    }
+
     public function hash(string $password): string
     {
         return password_hash($password, PASSWORD_ARGON2ID, $this->options);

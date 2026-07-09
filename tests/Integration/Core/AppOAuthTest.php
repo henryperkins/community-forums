@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Core\FeatureFlags;
 use App\Domain\User;
 use App\Repository\OAuthIdentityRepository;
 use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\PasswordHasher;
+use App\Security\RegistrationPolicy;
 use App\Service\OAuth\GoogleProvider;
 use App\Service\OAuth\NormalizedIdentity;
 use App\Service\OAuthService;
@@ -31,7 +33,13 @@ final class AppOAuthTest extends TestCase
 
     private function svc(): OAuthService
     {
-        return new OAuthService($this->db, new OAuthIdentityRepository($this->db), new UserRepository($this->db), $this->settings());
+        return new OAuthService($this->db, new OAuthIdentityRepository($this->db), new UserRepository($this->db), $this->registrationPolicy());
+    }
+
+    private function registrationPolicy(): RegistrationPolicy
+    {
+        // Fresh per call: FeatureFlags memoizes its settings read.
+        return new RegistrationPolicy($this->settings(), new FeatureFlags(new SettingRepository($this->db)));
     }
 
     private function settings(): SettingRepository
@@ -152,7 +160,7 @@ final class AppOAuthTest extends TestCase
             $this->db,
             new OAuthIdentityRepository($this->db),
             new UserRepository($this->db),
-            $this->settings(),
+            $this->registrationPolicy(),
             null,
             static fn (): array => ['google'],
         );
@@ -198,6 +206,20 @@ final class AppOAuthTest extends TestCase
         self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-closed'));
     }
 
+    public function test_unknown_persisted_registration_mode_blocks_a_brand_new_oauth_signup(): void
+    {
+        // A corrupt setting or future restrictive mode must not fail open.
+        $this->settings()->set('registration_mode', 'banana');
+        $before = $this->users()->count();
+
+        $out = $this->svc()->resolve($this->identity('sub-unknown-mode'), null);
+
+        self::assertSame('registration_closed', $out['action']);
+        self::assertArrayNotHasKey('user', $out);
+        self::assertSame($before, $this->users()->count());
+        self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-unknown-mode'));
+    }
+
     public function test_closed_registration_still_lets_an_existing_identity_log_in(): void
     {
         // Provision the account while sign-ups are open…
@@ -210,6 +232,35 @@ final class AppOAuthTest extends TestCase
 
         self::assertSame('login', $again['action']);
         self::assertSame($created['user']->id(), $again['user']->id());
+    }
+
+    // ---- invite-only registration gate (P5-13) ----------------------------
+
+    public function test_invite_mode_blocks_a_brand_new_oauth_signup_with_invite_only_action(): void
+    {
+        // Invite-only sites provision no accounts from a provider identity:
+        // the invitation must be redeemed on /register first.
+        $this->settings()->set('registration_mode', 'invite');
+        $this->settings()->set('features', ['invitations' => true]);
+        $before = $this->users()->count();
+
+        $out = $this->svc()->resolve($this->identity('sub-invite'), null);
+
+        self::assertSame('registration_invite_only', $out['action']);
+        self::assertArrayNotHasKey('user', $out);                    // nobody is logged in
+        self::assertSame($before, $this->users()->count());          // no account created
+        self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-invite'));
+    }
+
+    public function test_invite_mode_with_dark_flag_degrades_to_closed_for_oauth(): void
+    {
+        // features.invitations stays at its dark default: fail closed.
+        $this->settings()->set('registration_mode', 'invite');
+
+        $out = $this->svc()->resolve($this->identity('sub-invite-dark'), null);
+
+        self::assertSame('registration_closed', $out['action']);
+        self::assertNull((new OAuthIdentityRepository($this->db))->findByProvider('google', 'sub-invite-dark'));
     }
 
     public function test_closed_registration_still_lets_a_signed_in_user_link_a_provider(): void
