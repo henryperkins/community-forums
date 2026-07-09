@@ -1,6 +1,6 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-07-05 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
+**Date:** 2026-07-09 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
 profile-media graduation reconciled; Phase 5 passkeys row reconciled with
 `PHASE_5_STATUS.md`; custom-emoji graduation reconciled; **2026-07-04
 `split_merge` + `custom_profile_fields` graduations reconciled** — both flipped
@@ -8,7 +8,11 @@ default-ON 2026-07-03 and now carry the full acceptance-evidence packages;
 **2026-07-05 Increment 6 (capabilities enforcement cutover) reconciled** — +3
 routes newly flag-gated by the existing `capabilities` flag, +1 admin route
 added with no flag gate at all, both reconciled below and against
-`PHASE_5_STATUS.md`)
+`PHASE_5_STATUS.md`; **2026-07-09 Increments 8–9 reconciled** —
+`provider_registry` (Inc 8, generic OIDC, PR #39) and `invitations` (Inc 9,
+PR #40) landed deploy-dark and are now *consumed*, no longer inert/reserved;
+the Source Code Audit below is re-run to 2026-07-09 (53 literal `enabled()`
+keys) and the `invitations` row carries its two-pass pre-merge review hardening)
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -20,11 +24,17 @@ The Phase 3/4 dark flags are additionally ranked in
 [Graduation Readiness Ranking](#graduation-readiness-ranking-phase-34-dark-flags)
 by how little evidence each still needs before it can graduate.
 
-Runtime source of truth: `src/Core/FeatureFlags.php`.
+Runtime source of truth for flag *availability*: `src/Core/FeatureFlags.php`
+(the `DEFAULTS` map merged with the `features` settings override). A flag's
+*effective* deploy-dark posture also depends on **enforcement** — route/DI gating
+in `src/Core/App.php` that makes an off flag 404 or no-op — and on config-gates
+that can leave an *on* flag inert (e.g. `giphy_public_key`,
+`PACKAGE_EXECUTION_DISABLED`, theme safe mode). Those per-flag nuances are called
+out in the rows and the Notes below, not derivable from `DEFAULTS` alone.
 
 ## Source Code Audit
 
-Audited 2026-07-04 against `src/Core/FeatureFlags.php`, literal
+Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
 `FeatureFlags::enabled('...')` call sites in `src/`, and shared
 `$features[...]` consumers in templates/bootstrapping code.
 
@@ -38,12 +48,14 @@ Audited 2026-07-04 against `src/Core/FeatureFlags.php`, literal
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
-- All 51 unique literal `FeatureFlags::enabled('...')` keys used in `src/` are
+- All 53 unique literal `FeatureFlags::enabled('...')` keys used in `src/` are
   declared in `FeatureFlags::DEFAULTS`. The declared flags without direct
   literal `enabled()` reads in `src/` are expected: `wysiwyg_composer` is
   consumed from the shared feature map in `templates/layout.php`, while
-  `provider_registry`, `invitations`, `governance`, `service_principals`, and
-  `verified_links` are still inert/reserved workstreams.
+  `governance`, `service_principals`, and `verified_links` are still
+  inert/reserved workstreams. (`provider_registry` and `invitations` left this
+  list when Inc 8/9 wired their runtimes — 2 and 7 literal `enabled()` reads
+  respectively.)
 - The default-ON baseline flags intentionally outside this deploy-dark inventory
   are: `engagement`, `notifications`, `email`, `mentions`, `search`, `dms`,
   `moderation_queue`, `community`, `oauth`, `presence`, `announcements`,
@@ -62,6 +74,16 @@ Audited 2026-07-04 against `src/Core/FeatureFlags.php`, literal
   `features` override) and is reachable — confirmed 422, not 404 — even with
   `capabilities` fully off
   (`docs/evidence/phase5/capabilities-fallback-rehearsal.md`).
+- **Increments 8–9 reconciliation (2026-07-09):** the `37`/`20` split is
+  unchanged — `provider_registry` and `invitations` were already default-dark
+  reserved flags, not new ones. Inc 8 (generic OIDC, PR #39, 2026-07-07) and
+  Inc 9 (invitations, PR #40, merged 2026-07-09) wired their runtimes, so both
+  now carry literal `enabled()` reads in `src/` (unique-key count 51 → 53) and
+  their Phase 5 Gate A rows below reflect landed evidence. Inc 9's `invitations`
+  row additionally reflects two pre-merge review-hardening passes merged with
+  PR #40 (honest `invitation.redemption_p95` 461.79 ms under production-cost
+  Argon2id); neither the wiring nor the hardening changes any flag's
+  deploy-dark posture.
 
 ## Phase 3 / Phase 3 Carryover
 
@@ -83,7 +105,7 @@ Audited 2026-07-04 against `src/Core/FeatureFlags.php`, literal
 | `reputation_ledger` | Reputation-event ledger and windowed rankings | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppLeaderboardTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `badge_rules` | Custom badge rules, preview, backfill, revoke history | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppAdminBadgeRulesTest` (available-by-default + flag-rollback-with-history-intact), `AppFeatureFlagTest`, browser `32-badge-rules`/`33-badge-rule-preview`/`34-badge-rule-backfilled`, `/admin/badge-rules` axe pass, runbook `docs/runbooks/badge_rules.md`. Retained here for traceability. |
 | `community_memory` | Summaries, related topics, wiki revisions | Accepted Gate A engineering baseline; default-dark until intentional enablement |
-| `content_references` | Persisted board/thread/post/DM/summary references and read-gated cards | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest` (default-on + operator rollback), `AppContentReferenceTest` (post/DM/summary/tag references through read gate), `AppPhase4CarryoverFoundationTest` (default posture), browser `43-content-references-redacted`, `.reference-cards` axe pass. Retained here for traceability. |
+| `content_references` | Persisted references from post/DM/summary bodies, rendered as read-gated board/thread/post/tag cards | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest` (default-on + operator rollback), `AppContentReferenceTest` (post/DM/summary/tag references through read gate), `AppPhase4CarryoverFoundationTest` (default posture), browser `43-content-references-redacted`, `.reference-cards` axe pass. Retained here for traceability. |
 
 ## Phase 4 Carryover Completion
 
@@ -323,7 +345,7 @@ Phase 5 flags are gated on their own workstreams' Milestone-0 approvals and
 acceptance evidence (`PHASE_5_PLAN.md` §2/§13), so they are not part of the
 graduation readiness ranking above. Per-flag implementation states (R0–R5) are
 machine-tracked in `docs/phase5/requirement-ledger.json`; the summary below is
-as of 2026-07-05.
+as of 2026-07-09.
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
@@ -343,9 +365,9 @@ as of 2026-07-05.
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
 | `server_extensions` | Sandboxed isolated server-extension runtime | Deploy-dark; manifest validation, fail-closed Bubblewrap probe seam, async worker, and admin inspection landed (`0065`); no public/untrusted runtime until Phase 5 Gate B sandbox acceptance |
-| `governance` | Operator groups, approvals, access review | Deploy-dark; reserved for Phase 5 Gate B |
-| `service_principals` | Remote-app service identities | Deploy-dark; reserved for Phase 5 Gate B |
-| `verified_links` | Verified profile links and richer profile fields | Deploy-dark; reserved for Phase 5 Gate B |
+| `governance` | Operator groups, approvals, access review | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
+| `service_principals` | Remote-app service identities | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
+| `verified_links` | Verified profile links and richer profile fields | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
 
 ## Notes
 
