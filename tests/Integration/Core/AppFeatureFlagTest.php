@@ -159,6 +159,49 @@ final class AppFeatureFlagTest extends TestCase
         self::assertFalse($overridden->enabled('server_extensions'), 'Gate B stays dark without an override');
     }
 
+    public function test_override_values_parse_strictly_and_garbage_fails_dark(): void
+    {
+        // Rollback is the primary safety lever now that Gate A defaults on, and the
+        // only production write path is a hand-edited JSON object — so the merge
+        // must honor operator intent for string shapes ("false" must not read ON)
+        // and fail DARK on garbage instead of (bool)-truthy failing open.
+        $this->setFlags([
+            'passkeys' => 'false',
+            'webhooks' => 'off',
+            'invitations' => '0',
+            'api_tokens' => 'true',
+            'capabilities' => '1',
+            'provider_registry' => ['unexpected'],
+            'package_registry' => 'garbage',
+        ]);
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($flags->enabled('passkeys'), 'string "false" must roll the flag back, not read ON');
+        self::assertFalse($flags->enabled('webhooks'), 'string "off" must roll the flag back');
+        self::assertFalse($flags->enabled('invitations'), 'string "0" must roll the flag back');
+        self::assertTrue($flags->enabled('api_tokens'), 'string "true" keeps the flag on');
+        self::assertTrue($flags->enabled('capabilities'), 'string "1" keeps the flag on');
+        self::assertFalse($flags->enabled('provider_registry'), 'a non-scalar override value must fail dark');
+        self::assertFalse($flags->enabled('package_registry'), 'an unrecognizable override value must fail dark');
+    }
+
+    public function test_non_object_features_setting_is_ignored_and_defaults_apply(): void
+    {
+        // A double-encoded write leaves a JSON *string* in settings.features (it
+        // passes MariaDB's json_valid CHECK, unlike malformed JSON). The loader
+        // must ignore it, apply code defaults, and report the corruption.
+        (new SettingRepository($this->db))->set('features', 'not-an-object');
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($flags->enabled('capabilities'), 'defaults apply when the override blob is corrupt');
+        self::assertFalse($flags->enabled('server_extensions'), 'Gate B stays dark when the override blob is corrupt');
+        self::assertTrue($flags->overridesCorrupt(), 'a non-object features value must be reported as corrupt');
+
+        // Replacing the row with a real JSON object clears the condition.
+        $this->setFlags(['passkeys' => false]);
+        $repaired = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($repaired->overridesCorrupt(), 'a JSON-object features value is not corrupt');
+        self::assertFalse($repaired->enabled('passkeys'), 'the repaired override applies');
+    }
+
     public function test_provider_registry_flag_gates_generic_oidc_routes(): void
     {
         $this->setFlags(['provider_registry' => false]);

@@ -104,6 +104,8 @@ final class FeatureFlags
     /** @var array<string,bool>|null */
     private ?array $cache = null;
 
+    private bool $overridesCorrupt = false;
+
     public function __construct(private SettingRepository $settings)
     {
     }
@@ -112,6 +114,33 @@ final class FeatureFlags
     {
         $map = $this->cache ??= $this->load();
         return $map[$flag] ?? false;
+    }
+
+    /**
+     * True when a `features` settings row exists but is not a JSON object, so
+     * every stored override is being ignored and code defaults are in effect.
+     */
+    public function overridesCorrupt(): bool
+    {
+        $this->cache ??= $this->load();
+        return $this->overridesCorrupt;
+    }
+
+    /**
+     * Normalize one stored override value. Overrides are hand-edited JSON, so
+     * honor operator intent for string shapes ("false"/"off" roll back, not
+     * (bool)-truthy) and fail DARK on anything unrecognizable — garbage in the
+     * override map must never enable a surface.
+     */
+    public static function normalizeOverride(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (!is_scalar($value)) {
+            return false;
+        }
+        return filter_var((string) $value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
     }
 
     /** @return array<string,bool> */
@@ -130,12 +159,22 @@ final class FeatureFlags
     private function load(): array
     {
         $map = self::DEFAULTS;
-        $overrides = $this->settings->get('features', []);
-        if (is_array($overrides)) {
-            foreach ($overrides as $key => $value) {
-                if (is_string($key)) {
-                    $map[$key] = (bool) $value;
-                }
+        // null covers both "no row" and a row MariaDB's json_valid CHECK could
+        // not have stored anyway; a present non-array (e.g. a double-encoded
+        // JSON string) means every stored rollback is being ignored — log it,
+        // because the defaults it falls back to are ON for graduated flags.
+        $overrides = $this->settings->get('features', null);
+        if ($overrides === null) {
+            return $map;
+        }
+        if (!is_array($overrides)) {
+            $this->overridesCorrupt = true;
+            error_log('[RetroBoards] settings.features is not a JSON object; all feature overrides ignored (code defaults in effect)');
+            return $map;
+        }
+        foreach ($overrides as $key => $value) {
+            if (is_string($key)) {
+                $map[$key] = self::normalizeOverride($value);
             }
         }
         return $map;

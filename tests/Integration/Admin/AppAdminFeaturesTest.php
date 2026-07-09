@@ -41,6 +41,36 @@ final class AppAdminFeaturesTest extends TestCase
         self::assertStringContainsString('<code>unknown_flag</code>', $page->body());
     }
 
+    public function test_console_override_column_matches_runtime_for_string_shapes(): void
+    {
+        // A hand-written {"passkeys":"false"} must read as a rollback at runtime,
+        // and the read-only console must report the same state — not the raw
+        // (bool)-truthy reading that would show "Override on" for a paused flag.
+        $this->setFlags(['passkeys' => 'false']);
+        $this->actingAs($this->makeAdmin(['username' => 'string-shape-admin']));
+
+        $page = $this->get('/admin/features');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('Override off', $page->body());
+        self::assertStringNotContainsString('Override on', $page->body());
+    }
+
+    public function test_console_warns_when_the_features_setting_is_not_a_json_object(): void
+    {
+        // A double-encoded features value silently discards every override; the
+        // one place an operator looks during an incident must say so instead of
+        // rendering "No override" everywhere like a clean install.
+        (new SettingRepository($this->db))->set('features', 'not-an-object');
+        $this->actingAs($this->makeAdmin(['username' => 'corrupt-blob-admin']));
+
+        $page = $this->get('/admin/features');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('not a JSON object', $page->body());
+        self::assertStringContainsString('overrides are being ignored', $page->body());
+    }
+
     public function test_feature_flag_inventory_is_admin_only_but_not_feature_gated(): void
     {
         $this->makeAdmin();
