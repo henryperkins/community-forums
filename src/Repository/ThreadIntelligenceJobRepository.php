@@ -270,17 +270,20 @@ final class ThreadIntelligenceJobRepository
         }
 
         return $this->db->transaction(function () use ($threadId, $leaseToken, $expectedActivityVersion, $generationId, $lastProcessedPostId, $snapshotHash, $fullReconcile, $publishedAt): bool {
+            // Atomic publication already owns thread -> job before completing
+            // its generation. Keep every release/prune/reconciliation path on
+            // the same job -> generation dependent-row order.
+            $row = $this->findForUpdate($threadId);
+            if ($row === null || $row['state'] !== 'running'
+                || !is_string($row['lease_token']) || !hash_equals($row['lease_token'], $leaseToken)) {
+                return false;
+            }
+
             $generation = $this->db->fetch(
                 'SELECT thread_id, status FROM thread_intelligence_generations WHERE id = ? FOR UPDATE',
                 [$generationId],
             );
             if ($generation === null || (int) $generation['thread_id'] !== $threadId || $generation['status'] !== 'published') {
-                return false;
-            }
-
-            $row = $this->findForUpdate($threadId);
-            if ($row === null || $row['state'] !== 'running'
-                || !is_string($row['lease_token']) || !hash_equals($row['lease_token'], $leaseToken)) {
                 return false;
             }
 

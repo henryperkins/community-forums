@@ -443,7 +443,7 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
         self::assertNull($row['last_processed_post_id']);
     }
 
-    public function test_release_published_locks_generation_before_job_to_match_reconciliation_order(): void
+    public function test_release_published_locks_job_before_generation_to_match_atomic_publication(): void
     {
         $seed = $this->seedThread();
         $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
@@ -453,7 +453,7 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
         $this->useCommittedFixtures();
 
         $this->pdo->beginTransaction();
-        $this->db->fetch('SELECT id FROM thread_intelligence_generations WHERE id = ? FOR UPDATE', [$generationId]);
+        $this->db->fetch('SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? FOR UPDATE', [$seed['thread_id']]);
 
         $childCode = <<<'PHP'
 require $argv[1];
@@ -494,15 +494,15 @@ PHP;
         $ready = trim((string) fgets($pipes[1]));
         self::assertMatchesRegularExpression('/\Aready:(\d+)\z/', $ready);
         preg_match('/ready:(\d+)/', $ready, $readyMatch);
-        $this->waitForConnectionQuery((int) $readyMatch[1], 'thread_intelligence_generations WHERE id');
+        $this->waitForConnectionQuery((int) $readyMatch[1], 'thread_intelligence_jobs WHERE thread_id');
 
-        $parentAcquiredJob = true;
+        $parentAcquiredGeneration = true;
         $previousLockWait = (int) $this->db->fetchValue('SELECT @@SESSION.innodb_lock_wait_timeout');
         try {
             $this->db->run('SET SESSION innodb_lock_wait_timeout = 1');
-            $this->db->fetch('SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? FOR UPDATE', [$seed['thread_id']]);
+            $this->db->fetch('SELECT id FROM thread_intelligence_generations WHERE id = ? FOR UPDATE', [$generationId]);
         } catch (\PDOException) {
-            $parentAcquiredJob = false;
+            $parentAcquiredGeneration = false;
         }
 
         if ($this->pdo->inTransaction()) {
@@ -516,7 +516,10 @@ PHP;
         fclose($pipes[2]);
         $exitCode = proc_close($process);
 
-        self::assertTrue($parentAcquiredJob, 'generation-first locking must not let the publisher hold the job while waiting on generation evidence');
+        self::assertTrue(
+            $parentAcquiredGeneration,
+            'job-first release must wait before generation so an atomic publisher can finish job -> generation without a cycle',
+        );
         self::assertSame(0, $exitCode, $stderr);
         self::assertSame('', trim($stderr));
         self::assertSame('result:1', $result);
@@ -867,7 +870,7 @@ PHP;
         );
     }
 
-    public function test_prune_locks_generation_before_job_to_avoid_publication_deadlocks(): void
+    public function test_prune_locks_job_before_generation_to_avoid_atomic_publication_deadlocks(): void
     {
         $seed = $this->seedThread();
         $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now());
@@ -884,7 +887,7 @@ PHP;
         $this->useCommittedFixtures();
 
         $this->pdo->beginTransaction();
-        $this->db->fetch('SELECT id FROM thread_intelligence_generations WHERE id = ? FOR UPDATE', [$generationId]);
+        $this->db->fetch('SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? FOR UPDATE', [$seed['thread_id']]);
 
         $childCode = <<<'PHP'
 $root = getcwd();
@@ -917,13 +920,13 @@ PHP;
         preg_match('/ready:(\d+)/', $ready, $readyMatch);
         $this->waitForConnectionQuery((int) $readyMatch[1], 'FOR UPDATE');
 
-        $parentAcquiredJob = true;
+        $parentAcquiredGeneration = true;
         $previousLockWait = (int) $this->db->fetchValue('SELECT @@SESSION.innodb_lock_wait_timeout');
         try {
             $this->db->run('SET SESSION innodb_lock_wait_timeout = 1');
-            $this->db->fetch('SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? FOR UPDATE', [$seed['thread_id']]);
+            $this->db->fetch('SELECT id FROM thread_intelligence_generations WHERE id = ? FOR UPDATE', [$generationId]);
         } catch (\PDOException) {
-            $parentAcquiredJob = false;
+            $parentAcquiredGeneration = false;
         }
 
         if ($this->pdo->inTransaction()) {
@@ -937,7 +940,10 @@ PHP;
         fclose($pipes[2]);
         $exitCode = proc_close($process);
 
-        self::assertTrue($parentAcquiredJob, 'pruning must not hold the job row while waiting on generation evidence');
+        self::assertTrue(
+            $parentAcquiredGeneration,
+            'pruning must wait on the publisher-owned job before touching generation evidence',
+        );
         self::assertSame(0, $exitCode, $stderr);
         self::assertSame('', trim($stderr));
         self::assertSame('result:1', $result);

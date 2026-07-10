@@ -250,14 +250,6 @@ final class ThreadIntelligenceGenerationRepository
 
             $ids = array_map(static fn (array $r): int => (int) $r['id'], $rows);
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $this->db->fetchAll(
-                "SELECT id FROM thread_intelligence_generations
-                 WHERE id IN ($placeholders)
-                 ORDER BY id ASC
-                 FOR UPDATE",
-                $ids,
-            );
-
             $threadIds = array_values(array_unique(array_map(static fn (array $r): int => (int) $r['thread_id'], $rows)));
             sort($threadIds, SORT_NUMERIC);
             $threadPlaceholders = implode(',', array_fill(0, count($threadIds), '?'));
@@ -268,12 +260,20 @@ final class ThreadIntelligenceGenerationRepository
                  FOR UPDATE",
                 $threadIds,
             );
+            $this->db->fetchAll(
+                "SELECT id FROM thread_intelligence_generations
+                 WHERE id IN ($placeholders)
+                 ORDER BY id ASC
+                 FOR UPDATE",
+                $ids,
+            );
 
             // The candidate read above is deliberately non-locking and bounded.
-            // Lock generations first, then job rows in primary-key order, and
+            // Lock job rows first, then generations in primary-key order, and
             // repeat the complete predicate as a current read before deleting.
-            // A concurrent dead/review_required transition therefore wins
-            // before revalidation or waits until this transaction has finished.
+            // This matches atomic publication's job -> generation order, while
+            // a concurrent dead/review_required transition still wins before
+            // revalidation or waits until this transaction has finished.
             $eligible = $this->db->fetchAll(
                 "SELECT g.id
                  FROM thread_intelligence_generations g
