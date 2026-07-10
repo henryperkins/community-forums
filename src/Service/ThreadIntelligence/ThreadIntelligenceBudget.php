@@ -43,7 +43,7 @@ final class ThreadIntelligenceBudget
         $corrupt = false;
         if ($raw !== false && $raw !== null) {
             $decoded = $this->decodeCounters((string) $raw);
-            if ($decoded === null) {
+            if ($decoded === null || $decoded['date'] > $today) {
                 $corrupt = true;
             } elseif ($decoded['date'] === $today) {
                 $counters = $decoded;
@@ -170,6 +170,9 @@ final class ThreadIntelligenceBudget
         if ($decoded === null) {
             return null;
         }
+        if ($decoded['date'] > $today) {
+            return null;
+        }
         if ($decoded['date'] !== $today) {
             return $this->freshCounters($today);
         }
@@ -186,7 +189,7 @@ final class ThreadIntelligenceBudget
     private function decodeCounters(string $raw): ?array
     {
         $decoded = json_decode($raw, true);
-        if (!is_array($decoded) || !is_string($decoded['date'] ?? null)) {
+        if (!is_array($decoded) || !$this->isCanonicalUtcDate($decoded['date'] ?? null)) {
             return null;
         }
         $counters = ['date' => $decoded['date']];
@@ -197,6 +200,16 @@ final class ThreadIntelligenceBudget
             $counters[$field] = $decoded[$field];
         }
         return $counters;
+    }
+
+    private function isCanonicalUtcDate(mixed $value): bool
+    {
+        if (!is_string($value)
+            || preg_match('/\A(\d{4})-(\d{2})-(\d{2})\z/', $value, $parts) !== 1) {
+            return false;
+        }
+
+        return checkdate((int) $parts[2], (int) $parts[3], (int) $parts[1]);
     }
 
     /** @param array{date:string, reserved_calls:int, used_calls:int, reserved_input_tokens:int, used_input_tokens:int} $counters */

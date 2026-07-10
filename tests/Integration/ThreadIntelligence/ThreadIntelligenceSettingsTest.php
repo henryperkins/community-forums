@@ -10,6 +10,7 @@ use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use PDO;
 use Tests\Support\TestCase;
 
 /**
@@ -20,6 +21,8 @@ use Tests\Support\TestCase;
  */
 final class ThreadIntelligenceSettingsTest extends TestCase
 {
+    private bool $committedFixtures = false;
+
     private function settings(
         string $model = 'gpt-5.6-luna',
         string $effort = 'low',
@@ -30,6 +33,7 @@ final class ThreadIntelligenceSettingsTest extends TestCase
             ThreadIntelligenceConfig::fromArray(['model' => $model, 'reasoning_effort' => $effort, 'api_key' => $apiKey]),
             (string) $this->config->get('app.key'),
             $apiKey,
+            $this->db,
         );
     }
 
@@ -50,6 +54,86 @@ final class ThreadIntelligenceSettingsTest extends TestCase
              ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
             [$key, $rawValue],
         );
+    }
+
+    /** @param array<string,mixed> $changes @return array<string,mixed> */
+    private function validHeartbeat(array $changes = []): array
+    {
+        return array_replace([
+            'run_id' => str_repeat('a', 32),
+            'status' => 'running',
+            'worker_label' => 'cli',
+            'started_at' => '2026-07-10T12:00:00Z',
+            'completed_at' => null,
+            'processed' => 0,
+            'succeeded' => 0,
+            'failed' => 0,
+        ], $changes);
+    }
+
+    private function useCommittedFixtures(): void
+    {
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->commit();
+        }
+        $this->committedFixtures = true;
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->committedFixtures) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            $preserve = [
+                'schema_migrations', 'badges', 'roles', 'identity_providers', 'provider_aliases',
+                'capabilities', 'role_capabilities', 'theme_state',
+            ];
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');
+            foreach ($this->pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) as $table) {
+                if (!in_array($table, $preserve, true)) {
+                    $this->pdo->exec('TRUNCATE TABLE `' . str_replace('`', '', (string) $table) . '`');
+                }
+            }
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+            $this->committedFixtures = false;
+        }
+        parent::tearDown();
+    }
+
+    /** @param resource $stream */
+    private function waitForProcessOutput($stream, string $needle, string $output = ''): string
+    {
+        $deadline = microtime(true) + 5.0;
+        do {
+            $chunk = stream_get_contents($stream);
+            if ($chunk !== false) {
+                $output .= $chunk;
+            }
+            if (str_contains($output, $needle)) {
+                return $output;
+            }
+            usleep(10_000);
+        } while (microtime(true) < $deadline);
+
+        self::fail("Timed out waiting for child process output: {$needle}. Received: {$output}");
+    }
+
+    private function waitForConnectionQuery(int $connectionId, string $needle): void
+    {
+        $deadline = microtime(true) + 5.0;
+        do {
+            $info = $this->db->fetchValue(
+                'SELECT INFO FROM information_schema.PROCESSLIST WHERE ID = ?',
+                [$connectionId],
+            );
+            if (is_string($info) && str_contains($info, $needle)) {
+                return;
+            }
+            usleep(10_000);
+        } while (microtime(true) < $deadline);
+
+        self::fail("Timed out waiting for connection {$connectionId} query: {$needle}");
     }
 
     // ---- generation pause (emergency brake) -----------------------------------
@@ -150,6 +234,54 @@ final class ThreadIntelligenceSettingsTest extends TestCase
         }
     }
 
+    public function test_timestamp_writers_convert_non_utc_inputs_before_appending_literal_z(): void
+    {
+        $offset = new DateTimeZone('Asia/Kolkata');
+        $startedAt = new DateTimeImmutable('2026-07-10 17:30:00', $offset);
+        $completedAt = new DateTimeImmutable('2026-07-10 17:30:05', $offset);
+
+        $this->settings()->blockProvider('authentication', $startedAt);
+        self::assertSame('2026-07-10T12:00:00Z', $this->settings()->providerHealth()['blocked_at']);
+
+        $runId = $this->settings()->heartbeatStarted('cli', $startedAt);
+        self::assertSame('2026-07-10T12:00:00Z', $this->settings()->heartbeat()['started_at']);
+
+        $this->settings()->heartbeatFinished(
+            $runId,
+            'ok',
+            ['processed' => 0, 'succeeded' => 0, 'failed' => 0],
+            $completedAt,
+        );
+        self::assertSame('2026-07-10T12:00:05Z', $this->settings()->heartbeat()['completed_at']);
+    }
+
+    public function test_provider_health_reader_rejects_invalid_code_timestamp_and_fingerprint_shapes(): void
+    {
+        $this->settings()->blockProvider('authentication', $this->now());
+        $raw = (string) $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', [ThreadIntelligenceSettings::PROVIDER_HEALTH_KEY]);
+        $valid = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+
+        $cases = [
+            'empty code' => ['code' => ''],
+            'impossible timestamp' => ['blocked_at' => '2026-02-30T12:00:00Z'],
+            'non-UTC timestamp' => ['blocked_at' => '2026-07-10T12:00:00+00:00'],
+            'short fingerprint' => ['fingerprint' => str_repeat('a', 63)],
+            'non-hex fingerprint' => ['fingerprint' => str_repeat('z', 64)],
+        ];
+
+        foreach ($cases as $label => $change) {
+            $this->writeRawSetting(
+                ThreadIntelligenceSettings::PROVIDER_HEALTH_KEY,
+                json_encode(array_replace($valid, $change), JSON_THROW_ON_ERROR),
+            );
+            $health = $this->settings()->providerHealth();
+            self::assertTrue($health['blocked'], $label . ' must fail blocked');
+            self::assertTrue($health['corrupt'], $label . ' must raise the operator warning');
+            self::assertNull($health['code'], $label . ' must not surface unvalidated data');
+            self::assertNull($health['blocked_at'], $label . ' must not surface unvalidated data');
+        }
+    }
+
     // ---- worker heartbeat -------------------------------------------------------------
 
     public function test_heartbeat_lifecycle_records_running_then_ok_with_integer_counts(): void
@@ -171,6 +303,78 @@ final class ThreadIntelligenceSettingsTest extends TestCase
         self::assertSame('2026-07-10T12:00:05Z', $beat['completed_at']);
     }
 
+    public function test_heartbeat_reader_rejects_semantically_impossible_utc_timestamps(): void
+    {
+        $running = $this->validHeartbeat(['started_at' => '2026-02-30T12:00:00Z']);
+        $this->writeRawSetting(
+            ThreadIntelligenceSettings::HEARTBEAT_KEY,
+            json_encode($running, JSON_THROW_ON_ERROR),
+        );
+        self::assertTrue($this->settings()->heartbeat()['corrupt'], 'an impossible start date must not pass a shape-only regex');
+
+        $completed = array_replace($running, [
+            'status' => 'ok',
+            'started_at' => '2026-07-10T12:00:00Z',
+            'completed_at' => '2026-04-31T12:00:05Z',
+        ]);
+        $this->writeRawSetting(
+            ThreadIntelligenceSettings::HEARTBEAT_KEY,
+            json_encode($completed, JSON_THROW_ON_ERROR),
+        );
+        self::assertTrue($this->settings()->heartbeat()['corrupt'], 'an impossible completion date must not pass a shape-only regex');
+    }
+
+    public function test_heartbeat_reader_enforces_the_complete_exact_record_contract(): void
+    {
+        $missingCount = $this->validHeartbeat();
+        unset($missingCount['failed']);
+
+        $cases = [
+            'extra field' => $this->validHeartbeat(['credential' => 'must-never-be-accepted']),
+            'missing count' => $missingCount,
+            'empty run ID' => $this->validHeartbeat(['run_id' => '']),
+            'oversized run ID' => $this->validHeartbeat(['run_id' => str_repeat('a', 65)]),
+            'empty worker label' => $this->validHeartbeat(['worker_label' => '']),
+            'oversized worker label' => $this->validHeartbeat(['worker_label' => str_repeat('w', 65)]),
+            'running with completion time' => $this->validHeartbeat(['completed_at' => '2026-07-10T12:00:05Z']),
+            'ok without completion time' => $this->validHeartbeat(['status' => 'ok']),
+            'error without completion time' => $this->validHeartbeat(['status' => 'error']),
+            'string count' => $this->validHeartbeat(['processed' => '0']),
+            'negative count' => $this->validHeartbeat(['succeeded' => -1]),
+            'float count' => $this->validHeartbeat(['failed' => 0.5]),
+        ];
+
+        foreach ($cases as $label => $record) {
+            $this->writeRawSetting(
+                ThreadIntelligenceSettings::HEARTBEAT_KEY,
+                json_encode($record, JSON_THROW_ON_ERROR),
+            );
+            $beat = $this->settings()->heartbeat();
+            self::assertTrue($beat['exists'], $label);
+            self::assertTrue($beat['corrupt'], $label);
+            self::assertNull($beat['run_id'], $label . ' must not surface unvalidated record data');
+        }
+
+        foreach (['ok', 'error'] as $status) {
+            $this->writeRawSetting(
+                ThreadIntelligenceSettings::HEARTBEAT_KEY,
+                json_encode($this->validHeartbeat([
+                    'status' => $status,
+                    'completed_at' => '2026-07-10T12:00:05Z',
+                ]), JSON_THROW_ON_ERROR),
+            );
+            $beat = $this->settings()->heartbeat();
+            self::assertFalse($beat['corrupt'], $status . ' with a valid completion timestamp is terminal');
+            self::assertSame($status, $beat['status']);
+        }
+    }
+
+    public function test_heartbeat_started_rejects_an_empty_worker_label_instead_of_writing_corrupt_state(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->settings()->heartbeatStarted('', $this->now());
+    }
+
     public function test_an_older_run_cannot_overwrite_a_newer_running_heartbeat(): void
     {
         $oldRun = $this->settings()->heartbeatStarted('cli', $this->now());
@@ -188,6 +392,108 @@ final class ThreadIntelligenceSettingsTest extends TestCase
         self::assertSame(2, $beat['processed']);
         self::assertSame(1, $beat['succeeded']);
         self::assertSame(1, $beat['failed']);
+    }
+
+    public function test_an_old_completion_blocked_behind_a_new_start_cannot_overwrite_it_across_connections(): void
+    {
+        $oldRun = $this->settings()->heartbeatStarted('old-worker', $this->now());
+        $this->useCommittedFixtures();
+
+        // Connection A publishes the newer run but deliberately holds its row
+        // lock and commit. Connection B begins the old completion concurrently:
+        // a non-locking read sees the committed old run, then its write waits.
+        $this->pdo->beginTransaction();
+        $newRun = $this->settings()->heartbeatStarted('new-worker', $this->now()->modify('+1 minute'));
+
+        $childCode = <<<'PHP'
+require $argv[1];
+
+$payload = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR);
+$db = new \App\Core\Database($payload['db']);
+$settings = new \App\Service\ThreadIntelligence\ThreadIntelligenceSettings(
+    new \App\Repository\SettingRepository($db),
+    \App\Service\ThreadIntelligence\ThreadIntelligenceConfig::fromArray([
+        'model' => 'gpt-5.6-luna',
+        'reasoning_effort' => 'low',
+        'api_key' => 'sk-test-key-abc',
+    ]),
+    $payload['app_key'],
+    'sk-test-key-abc',
+    $db,
+);
+
+fwrite(STDOUT, "READY:" . $db->fetchValue('SELECT CONNECTION_ID()') . "\n");
+fflush(STDOUT);
+$settings->heartbeatFinished(
+    $payload['old_run'],
+    'error',
+    ['processed' => 5, 'succeeded' => 0, 'failed' => 5],
+    new \DateTimeImmutable('2026-07-10 12:02:00', new \DateTimeZone('UTC')),
+);
+fwrite(STDOUT, "DONE\n");
+PHP;
+
+        $process = null;
+        $pipes = [];
+        try {
+            $process = proc_open(
+                [PHP_BINARY, '-r', $childCode, dirname(__DIR__, 3) . '/vendor/autoload.php'],
+                [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']],
+                $pipes,
+                dirname(__DIR__, 3),
+            );
+            self::assertIsResource($process);
+            fwrite($pipes[0], json_encode([
+                'db' => $GLOBALS['__RB_TEST_DBCONFIG'],
+                'app_key' => (string) $this->config->get('app.key'),
+                'old_run' => $oldRun,
+            ], JSON_THROW_ON_ERROR));
+            fclose($pipes[0]);
+            unset($pipes[0]);
+            stream_set_blocking($pipes[1], false);
+            stream_set_blocking($pipes[2], false);
+
+            $output = $this->waitForProcessOutput($pipes[1], 'READY:');
+            self::assertMatchesRegularExpression('/READY:(\d+)/', $output);
+            preg_match('/READY:(\d+)/', $output, $readyMatch);
+            $this->waitForConnectionQuery((int) $readyMatch[1], 'SELECT `value` FROM settings');
+            self::assertTrue(proc_get_status($process)['running'], 'the old completion must be waiting behind the newer row write');
+
+            $this->pdo->commit();
+            $output = $this->waitForProcessOutput($pipes[1], 'DONE', $output);
+            self::assertStringContainsString('DONE', $output);
+
+            $deadline = microtime(true) + 5.0;
+            do {
+                $status = proc_get_status($process);
+                if (!$status['running']) {
+                    break;
+                }
+                usleep(10_000);
+            } while (microtime(true) < $deadline);
+            self::assertFalse($status['running'], 'the old completion process must exit after the row lock is released');
+            self::assertSame('', trim((string) stream_get_contents($pipes[2])));
+        } finally {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            foreach ($pipes as $pipe) {
+                if (is_resource($pipe)) {
+                    fclose($pipe);
+                }
+            }
+            if (is_resource($process)) {
+                if (proc_get_status($process)['running']) {
+                    proc_terminate($process);
+                }
+                proc_close($process);
+            }
+        }
+
+        $beat = $this->settings()->heartbeat();
+        self::assertSame('running', $beat['status'], 'the newer run remains current after the old completion resumes');
+        self::assertSame($newRun, $beat['run_id']);
+        self::assertSame('new-worker', $beat['worker_label']);
     }
 
     public function test_heartbeat_statuses_labels_and_counts_are_validated(): void

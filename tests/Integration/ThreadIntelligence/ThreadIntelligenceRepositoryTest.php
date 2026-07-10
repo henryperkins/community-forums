@@ -62,6 +62,23 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
         $this->committedFixtures = true;
     }
 
+    private function waitForConnectionQuery(int $connectionId, string $needle): void
+    {
+        $deadline = microtime(true) + 5.0;
+        do {
+            $info = $this->db->fetchValue(
+                'SELECT INFO FROM information_schema.PROCESSLIST WHERE ID = ?',
+                [$connectionId],
+            );
+            if (is_string($info) && str_contains($info, $needle)) {
+                return;
+            }
+            usleep(10_000);
+        } while (microtime(true) < $deadline);
+
+        self::fail("Timed out waiting for connection {$connectionId} query: {$needle}");
+    }
+
     protected function tearDown(): void
     {
         if ($this->committedFixtures) {
@@ -226,17 +243,52 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
 
         $otherDb = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
         $otherDb->run('SET SESSION innodb_lock_wait_timeout = 2');
-        $theirs = (new ThreadIntelligenceJobRepository($otherDb))->claimDue(5, $this->now());
+        $theirs = (new ThreadIntelligenceJobRepository($otherDb))->claimDue(1, $this->now());
 
-        self::assertCount(1, $theirs, 'SKIP LOCKED must skip — not block on — the locked row');
+        self::assertCount(1, $theirs, 'a limit-one worker must scan past the older locked row');
         self::assertSame($b['thread_id'], (int) $theirs[0]['thread_id']);
 
         $this->pdo->rollBack();
     }
 
+    public function test_claim_due_bounds_the_scan_when_a_locked_prefix_exceeds_its_budget(): void
+    {
+        $lockedThreadIds = [];
+        for ($i = 0; $i < 10; $i++) {
+            $seed = $this->seedThread();
+            $lockedThreadIds[] = $seed['thread_id'];
+            $this->jobs()->upsertStale(
+                $seed['thread_id'],
+                'post_created',
+                null,
+                $this->now()->modify('-20 minutes +' . $i . ' seconds'),
+            );
+        }
+        $available = $this->seedThread();
+        $this->jobs()->upsertStale($available['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
+        $this->useCommittedFixtures();
+
+        $this->pdo->beginTransaction();
+        foreach ($lockedThreadIds as $threadId) {
+            $this->db->fetch('SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? FOR UPDATE', [$threadId]);
+        }
+
+        $otherDb = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
+        $otherDb->run('SET SESSION innodb_lock_wait_timeout = 2');
+        $otherJobs = new ThreadIntelligenceJobRepository($otherDb);
+        self::assertSame(
+            [],
+            $otherJobs->claimDue(1, $this->now()),
+            'one claim transaction examines only a fixed multiple of its requested limit',
+        );
+
+        $this->pdo->rollBack();
+        self::assertCount(1, $otherJobs->claimDue(1, $this->now()), 'work remains claimable after the locked prefix clears');
+    }
+
     // ---- compare-and-set renew/release ------------------------------------------------
 
-    public function test_renew_lease_requires_the_exact_token_and_activity_version(): void
+    public function test_renew_lease_requires_the_exact_token(): void
     {
         $seed = $this->seedThread();
         $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
@@ -244,12 +296,30 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
         $token = (string) $claimed['lease_token'];
 
         self::assertFalse($this->jobs()->renewLease($seed['thread_id'], str_repeat('0', 64), 1, $this->now()->modify('+20 minutes')));
-        self::assertFalse($this->jobs()->renewLease($seed['thread_id'], $token, 99, $this->now()->modify('+20 minutes')));
+        self::assertSame('running', $this->jobs()->find($seed['thread_id'])['state'], 'a foreign token is a no-op');
         self::assertTrue($this->jobs()->renewLease($seed['thread_id'], $token, 1, $this->now()->modify('+20 minutes')));
         self::assertSame(
             $this->now()->modify('+20 minutes')->format('Y-m-d H:i:s'),
             $this->jobs()->find($seed['thread_id'])['lease_expires_at'],
         );
+    }
+
+    public function test_renew_lease_with_an_owned_stale_activity_version_requeues_newer_activity(): void
+    {
+        $seed = $this->seedThread();
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
+        $claimed = $this->jobs()->claimDue(1, $this->now())[0];
+        $token = (string) $claimed['lease_token'];
+
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_edited', null, $this->now()->modify('+15 minutes'));
+
+        self::assertFalse($this->jobs()->renewLease($seed['thread_id'], $token, 1, $this->now()->modify('+20 minutes')));
+        $row = $this->jobs()->find($seed['thread_id']);
+        self::assertSame('queued', $row['state']);
+        self::assertSame(2, (int) $row['activity_version']);
+        self::assertNotNull($row['due_at']);
+        self::assertNull($row['lease_token']);
+        self::assertNull($row['lease_expires_at']);
     }
 
     public function test_release_applies_the_terminal_transition_only_under_the_owned_lease(): void
@@ -296,6 +366,10 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
         $generationId = $this->startGeneration($seed['thread_id']);
         $publishedAt = $this->now()->modify('+2 minutes');
         $hash = str_repeat('ef', 32);
+        $this->generations()->complete($generationId, [
+            'status' => 'published',
+            'published_at' => $publishedAt->format('Y-m-d H:i:s'),
+        ]);
 
         self::assertTrue($this->jobs()->releasePublished($seed['thread_id'], $token, 1, $generationId, $seed['post_id'], $hash, true, $publishedAt));
         $row = $this->jobs()->find($seed['thread_id']);
@@ -319,6 +393,133 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
         $after = $this->jobs()->find($seed['thread_id']);
         self::assertSame('queued', $after['state']);
         self::assertSame($hash, $after['source_snapshot_hash'], 'a stale publication must not advance the snapshot');
+    }
+
+    public function test_release_published_rejects_a_generation_that_is_still_requested(): void
+    {
+        $seed = $this->seedThread();
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
+        $token = (string) $this->jobs()->claimDue(1, $this->now())[0]['lease_token'];
+        $requestedGenerationId = $this->startGeneration($seed['thread_id']);
+
+        self::assertFalse($this->jobs()->releasePublished(
+            $seed['thread_id'],
+            $token,
+            1,
+            $requestedGenerationId,
+            $seed['post_id'],
+            str_repeat('ab', 32),
+            false,
+            $this->now(),
+        ));
+        $row = $this->jobs()->find($seed['thread_id']);
+        self::assertSame('running', $row['state']);
+        self::assertSame($token, $row['lease_token']);
+        self::assertNull($row['last_processed_post_id']);
+    }
+
+    public function test_release_published_rejects_a_published_generation_owned_by_another_thread(): void
+    {
+        $seed = $this->seedThread();
+        $other = $this->seedThread();
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
+        $token = (string) $this->jobs()->claimDue(1, $this->now())[0]['lease_token'];
+        $foreignGenerationId = $this->startGeneration($other['thread_id']);
+        $this->generations()->complete($foreignGenerationId, ['status' => 'published']);
+
+        self::assertFalse($this->jobs()->releasePublished(
+            $seed['thread_id'],
+            $token,
+            1,
+            $foreignGenerationId,
+            $seed['post_id'],
+            str_repeat('cd', 32),
+            false,
+            $this->now(),
+        ));
+        $row = $this->jobs()->find($seed['thread_id']);
+        self::assertSame('running', $row['state']);
+        self::assertSame($token, $row['lease_token']);
+        self::assertNull($row['last_processed_post_id']);
+    }
+
+    public function test_release_published_locks_generation_before_job_to_match_reconciliation_order(): void
+    {
+        $seed = $this->seedThread();
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
+        $claim = $this->jobs()->claimDue(1, $this->now())[0];
+        $generationId = $this->startGeneration($seed['thread_id']);
+        $this->generations()->complete($generationId, ['status' => 'published']);
+        $this->useCommittedFixtures();
+
+        $this->pdo->beginTransaction();
+        $this->db->fetch('SELECT id FROM thread_intelligence_generations WHERE id = ? FOR UPDATE', [$generationId]);
+
+        $childCode = <<<'PHP'
+require $argv[1];
+$payload = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR);
+$db = new \App\Core\Database($payload['db']);
+fwrite(STDOUT, "ready:" . $db->fetchValue('SELECT CONNECTION_ID()') . "\n");
+fflush(STDOUT);
+$released = (new \App\Repository\ThreadIntelligenceJobRepository($db))->releasePublished(
+    $payload['thread_id'],
+    $payload['lease_token'],
+    $payload['activity_version'],
+    $payload['generation_id'],
+    $payload['post_id'],
+    str_repeat('ab', 32),
+    false,
+    new \DateTimeImmutable('2026-07-10 12:02:00', new \DateTimeZone('UTC')),
+);
+fwrite(STDOUT, "result:" . ($released ? '1' : '0') . "\n");
+PHP;
+        $pipes = [];
+        $process = proc_open(
+            [PHP_BINARY, '-r', $childCode, dirname(__DIR__, 3) . '/vendor/autoload.php'],
+            [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']],
+            $pipes,
+            dirname(__DIR__, 3),
+        );
+        self::assertIsResource($process);
+        fwrite($pipes[0], json_encode([
+            'db' => $GLOBALS['__RB_TEST_DBCONFIG'],
+            'thread_id' => $seed['thread_id'],
+            'lease_token' => $claim['lease_token'],
+            'activity_version' => (int) $claim['activity_version'],
+            'generation_id' => $generationId,
+            'post_id' => $seed['post_id'],
+        ], JSON_THROW_ON_ERROR));
+        fclose($pipes[0]);
+
+        $ready = trim((string) fgets($pipes[1]));
+        self::assertMatchesRegularExpression('/\Aready:(\d+)\z/', $ready);
+        preg_match('/ready:(\d+)/', $ready, $readyMatch);
+        $this->waitForConnectionQuery((int) $readyMatch[1], 'thread_intelligence_generations WHERE id');
+
+        $parentAcquiredJob = true;
+        $previousLockWait = (int) $this->db->fetchValue('SELECT @@SESSION.innodb_lock_wait_timeout');
+        try {
+            $this->db->run('SET SESSION innodb_lock_wait_timeout = 1');
+            $this->db->fetch('SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? FOR UPDATE', [$seed['thread_id']]);
+        } catch (\PDOException) {
+            $parentAcquiredJob = false;
+        }
+
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+        $this->db->run('SET SESSION innodb_lock_wait_timeout = ' . $previousLockWait);
+        stream_set_timeout($pipes[1], 5);
+        $result = trim((string) fgets($pipes[1]));
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        self::assertTrue($parentAcquiredJob, 'generation-first locking must not let the publisher hold the job while waiting on generation evidence');
+        self::assertSame(0, $exitCode, $stderr);
+        self::assertSame('', trim($stderr));
+        self::assertSame('result:1', $result);
     }
 
     // ---- generation ledger ---------------------------------------------------------------
@@ -361,6 +562,34 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
             self::fail('request evidence may be recorded exactly once');
         } catch (LogicException $e) {
             self::assertStringContainsString('once', $e->getMessage());
+        }
+    }
+
+    public function test_record_request_rejects_non_list_and_nonpositive_id_evidence(): void
+    {
+        $seed = $this->seedThread();
+        $cases = [
+            'associative source IDs' => [['post' => $seed['post_id']], []],
+            'zero source ID' => [[0], []],
+            'string source ID' => [['1'], []],
+            'negative candidate ID' => [[$seed['post_id']], [-1]],
+        ];
+
+        foreach ($cases as $label => [$sourceIds, $candidateIds]) {
+            $id = $this->startGeneration($seed['thread_id']);
+            try {
+                $this->generations()->recordRequest(
+                    $id,
+                    str_repeat('ab', 32),
+                    $sourceIds,
+                    $candidateIds,
+                    str_repeat('cd', 32),
+                    100,
+                );
+                self::fail($label . ' must be rejected before persistence');
+            } catch (InvalidArgumentException $e) {
+                self::assertStringContainsString('positive integer ID lists', $e->getMessage(), $label);
+            }
         }
     }
 
@@ -445,6 +674,273 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
 
         $all = $this->generations()->abandonedRequested($this->now()->modify('-10 minutes'));
         self::assertSame([$old1, $old2, $old3], array_map(static fn (array $r): int => (int) $r['id'], $all), 'fresh and terminal rows are excluded');
+    }
+
+    public function test_abandoned_requested_excludes_a_request_owned_by_an_actively_renewed_lease(): void
+    {
+        $seed = $this->seedThread();
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now()->modify('-1 minute'));
+        $generationId = $this->startGeneration($seed['thread_id']);
+        $this->db->run(
+            'UPDATE thread_intelligence_generations SET requested_at = ? WHERE id = ?',
+            [$this->now()->modify('-20 minutes')->format('Y-m-d H:i:s'), $generationId],
+        );
+        $this->useCommittedFixtures();
+
+        $ownerDb = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
+        $ownerJobs = new ThreadIntelligenceJobRepository($ownerDb);
+        $claim = $ownerJobs->claimDue(1, $this->now())[0];
+        self::assertTrue($ownerJobs->renewLease(
+            $seed['thread_id'],
+            (string) $claim['lease_token'],
+            (int) $claim['activity_version'],
+            $this->now()->modify('+20 minutes'),
+        ));
+
+        $reconcilerDb = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
+        $reconciler = new ThreadIntelligenceGenerationRepository($reconcilerDb);
+        self::assertSame(
+            [],
+            $reconciler->abandonedRequested($this->now()->modify('-10 minutes')),
+            'a reconciler must not finalize evidence owned by another worker\'s active renewed lease',
+        );
+
+        $ownerDb->run(
+            'UPDATE thread_intelligence_jobs SET lease_expires_at = ? WHERE thread_id = ?',
+            [$this->now()->modify('-1 minute')->format('Y-m-d H:i:s'), $seed['thread_id']],
+        );
+        self::assertSame(
+            [$generationId],
+            array_map(
+                static fn (array $row): int => (int) $row['id'],
+                $reconciler->abandonedRequested($this->now()->modify('-10 minutes')),
+            ),
+            'the request becomes reconcilable after its owning lease expires',
+        );
+    }
+
+    public function test_generation_list_readers_return_decoded_id_arrays(): void
+    {
+        $seed = $this->seedThread();
+        $generationId = $this->startGeneration($seed['thread_id']);
+        $this->generations()->recordRequest(
+            $generationId,
+            str_repeat('ab', 32),
+            [$seed['post_id']],
+            [73, 91],
+            str_repeat('cd', 32),
+            100,
+        );
+        $this->db->run(
+            'UPDATE thread_intelligence_generations SET requested_at = ? WHERE id = ?',
+            [$this->now()->modify('-20 minutes')->format('Y-m-d H:i:s'), $generationId],
+        );
+
+        $abandoned = $this->generations()->abandonedRequested($this->now()->modify('-10 minutes'))[0];
+        self::assertSame([$seed['post_id']], $abandoned['source_post_ids']);
+        self::assertSame([73, 91], $abandoned['candidate_thread_ids']);
+
+        $recent = $this->generations()->recent(10);
+        $listed = null;
+        foreach ($recent as $row) {
+            if ((int) $row['id'] === $generationId) {
+                $listed = $row;
+                break;
+            }
+        }
+        self::assertNotNull($listed);
+        self::assertSame([$seed['post_id']], $listed['source_post_ids']);
+        self::assertSame([73, 91], $listed['candidate_thread_ids']);
+    }
+
+    public function test_generation_list_readers_reject_corrupt_id_array_shapes(): void
+    {
+        $seed = $this->seedThread();
+        $generationId = $this->startGeneration($seed['thread_id']);
+        $this->db->run(
+            "UPDATE thread_intelligence_generations SET source_post_ids = JSON_OBJECT('post', ?) WHERE id = ?",
+            [$seed['post_id'], $generationId],
+        );
+
+        try {
+            $this->generations()->recent(10);
+            self::fail('generation ID evidence must be a JSON list of positive integers');
+        } catch (LogicException $e) {
+            self::assertStringContainsString('ID evidence', $e->getMessage());
+        }
+    }
+
+    public function test_prune_revalidates_when_a_job_concurrently_becomes_review_protected(): void
+    {
+        $seed = $this->seedThread();
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now());
+        $this->db->run(
+            "UPDATE thread_intelligence_jobs SET state = 'idle', due_at = NULL, updated_at = ? WHERE thread_id = ?",
+            [$this->now()->modify('-100 days')->format('Y-m-d H:i:s'), $seed['thread_id']],
+        );
+        $generationId = $this->startGeneration($seed['thread_id']);
+        $this->generations()->complete($generationId, ['status' => 'failed']);
+        $this->db->run(
+            'UPDATE thread_intelligence_generations SET completed_at = ? WHERE id = ?',
+            [$this->now()->modify('-100 days')->format('Y-m-d H:i:s'), $generationId],
+        );
+        $this->useCommittedFixtures();
+
+        // Hold the protecting transition open. A non-locking eligibility read
+        // can still see the previously committed idle row and race its delete.
+        $this->pdo->beginTransaction();
+        $this->db->run(
+            "UPDATE thread_intelligence_jobs SET state = 'review_required', updated_at = UTC_TIMESTAMP() WHERE thread_id = ?",
+            [$seed['thread_id']],
+        );
+
+        $childCode = <<<'PHP'
+$root = getcwd();
+require $root . '/vendor/autoload.php';
+\App\Core\Env::load($root . '/.env');
+$config = \App\Core\Config::fromFile($root . '/config/config.php');
+$dbConfig = $config->all()['db'];
+$dbConfig['database'] = \App\Core\Env::get('DB_TEST_DATABASE', 'retroboards_test');
+$db = new \App\Core\Database($dbConfig);
+fwrite(STDOUT, "ready:" . $db->fetchValue('SELECT CONNECTION_ID()') . "\n");
+fflush(STDOUT);
+$count = (new \App\Repository\ThreadIntelligenceGenerationRepository($db))->pruneEligible(
+    new \DateTimeImmutable('2026-07-10 12:00:00', new \DateTimeZone('UTC')),
+    1,
+);
+fwrite(STDOUT, "result:" . $count . "\n");
+fflush(STDOUT);
+PHP;
+        $pipes = [];
+        $process = proc_open(
+            [PHP_BINARY, '-r', $childCode],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            dirname(__DIR__, 3),
+        );
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+
+        $readyLine = fgets($pipes[1]);
+        $resultLine = null;
+        $read = [$pipes[1]];
+        $write = [];
+        $except = [];
+        $readable = stream_select($read, $write, $except, 1);
+        if ($readable === 1) {
+            $resultLine = fgets($pipes[1]);
+        } else {
+            self::assertMatchesRegularExpression('/ready:(\d+)/', (string) $readyLine);
+            preg_match('/ready:(\d+)/', (string) $readyLine, $readyMatch);
+            $query = $this->db->fetchValue(
+                'SELECT INFO FROM information_schema.PROCESSLIST WHERE ID = ?',
+                [(int) $readyMatch[1]],
+            );
+            self::assertIsString($query);
+            self::assertStringContainsString(
+                'SELECT thread_id FROM thread_intelligence_jobs',
+                $query,
+                'the pruner must be waiting on the concurrent job-row transition before it is released',
+            );
+        }
+
+        // Release the job row after either the vulnerable delete completed or
+        // the hardened pruner demonstrably waited for the protecting lock.
+        $this->pdo->commit();
+        if ($resultLine === null) {
+            stream_set_timeout($pipes[1], 5);
+            $resultLine = fgets($pipes[1]);
+        }
+
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        self::assertMatchesRegularExpression('/\Aready:\d+\z/', trim((string) $readyLine));
+        self::assertSame(0, $exitCode, $stderr);
+        self::assertSame('', trim($stderr));
+        self::assertSame('result:0', trim((string) $resultLine));
+        self::assertNotNull(
+            $this->db->fetch('SELECT id FROM thread_intelligence_generations WHERE id = ?', [$generationId]),
+            'evidence must survive a concurrent transition into review_required',
+        );
+    }
+
+    public function test_prune_locks_generation_before_job_to_avoid_publication_deadlocks(): void
+    {
+        $seed = $this->seedThread();
+        $this->jobs()->upsertStale($seed['thread_id'], 'post_created', null, $this->now());
+        $this->db->run(
+            "UPDATE thread_intelligence_jobs SET state = 'idle', due_at = NULL, updated_at = ? WHERE thread_id = ?",
+            [$this->now()->modify('-100 days')->format('Y-m-d H:i:s'), $seed['thread_id']],
+        );
+        $generationId = $this->startGeneration($seed['thread_id']);
+        $this->generations()->complete($generationId, ['status' => 'failed']);
+        $this->db->run(
+            'UPDATE thread_intelligence_generations SET completed_at = ? WHERE id = ?',
+            [$this->now()->modify('-100 days')->format('Y-m-d H:i:s'), $generationId],
+        );
+        $this->useCommittedFixtures();
+
+        $this->pdo->beginTransaction();
+        $this->db->fetch('SELECT id FROM thread_intelligence_generations WHERE id = ? FOR UPDATE', [$generationId]);
+
+        $childCode = <<<'PHP'
+$root = getcwd();
+require $root . '/vendor/autoload.php';
+\App\Core\Env::load($root . '/.env');
+$config = \App\Core\Config::fromFile($root . '/config/config.php');
+$dbConfig = $config->all()['db'];
+$dbConfig['database'] = \App\Core\Env::get('DB_TEST_DATABASE', 'retroboards_test');
+$db = new \App\Core\Database($dbConfig);
+fwrite(STDOUT, "ready:" . $db->fetchValue('SELECT CONNECTION_ID()') . "\n");
+fflush(STDOUT);
+$count = (new \App\Repository\ThreadIntelligenceGenerationRepository($db))->pruneEligible(
+    new \DateTimeImmutable('2026-07-10 12:00:00', new \DateTimeZone('UTC')),
+    1,
+);
+fwrite(STDOUT, "result:" . $count . "\n");
+PHP;
+        $pipes = [];
+        $process = proc_open(
+            [PHP_BINARY, '-r', $childCode],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            dirname(__DIR__, 3),
+        );
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+
+        $ready = trim((string) fgets($pipes[1]));
+        self::assertMatchesRegularExpression('/\Aready:(\d+)\z/', $ready);
+        preg_match('/ready:(\d+)/', $ready, $readyMatch);
+        $this->waitForConnectionQuery((int) $readyMatch[1], 'FOR UPDATE');
+
+        $parentAcquiredJob = true;
+        $previousLockWait = (int) $this->db->fetchValue('SELECT @@SESSION.innodb_lock_wait_timeout');
+        try {
+            $this->db->run('SET SESSION innodb_lock_wait_timeout = 1');
+            $this->db->fetch('SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? FOR UPDATE', [$seed['thread_id']]);
+        } catch (\PDOException) {
+            $parentAcquiredJob = false;
+        }
+
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+        $this->db->run('SET SESSION innodb_lock_wait_timeout = ' . $previousLockWait);
+        stream_set_timeout($pipes[1], 5);
+        $result = trim((string) fgets($pipes[1]));
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        self::assertTrue($parentAcquiredJob, 'pruning must not hold the job row while waiting on generation evidence');
+        self::assertSame(0, $exitCode, $stderr);
+        self::assertSame('', trim($stderr));
+        self::assertSame('result:1', $result);
     }
 
     public function test_recent_lists_newest_attempts_first(): void

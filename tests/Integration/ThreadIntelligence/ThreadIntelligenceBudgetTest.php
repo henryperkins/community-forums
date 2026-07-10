@@ -11,6 +11,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
 use PDOException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\TestCase;
 
 /**
@@ -43,6 +44,33 @@ final class ThreadIntelligenceBudgetTest extends TestCase
     private function storedCounters(): array
     {
         return json_decode((string) $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', [self::KEY]), true);
+    }
+
+    private function storeCountersWithDate(string $date): string
+    {
+        $raw = json_encode([
+            'date' => $date,
+            'reserved_calls' => 2,
+            'used_calls' => 3,
+            'reserved_input_tokens' => 64_000,
+            'used_input_tokens' => 1_000,
+        ], JSON_THROW_ON_ERROR);
+        $this->db->run(
+            'INSERT INTO settings (`key`, `value`, updated_at) VALUES (?, ?, UTC_TIMESTAMP())
+             ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+            [self::KEY, $raw],
+        );
+        return $raw;
+    }
+
+    /** @return array<string,array{string}> */
+    public static function invalidCounterDates(): array
+    {
+        return [
+            'impossible calendar day' => ['2026-02-30'],
+            'noncanonical unpadded date' => ['2026-7-10'],
+            'future canonical date' => ['2026-07-11'],
+        ];
     }
 
     protected function tearDown(): void
@@ -213,6 +241,37 @@ final class ThreadIntelligenceBudgetTest extends TestCase
         );
 
         self::assertTrue($this->budget()->status($this->now())['corrupt']);
+    }
+
+    #[DataProvider('invalidCounterDates')]
+    public function test_status_fails_unavailable_for_an_invalid_counter_date_without_exposing_it(string $counterDate): void
+    {
+        $this->storeCountersWithDate($counterDate);
+
+        $status = $this->budget()->status($this->now());
+
+        self::assertTrue($status['corrupt'], 'an invalid counter date raises the bounded operator warning');
+        self::assertTrue($status['exhausted'], 'corrupt state fails unavailable');
+        self::assertSame('2026-07-10', $status['date'], 'the status response does not echo the corrupt stored date');
+    }
+
+    #[DataProvider('invalidCounterDates')]
+    public function test_reserve_fails_unavailable_for_an_invalid_counter_date_without_resetting_spend(string $counterDate): void
+    {
+        $raw = $this->storeCountersWithDate($counterDate);
+
+        $denied = $this->budget()->reserve($this->now());
+
+        self::assertSame(
+            ['reserved' => false, 'reservation' => null, 'retry_at' => null, 'corrupt' => true],
+            $denied,
+            'the denial exposes only the bounded corruption signal',
+        );
+        self::assertSame(
+            $raw,
+            (string) $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', [self::KEY]),
+            'an invalid counter date is never treated as a rollover that resets spend',
+        );
     }
 
     // ---- concurrency ------------------------------------------------------------------------

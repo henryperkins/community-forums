@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service\ThreadIntelligence;
 
+use App\Core\Database;
 use App\Repository\SettingRepository;
 use DateTimeImmutable;
+use DateTimeZone;
 use InvalidArgumentException;
 
 /**
@@ -29,13 +31,21 @@ final class ThreadIntelligenceSettings
     public const HEARTBEAT_KEY = 'thread_intelligence_worker_heartbeat';
 
     private const HEARTBEAT_STATUSES = ['running', 'ok', 'error'];
+    private const HEARTBEAT_FIELDS = [
+        'run_id', 'status', 'worker_label', 'started_at', 'completed_at', 'processed', 'succeeded', 'failed',
+    ];
+    private const MAX_RUN_ID_LENGTH = 64;
+    private const MAX_WORKER_LABEL_LENGTH = 64;
     private const TIME_FORMAT = 'Y-m-d\TH:i:s\Z';
+    private const SAFE_CODE_PATTERN = '/\A[a-z0-9][a-z0-9_.-]{0,63}\z/';
+    private const FINGERPRINT_PATTERN = '/\A[0-9a-f]{64}\z/';
 
     public function __construct(
         private readonly SettingRepository $settings,
         private readonly ThreadIntelligenceConfig $config,
         private readonly string $appKey,
         private readonly string $apiKey,
+        private readonly Database $db,
     ) {
     }
 
@@ -78,9 +88,9 @@ final class ThreadIntelligenceSettings
             return ['blocked' => false, 'code' => null, 'blocked_at' => null, 'corrupt' => false];
         }
         if (!is_array($value)
-            || !is_string($value['code'] ?? null) || strlen($value['code']) > 64
-            || !is_string($value['blocked_at'] ?? null)
-            || !is_string($value['fingerprint'] ?? null)) {
+            || !is_string($value['code'] ?? null) || preg_match(self::SAFE_CODE_PATTERN, $value['code']) !== 1
+            || !$this->isValidTime($value['blocked_at'] ?? null)
+            || !is_string($value['fingerprint'] ?? null) || preg_match(self::FINGERPRINT_PATTERN, $value['fingerprint']) !== 1) {
             // Invalid health JSON fails blocked with an admin warning.
             return ['blocked' => true, 'code' => null, 'blocked_at' => null, 'corrupt' => true];
         }
@@ -96,12 +106,12 @@ final class ThreadIntelligenceSettings
 
     public function blockProvider(string $safeCode, DateTimeImmutable $at): void
     {
-        if ($safeCode === '' || strlen($safeCode) > 64) {
+        if (preg_match(self::SAFE_CODE_PATTERN, $safeCode) !== 1) {
             throw new InvalidArgumentException('provider block codes must be bounded');
         }
         $this->settings->set(self::PROVIDER_HEALTH_KEY, [
             'code' => $safeCode,
-            'blocked_at' => $at->format(self::TIME_FORMAT),
+            'blocked_at' => $this->formatUtc($at),
             'fingerprint' => $this->configFingerprint(),
         ]);
     }
@@ -125,12 +135,16 @@ final class ThreadIntelligenceSettings
 
     public function heartbeatStarted(string $workerLabel, DateTimeImmutable $at): string
     {
+        if (trim($workerLabel) === '') {
+            throw new InvalidArgumentException('heartbeat worker labels must be nonempty');
+        }
+
         $runId = bin2hex(random_bytes(16));
         $this->settings->set(self::HEARTBEAT_KEY, [
             'run_id' => $runId,
             'status' => 'running',
-            'worker_label' => substr($workerLabel, 0, 64),
-            'started_at' => $at->format(self::TIME_FORMAT),
+            'worker_label' => substr($workerLabel, 0, self::MAX_WORKER_LABEL_LENGTH),
+            'started_at' => $this->formatUtc($at),
             'completed_at' => null,
             'processed' => 0,
             'succeeded' => 0,
@@ -151,23 +165,38 @@ final class ThreadIntelligenceSettings
             }
         }
 
-        $invalidJson = new \stdClass();
-        $current = $this->settings->get(self::HEARTBEAT_KEY, $invalidJson);
-        if (!is_array($current) || ($current['run_id'] ?? null) !== $runId) {
-            // A newer run owns the heartbeat; an older completion never overwrites it.
-            return;
-        }
+        $this->db->transaction(function () use ($runId, $status, $counts, $at): void {
+            $raw = $this->db->fetchValue(
+                'SELECT `value` FROM settings WHERE `key` = ? FOR UPDATE',
+                [self::HEARTBEAT_KEY],
+            );
+            $current = $raw === false || $raw === null ? null : json_decode((string) $raw, true);
+            if (!$this->isValidHeartbeatRecord($current)
+                || $current['run_id'] !== $runId
+                || $current['status'] !== 'running') {
+                // The ownership check and write share one row lock. If a newer
+                // start committed while this completion waited, it is observed
+                // here and the old run cannot overwrite it.
+                return;
+            }
 
-        $this->settings->set(self::HEARTBEAT_KEY, [
-            'run_id' => $runId,
-            'status' => $status,
-            'worker_label' => $current['worker_label'] ?? '',
-            'started_at' => $current['started_at'] ?? null,
-            'completed_at' => $at->format(self::TIME_FORMAT),
-            'processed' => $counts['processed'],
-            'succeeded' => $counts['succeeded'],
-            'failed' => $counts['failed'],
-        ]);
+            $this->db->run(
+                'UPDATE settings SET `value` = :value, updated_at = UTC_TIMESTAMP() WHERE `key` = :key',
+                [
+                    'value' => json_encode([
+                        'run_id' => $runId,
+                        'status' => $status,
+                        'worker_label' => $current['worker_label'] ?? '',
+                        'started_at' => $current['started_at'] ?? null,
+                        'completed_at' => $this->formatUtc($at),
+                        'processed' => $counts['processed'],
+                        'succeeded' => $counts['succeeded'],
+                        'failed' => $counts['failed'],
+                    ], JSON_THROW_ON_ERROR),
+                    'key' => self::HEARTBEAT_KEY,
+                ],
+            );
+        });
     }
 
     /**
@@ -190,15 +219,7 @@ final class ThreadIntelligenceSettings
         $corrupt['exists'] = true;
         $corrupt['corrupt'] = true;
 
-        if (!is_array($value)
-            || !is_string($value['run_id'] ?? null)
-            || !in_array($value['status'] ?? null, self::HEARTBEAT_STATUSES, true)
-            || !is_string($value['worker_label'] ?? null) || strlen($value['worker_label']) > 64
-            || !$this->isValidTime($value['started_at'] ?? null)
-            || !($value['completed_at'] === null || $this->isValidTime($value['completed_at']))
-            || !$this->isValidCount($value['processed'] ?? null)
-            || !$this->isValidCount($value['succeeded'] ?? null)
-            || !$this->isValidCount($value['failed'] ?? null)) {
+        if (!$this->isValidHeartbeatRecord($value)) {
             return $corrupt;
         }
 
@@ -216,13 +237,59 @@ final class ThreadIntelligenceSettings
         ];
     }
 
+    private function isValidHeartbeatRecord(mixed $value): bool
+    {
+        if (!is_array($value) || !$this->hasExactKeys($value, self::HEARTBEAT_FIELDS)) {
+            return false;
+        }
+        if (!is_string($value['run_id'])
+            || $value['run_id'] === ''
+            || strlen($value['run_id']) > self::MAX_RUN_ID_LENGTH
+            || !in_array($value['status'], self::HEARTBEAT_STATUSES, true)
+            || !is_string($value['worker_label'])
+            || $value['worker_label'] === ''
+            || strlen($value['worker_label']) > self::MAX_WORKER_LABEL_LENGTH
+            || !$this->isValidTime($value['started_at'])
+            || !$this->isValidCount($value['processed'])
+            || !$this->isValidCount($value['succeeded'])
+            || !$this->isValidCount($value['failed'])) {
+            return false;
+        }
+
+        return $value['status'] === 'running'
+            ? $value['completed_at'] === null
+            : $this->isValidTime($value['completed_at']);
+    }
+
+    /** @param list<string> $expected */
+    private function hasExactKeys(array $value, array $expected): bool
+    {
+        $actual = array_keys($value);
+        sort($actual);
+        sort($expected);
+        return $actual === $expected;
+    }
+
     private function isValidTime(mixed $value): bool
     {
-        return is_string($value) && preg_match('/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/', $value) === 1;
+        if (!is_string($value) || preg_match('/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/', $value) !== 1) {
+            return false;
+        }
+
+        $parsed = DateTimeImmutable::createFromFormat('!' . self::TIME_FORMAT, $value, new DateTimeZone('UTC'));
+        $errors = DateTimeImmutable::getLastErrors();
+        return $parsed !== false
+            && ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))
+            && $parsed->format(self::TIME_FORMAT) === $value;
     }
 
     private function isValidCount(mixed $value): bool
     {
         return is_int($value) && $value >= 0;
+    }
+
+    private function formatUtc(DateTimeImmutable $value): string
+    {
+        return $value->setTimezone(new DateTimeZone('UTC'))->format(self::TIME_FORMAT);
     }
 }

@@ -82,6 +82,17 @@ final class ThreadIntelligenceGenerationRepository
      */
     public function recordRequest(int $id, string $snapshotHash, array $sourcePostIds, array $candidateThreadIds, string $requestFingerprint, int $estimatedInputTokens): void
     {
+        foreach ([$sourcePostIds, $candidateThreadIds] as $ids) {
+            if (!array_is_list($ids)) {
+                throw new InvalidArgumentException('generation evidence IDs must be positive integer ID lists');
+            }
+            foreach ($ids as $value) {
+                if (!is_int($value) || $value < 1) {
+                    throw new InvalidArgumentException('generation evidence IDs must be positive integer ID lists');
+                }
+            }
+        }
+
         $updated = $this->db->run(
             "UPDATE thread_intelligence_generations
              SET source_snapshot_hash = :snapshot_hash,
@@ -92,8 +103,8 @@ final class ThreadIntelligenceGenerationRepository
              WHERE id = :id AND status = 'requested' AND request_fingerprint IS NULL",
             [
                 'snapshot_hash' => $snapshotHash,
-                'source_post_ids' => json_encode(array_values(array_map('intval', $sourcePostIds)), JSON_THROW_ON_ERROR),
-                'candidate_thread_ids' => json_encode(array_values(array_map('intval', $candidateThreadIds)), JSON_THROW_ON_ERROR),
+                'source_post_ids' => json_encode($sourcePostIds, JSON_THROW_ON_ERROR),
+                'candidate_thread_ids' => json_encode($candidateThreadIds, JSON_THROW_ON_ERROR),
                 'request_fingerprint' => $requestFingerprint,
                 'estimated_input_tokens' => max(0, $estimatedInputTokens),
                 'id' => $id,
@@ -158,20 +169,35 @@ final class ThreadIntelligenceGenerationRepository
     /**
      * Still-`requested` rows older than the owning ten-minute lease cutoff,
      * oldest first, for worker crash reconciliation. Bounded at 100.
+     * This is candidate discovery, not the finalization CAS: Task 8 must lock
+     * and revalidate the generation plus owning job immediately before its
+     * settleAbandoned()+complete() transaction, because a lease may be claimed
+     * after this method returns.
      *
      * @return list<array<string,mixed>>
      */
     public function abandonedRequested(DateTimeImmutable $leaseCutoff, int $limit = 100): array
     {
         $limit = max(1, min($limit, 100));
+        $activeAt = $leaseCutoff->modify('+' . ThreadIntelligenceJobRepository::LEASE_SECONDS . ' seconds');
 
-        return array_values($this->db->fetchAll(
-            "SELECT * FROM thread_intelligence_generations
-             WHERE status = 'requested' AND requested_at <= :cutoff
-             ORDER BY id ASC
+        return $this->decodeIdLists(array_values($this->db->fetchAll(
+            "SELECT g.* FROM thread_intelligence_generations g
+             LEFT JOIN thread_intelligence_jobs j ON j.thread_id = g.thread_id
+             WHERE g.status = 'requested' AND g.requested_at <= :cutoff
+               AND (
+                    j.thread_id IS NULL
+                 OR j.state <> 'running'
+                 OR j.lease_expires_at IS NULL
+                 OR j.lease_expires_at <= :active_at
+               )
+             ORDER BY g.id ASC
              LIMIT " . $limit,
-            ['cutoff' => $leaseCutoff->format('Y-m-d H:i:s')],
-        ));
+            [
+                'cutoff' => $leaseCutoff->format('Y-m-d H:i:s'),
+                'active_at' => $activeAt->format('Y-m-d H:i:s'),
+            ],
+        )));
     }
 
     /** @return list<array<string,mixed>> newest attempts first */
@@ -179,9 +205,9 @@ final class ThreadIntelligenceGenerationRepository
     {
         $limit = max(1, min($limit, 200));
 
-        return array_values($this->db->fetchAll(
+        return $this->decodeIdLists(array_values($this->db->fetchAll(
             'SELECT * FROM thread_intelligence_generations ORDER BY id DESC LIMIT ' . $limit,
-        ));
+        )));
     }
 
     /**
@@ -200,7 +226,7 @@ final class ThreadIntelligenceGenerationRepository
 
         return $this->db->transaction(function () use ($cutoff, $limit): int {
             $rows = $this->db->fetchAll(
-                "SELECT g.id
+                "SELECT g.id, g.thread_id
                  FROM thread_intelligence_generations g
                  LEFT JOIN thread_intelligence_jobs j ON j.thread_id = g.thread_id
                  WHERE g.completed_at IS NOT NULL
@@ -224,10 +250,96 @@ final class ThreadIntelligenceGenerationRepository
 
             $ids = array_map(static fn (array $r): int => (int) $r['id'], $rows);
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            return $this->db->run(
-                "DELETE FROM thread_intelligence_generations WHERE id IN ($placeholders)",
+            $this->db->fetchAll(
+                "SELECT id FROM thread_intelligence_generations
+                 WHERE id IN ($placeholders)
+                 ORDER BY id ASC
+                 FOR UPDATE",
                 $ids,
+            );
+
+            $threadIds = array_values(array_unique(array_map(static fn (array $r): int => (int) $r['thread_id'], $rows)));
+            sort($threadIds, SORT_NUMERIC);
+            $threadPlaceholders = implode(',', array_fill(0, count($threadIds), '?'));
+            $this->db->fetchAll(
+                "SELECT thread_id FROM thread_intelligence_jobs
+                 WHERE thread_id IN ($threadPlaceholders)
+                 ORDER BY thread_id ASC
+                 FOR UPDATE",
+                $threadIds,
+            );
+
+            // The candidate read above is deliberately non-locking and bounded.
+            // Lock generations first, then job rows in primary-key order, and
+            // repeat the complete predicate as a current read before deleting.
+            // A concurrent dead/review_required transition therefore wins
+            // before revalidation or waits until this transaction has finished.
+            $eligible = $this->db->fetchAll(
+                "SELECT g.id
+                 FROM thread_intelligence_generations g
+                 LEFT JOIN thread_intelligence_jobs j ON j.thread_id = g.thread_id
+                 WHERE g.id IN ($placeholders)
+                   AND g.completed_at IS NOT NULL
+                   AND g.completed_at <= ?
+                   AND (
+                        g.status IN ('succeeded', 'retry', 'failed', 'rejected', 'stale')
+                     OR (
+                          g.status IN ('dead', 'review_required')
+                          AND (j.thread_id IS NULL OR (j.state NOT IN ('dead', 'review_required') AND j.updated_at <= ?))
+                        )
+                   )
+                   AND (j.thread_id IS NULL OR j.state NOT IN ('dead', 'review_required'))
+                 ORDER BY g.id ASC
+                 FOR UPDATE",
+                [...$ids, $cutoff, $cutoff],
+            );
+            $eligibleIds = array_map(static fn (array $row): int => (int) $row['id'], $eligible);
+            if ($eligibleIds === []) {
+                return 0;
+            }
+
+            $eligiblePlaceholders = implode(',', array_fill(0, count($eligibleIds), '?'));
+            return $this->db->run(
+                "DELETE FROM thread_intelligence_generations WHERE id IN ($eligiblePlaceholders)",
+                $eligibleIds,
             )->rowCount();
         });
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     * @return list<array<string,mixed>>
+     */
+    private function decodeIdLists(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            foreach (['source_post_ids', 'candidate_thread_ids'] as $field) {
+                $encoded = $row[$field] ?? null;
+                if ($encoded === null) {
+                    $row[$field] = null;
+                    continue;
+                }
+                if (!is_string($encoded)) {
+                    throw new LogicException('generation ID evidence is corrupt');
+                }
+                try {
+                    $ids = json_decode($encoded, true, 512, JSON_THROW_ON_ERROR);
+                } catch (\JsonException $e) {
+                    throw new LogicException('generation ID evidence is corrupt', 0, $e);
+                }
+                if (!is_array($ids) || !array_is_list($ids)) {
+                    throw new LogicException('generation ID evidence is corrupt');
+                }
+                foreach ($ids as $id) {
+                    if (!is_int($id) || $id < 1) {
+                        throw new LogicException('generation ID evidence is corrupt');
+                    }
+                }
+                $row[$field] = $ids;
+            }
+        }
+        unset($row);
+
+        return $rows;
     }
 }

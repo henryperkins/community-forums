@@ -20,6 +20,7 @@ use DateTimeImmutable;
 final class ThreadIntelligenceJobRepository
 {
     public const LEASE_SECONDS = 600;
+    private const CLAIM_SCAN_MULTIPLIER = 10;
 
     public function __construct(private Database $db)
     {
@@ -87,50 +88,84 @@ final class ThreadIntelligenceJobRepository
     {
         $limit = max(1, min($limit, 100));
         $stamp = $now->format('Y-m-d H:i:s');
+        $scanBudget = $limit * self::CLAIM_SCAN_MULTIPLIER;
 
-        return $this->db->transaction(function () use ($limit, $now, $stamp): array {
-            // Phase 1 — a NON-locking ordered candidate read. A single ordered
-            // locking statement would filesort and therefore lock every row it
-            // examined, defeating SKIP LOCKED for concurrent workers; sorting
-            // here takes no locks at all.
-            $candidates = $this->db->fetchAll(
-                "SELECT thread_id FROM thread_intelligence_jobs
-                 WHERE automation_paused = 0
-                   AND (
-                        (state IN ('queued', 'retry') AND due_at IS NOT NULL AND due_at <= :due_now)
-                     OR (state = 'running' AND lease_expires_at IS NOT NULL AND lease_expires_at <= :lease_now)
-                   )
-                 ORDER BY COALESCE(due_at, lease_expires_at) ASC, thread_id ASC
-                 LIMIT " . $limit,
-                ['due_now' => $stamp, 'lease_now' => $stamp],
-            );
-            if ($candidates === []) {
-                return [];
-            }
-            $candidateIds = array_map(static fn (array $r): int => (int) $r['thread_id'], $candidates);
+        return $this->db->transaction(function () use ($limit, $now, $stamp, $scanBudget): array {
+            // Walk three non-locking, index-backed streams in global due order,
+            // then lock each candidate by primary key. Exact-row locking avoids
+            // InnoDB next-key locks on later work, while advancing the stream
+            // after a skipped row lets a limit-one worker find the next row.
+            $streams = [
+                'queued' => ['index' => 'idx_ti_jobs_due', 'ready_column' => 'due_at', 'head' => null],
+                'retry' => ['index' => 'idx_ti_jobs_due', 'ready_column' => 'due_at', 'head' => null],
+                'running' => ['index' => 'idx_ti_jobs_lease', 'ready_column' => 'lease_expires_at', 'head' => null],
+            ];
+            $nextCandidate = function (string $state, array $stream, ?array $after) use ($stamp): ?array {
+                $readyColumn = $stream['ready_column'];
+                $afterSql = '';
+                $params = ['state' => $state, 'ready_at' => $stamp];
+                if ($after !== null) {
+                    $afterSql = " AND ($readyColumn > :after_ready
+                                      OR ($readyColumn = :same_ready AND thread_id > :after_thread))";
+                    $params['after_ready'] = (string) $after['ready_at'];
+                    $params['same_ready'] = (string) $after['ready_at'];
+                    $params['after_thread'] = (int) $after['thread_id'];
+                }
 
-            // Phase 2 — lock exactly those candidates that are still claimable,
-            // skipping any a concurrent worker already holds. Point lookups by
-            // primary key lock only the rows actually returned.
-            $placeholders = implode(',', array_fill(0, count($candidateIds), '?'));
-            $locked = $this->db->fetchAll(
-                "SELECT thread_id FROM thread_intelligence_jobs
-                 WHERE thread_id IN ($placeholders)
-                   AND automation_paused = 0
-                   AND (
-                        (state IN ('queued', 'retry') AND due_at IS NOT NULL AND due_at <= ?)
-                     OR (state = 'running' AND lease_expires_at IS NOT NULL AND lease_expires_at <= ?)
-                   )
-                 FOR UPDATE SKIP LOCKED",
-                [...$candidateIds, $stamp, $stamp],
-            );
-            if ($locked === []) {
-                return [];
+                return $this->db->fetch(
+                    "SELECT thread_id, $readyColumn AS ready_at
+                     FROM thread_intelligence_jobs FORCE INDEX (" . $stream['index'] . ")
+                     WHERE state = :state AND automation_paused = 0
+                       AND $readyColumn IS NOT NULL AND $readyColumn <= :ready_at"
+                    . $afterSql
+                    . " ORDER BY $readyColumn ASC, thread_id ASC LIMIT 1",
+                    $params,
+                );
+            };
+
+            foreach ($streams as $state => $stream) {
+                $streams[$state]['head'] = $nextCandidate($state, $stream, null);
             }
 
-            // Preserve the phase-1 due order for the rows that survived.
-            $lockedIds = array_map(static fn (array $r): int => (int) $r['thread_id'], $locked);
-            $claimedIds = array_values(array_intersect($candidateIds, $lockedIds));
+            $claimedIds = [];
+            $scanned = 0;
+            while (count($claimedIds) < $limit && $scanned < $scanBudget) {
+                $available = [];
+                foreach ($streams as $state => $stream) {
+                    if (is_array($stream['head'])) {
+                        $available[] = ['state' => $state, ...$stream['head']];
+                    }
+                }
+                if ($available === []) {
+                    break;
+                }
+                usort($available, static function (array $a, array $b): int {
+                    $byReadyAt = strcmp((string) $a['ready_at'], (string) $b['ready_at']);
+                    return $byReadyAt !== 0 ? $byReadyAt : ((int) $a['thread_id'] <=> (int) $b['thread_id']);
+                });
+
+                $candidate = $available[0];
+                $scanned++;
+                $state = (string) $candidate['state'];
+                $streams[$state]['head'] = $nextCandidate($state, $streams[$state], $candidate);
+
+                $locked = $this->db->fetch(
+                    "SELECT thread_id FROM thread_intelligence_jobs
+                     WHERE thread_id = :thread_id AND automation_paused = 0
+                       AND (
+                            (state IN ('queued', 'retry') AND due_at IS NOT NULL AND due_at <= :due_now)
+                         OR (state = 'running' AND lease_expires_at IS NOT NULL AND lease_expires_at <= :lease_now)
+                       )
+                     FOR UPDATE SKIP LOCKED",
+                    ['thread_id' => (int) $candidate['thread_id'], 'due_now' => $stamp, 'lease_now' => $stamp],
+                );
+                if ($locked !== null) {
+                    $claimedIds[] = (int) $locked['thread_id'];
+                }
+            }
+            if ($claimedIds === []) {
+                return [];
+            }
 
             $expiresAt = $now->modify('+' . self::LEASE_SECONDS . ' seconds')->format('Y-m-d H:i:s');
             foreach ($claimedIds as $threadId) {
@@ -158,8 +193,11 @@ final class ThreadIntelligenceJobRepository
         return $this->db->transaction(function () use ($threadId, $leaseToken, $expectedActivityVersion, $expiresAt): bool {
             $row = $this->findForUpdate($threadId);
             if ($row === null || $row['state'] !== 'running'
-                || !is_string($row['lease_token']) || !hash_equals($row['lease_token'], $leaseToken)
-                || (int) $row['activity_version'] !== $expectedActivityVersion) {
+                || !is_string($row['lease_token']) || !hash_equals($row['lease_token'], $leaseToken)) {
+                return false;
+            }
+            if ((int) $row['activity_version'] !== $expectedActivityVersion) {
+                $this->requeueNewerActivity($threadId);
                 return false;
             }
             $this->db->run(
@@ -231,7 +269,15 @@ final class ThreadIntelligenceJobRepository
             throw new \InvalidArgumentException('generation id must be positive');
         }
 
-        return $this->db->transaction(function () use ($threadId, $leaseToken, $expectedActivityVersion, $lastProcessedPostId, $snapshotHash, $fullReconcile, $publishedAt): bool {
+        return $this->db->transaction(function () use ($threadId, $leaseToken, $expectedActivityVersion, $generationId, $lastProcessedPostId, $snapshotHash, $fullReconcile, $publishedAt): bool {
+            $generation = $this->db->fetch(
+                'SELECT thread_id, status FROM thread_intelligence_generations WHERE id = ? FOR UPDATE',
+                [$generationId],
+            );
+            if ($generation === null || (int) $generation['thread_id'] !== $threadId || $generation['status'] !== 'published') {
+                return false;
+            }
+
             $row = $this->findForUpdate($threadId);
             if ($row === null || $row['state'] !== 'running'
                 || !is_string($row['lease_token']) || !hash_equals($row['lease_token'], $leaseToken)) {
