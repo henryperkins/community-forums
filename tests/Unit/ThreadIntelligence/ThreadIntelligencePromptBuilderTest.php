@@ -119,6 +119,28 @@ final class ThreadIntelligencePromptBuilderTest extends TestCase
         self::assertSame(['login'], $decoded['candidates'][0]['shared_tags']);
     }
 
+    public function test_task_six_pack_metadata_stays_local_while_only_bounded_evidence_enters_untrusted_data(): void
+    {
+        [$instructions, $untrusted] = $this->builder->build($this->request());
+        $jsonStart = strpos($untrusted['content'], '{');
+        self::assertNotFalse($jsonStart);
+        $decoded = json_decode(substr($untrusted['content'], $jsonStart), true, 64, JSON_THROW_ON_ERROR);
+
+        $rootKeys = array_keys($decoded);
+        sort($rootKeys);
+        self::assertSame(
+            ['baseline', 'candidates', 'carry_forward', 'posts', 'thread', 'window'],
+            $rootKeys,
+        );
+        self::assertStringNotContainsString(str_repeat('cd', 32), $untrusted['content'], 'snapshot hashes stay in the local ledger contract');
+        self::assertStringNotContainsString(ThreadIntelligencePromptBuilder::VERSION, $untrusted['content'], 'prompt version stays in the local ledger contract');
+
+        foreach (['The upgrade broke my login.', 'Cookie rename in 2.3', 'The 2.3 release renamed…'] as $evidence) {
+            self::assertStringNotContainsString($evidence, $instructions['content']);
+            self::assertStringContainsString($evidence, $untrusted['content']);
+        }
+    }
+
     // ---- injection isolation -----------------------------------------------------
 
     public function test_injection_text_appears_only_inside_the_serialized_untrusted_data_block(): void
