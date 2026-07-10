@@ -6,7 +6,7 @@
 
 ## Running Phase 1
 
-Requirements: **PHP 8.2+** (with `pdo_mysql`, `mbstring`, `dom`, `openssl`), **Composer**, and **MySQL 8 / MariaDB 10.6+**.
+Requirements: **PHP 8.2+** (with `pdo_mysql`, `mbstring`, `dom`, `openssl`, `curl` — cURL backs outbound webhook delivery and the optional Thread Intelligence AI generation), **Composer**, and **MySQL 8 / MariaDB 10.6+**. Thread Intelligence is configured entirely through the environment (`OPENAI_API_KEY` plus the `THREAD_INTELLIGENCE_*` values documented in `.env.example`); the credential is never stored in the database or shown in the UI.
 
 ```bash
 composer install                      # install league/commonmark + phpunit
