@@ -62,6 +62,12 @@ final class ThreadRepository
         return $this->db->fetch('SELECT * FROM threads WHERE id = ?', [$id]);
     }
 
+    /** Canonical mutation lock: callers acquire this before dependent rows. @return array<string,mixed>|null */
+    public function findForUpdate(int $id): ?array
+    {
+        return $this->db->fetch('SELECT * FROM threads WHERE id = ? FOR UPDATE', [$id]);
+    }
+
     /** Thread joined with its board (for read gates + locked checks). @return array<string,mixed>|null */
     public function findWithBoard(int $id): ?array
     {

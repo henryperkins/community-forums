@@ -5,8 +5,27 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\BoardMemberRepository;
+use App\Repository\BoardRepository;
+use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
 use App\Repository\TagRepository;
+use App\Repository\ThreadIntelligenceGenerationRepository;
+use App\Repository\ThreadIntelligenceJobRepository;
+use App\Repository\ThreadRepository;
+use App\Security\BoardPolicy;
+use App\Service\ContentReferenceService;
+use App\Service\ThreadIntelligence\ThreadIntelligenceCandidateFinder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceConfig;
+use App\Service\ThreadIntelligence\ThreadIntelligenceEvidenceBuilder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceOutputValidator;
+use App\Service\ThreadIntelligence\ThreadIntelligencePublisher;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
+use App\Service\ThreadIntelligence\ThreadIntelligenceResult;
+use App\Service\ThreadIntelligence\ThreadIntelligenceUsage;
+use App\Support\HtmlSanitizer;
+use App\Support\Markdown;
+use DateTimeImmutable;
+use DateTimeZone;
 use Tests\Support\TestCase;
 
 final class AppContentReferenceTest extends TestCase
@@ -133,6 +152,100 @@ final class AppContentReferenceTest extends TestCase
         $this->assertStatus(200, $memberPage);
         self::assertStringContainsString('Summary Public Target', $memberPage->body());
         self::assertStringContainsString('Summary Private Target', $memberPage->body());
+    }
+
+    public function test_ai_publisher_captures_references_from_server_composed_canonical_markdown(): void
+    {
+        $this->setFlags(['content_references' => true, 'community_memory' => true]);
+        $author = $this->makeUser(['username' => 'aicanonicalref']);
+        $board = $this->makeBoard($this->makeCategory('AI Summary References'), ['slug' => 'ai-summary-source']);
+        $source = $this->makeThread($board, $author, 'AI reference source', 'Opening AI evidence.');
+        $sourceThreadId = (int) $source['thread_id'];
+        $postIds = [(int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$sourceThreadId])];
+        for ($index = 1; $index < 8; $index++) {
+            $postIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                $sourceThreadId,
+                ['body' => 'AI reference evidence ' . $index . '.'],
+            );
+        }
+        $target = $this->makeThread($board, $author, 'AI Canonical Reference Target', 'Target body.');
+
+        $jobs = new ThreadIntelligenceJobRepository($this->db);
+        $now = new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'));
+        $jobs->upsertStale($sourceThreadId, ThreadIntelligenceQueue::TRIGGER_POST_CREATED, null, $now);
+        $job = $jobs->claimDue(1, $now)[0];
+        $builder = new ThreadIntelligenceEvidenceBuilder(
+            $this->db,
+            new ThreadIntelligenceCandidateFinder($this->db),
+            ThreadIntelligenceConfig::fromArray([]),
+        );
+        $evidence = $builder->build($sourceThreadId, $job);
+        $request = $builder->requestForWindow($evidence, 0, null);
+        $sourcePostId = $request->posts[0]->postId;
+        $providerResult = new ThreadIntelligenceResult([
+            'overview' => [
+                'markdown' => 'See /t/' . (int) $target['thread_id'] . '-' . $target['slug'] . ' for the complete context.',
+                'source_post_ids' => [$sourcePostId],
+            ],
+            'key_points' => [
+                ['markdown' => 'The canonical brief keeps this reference.', 'source_post_ids' => [$sourcePostId]],
+                ['markdown' => 'References are captured inside publication.', 'source_post_ids' => [$sourcePostId]],
+            ],
+            'open_questions' => [
+                ['markdown' => 'No provider text is persisted.', 'source_post_ids' => [$sourcePostId]],
+            ],
+            'related_topics' => [],
+        ], 'local-response-id', 'completed', null, new ThreadIntelligenceUsage(null, null, null, null));
+        $output = (new ThreadIntelligenceOutputValidator(new Markdown(new HtmlSanitizer())))->validate($providerResult, $request);
+
+        $generations = new ThreadIntelligenceGenerationRepository($this->db);
+        $generationId = $generations->start([
+            'thread_id' => $sourceThreadId,
+            'trigger_code' => (string) $job['trigger_code'],
+            'baseline_summary_id' => $evidence->baselineSummaryId(),
+        ]);
+        $generations->recordRequest(
+            $generationId,
+            $evidence->snapshotHash(),
+            $evidence->sourcePostIds(),
+            $evidence->candidateThreadIds(),
+            hash('sha256', 'canonical-reference-' . $generationId),
+            $evidence->estimatedInputTokens(0),
+        );
+        $references = new ContentReferenceService(
+            $this->db,
+            new BoardRepository($this->db),
+            new ThreadRepository($this->db),
+            new PostRepository($this->db),
+            new TagRepository($this->db),
+            new BoardMemberRepository($this->db),
+            new BoardPolicy(),
+            true,
+        );
+        $publisher = new ThreadIntelligencePublisher(
+            $this->db,
+            new ThreadRepository($this->db),
+            $jobs,
+            $generations,
+            $builder,
+            new Markdown(new HtmlSanitizer()),
+            $references,
+        );
+        $published = $publisher->publish(
+            $generationId,
+            (string) $job['lease_token'],
+            $job,
+            $evidence,
+            $output,
+        );
+
+        self::assertSame(1, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM content_references
+             WHERE source_type = 'summary' AND source_id = ? AND target_type = 'thread' AND target_id = ?",
+            [$published->summaryId, (int) $target['thread_id']],
+        ));
+        self::assertSame($output->canonicalMarkdown(), $this->db->fetchValue('SELECT body FROM thread_summaries WHERE id = ?', [$published->summaryId]));
     }
 
     public function test_tag_references_are_persisted_and_rendered_when_flags_allow(): void

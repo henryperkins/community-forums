@@ -17,6 +17,7 @@ use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
 use App\Security\Cap;
 use App\Security\WriteGate;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
 use App\Support\Markdown;
 
 final class CommunityMemoryService
@@ -32,6 +33,7 @@ final class CommunityMemoryService
         private Markdown $markdown,
         private ?ContentReferenceService $contentReferences = null,
         private ?AuthorityGate $authority = null,
+        private ?ThreadIntelligenceQueue $threadIntelligence = null,
     ) {
     }
 
@@ -43,7 +45,6 @@ final class CommunityMemoryService
     /** @param list<int> $sourcePostIds */
     public function publishSummary(User $actor, int $threadId, string $body, array $sourcePostIds): void
     {
-        $this->assertCurator($actor, $threadId);
         $body = trim($body);
         if ($body === '') {
             throw new ValidationException(['body' => 'Write a summary before publishing.']);
@@ -52,6 +53,15 @@ final class CommunityMemoryService
         $html = $this->markdown->render($body);
 
         $this->db->transaction(function () use ($actor, $threadId, $body, $html, $sourcePostIds): void {
+            $thread = $this->threads->findForUpdate($threadId);
+            $this->assertCuratorForLockedThread($actor, $thread);
+            $published = $this->db->fetch(
+                "SELECT id FROM thread_summaries
+                 WHERE thread_id = ? AND status = 'published'
+                 ORDER BY version DESC, id DESC LIMIT 1 FOR UPDATE",
+                [$threadId],
+            );
+            $parentSummaryId = $published === null ? null : (int) $published['id'];
             $version = 1 + (int) $this->db->fetchValue('SELECT COALESCE(MAX(version), 0) FROM thread_summaries WHERE thread_id = ?', [$threadId]);
             $this->db->run(
                 "UPDATE thread_summaries SET status = 'retired', retired_at = UTC_TIMESTAMP()
@@ -60,13 +70,20 @@ final class CommunityMemoryService
             );
             $id = $this->db->insert(
                 "INSERT INTO thread_summaries
-                    (thread_id, kind, status, body, body_html, version, author_id, reviewer_id, published_at, created_at)
-                 VALUES (?, 'manual', 'published', ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
-                [$threadId, $body, $html, $version, $actor->id(), $actor->id()],
+                    (thread_id, kind, status, body, body_html, version, author_id, reviewer_id,
+                     parent_summary_id, published_at, created_at)
+                 VALUES (?, 'manual', 'published', ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+                [$threadId, $body, $html, $version, $actor->id(), $actor->id(), $parentSummaryId],
             );
             foreach ($sourcePostIds as $postId) {
-                $post = $this->posts->find($postId);
-                if ($post !== null && (int) $post['thread_id'] === $threadId) {
+                $post = $this->db->fetch(
+                    'SELECT id, thread_id, is_deleted, is_pending FROM posts WHERE id = ? FOR UPDATE',
+                    [$postId],
+                );
+                if ($post !== null
+                    && (int) $post['thread_id'] === $threadId
+                    && (int) $post['is_deleted'] === 0
+                    && (int) $post['is_pending'] === 0) {
                     $this->db->run(
                         'INSERT IGNORE INTO thread_summary_sources (summary_id, post_id) VALUES (?, ?)',
                         [$id, $postId],
@@ -79,31 +96,47 @@ final class CommunityMemoryService
 
     public function addRelated(User $actor, int $sourceThreadId, int $targetThreadId, string $reason): void
     {
-        $this->assertCurator($actor, $sourceThreadId);
         if ($sourceThreadId === $targetThreadId) {
             throw new ValidationException(['related' => 'Choose a different topic.']);
         }
-        if ($this->threads->find($targetThreadId) === null) {
-            throw new NotFoundException('Related topic not found.');
-        }
-        $this->db->run(
-            "INSERT INTO related_threads
-                (source_thread_id, related_thread_id, relation_type, source, reason, status, curator_id, created_at)
-             VALUES (?, ?, 'related', 'curated', ?, 'approved', ?, UTC_TIMESTAMP())
-             ON DUPLICATE KEY UPDATE reason = VALUES(reason), status = 'approved', curator_id = VALUES(curator_id)",
-            [$sourceThreadId, $targetThreadId, mb_substr(trim($reason), 0, 255), $actor->id()],
-        );
+        $this->db->transaction(function () use ($actor, $sourceThreadId, $targetThreadId, $reason): void {
+            $source = $this->threads->findForUpdate($sourceThreadId);
+            $this->assertCuratorForLockedThread($actor, $source);
+            if ($this->threads->find($targetThreadId) === null) {
+                throw new NotFoundException('Related topic not found.');
+            }
+            $this->db->run(
+                "INSERT INTO related_threads
+                    (source_thread_id, related_thread_id, relation_type, source, reason, status, curator_id,
+                     ai_generation_id, ai_reason, ai_selected, ai_selected_at, created_at)
+                 VALUES (?, ?, 'related', 'curated', ?, 'approved', ?, NULL, NULL, 0, NULL, UTC_TIMESTAMP())
+                 ON DUPLICATE KEY UPDATE
+                    source = 'curated',
+                    reason = VALUES(reason),
+                    status = 'approved',
+                    curator_id = VALUES(curator_id),
+                    ai_generation_id = NULL,
+                    ai_reason = NULL,
+                    ai_selected = 0,
+                    ai_selected_at = NULL",
+                [$sourceThreadId, $targetThreadId, mb_substr(trim($reason), 0, 255), $actor->id()],
+            );
+        });
     }
 
     public function retireSummary(User $actor, int $threadId): void
     {
-        $this->assertCurator($actor, $threadId);
-        $this->db->run(
-            "UPDATE thread_summaries
-             SET status = 'retired', retired_at = UTC_TIMESTAMP(), reviewer_id = ?, updated_at = UTC_TIMESTAMP()
-             WHERE thread_id = ? AND status = 'published'",
-            [$actor->id(), $threadId],
-        );
+        $this->db->transaction(function () use ($actor, $threadId): void {
+            $thread = $this->threads->findForUpdate($threadId);
+            $this->assertCuratorForLockedThread($actor, $thread);
+            $this->db->run(
+                "UPDATE thread_summaries
+                 SET status = 'retired', retired_at = UTC_TIMESTAMP(), reviewer_id = ?, updated_at = UTC_TIMESTAMP()
+                 WHERE thread_id = ? AND status = 'published'",
+                [$actor->id(), $threadId],
+            );
+            $this->threadIntelligence?->setAutomationPaused($threadId, true, $actor->id());
+        });
     }
 
     public function republishSummary(User $actor, int $summaryId, ?int $expectedThreadId = null): void
@@ -116,8 +149,16 @@ final class CommunityMemoryService
         if ($expectedThreadId !== null && $threadId !== $expectedThreadId) {
             throw new NotFoundException('Summary not found.');
         }
-        $this->assertCurator($actor, $threadId);
         $this->db->transaction(function () use ($actor, $threadId, $summaryId): void {
+            $thread = $this->threads->findForUpdate($threadId);
+            $this->assertCuratorForLockedThread($actor, $thread);
+            $lockedSummary = $this->db->fetch(
+                'SELECT id, thread_id FROM thread_summaries WHERE id = ? FOR UPDATE',
+                [$summaryId],
+            );
+            if ($lockedSummary === null || (int) $lockedSummary['thread_id'] !== $threadId) {
+                throw new NotFoundException('Summary not found.');
+            }
             $this->db->run(
                 "UPDATE thread_summaries SET status = 'retired', retired_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP()
                  WHERE thread_id = ? AND status = 'published' AND id <> ?",
@@ -129,6 +170,15 @@ final class CommunityMemoryService
                  WHERE id = ?",
                 [$actor->id(), $summaryId],
             );
+        });
+    }
+
+    public function resumeAutomation(User $actor, int $threadId): void
+    {
+        $this->db->transaction(function () use ($actor, $threadId): void {
+            $thread = $this->threads->findForUpdate($threadId);
+            $this->assertCuratorForLockedThread($actor, $thread);
+            $this->threadIntelligence?->resumeAndRequeue($threadId, $actor->id());
         });
     }
 
@@ -191,7 +241,7 @@ final class CommunityMemoryService
     {
         return $this->db->fetch(
             "SELECT s.*, u.username AS author_username
-             FROM thread_summaries s JOIN users u ON u.id = s.author_id
+             FROM thread_summaries s LEFT JOIN users u ON u.id = s.author_id
              WHERE s.thread_id = ? AND s.status = 'published'
              ORDER BY s.version DESC LIMIT 1",
             [$threadId],
@@ -203,7 +253,7 @@ final class CommunityMemoryService
     {
         return $this->db->fetchAll(
             'SELECT s.*, u.username AS author_username
-             FROM thread_summaries s JOIN users u ON u.id = s.author_id
+             FROM thread_summaries s LEFT JOIN users u ON u.id = s.author_id
              WHERE s.thread_id = ?
              ORDER BY s.version DESC, s.id DESC',
             [$threadId],
@@ -289,8 +339,14 @@ final class CommunityMemoryService
 
     private function assertCurator(User $actor, int $threadId): void
     {
-        $this->writeGate->assertCanWrite($actor);
         $thread = $this->threads->find($threadId);
+        $this->assertCuratorForLockedThread($actor, $thread);
+    }
+
+    /** @param array<string,mixed>|null $thread */
+    private function assertCuratorForLockedThread(User $actor, ?array $thread): void
+    {
+        $this->writeGate->assertCanWrite($actor);
         if ($thread === null || (int) $thread['is_deleted'] === 1) {
             throw new NotFoundException('Thread not found.');
         }
