@@ -20,6 +20,7 @@ use App\Security\AuthorityGate;
 use App\Security\Cap;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
 
 /**
  * Content moderation (P2-08), capability-based and board-scoped: pin/unpin,
@@ -43,6 +44,7 @@ final class ModerationService
         private UserRepository $users,
         private ?FirstPartyHookRegistry $hooks = null,
         private ?AuthorityGate $authority = null,
+        private ?ThreadIntelligenceQueue $threadIntelligence = null,
     ) {
     }
 
@@ -190,6 +192,10 @@ final class ModerationService
                 'before' => ['is_deleted' => 0],
                 'after' => ['is_deleted' => 1, 'deleted_by' => $mod->id()],
             ]);
+            $this->threadIntelligence?->markStale(
+                (int) $post['thread_id'],
+                ThreadIntelligenceQueue::TRIGGER_POST_DELETED,
+            );
             return true;
         });
 
@@ -230,6 +236,10 @@ final class ModerationService
                 'before' => ['is_deleted' => 1],
                 'after' => ['is_deleted' => 0],
             ]);
+            $this->threadIntelligence?->markStale(
+                (int) $post['thread_id'],
+                ThreadIntelligenceQueue::TRIGGER_POST_RESTORED,
+            );
         });
 
         return $post;
@@ -289,6 +299,10 @@ final class ModerationService
                 'before' => ['board_id' => $srcBoardId],
                 'after' => ['board_id' => $destBoardId],
             ]);
+            $this->threadIntelligence?->markStale(
+                $threadId,
+                ThreadIntelligenceQueue::TRIGGER_THREAD_MOVED,
+            );
         });
 
         return ['thread' => $thread, 'moved' => true];

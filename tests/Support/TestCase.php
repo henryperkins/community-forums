@@ -31,6 +31,7 @@ use App\Service\LegacyAuthorityProjection;
 use App\Service\PostingService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
+use LogicException;
 use PDO;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
@@ -72,6 +73,29 @@ abstract class TestCase extends BaseTestCase
     {
         if ($this->pdo->inTransaction()) {
             $this->pdo->rollBack();
+        }
+    }
+
+    /**
+     * Temporarily leave the per-test rollback transaction for integration
+     * checks that must observe a real commit boundary from another connection.
+     * The callback owns any transactions it starts; a fresh cleanup transaction
+     * is always restored for the remainder of the test and tearDown().
+     */
+    protected function withoutHarnessTransaction(callable $callback): mixed
+    {
+        if (!$this->pdo->inTransaction()) {
+            throw new LogicException('the test harness transaction is not active');
+        }
+
+        $this->pdo->commit();
+        try {
+            return $callback();
+        } finally {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            $this->pdo->beginTransaction();
         }
     }
 

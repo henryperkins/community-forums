@@ -21,6 +21,7 @@ use App\Security\Cap;
 use App\Security\CapabilityResolver;
 use App\Security\RegistrationPolicy;
 use App\Security\WriteGate;
+use App\Service\ThreadIntelligence\ThreadIntelligenceBoardSweep;
 use App\Support\Str;
 
 /**
@@ -51,6 +52,7 @@ final class AdminService
         private BoardMemberRepository $boardMembers,
         private ?AuthorityGate $authority = null,
         private ?CapabilityResolver $resolver = null,
+        private ?ThreadIntelligenceBoardSweep $threadIntelligenceBoardSweep = null,
     ) {
     }
 
@@ -281,6 +283,9 @@ final class AdminService
                 'wiki_enabled' => $wikiEnabled,
                 'position' => $position,
             ]);
+            if ($visibility !== (string) $board['visibility']) {
+                $this->threadIntelligenceBoardSweep?->markVisibilityChanged($id);
+            }
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'update_board',

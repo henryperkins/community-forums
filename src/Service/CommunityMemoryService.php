@@ -209,9 +209,11 @@ final class CommunityMemoryService
             throw new ValidationException(['body' => 'Wiki body cannot be empty.']);
         }
         $html = $this->markdown->render($body);
-        $this->db->transaction(function () use ($actor, $postId, $body, $html, $reason): void {
+        $threadId = (int) $post['thread_id'];
+        $this->db->transaction(function () use ($actor, $postId, $body, $html, $reason, $threadId): void {
             $this->recordRevision($postId, $actor->id(), $body, $html, $reason);
             $this->posts->update($postId, $body, $html, $actor->id());
+            $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_WIKI_EDITED);
         });
     }
 
@@ -230,9 +232,11 @@ final class CommunityMemoryService
         }
         $body = (string) $revision['body'];
         $html = (string) ($revision['body_html'] ?? $this->markdown->render($body));
-        $this->db->transaction(function () use ($actor, $postId, $body, $html, $revisionId): void {
+        $threadId = (int) $post['thread_id'];
+        $this->db->transaction(function () use ($actor, $postId, $body, $html, $revisionId, $threadId): void {
             $this->recordRevision($postId, $actor->id(), $body, $html, 'revert:' . $revisionId);
             $this->posts->update($postId, $body, $html, $actor->id());
+            $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_WIKI_REVERTED);
         });
     }
 

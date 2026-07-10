@@ -1348,6 +1348,7 @@ final class App
             $c->get(PostRepository::class),
             $c->get(ModerationService::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(ThreadIntelligenceQueue::class),
         ));
         $c->bind(CommunityMemoryService::class, fn (Container $c) => new CommunityMemoryService(
             $c->get(Database::class),
@@ -1861,6 +1862,7 @@ final class App
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
             $c->get(FeatureFlags::class)->enabled('link_previews') ? $c->get(LinkPreviewService::class) : null,
             $c->get(AuthorityGate::class),
+            $c->get(ThreadIntelligenceQueue::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -1874,6 +1876,7 @@ final class App
             $c->get(UserRepository::class),
             $c->get(FirstPartyHookRegistry::class),
             $c->get(AuthorityGate::class),
+            $c->get(ThreadIntelligenceQueue::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
@@ -1887,6 +1890,7 @@ final class App
             $c->get(BoardMemberRepository::class),
             $c->get(AuthorityGate::class),
             $c->get(CapabilityResolver::class),
+            $c->get(ThreadIntelligenceBoardSweep::class),
         ));
         $c->bind(AdminDashboardService::class, fn (Container $c) => new AdminDashboardService(
             $c->get(Database::class),
