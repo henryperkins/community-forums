@@ -23,6 +23,7 @@ use App\Controller\AdminRegistryController;
 use App\Controller\AdminProviderController;
 use App\Controller\AdminRoleController;
 use App\Controller\AdminThemeController;
+use App\Controller\AdminThreadIntelligenceController;
 use App\Controller\AdminUserController;
 use App\Controller\AdminWebhookController;
 use App\Controller\Api\BoardsController as ApiBoardsController;
@@ -258,6 +259,7 @@ use App\Service\ThreadIntelligence\CurlOpenAiTransport;
 use App\Service\ThreadIntelligence\OpenAiThreadIntelligenceOutputModerator;
 use App\Service\ThreadIntelligence\OpenAiThreadIntelligenceProvider;
 use App\Service\ThreadIntelligence\OpenAiTransport;
+use App\Service\ThreadIntelligence\ThreadIntelligenceAdminService;
 use App\Service\ThreadIntelligence\ThreadIntelligenceBoardSweep;
 use App\Service\ThreadIntelligence\ThreadIntelligenceBudget;
 use App\Service\ThreadIntelligence\ThreadIntelligenceCandidateFinder;
@@ -1132,6 +1134,16 @@ final class App
             $c->get(ThreadIntelligenceJobRepository::class),
             $c->get(ThreadIntelligenceGenerationRepository::class),
         ));
+        $c->bind(ThreadIntelligenceAdminService::class, fn (Container $c) => new ThreadIntelligenceAdminService(
+            $c->get(Database::class),
+            $c->get(FeatureFlags::class),
+            $c->get(ThreadIntelligenceSettings::class),
+            $c->get(ThreadIntelligenceOperationsService::class),
+            $c->get(ThreadIntelligenceQueue::class),
+            $c->get(ThreadIntelligenceJobRepository::class),
+            $c->get(ThreadIntelligenceGenerationRepository::class),
+            $c->get(ModerationLogRepository::class),
+        ));
         $c->bind(ThreadIntelligenceViewService::class, fn (Container $c) => new ThreadIntelligenceViewService(
             $c->get(Database::class),
             $c->get(BoardMemberRepository::class),
@@ -1907,6 +1919,7 @@ final class App
             $c->get(FeatureFlags::class),
             $c->get(Mailer::class),
             $c->get(EmailDomainVerifier::class),
+            $c->get(ThreadIntelligenceAdminService::class),
         ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),
@@ -2226,6 +2239,14 @@ final class App
         $r->post('/admin/email/suppressions', [AdminEmailController::class, 'suppress']);
         $r->post('/admin/email/suppressions/remove', [AdminEmailController::class, 'unsuppress']);
         $r->get('/admin/features', [AdminFeatureController::class, 'index']);
+        $r->get('/admin/thread-intelligence', [AdminThreadIntelligenceController::class, 'index']);
+        $r->post('/admin/thread-intelligence/generation/pause', [AdminThreadIntelligenceController::class, 'pauseGeneration']);
+        $r->post('/admin/thread-intelligence/generation/resume', [AdminThreadIntelligenceController::class, 'resumeGeneration']);
+        $r->post('/admin/thread-intelligence/provider/retry', [AdminThreadIntelligenceController::class, 'retryProvider']);
+        $r->post('/admin/thread-intelligence/threads/{id}/retry', [AdminThreadIntelligenceController::class, 'retryThread']);
+        $r->post('/admin/thread-intelligence/threads/{id}/reconcile', [AdminThreadIntelligenceController::class, 'reconcileThread']);
+        $r->post('/admin/thread-intelligence/threads/{id}/pause', [AdminThreadIntelligenceController::class, 'pauseThread']);
+        $r->post('/admin/thread-intelligence/threads/{id}/resume', [AdminThreadIntelligenceController::class, 'resumeThread']);
         $r->get('/admin/extensions', [AdminExtensionController::class, 'index']);
         $r->get('/admin/announcements', [AdminAnnouncementController::class, 'form']);
         $r->post('/admin/announcements', [AdminAnnouncementController::class, 'save']);

@@ -130,6 +130,9 @@ final class AdminFeatureController extends Controller
             'override_text' => $hasOverride ? ($override ? 'Override on' : 'Override off') : 'No override',
             'override_class' => $hasOverride ? ($override ? 'state-active' : 'state-paused') : 'state-pending',
             'rollback' => $this->rollbackNote($flag, $default, $current),
+            'operations_href' => in_array($flag, ['community_memory', 'automated_context'], true)
+                ? '/admin/thread-intelligence'
+                : null,
         ];
     }
 

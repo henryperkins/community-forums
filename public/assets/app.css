@@ -4567,6 +4567,41 @@ span.wf-btn {
     }
 }
 
+.thread-intelligence-admin .ti-attention {
+    border-color: var(--warning);
+    background: var(--surface-review);
+}
+.thread-intelligence-admin .ti-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+.thread-intelligence-admin .ti-controls h2,
+.thread-intelligence-admin .ti-controls .muted { flex-basis: 100%; }
+.thread-intelligence-admin .ti-budget {
+    display: grid;
+    gap: var(--space-3);
+}
+.thread-intelligence-admin .ti-budget label { display: grid; gap: var(--space-1); }
+.thread-intelligence-admin .ti-budget progress { width: min(100%, 44rem); }
+.thread-intelligence-admin .ti-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0;
+}
+.thread-intelligence-admin .ti-metadata div { min-width: 12rem; }
+.thread-intelligence-admin .ti-metadata dt { color: var(--text-muted); }
+.thread-intelligence-admin .ti-metadata dd { margin: var(--space-1) 0 0; }
+.thread-intelligence-admin .ti-evidence {
+    min-width: 14rem;
+    max-width: 38rem;
+    overflow-wrap: anywhere;
+}
+.thread-intelligence-admin .ti-actions { min-width: 8rem; }
+.thread-intelligence-admin .ti-actions form { margin-bottom: var(--space-1); }
+
 /* ── Messages reading room — responsive: rail column → drawer → overlay ───── */
 @media (min-width: 1400px) {
     /* The rail is a real column only when there's room beside the app nav rail +
