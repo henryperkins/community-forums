@@ -16,6 +16,8 @@ use Tests\Support\TestCase;
  */
 final class AppThreadIntelligenceMigrationTest extends TestCase
 {
+    private const MIGRATION = __DIR__ . '/../../../database/migrations/0077_thread_intelligence.php';
+
     /** @return array{data_type:string,column_type:string,is_nullable:string}|null */
     private function column(string $table, string $col): ?array
     {
@@ -79,6 +81,36 @@ final class AppThreadIntelligenceMigrationTest extends TestCase
             'delete_rule' => (string) $row['delete_rule'],
             'referenced_table' => (string) $row['referenced_table'],
         ];
+    }
+
+    private function foreignKeyName(string $table, string $column): ?string
+    {
+        $name = $this->db->fetchValue(
+            'SELECT CONSTRAINT_NAME
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE CONSTRAINT_SCHEMA = DATABASE()
+               AND TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?
+               AND REFERENCED_TABLE_NAME IS NOT NULL',
+            [$table, $column],
+        );
+        return $name === false || $name === null ? null : (string) $name;
+    }
+
+    private function quotedIdentifier(string $identifier): string
+    {
+        return '`' . str_replace('`', '``', $identifier) . '`';
+    }
+
+    /**
+     * Rebuild the fixture-free shared database after an interrupted direct up().
+     * This runs only on the RED/error path; successful up() already leaves 0077.
+     */
+    private function restoreAfterFailedDirectUp(): void
+    {
+        $migrator = new Migrator($this->pdo, (string) $this->config->get('paths.migrations'));
+        $migrator->fresh();
     }
 
     // ---- thread_intelligence_jobs ------------------------------------------
@@ -307,5 +339,116 @@ final class AppThreadIntelligenceMigrationTest extends TestCase
         $migrator = new Migrator($this->pdo, (string) $this->config->get('paths.migrations'));
         self::assertTrue($migrator->isSynced(), 'ledger must exactly match the migration files');
         self::assertSame(0, $migrator->migrate(), 're-running migrate must apply nothing');
+    }
+
+    public function test_0077_discovers_a_drifted_legacy_summary_author_foreign_key(): void
+    {
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue('SELECT COUNT(*) FROM thread_summaries'),
+            'direct migration rehearsal requires a fixture-free summary table',
+        );
+
+        $migration = require self::MIGRATION;
+        $legacyConstraint = 'fk_summary_author_legacy_drift';
+        $fixture = [
+            'category_id' => null,
+            'board_id' => null,
+            'thread_id' => null,
+            'owner_id' => null,
+            'author_id' => null,
+            'summary_id' => null,
+        ];
+        $upCompleted = false;
+
+        try {
+            $migration->down($this->pdo);
+            $this->pdo->exec('ALTER TABLE thread_summaries DROP FOREIGN KEY fk_summary_author');
+            $this->pdo->exec(
+                'ALTER TABLE thread_summaries ADD CONSTRAINT '
+                . $this->quotedIdentifier($legacyConstraint)
+                . ' FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE',
+            );
+            self::assertSame($legacyConstraint, $this->foreignKeyName('thread_summaries', 'author_id'));
+
+            $suffix = bin2hex(random_bytes(5));
+            $fixture['category_id'] = (int) $this->db->insert(
+                'INSERT INTO categories (name) VALUES (?)',
+                ['TI migration ' . $suffix],
+            );
+            $fixture['owner_id'] = (int) $this->db->insert(
+                'INSERT INTO users (username, email) VALUES (?, ?)',
+                ['ti_owner_' . $suffix, 'ti_owner_' . $suffix . '@example.test'],
+            );
+            $fixture['author_id'] = (int) $this->db->insert(
+                'INSERT INTO users (username, email) VALUES (?, ?)',
+                ['ti_author_' . $suffix, 'ti_author_' . $suffix . '@example.test'],
+            );
+            $fixture['board_id'] = (int) $this->db->insert(
+                'INSERT INTO boards (category_id, slug, name) VALUES (?, ?, ?)',
+                [$fixture['category_id'], 'ti-migration-' . $suffix, 'TI Migration ' . $suffix],
+            );
+            $fixture['thread_id'] = (int) $this->db->insert(
+                'INSERT INTO threads (board_id, user_id, title, slug) VALUES (?, ?, ?, ?)',
+                [$fixture['board_id'], $fixture['owner_id'], 'Migration fixture', 'migration-fixture-' . $suffix],
+            );
+            $fixture['summary_id'] = (int) $this->db->insert(
+                "INSERT INTO thread_summaries (thread_id, kind, status, body, body_html, version, author_id)
+                 VALUES (?, 'manual', 'published', 'Legacy summary body', '<p>Legacy summary body</p>', 3, ?)",
+                [$fixture['thread_id'], $fixture['author_id']],
+            );
+
+            $migrationFailure = null;
+            try {
+                $migration->up($this->pdo);
+                $upCompleted = true;
+            } catch (\Throwable $e) {
+                $migrationFailure = $e;
+            }
+            if ($migrationFailure !== null) {
+                self::fail(
+                    '0077 must discover the FK covering thread_summaries.author_id; direct up() failed: '
+                    . $migrationFailure->getMessage(),
+                );
+            }
+
+            $summary = $this->db->fetch(
+                'SELECT body, version, author_id FROM thread_summaries WHERE id = ?',
+                [$fixture['summary_id']],
+            );
+            self::assertNotNull($summary, 'the pre-existing summary must survive migration 0077');
+            self::assertSame('Legacy summary body', $summary['body']);
+            self::assertSame(3, (int) $summary['version']);
+            self::assertSame($fixture['author_id'], (int) $summary['author_id']);
+
+            $this->db->run('DELETE FROM users WHERE id = ?', [$fixture['author_id']]);
+            $summary = $this->db->fetch(
+                'SELECT author_id FROM thread_summaries WHERE id = ?',
+                [$fixture['summary_id']],
+            );
+            self::assertNotNull($summary, 'deleting an author must not delete summary history');
+            self::assertNull($summary['author_id'], 'the migrated author FK must use ON DELETE SET NULL');
+        } finally {
+            try {
+                if ($fixture['thread_id'] !== null) {
+                    $this->db->run('DELETE FROM threads WHERE id = ?', [$fixture['thread_id']]);
+                }
+                if ($fixture['board_id'] !== null) {
+                    $this->db->run('DELETE FROM boards WHERE id = ?', [$fixture['board_id']]);
+                }
+                if ($fixture['category_id'] !== null) {
+                    $this->db->run('DELETE FROM categories WHERE id = ?', [$fixture['category_id']]);
+                }
+                foreach (['owner_id', 'author_id'] as $userKey) {
+                    if ($fixture[$userKey] !== null) {
+                        $this->db->run('DELETE FROM users WHERE id = ?', [$fixture[$userKey]]);
+                    }
+                }
+            } finally {
+                if (!$upCompleted) {
+                    $this->restoreAfterFailedDirectUp();
+                }
+            }
+        }
     }
 }

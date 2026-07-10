@@ -89,14 +89,33 @@ return new class {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         SQL);
 
-        // AI authorship + lineage on the existing summary history. The author FK
-        // (fk_summary_author, created by 0048) flips CASCADE -> SET NULL so
-        // deleting/anonymizing a human author can never delete summary history.
+        // AI authorship + lineage on the existing summary history. Discover the
+        // pre-existing author FK by its schema shape because compatible upgraded
+        // databases may not retain 0048's original constraint name. It flips
+        // CASCADE -> SET NULL so deleting/anonymizing a human author can never
+        // delete summary history.
+        $authorForeignKey = $pdo->query(<<<'SQL'
+            SELECT CONSTRAINT_NAME
+            FROM information_schema.KEY_COLUMN_USAGE
+            WHERE CONSTRAINT_SCHEMA = DATABASE()
+              AND TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'thread_summaries'
+              AND COLUMN_NAME = 'author_id'
+              AND REFERENCED_TABLE_NAME = 'users'
+              AND REFERENCED_COLUMN_NAME = 'id'
+            ORDER BY CONSTRAINT_NAME
+            LIMIT 1
+        SQL)->fetchColumn();
+        if (!is_string($authorForeignKey) || $authorForeignKey === '') {
+            throw new \RuntimeException('Missing foreign key covering thread_summaries.author_id');
+        }
+        $quotedAuthorForeignKey = str_replace('`', '``', $authorForeignKey);
+
         $pdo->exec(<<<'SQL'
             ALTER TABLE thread_summaries
               MODIFY kind ENUM('manual','canonical_answer','ai') NOT NULL DEFAULT 'manual'
         SQL);
-        $pdo->exec('ALTER TABLE thread_summaries DROP FOREIGN KEY fk_summary_author');
+        $pdo->exec("ALTER TABLE thread_summaries DROP FOREIGN KEY `{$quotedAuthorForeignKey}`");
         $pdo->exec('ALTER TABLE thread_summaries MODIFY author_id BIGINT UNSIGNED NULL');
         $pdo->exec(<<<'SQL'
             ALTER TABLE thread_summaries
