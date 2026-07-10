@@ -36,6 +36,10 @@ use App\Repository\RegistrySnapshotRepository;
 use App\Repository\RegistryTrustKeyRepository;
 use App\Repository\SessionRepository;
 use App\Repository\PostRepository;
+use App\Repository\TagRepository;
+use App\Repository\ThreadRepository;
+use App\Repository\ThreadIntelligenceGenerationRepository;
+use App\Repository\ThreadIntelligenceJobRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
@@ -80,6 +84,8 @@ use App\Repository\AttachmentRepository;
 use App\Repository\ModerationLogRepository;
 use App\Service\AttachmentService;
 use App\Service\AttachmentScanService;
+use App\Service\ContentReferenceService;
+use App\Service\CustomEmojiService;
 use App\Service\EmailDomainVerifier;
 use App\Service\EmailPreferenceService;
 use App\Service\Extension\BubblewrapSandboxAdapter;
@@ -87,6 +93,24 @@ use App\Service\LegacyAuthorityProjection;
 use App\Service\Phase5BudgetReportService;
 use App\Service\Phase5FixtureSeeder;
 use App\Service\ResolverParityService;
+use App\Service\ThreadIntelligence\CurlOpenAiTransport;
+use App\Service\ThreadIntelligence\OpenAiThreadIntelligenceOutputModerator;
+use App\Service\ThreadIntelligence\OpenAiThreadIntelligenceProvider;
+use App\Service\ThreadIntelligence\ThreadIntelligenceBoardSweep;
+use App\Service\ThreadIntelligence\ThreadIntelligenceBudget;
+use App\Service\ThreadIntelligence\ThreadIntelligenceCandidateFinder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceConfig;
+use App\Service\ThreadIntelligence\ThreadIntelligenceEligibility;
+use App\Service\ThreadIntelligence\ThreadIntelligenceEvidenceBuilder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceOperationsService;
+use App\Service\ThreadIntelligence\ThreadIntelligenceOutputValidator;
+use App\Service\ThreadIntelligence\ThreadIntelligencePromptBuilder;
+use App\Service\ThreadIntelligence\ThreadIntelligencePublisher;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
+use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
+use App\Support\HtmlSanitizer;
+use App\Support\Markdown;
+use App\Support\MentionLinker;
 use App\Support\UpgradeRehearsal;
 use App\Worker\DailyDigestWorker;
 use App\Worker\RegistryRefreshWorker;
@@ -97,6 +121,7 @@ use App\Worker\NotificationEmailWorker;
 use App\Worker\OrphanAttachmentCleaner;
 use App\Worker\PackageHealthWorker;
 use App\Worker\RelatedTopicRefreshWorker;
+use App\Worker\ThreadIntelligenceWorker;
 
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
@@ -160,6 +185,92 @@ $domainVerifier = static fn (Database $db): EmailDomainVerifier => new EmailDoma
     new EmailDomainStatusRepository($db),
 );
 
+/** Hand-wire the same lazy-graph dependencies used by App::buildContainer(). */
+$threadIntelligenceGraph = static function (Database $db) use ($config): array {
+    $block = (array) $config->get('thread_intelligence', []);
+    $apiKey = is_string($block['api_key'] ?? null) ? $block['api_key'] : '';
+    $typed = ThreadIntelligenceConfig::fromArray($block);
+    $flags = new FeatureFlags(new SettingRepository($db));
+    $settings = new ThreadIntelligenceSettings(
+        new SettingRepository($db),
+        $typed,
+        (string) $config->get('app.key', ''),
+        $apiKey,
+        $db,
+    );
+    $budget = new ThreadIntelligenceBudget($db, $typed);
+    $jobs = new ThreadIntelligenceJobRepository($db);
+    $generations = new ThreadIntelligenceGenerationRepository($db);
+    $eligibility = new ThreadIntelligenceEligibility($db, $flags, $typed, $settings, $budget, $jobs);
+    $queue = new ThreadIntelligenceQueue($db, $jobs, $eligibility);
+    $candidates = new ThreadIntelligenceCandidateFinder($db);
+    $evidence = new ThreadIntelligenceEvidenceBuilder($db, $candidates, $typed);
+    $markdown = new Markdown(
+        new HtmlSanitizer(
+            allowGiphyImages: $flags->enabled('slash_giphy')
+                && trim((string) $config->get('giphy.public_key', '')) !== '',
+        ),
+        $flags->enabled('custom_emoji') ? new CustomEmojiService($db, new WriteGate()) : null,
+        new MentionLinker(new UserRepository($db), $flags->enabled('mentions')),
+    );
+    $transport = new CurlOpenAiTransport($apiKey, $typed);
+    $provider = new OpenAiThreadIntelligenceProvider(
+        $transport,
+        $typed,
+        new ThreadIntelligencePromptBuilder(),
+        (string) $config->get('app.key', ''),
+    );
+    $moderator = new OpenAiThreadIntelligenceOutputModerator($transport);
+    $publisher = new ThreadIntelligencePublisher(
+        $db,
+        new ThreadRepository($db),
+        $jobs,
+        $generations,
+        $evidence,
+        $markdown,
+        new ContentReferenceService(
+            $db,
+            new BoardRepository($db),
+            new ThreadRepository($db),
+            new PostRepository($db),
+            new TagRepository($db),
+            new BoardMemberRepository($db),
+            new BoardPolicy(),
+            $flags->enabled('tags'),
+        ),
+    );
+    $worker = new ThreadIntelligenceWorker(
+        $db,
+        $flags,
+        $typed,
+        $settings,
+        $budget,
+        $jobs,
+        $generations,
+        new ThreadIntelligenceBoardSweep($db),
+        $eligibility,
+        $evidence,
+        $provider,
+        new ThreadIntelligenceOutputValidator($markdown),
+        $moderator,
+        $publisher,
+        (string) $config->get('app.key', ''),
+    );
+    $operations = new ThreadIntelligenceOperationsService(
+        $db,
+        $flags,
+        $typed,
+        $settings,
+        $budget,
+        $eligibility,
+        $queue,
+        $jobs,
+        $generations,
+    );
+
+    return ['worker' => $worker, 'operations' => $operations];
+};
+
 /** Build the configured mail transport (matches App::buildContainer). */
 $mailer = static function () use ($config): Mailer {
     $mail = (array) $config->get('mail', []);
@@ -180,6 +291,65 @@ $mailer = static function () use ($config): Mailer {
 
 try {
     switch ($command) {
+        case 'worker:thread-intelligence':
+            $requested = filter_var($argv[2] ?? 25, FILTER_VALIDATE_INT);
+            $limit = $requested === false ? 25 : max(1, min(100, (int) $requested));
+            $graph = $threadIntelligenceGraph($database());
+            $counts = $graph['worker']->run($limit, 'cli');
+            foreach (['processed', 'succeeded', 'failed'] as $name) {
+                $log($name . '=' . (int) $counts[$name]);
+            }
+            break;
+
+        case 'thread-intelligence:status':
+            $status = $threadIntelligenceGraph($database())['operations']->status();
+            $log('community_memory=' . ($status['flags']['community_memory'] ? 'on' : 'off'));
+            $log('automated_context=' . ($status['flags']['automated_context'] ? 'on' : 'off'));
+            $log('credential_ready=' . ($status['credential_ready'] ? 'yes' : 'no'));
+            $log('generation_paused=' . ($status['pause']['paused'] ? 'yes' : 'no'));
+            $log('pause_corrupt=' . ($status['pause']['corrupt'] ? 'yes' : 'no'));
+            $log('provider_blocked=' . ($status['provider']['blocked'] ? 'yes' : 'no'));
+            $log('provider_code=' . ($status['provider']['code'] ?? 'none'));
+            $log('heartbeat=' . $status['heartbeat']['classification']);
+            foreach ($status['queue'] as $state => $count) {
+                $log('queue_' . $state . '=' . (int) $count);
+            }
+            $log('model=' . $status['model']);
+            $log('reasoning_effort=' . $status['reasoning_effort']);
+            $log('prompt_version=' . $status['prompt_version']);
+            $log('budget_used_calls=' . (int) $status['budget']['used_calls']);
+            $log('budget_reserved_calls=' . (int) $status['budget']['reserved_calls']);
+            $log('budget_call_limit=' . (int) $status['budget']['call_limit']);
+            $log('budget_used_input_tokens=' . (int) $status['budget']['used_input_tokens']);
+            $log('budget_reserved_input_tokens=' . (int) $status['budget']['reserved_input_tokens']);
+            $log('budget_input_token_limit=' . (int) $status['budget']['input_token_limit']);
+            $log('budget_next_reset_at=' . $status['budget']['next_reset_at'] . ' UTC');
+            break;
+
+        case 'thread-intelligence:retry':
+        case 'thread-intelligence:reconcile':
+            $threadId = filter_var($argv[2] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($threadId === false) {
+                throw new InvalidArgumentException('A positive thread ID is required.');
+            }
+            $operations = $threadIntelligenceGraph($database())['operations'];
+            $decision = $command === 'thread-intelligence:retry'
+                ? $operations->retry((int) $threadId)
+                : $operations->reconcile((int) $threadId);
+            $log('queued=' . ($decision->queued ? 'yes' : 'no'));
+            $log('code=' . $decision->code);
+            if ($decision->nextEligibleAt !== null) {
+                $log('next_eligible_at=' . $decision->nextEligibleAt->format('Y-m-d H:i:s') . ' UTC');
+            }
+            break;
+
+        case 'thread-intelligence:prune-evidence':
+            $requested = filter_var($argv[2] ?? 500, FILTER_VALIDATE_INT);
+            $limit = $requested === false ? 500 : max(1, min(500, (int) $requested));
+            $pruned = $threadIntelligenceGraph($database())['operations']->pruneEvidence($limit);
+            $log('pruned=' . $pruned);
+            break;
+
         case 'migrate':
             $n = $migrator()->migrate($log);
             $log($n === 0 ? 'Nothing to migrate.' : "Applied $n migration(s).");
@@ -800,6 +970,11 @@ try {
             $log('  worker:webhooks [limit]  Drain the webhook delivery queue');
             $log('  worker:registry-refresh  Fetch + verify enabled package-registry snapshots/advisories (no-op if package_registry is rolled back)');
             $log('  worker:packages       Verify installed package digests, enforce advisories/blocklist, purge lapsed uninstalls');
+            $log('  worker:thread-intelligence [limit]  Generate due evidence-bound Living Briefs (default 25, max 100)');
+            $log('  thread-intelligence:status  Show redacted flags, health, queue, and budget status');
+            $log('  thread-intelligence:retry <thread-id>  Retry eligible thread work');
+            $log('  thread-intelligence:reconcile <thread-id>  Force eligible full reconciliation');
+            $log('  thread-intelligence:prune-evidence [limit]  Prune eligible attempt evidence (default/max 500)');
             $log('  verify:phase5-budgets   Seed the F9 fixture and write the D11 budget report (A3)');
             $log('  verify:resolver-parity  Archive the Inc-1 resolver parity corpus (exit 1 on mismatch)');
             break;

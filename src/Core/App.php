@@ -133,6 +133,8 @@ use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\TagRepository;
 use App\Repository\ThreadRepository;
+use App\Repository\ThreadIntelligenceGenerationRepository;
+use App\Repository\ThreadIntelligenceJobRepository;
 use App\Repository\ThreadAssignmentRepository;
 use App\Repository\ThreadUserRepository;
 use App\Repository\UserBoardPrefRepository;
@@ -252,6 +254,24 @@ use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
 use App\Service\ThreadSplitMergeService;
 use App\Service\ThreadWorkflowService;
+use App\Service\ThreadIntelligence\CurlOpenAiTransport;
+use App\Service\ThreadIntelligence\OpenAiThreadIntelligenceOutputModerator;
+use App\Service\ThreadIntelligence\OpenAiThreadIntelligenceProvider;
+use App\Service\ThreadIntelligence\OpenAiTransport;
+use App\Service\ThreadIntelligence\ThreadIntelligenceBoardSweep;
+use App\Service\ThreadIntelligence\ThreadIntelligenceBudget;
+use App\Service\ThreadIntelligence\ThreadIntelligenceCandidateFinder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceConfig;
+use App\Service\ThreadIntelligence\ThreadIntelligenceEligibility;
+use App\Service\ThreadIntelligence\ThreadIntelligenceEvidenceBuilder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceOperationsService;
+use App\Service\ThreadIntelligence\ThreadIntelligenceOutputModerator;
+use App\Service\ThreadIntelligence\ThreadIntelligenceOutputValidator;
+use App\Service\ThreadIntelligence\ThreadIntelligencePromptBuilder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceProvider;
+use App\Service\ThreadIntelligence\ThreadIntelligencePublisher;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
+use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
 use App\Service\UserModerationService;
 use App\Service\SetupService;
 use App\Service\Webhook\CurlWebhookTransport;
@@ -260,6 +280,7 @@ use App\Service\WebhookService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
 use App\Support\MentionLinker;
+use App\Worker\ThreadIntelligenceWorker;
 use Throwable;
 
 /**
@@ -288,6 +309,8 @@ final class App
         private ?Database $database = null,
         private ?RateLimiter $rateLimiter = null,
         private ?OAuthHttpClient $oauthHttpClient = null,
+        private ?ThreadIntelligenceProvider $threadIntelligenceProvider = null,
+        private ?ThreadIntelligenceOutputModerator $threadIntelligenceOutputModerator = null,
     ) {
         $this->router = $this->buildRouter();
     }
@@ -817,6 +840,8 @@ final class App
         $c->bind(BoardRepository::class, fn (Container $c) => new BoardRepository($c->get(Database::class)));
         $c->bind(ThreadRepository::class, fn (Container $c) => new ThreadRepository($c->get(Database::class)));
         $c->bind(PostRepository::class, fn (Container $c) => new PostRepository($c->get(Database::class)));
+        $c->bind(ThreadIntelligenceJobRepository::class, fn (Container $c) => new ThreadIntelligenceJobRepository($c->get(Database::class)));
+        $c->bind(ThreadIntelligenceGenerationRepository::class, fn (Container $c) => new ThreadIntelligenceGenerationRepository($c->get(Database::class)));
         $c->bind(ModerationLogRepository::class, fn (Container $c) => new ModerationLogRepository($c->get(Database::class)));
         $c->bind(ModerationAppealRepository::class, fn (Container $c) => new ModerationAppealRepository($c->get(Database::class)));
         $c->bind(ServerDraftRepository::class, fn (Container $c) => new ServerDraftRepository($c->get(Database::class)));
@@ -1000,6 +1025,112 @@ final class App
 
         // Phase 2 shared services.
         $c->bind(FeatureFlags::class, fn (Container $c) => new FeatureFlags($c->get(SettingRepository::class)));
+
+        // Thread Intelligence is an explicitly composed, lazy singleton graph.
+        // The raw credential reaches only the transport and keyed settings
+        // fingerprint; status/services receive the typed readiness-only config.
+        $threadIntelligenceBlock = (array) $config->get('thread_intelligence', []);
+        $threadIntelligenceApiKey = is_string($threadIntelligenceBlock['api_key'] ?? null)
+            ? $threadIntelligenceBlock['api_key']
+            : '';
+        $c->bind(ThreadIntelligenceConfig::class, fn () => ThreadIntelligenceConfig::fromArray($threadIntelligenceBlock));
+        $c->bind(OpenAiTransport::class, fn (Container $c) => new CurlOpenAiTransport(
+            $threadIntelligenceApiKey,
+            $c->get(ThreadIntelligenceConfig::class),
+        ));
+        $c->bind(ThreadIntelligencePromptBuilder::class, fn () => new ThreadIntelligencePromptBuilder());
+        if ($this->threadIntelligenceProvider !== null) {
+            $c->instance(ThreadIntelligenceProvider::class, $this->threadIntelligenceProvider);
+        } else {
+            $c->bind(ThreadIntelligenceProvider::class, fn (Container $c) => new OpenAiThreadIntelligenceProvider(
+                $c->get(OpenAiTransport::class),
+                $c->get(ThreadIntelligenceConfig::class),
+                $c->get(ThreadIntelligencePromptBuilder::class),
+                (string) $config->get('app.key', ''),
+            ));
+        }
+        if ($this->threadIntelligenceOutputModerator !== null) {
+            $c->instance(ThreadIntelligenceOutputModerator::class, $this->threadIntelligenceOutputModerator);
+        } else {
+            $c->bind(ThreadIntelligenceOutputModerator::class, fn (Container $c) => new OpenAiThreadIntelligenceOutputModerator(
+                $c->get(OpenAiTransport::class),
+            ));
+        }
+        $c->bind(ThreadIntelligenceSettings::class, fn (Container $c) => new ThreadIntelligenceSettings(
+            $c->get(SettingRepository::class),
+            $c->get(ThreadIntelligenceConfig::class),
+            (string) $config->get('app.key', ''),
+            $threadIntelligenceApiKey,
+            $c->get(Database::class),
+        ));
+        $c->bind(ThreadIntelligenceBudget::class, fn (Container $c) => new ThreadIntelligenceBudget(
+            $c->get(Database::class),
+            $c->get(ThreadIntelligenceConfig::class),
+        ));
+        $c->bind(ThreadIntelligenceEligibility::class, fn (Container $c) => new ThreadIntelligenceEligibility(
+            $c->get(Database::class),
+            $c->get(FeatureFlags::class),
+            $c->get(ThreadIntelligenceConfig::class),
+            $c->get(ThreadIntelligenceSettings::class),
+            $c->get(ThreadIntelligenceBudget::class),
+            $c->get(ThreadIntelligenceJobRepository::class),
+        ));
+        $c->bind(ThreadIntelligenceQueue::class, fn (Container $c) => new ThreadIntelligenceQueue(
+            $c->get(Database::class),
+            $c->get(ThreadIntelligenceJobRepository::class),
+            $c->get(ThreadIntelligenceEligibility::class),
+        ));
+        $c->bind(ThreadIntelligenceBoardSweep::class, fn (Container $c) => new ThreadIntelligenceBoardSweep(
+            $c->get(Database::class),
+        ));
+        $c->bind(ThreadIntelligenceCandidateFinder::class, fn (Container $c) => new ThreadIntelligenceCandidateFinder(
+            $c->get(Database::class),
+        ));
+        $c->bind(ThreadIntelligenceEvidenceBuilder::class, fn (Container $c) => new ThreadIntelligenceEvidenceBuilder(
+            $c->get(Database::class),
+            $c->get(ThreadIntelligenceCandidateFinder::class),
+            $c->get(ThreadIntelligenceConfig::class),
+        ));
+        $c->bind(ThreadIntelligenceOutputValidator::class, fn (Container $c) => new ThreadIntelligenceOutputValidator(
+            $c->get(Markdown::class),
+        ));
+        $c->bind(ThreadIntelligencePublisher::class, fn (Container $c) => new ThreadIntelligencePublisher(
+            $c->get(Database::class),
+            $c->get(ThreadRepository::class),
+            $c->get(ThreadIntelligenceJobRepository::class),
+            $c->get(ThreadIntelligenceGenerationRepository::class),
+            $c->get(ThreadIntelligenceEvidenceBuilder::class),
+            $c->get(Markdown::class),
+            $c->get(ContentReferenceService::class),
+        ));
+        $c->bind(ThreadIntelligenceWorker::class, fn (Container $c) => new ThreadIntelligenceWorker(
+            $c->get(Database::class),
+            $c->get(FeatureFlags::class),
+            $c->get(ThreadIntelligenceConfig::class),
+            $c->get(ThreadIntelligenceSettings::class),
+            $c->get(ThreadIntelligenceBudget::class),
+            $c->get(ThreadIntelligenceJobRepository::class),
+            $c->get(ThreadIntelligenceGenerationRepository::class),
+            $c->get(ThreadIntelligenceBoardSweep::class),
+            $c->get(ThreadIntelligenceEligibility::class),
+            $c->get(ThreadIntelligenceEvidenceBuilder::class),
+            $c->get(ThreadIntelligenceProvider::class),
+            $c->get(ThreadIntelligenceOutputValidator::class),
+            $c->get(ThreadIntelligenceOutputModerator::class),
+            $c->get(ThreadIntelligencePublisher::class),
+            (string) $config->get('app.key', ''),
+        ));
+        $c->bind(ThreadIntelligenceOperationsService::class, fn (Container $c) => new ThreadIntelligenceOperationsService(
+            $c->get(Database::class),
+            $c->get(FeatureFlags::class),
+            $c->get(ThreadIntelligenceConfig::class),
+            $c->get(ThreadIntelligenceSettings::class),
+            $c->get(ThreadIntelligenceBudget::class),
+            $c->get(ThreadIntelligenceEligibility::class),
+            $c->get(ThreadIntelligenceQueue::class),
+            $c->get(ThreadIntelligenceJobRepository::class),
+            $c->get(ThreadIntelligenceGenerationRepository::class),
+        ));
         $c->bind(ExtensionSandbox::class, fn () => new BubblewrapSandboxAdapter());
         $c->bind(FirstPartyHookRegistry::class, function (Container $c): FirstPartyHookRegistry {
             $registry = new FirstPartyHookRegistry($c->get(FeatureFlags::class));
@@ -1229,6 +1360,7 @@ final class App
             $c->get(Markdown::class),
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
             $c->get(AuthorityGate::class),
+            $c->get(ThreadIntelligenceQueue::class),
         ));
 
         // Session + CSRF.

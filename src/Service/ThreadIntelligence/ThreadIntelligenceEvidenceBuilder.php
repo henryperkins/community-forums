@@ -119,6 +119,18 @@ final class ThreadIntelligenceEvidenceBuilder
         return $pack->request($windowIndex, $carryForward);
     }
 
+    /** Rebuild current local inputs and compare without exposing raw material. */
+    public function snapshotIsCurrent(ThreadIntelligenceEvidencePack $pack, array $job): bool
+    {
+        try {
+            $current = $this->build($pack->threadId(), $job);
+        } catch (ThreadIntelligenceProviderException | InvalidArgumentException) {
+            return false;
+        }
+
+        return hash_equals($pack->snapshotHash(), $current->snapshotHash());
+    }
+
     private function baseline(int $threadId): ?ThreadIntelligenceBaseline
     {
         $row = $this->db->fetch(
