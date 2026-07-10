@@ -277,6 +277,24 @@ return [
         'safe_mode' => Env::bool('THEME_SAFE_MODE', false),
     ],
 
+    // Thread Intelligence (ADR 0019): AI Living Briefs for eligible public
+    // threads. Values pass through ThreadIntelligenceConfig::fromArray(), which
+    // replaces any invalid/out-of-range value with its conservative default and
+    // raises an operator warning. The credential is environment-only — never
+    // stored, rendered, or logged. The output ceiling bounds reasoning + output
+    // tokens; the 450-word local validator is the visible-content limit.
+    'thread_intelligence' => [
+        'api_key' => Env::get('OPENAI_API_KEY', ''),
+        'model' => Env::get('THREAD_INTELLIGENCE_MODEL', 'gpt-5.6-luna'),
+        'reasoning_effort' => Env::get('THREAD_INTELLIGENCE_REASONING_EFFORT', 'low'),
+        'daily_call_limit' => Env::get('THREAD_INTELLIGENCE_DAILY_CALL_LIMIT', '100'),
+        'daily_input_token_limit' => Env::get('THREAD_INTELLIGENCE_DAILY_INPUT_TOKEN_LIMIT', '1000000'),
+        'max_input_tokens' => Env::get('THREAD_INTELLIGENCE_MAX_INPUT_TOKENS', '32000'),
+        'max_output_tokens' => Env::get('THREAD_INTELLIGENCE_MAX_OUTPUT_TOKENS', '16000'),
+        'connect_timeout_seconds' => Env::get('THREAD_INTELLIGENCE_CONNECT_TIMEOUT_SECONDS', '5'),
+        'timeout_seconds' => Env::get('THREAD_INTELLIGENCE_TIMEOUT_SECONDS', '60'),
+    ],
+
     'giphy' => [
         // Public browser API key only. The app never proxies, caches, rewrites, or
         // downloads GIPHY media; the picker uses GIPHY Search/Trending directly.
