@@ -174,6 +174,18 @@ The following must not delay Phase 4 acceptance unless formally pulled in:
 - Native mobile applications, PWA/offline mode, forum import tooling, multi-community/multi-tenant operation, and full internationalization.
 - Third-party generative summaries or canonical-answer services, autonomous moderation, auto-published machine-written content, or any generated content path without a separate privacy, quality, cost, retention, and human-approval decision.
 
+> **2026-07-09 follow-on reconciliation — Thread Intelligence (ADR 0019):**
+> This deferral and Gate A's human-only boundary remain the historical Phase 4
+> acceptance record. The product owner has since made the separate decision they
+> required: eligible public threads may receive auto-published, evidence-bound
+> Living Briefs after local schema/source/content/moderation validation, with
+> public provenance, curator control, bounded retention/cost, last-good failure
+> behavior, and data-preserving rollback. The exception is limited to
+> `docs/superpowers/specs/2026-07-09-thread-intelligence-graduation-design.md`;
+> deterministic since-last-read context remains local, and private content,
+> generated posts/actions, browsing/tools, and autonomous moderation remain out
+> of scope. This follow-on does not retroactively broaden Phase 4 closeout.
+
 ## 5. Reconciled and locked implementation decisions
 
 The following decisions are treated as fixed for Phase 4:
@@ -335,6 +347,13 @@ The following decisions are treated as fixed for Phase 4:
 - Run each Gate B surface through independent privacy, safety, accessibility, performance, migration, and rollback acceptance.
 
 **Exit gate:** Every Gate B feature is independently accepted or has an approved destination phase; no automated context or remote content path bypasses privacy policy, authorization, source provenance, or canonical human-controlled content.
+
+> **Reconciled by ADR 0019 for follow-on graduation only:** the canonical
+> human-control clause above governed Phase 4 acceptance. Thread Intelligence
+> may replace per-generation human approval with the ADR's mandatory local
+> validation/moderation gates and curator recovery controls only after its own
+> acceptance evidence passes. All other remote/generated-content paths remain
+> subject to this original exit gate.
 
 ### Milestone 9 — Phase 4 release candidate and formal closeout
 
