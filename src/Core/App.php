@@ -272,6 +272,7 @@ use App\Service\ThreadIntelligence\ThreadIntelligenceProvider;
 use App\Service\ThreadIntelligence\ThreadIntelligencePublisher;
 use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
 use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
+use App\Service\ThreadIntelligence\ThreadIntelligenceViewService;
 use App\Service\UserModerationService;
 use App\Service\SetupService;
 use App\Service\Webhook\CurlWebhookTransport;
@@ -1131,6 +1132,13 @@ final class App
             $c->get(ThreadIntelligenceJobRepository::class),
             $c->get(ThreadIntelligenceGenerationRepository::class),
         ));
+        $c->bind(ThreadIntelligenceViewService::class, fn (Container $c) => new ThreadIntelligenceViewService(
+            $c->get(Database::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(ThreadIntelligenceEligibility::class),
+            $c->get(ThreadIntelligenceJobRepository::class),
+        ));
         $c->bind(ExtensionSandbox::class, fn () => new BubblewrapSandboxAdapter());
         $c->bind(FirstPartyHookRegistry::class, function (Container $c): FirstPartyHookRegistry {
             $registry = new FirstPartyHookRegistry($c->get(FeatureFlags::class));
@@ -1920,6 +1928,7 @@ final class App
         $r = new Router();
 
         $r->get('/', [HomeController::class, 'index']);
+        $r->get('/privacy', [HomeController::class, 'privacy']);
         $r->get('/healthz', [HealthController::class, 'check']);
         $r->get('/sitemap.xml', [SeoController::class, 'sitemap']);
         $r->get('/robots.txt', [SeoController::class, 'robots']);
@@ -1975,6 +1984,8 @@ final class App
         $r->post('/t/{id}/summary', [CommunityMemoryController::class, 'summary']);
         $r->post('/t/{id}/summary/retire', [CommunityMemoryController::class, 'retireSummary']);
         $r->post('/t/{id}/summary/restore', [CommunityMemoryController::class, 'republishSummary']);
+        $r->post('/t/{id}/summary/refresh', [CommunityMemoryController::class, 'refreshSummary']);
+        $r->post('/t/{id}/summary/automation/resume', [CommunityMemoryController::class, 'resumeAutomation']);
         $r->post('/t/{id}/related', [CommunityMemoryController::class, 'related']);
         $r->post('/t/{id}/poll', [PollController::class, 'create']);
         $r->post('/polls/{id}/vote', [PollController::class, 'vote']);

@@ -18,6 +18,7 @@ use App\Security\BoardPolicy;
 use App\Security\Cap;
 use App\Security\WriteGate;
 use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueueResult;
 use App\Support\Markdown;
 
 final class CommunityMemoryService
@@ -40,6 +41,15 @@ final class CommunityMemoryService
     private function gate(): AuthorityGate
     {
         return $this->authority ?? AuthorityGate::legacy();
+    }
+
+    public function requestRefresh(User $actor, int $threadId): ThreadIntelligenceQueueResult
+    {
+        $this->assertCurator($actor, $threadId);
+        if ($this->threadIntelligence === null) {
+            return new ThreadIntelligenceQueueResult(false, 'automated_context_disabled', 'Automatic context is disabled');
+        }
+        return $this->threadIntelligence->requestRefresh($threadId);
     }
 
     /** @param list<int> $sourcePostIds */

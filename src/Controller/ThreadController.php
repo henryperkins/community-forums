@@ -29,6 +29,7 @@ use App\Service\PollService;
 use App\Service\ReactionService;
 use App\Service\SinceLastReadContextService;
 use App\Service\ThreadWorkflowService;
+use App\Service\ThreadIntelligence\ThreadIntelligenceViewService;
 use App\Support\Markdown;
 
 /**
@@ -291,26 +292,47 @@ final class ThreadController extends Controller
         }
 
         $memoryOn = (bool) $featureFlags->enabled('community_memory');
-        $summary = null;
-        $summarySources = [];
-        $summaryReferenceCards = [];
-        $summaryHistory = [];
-        $related = [];
+        $livingBrief = null;
+        $livingBriefSources = [];
+        $livingBriefRelated = [];
+        $relatedFallback = [];
+        $memoryHistory = [];
+        $memoryRefresh = [];
+        $memoryAutomationPaused = false;
         $canCurateMemory = false;
         $canCurateWiki = false;
         $wikiRevisions = [];
         if ($memoryOn) {
             $memory = $this->container->get(CommunityMemoryService::class);
-            $summary = $memory->publishedSummary((int) $thread['id']);
-            if ($summary !== null) {
-                $summarySources = $memory->summarySources((int) $summary['id'], $user);
-                if ($featureFlags->enabled('content_references')) {
-                    $summaryReferenceCards = $this->container->get(ContentReferenceService::class)
-                        ->cardsForSources('summary', [(int) $summary['id']], $user)[(int) $summary['id']] ?? [];
-                }
+            $memoryModel = $this->container->get(ThreadIntelligenceViewService::class)
+                ->forThread((int) $thread['id'], $user);
+            $livingBrief = $memoryModel['living_brief'];
+            $livingBriefSources = $memoryModel['sources'];
+            foreach ($livingBriefSources as &$source) {
+                $source['url'] = $this->postLocation(
+                    (int) $source['thread_id'],
+                    (string) $source['thread_slug'],
+                    (int) $source['id'],
+                );
             }
-            $summaryHistory = $memory->summaries((int) $thread['id']);
-            $related = $memory->relatedForViewer((int) $thread['id'], $user);
+            unset($source);
+            $livingBriefRelated = $memoryModel['related'];
+            foreach ($livingBriefRelated as &$related) {
+                $related['url'] = '/t/' . (int) $related['thread_id'] . '-' . (string) $related['slug'];
+            }
+            unset($related);
+            $relatedFallback = $memoryModel['fallback_related'];
+            foreach ($relatedFallback as &$related) {
+                $related['url'] = '/t/' . (int) $related['thread_id'] . '-' . (string) $related['slug'];
+            }
+            unset($related);
+            $memoryHistory = $memoryModel['history'];
+            $memoryRefresh = $memoryModel['refresh'];
+            $memoryAutomationPaused = $memoryModel['automation_paused'];
+            if ($livingBrief !== null && $featureFlags->enabled('content_references')) {
+                $livingBrief['reference_cards'] = $this->container->get(ContentReferenceService::class)
+                    ->cardsForSources('summary', [(int) $livingBrief['id']], $user)[(int) $livingBrief['id']] ?? [];
+            }
             $canCurateMemory = $user !== null
                 && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::MEMORY_CURATE);
             $canCurateWiki = $canCurateMemory && (int) ($thread['board_wiki_enabled'] ?? 0) === 1;
@@ -383,11 +405,13 @@ final class ThreadController extends Controller
             'all_tags' => $allTags,
             'can_edit_tags' => $canEditTags,
             'memory_on' => $memoryOn,
-            'summary' => $summary,
-            'summary_sources' => $summarySources,
-            'summary_reference_cards' => $summaryReferenceCards,
-            'summary_history' => $summaryHistory,
-            'related_threads' => $related,
+            'living_brief' => $livingBrief,
+            'living_brief_sources' => $livingBriefSources,
+            'living_brief_related' => $livingBriefRelated,
+            'related_fallback' => $relatedFallback,
+            'memory_history' => $memoryHistory,
+            'memory_refresh' => $memoryRefresh,
+            'memory_automation_paused' => $memoryAutomationPaused,
             'can_curate_memory' => $canCurateMemory,
             'can_curate_wiki' => $canCurateWiki,
             'wiki_revisions_by_post' => $wikiRevisions,

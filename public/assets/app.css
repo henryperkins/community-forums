@@ -4645,3 +4645,87 @@ span.wf-btn {
         width: 100%;
     }
 }
+
+/* Living Brief: one post-header memory slot shared by members and curators. */
+.thread-memory-slot {
+    display: grid;
+    gap: var(--space-3);
+    min-width: 0;
+    margin: 0 0 var(--space-5);
+}
+.living-brief,
+.related-topic-fallback,
+.memory-curator-tools {
+    min-width: 0;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-xs);
+    padding: var(--space-4);
+}
+.living-brief-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-width: 0;
+}
+.living-brief-head h2,
+.related-topic-fallback h2 { margin: 0; }
+.living-brief-label {
+    margin: 0 0 var(--space-1);
+    color: var(--gold-ink);
+    font-family: var(--font-label);
+    font-size: .78rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+}
+.living-brief-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .88rem;
+}
+.living-brief-related {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+}
+.living-brief-related-card {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-cool);
+    overflow-wrap: anywhere;
+}
+.living-brief-related-card span { color: var(--text-muted); }
+.living-brief-sources { margin-top: var(--space-4); }
+.living-brief-sources h3 { margin-bottom: var(--space-2); }
+.living-brief-sources ul { margin: 0; padding-left: 1.2rem; }
+.related-topic-fallback {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+    overflow-wrap: anywhere;
+}
+.memory-curator-tools > summary { cursor: pointer; }
+.memory-curator-tools-body {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    min-width: 0;
+}
+
+@media (max-width: 760px) {
+    .living-brief-head { flex-direction: column; }
+    .living-brief-meta { justify-content: flex-start; }
+    .living-brief-related { grid-template-columns: minmax(0, 1fr); }
+}

@@ -16,6 +16,29 @@ use App\Service\CommunityMemoryService;
 final class CommunityMemoryController extends Controller
 {
     /** @param array<string,string> $params */
+    public function refreshSummary(Request $request, array $params): Response
+    {
+        $this->requireMemory();
+        $user = $this->requireUser();
+        $threadId = (int) ($params['id'] ?? 0);
+        $result = $this->container->get(CommunityMemoryService::class)->requestRefresh($user, $threadId);
+        return $this->redirectWithFlash($this->threadUrl($threadId), $result->message);
+    }
+
+    /** @param array<string,string> $params */
+    public function resumeAutomation(Request $request, array $params): Response
+    {
+        $this->requireMemory();
+        $user = $this->requireUser();
+        $threadId = (int) ($params['id'] ?? 0);
+        return $this->run(
+            fn () => $this->container->get(CommunityMemoryService::class)->resumeAutomation($user, $threadId),
+            $this->threadUrl($threadId),
+            'Automatic refresh resumed.',
+        );
+    }
+
+    /** @param array<string,string> $params */
     public function summary(Request $request, array $params): Response
     {
         $this->requireMemory();
