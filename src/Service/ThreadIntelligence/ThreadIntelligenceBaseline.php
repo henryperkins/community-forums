@@ -27,6 +27,9 @@ final readonly class ThreadIntelligenceBaseline
         if ($version !== null && $version < 1) {
             throw new InvalidArgumentException('baseline version must be positive');
         }
+        if (!array_is_list($sourcePostIds)) {
+            throw new InvalidArgumentException('baseline source ids must be a list');
+        }
         foreach ($sourcePostIds as $id) {
             if (!is_int($id) || $id < 1) {
                 throw new InvalidArgumentException('baseline source ids must be positive integers');

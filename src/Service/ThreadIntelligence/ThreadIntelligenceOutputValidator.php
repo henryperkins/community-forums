@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\ThreadIntelligence;
 
+use App\Support\Markdown;
+
 /**
  * Local structured-output validation (ADR 0019). Takes only the supplied
  * request — never the database — and either returns the fully validated
@@ -12,8 +14,8 @@ namespace App\Service\ThreadIntelligence;
  *
  * Structural violations (shape/keys/types) throw `schema_invalid`; content
  * violations (word limits, citations, candidates, unsafe content) throw
- * `validation_failed`. Downstream rendering still runs the canonical Markdown
- * through the existing App\Support\Markdown safety path at publish time.
+ * `validation_failed`. Content also runs through the existing
+ * App\Support\Markdown render/sanitization path before it becomes trusted.
  */
 final class ThreadIntelligenceOutputValidator
 {
@@ -27,6 +29,7 @@ final class ThreadIntelligenceOutputValidator
 
     private const UNSAFE_PATTERNS = [
         '/<[a-z!\/]/i',                    // raw HTML tag, comment, or autolink opener
+        '/<\?/',                            // raw processing instruction (PHP/XML)
         '/\]\(/',                          // Markdown link/image destination
         '/!\[/',                           // Markdown image opener
         '/```|~~~/',                       // code fences
@@ -34,6 +37,12 @@ final class ThreadIntelligenceOutputValidator
         '/\b(?:javascript|data|vbscript|mailto|file):/i',
         '/(?<![:\w])\/\/(?=\S)/',          // protocol-relative URL
     ];
+
+    private const FORBIDDEN_RENDERED_MARKUP = '~<\s*(?:a|img|pre|script|style|iframe|object|embed|svg|math|form|textarea|button|select|option|link|meta|base|audio|video|source|track|canvas|template|applet|frame|frameset|noscript|picture|map|area)\b|<[^>]+\son[a-z0-9_-]+\s*=~i';
+
+    public function __construct(private readonly Markdown $markdown)
+    {
+    }
 
     public function validate(ThreadIntelligenceResult $result, ThreadIntelligenceRequest $request): ValidatedThreadIntelligenceOutput
     {
@@ -52,6 +61,13 @@ final class ThreadIntelligenceOutputValidator
         // ---- content rules (validation_failed) ------------------------------
 
         $eligiblePostIds = array_map(static fn (ThreadIntelligenceEvidencePost $p): int => $p->postId, $request->posts);
+        if ($request->baseline !== null) {
+            $eligiblePostIds = [...$eligiblePostIds, ...$request->baseline->sourcePostIds];
+        }
+        if ($request->carryForward !== null) {
+            $eligiblePostIds = [...$eligiblePostIds, ...$request->carryForward->sourcePostIds];
+        }
+        $eligiblePostIds = array_values(array_unique($eligiblePostIds));
         $candidateIds = array_map(static fn (ThreadIntelligenceRelatedCandidate $c): int => $c->threadId, $request->candidates);
 
         $overviewText = $this->safeText($overview['markdown'], self::OVERVIEW_WORD_LIMIT, allowNewlines: true);
@@ -117,12 +133,14 @@ final class ThreadIntelligenceOutputValidator
         if ($this->wordCount($canonical) > self::TOTAL_WORD_LIMIT) {
             $this->rejectContent('composed brief exceeds 450 words');
         }
+        $this->assertSafeContent($canonical);
 
         $explanations = array_map(static fn (array $t): string => $t['explanation'], $validatedRelated);
         $moderationText = $canonical;
         if ($explanations !== []) {
             $moderationText .= "\n\n" . implode("\n", $explanations);
         }
+        $this->assertSafeContent($moderationText);
 
         $union = $overviewSources;
         foreach ([...$validatedKeyPoints, ...$validatedOpenQuestions] as $item) {
@@ -267,6 +285,15 @@ final class ThreadIntelligenceOutputValidator
             if (preg_match($pattern, $text) === 1) {
                 $this->rejectContent('raw HTML, links, images, code fences, and URLs are not allowed');
             }
+        }
+
+        try {
+            $rendered = $this->markdown->render($text);
+        } catch (\Throwable) {
+            $this->rejectContent('content could not be rendered safely');
+        }
+        if (preg_match(self::FORBIDDEN_RENDERED_MARKUP, $rendered) !== 0) {
+            $this->rejectContent('rendered content must not contain interactive or executable markup');
         }
     }
 

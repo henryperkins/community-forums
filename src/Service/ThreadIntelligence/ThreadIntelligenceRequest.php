@@ -37,10 +37,16 @@ final readonly class ThreadIntelligenceRequest
         if ($threadId < 1) {
             throw new InvalidArgumentException('thread id must be positive');
         }
+        if (!array_is_list($posts)) {
+            throw new InvalidArgumentException('posts must be a list');
+        }
         foreach ($posts as $post) {
             if (!$post instanceof ThreadIntelligenceEvidencePost) {
                 throw new InvalidArgumentException('posts must be ThreadIntelligenceEvidencePost instances');
             }
+        }
+        if (!array_is_list($candidates)) {
+            throw new InvalidArgumentException('candidates must be a list');
         }
         foreach ($candidates as $candidate) {
             if (!$candidate instanceof ThreadIntelligenceRelatedCandidate) {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\ThreadIntelligence;
 
+use InvalidArgumentException;
+
 /**
  * The ONLY shape trusted past the validator. Exposes exactly the product
  * contract: server-composed canonical Markdown, the moderation text (brief +
@@ -29,6 +31,25 @@ final readonly class ValidatedThreadIntelligenceOutput
         private array $sourcePostIds,
         private array $relatedThreadIds,
     ) {
+        foreach ([
+            'key points' => $keyPoints,
+            'open questions' => $openQuestions,
+            'related topics' => $relatedTopics,
+            'source post ids' => $sourcePostIds,
+            'related thread ids' => $relatedThreadIds,
+        ] as $name => $items) {
+            if (!array_is_list($items)) {
+                throw new InvalidArgumentException($name . ' must be a list');
+            }
+        }
+        foreach ([...$keyPoints, ...$openQuestions] as $item) {
+            if (!is_array($item)
+                || !array_key_exists('source_post_ids', $item)
+                || !is_array($item['source_post_ids'])
+                || !array_is_list($item['source_post_ids'])) {
+                throw new InvalidArgumentException('validated item source post ids must be a list');
+            }
+        }
     }
 
     public function canonicalMarkdown(): string

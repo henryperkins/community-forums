@@ -8,7 +8,9 @@ use App\Service\ThreadIntelligence\ArrayOpenAiTransport;
 use App\Service\ThreadIntelligence\OpenAiThreadIntelligenceOutputModerator;
 use App\Service\ThreadIntelligence\OpenAiTransportResponse;
 use App\Service\ThreadIntelligence\ThreadIntelligenceFailureCode;
+use App\Service\ThreadIntelligence\ThreadIntelligenceModerationResult;
 use App\Service\ThreadIntelligence\ThreadIntelligenceProviderException;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -87,6 +89,12 @@ final class OpenAiThreadIntelligenceOutputModeratorTest extends TestCase
         foreach ($verdict->flaggedCategories as $name) {
             self::assertLessThanOrEqual(64, strlen($name));
         }
+    }
+
+    public function test_moderation_categories_must_be_a_list(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new ThreadIntelligenceModerationResult(true, ['private-category-key' => 'harassment']);
     }
 
     public function test_non_200_statuses_fail_closed_as_moderation_transport(): void

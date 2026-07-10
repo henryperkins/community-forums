@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\ThreadIntelligence;
 
+use App\Service\ThreadIntelligence\ThreadIntelligenceBaseline;
+use App\Service\ThreadIntelligence\ThreadIntelligenceCarryForward;
 use App\Service\ThreadIntelligence\ThreadIntelligenceEvidencePost;
 use App\Service\ThreadIntelligence\ThreadIntelligenceFailureCode;
 use App\Service\ThreadIntelligence\ThreadIntelligenceOutputValidator;
@@ -12,6 +14,11 @@ use App\Service\ThreadIntelligence\ThreadIntelligenceRelatedCandidate;
 use App\Service\ThreadIntelligence\ThreadIntelligenceRequest;
 use App\Service\ThreadIntelligence\ThreadIntelligenceResult;
 use App\Service\ThreadIntelligence\ThreadIntelligenceUsage;
+use App\Service\ThreadIntelligence\ValidatedThreadIntelligenceOutput;
+use App\Support\HtmlSanitizer;
+use App\Support\Markdown;
+use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,12 +34,18 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->validator = new ThreadIntelligenceOutputValidator();
+        $this->validator = new ThreadIntelligenceOutputValidator(new Markdown(new HtmlSanitizer()));
     }
 
     /** @param list<int> $postIds @param list<int> $candidateIds */
-    private function request(array $postIds = [11, 12, 13], array $candidateIds = [201, 202, 203, 204]): ThreadIntelligenceRequest
-    {
+    private function request(
+        array $postIds = [11, 12, 13],
+        array $candidateIds = [201, 202, 203, 204],
+        ?ThreadIntelligenceBaseline $baseline = null,
+        ?ThreadIntelligenceCarryForward $carryForward = null,
+        int $windowNumber = 0,
+        int $windowCount = 1,
+    ): ThreadIntelligenceRequest {
         $posts = [];
         $speaker = 0;
         foreach ($postIds as $id) {
@@ -49,14 +62,32 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
         return new ThreadIntelligenceRequest(
             threadId: 7,
             threadTitle: 'Widget upgrade breaks login',
-            baseline: null,
-            carryForward: null,
+            baseline: $baseline,
+            carryForward: $carryForward,
             posts: $posts,
             candidates: $candidates,
             sourceSnapshotHash: str_repeat('ab', 32),
             promptVersion: 'thread-intelligence-v1',
-            windowNumber: 0,
-            windowCount: 1,
+            windowNumber: $windowNumber,
+            windowCount: $windowCount,
+        );
+    }
+
+    /** @param list<int> $postIds */
+    private function carryForward(array $postIds = [21, 22]): ThreadIntelligenceCarryForward
+    {
+        $result = $this->providerResult([
+            'overview' => ['markdown' => 'Prior overview.', 'source_post_ids' => [$postIds[0]]],
+            'key_points' => [
+                ['markdown' => 'Prior point one.', 'source_post_ids' => [$postIds[0]]],
+                ['markdown' => 'Prior point two.', 'source_post_ids' => [$postIds[1]]],
+            ],
+            'open_questions' => [['markdown' => 'Prior question.', 'source_post_ids' => [$postIds[1]]]],
+            'related_topics' => [],
+        ]);
+
+        return ThreadIntelligenceCarryForward::fromValidated(
+            $this->validator->validate($result, $this->request($postIds, [])),
         );
     }
 
@@ -217,6 +248,44 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
         $this->assertRejected($notAList, ThreadIntelligenceFailureCode::SCHEMA_INVALID, 'items must be a list');
     }
 
+    /** @return iterable<string,array{string,array<mixed>}> */
+    public static function invalidValidatedOutputListCases(): iterable
+    {
+        yield 'key points object' => ['keyPoints', ['first' => ['markdown' => 'Point.', 'source_post_ids' => [11]]]];
+        yield 'open questions object' => ['openQuestions', ['first' => ['markdown' => 'Question.', 'source_post_ids' => [11]]]];
+        yield 'related topics object' => ['relatedTopics', ['first' => ['thread_id' => 201, 'explanation' => 'Related']]];
+        yield 'source post IDs object' => ['sourcePostIds', ['first' => 11]];
+        yield 'related thread IDs object' => ['relatedThreadIds', ['first' => 201]];
+        yield 'nested key-point source IDs object' => ['keyPoints', [['markdown' => 'Point.', 'source_post_ids' => ['first' => 11]]]];
+        yield 'nested open-question source IDs object' => ['openQuestions', [['markdown' => 'Question.', 'source_post_ids' => ['first' => 11]]]];
+    }
+
+    /** @param array<mixed> $invalidValue */
+    #[DataProvider('invalidValidatedOutputListCases')]
+    public function test_validated_output_rejects_associative_values_for_list_contracts(string $field, array $invalidValue): void
+    {
+        $values = [
+            'keyPoints' => [['markdown' => 'Point.', 'source_post_ids' => [11]]],
+            'openQuestions' => [['markdown' => 'Question.', 'source_post_ids' => [11]]],
+            'relatedTopics' => [['thread_id' => 201, 'explanation' => 'Related']],
+            'sourcePostIds' => [11],
+            'relatedThreadIds' => [201],
+        ];
+        $values[$field] = $invalidValue;
+
+        $this->expectException(InvalidArgumentException::class);
+        new ValidatedThreadIntelligenceOutput(
+            'Overview.',
+            'Overview.',
+            'Overview.',
+            $values['keyPoints'],
+            $values['openQuestions'],
+            $values['relatedTopics'],
+            $values['sourcePostIds'],
+            $values['relatedThreadIds'],
+        );
+    }
+
     // ---- word limits ------------------------------------------------------------
 
     public function test_overview_over_220_words_is_rejected(): void
@@ -284,6 +353,55 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
         $output = $this->validOutput();
         $output['key_points'][0]['source_post_ids'] = [999];
         $this->assertRejected($output, ThreadIntelligenceFailureCode::VALIDATION_FAILED, 'unknown post id');
+    }
+
+    public function test_later_windows_accept_citations_from_current_posts_baseline_and_carry_forward(): void
+    {
+        $baseline = new ThreadIntelligenceBaseline(5, 3, 'Immutable curator baseline.', [31]);
+        $carryForward = $this->carryForward([21, 22]);
+        $request = $this->request([41], [], $baseline, $carryForward, 1, 2);
+        $output = [
+            'overview' => ['markdown' => 'The curator baseline remains supported.', 'source_post_ids' => [31]],
+            'key_points' => [
+                ['markdown' => 'The prior result remains relevant.', 'source_post_ids' => [21]],
+                ['markdown' => 'The current slice adds evidence.', 'source_post_ids' => [41]],
+            ],
+            'open_questions' => [['markdown' => 'The prior question remains open.', 'source_post_ids' => [22]]],
+            'related_topics' => [],
+        ];
+
+        try {
+            $validated = $this->validator->validate($this->providerResult($output), $request);
+        } catch (ThreadIntelligenceProviderException $e) {
+            self::fail('citations supplied by baseline/carry-forward must remain eligible: ' . $e->safeCode());
+        }
+
+        self::assertSame([21, 22, 31, 41], $validated->sourcePostIds());
+        self::assertSame([31], $request->baseline?->sourcePostIds, 'the immutable baseline remains distinct');
+        self::assertSame([21, 22], $request->carryForward?->sourcePostIds, 'carry-forward remains distinct');
+    }
+
+    public function test_later_windows_still_reject_citations_not_supplied_by_any_request_input(): void
+    {
+        $baseline = new ThreadIntelligenceBaseline(5, 3, 'Immutable curator baseline.', [31]);
+        $carryForward = $this->carryForward([21, 22]);
+        $request = $this->request([41], [], $baseline, $carryForward, 1, 2);
+        $output = [
+            'overview' => ['markdown' => 'The current slice remains supported.', 'source_post_ids' => [41]],
+            'key_points' => [
+                ['markdown' => 'The current result remains relevant.', 'source_post_ids' => [41]],
+                ['markdown' => 'An invented citation is not allowed.', 'source_post_ids' => [999]],
+            ],
+            'open_questions' => [['markdown' => 'The current question remains open.', 'source_post_ids' => [41]]],
+            'related_topics' => [],
+        ];
+
+        try {
+            $this->validator->validate($this->providerResult($output), $request);
+            self::fail('a citation absent from posts, baseline, and carry-forward must be rejected');
+        } catch (ThreadIntelligenceProviderException $e) {
+            self::assertSame(ThreadIntelligenceFailureCode::VALIDATION_FAILED, $e->safeCode());
+        }
     }
 
     public function test_the_same_source_may_be_cited_by_different_items(): void
@@ -376,6 +494,57 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
         }
     }
 
+    /** @return iterable<string,array{string}> */
+    public static function rawProcessingInstructionCases(): iterable
+    {
+        yield 'PHP processing instruction' => ['<?php echo 1; ?>'];
+        yield 'XML processing instruction' => ['<?xml version="1.0"?>'];
+    }
+
+    #[DataProvider('rawProcessingInstructionCases')]
+    public function test_raw_html_processing_instructions_are_rejected(string $payload): void
+    {
+        $output = $this->validOutput();
+        $output['overview']['markdown'] = $payload;
+
+        $this->assertRejected($output, ThreadIntelligenceFailureCode::VALIDATION_FAILED, $payload);
+    }
+
+    /** @return iterable<string,array{string}> */
+    public static function renderedLinkCases(): iterable
+    {
+        yield 'bare www autolink' => ['See www.example.com for the details'];
+        yield 'email autolink' => ['Contact admin@example.com for the details'];
+        yield 'reference-style relative link' => ["Read [docs][r] for details.\n\n[r]: /admin"];
+        yield 'inline relative link' => ['Read [docs](/admin) for details.'];
+    }
+
+    #[DataProvider('renderedLinkCases')]
+    public function test_content_that_renders_as_a_link_is_rejected(string $payload): void
+    {
+        $output = $this->validOutput();
+        $output['overview']['markdown'] = $payload;
+
+        $this->assertRejected($output, ThreadIntelligenceFailureCode::VALIDATION_FAILED, $payload);
+    }
+
+    public function test_reference_definitions_cannot_activate_links_only_after_canonical_composition(): void
+    {
+        $output = $this->validOutput();
+        $output['overview']['markdown'] = "Context retained.\n\n[r]: /admin";
+        $output['key_points'][0]['markdown'] = 'Read [docs][r] for details.';
+
+        $this->assertRejected($output, ThreadIntelligenceFailureCode::VALIDATION_FAILED, 'cross-section reference link');
+    }
+
+    public function test_indented_code_blocks_are_rejected_after_markdown_rendering(): void
+    {
+        $output = $this->validOutput();
+        $output['overview']['markdown'] = "Context retained.\n\n    echo dangerous();";
+
+        $this->assertRejected($output, ThreadIntelligenceFailureCode::VALIDATION_FAILED, 'indented code block');
+    }
+
     public function test_empty_or_whitespace_overview_is_rejected(): void
     {
         foreach (['', '   ', "\n\t"] as $empty) {
@@ -390,5 +559,18 @@ final class ThreadIntelligenceOutputValidatorTest extends TestCase
         $output = $this->validOutput();
         $output['overview']['markdown'] = 'The **cookie rename** is the *root cause* according to `session.name` reports.';
         self::assertNotNull($this->validator->validate($this->providerResult($output), $this->request()));
+    }
+
+    public function test_plain_text_that_only_resembles_an_event_attribute_remains_safe(): void
+    {
+        $output = $this->validOutput();
+        $output['overview']['markdown'] = 'The parser preserves onload=value as inert discussion text.';
+
+        try {
+            $validated = $this->validator->validate($this->providerResult($output), $this->request());
+        } catch (ThreadIntelligenceProviderException $e) {
+            self::fail('plain text must not be mistaken for a rendered event attribute: ' . $e->safeCode());
+        }
+        self::assertNotNull($validated);
     }
 }

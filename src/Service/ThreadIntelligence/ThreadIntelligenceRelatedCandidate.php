@@ -32,6 +32,9 @@ final readonly class ThreadIntelligenceRelatedCandidate
         if (mb_strlen($excerpt) > 500) {
             throw new InvalidArgumentException('candidate excerpt is bounded to 500 characters');
         }
+        if (!array_is_list($sharedTags)) {
+            throw new InvalidArgumentException('shared tags must be a list');
+        }
         foreach ($sharedTags as $tag) {
             if (!is_string($tag) || $tag === '') {
                 throw new InvalidArgumentException('shared tags must be nonempty strings');

@@ -14,6 +14,8 @@ use App\Service\ThreadIntelligence\ThreadIntelligenceResult;
 use App\Service\ThreadIntelligence\ThreadIntelligenceOutputValidator;
 use App\Service\ThreadIntelligence\ThreadIntelligenceSchema;
 use App\Service\ThreadIntelligence\ThreadIntelligenceUsage;
+use App\Support\HtmlSanitizer;
+use App\Support\Markdown;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -32,13 +34,17 @@ final class ThreadIntelligencePromptBuilderTest extends TestCase
         $this->builder = new ThreadIntelligencePromptBuilder();
     }
 
-    /** @param list<ThreadIntelligenceEvidencePost>|null $posts */
+    /**
+     * @param list<ThreadIntelligenceEvidencePost>|null $posts
+     * @param list<ThreadIntelligenceRelatedCandidate>|null $candidates
+     */
     private function request(
         ?array $posts = null,
         ?ThreadIntelligenceBaseline $baseline = null,
         ?ThreadIntelligenceCarryForward $carryForward = null,
         int $windowNumber = 0,
         int $windowCount = 1,
+        ?array $candidates = null,
     ): ThreadIntelligenceRequest {
         return new ThreadIntelligenceRequest(
             threadId: 42,
@@ -49,7 +55,7 @@ final class ThreadIntelligencePromptBuilderTest extends TestCase
                 new ThreadIntelligenceEvidencePost(11, '2026-07-10T09:00:00Z', 'speaker-1', 'The upgrade broke my login.'),
                 new ThreadIntelligenceEvidencePost(12, '2026-07-10T09:05:00Z', 'speaker-2', 'Same here, cookie looks renamed.'),
             ],
-            candidates: [
+            candidates: $candidates ?? [
                 new ThreadIntelligenceRelatedCandidate(201, 'Cookie rename in 2.3', 'The 2.3 release renamed…', ['login'], 1, 0.7, 1, '2026-07-01T00:00:00Z'),
             ],
             sourceSnapshotHash: str_repeat('cd', 32),
@@ -185,7 +191,7 @@ final class ThreadIntelligencePromptBuilderTest extends TestCase
             'related_topics' => [['thread_id' => 201, 'explanation' => 'Related because shared topic']],
         ], 'resp_x', 'completed', null, new ThreadIntelligenceUsage(null, null, null, null));
 
-        return (new ThreadIntelligenceOutputValidator())->validate($result, $request);
+        return (new ThreadIntelligenceOutputValidator(new Markdown(new HtmlSanitizer())))->validate($result, $request);
     }
 
     public function test_carry_forward_copies_only_validated_intermediate_state_and_no_provider_metadata(): void
@@ -308,6 +314,45 @@ final class ThreadIntelligencePromptBuilderTest extends TestCase
         } catch (InvalidArgumentException $e) {
             self::assertStringContainsString('RelatedCandidate', $e->getMessage());
         }
+    }
+
+    public function test_posts_must_be_a_list_even_when_every_value_is_typed(): void
+    {
+        $post = new ThreadIntelligenceEvidencePost(11, '2026-07-10T09:00:00Z', 'speaker-1', 'Public body.');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('list');
+        $this->request(posts: ['private-post-key' => $post]);
+    }
+
+    public function test_candidates_must_be_a_list_even_when_every_value_is_typed(): void
+    {
+        $candidate = new ThreadIntelligenceRelatedCandidate(201, 'Candidate', 'Excerpt', ['login'], 1, 0.7, 1, '2026-07-01T00:00:00Z');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('list');
+        $this->request(candidates: ['private-candidate-key' => $candidate]);
+    }
+
+    public function test_baseline_source_ids_must_be_a_list(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('list');
+        new ThreadIntelligenceBaseline(5, 3, 'Curator baseline.', ['private-source-key' => 11]);
+    }
+
+    public function test_candidate_shared_tags_must_be_a_list(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('list');
+        new ThreadIntelligenceRelatedCandidate(
+            201,
+            'Candidate',
+            'Excerpt',
+            ['private-tag-key' => 'login'],
+            1,
+            0.7,
+            1,
+            '2026-07-01T00:00:00Z',
+        );
     }
 
     // ---- strict schema envelope ------------------------------------------------------

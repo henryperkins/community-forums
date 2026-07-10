@@ -17,6 +17,9 @@ final readonly class ThreadIntelligenceModerationResult
         public bool $flagged,
         public array $flaggedCategories = [],
     ) {
+        if (!array_is_list($flaggedCategories)) {
+            throw new InvalidArgumentException('flagged categories must be a list');
+        }
         if (count($flaggedCategories) > 32) {
             throw new InvalidArgumentException('flagged categories must stay bounded');
         }
