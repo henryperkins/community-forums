@@ -102,8 +102,10 @@ final class ThreadIntelligenceBudget
 
     /**
      * Moves one reserved call to used and refunds the unused input-token
-     * difference; missing usage conservatively keeps the full reservation
-     * used. A prior-day reservation needs no current-counter mutation.
+     * difference; exact zero cancels a reservation known not to have crossed
+     * the provider boundary, while missing usage conservatively keeps the full
+     * reservation used. A prior-day reservation needs no current-counter
+     * mutation.
      *
      * @param array{date:string, input_tokens:int} $reservation
      */
@@ -120,6 +122,15 @@ final class ThreadIntelligenceBudget
             }
 
             $reserved = (int) $reservation['input_tokens'];
+            if ($actualInputTokens === 0) {
+                // The worker uses exact zero only when it can prove no provider
+                // call occurred (lost lease or a live pre-egress gate). Refund
+                // both reserved dimensions instead of inventing a used call.
+                $counters['reserved_calls'] = max(0, $counters['reserved_calls'] - 1);
+                $counters['reserved_input_tokens'] = max(0, $counters['reserved_input_tokens'] - $reserved);
+                $this->writeCounters($counters);
+                return;
+            }
             $used = $actualInputTokens === null ? $reserved : max(0, $actualInputTokens);
 
             $counters['reserved_calls'] = max(0, $counters['reserved_calls'] - 1);

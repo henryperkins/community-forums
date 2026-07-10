@@ -149,6 +149,20 @@ final class ThreadIntelligenceBudgetTest extends TestCase
         self::assertSame(500, $counters['used_input_tokens'], 'actual usage is recorded; the difference is refunded');
     }
 
+    public function test_zero_usage_cancels_a_reservation_before_any_provider_call(): void
+    {
+        $budget = $this->budget();
+        $reservation = $budget->reserve($this->now())['reservation'];
+
+        $budget->reconcile($reservation, 0);
+
+        $counters = $this->storedCounters();
+        self::assertSame(0, $counters['reserved_calls']);
+        self::assertSame(0, $counters['used_calls'], 'a call that never crossed the provider boundary is refunded');
+        self::assertSame(0, $counters['reserved_input_tokens']);
+        self::assertSame(0, $counters['used_input_tokens']);
+    }
+
     public function test_missing_usage_keeps_the_conservative_full_reservation_used(): void
     {
         $budget = $this->budget();
