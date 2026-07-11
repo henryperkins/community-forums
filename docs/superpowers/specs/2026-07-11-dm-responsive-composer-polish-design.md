@@ -44,6 +44,10 @@ DM templates will set the existing layout `route` block to `messages`, producing
 
 The mobile DM shell will use a bounded dynamic-viewport height. The thread pane remains a column: header and composer are fixed-height flex children, while only `.dm-scroll` scrolls. This prevents the page itself from placing the composer beneath the viewport. The implementation must tolerate the natural wrapped height of the retained top-bar controls and must be verified at both 390×844 and 320×568.
 
+The `/messages/new` fallback route uses the same bounded shell. Its form pane scrolls internally when the recipient, optional group title, body, validation errors, or draft state exceed the available height; fields and submit actions must not clip.
+
+Hiding the global search form on mobile DM routes intentionally prioritizes the message task. Site-wide search is not available from the compact DM top bar; users can leave the DM surface through the retained navigation control. The conversation-list search remains available for finding messages.
+
 ### DM-only formatting disclosure
 
 When the shared composer enhances a form whose `data-composer-context` equals `dm`, it will create one `Formatting` button before the Markdown toolbar. The button controls the toolbar with `aria-expanded` and `aria-controls`. The toolbar begins collapsed for both the new-message form and the conversation reply form.
@@ -52,11 +56,13 @@ Expanding the disclosure reveals the existing Bold, Italic, Strike, Code, Spoile
 
 Non-DM topic, reply, and edit composers keep the always-visible toolbar. With JavaScript disabled, no toolbar or disclosure is present and the textarea continues to submit normally.
 
-The DM character counter stays available but is visually quiet and occupies no dedicated row while the field is empty. The existing `Discard draft` button remains governed by saved-draft state; in DMs it is styled as a quiet text action rather than a full-width secondary button.
+The default-on WYSIWYG posture is part of this behavior. DM replies and the standalone `/messages/new` route may mount Milkdown; the list-pane compose dialog keeps its existing `data-no-wysiwyg` fallback. The formatting disclosure wraps the shared `.composer-toolbar`, so its buttons must continue to drive both the rich editor and source textarea. Browser coverage must exercise a DM reply with WYSIWYG enabled, not only the source-mode fallback.
+
+The DM character counter stays available but is visually quiet and occupies no dedicated row while the field is empty. Its denominator comes from the enhanced field's `maxlength`, with the existing 20,000 default only when no valid maximum is present; DM fields therefore report the server-aligned 5,000-character limit. The existing `Discard draft` button remains governed by saved-draft state; in DMs it is styled as a quiet text action rather than a full-width secondary button.
 
 ### Conversation-list hierarchy
 
-Add a deterministic compact UTC timestamp helper for DM list rows. It renders `M j · H:i`, for example `Jul 11 · 02:54`. The `<time>` element retains the machine-readable datetime, and its accessible label/title retains the existing full `human_datetime()` value.
+Add a deterministic compact UTC timestamp helper for DM list rows. It renders `M j · H:i`, for example `Jul 11 · 02:54`. A semantic `<time>` element is introduced with the machine-readable datetime, while both `aria-label` and `title` expose the existing full `human_datetime()` value.
 
 Participant or group names retain priority in the first row. The preview occupies the second row, and the unread dot remains a separate labelled status. The full date continues to appear in the open conversation.
 
@@ -66,14 +72,17 @@ DM new-message, back, details, overflow, close, send, and per-message action con
 
 ## Accessibility Semantics
 
-The shared slash-command and reference-suggestion code will stop assigning `role="combobox"` to a native `<textarea>`. The textarea keeps its implicit textbox role and the accessible name, `aria-autocomplete`, `aria-controls`, `aria-expanded`, `aria-haspopup`, and `aria-activedescendant` state needed by the suggestion menus.
+The shared slash-command and reference-suggestion code will stop assigning `role="combobox"` and `aria-expanded` to a native `<textarea>`. The textarea keeps its implicit textbox role and the accessible name, `aria-autocomplete`, `aria-controls`, `aria-haspopup`, and `aria-activedescendant` state needed by the suggestion menus. Popup open state is conveyed by the visible listbox and active-descendant state instead of an attribute that is invalid for the textarea's implicit role.
+
+The current `role` and `aria-expanded` attributes are load-bearing internal state in `comboboxReady()`, `setExpanded()`, and reference-picker close detection. Their removal requires a small state refactor: slash readiness uses the existing closure `ready`/configuration state, and reference-picker open/close logic uses `menu.hidden` plus the controlled popup id. The implementation must not substitute another DOM attribute merely to preserve the old control flow.
 
 Tests must prove that:
 
-- Axe no longer reports `aria-allowed-role` for the composer textarea;
+- an explicit Axe run with `withRules(['aria-allowed-role'])` no longer reports the best-practice role violation, rather than relying on the existing WCAG-tagged serious/critical helper that excludes this rule;
+- the existing WCAG-tagged scan continues to report no serious or critical `aria-allowed-attr` violation after `aria-expanded` is removed;
 - the suggestion listboxes still open, expose options, support arrow-key movement, accept Enter, and close with Escape;
 - the DM formatting disclosure is keyboard operable and returns focus when collapsed;
-- the details overlay exposes correct expanded state and dismisses with Escape;
+- the details overlay exposes correct expanded state, dismisses with Escape/scrim/close, and returns focus to the details toggle when closed;
 - focus remains visible and no control depends on color alone.
 
 This work does not claim full WCAG compliance. Screen-reader announcements, contrast, zoom, and reflow remain part of browser evidence and manual verification.
@@ -98,13 +107,16 @@ Expected production files:
 - `public/assets/app.css`: two-column DM shell, overlay rail, mobile bounded viewport, compact DM composer, and 44px hit areas.
 - `public/assets/app.js`: simplify the details overlay state if required by the all-width overlay.
 - `public/assets/composer.js`: DM-only formatting disclosure and shared textarea-role correction.
+- `COMPOSER.md`: document the DM-specific mobile formatting disclosure as an intentional exception to the shared essential-controls-plus-overflow pattern.
 
 Expected test files:
 
 - `tests/Unit/Support/*` or the existing helper test file: compact timestamp formatting and invalid input.
 - `tests/Integration/Core/AppDirectMessageTest.php`: route marker, timestamp markup, no-JS forms, and preserved DM behavior.
-- `tests/browser/dm-reimagine.spec.ts`: desktop/mobile layout, rail overlay, formatting disclosure, focus, and touch targets.
-- `tests/browser/a11y.spec.ts`: composer semantics and suggestion-menu keyboard behavior.
+- `tests/browser/dm-reimagine.spec.ts`: desktop/mobile layout, rail overlay, formatting disclosure, focus, and touch targets. Its current wide-rail assertions are replaced rather than extended; before implementation, repair the already-red stale copy assertion for `Beginning of your counsel`, which has no corresponding production text.
+- `tests/browser/a11y.spec.ts`: explicit best-practice role scan, WCAG attribute scan, and suggestion-menu keyboard behavior.
+- `tests/browser/gate-a.spec.ts`: replace the slash-picker textarea's `aria-expanded` contract with visible-listbox and active-descendant assertions.
+- `tests/browser/wysiwyg-composer.spec.ts`: replace the reference-picker `aria-expanded` assertion and add a default-on DM WYSIWYG formatting-disclosure assertion.
 
 No database migration, controller route, repository method, design token, icon set, or dependency is added.
 
@@ -113,11 +125,13 @@ No database migration, controller route, repository method, design token, icon s
 Implementation follows red-green-refactor for each behavior:
 
 1. Add failing unit and integration assertions for compact timestamps and DM route markup.
-2. Add failing browser assertions for the two-column desktop shell, closed overlay rail, DM-only formatting disclosure, mobile bounded composer, and 44px hit areas.
-3. Add a failing accessibility assertion proving the textarea no longer has an invalid explicit role while suggestion menus still work.
+2. Record the known stale `dm-reimagine.spec.ts` copy failure, repair that baseline expectation, then add failing browser assertions for the two-column desktop shell, closed overlay rail, DM-only formatting disclosure, mobile bounded composer, internally scrolling `/messages/new`, and 44px hit areas. The 1440×900 and 320×568 checks use explicit browser contexts because the configured desktop project is 1280×800.
+3. Add a failing explicit `aria-allowed-role` assertion and update the existing WCAG-tagged scans to prove the textarea has neither the invalid role nor invalid `aria-expanded`, while suggestion menus remain keyboard-operable.
 4. Implement the smallest changes that satisfy each test.
 5. Run focused PHPUnit and Playwright tests, then the full PHP suite and the existing DM/no-JS/a11y browser evidence.
 6. Capture fresh desktop and mobile screenshots at 1440×900, 390×844, and 320×568.
+
+The rail implementation also removes dead column-era state: `.rail-hidden` CSS, the grid-column transition, the `rb-dm-rail-collapsed` storage key, and the width-gated Escape path. These are deleted only after the overlay tests are green.
 
 ## Non-Goals
 
