@@ -95,6 +95,9 @@ final class ThreadIntelligencePromptBuilderTest extends TestCase
         self::assertStringContainsString('Cite only supplied post IDs', $instructions);
         self::assertStringContainsString('Choose related topics only from the supplied candidate thread IDs', $instructions);
         self::assertStringContainsString('Return exactly the required JSON schema', $instructions);
+        self::assertStringContainsString('three to five combined key points plus open questions, each a single line of at most 40 words', $instructions);
+        self::assertStringContainsString('overview within 220 words and the whole brief within 450 words', $instructions);
+        self::assertStringContainsString('at most three related topics, each explained in exactly one sentence of fewer than 256 characters', $instructions);
     }
 
     public function test_data_document_is_json_with_thread_posts_candidates_and_window(): void

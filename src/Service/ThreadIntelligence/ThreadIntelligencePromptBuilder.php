@@ -30,6 +30,8 @@ final class ThreadIntelligencePromptBuilder
         6. Cite only supplied post IDs, and cite at least one for every statement group.
         7. Choose related topics only from the supplied candidate thread IDs; never invent or browse to other threads.
         8. Return exactly the required JSON schema with no additional properties, no raw HTML, no links or images, and no code fences.
+        9. Size the brief exactly: provide three to five combined key points plus open questions, each a single line of at most 40 words; keep the overview within 220 words and the whole brief within 450 words.
+        10. Provide at most three related topics, each explained in exactly one sentence of fewer than 256 characters.
         TEXT;
 
     /** @return list<array{role:string, content:string}> */
