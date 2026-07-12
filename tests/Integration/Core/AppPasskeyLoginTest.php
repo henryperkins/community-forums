@@ -71,6 +71,23 @@ final class AppPasskeyLoginTest extends TestCase
         $this->assertStatus(200, $this->get('/settings/security'));
     }
 
+    public function test_registered_credential_defaults_to_the_community_inbox_without_next(): void
+    {
+        $user = $this->makeUser(['username' => 'pk_inbox']);
+        $this->actingAs($user);
+        $cred = $this->enroll($user);
+        $this->logoutClient();
+
+        $challenge = $this->loginChallenge((string) $user['email']);
+        $response = $this->post('/login/passkey', [
+            'email' => (string) $user['email'],
+            'credential' => $this->harness->assertionPayload($cred, $challenge['challenge'], 1),
+        ]);
+
+        $this->assertStatus(200, $response);
+        self::assertSame('/inbox', json_decode($response->body(), true)['redirect']);
+    }
+
     public function test_unknown_or_passkeyless_email_gets_fixed_shape_decoys_and_never_signs_in(): void
     {
         $c = $this->loginChallenge('nobody@retro.test');
