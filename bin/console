@@ -388,10 +388,115 @@ try {
                 || array_diff($requiredCategories, $categories) !== []) {
                 throw new RuntimeException('Live evaluation corpus is missing a locked case or has duplicate IDs.');
             }
-            $tty = @fopen('/dev/tty', 'r+');
-            if (!is_resource($tty)) {
-                throw new RuntimeException('Live evaluation requires an interactive /dev/tty reviewer.');
+            // The reviewer channel shows generated text transiently and accepts one
+            // rubric JSON line per fixture/effort. It is never stdout: the default is
+            // the controlling terminal (/dev/tty, or CONIN$/CONOUT$ on Windows), and a
+            // delegated reviewer may instead supply a memory-only loopback TCP endpoint
+            // via THREAD_INTELLIGENCE_REVIEWER_CHANNEL. The production refusal above
+            // guards every mode.
+            $reviewerEndpoint = trim((string) getenv('THREAD_INTELLIGENCE_REVIEWER_CHANNEL'));
+            $reviewerServer = null;
+            $reviewerIn = null;
+            $reviewerOut = null;
+            if ($reviewerEndpoint !== '') {
+                if (preg_match('~\Atcp://127\.0\.0\.1:(\d{4,5})\z~', $reviewerEndpoint, $endpointPort) !== 1
+                    || (int) $endpointPort[1] < 1024
+                    || (int) $endpointPort[1] > 65535) {
+                    throw new RuntimeException('THREAD_INTELLIGENCE_REVIEWER_CHANNEL must be tcp://127.0.0.1:<1024-65535>.');
+                }
+                $reviewerServer = @stream_socket_server($reviewerEndpoint, $channelErrorCode, $channelErrorMessage);
+                if (!is_resource($reviewerServer)) {
+                    throw new RuntimeException('Unable to bind the loopback reviewer channel.');
+                }
+            } elseif (PHP_OS_FAMILY === 'Windows') {
+                $reviewerOut = @fopen('CONOUT$', 'wb');
+                $reviewerIn = @fopen('CONIN$', 'rb');
+                if (!is_resource($reviewerOut) || !is_resource($reviewerIn)) {
+                    throw new RuntimeException('Live evaluation requires an interactive console reviewer (CONIN$/CONOUT$) or a loopback reviewer channel.');
+                }
+            } else {
+                $tty = @fopen('/dev/tty', 'r+');
+                if (!is_resource($tty)) {
+                    throw new RuntimeException('Live evaluation requires an interactive /dev/tty reviewer.');
+                }
+                $reviewerIn = $tty;
+                $reviewerOut = $tty;
             }
+            $parseRubricLine = static function (string $line): array|string {
+                $trimmed = trim($line);
+                if ($trimmed === '') {
+                    return 'A rubric JSON line is required for every fixture and effort.';
+                }
+                try {
+                    $rubric = json_decode($trimmed, true, 8, JSON_THROW_ON_ERROR);
+                } catch (JsonException) {
+                    return 'The rubric line must be valid JSON.';
+                }
+                if (!is_array($rubric)) {
+                    return 'The rubric line must be a JSON object.';
+                }
+                $keys = array_keys($rubric);
+                sort($keys);
+                if ($keys !== ['fabricated_decision', 'material_claims', 'quality_pass', 'supported_claims']) {
+                    return 'The rubric object must contain exactly material_claims, supported_claims, fabricated_decision, and quality_pass.';
+                }
+                if (!is_int($rubric['material_claims']) || $rubric['material_claims'] < 0
+                    || !is_int($rubric['supported_claims']) || $rubric['supported_claims'] < 0
+                    || $rubric['supported_claims'] > $rubric['material_claims']
+                    || !is_bool($rubric['fabricated_decision'])
+                    || !is_bool($rubric['quality_pass'])) {
+                    return 'Rubric counts must be nonnegative integers with supported_claims <= material_claims and boolean flags.';
+                }
+                return $rubric;
+            };
+            $askReviewer = static function (string $display) use ($reviewerServer, $reviewerIn, $reviewerOut, $parseRubricLine): array {
+                if (is_resource($reviewerServer)) {
+                    // Reviewer clients connect once per exchange: a connection that
+                    // reads the display and closes without answering is a preview,
+                    // and the same display is re-offered until a connection returns
+                    // a valid rubric line. Invalid lines are rejected and re-asked
+                    // instead of aborting the paid evaluation run.
+                    $rejection = null;
+                    $deadline = time() + 7200;
+                    while (time() < $deadline) {
+                        $connection = @stream_socket_accept($reviewerServer, 60);
+                        if (!is_resource($connection)) {
+                            continue;
+                        }
+                        stream_set_timeout($connection, 600);
+                        fwrite($connection, ($rejection === null ? '' : 'REJECTED: ' . $rejection . "\n") . $display);
+                        $line = fgets($connection);
+                        if (!is_string($line) || trim($line) === '') {
+                            fclose($connection);
+                            continue;
+                        }
+                        $rubric = $parseRubricLine($line);
+                        if (is_string($rubric)) {
+                            $rejection = $rubric;
+                            fwrite($connection, 'REJECTED: ' . $rubric . "\n");
+                            fclose($connection);
+                            continue;
+                        }
+                        fwrite($connection, "ACCEPTED\n");
+                        fclose($connection);
+                        return $rubric;
+                    }
+                    throw new RuntimeException('No reviewer rubric arrived on the loopback channel within two hours.');
+                }
+                fwrite($reviewerOut, $display);
+                for ($attempt = 0; $attempt < 25; $attempt++) {
+                    $line = fgets($reviewerIn);
+                    if (!is_string($line)) {
+                        throw new RuntimeException('The reviewer terminal closed before a rubric line arrived.');
+                    }
+                    $rubric = $parseRubricLine($line);
+                    if (is_array($rubric)) {
+                        return $rubric;
+                    }
+                    fwrite($reviewerOut, 'REJECTED: ' . $rubric . "\nEnter one exact rubric JSON line: ");
+                }
+                throw new RuntimeException('Too many invalid rubric lines.');
+            };
             $fixturesById = [];
             foreach ($corpus['fixtures'] as $fixture) {
                 $fixturesById[(string) $fixture['id']] = $fixture;
@@ -427,46 +532,46 @@ try {
                         (string) $config->get('app.key', ''),
                     );
                 },
-                static function (string $fixtureId, string $effort, ValidatedThreadIntelligenceOutput $output) use ($tty, $fixturesById): array {
+                static function (string $fixtureId, string $effort, ValidatedThreadIntelligenceOutput $output) use ($askReviewer, $fixturesById): array {
                     $fixture = $fixturesById[$fixtureId] ?? null;
                     if (!is_array($fixture)) {
                         throw new RuntimeException('Unknown live evaluation fixture.');
                     }
-                    fwrite($tty, "\n=== {$fixtureId} / {$effort} ===\n");
-                    fwrite($tty, "SUPPLIED SYNTHETIC POSTS\n");
+                    $display = "\n=== {$fixtureId} / {$effort} ===\n";
+                    $display .= "SUPPLIED SYNTHETIC POSTS\n";
                     foreach ($fixture['posts'] as $post) {
                         if (($post['eligible'] ?? false) === true) {
-                            fwrite($tty, '#' . (int) $post['post_id'] . ' ' . (string) $post['body'] . "\n");
+                            $display .= '#' . (int) $post['post_id'] . ' ' . (string) $post['body'] . "\n";
                         }
                     }
                     if ($fixture['candidates'] !== []) {
-                        fwrite($tty, "\nSUPPLIED SYNTHETIC CANDIDATES\n");
+                        $display .= "\nSUPPLIED SYNTHETIC CANDIDATES\n";
                         foreach ($fixture['candidates'] as $candidate) {
                             if (($candidate['eligible'] ?? false) === true) {
-                                fwrite($tty, '#' . (int) $candidate['thread_id'] . ' ' . (string) $candidate['title'] . ' — ' . (string) $candidate['excerpt'] . "\n");
+                                $display .= '#' . (int) $candidate['thread_id'] . ' ' . (string) $candidate['title'] . ' — ' . (string) $candidate['excerpt'] . "\n";
                             }
                         }
                     }
-                    fwrite($tty, "\nVALIDATED GENERATED BRIEF\n" . $output->canonicalMarkdown() . "\n");
+                    $display .= "\nVALIDATED GENERATED BRIEF\n" . $output->canonicalMarkdown() . "\n";
                     if ($output->relatedTopics() !== []) {
-                        fwrite($tty, "\nVALIDATED RELATED EXPLANATIONS\n");
+                        $display .= "\nVALIDATED RELATED EXPLANATIONS\n";
                         foreach ($output->relatedTopics() as $topic) {
-                            fwrite($tty, 'candidate #' . (int) $topic['thread_id'] . ' ' . (string) $topic['explanation'] . "\n");
+                            $display .= 'candidate #' . (int) $topic['thread_id'] . ' ' . (string) $topic['explanation'] . "\n";
                         }
                     }
-                    fwrite($tty, "\nEnter one exact rubric JSON line: ");
-                    $line = fgets($tty);
-                    if (!is_string($line) || trim($line) === '') {
-                        throw new RuntimeException('A rubric JSON line is required for every fixture and effort.');
-                    }
-                    $rubric = json_decode(trim($line), true, flags: JSON_THROW_ON_ERROR);
-                    if (!is_array($rubric)) {
-                        throw new RuntimeException('The rubric line must be a JSON object.');
-                    }
-                    return $rubric;
+                    $display .= "\nEnter one exact rubric JSON line: ";
+                    return $askReviewer($display);
                 },
             );
-            fclose($tty);
+            if (is_resource($reviewerServer)) {
+                fclose($reviewerServer);
+            }
+            if (is_resource($reviewerOut)) {
+                fclose($reviewerOut);
+            }
+            if (is_resource($reviewerIn)) {
+                fclose($reviewerIn);
+            }
             if (!$result['decision']['passed']) {
                 exit(2);
             }
