@@ -738,6 +738,14 @@ visible-content contract. Before the flag flip, the selected effort and ceiling
 must be committed consistently to `config/config.php`, `.env.example`, the
 runbook, this design's recorded outcome, and the live-eval evidence.
 
+Recorded outcome (2026-07-12 UTC): the complete 46-run comparison over corpus
+revision `thread-intelligence-corpus-v1` passed the live gate with reasoning
+effort `low` and a 16,000-token API ceiling. All 23 low-effort fixtures passed;
+the run recorded 100% eligible citations and supplied related candidates, zero
+private-sentinel transmissions or fabricated decisions, 149 of 149 supported
+material claims across both efforts, and zero `max_output_tokens` incomplete
+responses. The production defaults therefore remain `low` and `16000`.
+
 ## Failure Behavior
 
 - Transient transport, rate-limit, and provider failures retry with bounded
