@@ -1,0 +1,533 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   Imladris — webfonts
+   The four Rivendell families. All four are genuine Google Fonts, loaded here
+   so any file that links styles.css inherits them. The token *family* variables
+   (in typography.css) keep system-serif fallbacks, so the brand still reads
+   correctly before the webfonts arrive or if the CDN is blocked.
+
+   · Cormorant Garamond — display serif (headings, wordmark)
+   · Marcellus          — lapidary roman caps (eyebrows, labels, buttons)
+   · EB Garamond        — body serif (prose)
+   · JetBrains Mono     — data / routes / counts
+
+   Note: the live RetroBoards product deliberately ships *no* webfonts (its
+   strict CSP forbids the Google Fonts CDN) and falls back to a system-serif
+   stack. This design system loads the true families so specimens render as
+   intended. To self-host, swap this @import for local @font-face rules under
+   assets/fonts/ — the family names and fallbacks do not change.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Marcellus&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Imladris — colour
+   Rivendell register: parchment + evergreen surfaces, a single mallorn-gold
+   accent, the Bruinen river-blue for information, and a twilight night register.
+   Status is always carried by colour AND a word — never colour alone.
+
+   Two layers:
+     1. Primitives  — raw scales (--parchment-50 … --twilight-900). Don't paint
+        UI directly from these in app code; reach for the semantic aliases.
+     2. Semantics   — purpose-named tokens (--surface, --accent, --on-done …)
+        that every component reads. Re-skinning the whole product = re-point
+        these. The [data-theme="dark"] block below flips them to twilight.
+
+   Values transcribed verbatim from the live RetroBoards app.css :root, which is
+   the operator's authoritative transcription of the Imladris token manifest.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+    /* ── Primitives ──────────────────────────────────────────────────────── */
+    /* Parchment — the page itself; warm aged paper. */
+    --parchment-50:  #FAF6EC;
+    --parchment-100: #F5EFE1;
+    --parchment-200: #ECE4D2;
+    --parchment-300: #DED2B8;
+    /* Mist — cool neutral, a quieter alternative to parchment. */
+    --mist-100: #EEF1ED;
+    --mist-200: #DCE3DD;
+    /* Ink — the text scale, warm near-black to soft grey-green. */
+    --ink-900: #1B231D;
+    --ink-700: #313B33;
+    --ink-500: #515C52;
+    --ink-400: #5C685D;
+    --ink-300: #94A095;
+    /* Evergreen — the brand. Mallorn boughs over Rivendell. */
+    --green-900: #1C2E24;
+    --green-800: #24402F;
+    --green-700: #2E4A3A;
+    --green-600: #3A5C49;
+    --green-500: #4E7459;
+    --green-400: #6E9479;
+    --green-200: #BCD0BF;
+    --green-100: #DCE8DD;
+    --green-050: #EDF3ED;
+    /* River — the Bruinen. Information, links to artifacts, a cool counterpoint. */
+    --river-900: #1E3040;
+    --river-700: #2C4D63;
+    --river-500: #3F6E89;
+    --river-400: #5E8CA6;
+    --river-200: #BAD2DF;
+    --river-100: #DCE9F0;
+    /* Gold — mallorn leaf. The single accent: indicators, active, unread, esteem. */
+    --gold-700: #9A7530;
+    --gold-600: #B08A3A;
+    --gold-500: #C29A44;
+    --gold-400: #D2B062;
+    --gold-200: #EAD9A8;
+    --gold-100: #F4EBCF;
+    /* Twilight — the night register (dark surfaces). */
+    --twilight-900: #161D24;
+    --twilight-800: #1E2730;
+    --twilight-700: #283440;
+    /* Named status hues. */
+    --leaf:  #4E7459;   /* success — green-500 */
+    --amber: #B7842F;   /* warning */
+    --rust:  #9C4A33;   /* danger  */
+    --slate: #3F6E89;   /* info — river-500 */
+
+    /* ── Semantic: surfaces / ink / lines ────────────────────────────────── */
+    --surface-page:    var(--parchment-100);  /* the page ground            */
+    --surface-raised:  var(--parchment-50);   /* cards, topbar, inputs       */
+    --surface-sunken:  var(--parchment-200);  /* pills, code, join-bar wells */
+    --surface-cool:    var(--mist-100);
+    --surface-inverse: var(--twilight-800);   /* twilight covers on day      */
+    --border-hair:   var(--parchment-300);    /* the default hairline        */
+    --border-soft:   var(--mist-200);
+    --border-strong: var(--ink-300);
+    --rule-gold:     var(--gold-500);         /* gold left-rules, blockquotes */
+
+    /* ── Semantic: brand + accent ────────────────────────────────────────── */
+    --brand:         var(--green-700);   /* primary brand: links, buttons    */
+    --brand-hover:   var(--green-800);
+    --brand-press:   var(--green-900);
+    --brand-subtle:  var(--green-050);   /* active rows, OP badge wash        */
+    --gold:          var(--gold-500);    /* the indicator accent              */
+    --gold-soft:     var(--gold-100);
+    --gold-ink:      #7E5F22;            /* darker gold for small text (AA)    */
+    --on-brand-subtle: var(--green-800); /* ink on the brand-subtle wash       */
+
+    /* ── Semantic: status ledger (colour + a word, never colour alone) ───── */
+    --success: var(--leaf);    --surface-done:    var(--green-050); --on-done:    var(--green-800);
+    --warning: var(--amber);   --surface-review:  var(--gold-100);  --on-review:  #7E5F22;
+    --pending: var(--ink-400); --surface-pending: var(--parchment-200); --on-pending: var(--ink-500);
+    --info:    var(--river-500); --surface-info:  var(--river-100);  --on-info:    var(--river-700);
+    --star:    var(--gold-600); /* the esteem star                              */
+    --artifact-link: var(--river-500);
+    --presence:      var(--leaf); /* the "online" leaf dot                      */
+
+    /* ── Legacy aliases (kept so older rules recolour with the system) ────── */
+    --surface:   var(--parchment-50);
+    --surface-2: var(--parchment-100);
+    --surface-3: var(--parchment-200);
+    --border:    var(--parchment-300);
+    --text:         var(--ink-900);
+    --text-muted:   var(--ink-500);
+    --text-strong:  var(--ink-900);
+    --text-body:    var(--ink-700);
+    --text-faint:   var(--ink-400);
+    --text-inverse: var(--parchment-50);
+    --accent:          var(--green-700);
+    --accent-contrast: var(--parchment-50);
+    --accent-2:        var(--gold-500);
+    --danger:          var(--rust);
+}
+
+/* ── Twilight night register ──────────────────────────────────────────────
+   Gold becomes the actionable colour (links/buttons), parchment is the ink,
+   evergreen the quiet brand. Apply with <html data-theme="dark">. */
+[data-theme="dark"] {
+    --surface:   var(--twilight-700);
+    --surface-2: var(--twilight-900);
+    --surface-3: var(--twilight-800);
+    --border: #36434f;
+    --text:         #ECE4D2;
+    --text-muted:   #AEB8B4;
+    --text-strong:  var(--parchment-50);
+    --text-body:    #D7DCD2;
+    --text-faint:   var(--ink-300);
+    --text-inverse: var(--ink-900);
+    --on-brand-subtle: #BCD0BF;
+    --gold-ink:        var(--gold-400);
+    --accent:          var(--gold-400);
+    --accent-contrast: var(--twilight-900);
+    --accent-2:        var(--gold-500);
+    --danger:          #DB8C73;
+    --surface-page:    var(--twilight-900);
+    --surface-raised:  var(--twilight-800);
+    --surface-sunken:  var(--twilight-700);
+    --surface-inverse: var(--parchment-100);
+    --border-hair:   #36434f;
+    --border-soft:   #2C3742;
+    --border-strong: #51606C;
+    --brand:        var(--green-500);
+    --brand-hover:  var(--green-400);
+    --brand-subtle: rgba(78,116,89,.20);
+    --gold-soft:    rgba(194,154,68,.16);
+    --rule-gold:    var(--gold-400);
+    --success: var(--green-400);  --surface-done:    rgba(78,116,89,.20);  --on-done:    #BCD0BF;
+    --warning: var(--gold-400);   --surface-review:  rgba(194,154,68,.16); --on-review:  #DCC68A;
+    --pending: var(--ink-300);    --surface-pending: var(--twilight-700);  --on-pending: #AEB8B4;
+    --info:    var(--river-400);  --surface-info:    rgba(63,110,137,.20); --on-info:    var(--river-200);
+    --star:    var(--gold-400);
+    --presence: var(--green-400);
+    --focus-ring: rgba(210,176,98,.75);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Imladris — typography
+   An all-serif voice. Display serif for headings, lapidary roman caps for
+   labels and buttons, a book-weight serif for prose, and a mono for data.
+   Fallback stacks keep the register intact before the webfonts (fonts.css)
+   load. Type *scale* and base element styles live here too so specimens and
+   prose read correctly out of the box.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+    /* Families */
+    --font-display: "Cormorant Garamond", "Hoefler Text", Garamond, Georgia, "Times New Roman", serif;
+    --font-label:   "Marcellus", "Optima", "Palatino Linotype", Palatino, "Cormorant Garamond", serif;
+    --font-body:    "EB Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --font-mono:    "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+    --font: var(--font-body);
+
+    /* Weights — the serifs are set medium, not bold; restraint reads as quality. */
+    --weight-regular:  400;
+    --weight-medium:   500;
+    --weight-semibold: 600;
+    --weight-bold:     700;
+
+    /* Tracking — lapidary caps get generous letterspacing. */
+    --tracking-caps: 0.16em;
+    --tracking-wide: 0.04em;
+
+    /* Type scale (rem). Body base is book-like at 1.0625rem (17px). */
+    --text-display-xl: 2.4rem;    /* profile name, hero               */
+    --text-display-lg: 2.25rem;   /* h1, page title                   */
+    --text-display-md: 1.85rem;   /* inbox heading                    */
+    --text-display-sm: 1.75rem;   /* h2                               */
+    --text-title:      1.375rem;  /* h3, board name                   */
+    --text-thread:     1.2rem;    /* thread row title                 */
+    --text-body:       1.0625rem; /* prose / posts                    */
+    --text-sm:         0.95rem;
+    --text-meta:       0.78rem;   /* Marcellus meta lines             */
+    --text-eyebrow:    0.72rem;   /* tracked caps eyebrow             */
+    --text-chip:       0.62rem;   /* status chip caps                 */
+}
+
+/* ── Base element styles ─────────────────────────────────────────────────── */
+body {
+    font-family: var(--font);
+    font-size: var(--text-body);
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--surface-page);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, .page-title, .display {
+    font-family: var(--font-display);
+    font-weight: var(--weight-medium);
+    color: var(--text-strong);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0 0 0.4em;
+}
+h1, .page-title { font-size: var(--text-display-lg); }
+h2 { font-size: var(--text-display-sm); }
+h3 { font-size: var(--text-title); }
+
+p { text-wrap: pretty; }
+
+/* The eyebrow: a tracked Marcellus cap line above a heading. */
+.eyebrow {
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    font-size: var(--text-eyebrow);
+    color: var(--text-muted);
+}
+
+/* Links: evergreen text with a translucent-gold underline that warms on hover. */
+a {
+    color: var(--accent);
+    text-decoration: none;
+    text-underline-offset: 2px;
+    text-decoration-color: color-mix(in srgb, var(--gold-500) 45%, transparent);
+}
+a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
+
+code, pre, kbd, samp { font-family: var(--font-mono); }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Imladris — space, radius, shadow, motion, layout
+   Quiet, even rhythm. Soft warm shadows (never hard black). Calm cubic-bezier
+   easing — nothing bounces in Rivendell. Values verbatim from the live app.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+    /* ── Spacing scale ───────────────────────────────────────────────────── */
+    --space-1: 0.25rem;   /* 4px  */
+    --space-2: 0.5rem;    /* 8px  */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.5rem;    /* 24px */
+    --space-6: 2rem;      /* 32px */
+    --space-8: 3rem;      /* 48px */
+    --space-12: 7rem;     /* 112px */
+
+    /* ── Radii — restrained. Pills for chips/search; lg for cards. ───────── */
+    --radius-sm:   4px;
+    --radius-md:   7px;
+    --radius-lg:   12px;
+    --radius-xl:   20px;
+    --radius-pill: 999px;
+    --radius: var(--radius-md);
+
+    /* ── Shadows — warm ink, layered soft. No pure-black drop shadows. ───── */
+    --shadow-xs:    0 1px 2px rgba(27,35,29,.06);
+    --shadow-sm:    0 1px 3px rgba(27,35,29,.07), 0 1px 2px rgba(27,35,29,.05);
+    --shadow-md:    0 4px 14px rgba(27,35,29,.08), 0 2px 5px rgba(27,35,29,.05);
+    --shadow-lg:    0 12px 32px rgba(27,35,29,.12), 0 4px 10px rgba(27,35,29,.06);
+    --shadow-xl:    0 24px 60px rgba(22,29,36,.18), 0 8px 18px rgba(22,29,36,.08);
+    --shadow-inset: inset 0 1px 2px rgba(27,35,29,.07);
+    /* The "gilt" — a thin gold inner ring for precious avatars (OP, accepted). */
+    --gilt: inset 0 0 0 1px rgba(194,154,68,.38); /* @kind shadow */
+
+    /* ── Motion — calm easing; three durations. ─────────────────────────── */
+    --ease-calm: cubic-bezier(.22,.61,.36,1); /* @kind other */
+    --dur-fast: 140ms; /* @kind other */
+    --dur-base: 240ms; /* @kind other */
+    --dur-slow: 420ms; /* @kind other */
+
+    /* ── Focus — a gold halo over a high-contrast ring. ─────────────────── */
+    --focus-ring: rgba(194,154,68,.7);
+
+    /* ── Layout rails ────────────────────────────────────────────────────── */
+    --maxw: 1280px;
+    --sidebar-w: 272px;
+    --list-w: 410px;
+    --topbar-h: 62px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ── Badge & chip block — components.css lines 59-79 verbatim. Chips are the
+   only primitive this document uses; the shared .badge rules ride along uncut. ── */
+/* ── Badges (role) & chips (topic status) — lapidary Marcellus pills ─────── */
+.badge, .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-label); font-size: .62rem; letter-spacing: .1em;
+    text-transform: uppercase; line-height: 1;
+    padding: 3px 9px; border-radius: var(--radius-pill);
+    background: var(--brand-subtle); color: var(--on-brand-subtle);
+    border: 1px solid var(--green-200); vertical-align: middle;
+}
+.badge svg, .chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Role badges */
+.badge-staff  { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
+.badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
+.badge-solved { color: var(--on-done); background: var(--surface-raised); border-color: var(--green-200); }
+/* Status chips */
+.chip-solved        { color: var(--on-done);   background: var(--surface-done);   border-color: var(--green-200); }
+.chip-needs         { color: var(--on-review); background: var(--surface-review); border-color: var(--gold-200); }
+.chip-decision_made { color: var(--green-800); background: var(--brand-subtle);   border-color: var(--green-200); }
+.chip-pinned,
+.chip-locked        { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
+.chip-archived      { color: var(--ink-400); background: transparent; border-style: dashed; border-color: var(--border-strong); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Imladris Design System — document components
+   The long-form layer: the patterns that turn the primitives into a printed
+   reference — a cover, section headers, figures, callouts, and spec tables.
+   Lifted from the RetroBoards engineering handoff and generalised. Everything
+   paints from the *semantic* tokens (not the raw parchment/ink scales), so the
+   twilight register flips cleanly and a greyscale print still reads.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* Doc-local: the code/terminal well stays dark in both registers. */
+    --doc-code-bg:  var(--twilight-800);
+    --doc-code-ink: var(--mist-100);
+    --doc-code-dim: #7E8A78;
+    --doc-measure:  69ch;   /* the reading measure for body copy + captions */
+}
+[data-theme="dark"] {
+    --doc-code-bg:  #0F151B; /* sink below the twilight page so code reads as a well */
+}
+
+/* ── Cover ──────────────────────────────────────────────────────────────────
+   The title page: a tracked-caps kicker beside the eight-point mark, a large
+   display title, an italic dek, a gold rule, the lede, a meta grid, and a
+   contents rail of section pills. */
+.doc-cover { margin: 0 0 var(--space-8); }
+.doc-cover-brand { display: flex; align-items: center; gap: 13px; margin-bottom: 30px; }
+.doc-cover-mark { width: 38px; height: 38px; flex: none; color: var(--brand); }
+.doc-cover-mark svg { width: 100%; height: 100%; display: block; }
+.doc-cover-kicker {
+    font-family: var(--font-label); text-transform: uppercase;
+    letter-spacing: .2em; font-size: .8rem; color: var(--gold-ink);
+}
+.doc-cover-title {
+    font-family: var(--font-display); font-weight: var(--weight-medium);
+    font-size: clamp(40px, 8vw, 72px); line-height: .98; letter-spacing: -.015em;
+    color: var(--text-strong); margin: 0; text-wrap: balance;
+}
+.doc-cover-dek {
+    font-family: var(--font-display); font-style: italic; font-weight: var(--weight-medium);
+    font-size: clamp(20px, 3vw, 29px); line-height: 1.2; color: var(--text-muted);
+    margin-top: 10px; max-width: 24ch; text-wrap: balance;
+}
+.doc-cover-rule { height: 2px; width: 128px; background: var(--rule-gold); opacity: .85; margin: 26px 0 24px; }
+.doc-cover-lede { font-size: 1.12rem; line-height: 1.62; color: var(--text-body); margin: 0; max-width: 62ch; }
+.doc-cover-meta {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: var(--border-hair); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md); overflow: hidden; margin-top: 30px;
+}
+.doc-cover-meta-cell { background: var(--surface-raised); padding: 13px 16px; }
+.doc-cover-meta-label {
+    font-family: var(--font-label); text-transform: uppercase; letter-spacing: .14em;
+    font-size: .6rem; color: var(--gold-ink); margin-bottom: 3px;
+}
+.doc-cover-meta-value { font-family: var(--font-mono); font-size: .82rem; color: var(--text-strong); }
+.doc-cover-toc { display: flex; flex-wrap: wrap; gap: 8px 9px; margin-top: 26px; }
+.doc-cover-toc-item {
+    font-family: var(--font-label); font-size: .7rem; letter-spacing: .05em;
+    color: var(--text-muted); background: var(--surface-sunken);
+    border-radius: var(--radius-pill); padding: 4px 12px;
+}
+
+/* ── Section header ─────────────────────────────────────────────────────────
+   A numbered, tracked kicker over a display title and an optional italic
+   standfirst. `is-sub` is the quieter sub-section register (ink kicker, h3). */
+.doc-section { margin: 0 0 var(--space-5); }
+.doc-section-kicker {
+    font-family: var(--font-label); text-transform: uppercase;
+    letter-spacing: .16em; font-size: .75rem; color: var(--gold-ink); margin-bottom: 9px;
+}
+.doc-section-title {
+    font-family: var(--font-display); font-weight: var(--weight-medium);
+    font-size: clamp(26px, 4vw, 34px); line-height: 1.06; color: var(--text-strong);
+    letter-spacing: -.01em; margin: 0; text-wrap: balance;
+}
+.doc-section-dek {
+    font-family: var(--font-display); font-style: italic;
+    font-size: clamp(18px, 2.4vw, 21px); line-height: 1.4; color: var(--text-muted);
+    max-width: 60ch; margin: 12px 0 0; text-wrap: pretty;
+}
+.doc-section.is-sub { margin-bottom: var(--space-4); }
+.doc-section.is-sub .doc-section-kicker { color: var(--text-faint); letter-spacing: .12em; font-size: .7rem; margin-bottom: 7px; }
+.doc-section.is-sub .doc-section-title { font-size: clamp(22px, 3vw, 26px); }
+.doc-section.is-sub .doc-section-dek { font-family: var(--font-body); font-style: normal; font-size: 1rem; color: var(--text-muted); margin-top: 8px; }
+
+/* ── Figure ─────────────────────────────────────────────────────────────────
+   A framed image with a mono caption ("FIG n — …"). With no src (and no
+   children) it renders a drop-in slot the author fills; `is-plain` drops the
+   frame for edge-to-edge art (e.g. a strip of phone frames). */
+.doc-figure { margin: 0 0 var(--space-2); }
+.doc-figure-frame {
+    background: var(--surface-raised); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg); padding: 9px; box-shadow: var(--shadow-sm);
+}
+.doc-figure-img { display: block; width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-hair); }
+.doc-figure-slot {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    min-height: 200px; border-radius: var(--radius-sm);
+    border: 1.5px dashed var(--border-strong); background: var(--surface-sunken);
+    color: var(--text-faint); text-align: center; padding: 24px;
+}
+.doc-figure-slot svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: .7; }
+.doc-figure-slot span { font-family: var(--font-label); letter-spacing: .04em; font-size: .8rem; }
+.doc-figure.is-plain .doc-figure-frame { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.doc-figure-cap {
+    display: flex; gap: 9px; margin-top: 9px;
+    font-family: var(--font-mono); font-size: .72rem; line-height: 1.5; color: var(--text-faint);
+}
+.doc-figure-cap-label { color: var(--gold-ink); white-space: nowrap; font-weight: 500; flex: none; }
+.doc-figure-cap-text { max-width: var(--doc-measure); }
+
+/* ── Callout ────────────────────────────────────────────────────────────────
+   An aside that carries a note, an acceptance test, a flow, a warning. Default
+   is the gold-ruled brand wash; tones recolour the rule + wash; `is-panel`
+   swaps the left rule for a full hairline box (for keyed cards and flows). */
+.doc-callout {
+    --co-rule: var(--rule-gold); --co-wash: var(--brand-subtle); --co-ink: var(--on-brand-subtle);
+    --co-edge: color-mix(in srgb, var(--brand) 22%, transparent);
+    background: var(--co-wash); border-left: 3px solid var(--co-rule);
+    border-radius: var(--radius-md); padding: 16px 19px; margin: 0;
+}
+.doc-callout-info   { --co-rule: var(--info);    --co-wash: var(--surface-info);   --co-ink: var(--on-info);   --co-edge: color-mix(in srgb, var(--info) 28%, transparent); }
+.doc-callout-warn   { --co-rule: var(--warning); --co-wash: var(--surface-review); --co-ink: var(--on-review); --co-edge: color-mix(in srgb, var(--warning) 30%, transparent); }
+.doc-callout-danger { --co-rule: var(--danger);  --co-wash: color-mix(in srgb, var(--danger) 12%, transparent); --co-ink: var(--danger); --co-edge: color-mix(in srgb, var(--danger) 30%, transparent); }
+.doc-callout-quiet  { --co-rule: var(--border-strong); --co-wash: var(--surface-sunken); --co-ink: var(--text-muted); --co-edge: var(--border-hair); }
+.doc-callout.is-panel { border-left: 0; border: 1px solid var(--co-edge); padding: 17px 19px; }
+.doc-callout-label {
+    font-family: var(--font-label); text-transform: uppercase; letter-spacing: .12em;
+    font-size: .62rem; color: var(--co-ink); margin-bottom: 10px;
+}
+.doc-callout-title { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.15rem; color: var(--text-strong); margin: 0 0 6px; }
+.doc-callout-body { color: var(--text-body); font-size: .95rem; line-height: 1.55; }
+.doc-callout-body > :first-child { margin-top: 0; }
+.doc-callout-body > :last-child { margin-bottom: 0; }
+.doc-callout-body :where(ul, ol) { margin: 0; padding-left: 18px; }
+.doc-callout-body li + li { margin-top: 5px; }
+.doc-callout-body strong { color: var(--text-strong); font-weight: var(--weight-semibold); }
+
+/* ── Spec table ─────────────────────────────────────────────────────────────
+   A bordered reference table: a sunken header in tracked micro-caps, a serif
+   body, optional zebra rows, and cells that hold prose, mono, or a ✓ / — mark. */
+.doc-table-wrap { border: 1px solid var(--border-hair); border-radius: var(--radius-lg); overflow: hidden; }
+.doc-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.doc-table caption { caption-side: top; text-align: left; padding: 0 0 9px; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .12em; font-size: .62rem; color: var(--gold-ink); }
+.doc-table thead th {
+    background: var(--surface-sunken); text-align: left;
+    font-family: var(--font-label); font-weight: var(--weight-regular);
+    text-transform: uppercase; letter-spacing: .1em; font-size: .6rem; color: var(--text-muted);
+    padding: 9px 13px;
+}
+.doc-table tbody td { padding: 8px 13px; border-top: 1px solid var(--border-hair); font-family: var(--font-body); color: var(--text-body); vertical-align: top; }
+.doc-table.is-zebra tbody tr:nth-child(odd) { background: var(--surface-raised); }
+.doc-table .is-center { text-align: center; }
+.doc-table .is-right  { text-align: right; }
+.doc-table .is-num    { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Matrix marks — colour AND a glyph, never colour alone. */
+.doc-yes    { color: var(--success); font-weight: var(--weight-bold); }
+.doc-no     { color: var(--text-faint); }
+.doc-scoped { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .04em; font-size: .68rem; color: var(--gold-ink); }
+.doc-code   { font-family: var(--font-mono); font-size: .82em; color: var(--brand); }
+
+/* ── Shared doc utilities (used by the long-form templates) ──────────────────
+   A dark code well and a keycap — not components, but part of the doc voice. */
+.doc-pre {
+    margin: 0; background: var(--doc-code-bg); color: var(--doc-code-ink);
+    border-radius: var(--radius-lg); padding: 16px 17px; overflow-x: auto;
+    font-family: var(--font-mono); font-size: .72rem; line-height: 1.7;
+}
+.doc-pre .tok-dim  { color: var(--doc-code-dim); }
+.doc-pre .tok-gold { color: var(--gold-400); }
+.doc-pre .tok-blue { color: var(--river-200); }
+.doc-kbd {
+    font-family: var(--font-mono); font-size: .7rem; color: var(--text-body);
+    background: var(--surface-sunken); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-sm); padding: 1px 7px;
+}
+
+/* Print: keep these blocks whole; let a heading stay with its body. */
+@media print {
+    .doc-figure, .doc-callout, .doc-table-wrap, .doc-pre { break-inside: avoid; }
+    .doc-section-title { break-after: avoid; }
+}

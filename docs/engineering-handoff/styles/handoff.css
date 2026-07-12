@@ -1,0 +1,98 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   RetroBoards — Engineering Handoff (page layout)
+   The document shell that composes the Imladris doc components into a printable
+   reference. Values transcribed verbatim from the design's own inline styles;
+   everything paints from the semantic tokens so the twilight register flips.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--surface-page); }
+
+/* UA chrome (scrollbars, form controls) follows the active register. */
+:root { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+.doc {
+  box-sizing: border-box;
+  max-width: 8.5in;
+  margin: 0 auto;
+  background: var(--surface-page);
+  padding: 0 clamp(22px, 5vw, 0.85in) 64px;
+  color: var(--text-body);
+  font-family: var(--font-body);
+  font-size: 16.5px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.doc-prose { max-width: 69ch; }
+.doc-prose p { margin: 0 0 15px; }
+.doc-prose strong { color: var(--text-strong); font-weight: 600; }
+.doc-prose .doc-code { font-family: var(--font-mono); font-size: .82em; color: var(--brand); }
+
+.section { padding-top: 40px; }
+.seclead { margin-top: 18px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+.stackgap { display: flex; flex-direction: column; gap: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 9px; }
+
+/* The design system clips .doc-table-wrap on both axes for corner rounding;
+   wide tables (the §5 matrix needs ~500px) must scroll, not lose columns. */
+.doc-table-wrap { overflow-x: auto; }
+
+.spacer-14 { height: 14px; }
+.spacer-20 { height: 20px; }
+
+/* ── Theme toggle — a quiet lapidary control, hidden from print ─────────────── */
+.theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .62rem;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
+  border: 1px solid var(--border-hair);
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--dur-fast) var(--ease-calm),
+              color var(--dur-fast) var(--ease-calm),
+              transform var(--dur-fast) var(--ease-calm);
+}
+.theme-toggle:hover { color: var(--text-strong); border-color: var(--border-strong); }
+.theme-toggle:active { transform: translateY(0.5px); }
+.theme-toggle svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle .theme-toggle-sun { display: none; }
+[data-theme="dark"] .theme-toggle .theme-toggle-sun { display: block; }
+[data-theme="dark"] .theme-toggle .theme-toggle-moon { display: none; }
+
+/* Below ~760px the cover kicker would run under the fixed pill. */
+@media (max-width: 760px) {
+  .doc { padding-top: 64px; }
+}
+
+@page { size: letter; margin: 0.7in 0; }
+
+@media print {
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .doc { max-width: none !important; padding: 0 0.75in 0 !important; }
+  .cover-break { break-after: page; }
+  .pbreak { break-before: page; }
+  .theme-toggle { display: none !important; }
+}
+
+@media (max-width: 680px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
