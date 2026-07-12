@@ -1,11 +1,11 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
+$canWrite = !empty($can_write);
 $owner = $current_user !== null && $current_user->id() === (int) $p['user_id'];
 // Board moderators — not just global admins — get the mod controls; the caller's
-// can_delete_posts flag (core.post.delete_any) already folds in admin-any. Keep an
-// isAdmin fallback so any render path that doesn't thread the flag still shows
-// admins their controls.
-$canModerate = (!empty($can_delete_posts) || ($current_user?->isAdmin() ?? false)) && !$owner;
+// can_delete_posts flag is the exact core.post.delete_any capability. Account
+// state is orthogonal, so every write surface also consumes can_write.
+$canModerate = $canWrite && !empty($can_delete_posts) && !$owner;
 $isAnon = (int) ($p['is_anonymous'] ?? 0) === 1;
 // Public byline is ALWAYS masked when anonymous; a mod "reveal" is a separate
 // audited action (flash), never an un-mask of this render.
@@ -18,7 +18,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
       // wiki posts are also left ungrouped so their role/Wiki badge is never hidden. ?>
 <?php $grouped = ($grouped ?? false) && !$accepted && (int) $p['is_op'] !== 1
     && (($p['author_role'] ?? 'user') === 'user') && empty($p['is_wiki']); ?>
-<div class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>">
+<article class="post<?= $accepted ? ' post-accepted' : '' ?><?= (int) $p['is_op'] === 1 ? ' post-op' : '' ?><?= $grouped ? ' post-grouped' : '' ?>" id="p<?= (int) $p['id'] ?>" data-post>
     <?php if ($show_avatars ?? true): ?>
         <?php if ($grouped): ?><span class="post-avatar-spacer" aria-hidden="true"></span>
         <?php else: ?>
@@ -56,12 +56,6 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
             <?php endif; ?>
             <span class="post-time"><?= $e(human_datetime($p['created_at'])) ?></span>
             <?php if (!empty($p['edited_at'])): ?><span class="muted post-edited">(edited)</span><?php endif; ?>
-            <?php if ($isAnon && !empty($can_reveal_anon)): ?>
-                <form class="inline reveal-anon" method="post" action="/mod/p/<?= (int) $p['id'] ?>/reveal">
-                    <?= $this->csrfField() ?>
-                    <button class="linkbtn muted" type="submit" title="Reveal the real author — this is logged">Reveal author</button>
-                </form>
-            <?php endif; ?>
         </div>
         <div class="post-body">
             <?php if (($p['body_html'] ?? '') !== ''): ?>
@@ -108,12 +102,11 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
         $mine = $mine ?? [];
         $allowed = $allowed_emoji ?? [];
         if ($engagement && ($show_reactions ?? true)):
-            $threadPath = '/t/' . (int) $thread['id'] . '-' . $thread['slug'];
         ?>
         <div class="reactions" data-post="<?= (int) $p['id'] ?>">
             <?php foreach ($counts as $emoji => $n): ?>
                 <?php $on = in_array($emoji, $mine, true); ?>
-                <?php if ($current_user !== null): ?>
+                <?php if ($current_user !== null && $canWrite): ?>
                     <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
                         <?= $this->csrfField() ?>
                         <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
@@ -124,118 +117,30 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                     <span class="reaction reaction-static"><?= $e($emoji) ?> <span class="reaction-n"><?= (int) $n ?></span></span>
                 <?php endif; ?>
             <?php endforeach; ?>
-            <?php if ($current_user !== null && $allowed !== []): ?>
-                <details class="reaction-add">
-                    <summary class="reaction reaction-pick" title="Add a reaction">＋</summary>
-                    <div class="reaction-menu">
-                        <?php foreach ($allowed as $emoji): ?>
-                            <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
-                                <?= $this->csrfField() ?>
-                                <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
-                                <button type="submit" class="reaction"><?= $e($emoji) ?></button>
-                            </form>
-                        <?php endforeach; ?>
-                    </div>
-                </details>
-            <?php endif; ?>
         </div>
         <?php endif; ?>
-        <?php if (!empty($can_mark_solved) && empty($accepted) && (int) $p['is_op'] === 0): ?>
-            <form class="inline solved-action" method="post" action="/posts/<?= (int) $p['id'] ?>/accept">
-                <?= $this->csrfField() ?>
-                <button class="linkbtn" type="submit">✓ Accept as answer</button>
-            </form>
-        <?php endif; ?>
-        <?php if ($owner || $canModerate): ?>
-            <div class="post-actions">
-                <?php if ($owner): ?>
-                    <?php // When an edit fails validation the controller re-renders the thread with
-                          // this post's edit form re-opened and the rejected text + error preserved
-                          // (edit_post_id / edit_old / edit_error), instead of dropping the typed edit. ?>
-                    <?php $editingThis = ($edit_post_id ?? 0) === (int) $p['id']; ?>
-                    <details class="post-edit"<?= $editingThis ? ' open' : '' ?>>
-                        <summary class="linkbtn">Edit</summary>
-                        <?php if ($editingThis && ($edit_error ?? '') !== ''): ?><p class="field-error"><?= $e($edit_error) ?></p><?php endif; ?>
-                        <?php // data-no-draft: the textarea is pre-filled with the current body, so a
-                              // local draft can never be restored here; opting out avoids a misleading,
-                              // unrecoverable "Post edit" draft that the next page load would discard. ?>
-                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/edit" class="composer" data-composer-context="edit" data-composer-target-id="<?= (int) $p['id'] ?>" data-no-draft>
-                            <?= $this->csrfField() ?>
-                            <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($editingThis ? (string) ($edit_old ?? '') : $p['body']) ?></textarea>
-                            <button class="btn btn-small" type="submit">Save changes</button>
-                        </form>
-                    </details>
-                    <form method="post" action="/posts/<?= (int) $p['id'] ?>/delete" class="inline">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn danger" type="submit"><?= (int) $p['is_op'] === 1 ? 'Delete topic' : 'Delete' ?></button>
-                    </form>
-                <?php elseif ($canModerate): ?>
-                    <?php // Removing the opening post removes the whole topic (replies and all),
-                          // so the OP's mod control says so; a reply removes just that post. ?>
-                    <?php $opRemoval = (int) $p['is_op'] === 1; ?>
-                    <details class="post-edit">
-                        <summary class="linkbtn danger"><?= $opRemoval ? 'Remove topic (mod)' : 'Remove (mod)' ?></summary>
-                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/delete" class="composer">
-                            <?= $this->csrfField() ?>
-                            <input type="text" name="reason" class="input" placeholder="Reason (required)" maxlength="255" required>
-                            <button class="btn btn-small danger" type="submit"><?= $opRemoval ? 'Remove topic' : 'Remove post' ?></button>
-                        </form>
-                    </details>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-        <?php if (!empty($memory_on) && !empty($can_curate_wiki)): ?>
-            <div class="post-actions">
-                <?php if (empty($p['is_wiki'])): ?>
-                    <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki" class="inline">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn" type="submit">Make wiki</button>
-                    </form>
-                <?php else: ?>
-                    <details class="post-edit">
-                        <summary class="linkbtn">Edit wiki</summary>
-                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/edit" class="composer" data-composer-context="edit" data-composer-target-id="<?= (int) $p['id'] ?>" data-no-draft>
-                            <?= $this->csrfField() ?>
-                            <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($p['body']) ?></textarea>
-                            <input type="text" name="reason" class="input" maxlength="255" placeholder="Reason">
-                            <button class="btn btn-small" type="submit">Save wiki edit</button>
-                        </form>
-                    </details>
-                    <?php // Revert lives with the other curator (admin + board moderator) wiki
-                          // tools so every authorized curator can reach it — not just non-owner
-                          // admins. $wiki_revisions is only populated for curators by ThreadController. ?>
-                    <?php if (!empty($wiki_revisions)): ?>
-                        <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/revert" class="inline-form">
-                            <?= $this->csrfField() ?>
-                            <label class="sr-only" for="wiki-revision-<?= (int) $p['id'] ?>">Revision</label>
-                            <select id="wiki-revision-<?= (int) $p['id'] ?>" class="input input-small" name="revision_id">
-                                <?php foreach ($wiki_revisions as $rev): ?>
-                                    <option value="<?= (int) $rev['id'] ?>">#<?= (int) $rev['id'] ?> · @<?= $e($rev['editor_username']) ?> · <?= $e(human_datetime($rev['created_at'])) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <button class="linkbtn muted" type="submit">Revert wiki</button>
-                        </form>
-                    <?php endif; ?>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-        <?php if (!empty($features['moderation_queue']) && $current_user !== null && !$owner): ?>
-            <div class="post-report">
-                <details>
-                    <summary class="linkbtn muted">Report</summary>
-                    <form method="post" action="/posts/<?= (int) $p['id'] ?>/report" class="composer">
-                        <?= $this->csrfField() ?>
-                        <select name="reason_code" class="input input-small">
-                            <?php foreach (['spam', 'harassment', 'off_topic', 'nsfw', 'illegal', 'other'] as $rc): ?>
-                                <option value="<?= $e($rc) ?>"><?= $e(ucfirst(str_replace('_', ' ', $rc))) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <input type="text" name="reason" class="input" placeholder="Details (optional)" maxlength="255">
-                        <label class="checkline"><input type="checkbox" name="notify_reporter" value="1"> Notify me of the outcome</label>
-                        <button class="btn btn-small" type="submit">Submit report</button>
-                    </form>
-                </details>
-            </div>
-        <?php endif; ?>
+        <?= $this->partial('partials/post_toolbar', [
+            'p' => $p,
+            'thread' => $thread,
+            'page' => $page,
+            'can_write' => $canWrite,
+            'can_reply' => $can_reply ?? false,
+            'owner' => $owner,
+            'canModerate' => $canModerate,
+            'isAnon' => $isAnon,
+            'accepted' => $accepted,
+            'engagement' => $engagement,
+            'show_reactions' => $show_reactions ?? true,
+            'allowed' => $allowed,
+            'can_mark_solved' => $can_mark_solved ?? false,
+            'can_reveal_anon' => $can_reveal_anon ?? false,
+            'memory_on' => $memory_on ?? false,
+            'can_curate_wiki' => $can_curate_wiki ?? false,
+            'wiki_revisions' => $wiki_revisions ?? [],
+            'features' => $features ?? [],
+            'edit_post_id' => $edit_post_id ?? 0,
+            'edit_old' => $edit_old ?? '',
+            'edit_error' => $edit_error ?? '',
+        ]) ?>
     </div>
-</div>
+</article>

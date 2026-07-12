@@ -121,14 +121,14 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         $this->assertStatus(200, $page);
         $html = $page->body();
         $headerEnd = strpos($html, '</header>');
-        $brief = strpos($html, 'class="living-brief"');
+        $brief = strpos($html, 'data-living-brief');
         $postStream = strpos($html, 'class="post-stream"');
         self::assertNotFalse($headerEnd);
         self::assertNotFalse($brief);
         self::assertNotFalse($postStream);
         self::assertLessThan($brief, $headerEnd);
         self::assertLessThan($postStream, $brief);
-        self::assertSame(1, substr_count($html, 'class="living-brief"'));
+        self::assertSame(1, substr_count($html, 'class="living-brief study-living-brief"'));
         self::assertStringContainsString('/privacy#thread-intelligence', $html);
         self::assertStringContainsString('Updated automatically', $html);
         self::assertMatchesRegularExpression('/<time datetime="[^"]+Z">/', $html);

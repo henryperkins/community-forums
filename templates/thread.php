@@ -128,7 +128,12 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
     <?php if ($living_brief !== null || $related_fallback !== []): ?>
     <div class="thread-memory-slot">
         <?php if ($living_brief !== null): ?>
-            <?= $this->partial('partials/living_brief', compact('living_brief', 'living_brief_sources', 'living_brief_related')) ?>
+            <?= $this->partial('partials/living_brief', [
+                'living_brief' => $living_brief,
+                'living_brief_sources' => $living_brief_sources,
+                'living_brief_related' => $living_brief_related,
+                'can_curate_memory' => !empty($can_write) && !empty($can_curate_memory),
+            ]) ?>
         <?php elseif ($related_fallback !== []): ?>
             <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
                 <h2 id="related-topic-fallback-heading">Related topics</h2>
@@ -160,8 +165,13 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         <p class="muted empty">This thread has no visible posts.</p>
     <?php else: ?>
         <div class="post-stream">
-            <?php $prevAuthorId = null; $prevAnon = true; $prevAt = 0; ?>
+            <?php $prevAuthorId = null; $prevAnon = true; $prevAt = 0; $previousDay = null; ?>
             <?php foreach ($posts as $p): ?>
+                <?php $postDay = substr((string) $p['created_at'], 0, 10); ?>
+                <?php if ($previousDay !== null && $postDay !== $previousDay): ?>
+                    <div class="post-day-divider" data-post-day="<?= $e($postDay) ?>"><span></span><time datetime="<?= $e($postDay) ?>"><?= $e(gmdate('F j, Y', strtotime($postDay . ' UTC') ?: 0)) ?></time><span></span></div>
+                <?php endif; ?>
+                <?php $previousDay = $postDay; ?>
                 <?php
                 // Group a reply with the one above it when the same non-anonymous
                 // author posted again within ten minutes (§5.1); the partial keeps the
@@ -179,6 +189,10 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                     'p' => $p,
                     'grouped' => $grouped,
                     'thread' => $thread,
+                    'page' => $page,
+                    'features' => $features ?? [],
+                    'can_write' => $can_write ?? false,
+                    'can_reply' => $can_reply ?? false,
                     'engagement' => $engagement ?? false,
                     'counts' => ($reaction_counts ?? [])[(int) $p['id']] ?? [],
                     'mine' => ($my_reactions ?? [])[(int) $p['id']] ?? [],
@@ -215,7 +229,12 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         <?php if ($locked): ?>
             <div class="joinbar">This thread is locked and is not accepting replies.</div>
         <?php elseif ($can_reply): ?>
-            <?= $this->partial('partials/composer', ['thread' => $thread, 'reply_errors' => $reply_errors, 'reply_old' => $reply_old]) ?>
+            <?= $this->partial('partials/composer', [
+                'thread' => $thread,
+                'reply_errors' => $reply_errors,
+                'reply_old' => $reply_old,
+                'show_avatars' => $show_avatars ?? true,
+            ]) ?>
         <?php elseif ($current_user === null): ?>
             <div class="joinbar"><span>You're browsing as a guest — <em>log in to add your counsel.</em></span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
         <?php elseif ($current_user !== null && !$current_user->isActive()): ?>

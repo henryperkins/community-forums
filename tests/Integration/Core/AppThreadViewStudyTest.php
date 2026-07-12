@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\BoardModeratorRepository;
 use Tests\Support\TestCase;
 
 final class AppThreadViewStudyTest extends TestCase
@@ -187,5 +188,148 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertSame(1, substr_count($html, 'action="/t/' . $thread['thread_id'] . '/summary/refresh"'));
         self::assertSame(1, substr_count($html, 'action="/t/' . $thread['thread_id'] . '/related"'));
         self::assertStringNotContainsString('class="workflow-actions', $html);
+    }
+
+    public function test_post_toolbar_is_signed_in_capability_scoped_and_no_js_reachable(): void
+    {
+        $author = $this->makeUser(['username' => 'study_toolbar_author']);
+        $viewer = $this->makeUser(['username' => 'study_toolbar_viewer']);
+        $board = $this->makeBoard($this->makeCategory('Study Toolbar'));
+        $thread = $this->makeThread($board, $author, 'Actions remain real forms', 'Opening record.');
+
+        $guest = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        self::assertStringNotContainsString('data-post-toolbar', $guest->body());
+
+        $this->actingAs($viewer);
+        $member = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        self::assertStringContainsString('data-post-toolbar', $member->body());
+        self::assertStringContainsString('data-quote-post', $member->body());
+        self::assertStringContainsString('data-copy-post', $member->body());
+        self::assertStringContainsString('icon-plus', $member->body());
+        self::assertStringContainsString('icon-quote', $member->body());
+        self::assertStringContainsString('icon-more-horizontal', $member->body());
+        self::assertStringNotContainsString('Remove (warden)', $member->body());
+    }
+
+    public function test_quote_is_hidden_when_an_active_viewer_cannot_reply(): void
+    {
+        $author = $this->makeAdmin(['username' => 'study_quote_author']);
+        $viewer = $this->makeUser(['username' => 'study_quote_reader']);
+        $board = $this->makeBoard($this->makeCategory('Study Quote'), ['post_min_role' => 'moderator']);
+        $thread = $this->makeThread($board, $author, 'Quote follows reply authority', 'Opening record.');
+
+        $this->actingAs($viewer);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        self::assertStringContainsString('data-post-toolbar', $page->body());
+        self::assertStringContainsString('data-copy-post', $page->body());
+        self::assertStringNotContainsString('data-quote-post', $page->body());
+        self::assertStringContainsString("You don't have permission to reply in this board.", $page->body());
+    }
+
+    public function test_owner_edit_and_delete_forms_keep_one_native_no_js_copy(): void
+    {
+        $author = $this->makeUser(['username' => 'study_owner_actions']);
+        $board = $this->makeBoard($this->makeCategory('Study Owner Actions'));
+        $thread = $this->makeThread($board, $author, 'Owner actions remain native', 'Opening record.');
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+
+        $this->actingAs($author);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $html = $page->body();
+
+        self::assertSame(1, substr_count($html, 'action="/posts/' . $opId . '/edit"'));
+        self::assertSame(1, substr_count($html, 'action="/posts/' . $opId . '/delete"'));
+        self::assertStringContainsString('id="post-edit-' . $opId . '"', $html);
+        self::assertStringContainsString('data-post-disclosure-open="post-edit-' . $opId . '"', $html);
+        self::assertStringContainsString('<summary class="linkbtn">Edit</summary>', $html);
+    }
+
+    public function test_moderator_post_forms_are_capability_scoped_single_copy_and_native_without_js(): void
+    {
+        $author = $this->makeUser(['username' => 'study_post_form_author']);
+        $moderator = $this->makeUser(['username' => 'study_post_form_moderator']);
+        $board = $this->makeBoard($this->makeCategory('Study Post Forms'), ['allow_anonymous' => 1]);
+        $this->db->run('UPDATE boards SET wiki_enabled = 1 WHERE id = ?', [$board['id']]);
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $moderator['id']);
+        $thread = $this->posting()->createThread($this->userEntity($author), [
+            'board_id' => (int) $board['id'],
+            'title' => 'Moderator forms remain native',
+            'body' => 'Anonymous opening record.',
+            'is_anonymous' => 1,
+        ]);
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+
+        $this->actingAs($moderator);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $html = $page->body();
+
+        self::assertSame(1, substr_count($html, 'action="/posts/' . $opId . '/delete"'));
+        self::assertSame(1, substr_count($html, 'action="/mod/p/' . $opId . '/reveal"'));
+        self::assertSame(1, substr_count($html, 'action="/posts/' . $opId . '/wiki"'));
+        self::assertSame(1, substr_count($html, 'action="/posts/' . $opId . '/report"'));
+        self::assertStringContainsString('id="post-remove-' . $opId . '"', $html);
+        self::assertStringContainsString('id="post-report-' . $opId . '"', $html);
+        self::assertStringContainsString('name="reason"', $html);
+        self::assertStringContainsString('name="reason_code"', $html);
+    }
+
+    public function test_suspended_admin_and_board_moderator_get_no_post_write_controls(): void
+    {
+        $author = $this->makeUser(['username' => 'study_suspended_post_author']);
+        $reactor = $this->makeUser(['username' => 'study_reaction_seed']);
+        $admin = $this->makeAdmin([
+            'username' => 'study_suspended_post_admin',
+            'status' => 'suspended',
+            'suspended_until' => '2099-01-01 00:00:00',
+        ]);
+        $moderator = $this->makeUser(['username' => 'study_suspended_post_moderator']);
+        $board = $this->makeBoard($this->makeCategory('Study Suspended Posts'), ['allow_anonymous' => 1]);
+        $this->db->run('UPDATE boards SET wiki_enabled = 1 WHERE id = ?', [$board['id']]);
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $moderator['id']);
+        $this->users()->setStatus((int) $moderator['id'], 'suspended', '2099-01-01 00:00:00');
+        $thread = $this->posting()->createThread($this->userEntity($author), [
+            'board_id' => (int) $board['id'],
+            'title' => 'Account state closes post actions',
+            'body' => 'Anonymous opening record.',
+            'is_anonymous' => 1,
+        ]);
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+
+        $this->actingAs($reactor);
+        $this->assertRedirect($this->post('/posts/' . $opId . '/react', ['emoji' => '👍']));
+
+        foreach ([$admin, $moderator] as $suspended) {
+            $this->actingAs($suspended);
+            $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+            $html = $page->body();
+
+            self::assertStringContainsString('data-post-toolbar', $html);
+            self::assertStringContainsString('data-copy-post', $html);
+            self::assertStringContainsString('reaction reaction-static', $html);
+            self::assertStringNotContainsString('data-quote-post', $html);
+            self::assertStringNotContainsString('class="reaction-form', $html);
+            self::assertStringNotContainsString('action="/posts/' . $opId . '/react"', $html);
+            self::assertStringNotContainsString('action="/posts/' . $opId . '/accept"', $html);
+            self::assertStringNotContainsString('action="/posts/' . $opId . '/edit"', $html);
+            self::assertStringNotContainsString('action="/posts/' . $opId . '/delete"', $html);
+            self::assertStringNotContainsString('action="/mod/p/' . $opId . '/reveal"', $html);
+            self::assertStringNotContainsString('action="/posts/' . $opId . '/wiki"', $html);
+            self::assertStringNotContainsString('action="/posts/' . $opId . '/report"', $html);
+            self::assertStringNotContainsString('data-post-disclosure-open', $html);
+        }
+    }
+
+    public function test_stream_inserts_a_divider_when_the_utc_calendar_day_changes(): void
+    {
+        $author = $this->makeUser(['username' => 'study_day_author']);
+        $board = $this->makeBoard($this->makeCategory('Study Days'));
+        $thread = $this->makeThread($board, $author, 'Days divide the record', 'Opening record.');
+        $reply = $this->posting()->reply($this->userEntity($author), (int) $thread['thread_id'], ['body' => 'A later record.']);
+        $this->db->run("UPDATE posts SET created_at = '2026-07-13 09:00:00' WHERE id = ?", [$reply]);
+        $this->db->run("UPDATE posts SET created_at = '2026-07-12 09:00:00' WHERE thread_id = ? AND is_op = 1", [$thread['thread_id']]);
+
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        self::assertStringContainsString('data-post-day="2026-07-13"', $page->body());
     }
 }

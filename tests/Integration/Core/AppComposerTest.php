@@ -142,7 +142,8 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('class="thread thread-conversation thread-study"', $threadPage->body());
         self::assertStringContainsString('class="thread-scroll"', $threadPage->body());
         self::assertStringContainsString('class="thread-dock"', $threadPage->body());
-        self::assertStringContainsString('class="composer reply-composer"', $threadPage->body());
+        self::assertStringContainsString('class="composer reply-composer thread-composer-card"', $threadPage->body());
+        self::assertStringContainsString('data-thread-composer', $threadPage->body());
 
         $newDm = $this->get('/messages/new');
         $this->assertStatus(200, $newDm);
@@ -264,7 +265,11 @@ final class AppComposerTest extends TestCase
         $this->assertStatus(422, $res);
         self::assertStringContainsString('Your post is too long.', $res->body());
         self::assertStringContainsString($tooLong, $res->body(), 'the rejected edit text is preserved in the re-opened edit form');
-        self::assertStringContainsString('class="post-edit" open', $res->body(), 'the failing post\'s edit form is re-opened');
+        self::assertStringContainsString(
+            'class="post-native-disclosure post-edit" id="post-edit-' . $postId . '" open',
+            $res->body(),
+            'the failing post\'s native edit disclosure is re-opened',
+        );
         // The stored post is untouched by the failed edit.
         self::assertSame('Original body.', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
     }
@@ -285,7 +290,8 @@ final class AppComposerTest extends TestCase
         $this->assertStatus(422, $response);
         self::assertStringContainsString('Your post is too long.', $response->body());
         self::assertStringContainsString($tooLong, $response->body(), 'the rejected reply body remains in the composer');
-        self::assertStringContainsString('class="composer reply-composer is-expanded"', $response->body());
+        self::assertStringContainsString('class="composer reply-composer thread-composer-card is-expanded"', $response->body());
+        self::assertStringContainsString('data-thread-composer', $response->body());
     }
 
     /**

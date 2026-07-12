@@ -1,5 +1,5 @@
 <?php /** @var \App\Core\View $this */ ?>
-<section class="living-brief" aria-labelledby="living-brief-heading">
+<section class="living-brief study-living-brief" data-living-brief aria-labelledby="living-brief-heading">
     <div class="living-brief-head">
         <div>
             <p class="living-brief-label">
@@ -16,6 +16,7 @@
             <span>Version <?= (int) $living_brief['version'] ?></span>
             <time datetime="<?= $e($living_brief['published_at_utc']) ?>"><?= $e($living_brief['published_at']) ?></time>
         </p>
+        <?php if (!empty($can_curate_memory)): ?><button type="button" class="living-brief-curate" data-topic-tools-open="memory" hidden>Curate</button><?php endif; ?>
     </div>
     <div class="post-body"><?= $living_brief['body_html'] ?></div>
 

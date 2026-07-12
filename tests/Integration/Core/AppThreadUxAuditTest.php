@@ -84,8 +84,9 @@ final class AppThreadUxAuditTest extends TestCase
         $this->assertStatus(200, $page);
         $this->assertSeeText($page, 'action="/mod/t/' . $thread['thread_id'] . '/pin"');
         $this->assertSeeText($page, 'action="/mod/t/' . $thread['thread_id'] . '/lock"');
+        $this->assertSeeText($page, 'data-post-menu');
         $this->assertSeeText($page, 'action="/posts/' . $reply . '/delete"');
-        $this->assertSeeText($page, 'Remove (mod)');
+        $this->assertSeeText($page, 'Remove (warden)');
     }
 
     public function test_plain_member_sees_no_moderation_controls(): void
@@ -101,7 +102,7 @@ final class AppThreadUxAuditTest extends TestCase
 
         $this->assertStatus(200, $page);
         $this->assertDontSeeText($page, '/mod/t/' . $thread['thread_id'] . '/pin');
-        $this->assertDontSeeText($page, 'Remove (mod)');
+        $this->assertDontSeeText($page, 'Remove (warden)');
     }
 
     public function test_moderator_removing_the_opening_post_removes_the_whole_topic(): void
