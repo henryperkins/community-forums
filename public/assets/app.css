@@ -1306,6 +1306,8 @@ body[data-route="inbox"] .main { padding: 0; }
 .inbox-reading { background: var(--surface-raised); padding: 24px 30px 44px; overflow-y: auto; min-width: 0; }
 .inbox-reading[aria-busy="true"] { opacity: .55; }
 .inbox-mobile-back { display: none; }
+.mobile-only { display: none; }
+.topbar-logout .icon { display: none; }
 .inbox-reading .thread-view, .inbox-reading .board-view { max-width: 760px; }
 .thread-row.is-active { background: var(--brand-subtle); }
 .thread-row.is-active::before { background: var(--leaf); }
@@ -1339,6 +1341,27 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
 .fab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 860px) {
+    .topbar { height: var(--topbar-h); min-height: var(--topbar-h); }
+    .topbar-inner {
+        height: 100%; min-height: 0; padding: 0 8px;
+        flex-wrap: nowrap; align-items: center; row-gap: 0; gap: 4px;
+    }
+    .topbar-search { display: none; }
+    .brand { min-width: 44px; min-height: 44px; justify-content: center; gap: 0; }
+    .brand-name, .topbar-name, .topbar-action-label { display: none; }
+    .topbar-right {
+        flex: 0 1 auto; min-width: 0; margin-left: auto;
+        flex-wrap: nowrap; justify-content: flex-end; gap: 2px;
+    }
+    .topbar-link, .topbar-user, .topbar-logout .linkbtn {
+        width: 44px; min-width: 44px; height: 44px; min-height: 44px;
+        padding: 0; justify-content: center;
+    }
+    .topbar-right .inline { margin: 0; }
+    .topbar-logout .linkbtn { display: inline-flex; align-items: center; gap: 0; }
+    .topbar-logout .icon { display: block; width: 18px; height: 18px; }
+    .topbar-moderation { width: auto; padding: 0 8px; }
+    .mobile-search-link { display: flex; }
     .has-js .nav-toggle { display: inline-flex; }
     .fab { display: inline-flex; }
 
