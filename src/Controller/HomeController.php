@@ -17,6 +17,12 @@ use App\Security\BoardPolicy;
 final class HomeController extends Controller
 {
     /** @param array<string,string> $params */
+    public function privacy(Request $request, array $params): Response
+    {
+        return $this->view('privacy');
+    }
+
+    /** @param array<string,string> $params */
     public function index(Request $request, array $params): Response
     {
         $user = $this->currentUser();

@@ -7,6 +7,7 @@ $disabledNote = 'Disabled until the feature flag is enabled';
 $always = [
     ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => '/admin'],
     ['key' => 'features', 'label' => 'Feature flags', 'href' => '/admin/features'],
+    ['key' => 'thread_intelligence', 'label' => 'Thread Intelligence', 'href' => '/admin/thread-intelligence', 'flags_any' => ['community_memory', 'automated_context']],
     ['key' => 'structure', 'label' => 'Boards & categories', 'href' => '/admin/structure'],
     ['key' => 'users', 'label' => 'Users', 'href' => '/admin/users'],
     ['key' => 'branding', 'label' => 'Branding', 'href' => '/admin/branding', 'flag' => 'branding'],
@@ -30,6 +31,7 @@ $dark = [
 ?>
 <nav class="subnav admin-subnav" aria-label="Admin navigation">
     <?php foreach ($always as $item): ?>
+        <?php if (!empty($item['flags_any']) && !array_filter($item['flags_any'], static fn ($flag): bool => !empty($features[$flag]))): continue; endif; ?>
         <?php if (empty($item['flag']) || !empty($features[$item['flag']])): ?>
             <a href="<?= $e($item['href']) ?>"<?= $active === $item['key'] ? ' class="active" aria-current="page"' : '' ?>><?= $e($item['label']) ?></a>
         <?php else: ?>

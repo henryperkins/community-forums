@@ -157,6 +157,13 @@ final class FeatureFlags
         return $this->cache ??= $this->load();
     }
 
+    /** Force the next read to observe the current persisted override map. */
+    public function invalidate(): void
+    {
+        $this->cache = null;
+        $this->overridesCorrupt = false;
+    }
+
     /** @return array<string,bool> */
     private function load(): array
     {

@@ -9,6 +9,7 @@ use App\Core\FeatureFlags;
 use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Service\ThreadIntelligence\ThreadIntelligenceAdminService;
 
 final class AdminDashboardService
 {
@@ -19,6 +20,7 @@ final class AdminDashboardService
         private FeatureFlags $features,
         private Mailer $mailer,
         private EmailDomainVerifier $emailDomainVerifier,
+        private ?ThreadIntelligenceAdminService $threadIntelligence = null,
     ) {
     }
 
@@ -87,6 +89,19 @@ final class AdminDashboardService
             ],
         ];
 
+        $threadIntelligence = null;
+        if ($this->features->enabled('community_memory') || $this->features->enabled('automated_context')) {
+            $threadIntelligence = $this->threadIntelligence?->overview();
+            if ($threadIntelligence !== null) {
+                $cards[] = [
+                    'title' => 'Thread Intelligence',
+                    'count' => (int) $threadIntelligence['warning_count'],
+                    'detail' => (int) $threadIntelligence['queue_attention'] . ' threads need operator attention · worker ' . (string) $threadIntelligence['heartbeat'],
+                    'href' => '/admin/thread-intelligence',
+                ];
+            }
+        }
+
         $attention = [];
         if ($reportsEnabled && $counts['reports'] > 0) {
             $attention[] = [
@@ -120,6 +135,12 @@ final class AdminDashboardService
             $attention[] = [
                 'label' => 'Email sending is blocked until SPF and DKIM pass.',
                 'href' => '/admin/email',
+            ];
+        }
+        if ($threadIntelligence !== null && (int) $threadIntelligence['warning_count'] > 0) {
+            $attention[] = [
+                'label' => (int) $threadIntelligence['warning_count'] . ' Thread Intelligence warning' . ((int) $threadIntelligence['warning_count'] === 1 ? '' : 's') . ' need operator review.',
+                'href' => '/admin/thread-intelligence',
             ];
         }
 

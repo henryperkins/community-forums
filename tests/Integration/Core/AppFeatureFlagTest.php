@@ -30,6 +30,18 @@ final class AppFeatureFlagTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
+    public function test_invalidate_reloads_live_operator_overrides(): void
+    {
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($flags->enabled('community_memory'));
+
+        $this->setFlags(['community_memory' => true]);
+        self::assertFalse($flags->enabled('community_memory'), 'the per-request cache remains stable until a boundary asks to refresh');
+
+        $flags->invalidate();
+        self::assertTrue($flags->enabled('community_memory'));
+    }
+
     public function test_phase4_gate_a_flags_have_expected_default_posture(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));

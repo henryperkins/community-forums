@@ -58,7 +58,12 @@
                         <tbody>
                             <?php foreach ($rows as $row): ?>
                                 <tr>
-                                    <td><code><?= $e((string) $row['flag']) ?></code></td>
+                                    <td>
+                                        <code><?= $e((string) $row['flag']) ?></code>
+                                        <?php if (!empty($row['operations_href'])): ?>
+                                            <a href="<?= $e($row['operations_href']) ?>">Operations</a>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><span class="state <?= !empty($row['effective']) ? 'state-active' : 'state-paused' ?>"><?= $e((string) $row['effective_text']) ?></span></td>
                                     <td><span class="state <?= !empty($row['default']) ? 'state-active' : 'state-paused' ?>"><?= $e((string) $row['default_text']) ?></span></td>
                                     <td><span class="state <?= $e((string) $row['override_class']) ?>"><?= $e((string) $row['override_text']) ?></span></td>

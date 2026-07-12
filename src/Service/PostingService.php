@@ -23,6 +23,7 @@ use App\Security\BoardPolicy;
 use App\Security\Cap;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
 use App\Support\Markdown;
 use App\Support\MentionParser;
 use App\Support\Str;
@@ -54,6 +55,7 @@ final class PostingService
         private ?ContentReferenceService $contentReferences = null,
         private ?LinkPreviewService $linkPreviews = null,
         private ?AuthorityGate $authority = null,
+        private ?ThreadIntelligenceQueue $threadIntelligence = null,
     ) {
     }
 
@@ -185,6 +187,10 @@ final class PostingService
                     $this->antiAbuse->audit($decision, 'thread', $threadId, (string) ($board['visibility'] ?? 'public'));
                 }
 
+                if (!$pending) {
+                    $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_POST_CREATED);
+                }
+
                 return ['thread_id' => $threadId, 'slug' => $slug, 'pending' => $pending, 'post_id' => $postId];
             });
             if (empty($result['pending']) && (string) ($board['visibility'] ?? 'public') === 'public') {
@@ -302,6 +308,10 @@ final class PostingService
                     $this->antiAbuse->audit($decision, 'post', $postId, (string) ($thread['board_visibility'] ?? 'public'));
                 }
 
+                if (!$pending) {
+                    $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_POST_CREATED);
+                }
+
                 return $postId;
             });
             if (!$pending && (string) ($thread['board_visibility'] ?? 'public') === 'public') {
@@ -345,7 +355,7 @@ final class PostingService
         $beforeLower = array_map('strtolower', $before);
         $added = array_values(array_filter($after, static fn (string $h): bool => !in_array(strtolower($h), $beforeLower, true)));
 
-        $this->db->transaction(function () use ($post, $postId, $body, $user, $added): void {
+        $this->db->transaction(function () use ($post, $postId, $body, $user, $added, $changed): void {
             $this->posts->update($postId, $body, $this->markdown->render($body, ['link_mentions' => true]), $user->id());
             // Bind images the edit newly references. The edit composer uploads
             // pasted/dropped images as temp attachments exactly like create/reply;
@@ -363,6 +373,12 @@ final class PostingService
                     'board_visibility' => $post['board_visibility'] ?? 'public',
                 ];
                 $this->notifications->notifyMentions($user->id(), $threadCtx, $postId, $added);
+            }
+            if ($changed) {
+                $this->threadIntelligence?->markStale(
+                    (int) $post['thread_id'],
+                    ThreadIntelligenceQueue::TRIGGER_POST_EDITED,
+                );
             }
         });
 
@@ -418,6 +434,10 @@ final class PostingService
             // (guards against a concurrent/duplicate delete double-decrementing).
             if ($this->posts->softDelete($postId, $user->id()) > 0) {
                 $this->applyDeletionCounters($post);
+                $this->threadIntelligence?->markStale(
+                    (int) $post['thread_id'],
+                    ThreadIntelligenceQueue::TRIGGER_POST_DELETED,
+                );
                 return true;
             }
             return false;
@@ -600,6 +620,7 @@ final class PostingService
                 $threadCtx = ['id' => $threadId, 'board_id' => (int) $thread['board_id'], 'board_visibility' => $board['visibility'] ?? 'public'];
                 $this->notifications->fanOutNewPost((int) $thread['user_id'], $threadCtx, (int) $op['id'], true, (string) $op['body']);
             }
+            $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_POST_APPROVED);
             return true;
         });
         if ($approved) {
@@ -637,6 +658,7 @@ final class PostingService
                 $threadCtx = ['id' => $threadId, 'board_id' => (int) $post['board_id'], 'board_visibility' => $post['board_visibility'] ?? 'public'];
                 $this->notifications->fanOutNewPost((int) $post['user_id'], $threadCtx, $postId, false, (string) $post['body']);
             }
+            $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_POST_APPROVED);
             return true;
         });
         if ($approved) {

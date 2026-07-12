@@ -219,80 +219,6 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 </form>
             </details>
         <?php endif; ?>
-        <?php if (($memory_on ?? false) && !empty($summary)): ?>
-            <section class="memory-panel">
-                <h2>Summary</h2>
-                <div class="post-body"><?= $summary['body_html'] ?></div>
-                <p class="muted">Version <?= (int) $summary['version'] ?> by @<?= $e($summary['author_username']) ?></p>
-                <?php if (!empty($summary_sources)): ?>
-                    <ul class="muted">
-                        <?php foreach ($summary_sources as $src): ?>
-                            <li>Source <a href="/t/<?= (int) $src['thread_id'] ?>-<?= $e($src['thread_slug']) ?>#p<?= (int) $src['id'] ?>">#<?= (int) $src['id'] ?></a> by <?= ($src['author_username'] ?? '') !== '' ? '@' . $e($src['author_username']) : 'Anonymous' ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-                <?php if (!empty($summary_reference_cards)): ?>
-                    <div class="reference-cards" aria-label="Referenced content">
-                        <?php foreach ($summary_reference_cards as $card): ?>
-                            <a class="reference-card" href="<?= $e($card['url']) ?>">
-                                <span class="badge badge-muted"><?= $e($card['type']) ?></span>
-                                <strong><?= $e($card['title']) ?></strong>
-                                <?php if (($card['meta'] ?? '') !== ''): ?><span class="muted"><?= $e($card['meta']) ?></span><?php endif; ?>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-                <?php if (!empty($can_curate_memory)): ?>
-                    <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/retire">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn muted" type="submit">Retire summary</button>
-                    </form>
-                <?php endif; ?>
-            </section>
-        <?php endif; ?>
-        <?php if (($memory_on ?? false) && !empty($related_threads)): ?>
-            <section class="memory-panel">
-                <h2>Related topics</h2>
-                <ul>
-                    <?php foreach ($related_threads as $related): ?>
-                        <li><a href="/t/<?= (int) $related['related_thread_id'] ?>-<?= $e($related['slug']) ?>"><?= $e($related['title']) ?></a>
-                            <?php if (!empty($related['reason'])): ?><span class="muted">— <?= $e($related['reason']) ?></span><?php endif; ?>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </section>
-        <?php endif; ?>
-        <?php if (($memory_on ?? false) && !empty($can_curate_memory)): ?>
-            <details class="workflow-actions">
-                <summary class="linkbtn">Curate topic memory</summary>
-                <form class="composer" method="post" action="/t/<?= (int) $thread['id'] ?>/summary">
-                    <?= $this->csrfField() ?>
-                    <label for="summary-body">Summary</label>
-                    <textarea id="summary-body" class="composer-input" name="body" rows="4" maxlength="20000"></textarea>
-                    <label for="summary-sources">Source post IDs</label>
-                    <input id="summary-sources" class="input" type="text" name="source_post_ids" placeholder="1, 2, 3">
-                    <button class="btn btn-small" type="submit">Publish summary</button>
-                </form>
-                <?php if (!empty($summary_history)): ?>
-                    <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/summary/restore">
-                        <?= $this->csrfField() ?>
-                        <label class="sr-only" for="summary-restore">Restore summary</label>
-                        <select id="summary-restore" class="input input-small" name="summary_id">
-                            <?php foreach ($summary_history as $item): ?>
-                                <option value="<?= (int) $item['id'] ?>">v<?= (int) $item['version'] ?> · <?= $e($item['status']) ?> · @<?= $e($item['author_username']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <button class="btn btn-small" type="submit">Restore summary</button>
-                    </form>
-                <?php endif; ?>
-                <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/related">
-                    <?= $this->csrfField() ?>
-                    <input class="input input-small" type="number" name="related_thread_id" min="1" placeholder="Thread ID" required>
-                    <input class="input" type="text" name="reason" maxlength="255" placeholder="Reason">
-                    <button class="btn btn-small" type="submit">Add related topic</button>
-                </form>
-            </details>
-        <?php endif; ?>
         <?php if (!empty($polls_on) && !empty($poll)): ?>
             <section class="poll-card poll-panel">
                 <div class="poll-head">
@@ -411,6 +337,33 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             </details>
         <?php endif; ?>
     </header>
+
+    <?php if ($living_brief !== null || $related_fallback !== [] || $can_curate_memory): ?>
+    <div class="thread-memory-slot">
+        <?php if ($living_brief !== null): ?>
+            <?= $this->partial('partials/living_brief', compact('living_brief', 'living_brief_sources', 'living_brief_related')) ?>
+        <?php elseif ($related_fallback !== []): ?>
+            <section class="related-topic-fallback" aria-labelledby="related-topic-fallback-heading">
+                <h2 id="related-topic-fallback-heading">Related topics</h2>
+                <?php foreach ($related_fallback as $related): ?>
+                    <a href="<?= $e($related['url']) ?>"><?= $e($related['title']) ?></a>
+                <?php endforeach; ?>
+            </section>
+        <?php endif; ?>
+        <?php if ($can_curate_memory): ?>
+            <?php // Pass an explicit payload: this renderer's get_defined_vars()
+                  // includes its internal $file variable and would recursively
+                  // include thread.php when forwarded to a partial. ?>
+            <?= $this->partial('partials/thread_memory_tools', [
+                'thread' => $thread,
+                'living_brief' => $living_brief,
+                'memory_history' => $memory_history,
+                'memory_refresh' => $memory_refresh,
+                'memory_automation_paused' => $memory_automation_paused,
+            ]) ?>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <?php if (!empty($since_last_read_context)): ?>
         <section class="memory-panel since-last-read">

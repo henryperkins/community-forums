@@ -14,8 +14,34 @@ ROOT_USER="${DB_ROOT_USER:-root}"
 ROOT_PASSWORD="${DB_ROOT_PASSWORD:-rootpw}"
 DB_USER="${DB_USERNAME:-retro}"
 MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
+if [ -n "${DOCKER_BINARY:-}" ]; then
+  DOCKER_BIN="$DOCKER_BINARY"
+elif command -v docker.exe >/dev/null 2>&1; then
+  DOCKER_BIN="docker.exe"
+else
+  DOCKER_BIN="docker"
+fi
 RATE_LIMIT_PATH="${RATELIMIT_PATH:-$PWD/storage/ratelimit-e2e}"
 PACKAGES_PATH="${PACKAGES_STORAGE_PATH:-$PWD/storage/packages-e2e}"
+if [ -n "${PHP_BINARY:-}" ]; then
+  PHP_BIN="$PHP_BINARY"
+elif command -v php.exe >/dev/null 2>&1; then
+  PHP_BIN="php.exe"
+else
+  PHP_BIN="php"
+fi
+
+# Seed, fixture subprocesses, and Playwright's PHP server must share the same
+# deterministic non-production keys. Thread Intelligence provider health is
+# fingerprinted with both values, so allowing one process to invent its own
+# fallback would make the latch/retry evidence unstable.
+export APP_KEY="${APP_KEY:-0000000000000000000000000000000000000000000000000000000000000000}"
+export OPENAI_API_KEY="${OPENAI_API_KEY:-browser-thread-intelligence-dummy-credential}"
+if [[ "$PHP_BIN" == *.exe ]]; then
+  export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-$(wslpath -w "$PWD/storage/cache")}"
+  export OPENSSL_CONF="${OPENSSL_CONF:-C:\Program Files\Git\usr\ssl\openssl.cnf}"
+  export WSLENV="${WSLENV:+$WSLENV:}PHP_INI_SCAN_DIR/w:OPENSSL_CONF/w:DB_DATABASE/w:APP_KEY/w:OPENAI_API_KEY/w:PACKAGES_STORAGE_PATH/p"
+fi
 
 if [[ "$RATE_LIMIT_PATH" != /* ]]; then
   RATE_LIMIT_PATH="$PWD/$RATE_LIMIT_PATH"
@@ -51,11 +77,11 @@ case "$PACKAGES_PATH" in
 esac
 export PACKAGES_STORAGE_PATH="$PACKAGES_PATH"
 
-if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$RESET_CONTAINER"; then
+if "$DOCKER_BIN" ps --format '{{.Names}}' 2>/dev/null | grep -qx "$RESET_CONTAINER"; then
   # rootpw is the fixed local rb-mariadb dev-container password (see project README);
   # it only resets a throwaway local database and is never a production credential.
   echo "==> Resetting database '$DB' ($RESET_CONTAINER container)"
-  docker exec "$RESET_CONTAINER" "$MYSQL_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" -e \
+  "$DOCKER_BIN" exec "$RESET_CONTAINER" "$MYSQL_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" -e \
     "DROP DATABASE IF EXISTS \`$DB\`;
      CREATE DATABASE \`$DB\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
      GRANT ALL PRIVILEGES ON \`$DB\`.* TO '$DB_USER'@'%';
@@ -69,9 +95,9 @@ echo "==> Rebuilding schema"
 # The spec mutates data (new threads, announcements, email state, etc.), so a
 # plain migrate-on-top leaves older evidence artifacts on page 1 and breaks the
 # fixture assumptions. Rebuild the dedicated evidence DB each time instead.
-DB_DATABASE="$DB" php bin/console migrate:fresh
+DB_DATABASE="$DB" "$PHP_BIN" bin/console migrate:fresh
 
 echo "==> Seeding"
-DB_DATABASE="$DB" php tests/browser/seed.php
+DB_DATABASE="$DB" "$PHP_BIN" tests/browser/seed.php
 
 echo "==> Database '$DB' ready."

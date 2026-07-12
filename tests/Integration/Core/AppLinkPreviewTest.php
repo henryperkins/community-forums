@@ -208,9 +208,10 @@ header('Content-Type: text/html; charset=UTF-8');
 echo '<html><head><title>Pinned Preview OK</title><meta name="description" content="resolved through guard"></head><body>ok</body></html>';
 PHP);
 
+        $nullDevice = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
         $server = proc_open(
             [PHP_BINARY, '-S', '127.0.0.1:' . $port, $router],
-            [['pipe', 'r'], ['file', '/dev/null', 'w'], ['file', '/dev/null', 'w']],
+            [['pipe', 'r'], ['file', $nullDevice, 'w'], ['file', $nullDevice, 'w']],
             $pipes,
             $dir,
         );

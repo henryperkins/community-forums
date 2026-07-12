@@ -1,6 +1,6 @@
 # RetroBoards — Consolidated Database Schema
 
-**Status:** v1.37 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-09
+**Status:** v1.38 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-10
 **This file is the single authoritative reference for the full database schema.** It consolidates the DDL that is otherwise scattered across [DESIGN.md](DESIGN.md) §8, [USER.md](USER.md) §7, [ADMIN.md](ADMIN.md) §10, [COMPOSER.md](COMPOSER.md) §16, and [COMMUNITY.md](COMMUNITY.md) §11 into one place, with each doc's *"additions to existing tables"* folded directly into the table definition.
 
 Those source docs remain the narrative source of truth for *why* each field exists; this file is the source of truth for the *final shape* of each table. When the two disagree, the reconciliations in §7 below are authoritative (they were applied to fix genuine drift between the docs).
@@ -131,6 +131,8 @@ Those source docs remain the narrative source of truth for *why* each field exis
 | 111 | `theme_state` | Ecosystem / themes | 5 | PHASE_5_PLAN §8.2 #7 / P5-03 (migration 0072) |
 | 112 | `installed_package_settings` | Ecosystem | 5 | PHASE_5_PLAN §8.2 / P5-04 (migration 0073; inert until Inc 5 integration runtime) |
 | 113 | `installed_package_credentials` | Ecosystem | 5 | PHASE_5_PLAN §8.2 / P5-04 (migration 0073; package-owned api_token/webhook links) |
+| 114 | `thread_intelligence_jobs` | Knowledge / AI | 4 | ADR 0019 Thread Intelligence / migration 0077 |
+| 115 | `thread_intelligence_generations` | Knowledge / AI | 4 | ADR 0019 Thread Intelligence / migration 0077 |
 
 > "Phase" reflects the seven-phase delivery plan (PHASE_1 through PHASE_7), which subdivides the DESIGN.md §13 roadmap. See §6 for the full per-phase build cut and the crosswalk to DESIGN §13.
 >
@@ -1009,6 +1011,102 @@ account-deletion purge.
 
 ---
 
+## 4D. Thread Intelligence (migration 0077, ADR 0019)
+
+Migration `0077` adds the durable AI Living-Brief pipeline state: a per-thread
+job/queue row, an append-only generation-attempt evidence ledger, AI summary
+authorship/lineage on the existing summary history, an AI selection overlay on
+deterministic relationships, and the bounded board-visibility sweep cursor.
+Additive and data-preserving; deployed rollback is runtime-level (flags, global
+pause, credential removal) and keeps every row. `down()` exists only for the
+fixture-free deployment rehearsal.
+
+Modified existing tables:
+
+- `thread_summaries.kind` **ENUM widened** with `'ai'`. `author_id` becomes
+  **NULLable** and its FK (`fk_summary_author`) flips CASCADE → **SET NULL**:
+  `kind='ai'` versions have no human author (the UI renders system attribution
+  from `kind`, never a fake user), and deleting/anonymizing a human author no
+  longer deletes summary history. New `parent_summary_id BIGINT UNSIGNED NULL`
+  self-FK (SET NULL) records version lineage — the AI baseline behind a curator
+  edit and successive versions — without a generation↔summary FK cycle.
+- `related_threads` gains the AI overlay: `ai_generation_id BIGINT UNSIGNED
+  NULL` (FK → `thread_intelligence_generations`, SET NULL), `ai_reason
+  VARCHAR(255) NULL`, `ai_selected TINYINT(1) NOT NULL DEFAULT 0`,
+  `ai_selected_at DATETIME NULL`, and `idx_related_ai_overlay
+  (source_thread_id, ai_selected, status, id)` for current-overlay reads. The
+  `source` vocabulary (`curated|tag|search|merge`) and `uq_related_pair` are
+  unchanged. Curated rows are never overlaid; curator promotion via
+  `CommunityMemoryService::addRelated()` clears every `ai_*` column.
+- `boards.thread_intelligence_sweep_after_id BIGINT UNSIGNED NULL` +
+  `idx_boards_ti_sweep (thread_intelligence_sweep_after_id, id)`: the bounded
+  visibility-sweep cursor. **`NULL` = no sweep due; `0` = sweep from the start;
+  a positive value = last processed thread ID** (keyset resume point). A
+  visibility change is one O(1) board write; the worker drains one 250-thread
+  batch per run before claims.
+- `threads` gains `idx_threads_board_id (board_id, id)` for those keyset
+  batches.
+
+New tables:
+
+- `thread_intelligence_jobs(thread_id PK/FK, state, trigger_code,
+  trigger_reason, due_at, lease_token, lease_expires_at, attempt_count,
+  last_error_code, last_processed_post_id, last_generated_at,
+  last_full_reconcile_at, automation_paused, paused_by, paused_at,
+  source_snapshot_hash, activity_version, reconcile_required, created_at,
+  updated_at)` — **one row per thread acting as queue plus current state**.
+  `state ENUM('idle','queued','running','retry','dead','review_required')`;
+  `due_at` carries both the 15-minute activity debounce and retry timing;
+  `lease_token`/`lease_expires_at` implement the ten-minute compare-and-set
+  worker lease; `last_processed_post_id` (FK → `posts`, SET NULL) is the
+  incremental checkpoint; `automation_paused`/`paused_by` (FK → `users`, SET
+  NULL)/`paused_at` record the curator retirement pause. `activity_version`
+  increments on every meaningful enqueue so an in-flight provider response can
+  never erase newer committed activity; `reconcile_required` is OR'd by
+  evidence-invalidating activity and is not downgraded by routine posts. Claim
+  indexes `(state, due_at, thread_id)` and `(state, lease_expires_at,
+  thread_id)`. The row survives successful work (cadence/pause/checkpoint
+  state); thread deletion cascades it.
+- `thread_intelligence_generations(id, thread_id, trigger_code, status,
+  retry_number, window_number, baseline_summary_id, published_summary_id,
+  source_snapshot_hash, source_post_ids, candidate_thread_ids,
+  request_fingerprint, prompt_version, model, reasoning_effort,
+  provider_response_id, estimated_input_tokens, input_tokens, output_tokens,
+  reasoning_tokens, cached_tokens, failure_code, failure_message, requested_at,
+  completed_at, published_at)` — the **append-only attempt/evidence ledger**,
+  immutable within its retention window; one row per planned provider call or
+  audited no-call outcome. `status
+  ENUM('requested','succeeded','published','retry','failed','dead',
+  'review_required','rejected','stale')`; `baseline_summary_id`/
+  `published_summary_id` are NULLable FKs → `thread_summaries` (SET NULL) so
+  summary deletion never cascades into evidence; `source_post_ids`/
+  `candidate_thread_ids` are JSON ID lists; `request_fingerprint CHAR(64)` is a
+  keyed HMAC — a `requested` row with a nonnull fingerprint owns a committed
+  budget reservation. `failure_message VARCHAR(255)` is the bounded admin-safe
+  detail. **No credential, raw prompt, raw provider response, or post body is
+  ever stored.** Indexes `(thread_id, id)`, `(status, completed_at, id)`, and
+  both summary FKs. Lifecycle: the thread FK (CASCADE) is the owner.
+
+Retention: published generation rows live for the source thread's lifetime;
+unpublished `succeeded|retry|failed|rejected|stale` rows become prune-eligible
+90 days after completion; rows supporting a current `dead|review_required` job
+are retained until that state resolves, then enter the same 90-day window. The
+bounded `thread-intelligence:prune-evidence` command (max 500 rows/run,
+flag/credential/pause-independent) is the sole deletion path besides thread
+cascade.
+
+Operational state in `settings` (no additional tables):
+`thread_intelligence_generation_paused` (canonical JSON strings `'1'`/`'0'`;
+missing = unpaused, any other value fails paused with an operator warning),
+`thread_intelligence_daily_budget` (UTC date + reserved/used calls and input
+tokens, locked `FOR UPDATE` for reservations),
+`thread_intelligence_provider_health` (bounded failure code + keyed HMAC
+config fingerprint; never a credential or unkeyed credential hash), and
+`thread_intelligence_worker_heartbeat` (run ID, status `running|ok|error`, UTC
+times, counts).
+
+---
+
 ## 5A. Phase 5 foundation — ecosystem, identity & governance (accepted, reversible)
 
 Migrations `0049`–`0053` established the foundation (additive; one reversible
@@ -1210,6 +1308,7 @@ Mentioned in the docs as future schema, deliberately **not** added here until sp
 
 | Version | Date | Notes |
 |---|---|---|
+| v1.38 | 2026-07-10 | Thread Intelligence migration `0077_thread_intelligence` (ADR 0019, new **§4D**): added `thread_intelligence_jobs` (per-thread queue/state row: six-state lifecycle, 15-minute debounce `due_at`, ten-minute CAS lease, `activity_version` lost-update guard, OR'd `reconcile_required`, curator pause, checkpoint FKs) and `thread_intelligence_generations` (append-only redacted attempt/evidence ledger: nine statuses, keyed `request_fingerprint`, JSON source/candidate ID lists, usage counts, bounded failure detail; no credential/prompt/response/post-body storage; 90-day unpublished retention, thread-lifetime published retention). Widened `thread_summaries.kind` with `'ai'`, made `author_id` NULLable with FK CASCADE→SET NULL, and added `parent_summary_id` self-FK (SET NULL) lineage. Overlaid `related_threads` with `ai_generation_id`/`ai_reason`/`ai_selected`/`ai_selected_at` + overlay read index (source enum and `uq_related_pair` unchanged). Added the `boards.thread_intelligence_sweep_after_id` sweep cursor + `idx_boards_ti_sweep`, and `threads.idx_threads_board_id` for keyset sweeps. Added table-index rows 114–115. Additive; both product flags remain default-off until the ADR 0019 evidence gates pass. |
 | v1.37 | 2026-07-09 | **Documentation-only reconciliation after the Phase 5 Gate A default-on acceptance (ADR 0018); no schema shape change.** §5A heading and body, the tables 55–77 index note, §6 Phase-3/Phase-5 rows, and the Phase-3 build-note webhook sentence reworded from deploy-dark to accepted/default-on (reversible via `features` overrides); the defaults apply to any install without an explicit override. Follows the v1.27 pattern for post-graduation reconciliations. |
 | v1.36 | 2026-07-09 | Phase 5 Increment 9 migration `0076_phase5_invitation_audit`: widened `moderation_log.target_type` with `invitation` (issuance/revoke/redemption audit rows — mirrors the 0075 `identity_provider` widen). `invitations`/`invitation_redemptions` rows are now animated by the P5-13 console + invite-mode registration through the accepted `invitations` flag; `registration_mode` gains the explicit `invite` value (settings-backed, no schema change). P5-16 closeout re-ran clean install, full rollback/reapply, `verify:upgrade` 17/17 through `0076`, and backup/restore rehearsal on 2026-07-09. |
 | v1.35 | 2026-07-07 | Phase 5 Increment 8 migration `0075_phase5_provider_admin_audit`: widened `moderation_log.target_type` with `identity_provider` (provider console create/enable/disable audit rows — mirrors the 0073 `publisher` widen). Also reconciled the §"moderation_log" CREATE block, which had lagged the `0073` `publisher` widen. `identity_providers` rows are now animated by the P5-12 console + generic-OIDC sign-in behind the dark `provider_registry` flag (graduated default-on 2026-07-09, v1.37). |

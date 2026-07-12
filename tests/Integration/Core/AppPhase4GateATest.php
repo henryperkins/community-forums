@@ -18,12 +18,27 @@ use App\Repository\ReportRepository;
 use App\Repository\SettingRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\TagRepository;
+use App\Repository\BoardMemberRepository;
+use App\Repository\BoardModeratorRepository;
+use App\Repository\PostRepository;
+use App\Repository\ThreadIntelligenceGenerationRepository;
+use App\Repository\ThreadIntelligenceJobRepository;
+use App\Repository\ThreadRepository;
 use App\Repository\UserPreferenceRepository;
+use App\Security\BoardPolicy;
 use App\Security\WriteGate;
+use App\Service\CommunityMemoryService;
 use App\Service\DirectMessageService;
 use App\Service\NotificationService;
 use App\Service\RepairService;
 use App\Service\ReputationLedgerService;
+use App\Service\ThreadIntelligence\ThreadIntelligenceBudget;
+use App\Service\ThreadIntelligence\ThreadIntelligenceCandidateFinder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceConfig;
+use App\Service\ThreadIntelligence\ThreadIntelligenceEligibility;
+use App\Service\ThreadIntelligence\ThreadIntelligenceEvidenceBuilder;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
+use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
 use Tests\Support\TestCase;
@@ -633,6 +648,159 @@ final class AppPhase4GateATest extends TestCase
         self::assertSame('Updated wiki body', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
         $this->assertRedirect($this->post('/posts/' . $postId . '/wiki/revert', ['revision_id' => $originalRevisionId]));
         self::assertSame('Original body', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+    }
+
+    public function testCommunityMemoryCuratorMutationsPreserveLineagePromoteRelationshipsAndSerializePauseResume(): void
+    {
+        (new SettingRepository($this->db))->set('features', [
+            'community_memory' => true,
+            'automated_context' => true,
+        ]);
+        $admin = $this->makeAdmin(['username' => 'lineageadmin']);
+        $author = $this->makeUser(['username' => 'lineageauthor']);
+        $board = $this->makeBoard($this->makeCategory(), ['name' => 'Lineage memory']);
+        $thread = $this->makeThread($board, $author, 'Lineage topic', 'Opening source.');
+        $threadId = (int) $thread['thread_id'];
+        $postIds = [(int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$threadId])];
+        for ($index = 1; $index < 8; $index++) {
+            $postIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                $threadId,
+                ['body' => 'Lineage evidence ' . $index . '.'],
+            );
+        }
+
+        $canonicalId = $this->db->insert(
+            "INSERT INTO thread_summaries
+                (thread_id, kind, status, body, body_html, version, author_id, reviewer_id, published_at, created_at)
+             VALUES (?, 'canonical_answer', 'published', ?, ?, 7, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$threadId, 'Accepted answer baseline.', '<p>Accepted answer baseline.</p>', (int) $author['id'], (int) $admin['id']],
+        );
+        $this->db->run('INSERT INTO thread_summary_sources (summary_id, post_id) VALUES (?, ?)', [$canonicalId, $postIds[0]]);
+
+        $config = ThreadIntelligenceConfig::fromArray(['api_key' => 'sk-test-thread-intelligence']);
+        $settings = new ThreadIntelligenceSettings(
+            new SettingRepository($this->db),
+            $config,
+            (string) $this->config->get('app.key'),
+            'sk-test-thread-intelligence',
+            $this->db,
+        );
+        $jobs = new ThreadIntelligenceJobRepository($this->db);
+        $eligibility = new ThreadIntelligenceEligibility(
+            $this->db,
+            new FeatureFlags(new SettingRepository($this->db)),
+            $config,
+            $settings,
+            new ThreadIntelligenceBudget($this->db, $config),
+            $jobs,
+        );
+        $queue = new ThreadIntelligenceQueue($this->db, $jobs, $eligibility);
+        $memory = new CommunityMemoryService(
+            $this->db,
+            new ThreadRepository($this->db),
+            new PostRepository($this->db),
+            new BoardModeratorRepository($this->db),
+            new BoardMemberRepository($this->db),
+            new BoardPolicy(),
+            new WriteGate(),
+            new Markdown(new HtmlSanitizer()),
+            null,
+            null,
+            $queue,
+        );
+
+        $actor = $this->userEntity($admin);
+        $memory->publishSummary($actor, $threadId, 'First exact manual brief.', [$postIds[0], $postIds[1]]);
+        $first = $this->db->fetch("SELECT * FROM thread_summaries WHERE thread_id = ? AND body = 'First exact manual brief.'", [$threadId]);
+        self::assertIsArray($first);
+        self::assertSame(8, (int) $first['version']);
+        self::assertSame($canonicalId, (int) $first['parent_summary_id']);
+
+        $memory->publishSummary($actor, $threadId, 'Second exact manual brief.', [$postIds[2], $postIds[3]]);
+        $second = $this->db->fetch("SELECT * FROM thread_summaries WHERE thread_id = ? AND body = 'Second exact manual brief.'", [$threadId]);
+        self::assertIsArray($second);
+        self::assertSame(9, (int) $second['version']);
+        self::assertSame((int) $first['id'], (int) $second['parent_summary_id']);
+
+        $pack = (new ThreadIntelligenceEvidenceBuilder(
+            $this->db,
+            new ThreadIntelligenceCandidateFinder($this->db),
+            ThreadIntelligenceConfig::fromArray([]),
+        ))->build($threadId, [
+            'thread_id' => $threadId,
+            'trigger_code' => ThreadIntelligenceQueue::TRIGGER_POST_CREATED,
+            'last_processed_post_id' => null,
+            'last_generated_at' => null,
+            'reconcile_required' => 0,
+        ]);
+        self::assertSame((int) $second['id'], $pack->baselineSummaryId());
+        $request = (new ThreadIntelligenceEvidenceBuilder(
+            $this->db,
+            new ThreadIntelligenceCandidateFinder($this->db),
+            ThreadIntelligenceConfig::fromArray([]),
+        ))->requestForWindow($pack, 0, null);
+        self::assertSame('Second exact manual brief.', $request->baseline?->markdown);
+        self::assertSame(9, $request->baseline?->version);
+        self::assertSame([$postIds[2], $postIds[3]], $request->baseline?->sourcePostIds);
+
+        $target = $this->makeThread($board, $author, 'Promoted related topic', 'Related body.');
+        $generationId = (new ThreadIntelligenceGenerationRepository($this->db))->start([
+            'thread_id' => $threadId,
+            'trigger_code' => ThreadIntelligenceQueue::TRIGGER_POST_CREATED,
+        ]);
+        $this->db->run(
+            "INSERT INTO related_threads
+                (source_thread_id, related_thread_id, relation_type, source, reason, status, curator_id,
+                 ai_generation_id, ai_reason, ai_selected, ai_selected_at, created_at)
+             VALUES (?, ?, 'related', 'search', 'deterministic reason', 'suggested', NULL,
+                     ?, 'AI reason', 1, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$threadId, (int) $target['thread_id'], $generationId],
+        );
+        $memory->addRelated($actor, $threadId, (int) $target['thread_id'], 'Curator-owned reason');
+        $promoted = $this->db->fetch(
+            "SELECT * FROM related_threads WHERE source_thread_id = ? AND related_thread_id = ? AND relation_type = 'related'",
+            [$threadId, (int) $target['thread_id']],
+        );
+        self::assertSame('curated', $promoted['source']);
+        self::assertSame('approved', $promoted['status']);
+        self::assertSame('Curator-owned reason', $promoted['reason']);
+        self::assertSame((int) $admin['id'], (int) $promoted['curator_id']);
+        self::assertNull($promoted['ai_generation_id']);
+        self::assertNull($promoted['ai_reason']);
+        self::assertSame(0, (int) $promoted['ai_selected']);
+        self::assertNull($promoted['ai_selected_at']);
+
+        $memory->retireSummary($actor, $threadId);
+        $paused = $jobs->find($threadId);
+        self::assertSame(1, (int) $paused['automation_paused']);
+        self::assertSame('idle', $paused['state']);
+        self::assertNull($paused['due_at']);
+
+        $memory->republishSummary($actor, (int) $first['id'], $threadId);
+        self::assertSame('published', $this->db->fetchValue('SELECT status FROM thread_summaries WHERE id = ?', [(int) $first['id']]));
+        self::assertSame(1, (int) $jobs->find($threadId)['automation_paused'], 'restore must not silently resume automation');
+
+        $memory->resumeAutomation($actor, $threadId);
+        $resumed = $jobs->find($threadId);
+        self::assertSame(0, (int) $resumed['automation_paused']);
+        self::assertNull($resumed['paused_by']);
+        self::assertNull($resumed['paused_at']);
+        self::assertSame('queued', $resumed['state']);
+        self::assertSame(ThreadIntelligenceQueue::TRIGGER_CURATOR_REFRESH, $resumed['trigger_code']);
+
+        $this->db->run('DELETE FROM users WHERE id = ?', [(int) $admin['id']]);
+        $published = $memory->publishedSummary($threadId);
+        self::assertIsArray($published);
+        self::assertSame((int) $first['id'], (int) $published['id']);
+        self::assertNull($published['author_id']);
+        self::assertNull($published['author_username']);
+        $history = $memory->summaries($threadId);
+        self::assertSame([$canonicalId, (int) $first['id'], (int) $second['id']], array_values(array_map(
+            'intval',
+            array_column(array_reverse($history), 'id'),
+        )));
+        self::assertSame('canonical_answer', $this->db->fetchValue('SELECT kind FROM thread_summaries WHERE id = ?', [$canonicalId]));
     }
 
     public function testSummarySourceMasksAnonymousAuthor(): void

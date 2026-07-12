@@ -1,6 +1,6 @@
 # Phase 3/4 Closeout Carryover Ledger
 
-Date: 2026-06-30
+Date: 2026-07-12
 Branch: current closeout train
 
 This ledger records the current release-train boundary. It reconciles stale
@@ -33,6 +33,7 @@ For the full default-dark flag inventory across phases, see
 | Board folders and saved feed filters | Implemented private personal organization records and settings routes — **graduated to default-ON 2026-07-01** (reversible via `features` override) | Phase 4 closeout | `board_folders`, `saved_feeds` | `AppPhase4CarryoverFoundationTest`; `AppBoardFoldersSavedFeedsTest`; Imladris activation map | None — accepted and enabled by default |
 | Since-last-read context | Implemented deterministic local-data assembly before advancing read state | Phase 4 closeout | `automated_context` | `AppAutomatedContextTest`; full suite green | Browser/no-JS evidence, replay/disable runbook |
 | Scheduled related-topic refresh | Implemented deterministic tag-based public-thread refresh worker | Phase 4 closeout | `community_memory`, `automated_context`, `tags` | `RelatedTopicRefreshWorkerTest`; dark console smoke; full suite green | Populated worker smoke, runbook, stale-link cleanup policy |
+| Thread Intelligence automatic Living Briefs | Complete pre-flip implementation: public-only evidence builder, leased worker, bounded provider/moderation seams, validated atomic publication, curator lineage/controls, redacted admin operations, UTC budgets, board sweeps, and 90-day unpublished-evidence retention. **Not default-on.** | Phase 4 follow-on graduation | `community_memory`, `automated_context` (both still default `false`) | ADR 0019; migration `0077`; `docs/runbooks/thread_intelligence.md`; Task 12 redacted live gate `low`/`16000`, 46/46 runs, 149/149 supported, zero incomplete/private-sentinel/fabricated-decision outcomes | Complete and attach browser/mobile/no-JS/a11y, security/privacy, concurrency, migration/upgrade, backup/restore, and runtime-rollback evidence; then a separate default-on change and post-flip double suite |
 | Avatar upload/removal and safe signatures | Implemented deploy-dark local avatar upload/removal, three-line signature height cap, and moderator signature removal audit | Phase 4 closeout | `profile_media` | `AppProfileMediaTest`; full suite green | Browser/a11y evidence and moderation runbook |
 | Moderation appeals | Implemented member appeal submission, staff queue, reverse/uphold outcomes, restoration, notifications, and audit | Phase 4 moderator operations | `appeals` | `AppModerationAppealsTest`; focused suite green | Browser/no-JS queue evidence and moderation runbook |
 | Split/merge operations | Implemented service/routes using existing `0048` thread operation/redirect schema with repair pass and audit | Phase 4 moderator operations | `split_merge` | `AppThreadSplitMergeTest`; focused suite green | Browser/runbook evidence and larger repair rehearsal |

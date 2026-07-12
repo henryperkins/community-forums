@@ -13,6 +13,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\Cap;
+use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
 use App\Support\Str;
 
 final class ThreadSplitMergeService
@@ -23,6 +24,7 @@ final class ThreadSplitMergeService
         private PostRepository $posts,
         private ModerationService $moderation,
         private ModerationLogRepository $logs,
+        private ?ThreadIntelligenceQueue $threadIntelligence = null,
     ) {
     }
 
@@ -63,8 +65,10 @@ final class ThreadSplitMergeService
         }
 
         $newThreadId = $this->db->transaction(function () use ($actor, $source, $sourceThreadId, $selected, $postIds, $title): int {
+            $this->threads->findForUpdate($sourceThreadId);
             $slug = Str::slug($title);
             $newThreadId = $this->threads->create((int) $source['board_id'], (int) $selected[0]['user_id'], $title, $slug);
+            $this->threads->findForUpdate($newThreadId);
             $ids = array_map(static fn (array $p): int => (int) $p['id'], $selected);
             $in = implode(',', array_fill(0, count($ids), '?'));
             $this->db->run("UPDATE posts SET thread_id = ?, is_op = 0 WHERE id IN ($in)", array_merge([$newThreadId], $ids));
@@ -91,6 +95,12 @@ final class ThreadSplitMergeService
                     json_encode(['new_thread_id' => $newThreadId], JSON_THROW_ON_ERROR),
                 ],
             );
+            foreach ([$sourceThreadId, $newThreadId] as $affectedThreadId) {
+                $this->threadIntelligence?->markStale(
+                    $affectedThreadId,
+                    ThreadIntelligenceQueue::TRIGGER_THREAD_SPLIT,
+                );
+            }
             return $newThreadId;
         });
 
@@ -120,6 +130,11 @@ final class ThreadSplitMergeService
         }
 
         $this->db->transaction(function () use ($actor, $source, $target, $sourceThreadId, $targetThreadId): void {
+            $affectedThreadIds = [$sourceThreadId, $targetThreadId];
+            sort($affectedThreadIds, SORT_NUMERIC);
+            foreach ($affectedThreadIds as $affectedThreadId) {
+                $this->threads->findForUpdate($affectedThreadId);
+            }
             $this->db->run('UPDATE posts SET thread_id = ?, is_op = 0 WHERE thread_id = ?', [$targetThreadId, $sourceThreadId]);
             $this->db->run('UPDATE threads SET is_deleted = 1 WHERE id = ?', [$sourceThreadId]);
             $this->recountThread($sourceThreadId);
@@ -150,6 +165,12 @@ final class ThreadSplitMergeService
                 'target_id' => $sourceThreadId,
                 'after' => ['target_thread_id' => $targetThreadId],
             ]);
+            foreach ($affectedThreadIds as $affectedThreadId) {
+                $this->threadIntelligence?->markStale(
+                    $affectedThreadId,
+                    ThreadIntelligenceQueue::TRIGGER_THREAD_MERGED,
+                );
+            }
         });
 
         $target = $this->threads->find($targetThreadId);

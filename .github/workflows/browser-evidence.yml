@@ -48,6 +48,11 @@ jobs:
       # hex makes that explicit. The job env propagates to the PHP server Playwright
       # boots, so the in-process app sees it.
       APP_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+      # Deterministic dummy only: Thread Intelligence browser evidence injects
+      # its Fake provider and never crosses the network.
+      OPENAI_API_KEY: 'browser-thread-intelligence-dummy-credential'
+      THREAD_INTELLIGENCE_REASONING_EFFORT: 'low'
+      THREAD_INTELLIGENCE_MAX_OUTPUT_TOKENS: '16000'
 
     steps:
       - uses: actions/checkout@v4
