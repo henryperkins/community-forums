@@ -239,7 +239,8 @@
                         history.pushState({ rbInboxTopic: true, href: href }, '', url.toString());
                     }
                     if (focus) {                                  // move focus, don't announce the whole thread
-                        var h = readingContent.querySelector('h1, h2, .thread-head');
+                        var h = readingContent.querySelector('h1, h2');
+                        if (!h) { h = readingContent.querySelector('.thread-head'); }
                         if (h) { h.setAttribute('tabindex', '-1'); h.focus(); }
                         else { reading.focus(); }
                     }

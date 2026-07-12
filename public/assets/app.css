@@ -1235,6 +1235,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .thread-unread .thread-title { font-weight: var(--weight-semibold); }
 .thread-meta { font-family: var(--font-label); font-size: .75rem; letter-spacing: .02em; color: var(--text-faint); margin-top: 6px; display: block; }
 .thread-board, .thread-board .hash { color: var(--gold-ink); }
+.thread-meta .thread-board { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
 
 /* Thread page header + post stream. */
 .thread-head { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-hair); }
