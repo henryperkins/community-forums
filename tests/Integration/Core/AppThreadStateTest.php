@@ -172,5 +172,8 @@ final class AppThreadStateTest extends TestCase
         $this->assertSeeText($r, 'Inbox');
         $this->assertSeeText($r, 'Unread');               // filter tab
         $this->assertSeeText($r, 'Some topic');
+        self::assertStringContainsString('data-inbox-reading', $r->body());
+        self::assertStringContainsString('data-inbox-back', $r->body());
+        self::assertStringContainsString('data-inbox-reading-content', $r->body());
     }
 }
