@@ -254,6 +254,20 @@ final class ThreadController extends Controller
         if ($workflowOn) {
             $workflow = $this->container->get(ThreadWorkflowService::class);
             $statusHistory = $this->container->get(ThreadRepository::class)->statusHistory((int) $thread['id'], 5);
+            foreach ($statusHistory as &$statusEvent) {
+                if ($statusEvent['actor_id'] === null) {
+                    $statusEvent['actor_label'] = 'system';
+                    continue;
+                }
+                $actor = \mask_author(
+                    isset($statusEvent['actor_display_name']) ? (string) $statusEvent['actor_display_name'] : null,
+                    isset($statusEvent['actor_username']) ? (string) $statusEvent['actor_username'] : null,
+                    isset($statusEvent['actor_role']) ? (string) $statusEvent['actor_role'] : 'user',
+                    (int) ($statusEvent['actor_is_anonymous'] ?? 0) === 1,
+                );
+                $statusEvent['actor_label'] = $actor['label'];
+            }
+            unset($statusEvent);
             $assignment = $workflow->currentAssignment((int) $thread['id']);
             if ($user !== null) {
                 $canSelfAssign = $workflow->canSelfAssign($user, $thread);

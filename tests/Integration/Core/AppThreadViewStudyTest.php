@@ -58,9 +58,39 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertStringContainsString('data-thread-status="needs_answer"', $page->body());
         self::assertStringContainsString('data-thread-status-history', $page->body());
         self::assertStringContainsString('Awaiting counsel', $page->body());
+        self::assertStringContainsString('study_guest_author ·', $page->body());
         self::assertStringNotContainsString('data-topic-tools-open', $page->body());
         self::assertStringNotContainsString('action="/t/' . $thread['thread_id'] . '/status"', $page->body());
         self::assertStringNotContainsString('class="workflow-bar', $page->body());
+    }
+
+    public function test_guest_status_history_masks_anonymous_op_actor_identity(): void
+    {
+        $author = $this->makeUser([
+            'username' => 'study_hidden_status_actor',
+            'display_name' => 'Hidden Status Actor',
+        ]);
+        $board = $this->makeBoard($this->makeCategory('Study Private Ledger'), ['allow_anonymous' => 1]);
+        $thread = $this->posting()->createThread($this->userEntity($author), [
+            'board_id' => (int) $board['id'],
+            'title' => 'Anonymous standing remains private',
+            'body' => 'An anonymous opening record.',
+            'is_anonymous' => 1,
+        ]);
+
+        $this->actingAs($author);
+        $this->assertRedirect($this->post('/t/' . $thread['thread_id'] . '/status', [
+            'status' => 'needs_answer',
+            'reason' => 'Privacy-safe ledger actor',
+        ]));
+        $this->logoutClient();
+
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $this->assertStatus(200, $page);
+        self::assertSame(1, substr_count($page->body(), 'data-thread-status-history'));
+        self::assertStringContainsString('Anonymous ·', $page->body());
+        self::assertStringNotContainsString('study_hidden_status_actor', $page->body());
+        self::assertStringNotContainsString('Hidden Status Actor', $page->body());
     }
 
     public function test_member_gets_basic_topic_tools_but_no_moderation_forms(): void
@@ -77,6 +107,7 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertStringContainsString('data-topic-tools-open', $page->body());
         self::assertStringContainsString('data-topic-tools', $page->body());
         self::assertStringContainsString('icon-eight-point-star', $page->body());
+        self::assertStringContainsString('<path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"/>', $page->body());
         self::assertStringContainsString('icon-x', $page->body());
         self::assertStringContainsString('data-topic-tools-section="watch"', $page->body());
         self::assertStringContainsString('data-topic-tools-section="standing"', $page->body());

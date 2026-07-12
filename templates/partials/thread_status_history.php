@@ -9,7 +9,7 @@
                 <?php if (!empty($event['previous_status'])): ?>
                     <span>← <?= $e($status_labels[$event['previous_status']] ?? $event['previous_status']) ?></span>
                 <?php endif; ?>
-                <span><?= $e($event['actor_display_name'] ?? $event['actor_username'] ?? 'system') ?> · <?= $e(human_datetime($event['created_at'])) ?></span>
+                <span><?= $e($event['actor_label'] ?? 'system') ?> · <?= $e(human_datetime($event['created_at'])) ?></span>
                 <?php if (!empty($event['reason'])): ?><em>“<?= $e($event['reason']) ?>”</em><?php endif; ?>
             </li>
         <?php endforeach; ?>

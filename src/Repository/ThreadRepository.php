@@ -236,7 +236,13 @@ final class ThreadRepository
     {
         $limit = max(1, min(100, $limit));
         return $this->db->fetchAll(
-            'SELECT h.*, u.username AS actor_username, u.display_name AS actor_display_name
+            'SELECT h.*, u.username AS actor_username, u.display_name AS actor_display_name,
+                    u.role AS actor_role,
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM posts op
+                        WHERE op.thread_id = h.thread_id AND op.user_id = h.actor_id
+                          AND op.is_op = 1 AND op.is_anonymous = 1
+                    ) THEN 1 ELSE 0 END AS actor_is_anonymous
              FROM thread_status_history h
              LEFT JOIN users u ON u.id = h.actor_id
              WHERE h.thread_id = ?
