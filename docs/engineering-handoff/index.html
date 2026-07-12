@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RetroBoards — Engineering Handoff</title>
+  <meta name="description" content="The Community Inbox — information architecture, key flows, and the Phase 5 platform. The reference an engineer reads before touching the screens.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    /* Set the saved register before the CSSOM builds — otherwise a returning
+       twilight reader gets a parchment flash on every load. */
+    try { if (localStorage.getItem('retroboards-handoff-theme') === 'twilight') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="styles/imladris.css">
+  <link rel="stylesheet" href="styles/handoff.css">
+</head>
+<body>
+
+<button class="theme-toggle" type="button" id="theme-toggle" aria-label="Toggle parchment / twilight register">
+  <svg class="theme-toggle-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+  <svg class="theme-toggle-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  <span class="theme-toggle-label">Twilight</span>
+</button>
+
+<main class="doc">
+
+  <!-- ───────────────────────── COVER ───────────────────────── -->
+  <div class="cover-break">
+    <header class="doc-cover">
+      <div class="doc-cover-brand">
+        <span class="doc-cover-mark">
+          <svg viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <g stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/>
+              <path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/>
+              <circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/>
+            </g>
+          </svg>
+        </span>
+        <span class="doc-cover-kicker">Engineering Handoff · Design Reference</span>
+      </div>
+      <h1 class="doc-cover-title">RetroBoards</h1>
+      <div class="doc-cover-dek">The Community Inbox — information architecture, key flows, and the Phase 5 platform.</div>
+      <div class="doc-cover-rule" aria-hidden="true"></div>
+      <p class="doc-cover-lede">The reference an engineer reads before touching the screens: how the product is organised, how a person moves through it, and what each surface owes the next. The figures are the high-fidelity mock; the structure, routes, and data they illustrate are the real product, read from the source at Phase 5 Gate A.</p>
+      <div class="doc-cover-meta">
+        <div class="doc-cover-meta-cell"><div class="doc-cover-meta-label">Source of truth</div><div class="doc-cover-meta-value">DESIGN.md v0.13 · SCHEMA v1.38 · DECISIONS v1.6</div></div>
+        <div class="doc-cover-meta-cell"><div class="doc-cover-meta-label">Stack</div><div class="doc-cover-meta-value">PHP 8.2+ · MySQL 8 · server-rendered</div></div>
+        <div class="doc-cover-meta-cell"><div class="doc-cover-meta-label">Build status</div><div class="doc-cover-meta-value">Phase 5 Gate A default-on · 1,831 tests green</div></div>
+        <div class="doc-cover-meta-cell"><div class="doc-cover-meta-label">Prepared for</div><div class="doc-cover-meta-value">Engineering · lakefrontdigital.io</div></div>
+      </div>
+      <nav class="doc-cover-toc" aria-label="Contents">
+        <span class="doc-cover-toc-item">01 Overview</span>
+        <span class="doc-cover-toc-item">02 Information architecture</span>
+        <span class="doc-cover-toc-item">03 Screens &amp; flows</span>
+        <span class="doc-cover-toc-item">04 Data model</span>
+        <span class="doc-cover-toc-item">05 Status &amp; authority</span>
+        <span class="doc-cover-toc-item">06 Identity &amp; security</span>
+        <span class="doc-cover-toc-item">07 Platform &amp; extensibility</span>
+        <span class="doc-cover-toc-item">08 Thread intelligence</span>
+      </nav>
+    </header>
+  </div>
+
+  <!-- ───────────────────────── §1 OVERVIEW ───────────────────────── -->
+  <section class="section">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§1 · Overview</div>
+      <h2 class="doc-section-title">The Community Inbox</h2>
+      <p class="doc-section-dek">One durable knowledge space, read like an inbox: the inbox is personal, the topic is durable, and the composer is immediate.</p>
+    </header>
+
+    <div class="doc-prose seclead">
+      <p>RetroBoards is self-hostable forum software that presents classic message-board depth through an interface people already use daily. The default authenticated home is not a forum homepage; it is a <strong>personalized forum inbox</strong>, and the durable unit is the <strong>topic</strong>. That sentence is the lens for every decision in this document.</p>
+      <p>Three lineages combine, and naming them is the fastest way to predict how any screen should behave:</p>
+    </div>
+
+    <div class="grid-3" style="margin:6px 0 20px">
+      <aside class="doc-callout is-panel"><div class="doc-callout-label">Discourse bones</div><div class="doc-callout-body">Durable topics, categories, tags, search, solved answers, moderation — canonical knowledge that outlives the session.</div></aside>
+      <aside class="doc-callout doc-callout-info is-panel"><div class="doc-callout-label">Slack polish</div><div class="doc-callout-body">Immediacy, mentions, reactions, lightweight replies, a rich composer — conversational warmth at the point of writing.</div></aside>
+      <aside class="doc-callout doc-callout-warn is-panel"><div class="doc-callout-label">Outlook discipline</div><div class="doc-callout-body">Triage, split-pane reading, unread state, focused filters, keyboard-driven density — catch up without opening everything.</div></aside>
+    </div>
+
+    <aside class="doc-callout"><div class="doc-callout-label">Status, stated plainly</div><div class="doc-callout-body"><strong>Phase 5 Gate A is accepted and default-on</strong> (ADR 0018, 2026-07-09): signed packages, declarative themes, the capability resolver, passkeys, generic OIDC, invitations, secrets, read-only API tokens, and webhooks all ship on for any install without an explicit override — each independently reversible via <span class="doc-code">features.&lt;flag&gt;=false</span>. Gate B (server extensions, governance, service principals, verified links) stays reserved and dark. Thread Intelligence is implemented but <strong>pre-flip</strong> (§8). Where a surface is mock-only or dark, this document says so rather than implying it ships.</div></aside>
+
+    <div class="spacer-20"></div>
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>Gate A closeout evidence — docs/evidence/phase5/ (regression, browser/a11y, resolver-parity, runbook-rehearsals; indexed in gate-a-closeout.md)</caption>
+        <thead><tr><th scope="col">Check</th><th scope="col">Result (2026-07-09)</th></tr></thead>
+        <tbody>
+          <tr><td>PHP regression</td><td>1,831 tests / 9,396 assertions — fresh and reused-schema runs</td></tr>
+          <tr><td>Browser evidence</td><td>71 passed / 1 skipped</td></tr>
+          <tr><td>Accessibility</td><td>26 passed / 2 skipped</td></tr>
+          <tr><td>Resolver parity</td><td>1,551 / 1,551 fixtures · 0 mismatches</td></tr>
+          <tr><td>Upgrade rehearsal</td><td>17/17 through migration 0076 · backup/restore passed</td></tr>
+          <tr><td>Acceptance</td><td>ADR 0017 (product owner) · ADR 0018 (default-on)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── §2 INFORMATION ARCHITECTURE ───────────────────────── -->
+  <section class="section pbreak">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§2 · Information architecture</div>
+      <h2 class="doc-section-title">One spine, three registers</h2>
+      <p class="doc-section-dek">A category has many boards; a board has many threads; a thread has many posts. Every route hangs off a user and that spine — member surfaces, the operator consoles, and the machine endpoints.</p>
+    </header>
+
+    <div class="doc-prose seclead">
+      <p>The shell is three panes — a channel rail, the inbox, and the conversation — and every member surface is a route into that spine. A micro-router (<span class="doc-code">src/Core/Router.php</span>) matches <span class="doc-code">{id}</span> and <span class="doc-code">{slug}</span> patterns onto controller pairs; everything is server-rendered with progressive enhancement, and every flow has a no-JS fallback.</p>
+    </div>
+
+    <div class="spacer-14"></div>
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>Member surfaces</caption>
+        <thead><tr><th scope="col">Route</th><th scope="col">Surface</th><th scope="col">Made of</th></tr></thead>
+        <tbody>
+          <tr><td><span class="doc-code">/</span></td><td>Home</td><td>Board index — categories, boards, latest activity</td></tr>
+          <tr><td><span class="doc-code">/inbox</span></td><td>The inbox</td><td>Channel rail · triage filters · thread list</td></tr>
+          <tr><td><span class="doc-code">/c/{slug}</span></td><td>A board</td><td>Filtered thread list · New topic (full-page composer)</td></tr>
+          <tr><td><span><span class="doc-code">/t/{id}-{slug}</span> · <span class="doc-code">/t/{id}</span></span></td><td>A topic</td><td>Post stream · composer / join-bar · workflow chips</td></tr>
+          <tr><td><span class="doc-code">/u/{username}</span></td><td>A profile</td><td>Identity header · activity · /followers · /following</td></tr>
+          <tr><td><span><span class="doc-code">/feed</span> · <span class="doc-code">/leaderboard</span></span></td><td>Community</td><td>Following + Latest feeds · windowed reputation ranks</td></tr>
+          <tr><td><span><span class="doc-code">/search</span> · <span class="doc-code">/tags</span> · <span class="doc-code">/tags/{slug}</span></span></td><td>Discovery</td><td>FULLTEXT search · curated tag directory, follow a tag</td></tr>
+          <tr><td><span><span class="doc-code">/notifications</span> · <span class="doc-code">/notifications/bell</span></span></td><td>Notifications</td><td>Full page + the short-polled bell counter</td></tr>
+          <tr><td><span><span class="doc-code">/messages</span> · <span class="doc-code">/messages/{id}</span></span></td><td>Private counsel</td><td>Conversation list · reading room (group DMs stay dark)</td></tr>
+          <tr><td><span><span class="doc-code">/settings</span> · <span class="doc-code">/settings/…</span></span></td><td>Account console</td><td>13 pages — account, security, privacy, appearance, preferences, composing, notifications, sessions, blocks, boards, connections, lifecycle</td></tr>
+          <tr><td><span><span class="doc-code">/appeals</span> · <span class="doc-code">/drafts</span></span></td><td>Self-service</td><td>One appeal per moderation action · synced drafts</td></tr>
+          <tr><td><span><span class="doc-code">/login</span> · <span class="doc-code">/register</span> · <span class="doc-code">/invite/{token}</span> · <span class="doc-code">/forgot</span> · <span class="doc-code">/reset</span> · <span class="doc-code">/verify</span></span></td><td>The gate</td><td>Password + MFA step · passkey login · OAuth redirects</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="spacer-20"></div>
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>Operator and machine surfaces</caption>
+        <thead><tr><th scope="col">Route</th><th scope="col">Surface</th><th scope="col">What it owns</th></tr></thead>
+        <tbody>
+          <tr><td><span><span class="doc-code">/mod/reports</span> · <span class="doc-code">/mod/approvals</span> · <span class="doc-code">/mod/appeals</span></span></td><td>The warden&rsquo;s table</td><td>Report claim/resolve/dismiss · the approval hold · appeal outcomes with resolution notes</td></tr>
+          <tr><td><span class="doc-code">/admin</span></td><td>Operator&rsquo;s desk</td><td>Dashboard — site name, trust &amp; safety, audit log</td></tr>
+          <tr><td><span><span class="doc-code">/admin/structure</span> · <span class="doc-code">/admin/users/{id}</span></span></td><td>Structure &amp; members</td><td>Categories/boards create-move-archive · user record drill-in, warn/suspend/ban</td></tr>
+          <tr><td><span><span class="doc-code">/admin/roles</span> · <span class="doc-code">/admin/roles/simulator</span></span></td><td>Authority console</td><td>Custom roles, scoped assignments with expiry, the permission simulator (§5)</td></tr>
+          <tr><td><span><span class="doc-code">/admin/providers</span> · <span class="doc-code">/admin/invitations</span></span></td><td>Identity ops</td><td>Generic-OIDC provider registry with test/enable/disable · invitation lifecycle</td></tr>
+          <tr><td><span><span class="doc-code">/admin/packages</span> · <span class="doc-code">/admin/registries</span> · <span class="doc-code">/admin/themes</span></span></td><td>Package ops</td><td>Install/update/rollback with consent · registry trust keys, advisories, blocklist · theme preview, activate, safe mode (§7)</td></tr>
+          <tr><td><span><span class="doc-code">/admin/webhooks</span> · <span class="doc-code">/admin/api-tokens</span> · <span class="doc-code">/admin/email</span></span></td><td>Delivery ops</td><td>Endpoints + delivery ledger with replay · Bearer token mint/revoke · queue, suppressions, domain verify</td></tr>
+          <tr><td><span><span class="doc-code">/admin/features</span> · <span class="doc-code">/admin/thread-intelligence</span></span></td><td>Flags &amp; AI</td><td>Per-flag rollback console · TI health, budgets, pause/resume/retry (§8)</td></tr>
+          <tr><td><span><span class="doc-code">/admin/branding</span> · <span class="doc-code">/admin/tags</span> · <span class="doc-code">/admin/badge-rules</span> · <span class="doc-code">/admin/announcements</span></span></td><td>Community config</td><td>Live-preview branding · tag catalogue + merge · badge rules with backfill · site announcements</td></tr>
+          <tr><td><span><span class="doc-code">/api/v1/me</span> · <span class="doc-code">/api/v1/boards</span> · <span class="doc-code">/api/v1/boards/{id}/threads</span></span></td><td>Read-only API</td><td>Bearer api_tokens, scope-checked, 120 req/min</td></tr>
+          <tr><td><span><span class="doc-code">/healthz</span> · <span class="doc-code">/sitemap.xml</span> · <span class="doc-code">/brand.css</span> · <span class="doc-code">/theme/{digest}.css</span> · <span class="doc-code">/media/{id}</span></span></td><td>Machine endpoints</td><td>Health probe · SEO · branding CSS · content-addressed theme CSS · auth-gated media</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="spacer-20"></div>
+    <figure class="doc-figure">
+      <div class="doc-figure-frame">
+        <div class="doc-figure-slot" role="img" aria-label="Drop the three-pane shell" style="aspect-ratio:16/9">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+          <span>Drop the three-pane shell</span>
+        </div>
+      </div>
+      <figcaption class="doc-figure-cap">
+        <span class="doc-figure-cap-label">FIG 1</span>
+        <span class="doc-figure-cap-text">The three-pane shell — channel rail · inbox · conversation. Drop a screenshot of the desktop layout here.</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ───────────────────────── §3 SCREENS & FLOWS ───────────────────────── -->
+  <section class="section pbreak">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§3 · Screens and flows</div>
+      <h2 class="doc-section-title">Reading, posting, proving who you are</h2>
+      <p class="doc-section-dek">Each surface is given the same way: what it is for, the parts it is built from, and the flow that runs through it.</p>
+    </header>
+
+    <div class="seclead">
+      <header class="doc-section is-sub">
+        <div class="doc-section-kicker">3.1 · Pane 3</div>
+        <h3 class="doc-section-title">The conversation</h3>
+        <p class="doc-section-dek">A thread opens as a chat-style message stream with the composer pinned to the bottom. The first post is the OP; consecutive posts by one author drop the repeated avatar and name.</p>
+      </header>
+    </div>
+
+    <div class="spacer-14"></div>
+    <figure class="doc-figure">
+      <div class="doc-figure-frame">
+        <div class="doc-figure-slot" role="img" aria-label="Drop the open thread" style="aspect-ratio:16/9">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+          <span>Drop the open thread</span>
+        </div>
+      </div>
+      <figcaption class="doc-figure-cap">
+        <span class="doc-figure-cap-label">FIG 2</span>
+        <span class="doc-figure-cap-text">Route /t/{id}-{slug}, signed in. The OP carries the OP badge; the sticky composer reads &ldquo;Posting as …&rdquo;. Reaction counts under each post sum into regard, and the topic header carries the workflow chips of §5.</span>
+      </figcaption>
+    </figure>
+
+    <div class="spacer-20"></div>
+    <aside class="doc-callout is-panel"><div class="doc-callout-label">Flow — reply</div><div class="doc-callout-body">Type in the pinned composer → <strong>Enter</strong> sends → the write passes the gate below → redirect lands on the new post (<span class="doc-code">/t/{id}-{slug}#p{postId}</span>) with counters and unread markers updated in the same transaction. A reply held for review flashes <em>&ldquo;awaiting moderator approval&rdquo;</em> instead — the author is never dropped on an empty page.</div></aside>
+
+    <div class="seclead">
+      <header class="doc-section is-sub">
+        <div class="doc-section-kicker">3.2 · One component</div>
+        <h3 class="doc-section-title">The composer, every write</h3>
+        <p class="doc-section-dek">New topic, reply, DM, and edit share one composer: a canonical Markdown textarea, a Milkdown WYSIWYG layer over it, and a server-rendered preview through the same sanitise pipeline the post will use.</p>
+      </header>
+    </div>
+
+    <div class="grid-3" style="margin:14px 0 20px">
+      <aside class="doc-callout doc-callout-info is-panel"><div class="doc-callout-label">Drafts that survive</div><div class="doc-callout-body">Local autosave always; signed in, drafts sync across devices (<span class="doc-code">server_drafts</span>) with a Drafts view and per-draft discard.</div></aside>
+      <aside class="doc-callout doc-callout-info is-panel"><div class="doc-callout-label">Media, held at arm's length</div><div class="doc-callout-body">Images are sniffed, re-encoded, and stored outside the web root; delivery is authorization-gated per parent (<span class="doc-code">/media/{id}</span>).</div></aside>
+      <aside class="doc-callout doc-callout-info is-panel"><div class="doc-callout-label">Beyond text</div><div class="doc-callout-body">One poll per thread with no-JS vote and results; operator-managed custom emoji shortcodes; a slash-command GIPHY picker, inert until a key is set.</div></aside>
+    </div>
+
+    <aside class="doc-callout"><div class="doc-callout-label">The write gate</div><div class="doc-callout-body">Every write runs the same sequence: named rate limits → anti-abuse rules (<span class="doc-code">observe → flag → hold → block</span>; automated scoring is capped at <em>hold</em>) → sanitisation → transactional counters. New accounts face stricter link and upload ceilings until they have a footprint.</div></aside>
+  </section>
+
+  <!-- ───────────────────────── §4 DATA MODEL ───────────────────────── -->
+  <section class="section pbreak">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§4 · Data model</div>
+      <h2 class="doc-section-title">What the screens are made of</h2>
+      <p class="doc-section-dek">InnoDB, utf8mb4, BIGINT surrogate keys, UTC datetimes, soft-deletes wherever history matters. Read-side counters are denormalised and maintained on write. 115 tables across 77 migrations — but the spine is still six.</p>
+    </header>
+
+    <div class="spacer-14 seclead"></div>
+    <div class="grid-2">
+      <pre class="doc-pre"><span class="tok-dim">-- a topic is the durable unit</span>
+threads(
+  id, board_id, user_id,
+  title, slug,
+  is_pinned, is_locked, is_deleted,
+  <span class="tok-gold">reply_count</span>, view_count,
+  <span class="tok-gold">last_post_id</span>,       <span class="tok-dim">-- drives unread</span>
+  last_post_user_id,
+  last_post_at, created_at )
+
+<span class="tok-dim">-- a post is one message</span>
+posts(
+  id, thread_id, user_id,
+  parent_post_id,
+  body, body_html,       <span class="tok-dim">-- raw + sanitised</span>
+  is_op, <span class="tok-gold">is_anonymous</span>,   <span class="tok-dim">-- masked identity</span>
+  is_deleted, deleted_by,
+  edited_at, edited_by )</pre>
+      <div class="stackgap">
+        <aside class="doc-callout doc-callout-info is-panel"><div class="doc-callout-label">Unread is derived</div><div class="doc-callout-body">A thread is unread when <span class="doc-code">thread.last_post_id &gt; thread_user.last_read_post_id</span> — no per-post read rows.</div></aside>
+        <aside class="doc-callout doc-callout-info is-panel"><div class="doc-callout-label">Sessions, not cookies-as-truth</div><div class="doc-callout-body">Opaque tokens in a <span class="doc-code">sessions</span> table power the device list and log-out-everywhere; cookies are <span class="doc-code">HttpOnly · Secure · SameSite</span>. A guest is simply a request with no valid session.</div></aside>
+        <aside class="doc-callout doc-callout-info is-panel"><div class="doc-callout-label">History over deletion</div><div class="doc-callout-body">Edits keep <span class="doc-code">post_revisions</span>; status changes keep <span class="doc-code">thread_status_history</span>; role grants, owner transfers, package installs, and appeals each keep their own ledger.</div></aside>
+      </div>
+    </div>
+
+    <div class="spacer-20"></div>
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>The twelve table families — SCHEMA.md v1.38 holds final shapes</caption>
+        <thead><tr><th scope="col">Family</th><th scope="col">Representative tables</th><th scope="col">Powers</th></tr></thead>
+        <tbody>
+          <tr><td>Core spine (10)</td><td><span><span class="doc-code">users</span> · <span class="doc-code">boards</span> · <span class="doc-code">threads</span> · <span class="doc-code">posts</span> · <span class="doc-code">sessions</span></span></td><td>Everything — the three panes, login state</td></tr>
+          <tr><td>Reading &amp; engagement (11)</td><td><span><span class="doc-code">thread_user</span> · <span class="doc-code">reactions</span> · <span class="doc-code">subscriptions</span> · <span class="doc-code">notifications</span> · <span class="doc-code">follows</span></span></td><td>Unread, regard, the bell, the Following feed</td></tr>
+          <tr><td>Email (3)</td><td><span><span class="doc-code">email_deliveries</span> · <span class="doc-code">email_suppressions</span> · <span class="doc-code">email_domain_status</span></span></td><td>Instant + digest sends, bounce hygiene, domain send-blocking</td></tr>
+          <tr><td>Private counsel (4)</td><td><span><span class="doc-code">conversations</span> · <span class="doc-code">conversation_participants</span> · <span class="doc-code">dm_messages</span></span></td><td>DMs, read receipts, conversation events</td></tr>
+          <tr><td>Moderation &amp; trust (9)</td><td><span><span class="doc-code">reports</span> · <span class="doc-code">bans</span> · <span class="doc-code">warnings</span> · <span class="doc-code">moderation_appeals</span> · <span class="doc-code">board_moderators</span></span></td><td>The warden&rsquo;s table, scoped mods, appeals</td></tr>
+          <tr><td>Composer &amp; media (8)</td><td><span><span class="doc-code">attachments</span> · <span class="doc-code">server_drafts</span> · <span class="doc-code">polls</span> · <span class="doc-code">custom_emoji</span></span></td><td>Uploads, cross-device drafts, polls, shortcodes</td></tr>
+          <tr><td>Topic workflow &amp; knowledge (23)</td><td><span><span class="doc-code">thread_status_history</span> · <span class="doc-code">tags</span> · <span class="doc-code">reputation_events</span> · <span class="doc-code">thread_summaries</span> · <span class="doc-code">post_revisions</span></span></td><td>Status/triage, tagging, the reputation ledger, memory</td></tr>
+          <tr><td>Identity (10)</td><td><span><span class="doc-code">oauth_identities</span> · <span class="doc-code">identity_providers</span> · <span class="doc-code">webauthn_credentials</span> · <span class="doc-code">user_totp_credentials</span> · <span class="doc-code">invitations</span></span></td><td>OAuth + OIDC, passkeys, TOTP, invites (§6)</td></tr>
+          <tr><td>Authority (7)</td><td><span><span class="doc-code">capabilities</span> · <span class="doc-code">roles</span> · <span class="doc-code">role_assignments</span> · <span class="doc-code">protected_owners</span></span></td><td>The capability resolver and custom roles (§5)</td></tr>
+          <tr><td>Packages &amp; themes (19)</td><td><span><span class="doc-code">packages</span> · <span class="doc-code">package_releases</span> · <span class="doc-code">installed_packages</span> · <span class="doc-code">package_transparency_log</span> · <span class="doc-code">theme_state</span></span></td><td>The signed ecosystem (§7)</td></tr>
+          <tr><td>Platform services (9)</td><td><span><span class="doc-code">service_secrets</span> · <span class="doc-code">api_tokens</span> · <span class="doc-code">webhooks</span> · <span class="doc-code">webhook_deliveries</span></span></td><td>The vault, the read-only API, outbound delivery</td></tr>
+          <tr><td>Thread intelligence (2)</td><td><span><span class="doc-code">thread_intelligence_jobs</span> · <span class="doc-code">thread_intelligence_generations</span></span></td><td>The Living Brief queue and its ledger (§8)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── §5 STATUS & AUTHORITY ───────────────────────── -->
+  <section class="section pbreak">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§5 · Status and authority</div>
+      <h2 class="doc-section-title">State you can read, power you can audit</h2>
+      <p class="doc-section-dek">Status is never carried by colour alone — every state pairs a hue with a word. Capability accumulates — Admin ⊇ Moderator ⊇ User ⊇ Guest — and since Phase 5 every check names one of 54 catalogued capabilities.</p>
+    </header>
+
+    <div class="seclead" style="margin-bottom:11px;font-family:var(--font-label);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--gold-ink)">Topic status chips</div>
+    <div class="chips" style="margin-bottom:22px">
+      <span class="chip chip-solved">Solved</span>
+      <span class="chip chip-needs">Needs answer</span>
+      <span class="chip chip-decision_made">Decision</span>
+      <span class="chip chip-pinned">Pinned</span>
+      <span class="chip chip-locked">Locked</span>
+      <span class="chip chip-archived">Archived</span>
+    </div>
+
+    <div class="doc-prose">
+      <p>The four fixed roles remain the spine, but enforcement now runs through an <strong>authority gate</strong> with three postures. <em>Legacy</em> (flag off): the fixed-role checks decide alone. <em>Shadow</em> — the shipped default (<span class="doc-code">CAPABILITIES_MODE=shadow</span>): legacy still decides, while the database-backed resolver dual-runs every gated read for mismatch telemetry. <em>Enforce</em>: the resolver decides, custom roles and scoped grants become live, and suspended staff lose their capabilities. The cutover evidence is 1,551/1,551 parity fixtures with zero mismatches.</p>
+      <p>Operators shape authority at <span class="doc-code">/admin/roles</span> — create or clone roles, grant per-capability, assign site- or board-scoped, with expiry, a full assignment history, and a <strong>permission simulator</strong> to answer &ldquo;what could this person do?&rdquo; before saving. Protected owners cannot be locked out; ownership moves only through audited transfer and recovery.</p>
+    </div>
+
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>Capability matrix — the fixed-role defaults, with the catalogue keys each check names</caption>
+        <thead><tr><th scope="col">Can…</th><th scope="col" class="is-center">Guest</th><th scope="col" class="is-center">User</th><th scope="col" class="is-center">Mod</th><th scope="col" class="is-center">Admin</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span>Read all public content <span class="doc-code" style="font-size:.76em;opacity:.8;white-space:nowrap">core.board.read</span></span></td>
+            <td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td>
+          </tr>
+          <tr>
+            <td><span>Post, reply, react, star, DM <span class="doc-code" style="font-size:.76em;opacity:.8;white-space:nowrap">core.post.create · core.content.react</span></span></td>
+            <td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td>
+          </tr>
+          <tr>
+            <td><span>Edit / delete own posts <span class="doc-code" style="font-size:.76em;opacity:.8;white-space:nowrap">core.post.edit_own · core.post.delete_own</span></span></td>
+            <td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td>
+          </tr>
+          <tr>
+            <td><span>Pin, lock, move, split/merge, approve holds <span class="doc-code" style="font-size:.76em;opacity:.8;white-space:nowrap">core.thread.* · core.content.approve</span></span></td>
+            <td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-scoped">scoped</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td>
+          </tr>
+          <tr>
+            <td><span>Warn, suspend, ban, resolve appeals <span class="doc-code" style="font-size:.76em;opacity:.8;white-space:nowrap">core.user.* · core.appeal.*</span></span></td>
+            <td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-scoped">scoped</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td>
+          </tr>
+          <tr>
+            <td><span>Configure site, roles, packages, secrets <span class="doc-code" style="font-size:.76em;opacity:.8;white-space:nowrap">core.site.* · core.package.manage</span></span></td>
+            <td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-no" title="Not allowed">—</span></td><td class="is-center"><span class="doc-yes" title="Allowed">✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="spacer-20"></div>
+    <aside class="doc-callout"><div class="doc-callout-label">Where to look next</div><div class="doc-callout-body"><strong>DECISIONS.md</strong> wins on any conflict; <strong>DESIGN.md</strong> is the product and technical source of truth; <strong>SCHEMA.md</strong> holds final table shapes; <span class="doc-code">Cap.php</span> and <span class="doc-code">CapabilityCatalog</span> define the 54 keys. This document is the map, not the territory.</div></aside>
+  </section>
+
+  <!-- ───────────────────────── §6 IDENTITY & SECURITY ───────────────────────── -->
+  <section class="section pbreak">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§6 · Identity and security</div>
+      <h2 class="doc-section-title">Proving who you are</h2>
+      <p class="doc-section-dek">Password, TOTP, passkeys, three fixed OAuth providers plus operator-registered OIDC, and invitations — every path lands in the same sessions table, and every sensitive change passes a re-auth gate.</p>
+    </header>
+
+    <div class="spacer-14 seclead"></div>
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>The identity surfaces</caption>
+        <thead><tr><th scope="col">Surface</th><th scope="col">Mechanics</th><th scope="col">Posture</th></tr></thead>
+        <tbody>
+          <tr><td>Password + email verify</td><td>Signed single-use links — reset 1h, verify 24h; named rate limits on every attempt path</td><td>Always on</td></tr>
+          <tr><td>TOTP + recovery codes</td><td>Enroll/confirm/rotate/disable at /settings/security; login challenge at /login/mfa</td><td>Always available — no flag</td></tr>
+          <tr><td>Passkeys (WebAuthn)</td><td>Register, rename, revoke; passkey sign-in and step-up challenges for sensitive changes</td><td><span class="doc-code">passkeys</span></td></tr>
+          <tr><td>OAuth</td><td>Google · Apple · GitHub; link/unlink at /settings/connections; tokens never persisted</td><td><span class="doc-code">oauth</span></td></tr>
+          <tr><td>Generic OIDC</td><td>Operator-registered providers with aliases, test, enable/disable — the provider registry</td><td><span class="doc-code">provider_registry</span></td></tr>
+          <tr><td>Invitations</td><td>Admin-issued, /invite/{token} landing, redemption ledger, issuance + probing rate-limited</td><td><span class="doc-code">invitations</span></td></tr>
+          <tr><td>Sessions</td><td>Opaque tokens, device list, revoke one / revoke all others; re-auth gate before sensitive ops</td><td>Always on</td></tr>
+          <tr><td>Account lifecycle</td><td>Self-serve export · deactivate · reactivate · delete with a 30-day grace window</td><td><span class="doc-code">account_lifecycle</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="spacer-20"></div>
+    <aside class="doc-callout doc-callout-warn"><div class="doc-callout-label">Fail closed, always</div><div class="doc-callout-body">An unconfigured OAuth provider shows no button and accepts no callback. A garbage value in the <span class="doc-code">features</span> override map disables, never enables. An unknown <span class="doc-code">CAPABILITIES_MODE</span> falls back to shadow. Email unconfigured means email fails closed while in-app notifications still deliver.</div></aside>
+  </section>
+
+  <!-- ───────────────────────── §7 PLATFORM & EXTENSIBILITY ───────────────────────── -->
+  <section class="section pbreak">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§7 · Platform and extensibility</div>
+      <h2 class="doc-section-title">The ecosystem, signed and reversible</h2>
+      <p class="doc-section-dek">Phase 5's thesis: anything that extends the install must be verifiable before it runs, auditable while it runs, and reversible after — packages, themes, secrets, tokens, webhooks.</p>
+    </header>
+
+    <div class="spacer-14 seclead"></div>
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>Platform seams and their guard-rails</caption>
+        <thead><tr><th scope="col">Seam</th><th scope="col">What ships</th><th scope="col">Guard-rails</th></tr></thead>
+        <tbody>
+          <tr><td>Signed registry</td><td>Registry snapshots, publishers, releases, advisories, review decisions, transparency log</td><td>Pinned trust keys · signature verification · local blocklist · egress-guarded HTTPS fetch</td></tr>
+          <tr><td>Package lifecycle</td><td>Plan → consent → install → enable/disable → pin → update → rollback → uninstall</td><td>Content-addressed storage outside the web root · retention window · break-glass kill switch</td></tr>
+          <tr><td>Theme packages</td><td>Declarative token builds, preview CSS, activate, rollback</td><td>Safe mode forces the built-in theme without touching DB state</td></tr>
+          <tr><td>Integrations</td><td>Per-package settings, provisioned credentials with rotate/revoke, settings export</td><td>Credentials encrypted at rest in the vault</td></tr>
+          <tr><td>Service secrets</td><td>Versioned encrypted vault for providers and webhooks</td><td>24h rotation grace · 4KB ceiling · reveal and revoke audited</td></tr>
+          <tr><td>Read-only API</td><td>Bearer api_tokens over /api/v1 — me, boards, threads</td><td>Scope-checked · read-only · 120 req/min</td></tr>
+          <tr><td>Webhooks</td><td>Endpoints, delivery ledger, test sends, per-delivery replay</td><td>6 attempts, 60s→6h backoff · circuit breaker at 15 · SSRF egress guard · 64KB response cap</td></tr>
+          <tr><td>First-party hooks</td><td>Code-only hook producers from a trusted directory</td><td>No public runtime — the sandboxed ecosystem is Gate B</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="spacer-20"></div>
+    <div class="grid-2">
+      <aside class="doc-callout doc-callout-warn is-panel"><div class="doc-callout-label">Emergency brakes</div><div class="doc-callout-body"><span class="doc-code">PACKAGE_EXECUTION_DISABLED</span> pauses every package-owned runtime bridge independent of any flag; <span class="doc-code">THEME_SAFE_MODE</span> forces the built-in theme without touching DB state; and every Gate A flag rolls back individually via <span class="doc-code">features</span>.</div></aside>
+      <aside class="doc-callout is-panel"><div class="doc-callout-label">Gate B — reserved, dark</div><div class="doc-callout-body">The sandboxed server-extension runtime, operator governance (groups, approvals, access review), remote service principals, and verified profile links are implemented behind flags that default <strong>off</strong> until each lands its own release evidence.</div></aside>
+    </div>
+
+    <div class="spacer-20"></div>
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>Background workers — PHP CLI, scheduled on the VPS</caption>
+        <thead><tr><th scope="col">Worker</th><th scope="col">Does</th></tr></thead>
+        <tbody>
+          <tr><td><span><span class="doc-code">NotificationEmailWorker</span> · <span class="doc-code">DailyDigestWorker</span></span></td><td>Instant email fan-out from the write transaction&rsquo;s queue · the daily digest</td></tr>
+          <tr><td><span class="doc-code">WebhookDeliveryWorker</span></td><td>Outbound deliveries with retry, backoff, and the circuit breaker</td></tr>
+          <tr><td><span class="doc-code">ThreadIntelligenceWorker</span></td><td>Bounded minutely pass over the Living Brief queue (§8)</td></tr>
+          <tr><td><span><span class="doc-code">RegistryRefreshWorker</span> · <span class="doc-code">PackageHealthWorker</span></span></td><td>Signed snapshot refresh · installed-package health checks</td></tr>
+          <tr><td><span><span class="doc-code">RelatedTopicRefreshWorker</span> · <span class="doc-code">OrphanAttachmentCleaner</span></span></td><td>Related-topic recompute · temp-upload and orphan sweep</td></tr>
+          <tr><td><span class="doc-code">IpRetentionPurger</span></td><td>Purges captured IPs past the 90-day retention window</td></tr>
+          <tr><td><span class="doc-code">ServerExtensionWorker</span></td><td>Gate B extension jobs — present, dark</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── §8 THREAD INTELLIGENCE ───────────────────────── -->
+  <section class="section pbreak">
+    <header class="doc-section">
+      <div class="doc-section-kicker">§8 · Thread intelligence</div>
+      <h2 class="doc-section-title">The Living Brief, pre-flip</h2>
+      <p class="doc-section-dek">AI proposes; the council approves. Evidence-bound briefs for eligible public threads, generated asynchronously, validated locally, published only when every claim traces to a source post.</p>
+    </header>
+
+    <div class="doc-prose seclead">
+      <p>The worker takes a bounded pass over queued public threads each minute, asks the provider for a structured brief, then runs it through local <strong>evidence, schema, content, and moderation checks</strong> before anything becomes visible. Curator edits remain authoritative input to later refreshes; a failed generation preserves the last good output; member-visible provenance links every claim back to its source posts. Personal since-last-read context stays deterministic — no model in that loop.</p>
+      <p>The boundary is deliberate: <strong>public post text only</strong> — no account, private, or moderation metadata leaves the install; raw prompts and responses are not retained; and with no credential configured, behavior is deterministic and non-AI. The credential lives only in the environment.</p>
+    </div>
+
+    <div class="doc-table-wrap">
+      <table class="doc-table is-zebra">
+        <caption>The accepted contract — ADR 0019, docs/runbooks/thread_intelligence.md</caption>
+        <thead><tr><th scope="col">Dimension</th><th scope="col">Accepted value</th></tr></thead>
+        <tbody>
+          <tr><td>Eligibility</td><td>Public threads only; personal since-last-read context stays deterministic</td></tr>
+          <tr><td>Contract</td><td>Low reasoning effort · 16,000 output-token ceiling · 450-word visible-content limit</td></tr>
+          <tr><td>Validation record</td><td>46/46 runs · 149/149 supported material claims · zero incomplete responses, private-sentinel transmissions, or fabricated decisions</td></tr>
+          <tr><td>Budgets</td><td>100 provider calls / 1,000,000 input tokens per day — worker stops at the ceiling</td></tr>
+          <tr><td>Credential</td><td><span><span class="doc-code">OPENAI_API_KEY</span> environment-only — never stored in the database, shown in the UI, or logged</span></td></tr>
+          <tr><td>Flags</td><td><span><span class="doc-code">community_memory</span> · <span class="doc-code">automated_context</span> — both default false (pre-flip)</span></td></tr>
+          <tr><td>Controls</td><td><span>Admin console pause/resume/retry/reconcile · <span class="doc-code">thread-intelligence:status</span> · <span class="doc-code">worker:thread-intelligence</span> CLI · ADR 0019 owns the decision</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="spacer-20"></div>
+    <aside class="doc-callout doc-callout-warn"><div class="doc-callout-label">Pre-flip means not yet on</div><div class="doc-callout-body"><span class="doc-code">community_memory</span> and <span class="doc-code">automated_context</span> both still default <strong>false</strong>. The worker, curator and admin controls, budgets, and the quality gate are all implemented and evidenced — default-on requires the separate final graduation change after the remaining evidence passes. Do not design surfaces that assume the brief exists on every thread.</div></aside>
+  </section>
+
+</main>
+
+<script>
+  // Theme register — parchment (default) / twilight. Mirrors the design's
+  // applyTheme(): dark sets data-theme="dark" on <html>. Choice is persisted.
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('theme-toggle');
+    var label = btn.querySelector('.theme-toggle-label');
+    var KEY = 'retroboards-handoff-theme';
+    function apply(theme) {
+      if (theme === 'twilight') root.setAttribute('data-theme', 'dark');
+      else root.removeAttribute('data-theme');
+      label.textContent = theme === 'twilight' ? 'Parchment' : 'Twilight';
+      btn.setAttribute('aria-pressed', theme === 'twilight' ? 'true' : 'false');
+    }
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    apply(saved === 'twilight' ? 'twilight' : 'parchment');
+    btn.addEventListener('click', function () {
+      var next = root.hasAttribute('data-theme') ? 'parchment' : 'twilight';
+      apply(next);
+      try { localStorage.setItem(KEY, next); } catch (e) {}
+    });
+    // Printing always uses the parchment register: twilight would print
+    // near-black pages (print-color-adjust is exact), or unreadable light
+    // ink where drivers drop backgrounds. Dark mode only exists when this
+    // script runs, so these hooks cover every path that can reach print.
+    window.addEventListener('beforeprint', function () { root.removeAttribute('data-theme'); });
+    window.addEventListener('afterprint', function () {
+      var s = null;
+      try { s = localStorage.getItem(KEY); } catch (e) {}
+      apply(s === 'twilight' ? 'twilight' : 'parchment');
+    });
+  })();
+</script>
+
+</body>
+</html>
