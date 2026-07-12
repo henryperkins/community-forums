@@ -1,12 +1,12 @@
 # Thread View — The Study
 
 **Date:** 2026-07-12
-**Status:** Approved design; awaiting written-spec review
+**Status:** Approved with review amendments; awaiting amended-spec confirmation
 **Owner:** RetroBoards core theme
 
 ## Context
 
-The attached Imladris design-system handoff selects `templates/thread-view/ThreadView.dc.html`, “The Study,” as the production direction for the RetroBoards topic page. Its central change is structural: a topic should read as a quiet, durable record, while personal controls and moderation tools remain close at hand without occupying the space above the first post.
+The attached Imladris design-system handoff selects [ThreadView.dc.html](../../design-system/imladris/templates/thread-view/ThreadView.dc.html), “The Study,” as the production direction for the RetroBoards topic page. Its central change is structural: a topic should read as a quiet, durable record, while personal controls and moderation tools remain close at hand without occupying the space above the first post. The complete handoff notes are committed at [design_handoff_thread_view/README.md](../../design-system/imladris/design_handoff_thread_view/README.md); the template’s `support.js`, `ds-base.js`, and `thread-data.js` dependencies sit beside it so the normative prototype remains reviewable and renderable.
 
 The current application already implements the underlying behavior through server-rendered forms and capability-gated services: starring, subscriptions, snooze, assignment, workflow status and history, tags, polls, Living Brief curation, accepted answers, reactions, anonymous-author reveal, wiki posts, pin/lock, and split/merge. The work therefore adapts the selected visual design to the existing PHP and progressive-enhancement architecture. It does not copy the prototype runtime or replace authoritative server behavior with client-side state.
 
@@ -32,12 +32,12 @@ The current application already implements the underlying behavior through serve
 - a hover/focus toolbar on pointer devices and an always-reachable action row on touch devices;
 - the existing reply composer restyled as the selected sticky dock without changing its submission contract;
 - strict-CSP JavaScript for drawer, modal, menu, focus, copy-link, quote, and accordion enhancement;
-- parchment/twilight, responsive, reduced-motion, keyboard, no-JavaScript, and accessibility behavior;
+- light/dark/system theme behavior (the parchment and twilight display registers), responsive layout, reduced motion, keyboard, no-JavaScript, and accessibility behavior;
 - focused PHPUnit and Playwright regression coverage plus desktop/mobile evidence captures.
 
 ### Out of scope
 
-- copying `support.js`, `ds-base.js`, the Design Component runtime, or prototype state into production;
+- copying the documentation-only `support.js`, `ds-base.js`, Design Component runtime, or prototype state into production templates or `public/assets/`;
 - new database columns, migrations, routes, permissions, or business services;
 - AJAX workflow/status/tag/poll/moderation mutations;
 - simulated Undo actions for destructive requests;
@@ -75,6 +75,8 @@ On the standalone route, the conversation column is centered and capped at 860px
 
 The prototype archive is reference input only. Production uses the tokens already defined in `public/assets/app.css`, the existing monogram and icon partials, and the application’s system-serif fallback stacks.
 
+The conversation/scroll/dock regions, participant stack, guest join bar, and ten-minute grouping rule are already shipped. The implementation plan must treat those as retained baselines to restyle or reposition, not as new subsystems to build.
+
 ### 2. Quiet topic head
 
 The header contains only information and two immediate actions:
@@ -88,19 +90,21 @@ The header contains only information and two immediate actions:
 - the existing Star form; and
 - a Topic tools trigger for signed-in viewers with available sections.
 
-The status chip is always word-plus-color. It maps the real values `open`, `needs_answer`, `solved`, `decision_made`, and `archived` to the selected Imladris status tokens. Pinned and Locked remain separate neutral/gold facts.
+When `topic_workflow` is enabled, exactly one workflow-status chip is always shown, including **Open** in the resting state. It is word-plus-color and maps the real values `open`, `needs_answer`, `solved`, `decision_made`, and `archived` to the selected Imladris status tokens. When workflow is disabled but an accepted answer exists, one fallback Solved chip is shown. Pinned and Locked remain separate neutral/gold facts.
 
 Assignment and snooze are rendered as byline facts, never as header controls. Tag editing, subscription frequency, status changes, assignment, pin/lock, memory curation, poll creation/closure, and split/merge leave the header entirely.
+
+This intentionally places subscription frequency in **Your watch** rather than restoring the older Bell/Bell-off header treatment described in `DESIGN.md` §6.10 and `USER.md` §4.6. It follows the selected Study handoff and the current consolidated thread-action direction: Star remains the one-tap header action, while notification configuration stays on the thread page behind Topic tools. Subscription persistence, channels, frequency, and precedence do not change.
 
 The participant stack remains privacy-safe: anonymous contributors are excluded by the repository and never inferred in the template. On narrow screens it may collapse to a count label rather than overflow horizontally.
 
 ### 3. Reading aids
 
-The existing Living Brief remains above the post stream and retains all authoritative disclosure content: label/AI lineage link, version, publication time, sanitized body, readable sources, reference cards, and related topics. Its visual treatment becomes the handoff’s raised parchment card with a gold left rule, compact label/meta row, and readable 72ch body. Curators receive a “Curate in Topic tools” button that opens the drawer directly to the memory section; without JavaScript, the same curation section remains reachable in flow.
+The existing Living Brief remains above the post stream and retains all authoritative disclosure content: the label’s lineage link to `/privacy#thread-intelligence` (the required member path to the processor disclosure), the meta row’s curator/automation attribution, version, publication time, sanitized body, readable sources, reference cards, and related topics. Its visual treatment becomes the handoff’s raised parchment card with a gold left rule, compact label/meta row, and readable 72ch body. Curators receive a “Curate in Topic tools” button that opens the drawer directly to the memory section; without JavaScript, the same curation section remains reachable in flow.
 
 The poll remains content rather than a tool panel. Its current voting and result-visibility rules are preserved. The card adopts the selected compact header, question, option rows, result rows, `<meter>` bars, and footer. Poll creation and the existing one-way Close action move into Topic tools. The UI does not offer reopen/remove controls because no such production contract exists.
 
-The deterministic “Since you last read” context and related-topic fallback remain readable content below the Living Brief slot. They are styled to share the reading surface but are not folded into moderation controls.
+The deterministic “Since you last read” context remains readable content below the memory slot. The related-topic fallback remains the existing `elseif` inside that slot when no Living Brief is available. Both share the reading treatment and stay outside moderation controls.
 
 ### 4. Topic tools
 
@@ -119,10 +123,12 @@ Only one accordion section stays open in the enhanced drawer. Native `<details>`
 1. **Your watch** — existing thread subscription frequency and personal snooze forms when their features are enabled.
 2. **Standing** — current status and status ledger for workflow-enabled topics; authorized viewers also receive the existing status-change form and reason field.
 3. **Tags** — linked current tags for readers and the existing checkbox editor for viewers with `can_edit_tags`.
-4. **Living Brief** — existing refresh, publish/edit, retire, restore, automation-resume, source, and related-topic controls for `can_curate_memory`.
+4. **Living Brief** — the exact existing curator forms for `can_curate_memory`: resume automation when paused; otherwise refresh; publish a summary with `body` plus `source_post_ids`; retire the current summary; restore one item from history; and add a related topic.
 5. **Topic management** — assignment controls, clear accepted answer, poll creation/closure, pin, lock, and split/merge, each included only when its existing capability permits it. The production label is capability-neutral because some topic owners can manage a poll or assignment without being staff.
 
 All forms retain their original action, method, field names, CSRF field, validation, and permission gate. A successful action reloads through the existing redirect and flash. No drawer action pretends to succeed locally.
+
+Guests keep today’s read-only status ledger. Because they do not receive Topic tools, a closed, in-flow Status history disclosure remains available near the quiet header when history exists. Signed-in viewers receive the same ledger in Standing; no viewer gets two rendered copies.
 
 ### 5. Split and merge
 
@@ -173,7 +179,7 @@ Without JavaScript, action disclosures and forms remain visible in normal flow. 
 - validation error and old-input preservation; and
 - the existing submit action and permission gates.
 
-The dock stays below the scrollable topic region on canonical and Inbox renders. Desktop uses the raised card with a soft page fade; mobile keeps the existing compact resting state and expands on focus/input. The guest and locked notices receive the selected quiet-bar treatment.
+The dock stays below the scrollable topic region on canonical and Inbox renders. Desktop uses the raised card with a soft page fade; mobile keeps the existing compact resting state and expands on focus/input. Dynamic viewport sizing and a safe-area/keyboard-aware bottom inset keep the expanded composer above the software keyboard; the implementation should retain the existing `dvh` behavior and add the smallest `visualViewport`/safe-area enhancement needed where it is insufficient. The guest and locked notices receive the selected quiet-bar treatment.
 
 Successful thread flashes may be styled as bottom-center toasts and dismissed after the existing short display interval. Error flashes remain persistent and in flow. Toasts contain only server-confirmed outcomes and never synthesize Undo.
 
@@ -181,7 +187,7 @@ Successful thread flashes may be styled as bottom-center toasts and dismissed af
 
 Server-rendered HTML is complete before JavaScript runs. Enhanced UI state is limited to the open drawer, open accordion, open post menu, open split/merge disclosure, focus origin, and body scroll lock. It is not stored in the database or local storage.
 
-The document-level handlers must work for both the initial canonical page and thread HTML inserted by the Inbox fetch path. They resolve the nearest `.thread-conversation` so multiple stale or hidden fragments cannot control the wrong drawer.
+The document-level handlers must work for both the initial canonical page and thread HTML inserted by the Inbox fetch path. They resolve the nearest `.thread-conversation` so multiple stale or hidden fragments cannot control the wrong drawer. References to the Inbox “toolbar” in acceptance checks mean the **post action toolbar**, not the shared composer formatting toolbar.
 
 Closing order is outermost-first: post/menu disclosures close before the split/merge modal, which closes before Topic tools. Escape never triggers a server action. Browser Back remains governed by the Inbox history implementation and is not overloaded for drawer state.
 
@@ -217,11 +223,11 @@ Implementation follows test-first development.
 
 ### Server-side regressions
 
-- a guest receives the quiet reading head, public status/tags/brief/poll, and join bar but no Star, Topic tools trigger, or write forms;
+- a guest receives the quiet reading head, public status/tags/brief/poll, read-only status-history disclosure, and join bar but no Star, Topic tools trigger, or write forms;
 - a member receives Star and only the watch/standing/tag controls permitted by current features and capabilities;
 - a topic owner retains accepted-answer and poll-management controls without acquiring moderator controls;
 - a board moderator receives only the pin, lock, split/merge, delete, reveal, memory, and other controls their individual capabilities allow;
-- a suspended privileged user does not receive write controls that `WriteGate` forbids;
+- under the current default legacy/shadow authority mode, a suspended privileged user does not receive write controls that `WriteGate` forbids; this regression must not be described as proof of future resolver-enforce semantics without a separate enforce-mode check;
 - status, assignment, snooze, tags, and participant facts render in the intended header/tool locations and the old stacked workflow panels are absent;
 - every moved form retains its action, CSRF field, and field names;
 - anonymous authors remain masked and expose neither title nor reputation;
@@ -231,17 +237,20 @@ Implementation follows test-first development.
 
 ### Browser regressions and evidence
 
-Approval of this spec includes use of the repository’s Playwright harness and evidence database.
+Approval of this spec includes use of the repository’s Playwright harness and evidence database. Existing tests that drive the relocated controls are part of this change: update `gate-a.spec.ts` (workflow and split/merge journeys plus `29-topic-workflow`), `a11y.spec.ts` (workflow and split/merge scopes), `thread-intelligence.spec.ts` (Living Brief curator controls and `77-living-brief-curator-controls`), and `community-inbox-theme.spec.ts` where its dynamically loaded thread assertions overlap.
 
 - desktop: open/close Topic tools by trigger, close button, scrim, and Escape; verify focus entry/restoration and exclusive accordion behavior;
-- desktop: verify the selected quiet header, reading width, Living Brief, poll, accepted answer, toolbar/menu, and composer dock in parchment and twilight;
-- Inbox: load a topic dynamically and repeat drawer, toolbar, quote, menu, and modal interactions;
+- desktop: verify the selected quiet header, reading width, Living Brief, poll, accepted answer, post toolbar/menu, and composer dock with operative `data-theme="light"` and `data-theme="dark"` values; retain `system` fallback coverage where applicable, and use `RB_BROWSER_DARK_SURFACES=1` for evidence fixtures/captures that require the harness’s dark surfaces;
+- Inbox: load a topic dynamically and repeat drawer, post-toolbar, quote, menu, and modal interactions;
 - mobile 390×844: verify bottom-sheet treatment, grab/close affordance, 44px targets, always-visible post actions, compact composer, full-screen split/merge sheet, and no horizontal overflow;
 - no JavaScript: navigate to the canonical topic, open native tool/action disclosures, and submit a real server reply;
 - keyboard: traverse the post toolbar, drawer, accordion, and modal; verify Escape layering and focus restoration;
 - accessibility: focused axe scans on the topic head, Topic tools, post stream, composer, and split/merge modal report no serious or critical violations;
-- motion: reduced-motion emulation removes nonessential transitions; and
-- evidence: refresh the canonical desktop/mobile thread captures and add open Topic tools captures under `docs/evidence/browser/`.
+- motion: add the harness’s first explicit `page.emulateMedia({ reducedMotion: 'reduce' })` check and verify nonessential transitions are removed;
+- mobile keyboard: exercise the compact-to-expanded composer under a representative shrunken visual viewport/safe-area condition and verify its controls remain above the keyboard boundary; and
+- evidence: refresh the canonical desktop/mobile thread captures, `29-topic-workflow`, and `77-living-brief-curator-controls`, add open Topic tools captures under `docs/evidence/browser/`, and update `docs/evidence/browser/README.md`.
+
+If focused coverage is added in a new Playwright spec, add that filename to the `evidence` script in `tests/browser/package.json` (and to `a11y` when applicable), because that script is the CI evidence entry point. There is no machine evidence manifest; `docs/evidence/browser/README.md` is the prose index.
 
 ### Completion checks
 
@@ -251,7 +260,7 @@ Approval of this spec includes use of the repository’s Playwright harness and 
 - focused Playwright desktop, mobile, no-JavaScript, and axe tests pass;
 - the browser evidence command completes and writes the required captures;
 - `git diff --check` is clean; and
-- the final diff contains no prototype runtime, inline CSP violation, unrelated worktree change, or inert control.
+- the final diff contains no prototype runtime in production templates/assets, inline CSP violation, accidental inclusion of unrelated user worktree changes, or inert control. Updating existing browser specs and evidence named above is expected and in scope.
 
 ## Expected files
 
@@ -263,6 +272,9 @@ Approval of this spec includes use of the repository’s Playwright harness and 
 - `public/assets/app.css` and `public/assets/app.js`;
 - focused integration tests, likely extending `tests/Integration/Core/AppThreadUxAuditTest.php` or a dedicated thread-view test;
 - focused Playwright coverage under `tests/browser/`; and
-- refreshed desktop/mobile evidence images and their evidence index when required by the existing runner.
+- updates to the existing `gate-a.spec.ts`, `a11y.spec.ts`, `thread-intelligence.spec.ts`, and `community-inbox-theme.spec.ts` contracts that exercise relocated controls;
+- `tests/browser/package.json` if a new focused spec must join the CI evidence/a11y commands;
+- refreshed desktop/mobile evidence images and `docs/evidence/browser/README.md`; and
+- the documentation-only normative reference under `docs/design-system/imladris/templates/thread-view/` plus its handoff README.
 
-No migration, route, feature-flag default, service mutation contract, or prototype runtime file is expected.
+No migration, route, feature-flag default, service mutation contract, or prototype runtime file under production templates/assets is expected.
