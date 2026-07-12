@@ -154,5 +154,38 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertStringNotContainsString('action="/posts/' . $answer . '/accept"', $html);
         self::assertStringNotContainsString('action="/t/' . $thread['thread_id'] . '/tags"', $html);
         self::assertStringNotContainsString('action="/t/' . $thread['thread_id'] . '/snooze"', $html);
+        self::assertStringNotContainsString('data-topic-tools-section="memory"', $html);
+        self::assertStringNotContainsString('data-topic-tools-section="management"', $html);
+        self::assertStringNotContainsString('action="/t/' . $thread['thread_id'] . '/summary"', $html);
+        self::assertStringNotContainsString('action="/t/' . $thread['thread_id'] . '/related"', $html);
+        self::assertStringNotContainsString('action="/mod/t/' . $thread['thread_id'] . '/split"', $html);
+        self::assertStringNotContainsString('action="/mod/t/' . $thread['thread_id'] . '/merge"', $html);
+    }
+
+    public function test_moderation_and_memory_forms_render_once_inside_scoped_tools(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'study_tools_admin']);
+        $author = $this->makeUser(['username' => 'study_tools_author']);
+        $board = $this->makeBoard($this->makeCategory('Study Management'));
+        $this->db->run('UPDATE boards SET assignment_mode = ?, wiki_enabled = 1 WHERE id = ?', ['staff', $board['id']]);
+        $thread = $this->makeThread($board, $author, 'Management stays scoped', 'Opening record.');
+        $this->posting()->reply($this->userEntity($author), (int) $thread['thread_id'], ['body' => 'Movable reply.']);
+
+        $this->actingAs($admin);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $html = $page->body();
+
+        self::assertStringContainsString('data-topic-tools-section="memory"', $html);
+        self::assertStringContainsString('data-topic-tools-section="management"', $html);
+        self::assertSame(1, substr_count($html, 'action="/mod/t/' . $thread['thread_id'] . '/pin"'));
+        self::assertSame(1, substr_count($html, 'action="/mod/t/' . $thread['thread_id'] . '/lock"'));
+        self::assertSame(1, substr_count($html, 'action="/mod/t/' . $thread['thread_id'] . '/split"'));
+        self::assertSame(1, substr_count($html, 'action="/mod/t/' . $thread['thread_id'] . '/merge"'));
+        self::assertSame(1, substr_count($html, 'action="/t/' . $thread['thread_id'] . '/assign"'));
+        self::assertSame(1, substr_count($html, 'action="/t/' . $thread['thread_id'] . '/poll"'));
+        self::assertSame(1, substr_count($html, 'action="/t/' . $thread['thread_id'] . '/summary"'));
+        self::assertSame(1, substr_count($html, 'action="/t/' . $thread['thread_id'] . '/summary/refresh"'));
+        self::assertSame(1, substr_count($html, 'action="/t/' . $thread['thread_id'] . '/related"'));
+        self::assertStringNotContainsString('class="workflow-actions', $html);
     }
 }

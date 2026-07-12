@@ -399,12 +399,12 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'sm-panel');
-        $this->assertSeeText($res, 'Split into a new topic');
-        $this->assertSeeText($res, 'Merge this topic');
+        $this->assertSeeText($res, 'data-thread-restructure');
+        $this->assertSeeText($res, 'data-thread-restructure-close');
+        $this->assertSeeText($res, 'data-topic-tools-section="management"');
         $this->assertSeeText($res, 'post_ids[]');
-        $this->assertSeeText($res, '/mod/t/' . (int) $thread['thread_id'] . '/split');
-        $this->assertSeeText($res, '/mod/t/' . (int) $thread['thread_id'] . '/merge');
+        $this->assertSeeText($res, 'action="/mod/t/' . (int) $thread['thread_id'] . '/split"');
+        $this->assertSeeText($res, 'action="/mod/t/' . (int) $thread['thread_id'] . '/merge"');
     }
 
     public function test_single_author_thread_has_no_participant_stack(): void

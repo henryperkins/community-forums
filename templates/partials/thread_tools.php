@@ -90,6 +90,14 @@ $hasTools = in_array(true, $topic_tool_sections, true);
             </div>
         </details>
         <?php endif; ?>
+        <?php if ($showMemory): ?>
+        <details data-topic-tools-section="memory">
+            <summary><span>Living Brief</span><span aria-hidden="true"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?></span></summary>
+            <div class="topic-tools-section-body">
+                <?= $this->partial('partials/thread_memory_tools', compact('thread', 'living_brief', 'memory_history', 'memory_refresh', 'memory_automation_paused') + ['embedded' => true]) ?>
+            </div>
+        </details>
+        <?php endif; ?>
         <?php if ($showManagement): ?>
         <details data-topic-tools-section="management">
             <summary><span>Topic management</span><span><?= !empty($assignment) ? '@' . $e($assignment['assigned_username']) : 'unassigned' ?></span></summary>
@@ -117,6 +125,23 @@ $hasTools = in_array(true, $topic_tool_sections, true);
                 <?php if (!empty($can_lock)): ?>
                     <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock"><?= $this->csrfField() ?><button class="linkbtn danger" type="submit"><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></button></form>
                 <?php endif; ?>
+                <?php if (!empty($poll['can_close'])): ?>
+                    <form method="post" action="/polls/<?= (int) $poll['id'] ?>/close"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Close poll</button></form>
+                <?php endif; ?>
+                <?php if (!empty($can_create_poll)): ?>
+                    <details class="poll-builder">
+                        <summary>Add poll</summary>
+                        <form class="stacked" method="post" action="/t/<?= (int) $thread['id'] ?>/poll">
+                            <?= $this->csrfField() ?>
+                            <label class="field"><span>Question</span><input class="input" type="text" name="question" maxlength="255" required></label>
+                            <label class="field"><span>Mode</span><select class="input" name="mode"><option value="single">Single choice</option><option value="multiple">Multiple choice</option></select></label>
+                            <label class="field"><span>Closes</span><select class="input" name="closes_in"><option value="never">Never</option><option value="1d">In 1 day</option><option value="3d">In 3 days</option><option value="1w">In 1 week</option></select></label>
+                            <label class="field"><span>Options, one per line</span><textarea class="input" name="options" rows="4" required></textarea></label>
+                            <button class="btn btn-small" type="submit">Create poll</button>
+                        </form>
+                    </details>
+                <?php endif; ?>
+                <?php if (!empty($can_split_merge)): ?><button type="button" data-thread-restructure-open hidden>Split or merge…</button><?php endif; ?>
             </div>
         </details>
         <?php endif; ?>

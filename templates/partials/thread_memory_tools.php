@@ -1,6 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
-<details class="memory-curator-tools">
-    <summary class="linkbtn">Curate topic memory</summary>
+<?php $embedded = !empty($embedded); ?>
+<?php if (!$embedded): ?><details class="memory-curator-tools"><summary class="linkbtn">Curate topic memory</summary><?php endif; ?>
     <div class="memory-curator-tools-body">
         <?php if (!empty($memory_automation_paused)): ?>
             <p class="muted">Automatic refresh is paused for this topic.</p>
@@ -59,4 +59,4 @@
             <button class="btn btn-small" type="submit">Add related topic</button>
         </form>
     </div>
-</details>
+<?php if (!$embedded): ?></details><?php endif; ?>

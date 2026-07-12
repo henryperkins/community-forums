@@ -134,8 +134,8 @@ final class AppThreadSplitMergeTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('Split into a new topic', $page->body());
-        self::assertStringContainsString('Merge this topic', $page->body());
+        self::assertStringContainsString('Split replies out', $page->body());
+        self::assertStringContainsString('Merge into another topic', $page->body());
         self::assertStringContainsString('/mod/t/' . $thread['thread_id'] . '/split', $page->body());
         self::assertStringContainsString('/mod/t/' . $thread['thread_id'] . '/merge', $page->body());
     }

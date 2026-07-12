@@ -123,78 +123,9 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                 <?php else: ?>
                     <p class="muted">Results are visible after voting or after the poll closes.</p>
                 <?php endif; ?>
-                <?php if (!empty($poll['can_close'])): ?>
-                    <form class="inline" method="post" action="/polls/<?= (int) $poll['id'] ?>/close">
-                        <?= $this->csrfField() ?>
-                        <button class="linkbtn muted" type="submit">Close poll</button>
-                    </form>
-                <?php endif; ?>
             </section>
-        <?php elseif (!empty($polls_on) && !empty($can_create_poll)): ?>
-            <details class="workflow-actions poll-builder">
-                <summary class="linkbtn">Add poll</summary>
-                <form class="stacked" method="post" action="/t/<?= (int) $thread['id'] ?>/poll">
-                    <?= $this->csrfField() ?>
-                    <div class="builder-head">
-                        <span class="poll-icon" aria-hidden="true">✦</span>
-                        <span class="poll-eyebrow">Add a poll</span>
-                        <span class="builder-hint">A topic may hold one poll.</span>
-                    </div>
-                    <label class="field"><span>Question</span><input class="input" type="text" name="question" maxlength="255" required></label>
-                    <label class="field"><span>Mode</span><select class="input input-small" name="mode"><option value="single">Single choice</option><option value="multiple">Multiple choice</option></select></label>
-                    <label class="field"><span>Closes</span><select class="input input-small" name="closes_in"><option value="never">Never</option><option value="1d">In 1 day</option><option value="3d">In 3 days</option><option value="1w">In 1 week</option></select></label>
-                    <label class="field"><span>Options</span><textarea class="input" name="options" rows="4" required></textarea></label>
-                    <button class="btn btn-small" type="submit">Create poll</button>
-                </form>
-            </details>
         <?php endif; ?>
-        <?php if (!empty($features['split_merge']) && !empty($can_split_merge)): ?>
-            <?php $movablePosts = array_values(array_filter($posts ?? [], static fn ($post): bool => (int) ($post['is_op'] ?? 0) !== 1)); ?>
-            <?php // Closed by default (§5b) — the same disclosure treatment as Edit
-                  // tags / Add poll, instead of a permanently open two-form panel. ?>
-            <details class="workflow-actions">
-            <summary class="linkbtn">Split or merge topic</summary>
-            <section class="sm-panel topic-restructure" aria-label="Split or merge topic">
-                <div class="sm-panel-head">
-                    <span class="sm-panel-title">Split a topic, or merge two</span>
-                    <span class="sm-note">Selected replies move into a new topic; merging redirects this topic to the chosen target.</span>
-                </div>
-                <div class="sm-grid">
-                    <form class="stacked" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/split">
-                        <?= $this->csrfField() ?>
-                        <h2>Split into a new topic</h2>
-                        <?php if (empty($movablePosts)): ?>
-                            <p class="muted">There are no replies to split yet.</p>
-                        <?php else: ?>
-                            <div class="sm-post-list">
-                                <?php foreach ($movablePosts as $post): ?>
-                                    <?php $pa = mask_author($post['author_display_name'] ?? null, $post['author_username'] ?? null, $post['author_role'] ?? 'user', (int) ($post['is_anonymous'] ?? 0) === 1); ?>
-                                    <label class="sm-post">
-                                        <input type="checkbox" name="post_ids[]" value="<?= (int) $post['id'] ?>">
-                                        <span class="sm-post-main">
-                                            <span class="sm-post-by"><?= $e($pa['label']) ?> · #<?= (int) $post['id'] ?></span>
-                                            <span class="sm-post-body"><?= $e(mb_strimwidth(strip_tags((string) ($post['body_html'] ?? '')), 0, 120, '…')) ?></span>
-                                        </span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                        <label class="field"><span>New topic title</span><input class="input" type="text" name="title" maxlength="255" required></label>
-                        <button class="btn btn-small" type="submit"<?= empty($movablePosts) ? ' disabled' : '' ?>>Split replies out</button>
-                    </form>
-                    <form class="stacked" method="post" action="/mod/t/<?= (int) $thread['id'] ?>/merge">
-                        <?= $this->csrfField() ?>
-                        <h2>Merge this topic</h2>
-                        <p class="merge-from"><span>From</span><strong><?= $e($thread['title']) ?></strong><span>#<?= $e($thread['board_slug']) ?></span></p>
-                        <label class="field"><span>Target topic ID</span><input class="input" type="number" name="target_thread_id" min="1" required></label>
-                        <p class="sm-note">All posts move into the chosen topic. The move is logged and reversible through repair tooling.</p>
-                        <button class="btn btn-small" type="submit">Merge topics</button>
-                    </form>
-                </div>
-            </section>
-            </details>
-        <?php endif; ?>
-    <?php if ($living_brief !== null || $related_fallback !== [] || $can_curate_memory): ?>
+    <?php if ($living_brief !== null || $related_fallback !== []): ?>
     <div class="thread-memory-slot">
         <?php if ($living_brief !== null): ?>
             <?= $this->partial('partials/living_brief', compact('living_brief', 'living_brief_sources', 'living_brief_related')) ?>
@@ -205,18 +136,6 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                     <a href="<?= $e($related['url']) ?>"><?= $e($related['title']) ?></a>
                 <?php endforeach; ?>
             </section>
-        <?php endif; ?>
-        <?php if ($can_curate_memory): ?>
-            <?php // Pass an explicit payload: this renderer's get_defined_vars()
-                  // includes its internal $file variable and would recursively
-                  // include thread.php when forwarded to a partial. ?>
-            <?= $this->partial('partials/thread_memory_tools', [
-                'thread' => $thread,
-                'living_brief' => $living_brief,
-                'memory_history' => $memory_history,
-                'memory_refresh' => $memory_refresh,
-                'memory_automation_paused' => $memory_automation_paused,
-            ]) ?>
         <?php endif; ?>
     </div>
     <?php endif; ?>
@@ -305,6 +224,13 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
             <div class="joinbar">You don't have permission to reply in this board.</div>
         <?php endif; ?>
     </div>
+    <?= $this->partial('partials/thread_restructure', [
+        'thread' => $thread,
+        'posts' => $posts,
+        'features' => $features,
+        'can_write' => $can_write,
+        'can_split_merge' => $can_split_merge,
+    ]) ?>
     <?= $this->partial('partials/thread_tools', [
         'thread' => $thread,
         'topic_tool_sections' => $topicToolSections,
