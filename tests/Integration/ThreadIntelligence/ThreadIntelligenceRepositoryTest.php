@@ -64,9 +64,10 @@ final class ThreadIntelligenceRepositoryTest extends TestCase
 
     private function waitForConnectionQuery(int $connectionId, string $needle): void
     {
+        $observer = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
         $deadline = microtime(true) + 5.0;
         do {
-            $info = $this->db->fetchValue(
+            $info = $observer->fetchValue(
                 'SELECT INFO FROM information_schema.PROCESSLIST WHERE ID = ?',
                 [$connectionId],
             );
@@ -826,25 +827,22 @@ PHP;
 
         $readyLine = fgets($pipes[1]);
         $resultLine = null;
-        $read = [$pipes[1]];
-        $write = [];
-        $except = [];
-        $readable = stream_select($read, $write, $except, 1);
-        if ($readable === 1) {
-            $resultLine = fgets($pipes[1]);
-        } else {
+        if (PHP_OS_FAMILY === 'Windows') {
             self::assertMatchesRegularExpression('/ready:(\d+)/', (string) $readyLine);
             preg_match('/ready:(\d+)/', (string) $readyLine, $readyMatch);
-            $query = $this->db->fetchValue(
-                'SELECT INFO FROM information_schema.PROCESSLIST WHERE ID = ?',
-                [(int) $readyMatch[1]],
-            );
-            self::assertIsString($query);
-            self::assertStringContainsString(
-                'SELECT thread_id FROM thread_intelligence_jobs',
-                $query,
-                'the pruner must be waiting on the concurrent job-row transition before it is released',
-            );
+            $this->waitForConnectionQuery((int) $readyMatch[1], 'SELECT thread_id FROM thread_intelligence_jobs');
+        } else {
+            $read = [$pipes[1]];
+            $write = [];
+            $except = [];
+            $readable = stream_select($read, $write, $except, 1);
+            if ($readable === 1) {
+                $resultLine = fgets($pipes[1]);
+            } else {
+                self::assertMatchesRegularExpression('/ready:(\d+)/', (string) $readyLine);
+                preg_match('/ready:(\d+)/', (string) $readyLine, $readyMatch);
+                $this->waitForConnectionQuery((int) $readyMatch[1], 'SELECT thread_id FROM thread_intelligence_jobs');
+            }
         }
 
         // Release the job row after either the vulnerable delete completed or

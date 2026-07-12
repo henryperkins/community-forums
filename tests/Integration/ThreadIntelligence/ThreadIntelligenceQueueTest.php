@@ -146,9 +146,10 @@ final class ThreadIntelligenceQueueTest extends TestCase
 
     private function waitForConnectionQuery(int $connectionId, string $needle): void
     {
+        $observer = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
         $deadline = microtime(true) + 5.0;
         do {
-            $info = $this->db->fetchValue(
+            $info = $observer->fetchValue(
                 'SELECT INFO FROM information_schema.PROCESSLIST WHERE ID = ?',
                 [$connectionId],
             );
@@ -163,6 +164,18 @@ final class ThreadIntelligenceQueueTest extends TestCase
     /** @param resource $stream */
     private function waitForProcessOutput($stream, string $needle, string $output = ''): string
     {
+        if (PHP_OS_FAMILY === 'Windows') {
+            stream_set_blocking($stream, true);
+            while (($line = fgets($stream)) !== false) {
+                $output .= $line;
+                if (str_contains($output, $needle)) {
+                    stream_set_blocking($stream, false);
+                    return $output;
+                }
+            }
+            self::fail("Child output closed before {$needle}; received {$output}");
+        }
+
         $deadline = microtime(true) + 5.0;
         do {
             $chunk = stream_get_contents($stream);
@@ -186,7 +199,7 @@ $config = json_decode(base64_decode((string) getenv('RB_CHILD_DB')), true, 512, 
 $db = new App\Core\Database($config);
 $db->run('SET SESSION innodb_lock_wait_timeout = 10');
 echo 'READY ' . $db->fetchValue('SELECT CONNECTION_ID()') . "\n";
-flush();
+fflush(STDOUT);
 (new App\Service\ThreadIntelligence\ThreadIntelligenceBoardSweep($db))->runBatch(
     1,
     new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC')),
@@ -197,7 +210,7 @@ PHP;
         $process = proc_open([PHP_BINARY, '-r', $code], $descriptors, $pipes, null, [
             'RB_ROOT' => dirname(__DIR__, 3),
             'RB_CHILD_DB' => base64_encode(json_encode($GLOBALS['__RB_TEST_DBCONFIG'], JSON_THROW_ON_ERROR)),
-        ]);
+        ] + getenv());
         self::assertIsResource($process);
         fclose($pipes[0]);
         stream_set_blocking($pipes[1], false);
@@ -233,7 +246,7 @@ $eligibility = new App\Service\ThreadIntelligence\ThreadIntelligenceEligibility(
     $jobs,
 );
 echo 'READY ' . $db->fetchValue('SELECT CONNECTION_ID()') . "\n";
-flush();
+fflush(STDOUT);
 (new App\Service\ThreadIntelligence\ThreadIntelligenceQueue($db, $jobs, $eligibility))->resumeAndRequeue(
     (int) getenv('RB_THREAD_ID'),
     (int) getenv('RB_ACTOR_ID'),
@@ -248,7 +261,7 @@ PHP;
             'RB_APP_KEY' => base64_encode((string) $this->config->get('app.key')),
             'RB_THREAD_ID' => (string) $seed['thread_id'],
             'RB_ACTOR_ID' => (string) $seed['author_id'],
-        ]);
+        ] + getenv());
         self::assertIsResource($process);
         fclose($pipes[0]);
         stream_set_blocking($pipes[1], false);

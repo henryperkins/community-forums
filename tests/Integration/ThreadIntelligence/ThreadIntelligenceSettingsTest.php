@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\ThreadIntelligence;
 
+use App\Core\Database;
 use App\Repository\SettingRepository;
 use App\Service\ThreadIntelligence\ThreadIntelligenceConfig;
 use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
@@ -104,6 +105,18 @@ final class ThreadIntelligenceSettingsTest extends TestCase
     /** @param resource $stream */
     private function waitForProcessOutput($stream, string $needle, string $output = ''): string
     {
+        if (PHP_OS_FAMILY === 'Windows') {
+            stream_set_blocking($stream, true);
+            while (($line = fgets($stream)) !== false) {
+                $output .= $line;
+                if (str_contains($output, $needle)) {
+                    stream_set_blocking($stream, false);
+                    return $output;
+                }
+            }
+            self::fail("Child output closed before {$needle}; received {$output}");
+        }
+
         $deadline = microtime(true) + 5.0;
         do {
             $chunk = stream_get_contents($stream);
@@ -121,9 +134,10 @@ final class ThreadIntelligenceSettingsTest extends TestCase
 
     private function waitForConnectionQuery(int $connectionId, string $needle): void
     {
+        $observer = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
         $deadline = microtime(true) + 5.0;
         do {
-            $info = $this->db->fetchValue(
+            $info = $observer->fetchValue(
                 'SELECT INFO FROM information_schema.PROCESSLIST WHERE ID = ?',
                 [$connectionId],
             );

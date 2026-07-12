@@ -342,7 +342,7 @@ $db->run('SET SESSION innodb_lock_wait_timeout = 10');
 $db->pdo()->beginTransaction();
 $db->run("UPDATE boards SET visibility = 'hidden' WHERE id = ?", [(int) getenv('RB_BOARD_ID')]);
 echo "HIDDEN_UNCOMMITTED\n";
-flush();
+fflush(STDOUT);
 usleep(1000000);
 $db->pdo()->commit();
 echo "COMMITTED\n";
@@ -356,7 +356,7 @@ PHP;
                 'RB_ROOT' => dirname(__DIR__, 3),
                 'RB_CHILD_DB' => base64_encode(json_encode($GLOBALS['__RB_TEST_DBCONFIG'], JSON_THROW_ON_ERROR)),
                 'RB_BOARD_ID' => (string) $targetBoard['id'],
-            ],
+            ] + getenv(),
         );
         self::assertIsResource($process);
         fclose($pipes[0]);
