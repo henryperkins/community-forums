@@ -46,3 +46,26 @@ test('responsive Inbox opens a topic in place and mobile Back restores its link'
     await expect(reading).toBeVisible();
   }
 });
+
+test('mobile top bar stays one row and Search remains reachable in the rail', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile chrome contract');
+  await login(page);
+
+  const topbar = page.locator('.topbar');
+  const topbarBox = await topbar.boundingBox();
+  expect(topbarBox).not.toBeNull();
+  expect(topbarBox!.height).toBeLessThanOrEqual(64);
+  await expect(page.locator('.topbar-search')).toBeHidden();
+
+  const viewportFits = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+  expect(viewportFits).toBe(true);
+
+  const navigation = page.getByRole('button', { name: 'Open navigation' });
+  const navigationBox = await navigation.boundingBox();
+  expect(navigationBox).not.toBeNull();
+  expect(navigationBox!.width).toBeGreaterThanOrEqual(44);
+  expect(navigationBox!.height).toBeGreaterThanOrEqual(44);
+  await navigation.click();
+  await expect(page.locator('[data-sidebar]')).toBeVisible();
+  await expect(page.locator('[data-sidebar]').getByRole('link', { name: 'Search' })).toBeVisible();
+});
