@@ -69,3 +69,22 @@ test('mobile top bar stays one row and Search remains reachable in the rail', as
   await expect(page.locator('[data-sidebar]')).toBeVisible();
   await expect(page.locator('[data-sidebar]').getByRole('link', { name: 'Search' })).toBeVisible();
 });
+
+test('mobile conversation keeps the reply dock visible and expands it on focus', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile reply dock contract');
+  await login(page);
+
+  await page.locator('[data-inbox-list] a.thread-title').first().click();
+  const dock = page.locator('[data-inbox-reading] .thread-dock');
+  const composer = dock.locator('.reply-composer');
+  await expect(dock).toBeVisible();
+  await expect(composer).toBeVisible();
+
+  const dockBox = await dock.boundingBox();
+  expect(dockBox).not.toBeNull();
+  expect(dockBox!.bottom).toBeLessThanOrEqual(844);
+  await expect(composer).not.toHaveClass(/\bis-expanded\b/);
+
+  await composer.locator('textarea[name="body"]').focus();
+  await expect(composer).toHaveClass(/\bis-expanded\b/);
+});
