@@ -4744,6 +4744,7 @@ span.wf-btn {
 .living-brief-sources { margin-top: var(--space-4); }
 .living-brief-sources h3 { margin-bottom: var(--space-2); }
 .living-brief-sources ul { margin: 0; padding-left: 1.2rem; }
+.living-brief-sources a { text-decoration: underline; }
 .related-topic-fallback {
     display: flex;
     flex-wrap: wrap;

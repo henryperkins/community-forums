@@ -2,8 +2,9 @@
 
 **Date:** 2026-07-09
 **Status:** Accepted product decision. The revised design was approved on
-2026-07-09; default-on graduation remains gated by its evidence and rollback
-criteria.
+2026-07-09; the implementation and Task 12 live gate are complete pre-flip, but
+default-on graduation remains gated by the rest of its evidence and rollback
+criteria. Both production feature defaults are still `false`.
 **Supersedes:** The human-only constraints in `PHASE_4_PLAN.md` Gate A,
 conditional/deferred scope, and Milestone 8 only for the bounded Thread
 Intelligence surface defined here. It does not rewrite historical Phase 4
@@ -31,8 +32,10 @@ requirements are in
 
 ## Decision
 
-1. Eligible public threads may receive an AI-generated Living Brief by default
-   when the operator configures a provider credential. Private/hidden boards,
+1. Under the approved eventual default-on posture, eligible public threads may
+   receive an AI-generated Living Brief when the operator configures a provider
+   credential. Until that graduation, both owning flags remain default-off.
+   Private/hidden boards,
    pending/deleted content, account metadata, DMs, reports, and moderation notes
    are never provider input.
 2. A validated result may publish without per-generation human approval. Local
@@ -67,6 +70,29 @@ requirements are in
    design's security, privacy, quality, browser/no-JS, accessibility, worker,
    migration, backup/restore, live-evaluation, and rollback gates pass. The
    later default-on commit requires its own recorded evidence.
+
+## Implementation and Evidence Status
+
+The pre-flip implementation is present in migration `0077`,
+`src/Worker/ThreadIntelligenceWorker.php`, the
+`src/Service/ThreadIntelligence/` provider/validation/operations seams,
+`templates/partials/living_brief.php`, and
+`templates/admin/thread_intelligence.php`. The canonical operator procedure is
+`docs/runbooks/thread_intelligence.md`; the Phase 3/4 carryover record is
+`docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
+
+The redacted Task 12 live report is
+`docs/evidence/phase4-closeout/thread-intelligence-live-eval.md`, with the human
+rubric in `thread-intelligence-live-rubric.json`. The selected contract is
+reasoning effort `low` with a `16000` output-token ceiling: 46/46 runs completed,
+149/149 material claims were supported, and there were zero incomplete
+responses, private-sentinel transmissions, or fabricated decisions.
+
+Browser/mobile/no-JS/accessibility, security/privacy, worker concurrency,
+migration/upgrade, backup/restore, and data-preserving runtime rollback remain
+pre-flip evidence gates. This ADR therefore records an implemented, evaluated
+but still default-off surface; only the later graduation change may update the
+activation map and default posture.
 
 ## Consequences
 

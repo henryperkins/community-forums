@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Integration\ThreadIntelligence;
 
 use App\Core\App;
+use App\Core\Config;
 use App\Core\FeatureFlags;
 use App\Core\Request;
+use App\Core\View;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadIntelligenceGenerationRepository;
 use App\Repository\ThreadIntelligenceJobRepository;
@@ -19,15 +21,51 @@ use App\Service\ThreadIntelligence\ThreadIntelligenceOperationsService;
 use App\Service\ThreadIntelligence\ThreadIntelligenceOutputValidator;
 use App\Service\ThreadIntelligence\ThreadIntelligenceQueue;
 use App\Service\ThreadIntelligence\ThreadIntelligenceSettings;
+use App\Service\ThreadIntelligence\ThreadIntelligenceViewService;
 use App\Support\Markdown;
 use App\Worker\ThreadIntelligenceWorker;
 use DateTimeImmutable;
 use DateTimeZone;
+use PDO;
+use PHPUnit\Framework\Attributes\Group;
 use ReflectionClass;
 use Tests\Support\TestCase;
 
+#[Group('nonparallel')]
 final class ThreadIntelligenceOperationsServiceTest extends TestCase
 {
+    private bool $committedFixtures = false;
+
+    protected function tearDown(): void
+    {
+        if ($this->committedFixtures) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            $preserve = [
+                'schema_migrations', 'badges', 'roles', 'identity_providers', 'provider_aliases',
+                'capabilities', 'role_capabilities', 'theme_state',
+            ];
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS=0');
+            foreach ($this->pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) as $table) {
+                if (!in_array($table, $preserve, true)) {
+                    $this->pdo->exec('TRUNCATE TABLE `' . str_replace('`', '', (string) $table) . '`');
+                }
+            }
+            $this->pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+            $this->committedFixtures = false;
+        }
+        parent::tearDown();
+    }
+
+    private function useCommittedFixtures(): void
+    {
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->commit();
+        }
+        $this->committedFixtures = true;
+    }
+
     private function now(): DateTimeImmutable
     {
         return new DateTimeImmutable('now', new DateTimeZone('UTC'));
@@ -258,5 +296,154 @@ final class ThreadIntelligenceOperationsServiceTest extends TestCase
         ] as $command) {
             self::assertStringContainsString($command, $output);
         }
+    }
+
+    public function test_data_preserving_runtime_rollback_sequence(): void
+    {
+        $settingsRepository = new SettingRepository($this->db);
+        $settingsRepository->set('features', [
+            'search' => false,
+            'community_memory' => true,
+            'automated_context' => true,
+        ]);
+
+        $seed = $this->seedThread();
+        $summaryId = $this->db->insert(
+            "INSERT INTO thread_summaries
+                (thread_id, kind, status, body, body_html, version, author_id, reviewer_id,
+                 parent_summary_id, published_at, created_at)
+             VALUES (?, 'ai', 'published', ?, ?, 1, NULL, NULL, NULL, UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$seed['thread_id'], 'Retained rollback living brief', '<p>Retained rollback living brief</p>'],
+        );
+        $this->db->run(
+            'INSERT INTO thread_summary_sources (summary_id, post_id) VALUES (?, ?)',
+            [$summaryId, $seed['post_ids'][0]],
+        );
+        $generationId = $this->db->insert(
+            "INSERT INTO thread_intelligence_generations
+                (thread_id, trigger_code, status, published_summary_id, source_post_ids,
+                 requested_at, completed_at, published_at)
+             VALUES (?, 'post_created', 'published', ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP())",
+            [$seed['thread_id'], $summaryId, json_encode([$seed['post_ids'][0]], JSON_THROW_ON_ERROR)],
+        );
+
+        $bundle = $this->operations(['api_key' => 'test-thread-intelligence-key']);
+        $bundle['jobs']->upsertStale($seed['thread_id'], 'post_created', null, $this->now());
+        $provider = new FakeThreadIntelligenceProvider();
+        $moderator = new FakeThreadIntelligenceOutputModerator();
+
+        $runtime = function (string $apiKey) use ($provider, $moderator): array {
+            $items = $this->config->all();
+            $items['thread_intelligence']['api_key'] = $apiKey;
+            $config = new Config($items);
+            $app = new App($config, $this->db, $this->rateLimiter, null, $provider, $moderator);
+            $method = (new ReflectionClass($app))->getMethod('buildContainer');
+            $container = $method->invoke($app, new Request('GET', '/', [], [], [], []));
+            return [$config, $app, $container];
+        };
+        $rowIds = fn (): array => [
+            'summaries' => array_map(
+                'intval',
+                array_column($this->db->fetchAll(
+                    'SELECT id FROM thread_summaries WHERE thread_id = ? ORDER BY id',
+                    [$seed['thread_id']],
+                ), 'id'),
+            ),
+            'generations' => array_map(
+                'intval',
+                array_column($this->db->fetchAll(
+                    'SELECT id FROM thread_intelligence_generations WHERE thread_id = ? ORDER BY id',
+                    [$seed['thread_id']],
+                ), 'id'),
+            ),
+            'jobs' => array_map(
+                'intval',
+                array_column($this->db->fetchAll(
+                    'SELECT thread_id FROM thread_intelligence_jobs WHERE thread_id = ? ORDER BY thread_id',
+                    [$seed['thread_id']],
+                ), 'thread_id'),
+            ),
+        ];
+
+        $expectedIds = [
+            'summaries' => [$summaryId],
+            'generations' => [$generationId],
+            'jobs' => [$seed['thread_id']],
+        ];
+        self::assertSame($expectedIds, $rowIds());
+        $this->useCommittedFixtures();
+        $assertPreserved = function (string $label) use ($provider, $rowIds, $expectedIds): void {
+            self::assertSame(0, $provider->callCount(), "$label must make zero provider calls");
+            self::assertSame($expectedIds, $rowIds(), "$label must preserve lifecycle row counts and IDs");
+        };
+
+        $bundle['settings']->setGenerationPaused(true);
+        [, , $paused] = $runtime('test-thread-intelligence-key');
+        self::assertSame(
+            ['processed' => 0, 'succeeded' => 0, 'failed' => 0],
+            $paused->get(ThreadIntelligenceWorker::class)->run(1, 'rollback-paused'),
+        );
+        self::assertTrue($paused->get(ThreadIntelligenceOperationsService::class)->status()['pause']['paused']);
+        $assertPreserved('global pause');
+
+        $overrides = $settingsRepository->get('features', []);
+        self::assertIsArray($overrides);
+        $overrides['automated_context'] = false;
+        $settingsRepository->set('features', $overrides);
+        [, , $contextDisabled] = $runtime('test-thread-intelligence-key');
+        self::assertSame(
+            ['processed' => 0, 'succeeded' => 0, 'failed' => 0],
+            $contextDisabled->get(ThreadIntelligenceWorker::class)->run(1, 'rollback-context-disabled'),
+        );
+        self::assertFalse($contextDisabled->get(ThreadIntelligenceOperationsService::class)->status()['flags']['automated_context']);
+        $assertPreserved('automated_context rollback pin');
+
+        $overrides['community_memory'] = false;
+        $settingsRepository->set('features', $overrides);
+        [, , $memoryDisabled] = $runtime('test-thread-intelligence-key');
+        self::assertSame(
+            ['processed' => 0, 'succeeded' => 0, 'failed' => 0],
+            $memoryDisabled->get(ThreadIntelligenceWorker::class)->run(1, 'rollback-memory-disabled'),
+        );
+        self::assertFalse($memoryDisabled->get(ThreadIntelligenceOperationsService::class)->status()['flags']['community_memory']);
+        $assertPreserved('community_memory rollback pin');
+
+        [, , $credentialRemoved] = $runtime('');
+        self::assertSame(
+            ['processed' => 0, 'succeeded' => 0, 'failed' => 0],
+            $credentialRemoved->get(ThreadIntelligenceWorker::class)->run(1, 'rollback-credential-empty'),
+        );
+        self::assertFalse($credentialRemoved->get(ThreadIntelligenceOperationsService::class)->status()['credential_ready']);
+        $assertPreserved('empty provider credential');
+
+        [$restoredConfig, , $restored] = $runtime('test-thread-intelligence-key');
+        $restoredOverrides = $settingsRepository->get('features', []);
+        self::assertIsArray($restoredOverrides);
+        unset($restoredOverrides['automated_context'], $restoredOverrides['community_memory']);
+        $settingsRepository->set('features', $restoredOverrides);
+        $bundle['settings']->setGenerationPaused(false);
+        self::assertSame(['search' => false], $settingsRepository->get('features'));
+        self::assertSame(['paused' => false, 'corrupt' => false], $bundle['settings']->generationPause());
+        $assertPreserved('runtime restore before read');
+
+        $model = $restored->get(ThreadIntelligenceViewService::class)->forThread($seed['thread_id'], null);
+        self::assertSame($summaryId, $model['living_brief']['id']);
+        self::assertSame(1, $model['living_brief']['version']);
+        $sources = array_map(static function (array $source): array {
+            $source['url'] = '/t/' . (int) $source['thread_id'] . '#p' . (int) $source['id'];
+            return $source;
+        }, $model['sources']);
+        $html = (new View((string) $restoredConfig->get('paths.templates')))->partial(
+            'partials/living_brief',
+            [
+                'living_brief' => $model['living_brief'],
+                'living_brief_sources' => $sources,
+                'living_brief_related' => [],
+            ],
+        );
+        self::assertStringContainsString('Retained rollback living brief', $html);
+        self::assertStringContainsString('Version 1', $html);
+        self::assertStringContainsString('Post #' . $seed['post_ids'][0], $html);
+        $assertPreserved('restored read and render without replacement');
     }
 }

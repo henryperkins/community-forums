@@ -1,6 +1,6 @@
 # RetroBoards — Admin & Moderation Design
 
-**Status:** v0.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-28
+**Status:** v0.14 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-12
 **Companion to [DESIGN.md](DESIGN.md).** That document is the source of truth for the whole product; this one owns the **admin and moderation surface** in depth. Where they overlap, DESIGN.md wins for member-facing behaviour and this doc wins for admin/mod behaviour. Same conventions (P0/P1/P2/P3 priorities; `Done (mockup)` / `Planned` / `Live` status; InnoDB / `utf8mb4`).
 
 ## Scope
@@ -269,6 +269,48 @@ Each automated decision writes an audit entry tagged `actor = system` so automat
 - **Reputation:** reputation is **derived** from reactions, so it self-corrects when a post or reaction is removed — there is no manual "set reputation". Coordinated reaction abuse (vote-rings) is an anti-abuse signal (§3.8).
 - **Presence / who's-online:** staff see real presence, but a user hidden via their privacy setting never appears online to anyone — including the who's-online list and moderators.
 - **Notifications:** the suppression list + per-recipient idempotency (§7.5) are the abuse controls; system-sent notifications are audited like any action.
+
+### 3.10 Thread Intelligence operations
+
+Thread Intelligence is implemented but remains pre-flip: `community_memory` and
+`automated_context` both still default `false` until the graduation evidence and
+separate default-on change are accepted. The admin console at
+`/admin/thread-intelligence` is the credential-free control plane:
+
+- **Observe:** effective flags, credential readiness, validated model/effort,
+  global pause and provider-latch health, minutely-worker heartbeat, queue-state
+  counts, UTC daily call/input-token budget and next reset, configuration
+  warnings, and recent redacted generation evidence.
+- **Recover:** audited POST + CSRF actions globally pause/resume generation, clear
+  a repaired provider latch, and retry/reconcile/pause/resume an individual
+  thread. Retry preserves all shared gates; reconcile forces a current public
+  evidence rebuild. Authentication/model failures latch provider claims,
+  transient exhaustion eventually becomes `dead`, and repeated truncation,
+  invalid output, moderation flags, or excess reconciliation windows become
+  `review_required`.
+- **Curate:** admins and in-scope board moderators may publish/edit a sourced
+  manual brief, refresh, retire, restore, and explicitly resume thread
+  automation. Retirement pauses automation; restore alone does not resume. A
+  human edit becomes the next model baseline and a curated related row cannot be
+  overwritten by an AI overlay.
+- **Retain:** the evidence ledger contains source/candidate IDs, model/effort,
+  prompt version, bounded failure codes, usage, response ID, and lineage, but no
+  raw prompt/response, duplicate post body, credential, or unvalidated generated
+  text. Published provenance follows the thread; unpublished terminal evidence
+  prunes after 90 days, with unresolved `dead`/`review_required` evidence retained
+  through resolution and for 90 quiet days afterward.
+- **Roll back:** pause globally, independently pin
+  `features.automated_context=false`, then
+  `features.community_memory=false`, then remove the environment credential.
+  This order preserves jobs, attempts, summaries, citations, relationships, and
+  the last safe version. Do not run migration `0077` down on production data.
+
+The canonical settings writes, merge-preserving feature commands, at-least-
+minutely worker schedule, heartbeat meanings, budget recovery, evidence pruning,
+board-sweep resumption, live-eval syntax, and full rollback/restore procedure are
+owned by `docs/runbooks/thread_intelligence.md`. The selected live contract is
+`low` / `16000`: 46/46 runs, 149/149 supported claims, and zero incomplete
+responses, private-sentinel transmissions, or fabricated decisions.
 
 ## 4. Board & Category Management
 
@@ -772,6 +814,7 @@ Mapped onto DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" bu
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.14 | 2026-07-12 | Added §3.10 for the pre-flip Thread Intelligence health, recovery, curator, provenance/retention, and data-preserving rollback workflows; linked the canonical runbook and recorded the selected live-eval contract. Production defaults remain off. |
 | v0.13 | 2026-06-28 | Reconciled outbound webhook storage with the B2 delivery implementation: `webhooks.secret` is replaced by `secret_ref` (`svcsec_*` SecretVault reference), added the durable `webhook_deliveries` ledger, and documented show-once signing secrets. |
 | v0.12 | 2026-06-26 | Consistency pass: aligned the §2.4 SUSPENDED resolver branch (`GUEST_READONLY_PLUS_SELF` → **`GUEST_READONLY`**) and the §2.5 worked example ("read-only+self" → "read-only") to the already-decided read-only (no self-write) behaviour in §11 + PHASE_1_PLAN; corrected §8.8 v1 scope to the internal hook system + email only, noting outbound webhooks, spam integration, and hook-system GA land in **Phase 3** (DECISIONS §4 #10; v1 = Phases 1–2); added `posts.ip VARBINARY(16) NULL` to the §10.2 additions (90-day retention, Admin-only audited; built Phase 2 — DECISIONS §4 #5, SCHEMA reconciliation #10). **Resolved (suspend scope) [Henry]:** set §3.4 Suspend scope to **Board/Site** to match §2.2 — Admins suspend site-wide (global `users.status`/`suspended_until`); a moderator suspends within their assigned board(s) as a time-limited board read-only state (`bans` `scope='board'`/`type='post'`/`expires_at`), enforced via the board-level gate, not the global account flag. |
 | v0.11 | 2026-06-26 | **Status-truth pass (nothing is built yet):** rewrote the §11 Phase 1 bullet from "is live" to planned and relabeled its test-file list as **target** evidence (none exists); relabeled the §9 "Live Phase 1 subset" as planned; reworded the v0.5/v0.6/v0.7 entries below from "Shipped/now live" to "Specified (design only — not built)". No scope changes. |

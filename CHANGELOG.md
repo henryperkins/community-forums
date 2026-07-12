@@ -2,6 +2,26 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
+## [Unreleased] - Thread Intelligence pre-flip implementation and evidence collection
+
+- Implemented the public-only, evidence-bound Living Brief pipeline behind the
+  still-default-off `community_memory` and `automated_context` flags: durable
+  leased jobs/attempt metadata, locally validated and moderated publication,
+  source/visibility rechecks, curator lineage, redacted admin operations, UTC
+  cost budgets, board-visibility sweeps, and bounded evidence retention.
+- Recorded the Task 12 live evaluation's selected production contract as
+  reasoning effort `low` with a `16000` output-token ceiling: 46/46 runs
+  completed, 149/149 material claims supported, and zero incomplete responses,
+  private-sentinel transmissions, or fabricated decisions.
+- Added `docs/runbooks/thread_intelligence.md` with all environment defaults,
+  minutely worker/heartbeat operations, status/retry/reconcile/prune/live-eval
+  commands, canonical global pause/resume writes, merge-preserving independent
+  rollback pins, failure/budget/source recovery, retention, board-sweep resume,
+  processor boundaries, and data-preserving rollback order.
+- Reconciled member, curator, operator, design, Phase 4 history/ledger, Imladris,
+  and ADR documentation. This entry does **not** authorize default-on; both
+  production feature defaults remain `false` until the final graduation change.
+
 ## [Unreleased] - Phase 5 Gate A defaults on
 
 Accepted Phase 5 Gate A and B2 support flags now default on:

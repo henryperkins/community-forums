@@ -50,6 +50,7 @@ harness grows. The current branch also captures:
 - `28-server-draft-conflict` (`server_drafts` cross-device conflict controls; graduated to default-on 2026-07-02, now captured in the standard `evidence` run)
 - `46-profile-media-avatar`, `47-profile-media-moderation` (`profile_media` member avatar/signature flow plus admin moderation controls; graduated to default-on 2026-07-03)
 - `48-custom-emoji-admin`, `49-custom-emoji-thread` (`custom_emoji` admin catalogue, Markdown rendering, and reaction compatibility; graduated to default-on 2026-07-03)
+- `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (pre-flip Thread Intelligence fallback, generated provenance, curator lifecycle, last-good guardrails, and operator recovery evidence)
 
 Focused acceptance specs that do not write numbered screenshots:
 
@@ -67,6 +68,9 @@ npm run evidence       # prepare.sh resets+seeds retroboards_e2e, then runs Play
 npm run evidence:dark  # legacy focused server-draft regression run with dark fixtures enabled
 npm run a11y           # prepare.sh resets+seeds retroboards_e2e, then runs axe checks
 npx playwright test wysiwyg-composer.spec.ts
+npm run prepare-db
+npx playwright test thread-intelligence.spec.ts
+npx playwright test thread-intelligence.spec.ts --grep 'no-JS|axe'
 ```
 
 `prepare.sh` drops and recreates the dedicated `retroboards_e2e` database (never
@@ -75,9 +79,11 @@ community (`seed.php`). Playwright then boots `php -S` against that DB and captu
 the screenshots. Override the database or port with `DB_DATABASE` / `E2E_PORT`.
 For a differently named local DB container/client, keep the normal app DB env and
 set `DB_RESET_CONTAINER`, `DB_ROOT_PASSWORD`, and `DB_MYSQL_CLIENT`.
-The local `php -S` profile uses a deterministic test-only `APP_KEY` when one is
-not supplied; set `APP_KEY` explicitly when you need evidence to match an
-external runtime.
+The local `php -S` profile uses deterministic test-only `APP_KEY` and
+`OPENAI_API_KEY` values when they are not supplied. `seed.php`, fixture CLI
+subprocesses, and the server inherit the same values so provider-latch
+fingerprints remain stable. The Thread Intelligence fixture always injects the
+repository fake provider/moderator and never makes a provider network call.
 
 For the production-like closeout profile, start the compose stack first:
 
@@ -123,3 +129,9 @@ surfaces, member appeals/drafts/account-lifecycle/profile-media surfaces, scoped
 server-draft conflict, slash-combobox, custom-emoji post/reaction widgets, plus
 the WYSIWYG toolbar/reference-picker/source-mode surfaces for serious or
 critical WCAG 2A/2AA axe violations.
+
+The same command then runs the Thread Intelligence `no-JS` and `axe` cases.
+Those cases scope scans to the Living Brief, provenance lists, related cards,
+history/curator forms, deterministic fallback, and admin console. Before the
+admin scan they enter the application's theme safe mode and restore it after
+the scan.

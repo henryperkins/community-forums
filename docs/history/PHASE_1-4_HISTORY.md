@@ -737,7 +737,7 @@ closeout fixes and test runs.
 ### Phase 4 Status
 
 **Status:** engineering closeout complete with explicit deferrals; product-owner accepted as the Phase 5 entry baseline on 2026-06-28
-**Last updated:** 2026-07-01
+**Last updated:** 2026-07-12
 **Branch:** accepted baseline on `main`; current checkout includes later deploy-dark carryover code and closeout evidence
 **Suite:** accepted baseline `./vendor/bin/phpunit` → 456 tests / 1635 assertions, green. Current checkout `composer test` → 866 tests / 4519 assertions, green
 
@@ -746,6 +746,27 @@ closeout fixes and test runs.
 > broad-rollout acceptance. See
 > `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md` and
 > `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
+
+### Thread Intelligence Follow-on (Pre-flip)
+
+ADR 0019 separately authorizes the bounded automatic-publication design that
+the original human-only Phase 4 boundary required. Migration `0077`, the
+public-only evidence/worker/provider pipeline, Living Brief and curator/admin
+surfaces, redacted operations, retention, and rollback controls are implemented,
+but `community_memory` and `automated_context` both remain default `false`.
+This is a pending graduation record, not a rewrite of the 2026-06-28 Phase 4
+acceptance and not a claim that automatic publication is default-on.
+
+The Task 12 live comparison selected `low` reasoning and a `16000` output-token
+ceiling. It completed 46/46 runs with 149/149 supported material claims and zero
+incomplete responses, private-sentinel transmissions, or fabricated decisions.
+Evidence is in
+`docs/evidence/phase4-closeout/thread-intelligence-live-eval.md` and
+`thread-intelligence-live-rubric.json`; operations are in
+`docs/runbooks/thread_intelligence.md`. Browser/mobile/no-JS/a11y,
+security/privacy, concurrency, migration/upgrade, backup/restore, and rehearsed
+runtime rollback remain pre-flip gates. The defaults may change only in the
+separate final graduation change followed by two identical complete suites.
 
 ### Accepted Gate A Scope
 
@@ -826,6 +847,11 @@ runtime source of truth.
 - Standalone index: `docs/evidence/phase4-gate-a.md`.
 - Deferral ADR: `docs/adr/0003-phase-4-closeout-deferrals.md`.
 - Carryover ledger: `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
+- Thread Intelligence pre-flip live evaluation:
+  `docs/evidence/phase4-closeout/thread-intelligence-live-eval.md` and
+  `thread-intelligence-live-rubric.json` (`low`/`16000`, 46/46 runs, 149/149
+  supported, zero incomplete/private-sentinel/fabricated-decision outcomes).
+- Thread Intelligence operations: `docs/runbooks/thread_intelligence.md`.
 - Current carryover stopping point: `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
 - Full suite: `composer test` → 984 tests / 5213 assertions.
 - Current Phase 4 focused spine: `AppPhase4GateATest`, `AppPhase4CarryoverFoundationTest`, `AppAdminBadgeRulesTest`, `AppExpandedFilesTest`, `AppLinkPreviewTest`, `AppPollTest`, `AppCustomEmojiGiphyTest`, `AppContentReferenceTest`, `AppAutomatedContextTest`, `RelatedTopicRefreshWorkerTest`, `AppProfileMediaTest`, `AppThreadSplitMergeTest`, `AppBoardFoldersSavedFeedsTest` → 83 tests / 546 assertions.
@@ -853,7 +879,10 @@ runtime source of truth.
 ### Operating Notes
 
 - `php bin/console repair:reputation`, `repair:reputation-ledger`, and `reputation:reconcile` now rebuild `reputation_events` from canonical reactions/accepted answers, reverse stale events, and reconcile `users.reputation`.
-- Phase 4 Gate A feature flags still default `false`: `group_dms`, `community_memory`.
+- Phase 4 Gate A feature flags still default `false`: `group_dms`,
+  `community_memory`; the follow-on `automated_context` flag also remains
+  default `false`. Thread Intelligence requires the latter two together and is
+  still pre-flip.
 - `topic_workflow` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppFeatureFlagTest::test_topic_workflow_is_available_by_default_and_can_be_disabled`, browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, `docs/runbooks/topic_workflow.md`). Reversible via the `features` override.
 - `tags`, `expanded_feeds`, and `reputation_ledger` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`, `AppLeaderboardTest`, `docs/runbooks/phase4-tags-feeds-reputation.md`, and `docs/design-system/imladris/ACTIVATED_FEATURES.md`). Reversible via the `features` override.
 - `board_folders`, `bookmark_folders`, and `saved_feeds` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, and `docs/design-system/imladris/ACTIVATED_FEATURES.md`). Reversible via the `features` override.

@@ -8,9 +8,10 @@
 #   3. back it up                            (mariadb-dump → .sql)
 #   4. restore into a fresh DB               (retroboards_backup_dst)
 #   5. snapshot the restore + diff vs source (must be identical)
-#   6. assert the restored schema is complete (`migrate` is a no-op)
-#   7. reconcile counters/reputation         (`repair`, runbook step 4)
-#   8. boot the app on the restored DB        (home page serves seeded content)
+#   6. assert restored Thread Intelligence lifecycle rows are populated
+#   7. assert the restored schema is complete (`migrate` is a no-op)
+#   8. reconcile counters/reputation         (`repair`, runbook step 4)
+#   9. boot the app on the restored DB        (home page serves seeded content)
 #
 # Uses the local rb-mariadb dev container by default (no host MySQL client needed)
 # and the dedicated retroboards_backup_{src,dst} databases — never dev/test/prod
@@ -34,10 +35,38 @@ DB_HOST="${DB_HOST:-127.0.0.1}"
 DB_PORT="${DB_PORT:-3306}"
 MYSQL_CLIENT="${DB_MYSQL_CLIENT:-mariadb}"
 MYSQLDUMP_CLIENT="${DB_MYSQLDUMP_CLIENT:-mariadb-dump}"
+if [ -n "${DOCKER_BINARY:-}" ]; then
+  DOCKER_BIN="$DOCKER_BINARY"
+elif command -v docker.exe >/dev/null 2>&1; then
+  DOCKER_BIN="docker.exe"
+else
+  DOCKER_BIN="docker"
+fi
 SRC="${DB_BACKUP_SRC:-retroboards_backup_src}"
 DST="${DB_BACKUP_DST:-retroboards_backup_dst}"
 PORT="${BACKUP_REHEARSAL_PORT:-8021}"
 DUMP="$(mktemp -d)/retroboards-backup.sql"
+if [ -n "${PHP_BINARY:-}" ]; then
+  PHP_BIN="$PHP_BINARY"
+elif command -v php.exe >/dev/null 2>&1; then
+  PHP_BIN="php.exe"
+else
+  PHP_BIN="php"
+fi
+if [[ "$PHP_BIN" == *.exe ]] && command -v curl.exe >/dev/null 2>&1; then
+  CURL_BIN="curl.exe"
+  CURL_NULL="NUL"
+else
+  CURL_BIN="curl"
+  CURL_NULL="/dev/null"
+fi
+export APP_KEY="${APP_KEY:-0000000000000000000000000000000000000000000000000000000000000000}"
+export OPENAI_API_KEY="${OPENAI_API_KEY:-backup-rehearsal-dummy-credential}"
+if [[ "$PHP_BIN" == *.exe ]]; then
+  export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR:-$(wslpath -w "$PWD/storage/cache")}"
+  export OPENSSL_CONF="${OPENSSL_CONF:-C:\Program Files\Git\usr\ssl\openssl.cnf}"
+  export WSLENV="${WSLENV:+$WSLENV:}PHP_INI_SCAN_DIR/w:OPENSSL_CONF/w:DB_DATABASE/w:APP_KEY/w:OPENAI_API_KEY/w"
+fi
 
 # rootpw is the fixed local rb-mariadb dev-container password (see project README);
 # this script only touches throwaway rehearsal databases — never a production credential.
@@ -45,8 +74,8 @@ if [ "$CONTAINER" = "host" ]; then
   myq()   { "$MYSQL_CLIENT"     "-h$DB_HOST" "-P$DB_PORT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
   mydump(){ "$MYSQLDUMP_CLIENT" "-h$DB_HOST" "-P$DB_PORT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
 else
-  myq()   { docker exec -i "$CONTAINER" "$MYSQL_CLIENT"     "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
-  mydump(){ docker exec    "$CONTAINER" "$MYSQLDUMP_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+  myq()   { "$DOCKER_BIN" exec -i "$CONTAINER" "$MYSQL_CLIENT"     "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
+  mydump(){ "$DOCKER_BIN" exec    "$CONTAINER" "$MYSQLDUMP_CLIENT" "-u$ROOT_USER" "-p$ROOT_PASSWORD" "$@" 2>/dev/null; }
 fi
 
 reset_db() {
@@ -91,12 +120,30 @@ snapshot() {  # snapshot <db> <outfile>  →  "table count checksum" per base ta
   for t in $tables; do printf '%s %s %s\n' "$t" "${CNT[$t]}" "${CKS[$t]}"; done | sort > "$out"
 }
 
+assert_nonzero() {
+  local label="$1" count="$2"
+  if [[ ! "$count" =~ ^[0-9]+$ ]] || [ "$count" -le 0 ]; then
+    echo "   FAIL: restored $label must be nonzero (got '${count:-empty}')." >&2
+    exit 1
+  fi
+  echo "   PASS: $label = $count."
+}
+
+assert_same() {
+  local label="$1" source_count="$2" restored_count="$3"
+  if [ "$source_count" -ne "$restored_count" ]; then
+    echo "   FAIL: $label source/restored counts differ ($source_count != $restored_count)." >&2
+    exit 1
+  fi
+  echo "   PASS: $label source/restored counts match ($source_count)."
+}
+
 echo "== Backup → restore rehearsal (operations.md §7) =="
 
 echo "-- 1. Build + seed source DB ($SRC)"
 reset_db "$SRC"
-DB_DATABASE="$SRC" php bin/console migrate >/dev/null
-DB_DATABASE="$SRC" php tests/browser/seed.php >/dev/null
+DB_DATABASE="$SRC" "$PHP_BIN" bin/console migrate >/dev/null
+DB_DATABASE="$SRC" "$PHP_BIN" tests/browser/seed.php >/dev/null
 echo "   seeded."
 
 echo "-- 2. Snapshot source"
@@ -127,21 +174,56 @@ else
   echo "   FAIL: restored data differs from the source." >&2; exit 1
 fi
 
-echo "-- 6. Restored schema is complete (migrate is a no-op)"
-MIG=$(DB_DATABASE="$DST" php bin/console migrate)
+echo "-- 6. Source/restored Thread Intelligence lifecycle is populated"
+SRC_TI_JOBS=$(myq -N -e "SELECT COUNT(*) FROM \`$SRC\`.thread_intelligence_jobs")
+SRC_TI_GENERATIONS=$(myq -N -e "SELECT COUNT(*) FROM \`$SRC\`.thread_intelligence_generations")
+SRC_TI_AI_SUMMARIES=$(myq -N -e "SELECT COUNT(*) FROM \`$SRC\`.thread_summaries WHERE kind = 'ai'")
+SRC_TI_CITATIONS=$(myq -N -e "SELECT COUNT(*)
+  FROM \`$SRC\`.thread_summary_sources ss
+  JOIN \`$SRC\`.thread_summaries s ON s.id = ss.summary_id
+  WHERE s.kind = 'ai'")
+SRC_TI_AI_OVERLAYS=$(myq -N -e "SELECT COUNT(*) FROM \`$SRC\`.related_threads
+  WHERE ai_generation_id IS NOT NULL AND ai_selected = 1")
+TI_JOBS=$(myq -N -e "SELECT COUNT(*) FROM \`$DST\`.thread_intelligence_jobs")
+TI_GENERATIONS=$(myq -N -e "SELECT COUNT(*) FROM \`$DST\`.thread_intelligence_generations")
+TI_AI_SUMMARIES=$(myq -N -e "SELECT COUNT(*) FROM \`$DST\`.thread_summaries WHERE kind = 'ai'")
+TI_CITATIONS=$(myq -N -e "SELECT COUNT(*)
+  FROM \`$DST\`.thread_summary_sources ss
+  JOIN \`$DST\`.thread_summaries s ON s.id = ss.summary_id
+  WHERE s.kind = 'ai'")
+TI_AI_OVERLAYS=$(myq -N -e "SELECT COUNT(*) FROM \`$DST\`.related_threads
+  WHERE ai_generation_id IS NOT NULL AND ai_selected = 1")
+assert_nonzero "source thread_intelligence_jobs rows" "$SRC_TI_JOBS"
+assert_nonzero "source thread_intelligence_generations rows" "$SRC_TI_GENERATIONS"
+assert_nonzero "source kind='ai' thread_summaries rows" "$SRC_TI_AI_SUMMARIES"
+assert_nonzero "source AI summary citations" "$SRC_TI_CITATIONS"
+assert_nonzero "source selected AI relationship overlays" "$SRC_TI_AI_OVERLAYS"
+assert_nonzero "restored thread_intelligence_jobs rows" "$TI_JOBS"
+assert_nonzero "restored thread_intelligence_generations rows" "$TI_GENERATIONS"
+assert_nonzero "restored kind='ai' thread_summaries rows" "$TI_AI_SUMMARIES"
+assert_nonzero "restored AI summary citations" "$TI_CITATIONS"
+assert_nonzero "restored selected AI relationship overlays" "$TI_AI_OVERLAYS"
+assert_same "thread_intelligence_jobs" "$SRC_TI_JOBS" "$TI_JOBS"
+assert_same "thread_intelligence_generations" "$SRC_TI_GENERATIONS" "$TI_GENERATIONS"
+assert_same "kind='ai' thread_summaries" "$SRC_TI_AI_SUMMARIES" "$TI_AI_SUMMARIES"
+assert_same "AI summary citations" "$SRC_TI_CITATIONS" "$TI_CITATIONS"
+assert_same "selected AI relationship overlays" "$SRC_TI_AI_OVERLAYS" "$TI_AI_OVERLAYS"
+
+echo "-- 7. Restored schema is complete (migrate is a no-op)"
+MIG=$(DB_DATABASE="$DST" "$PHP_BIN" bin/console migrate)
 echo "   $MIG"
 case "$MIG" in *"Nothing to migrate"*) echo "   PASS: no pending migrations.";;
   *) echo "   FAIL: restored schema was incomplete." >&2; exit 1;; esac
 echo "   migrate:status:"
-DB_DATABASE="$DST" php bin/console migrate:status | sed 's/^/   /'
+DB_DATABASE="$DST" "$PHP_BIN" bin/console migrate:status | sed 's/^/   /'
 
-echo "-- 7. Reconcile counters/reputation on the restore (runbook step 4)"
-DB_DATABASE="$DST" php bin/console repair >/dev/null && echo "   PASS: repair ran clean."
+echo "-- 8. Reconcile counters/reputation on the restore (runbook step 4)"
+DB_DATABASE="$DST" "$PHP_BIN" bin/console repair >/dev/null && echo "   PASS: repair ran clean."
 
-echo "-- 8. Boot the app on the restored DB and serve the home page"
+echo "-- 9. Boot the app on the restored DB and serve the home page"
 SRV_LOG="$(mktemp)"
 DB_DATABASE="$DST" SESSION_SECURE=false MAIL_DRIVER=array APP_URL="http://127.0.0.1:$PORT" \
-  php -S 127.0.0.1:"$PORT" -t public public/index.php >"$SRV_LOG" 2>&1 &
+  "$PHP_BIN" -S 127.0.0.1:"$PORT" -t public public/index.php >"$SRV_LOG" 2>&1 &
 SRV=$!; trap 'kill "$SRV" 2>/dev/null || true; rm -f "$SRV_LOG"' EXIT
 sleep 2
 if ! kill -0 "$SRV" 2>/dev/null; then
@@ -149,8 +231,8 @@ if ! kill -0 "$SRV" 2>/dev/null; then
   sed 's/^/   /' "$SRV_LOG" >&2 || true
   exit 1
 fi
-CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/")
-BODY_OK=$(curl -s "http://127.0.0.1:$PORT/" | grep -c 'Announcements' || true)
+CODE=$("$CURL_BIN" -s -o "$CURL_NULL" -w '%{http_code}' "http://127.0.0.1:$PORT/")
+BODY_OK=$("$CURL_BIN" -s "http://127.0.0.1:$PORT/" | grep -c 'Announcements' || true)
 if [ "$CODE" = "200" ] && [ "$BODY_OK" -ge 1 ]; then
   echo "   PASS: home returned 200 and rendered restored content."
 else

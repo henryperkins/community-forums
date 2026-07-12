@@ -25,12 +25,14 @@ const rateLimitPath = process.env.RATELIMIT_PATH ?? path.join(repoRoot, 'storage
 const packagesPath = process.env.PACKAGES_STORAGE_PATH ?? path.join(repoRoot, 'storage', 'packages-e2e');
 const skipWebServer = process.env.E2E_SKIP_WEBSERVER === '1';
 const appKey = process.env.APP_KEY?.trim() || '0000000000000000000000000000000000000000000000000000000000000000';
+const openAiApiKey = process.env.OPENAI_API_KEY?.trim() || 'browser-thread-intelligence-dummy-credential';
 
 process.env.APP_KEY = appKey;
+process.env.OPENAI_API_KEY = openAiApiKey;
 
-function shellQuote(value: string): string {
-  return "'" + value.replace(/'/g, "'\\''") + "'";
-}
+const inheritedEnv = Object.fromEntries(
+  Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
+);
 
 export default defineConfig({
   testDir: __dirname,
@@ -48,8 +50,21 @@ export default defineConfig({
   // The app uses HTTP locally, so the session cookie must not require Secure; mail
   // is captured in-memory. The DB is already migrated + seeded by prepare.sh.
   webServer: skipWebServer ? undefined : {
-    command: `APP_KEY=${shellQuote(appKey)} DB_DATABASE=${shellQuote(database)} RATELIMIT_PATH=${shellQuote(rateLimitPath)} PACKAGES_STORAGE_PATH=${shellQuote(packagesPath)} SESSION_SECURE=false MAIL_DRIVER=array APP_URL=${shellQuote(baseURL)} WEBHOOK_ALLOW_HTTP=true WEBHOOK_ALLOWED_PRIVATE_CIDRS=127.0.0.1/32 php -S ${shellQuote(`${serverHost}:${serverPort}`)} -t public public/index.php`,
+    command: `php -S ${serverHost}:${serverPort} -t public public/index.php`,
     cwd: repoRoot,
+    env: {
+      ...inheritedEnv,
+      APP_KEY: appKey,
+      OPENAI_API_KEY: openAiApiKey,
+      DB_DATABASE: database,
+      RATELIMIT_PATH: rateLimitPath,
+      PACKAGES_STORAGE_PATH: packagesPath,
+      SESSION_SECURE: 'false',
+      MAIL_DRIVER: 'array',
+      APP_URL: baseURL,
+      WEBHOOK_ALLOW_HTTP: 'true',
+      WEBHOOK_ALLOWED_PRIVATE_CIDRS: '127.0.0.1/32',
+    },
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,

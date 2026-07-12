@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Core\Migrator;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Support\TestCase;
 
 /**
@@ -14,6 +15,7 @@ use Tests\Support\TestCase;
  * changes, the related-topic AI overlay, the bounded board-sweep cursor, and
  * ledger idempotency, all against the freshly migrated test database.
  */
+#[Group('nonparallel')]
 final class AppThreadIntelligenceMigrationTest extends TestCase
 {
     private const MIGRATION = __DIR__ . '/../../../database/migrations/0077_thread_intelligence.php';
@@ -101,6 +103,15 @@ final class AppThreadIntelligenceMigrationTest extends TestCase
     private function quotedIdentifier(string $identifier): string
     {
         return '`' . str_replace('`', '``', $identifier) . '`';
+    }
+
+    private function tableExists(string $table): bool
+    {
+        return (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+            [$table],
+        ) === 1;
     }
 
     /**
@@ -450,5 +461,65 @@ final class AppThreadIntelligenceMigrationTest extends TestCase
                 }
             }
         }
+    }
+
+    public function test_0077_down_and_up_rehearsal_on_fixture_free_schema(): void
+    {
+        self::assertSame(
+            'retroboards_thread_intelligence_clean',
+            (string) $this->db->fetchValue('SELECT DATABASE()'),
+            'direct down/up rehearsal must run only on its dedicated throwaway database',
+        );
+        foreach (['thread_summaries', 'related_threads', 'threads', 'boards'] as $table) {
+            self::assertSame(
+                0,
+                (int) $this->db->fetchValue('SELECT COUNT(*) FROM ' . $this->quotedIdentifier($table)),
+                "0077 down() is fixture-free only; $table is populated",
+            );
+        }
+
+        $migration = require self::MIGRATION;
+        $downCompleted = false;
+        try {
+            $migration->down($this->pdo);
+            $downCompleted = true;
+
+            self::assertFalse($this->tableExists('thread_intelligence_jobs'));
+            self::assertFalse($this->tableExists('thread_intelligence_generations'));
+
+            $kind = $this->column('thread_summaries', 'kind');
+            self::assertNotNull($kind);
+            self::assertStringNotContainsString("'ai'", $kind['column_type']);
+            self::assertSame('NO', $this->column('thread_summaries', 'author_id')['is_nullable']);
+            self::assertSame('CASCADE', $this->foreignKey('thread_summaries', 'author_id')['delete_rule']);
+            self::assertNull($this->column('thread_summaries', 'parent_summary_id'));
+
+            foreach (['ai_generation_id', 'ai_reason', 'ai_selected', 'ai_selected_at'] as $column) {
+                self::assertNull($this->column('related_threads', $column), "old related_threads shape still has $column");
+            }
+            self::assertNull($this->column('boards', 'thread_intelligence_sweep_after_id'));
+            self::assertSame([], $this->indexColumns('threads', 'idx_threads_board_id'));
+        } finally {
+            if ($downCompleted) {
+                try {
+                    $migration->up($this->pdo);
+                } catch (\Throwable $failure) {
+                    $this->restoreAfterFailedDirectUp();
+                    throw $failure;
+                }
+            } else {
+                $this->restoreAfterFailedDirectUp();
+            }
+        }
+
+        self::assertTrue($this->tableExists('thread_intelligence_jobs'));
+        self::assertTrue($this->tableExists('thread_intelligence_generations'));
+        self::assertStringContainsString("'ai'", $this->column('thread_summaries', 'kind')['column_type']);
+        self::assertSame('YES', $this->column('thread_summaries', 'author_id')['is_nullable']);
+        self::assertSame('SET NULL', $this->foreignKey('thread_summaries', 'author_id')['delete_rule']);
+        self::assertNotNull($this->column('thread_summaries', 'parent_summary_id'));
+        self::assertNotNull($this->column('related_threads', 'ai_generation_id'));
+        self::assertNotNull($this->column('boards', 'thread_intelligence_sweep_after_id'));
+        self::assertSame(['board_id', 'id'], $this->indexColumns('threads', 'idx_threads_board_id'));
     }
 }

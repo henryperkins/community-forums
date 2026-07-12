@@ -70,10 +70,18 @@ $evidenceFeatures = [
     'passkeys' => true, // Inc 7 (P5-11), GA default-on (2026-07-09; ADR 0018): pinned so the /login affordance in every spec's captures is an explicit posture, not the DEFAULTS fallback; passkeys.spec.ts still sets the flag per test (incl. the dark shot)
     'provider_registry' => true, // Inc 8 (P5-12): identity-provider console + generic-OIDC sign-in-button evidence (service_secrets above is its §E prerequisite)
     'invitations' => true, // Inc 9 (P5-13): invitation console + invite-mode registration evidence (invitations.spec.ts restores registration_mode=open when done)
+    'community_memory' => true, // ADR 0019 graduation evidence: production default remains dark until Task 14
+    'automated_context' => true, // ADR 0019 graduation evidence: explicit browser-only worker enablement
     'package_registry' => true, // Inc 2 (P5-01): staff catalogue browse evidence (read-only)
     'package_themes' => true, // Inc 4 (P5-03): package theme preview/activate/safe-mode/rollback evidence
     'wysiwyg_composer' => false, // GA default-on (2026-07-02) but pinned OFF for the evidence baseline: gate-a + server-drafts journeys drive textarea.composer-input directly (fill/drop/toBeVisible), which a mounted Milkdown hides; the rich surface's browser evidence lives in wysiwyg-composer.spec.ts + the a11y.spec.ts scans, which toggle the flag per test
 ];
+$seedThreadIntelligence = static function (): void {
+    if (!defined('RB_BROWSER_THREAD_INTELLIGENCE_EMBEDDED')) {
+        define('RB_BROWSER_THREAD_INTELLIGENCE_EMBEDDED', true);
+    }
+    require __DIR__ . '/thread-intelligence-fixture.php';
+};
 if ($includeDarkSurfaceFixtures) {
     $evidenceFeatures['appeals'] = true;
     $evidenceFeatures['server_extensions'] = true;
@@ -475,6 +483,7 @@ if ($users->adminCount() > 0) {
     $registryReady = $ensureRegistryFixtures();
     $ensureAppealFixture();
     $newSurfaceFixturesReady = $includeDarkSurfaceFixtures ? $ensureNewSurfaceFixtures() : false;
+    $seedThreadIntelligence();
     fwrite(STDOUT, $pollReady
         ? ($registryReady
             ? ($newSurfaceFixturesReady
@@ -602,5 +611,7 @@ $ensureAppealFixture();
 if ($includeDarkSurfaceFixtures) {
     $ensureNewSurfaceFixtures();
 }
+
+$seedThreadIntelligence();
 
 fwrite(STDOUT, "Seeded RetroBoards e2e content.\n");

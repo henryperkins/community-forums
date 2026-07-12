@@ -1,6 +1,6 @@
 # RetroBoards — User Account, Preferences & Profile Design
 
-**Status:** v0.10 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-06-26
+**Status:** v0.11 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-12
 **Companion to [DESIGN.md](DESIGN.md) and [ADMIN.md](ADMIN.md).** DESIGN.md is the source of truth; ADMIN.md owns the operator surface; **this doc owns the member's own surface** — how a person signs in, configures their account, tailors their experience, and presents themselves. Same conventions (P0/P1/P2/P3; `Done (mockup)` / `Planned` / `Live`; InnoDB / `utf8mb4`).
 
 ## Scope
@@ -257,6 +257,38 @@ Plus: **email digest cadence** (off / daily), **quiet hours**, **per-thread mute
 
 Preferences live in `user_preferences` (§7) with defaults inherited from site settings. Client-only prefs (theme, density, font) apply immediately in the browser; server-side prefs (pagination, sorts, privacy, DMs, blocks) are enforced server-side so they hold across devices and can't be bypassed.
 
+### 4.9 Thread Intelligence disclosure and member workflow
+
+Thread Intelligence is implemented pre-flip behind the still-default-off
+`community_memory` and `automated_context` flags. When an operator later enables
+the approved processor path, eligible public threads may show a **Living Brief**
+above the posts:
+
+- The brief says whether it is AI-generated or curator-edited and shows its
+  version, update time, current readable source posts, and related topics.
+- Source and related links are rechecked against the viewer's current read
+  access. A deleted, pending, private, or otherwise inaccessible cited source
+  suppresses unsafe AI content rather than leaking it.
+- Public post evidence may be sent to the configured processor for generation
+  and output moderation. Private/hidden boards, DMs, reports, moderation notes,
+  account/session data, email addresses, IP addresses, and credentials are not
+  processor input. Anonymous public authors remain pseudonymous.
+- The initial Responses request uses `store: false`. RetroBoards stores the
+  validated brief and bounded provenance/usage metadata, not raw prompts, raw
+  responses, duplicate post bodies, or unvalidated generated text. Published
+  provenance follows the thread; unpublished terminal attempts are pruned after
+  90 days, except unresolved review evidence is retained through resolution and
+  then for 90 days.
+- Missing configuration, pause, budget exhaustion, generation failure, or
+  moderation leaves the last safe brief in place. If no manual or AI brief has
+  ever been published, no empty Living Brief appears.
+
+There is no member preference that sends private content to the provider and no
+per-member generation. The member-specific "Since you last read" context remains
+deterministic and local. Curators, not ordinary members, own edit/retire/restore/
+refresh and explicit automation-resume controls (COMMUNITY.md §1.1; ADMIN.md
+§3.10).
+
 ## 5. User Profiles
 
 ### 5.1 Profile page anatomy (`/u/{username}`)
@@ -461,6 +493,7 @@ Mapped onto DESIGN.md §13 (whose strategic "Phase 3" and "Later (P2)" buckets s
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.11 | 2026-07-12 | Added §4.9 with the pre-flip Living Brief reading, processor disclosure, access-gated provenance, retention, and last-good behavior. Both Thread Intelligence feature defaults remain `false`. |
 | v0.10 | 2026-06-26 | Wording/citation pass: dropped digest **"weekly"** cadence (§4.6 — daily-only per SCHEMA `subscriptions.frequency`); dropped **"optional"** from the Phase-1 `sessions` table (§3.3); fixed SCHEMA citations **§7.7 → §7 #7** (§7.3, §9 row 9); settled §4.5 default post format to **Markdown-canonical** (DECISIONS §3 #2, dropped the BBCode either/or); §5.5 title/rank now **reputation/post-count thresholds, admin-overridable** (COMMUNITY §8, DECISIONS §8). |
 | v0.9 | 2026-06-26 | **Status-truth pass (nothing is built yet):** reworded §8 Phase 1 from "auth is live / now live" to planned, and "monogram shipped Phase 1" → "monogram in Phase 1"; reworded the v0.5 entry below from "Shipped" to "Specified (design only — not built)". No scope changes. |
 | v0.8 | 2026-06-26 | Consistency pass: mapped §8's "Later (P2)" account items (passkeys, more providers, verified links, richer custom fields) to **delivery Phase 5** and noted DESIGN §13 now subdivides into Phases 3–7 (they previously had no home phase past Phase 3); added **P3** to the header conventions legend; bumped the stale header (was v0.6, behind its own v0.7 row). |
