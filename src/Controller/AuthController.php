@@ -34,7 +34,7 @@ final class AuthController extends Controller
     public function showLogin(Request $request, array $params): Response
     {
         if ($this->currentUser() !== null) {
-            return $this->redirect('/');
+            return $this->redirect($this->authenticatedHome());
         }
         return $this->view('auth/login', [
             'next' => $this->safeNext((string) $request->query('next', '')),
@@ -47,7 +47,7 @@ final class AuthController extends Controller
     public function login(Request $request, array $params): Response
     {
         if ($this->currentUser() !== null) {
-            return $this->redirect('/');
+            return $this->redirect($this->authenticatedHome());
         }
 
         $limiter = $this->container->get(RateLimitService::class);
@@ -97,7 +97,7 @@ final class AuthController extends Controller
     public function completeMfa(Request $request, array $params): Response
     {
         if ($this->currentUser() !== null) {
-            return $this->redirect('/');
+            return $this->redirect($this->authenticatedHome());
         }
 
         $token = (string) $request->post('mfa_token', '');
@@ -180,14 +180,14 @@ final class AuthController extends Controller
 
         $limiter->clearSubject('passkey_login', $request, $subject);
         $this->session()->login($result['user']);
-        return Response::json(['ok' => true, 'redirect' => $this->safeNext((string) ($request->post('next') ?? '/'))]);
+        return Response::json(['ok' => true, 'redirect' => $this->safeNext((string) ($request->post('next') ?? ''))]);
     }
 
     /** @param array<string,string> $params */
     public function showRegister(Request $request, array $params): Response
     {
         if ($this->currentUser() !== null) {
-            return $this->redirect('/');
+            return $this->redirect($this->authenticatedHome());
         }
         return $this->view('auth/register', ['errors' => [], 'old' => [], 'registration_closed' => $this->registrationClosed()]);
     }
@@ -202,7 +202,7 @@ final class AuthController extends Controller
     public function register(Request $request, array $params): Response
     {
         if ($this->currentUser() !== null) {
-            return $this->redirect('/');
+            return $this->redirect($this->authenticatedHome());
         }
 
         // Registration mode (P3-05): an admin may close public sign-ups entirely.
@@ -232,7 +232,7 @@ final class AuthController extends Controller
 
         $this->session()->login($user);
         $this->container->get(EmailVerificationService::class)->issue($user->id(), $user->email());
-        return $this->redirectWithFlash('/', 'Welcome to the community, ' . $user->displayName() . '! Please check your email to verify your address.');
+        return $this->redirectWithFlash($this->authenticatedHome(), 'Welcome to the community, ' . $user->displayName() . '! Please check your email to verify your address.');
     }
 
     /** @param array<string,string> $params */
@@ -369,7 +369,7 @@ final class AuthController extends Controller
     private function safeNext(string $next): string
     {
         if ($next === '' || $next[0] !== '/' || preg_match('~^[\\\\/]{2}~', $next) === 1) {
-            return '/';
+            return $this->authenticatedHome();
         }
         return $next;
     }
