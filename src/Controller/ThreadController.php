@@ -28,6 +28,7 @@ use App\Service\ModerationService;
 use App\Service\PollService;
 use App\Service\ReactionService;
 use App\Service\SinceLastReadContextService;
+use App\Service\TitleService;
 use App\Service\ThreadWorkflowService;
 use App\Service\ThreadIntelligence\ThreadIntelligenceViewService;
 use App\Support\Markdown;
@@ -89,6 +90,16 @@ final class ThreadController extends Controller
             : min($pages, max(1, $request->int('page', 1)));
 
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage);
+        $titleService = $this->container->get(TitleService::class);
+        foreach ($posts as &$post) {
+            $post['author_title_label'] = (int) ($post['is_anonymous'] ?? 0) === 1
+                ? null
+                : $titleService->resolve(
+                    isset($post['author_title']) ? (string) $post['author_title'] : null,
+                    (int) ($post['author_reputation'] ?? 0),
+                );
+        }
+        unset($post);
 
         // Topic-header participant stack (§5.1): the distinct visible authors, capped
         // to a handful of monograms with a "+N" overflow. Anonymous posters are

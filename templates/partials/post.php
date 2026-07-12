@@ -47,6 +47,9 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                 <?php else: ?>
                     <span class="post-author"><?= $e($a['label']) ?></span>
                 <?php endif; ?>
+                <?php if (!$isAnon && ($p['author_title_label'] ?? null) !== null): ?>
+                    <span class="post-title-chip" data-author-title="<?= $e($p['author_title_label']) ?>"><?= $e($p['author_title_label']) ?></span>
+                <?php endif; ?>
                 <?php if ((int) $p['is_op'] === 1): ?><span class="badge">OP</span><?php endif; ?>
                 <?php if (!empty($p['is_wiki'])): ?><span class="badge">Wiki</span><?php endif; ?>
                 <?php if ($a['is_staff']): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
