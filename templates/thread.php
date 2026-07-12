@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', $thread['title']);
+$this->section('route', 'thread');
 // SEO (P3-10): canonical URL + description for public threads; threads in a
 // private/hidden board are excluded from indexing (defence in depth — the read
 // gate already blocks crawlers).
@@ -12,7 +13,8 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
     $this->section('robots', 'noindex, nofollow');
 }
 ?>
-<article class="thread">
+<article class="thread thread-conversation">
+    <div class="thread-scroll">
     <header class="thread-head">
         <p class="breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Home</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
         <h1>
@@ -477,16 +479,19 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         'pages' => $pages,
         'base_url' => '/t/' . (int) $thread['id'] . '-' . $thread['slug'] . '?',
     ]) ?>
+    </div>
 
-    <?php if ($locked): ?>
-        <div class="joinbar">This thread is locked and is not accepting replies.</div>
-    <?php elseif ($can_reply): ?>
-        <?= $this->partial('partials/composer', ['thread' => $thread, 'reply_errors' => $reply_errors, 'reply_old' => $reply_old]) ?>
-    <?php elseif ($current_user === null): ?>
-        <div class="joinbar"><span>You're browsing as a guest — <em>log in to add your counsel.</em></span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
-    <?php elseif ($current_user !== null && !$current_user->isActive()): ?>
-        <div class="joinbar">Your account cannot post right now.</div>
-    <?php elseif ($current_user !== null): ?>
-        <div class="joinbar">You don't have permission to reply in this board.</div>
-    <?php endif; ?>
+    <div class="thread-dock">
+        <?php if ($locked): ?>
+            <div class="joinbar">This thread is locked and is not accepting replies.</div>
+        <?php elseif ($can_reply): ?>
+            <?= $this->partial('partials/composer', ['thread' => $thread, 'reply_errors' => $reply_errors, 'reply_old' => $reply_old]) ?>
+        <?php elseif ($current_user === null): ?>
+            <div class="joinbar"><span>You're browsing as a guest — <em>log in to add your counsel.</em></span><a class="btn" href="/login?next=/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">Log in</a></div>
+        <?php elseif ($current_user !== null && !$current_user->isActive()): ?>
+            <div class="joinbar">Your account cannot post right now.</div>
+        <?php elseif ($current_user !== null): ?>
+            <div class="joinbar">You don't have permission to reply in this board.</div>
+        <?php endif; ?>
+    </div>
 </article>

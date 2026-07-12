@@ -1478,6 +1478,73 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     background: var(--surface-raised); border: 1px solid var(--border-strong);
     border-radius: var(--radius-lg); box-shadow: var(--shadow-inset); padding: 14px 16px; margin-top: 18px;
 }
+.thread-conversation { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+body[data-route="thread"] .thread-conversation {
+    height: calc(100vh - var(--topbar-h) - 48px);
+    height: calc(100dvh - var(--topbar-h) - 48px);
+}
+.thread-scroll {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 0 8px 12px 0; scrollbar-gutter: stable;
+}
+.thread-dock {
+    position: relative; z-index: 2; flex: 0 0 auto; min-width: 0;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-hair);
+    background: var(--surface-raised);
+}
+.thread-dock #reply.composer, .thread-dock .joinbar { margin: 0; }
+.inbox-reading.is-open { overflow: hidden; }
+.inbox-reading.is-open [data-inbox-reading-content],
+.inbox-reading.is-open .thread-conversation { height: 100%; min-height: 0; }
+.reply-composer .composer-toolbar {
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
+    padding-bottom: 4px; scrollbar-width: thin;
+}
+.reply-composer .composer-toolbar > * { flex: 0 0 auto; }
+.reply-composer .checkline {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start;
+    column-gap: 8px; line-height: 1.4;
+}
+.reply-composer .checkline input { margin-top: 2px; }
+.reply-composer .checkline-copy { min-width: 0; }
+@media (max-width: 860px) {
+    body[data-route="thread"] .main { padding-bottom: 16px; }
+    body[data-route="thread"] .thread-conversation {
+        height: calc(100vh - var(--topbar-h) - 32px);
+        height: calc(100dvh - var(--topbar-h) - 32px);
+    }
+    .thread-scroll { padding-right: 3px; }
+    .thread-dock { margin-top: 8px; padding-top: 8px; }
+    .inbox-reading.is-open {
+        height: calc(100vh - var(--topbar-h));
+        height: calc(100dvh - var(--topbar-h));
+        padding: 10px 14px 14px;
+    }
+    .inbox-reading.is-open [data-inbox-reading-content] { height: calc(100% - 48px); }
+    .has-js .reply-composer:not(.is-expanded) {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end; gap: 8px; padding: 8px;
+    }
+    .has-js .reply-composer:not(.is-expanded) .composer-label,
+    .has-js .reply-composer:not(.is-expanded) .field-error,
+    .has-js .reply-composer:not(.is-expanded) .composer-toolbar,
+    .has-js .reply-composer:not(.is-expanded) .composer-count,
+    .has-js .reply-composer:not(.is-expanded) .composer-preview,
+    .has-js .reply-composer:not(.is-expanded) .composer-upload-tray,
+    .has-js .reply-composer:not(.is-expanded) .wysiwyg-source-toggle,
+    .has-js .reply-composer:not(.is-expanded) .checkline { display: none; }
+    .has-js .reply-composer:not(.is-expanded) .composer-input,
+    .has-js .reply-composer:not(.is-expanded) .wysiwyg-composer {
+        grid-column: 1; grid-row: 1; width: 100%; height: 44px; min-height: 44px;
+        margin: 0; resize: none; overflow: hidden;
+    }
+    .has-js .reply-composer:not(.is-expanded) .wysiwyg-composer .ProseMirror {
+        height: 44px; min-height: 44px; max-height: 44px; padding: 10px 12px; overflow: hidden;
+    }
+    .has-js .reply-composer:not(.is-expanded) > .btn {
+        grid-column: 2; grid-row: 1; min-width: 72px; margin: 0;
+    }
+}
 .thread-byline { font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; color: var(--text-muted); margin: 4px 0 0; }
 .star-btn {
     font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em;

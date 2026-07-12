@@ -297,6 +297,18 @@
         }
     }
 
+    // The reply dock rests compactly on small screens, then stays expanded once
+    // a member starts composing. Delegation also covers topics fetched into the
+    // Community Inbox after this script has loaded.
+    document.addEventListener('focusin', function (e) {
+        var form = e.target.closest ? e.target.closest('.reply-composer') : null;
+        if (form) { form.classList.add('is-expanded'); }
+    });
+    document.addEventListener('input', function (e) {
+        var form = e.target.closest ? e.target.closest('.reply-composer') : null;
+        if (form) { form.classList.add('is-expanded'); }
+    });
+
     // Mobile navigation drawer (Phase 4): the sidebar rail slides in over a scrim
     // on small screens. Without JS the rail simply stacks above the content (the
     // server-rendered nav stays reachable); this only adds the off-canvas toggle.
