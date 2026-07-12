@@ -132,7 +132,7 @@ final class AppEmailVerificationTest extends TestCase
             'password' => 'password123',
             'password_confirm' => 'password123',
         ]);
-        $this->assertRedirect($resp, '/');
+        $this->assertRedirect($resp, '/inbox');
 
         $uid = (int) $this->db->fetchValue('SELECT id FROM users WHERE email = ?', ['newbie@example.test']);
         self::assertSame(1, (int) $this->db->fetchValue(

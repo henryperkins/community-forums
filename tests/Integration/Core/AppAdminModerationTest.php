@@ -163,7 +163,7 @@ final class AppAdminModerationTest extends TestCase
             'password' => 'password123',
             'password_confirm' => 'password123',
         ]);
-        $this->assertRedirect($ok, '/');
+        $this->assertRedirect($ok, '/inbox');
         self::assertNotNull($this->users()->findByUsername('fresh'));
     }
 
