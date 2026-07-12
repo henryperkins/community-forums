@@ -82,7 +82,7 @@ test('mobile conversation keeps the reply dock visible and expands it on focus',
 
   const dockBox = await dock.boundingBox();
   expect(dockBox).not.toBeNull();
-  expect(dockBox!.bottom).toBeLessThanOrEqual(844);
+  expect(dockBox!.y + dockBox!.height).toBeLessThanOrEqual(844);
   await expect(composer).not.toHaveClass(/\bis-expanded\b/);
 
   await composer.locator('textarea[name="body"]').focus();
