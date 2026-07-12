@@ -50,7 +50,7 @@ harness grows. The current branch also captures:
 - `28-server-draft-conflict` (`server_drafts` cross-device conflict controls; graduated to default-on 2026-07-02, now captured in the standard `evidence` run)
 - `46-profile-media-avatar`, `47-profile-media-moderation` (`profile_media` member avatar/signature flow plus admin moderation controls; graduated to default-on 2026-07-03)
 - `48-custom-emoji-admin`, `49-custom-emoji-thread` (`custom_emoji` admin catalogue, Markdown rendering, and reaction compatibility; graduated to default-on 2026-07-03)
-- `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (pre-flip Thread Intelligence fallback, generated provenance, curator lifecycle, last-good guardrails, and operator recovery evidence)
+- `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (Thread Intelligence fallback, generated provenance, curator lifecycle, last-good guardrails, and operator recovery evidence; captured before and reverified after the default-on flip)
 
 Focused acceptance specs that do not write numbered screenshots:
 

@@ -29,7 +29,8 @@ final class ThreadIntelligenceEvidenceMapTest extends TestCase
             '/sk-(?:proj-)?[a-z0-9_-]{20,}|"(?:raw_)?prompt"\s*:|"raw_response"\s*:|"post_body"\s*:|"generated_text"\s*:/i',
             $index,
         );
-        if (str_contains($index, 'default_on: complete')) {
+        // Match the marker line itself, not the footer prose that names it.
+        if (preg_match('/^default_on: complete\b/m', $index) === 1) {
             self::assertStringContainsString('- [x] post_flip_double_suite:', $index);
         }
     }

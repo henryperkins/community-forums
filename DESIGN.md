@@ -392,10 +392,10 @@ These deepen the thesis without changing the v1 core; most are P1/P2 and additiv
 ### 6.19 Thread Intelligence — sourced Living Briefs
 
 Thread Intelligence is the bounded automatic-publication extension to the Phase
-4 human-controlled community-memory foundation (ADR 0019). It is implemented
-pre-flip, but `community_memory` and `automated_context` both still default
-`false` pending the complete graduation evidence and a separate default-on
-change.
+4 human-controlled community-memory foundation (ADR 0019). `community_memory`
+and `automated_context` graduated together to default-on on 2026-07-12 after
+the complete evidence package passed. Each remains independently reversible
+through an explicit `features.<flag>=false` override.
 
 - **Member workflow.** An eligible public thread may show a Living Brief above
   the posts. The brief identifies AI or curator authorship, update time, version,
@@ -965,7 +965,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
-| v0.13 | 2026-07-12 | Added §6.19 for the implemented pre-flip Thread Intelligence member, curator, processor, provenance, retention, failure, and operator contracts. Both production feature defaults remain `false` pending graduation. |
+| v0.13 | 2026-07-12 | Added §6.19 for the Thread Intelligence member, curator, processor, provenance, retention, failure, and operator contracts; later reconciled the completed evidence package and joint default-on graduation of `community_memory` and `automated_context`, with independent rollback pins. |
 | v0.12 | 2026-06-26 | **Cross-doc review fixes.** §8.2/§8.3 added `'announcement'` to the `notifications` enum (admin broadcast/system — SCHEMA §7 #13); §8.2 rewrote the session-handling note — the `sessions` table **ships in Phase 1** (canonical DDL in SCHEMA §1), not an optional "add if needed"; §1 + §9.3 stopped describing the mockup files as already existing (they are Phase 0 artifacts, not yet created — matching §6/§13); §13.1 clarified composer phasing — Phase 1 ships the no-JS Markdown box, Phase 2 adds @mentions/DM, the unified rich composer is Phase 3 (COMPOSER §17.1 / PHASE_3_PLAN). |
 | v0.11 | 2026-06-26 | **Stale-decision wording pass.** Reworded settled-but-still-"open" areas to match DECISIONS: **§9.1** framework is now stated as resolved — **vanilla PHP + micro-router**, no Slim/Laravel (§3 #1) — not an open question; **§9.5 + §8.2** markup is **Markdown canonical** (hybrid live-Markdown — §3 #2, COMPOSER.md), dropping the "Markdown vs BBCode" / "raw (Markdown/BBCode)" references; **§9.5** @mention notification rows are created **once at submit** (write-transaction, §9.6), with only the link rendered at render time; **§9.6** (and the §6.10 bell / §6.15 presence echoes) realtime is **short-polling v1**, SSE later (§3 #4), not an undecided "SSE or short-polling (§14)"; **§6.5** attachment storage is **resolved** (local-disk non-exec behind a storage interface, 5MB, png/jpg/webp/gif — §6 #6) with only the build deferred to Phase 3; **§13** Phase 3 "drafts" narrowed to **server-side draft sync** (localStorage drafts are Phase 1–2). Added the missing **`posts.ip`** column (`VARBINARY(16) NULL`) to the §8.2 DDL (DECISIONS §4 #5; SCHEMA §7 #10). No scope changes. |
 | v0.10 | 2026-06-26 | **Status-truth pass (nothing is built yet).** Reset every §6 Feature-Catalog status to `Planned` (35 `Done (mockup)` + 2 `Live` rows); reset the §13 Phase 1 roadmap items from **Live** to **Planned**; corrected Phase 0 from "✅ Done" to "Not started" (the `app.html`/`styles.css` mockup artifacts do not exist); reworded the "core forum flow is now live end-to-end" claim to "not yet built"; relabeled the §13 "Phase 1 completion evidence / Live slice" table as **target** evidence. No feature/scope changes. |

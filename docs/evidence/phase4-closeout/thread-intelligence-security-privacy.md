@@ -3,7 +3,7 @@
 **Scope:** pre-flip graduation evidence for `community_memory` and
 `automated_context`.
 
-**Status:** implementation evidence collected; focused command result pending.
+**Status:** implementation evidence collected; focused commands recorded 2026-07-12.
 
 ## Boundary
 
@@ -48,8 +48,17 @@ stale publication, concurrent leases/visibility changes, evidence retention,
 member-safe rendering, redacted admin evidence, provider/transport pinning,
 prompt authority, and output moderation/validation.
 
-Result will be recorded after the fresh command completes. No raw content or
-credential material is copied into this evidence record.
+Recorded 2026-07-12 (UTC), local Windows host:
+
+- 09:51:50Z `vendor/bin/phpunit
+  tests/Integration/ThreadIntelligence/ThreadIntelligenceAdversarialTest.php`
+  — OK (4 tests, 94 assertions).
+- 09:51:51Z `vendor/bin/phpunit
+  tests/Integration/ThreadIntelligence/ThreadIntelligenceConcurrencyTest.php`
+  — OK (6 tests, 25 assertions): concurrent leases and mid-flight visibility
+  changes never publish unsafe output.
+
+No raw content or credential material is copied into this evidence record.
 
 ## Leakage Review
 

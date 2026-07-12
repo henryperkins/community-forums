@@ -1,10 +1,11 @@
 # ADR 0019: Thread Intelligence automatic publication
 
 **Date:** 2026-07-09
-**Status:** Accepted product decision. The revised design was approved on
-2026-07-09; the implementation and Task 12 live gate are complete pre-flip, but
-default-on graduation remains gated by the rest of its evidence and rollback
-criteria. Both production feature defaults are still `false`.
+**Status:** Accepted and implemented. The revised design was approved on
+2026-07-09; all pre-flip evidence and rollback gates passed, and
+`community_memory` plus `automated_context` graduated together to default-on on
+2026-07-12. Both remain independently reversible through explicit `false`
+overrides.
 **Supersedes:** The human-only constraints in `PHASE_4_PLAN.md` Gate A,
 conditional/deferred scope, and Milestone 8 only for the bounded Thread
 Intelligence surface defined here. It does not rewrite historical Phase 4
@@ -32,9 +33,10 @@ requirements are in
 
 ## Decision
 
-1. Under the approved eventual default-on posture, eligible public threads may
-   receive an AI-generated Living Brief when the operator configures a provider
-   credential. Until that graduation, both owning flags remain default-off.
+1. Under the approved default-on posture, eligible public threads may receive
+   an AI-generated Living Brief when the operator configures a provider
+   credential. Both owning flags default on; either may be rolled back
+   independently through an explicit `false` override.
    Private/hidden boards,
    pending/deleted content, account metadata, DMs, reports, and moderation notes
    are never provider input.
@@ -66,14 +68,15 @@ requirements are in
    lifetime; unpublished attempts expire after 90 days, except unresolved
    dead/review-required evidence is retained until resolution and then for 90
    days.
-8. `community_memory` and `automated_context` remain default-off until the
+8. `community_memory` and `automated_context` may default on only after the
    design's security, privacy, quality, browser/no-JS, accessibility, worker,
-   migration, backup/restore, live-evaluation, and rollback gates pass. The
-   later default-on commit requires its own recorded evidence.
+   migration, backup/restore, live-evaluation, and rollback gates pass. Those
+   gates passed on 2026-07-12; the final post-flip verification remains recorded
+   separately in the evidence index.
 
 ## Implementation and Evidence Status
 
-The pre-flip implementation is present in migration `0077`,
+The implementation is present in migration `0077`,
 `src/Worker/ThreadIntelligenceWorker.php`, the
 `src/Service/ThreadIntelligence/` provider/validation/operations seams,
 `templates/partials/living_brief.php`, and
@@ -89,10 +92,10 @@ reasoning effort `low` with a `16000` output-token ceiling: 46/46 runs completed
 responses, private-sentinel transmissions, or fabricated decisions.
 
 Browser/mobile/no-JS/accessibility, security/privacy, worker concurrency,
-migration/upgrade, backup/restore, and data-preserving runtime rollback remain
-pre-flip evidence gates. This ADR therefore records an implemented, evaluated
-but still default-off surface; only the later graduation change may update the
-activation map and default posture.
+migration/upgrade, backup/restore, and data-preserving runtime rollback all
+passed before the flip. The activation map and runtime defaults now record the
+graduated surface; the evidence index remains the source for the final
+post-flip suite marker.
 
 ## Consequences
 

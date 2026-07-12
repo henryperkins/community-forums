@@ -9,15 +9,15 @@
 
 **PR #41 default-on pre-merge suite (2026-07-09):** `composer test` -> **1839 tests / 9453 assertions**, green on two consecutive runs (identical counts), including the pre-merge review's new pins (zero-override liveness, capabilities-rollback authorization writes, strict override-value parsing + corrupt-blob surfacing, RP-usability login-affordance gate, enable-direction flag isolation). This is the post-flip full-suite record ADR 0018's verification section cites; the review's deferred efficiency/structure items are listed under "PR #41 pre-merge review follow-ups".
 
-## Phase 4 Thread Intelligence follow-on (pre-flip, 2026-07-12)
+## Phase 4 Thread Intelligence follow-on (default-on, 2026-07-12)
 
 Thread Intelligence is a Phase 4 community-memory follow-on proceeding alongside
 the accepted Phase 5 train; it does not change Phase 5 Gate A acceptance. The
 public-only Living Brief pipeline, curator/admin controls, migration `0077`,
 budget/lease/retention operations, and privacy/provenance boundaries are
-implemented behind explicit test flags. Production defaults remain
-`community_memory=false` and `automated_context=false` until the separate final
-graduation change.
+implemented. `community_memory` and `automated_context` now both default `true`
+for installs without an explicit override and remain independently reversible
+through `features.<flag>=false`.
 
 Task 12's bounded live comparison selected reasoning effort `low` and output
 ceiling `16000`: 46/46 runs completed, 149/149 material claims were supported,
@@ -26,9 +26,19 @@ or fabricated decisions. The redacted report and human rubric are
 `docs/evidence/phase4-closeout/thread-intelligence-live-eval.md` and
 `thread-intelligence-live-rubric.json`. ADR 0019 owns the automatic-publication
 decision; `docs/runbooks/thread_intelligence.md` owns worker, recovery, retention,
-processor, and data-preserving rollback operations. Browser/a11y,
-security/privacy, concurrency, migration/backup, and runtime-rollback evidence
-must still be attached and pass before the defaults change.
+processor, and data-preserving rollback operations. All twelve pre-flip
+graduation gates (browser/a11y, security/privacy, concurrency,
+migration/backup, and runtime-rollback) were run and recorded on 2026-07-12 in
+`docs/evidence/phase4-closeout/thread-intelligence-index.md`. The corrected
+crypto-configured pre-flip regression passed fresh and reused at **2172 tests /
+12542 assertions / 1 skipped** in both runs. After the two-default flip, the
+focused flag/member/worker/provider/admin gate passed **224 tests / 1744
+assertions**. Final verification then passed: `verify:upgrade` **17/17**;
+backup/restore **116 tables / 744 rows** with matching checksums and HTTP 200;
+browser evidence **83 passed / 1 intentionally skipped**; accessibility **28
+passed** plus **4 passed** in the Thread Intelligence no-JS/axe subset; and the
+post-flip fresh/reused suites were identical at **2177 tests / 12564 assertions
+/ 1 skipped**. The graduation evidence index is complete.
 
 ## Phase 5 review follow-ups (2026-07-04, merged to main as part of the Inc 6 PR base)
 

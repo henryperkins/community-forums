@@ -16,14 +16,16 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         // `polls` graduated to default-on (GA 2026-06-30); the personal
         // organization slice graduated to default-on on 2026-07-01; `slash_giphy`
         // graduated on 2026-07-02 (inert until an operator sets giphy_public_key);
-        // `custom_emoji` and `split_merge` graduated on 2026-07-03.
+        // `custom_emoji` and `split_merge` graduated on 2026-07-03; Thread
+        // Intelligence graduates community memory and automated context together
+        // on 2026-07-12.
         // The rest stay dark until their own rollout evidence lands.
         foreach (['board_folders', 'bookmark_folders', 'saved_feeds', 'slash_giphy', 'profile_media', 'custom_emoji', 'split_merge'] as $flag) {
             self::assertArrayHasKey($flag, $flags->all(), "$flag must be declared, not merely unknown");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
 
-        foreach (['content_references'] as $flag) {
+        foreach (['content_references', 'community_memory', 'automated_context'] as $flag) {
             self::assertArrayHasKey($flag, $flags->all(), "$flag must be declared, not merely unknown");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
@@ -31,7 +33,6 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         $carryovers = [
             'link_previews',
             'expanded_files',
-            'automated_context',
         ];
 
         foreach ($carryovers as $flag) {
@@ -45,6 +46,22 @@ final class AppPhase4CarryoverFoundationTest extends TestCase
         self::assertTrue($overridden->enabled('link_previews'));
         self::assertTrue($overridden->enabled('custom_emoji'), 'enabling one dark carryover flag must not disable graduated flags');
         self::assertTrue($overridden->enabled('board_folders'), 'enabling one dark carryover flag must not disable graduated flags');
+
+        (new SettingRepository($this->db))->set('features', [
+            'community_memory' => false,
+            'automated_context' => true,
+        ]);
+        $memoryRolledBack = new FeatureFlags(new SettingRepository($this->db));
+        self::assertFalse($memoryRolledBack->enabled('community_memory'), 'community memory must retain an independent rollback pin');
+        self::assertTrue($memoryRolledBack->enabled('automated_context'), 'rolling back memory must not change the automation override');
+
+        (new SettingRepository($this->db))->set('features', [
+            'community_memory' => true,
+            'automated_context' => false,
+        ]);
+        $automationRolledBack = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($automationRolledBack->enabled('community_memory'), 'rolling back automation must not disable manual memory');
+        self::assertFalse($automationRolledBack->enabled('automated_context'), 'automated context must retain an independent rollback pin');
     }
 
     public function test_phase4_carryover_additive_schema_exists(): void

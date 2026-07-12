@@ -2,7 +2,7 @@
 
 Date: 2026-07-09
 
-Status: Approved for implementation planning
+Status: Graduated and default-on 2026-07-12; final verification complete
 
 ## Goal
 
@@ -26,7 +26,11 @@ does not require product or persistence changes.
 
 ## Current State
 
-Both flags currently default to `false` in `src/Core/FeatureFlags.php`.
+Both flags now default to `true` in `src/Core/FeatureFlags.php`. The pre-flip
+evidence package passed, the recorded live outcome selected reasoning effort
+`low` with a `16000` output-token ceiling (46/46 runs, 149/149 supported claims,
+zero incomplete/private-sentinel/fabricated-decision outcomes), and independent
+explicit-false rollback coverage remains in place.
 
 The deploy already contains the non-AI foundation:
 

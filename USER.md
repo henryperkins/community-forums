@@ -259,10 +259,10 @@ Preferences live in `user_preferences` (§7) with defaults inherited from site s
 
 ### 4.9 Thread Intelligence disclosure and member workflow
 
-Thread Intelligence is implemented pre-flip behind the still-default-off
-`community_memory` and `automated_context` flags. When an operator later enables
-the approved processor path, eligible public threads may show a **Living Brief**
-above the posts:
+Thread Intelligence ships default-on behind `community_memory` and
+`automated_context`, which graduated together on 2026-07-12 and remain
+independently reversible. Eligible public threads may show a **Living Brief**
+above the posts when provider credentials are configured:
 
 - The brief says whether it is AI-generated or curator-edited and shows its
   version, update time, current readable source posts, and related topics.
@@ -493,7 +493,7 @@ Mapped onto DESIGN.md §13 (whose strategic "Phase 3" and "Later (P2)" buckets s
 
 | Version | Date | Notes |
 |---|---|---|
-| v0.11 | 2026-07-12 | Added §4.9 with the pre-flip Living Brief reading, processor disclosure, access-gated provenance, retention, and last-good behavior. Both Thread Intelligence feature defaults remain `false`. |
+| v0.11 | 2026-07-12 | Added §4.9 with Living Brief reading, processor disclosure, access-gated provenance, retention, and last-good behavior; reconciled the joint default-on graduation of both Thread Intelligence flags and their independent rollback pins. |
 | v0.10 | 2026-06-26 | Wording/citation pass: dropped digest **"weekly"** cadence (§4.6 — daily-only per SCHEMA `subscriptions.frequency`); dropped **"optional"** from the Phase-1 `sessions` table (§3.3); fixed SCHEMA citations **§7.7 → §7 #7** (§7.3, §9 row 9); settled §4.5 default post format to **Markdown-canonical** (DECISIONS §3 #2, dropped the BBCode either/or); §5.5 title/rank now **reputation/post-count thresholds, admin-overridable** (COMMUNITY §8, DECISIONS §8). |
 | v0.9 | 2026-06-26 | **Status-truth pass (nothing is built yet):** reworded §8 Phase 1 from "auth is live / now live" to planned, and "monogram shipped Phase 1" → "monogram in Phase 1"; reworded the v0.5 entry below from "Shipped" to "Specified (design only — not built)". No scope changes. |
 | v0.8 | 2026-06-26 | Consistency pass: mapped §8's "Later (P2)" account items (passkeys, more providers, verified links, richer custom fields) to **delivery Phase 5** and noted DESIGN §13 now subdivides into Phases 3–7 (they previously had no home phase past Phase 3); added **P3** to the header conventions legend; bumped the stale header (was v0.6, behind its own v0.7 row). |

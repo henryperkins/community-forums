@@ -8,6 +8,7 @@ use App\Core\FeatureFlags;
 use App\Repository\BoardMemberRepository;
 use App\Repository\SettingRepository;
 use App\Repository\TagRepository;
+use App\Worker\RelatedTopicRefreshWorker;
 use Tests\Support\TestCase;
 
 /**
@@ -33,24 +34,24 @@ final class AppFeatureFlagTest extends TestCase
     public function test_invalidate_reloads_live_operator_overrides(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
-        self::assertFalse($flags->enabled('community_memory'));
+        self::assertTrue($flags->enabled('community_memory'));
 
-        $this->setFlags(['community_memory' => true]);
-        self::assertFalse($flags->enabled('community_memory'), 'the per-request cache remains stable until a boundary asks to refresh');
+        $this->setFlags(['community_memory' => false]);
+        self::assertTrue($flags->enabled('community_memory'), 'the per-request cache remains stable until a boundary asks to refresh');
 
         $flags->invalidate();
-        self::assertTrue($flags->enabled('community_memory'));
+        self::assertFalse($flags->enabled('community_memory'));
     }
 
     public function test_phase4_gate_a_flags_have_expected_default_posture(): void
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
         $defaults = $flags->all();
-        foreach (['tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'content_references'] as $flag) {
+        foreach (['tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory', 'content_references'] as $flag) {
             self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
         }
-        foreach (['group_dms', 'community_memory'] as $flag) {
+        foreach (['group_dms'] as $flag) {
             self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
         }
@@ -59,6 +60,90 @@ final class AppFeatureFlagTest extends TestCase
         $overridden = new FeatureFlags(new SettingRepository($this->db));
         self::assertFalse($overridden->enabled('tags'));
         self::assertTrue($overridden->enabled('community'));
+    }
+
+    public function test_community_memory_is_available_without_an_override(): void
+    {
+        $author = $this->makeUser(['username' => 'memory_default_author']);
+        $curator = $this->makeAdmin(['username' => 'memory_default_curator']);
+        $board = $this->makeBoard($this->makeCategory('Memory Default'), ['slug' => 'memory-default']);
+        $thread = $this->makeThread($board, $author, 'Memory default topic', 'Opening post.');
+        $sourcePostId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [$thread['thread_id']],
+        );
+        $this->actingAs($curator);
+
+        $response = $this->post('/t/' . $thread['thread_id'] . '/summary', [
+            'body' => 'Manual memory remains available by default.',
+            'source_post_ids' => (string) $sourcePostId,
+        ]);
+
+        $this->assertRedirectContains($response, '/t/' . $thread['thread_id']);
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM thread_summaries WHERE thread_id = ? AND status = ?',
+            [$thread['thread_id'], 'published'],
+        ));
+    }
+
+    public function test_community_memory_explicit_false_rolls_back_routes_and_mutations(): void
+    {
+        $this->setFlags(['community_memory' => false]);
+        $author = $this->makeUser(['username' => 'memory_rollback_author']);
+        $board = $this->makeBoard($this->makeCategory('Memory Rollback'), ['slug' => 'memory-rollback']);
+        $thread = $this->makeThread($board, $author, 'Memory rollback topic', 'Opening post.');
+        $sourcePostId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [$thread['thread_id']],
+        );
+        $this->actingAs($author);
+
+        $response = $this->post('/t/' . $thread['thread_id'] . '/summary', [
+            'body' => 'This summary must not be published while memory is rolled back.',
+            'source_post_ids' => (string) $sourcePostId,
+        ]);
+
+        $this->assertStatus(404, $response);
+        self::assertSame(0, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM thread_summaries WHERE thread_id = ?',
+            [$thread['thread_id']],
+        ));
+    }
+
+    public function test_automated_context_explicit_false_rolls_back_context_and_worker(): void
+    {
+        $this->setFlags(['community_memory' => true, 'automated_context' => false]);
+        $author = $this->makeUser(['username' => 'context_rollback_author']);
+        $viewer = $this->makeUser(['username' => 'context_rollback_viewer']);
+        $board = $this->makeBoard($this->makeCategory('Context Rollback'), ['slug' => 'context-rollback']);
+        $thread = $this->makeThread($board, $author, 'Context rollback topic', 'Opening post.');
+        $opId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [$thread['thread_id']],
+        );
+        $this->posting()->reply($this->userEntity($author), $thread['thread_id'], [
+            'body' => 'Unread context that must stay hidden while automation is rolled back.',
+        ]);
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], $thread['thread_id'], $opId],
+        );
+
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertSame(
+            ['linked' => 0, 'skipped' => 1],
+            (new RelatedTopicRefreshWorker($this->db, $flags))->run(),
+        );
+
+        $this->actingAs($viewer);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringNotContainsString('Since you last read', $page->body());
+        self::assertSame(0, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM since_last_read_context WHERE user_id = ? AND thread_id = ?',
+            [(int) $viewer['id'], $thread['thread_id']],
+        ));
     }
 
     public function test_wysiwyg_composer_is_available_by_default_and_can_be_disabled(): void
@@ -160,8 +245,19 @@ final class AppFeatureFlagTest extends TestCase
         }
 
         $defaults = $flags->all();
-        self::assertSame(47, count(array_filter($defaults)), 'fresh installs should now have 47 default-on flags');
-        self::assertSame(10, count($defaults) - count(array_filter($defaults)), 'fresh installs should keep 10 default-dark flags');
+        self::assertCount(57, $defaults, 'the declared flag inventory must remain stable during graduation');
+        self::assertSame(49, count(array_filter($defaults)), 'fresh and upgraded installs should have 49 default-on flags');
+        self::assertSame(8, count($defaults) - count(array_filter($defaults)), 'fresh and upgraded installs should keep 8 default-dark flags');
+        self::assertSame([
+            'custom_css',
+            'group_dms',
+            'link_previews',
+            'expanded_files',
+            'server_extensions',
+            'governance',
+            'service_principals',
+            'verified_links',
+        ], array_keys(array_filter($defaults, static fn (bool $enabled): bool => !$enabled)), 'only the approved eight flags stay default-dark');
 
         $this->setFlags(['capabilities' => false, 'passkeys' => false]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));

@@ -82,7 +82,7 @@
       <aside class="doc-callout doc-callout-warn is-panel"><div class="doc-callout-label">Outlook discipline</div><div class="doc-callout-body">Triage, split-pane reading, unread state, focused filters, keyboard-driven density — catch up without opening everything.</div></aside>
     </div>
 
-    <aside class="doc-callout"><div class="doc-callout-label">Status, stated plainly</div><div class="doc-callout-body"><strong>Phase 5 Gate A is accepted and default-on</strong> (ADR 0018, 2026-07-09): signed packages, declarative themes, the capability resolver, passkeys, generic OIDC, invitations, secrets, read-only API tokens, and webhooks all ship on for any install without an explicit override — each independently reversible via <span class="doc-code">features.&lt;flag&gt;=false</span>. Gate B (server extensions, governance, service principals, verified links) stays reserved and dark. Thread Intelligence is implemented but <strong>pre-flip</strong> (§8). Where a surface is mock-only or dark, this document says so rather than implying it ships.</div></aside>
+    <aside class="doc-callout"><div class="doc-callout-label">Status, stated plainly</div><div class="doc-callout-body"><strong>Phase 5 Gate A is accepted and default-on</strong> (ADR 0018, 2026-07-09): signed packages, declarative themes, the capability resolver, passkeys, generic OIDC, invitations, secrets, read-only API tokens, and webhooks all ship on for any install without an explicit override — each independently reversible via <span class="doc-code">features.&lt;flag&gt;=false</span>. Gate B (server extensions, governance, service principals, verified links) stays reserved and dark. <strong>Thread Intelligence is default-on</strong> as of 2026-07-12 (§8), with two independent rollback pins. Where a surface is mock-only or dark, this document says so rather than implying it ships.</div></aside>
 
     <div class="spacer-20"></div>
     <div class="doc-table-wrap">
@@ -423,7 +423,7 @@ posts(
   <section class="section pbreak">
     <header class="doc-section">
       <div class="doc-section-kicker">§8 · Thread intelligence</div>
-      <h2 class="doc-section-title">The Living Brief, pre-flip</h2>
+      <h2 class="doc-section-title">The Living Brief, default-on</h2>
       <p class="doc-section-dek">AI proposes; the council approves. Evidence-bound briefs for eligible public threads, generated asynchronously, validated locally, published only when every claim traces to a source post.</p>
     </header>
 
@@ -442,14 +442,14 @@ posts(
           <tr><td>Validation record</td><td>46/46 runs · 149/149 supported material claims · zero incomplete responses, private-sentinel transmissions, or fabricated decisions</td></tr>
           <tr><td>Budgets</td><td>100 provider calls / 1,000,000 input tokens per day — worker stops at the ceiling</td></tr>
           <tr><td>Credential</td><td><span><span class="doc-code">OPENAI_API_KEY</span> environment-only — never stored in the database, shown in the UI, or logged</span></td></tr>
-          <tr><td>Flags</td><td><span><span class="doc-code">community_memory</span> · <span class="doc-code">automated_context</span> — both default false (pre-flip)</span></td></tr>
+          <tr><td>Flags</td><td><span><span class="doc-code">community_memory</span> · <span class="doc-code">automated_context</span> — both default true; each independently reversible</span></td></tr>
           <tr><td>Controls</td><td><span>Admin console pause/resume/retry/reconcile · <span class="doc-code">thread-intelligence:status</span> · <span class="doc-code">worker:thread-intelligence</span> CLI · ADR 0019 owns the decision</span></td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="spacer-20"></div>
-    <aside class="doc-callout doc-callout-warn"><div class="doc-callout-label">Pre-flip means not yet on</div><div class="doc-callout-body"><span class="doc-code">community_memory</span> and <span class="doc-code">automated_context</span> both still default <strong>false</strong>. The worker, curator and admin controls, budgets, and the quality gate are all implemented and evidenced — default-on requires the separate final graduation change after the remaining evidence passes. Do not design surfaces that assume the brief exists on every thread.</div></aside>
+    <aside class="doc-callout doc-callout-warn"><div class="doc-callout-label">Default-on does not mean every thread has a brief</div><div class="doc-callout-body"><span class="doc-code">community_memory</span> and <span class="doc-code">automated_context</span> default <strong>true</strong>, but provider generation still requires credentials, public eligibility, activity thresholds, budget, and an unpaused worker. An explicit <span class="doc-code">false</span> override rolls either surface back without deleting stored evidence or the last safe brief.</div></aside>
   </section>
 
 </main>

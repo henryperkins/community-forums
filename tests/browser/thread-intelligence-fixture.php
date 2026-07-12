@@ -8,6 +8,8 @@ use App\Core\Container;
 use App\Core\Database;
 use App\Core\Env;
 use App\Core\Request;
+use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
 use App\Repository\SettingRepository;
 use App\Repository\ThreadIntelligenceGenerationRepository;
 use App\Repository\UserRepository;
@@ -100,6 +102,41 @@ function tiPostIds(Database $db, int $threadId): array
     );
 }
 
+/**
+ * Fixture threads live on their own public board: Thread Intelligence
+ * eligibility requires public visibility, while gate-a's /c/general journeys
+ * depend on the original seeded threads staying on that board's first page.
+ */
+function tiFixtureBoardId(Container $container, Database $db): int
+{
+    $existing = $db->fetchValue("SELECT id FROM boards WHERE slug = 'ti-briefs' LIMIT 1");
+    if ($existing !== false) {
+        return (int) $existing;
+    }
+    $categoryId = $db->fetchValue("SELECT category_id FROM boards WHERE slug = 'general' LIMIT 1");
+    if ($categoryId === false) {
+        throw new RuntimeException('browser seed must create #general before Thread Intelligence fixtures');
+    }
+    /** @var BoardRepository $boards */
+    $boards = $container->get(BoardRepository::class);
+    $boardId = $boards->create([
+        'category_id' => (int) $categoryId,
+        'slug' => 'ti-briefs',
+        'name' => 'TI Briefs',
+        'description' => 'Deterministic Thread Intelligence evidence fixtures.',
+        'visibility' => 'public',
+        'post_min_role' => 'user',
+    ]);
+    // Curator actions (publishSummary and the curator forms) require board
+    // moderator authority, so alice curates here exactly as she does #general.
+    $alice = $db->fetchValue("SELECT id FROM users WHERE username = 'alice' LIMIT 1");
+    if ($alice === false) {
+        throw new RuntimeException('browser seed must create alice before Thread Intelligence fixtures');
+    }
+    (new BoardModeratorRepository($db))->assign($boardId, (int) $alice);
+    return $boardId;
+}
+
 /** @return array<string,mixed> */
 function tiEnsureThread(
     Config $config,
@@ -121,9 +158,9 @@ function tiEnsureThread(
         throw new RuntimeException('browser seed must create alice before Thread Intelligence fixtures');
     }
     $author = $users->findEntity((int) $alice['id']);
-    $boardId = (int) $db->fetchValue("SELECT id FROM boards WHERE slug = 'general' LIMIT 1");
+    $boardId = tiFixtureBoardId($container, $db);
     if ($author === null || $boardId < 1) {
-        throw new RuntimeException('browser seed must create #general before Thread Intelligence fixtures');
+        throw new RuntimeException('browser seed must create alice before Thread Intelligence fixtures');
     }
 
     /** @var PostingService $posting */

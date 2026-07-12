@@ -4,16 +4,16 @@
 
 > **Status: Phase 5 (ecosystem, identity & governance) - Gate A accepted and default-on; Gate B reserved.** Phase 4 closed with explicit deferrals ([`docs/adr/0003-phase-4-closeout-deferrals.md`](docs/adr/0003-phase-4-closeout-deferrals.md)), and most of its deferred surfaces have since graduated default-ON. Accepted Phase 5 Gate A and B2 support flags now default on for any install without an explicit override (fresh and upgraded alike) and remain operator-reversible through `features.<flag>=false`: the signed package-registry protocol, install/update lifecycle, declarative theme packages, the integration runtime + security-response console, the database-backed capability resolver with its enforcement cutover (`CAPABILITIES_MODE`), WebAuthn passkeys, generic-OIDC identity providers with an operator console, encrypted service secrets, read-only API tokens, invitations, and outbound webhook delivery. (Opt-in TOTP/recovery also shipped with Gate A but is always available — it has no feature flag.) P5-16 closeout evidence is indexed at [`docs/evidence/phase5/gate-a-closeout.md`](docs/evidence/phase5/gate-a-closeout.md): PHP regression **1831 tests / 9396 assertions** across fresh and reused-schema runs (2026-07-09), browser evidence **71 passed / 1 skipped**, a11y **26 passed / 2 skipped**, resolver parity **1551/1551, 0 mismatches**, upgrade rehearsal **17/17** through migration `0076`, backup/restore rehearsal passed, and ADR 0017 records product-owner acceptance. Gate B workstreams remain reserved. See [`PHASE_5_STATUS.md`](PHASE_5_STATUS.md), [`docs/adr/0018-phase-5-gate-a-default-on.md`](docs/adr/0018-phase-5-gate-a-default-on.md), and [`docs/phase5/requirement-ledger.json`](docs/phase5/requirement-ledger.json); the Phase 4 record remains in [Phase 4 history](docs/history/PHASE_1-4_HISTORY.md#phase-4-status) and [`docs/evidence/phase4-gate-a.md`](docs/evidence/phase4-gate-a.md).
 
-> **Thread Intelligence is pre-flip.** The public-only Living Brief worker,
-> curator/admin controls, privacy and provenance boundaries, and Task 12 live
-> quality gate are implemented, but `community_memory` and `automated_context`
-> both still default `false`. The selected contract is `low` reasoning with a
+> **Thread Intelligence is default-on as of 2026-07-12.** The public-only
+> Living Brief worker, deterministic return context, curator/admin controls,
+> privacy and provenance boundaries, and Task 12 live quality gate ship behind
+> `community_memory` and `automated_context`, which now both default `true` and
+> remain independently reversible with explicit `false` overrides. The selected contract is `low` reasoning with a
 > `16000` output-token ceiling: 46/46 runs, 149/149 supported material claims,
 > and zero incomplete responses, private-sentinel transmissions, or fabricated
 > decisions. Operations and rollback are in
 > [`docs/runbooks/thread_intelligence.md`](docs/runbooks/thread_intelligence.md);
-> ADR 0019 owns the decision. Default-on requires the separate final graduation
-> change after all remaining evidence passes.
+> ADR 0019 owns the decision and the evidence index records the graduation gates.
 
 ## Running Phase 1
 

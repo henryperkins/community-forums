@@ -908,6 +908,14 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
     await expect(deliveryRow).toContainText('delivered');
     await expect(deliveryRow).toContainText('200');
     await shot(page, info, '23-admin-webhook-delivery-log');
+
+    // Desktop and mobile projects share one seeded database. Remove this
+    // project-local endpoint while its receiver is still alive so later topic
+    // events cannot queue ahead of the next project's live receiver and spend
+    // that test's delivery deadline retrying a closed port.
+    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.waitForURL(/\/admin\/webhooks$/);
+    await expect(page.getByText('Webhook deleted.')).toBeVisible();
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }

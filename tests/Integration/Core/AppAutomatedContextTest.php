@@ -17,16 +17,41 @@ final class AppAutomatedContextTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
-    public function test_since_last_read_context_is_dark_by_default(): void
+    public function test_since_last_read_context_is_available_without_an_override(): void
     {
         $this->makeAdmin();
         $author = $this->makeUser(['username' => 'contextauthor']);
         $viewer = $this->makeUser(['username' => 'contextviewer']);
-        $board = $this->makeBoard($this->makeCategory('Context Dark'), ['slug' => 'context-dark']);
-        $thread = $this->makeThread($board, $author, 'Context dark topic', 'Opening post.');
+        $board = $this->makeBoard($this->makeCategory('Context Default'), ['slug' => 'context-default']);
+        $thread = $this->makeThread($board, $author, 'Context default topic', 'Opening post.');
         $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
 
-        $this->posting()->reply($this->userEntity($author), $thread['thread_id'], ['body' => 'Unread dark reply.']);
+        $this->posting()->reply($this->userEntity($author), $thread['thread_id'], ['body' => 'Unread default-on reply.']);
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], $thread['thread_id'], $opId],
+        );
+
+        $this->actingAs($viewer);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('Since you last read', $page->body());
+        self::assertStringContainsString('Unread default-on reply.', $page->body());
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM since_last_read_context'));
+    }
+
+    public function test_since_last_read_context_can_be_rolled_back_with_explicit_false(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['automated_context' => false]);
+        $author = $this->makeUser(['username' => 'contextrollbackauthor']);
+        $viewer = $this->makeUser(['username' => 'contextrollbackviewer']);
+        $board = $this->makeBoard($this->makeCategory('Context Rollback'), ['slug' => 'context-rollback-explicit']);
+        $thread = $this->makeThread($board, $author, 'Context rollback topic', 'Opening post.');
+        $opId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$thread['thread_id']]);
+
+        $this->posting()->reply($this->userEntity($author), $thread['thread_id'], ['body' => 'Unread rollback reply.']);
         $this->db->run(
             'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
             [(int) $viewer['id'], $thread['thread_id'], $opId],

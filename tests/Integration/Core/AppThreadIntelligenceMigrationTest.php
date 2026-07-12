@@ -465,11 +465,15 @@ final class AppThreadIntelligenceMigrationTest extends TestCase
 
     public function test_0077_down_and_up_rehearsal_on_fixture_free_schema(): void
     {
-        self::assertSame(
-            'retroboards_thread_intelligence_clean',
-            (string) $this->db->fetchValue('SELECT DATABASE()'),
-            'direct down/up rehearsal must run only on its dedicated throwaway database',
-        );
+        $database = (string) $this->db->fetchValue('SELECT DATABASE()');
+        if ($database !== 'retroboards_thread_intelligence_clean') {
+            self::markTestSkipped(
+                'direct down/up rehearsal runs only on its dedicated throwaway database; run: '
+                . 'DB_TEST_DATABASE=retroboards_thread_intelligence_clean vendor/bin/phpunit '
+                . 'tests/Integration/Core/AppThreadIntelligenceMigrationTest.php '
+                . '--filter test_0077_down_and_up_rehearsal_on_fixture_free_schema',
+            );
+        }
         foreach (['thread_summaries', 'related_threads', 'threads', 'boards'] as $table) {
             self::assertSame(
                 0,

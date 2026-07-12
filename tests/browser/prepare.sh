@@ -43,10 +43,12 @@ if [[ "$PHP_BIN" == *.exe ]]; then
   export WSLENV="${WSLENV:+$WSLENV:}PHP_INI_SCAN_DIR/w:OPENSSL_CONF/w:DB_DATABASE/w:APP_KEY/w:OPENAI_API_KEY/w:PACKAGES_STORAGE_PATH/p"
 fi
 
-if [[ "$RATE_LIMIT_PATH" != /* ]]; then
+# Windows-form values (C:/…) are already absolute: a native npm/node hop can
+# hand them back converted, and prepending $PWD would double the repo root.
+if [[ "$RATE_LIMIT_PATH" != /* && "$RATE_LIMIT_PATH" != [A-Za-z]:* ]]; then
   RATE_LIMIT_PATH="$PWD/$RATE_LIMIT_PATH"
 fi
-if [[ "$PACKAGES_PATH" != /* ]]; then
+if [[ "$PACKAGES_PATH" != /* && "$PACKAGES_PATH" != [A-Za-z]:* ]]; then
   PACKAGES_PATH="$PWD/$PACKAGES_PATH"
 fi
 
@@ -75,6 +77,10 @@ case "$PACKAGES_PATH" in
     mkdir -p "$PACKAGES_PATH"
     ;;
 esac
+# Native Windows PHP cannot resolve MSYS-style /c/… paths — hand it C:/… form.
+if [[ "$PHP_BIN" == *.exe ]] && command -v cygpath >/dev/null 2>&1; then
+  PACKAGES_PATH="$(cygpath -m "$PACKAGES_PATH")"
+fi
 export PACKAGES_STORAGE_PATH="$PACKAGES_PATH"
 
 if "$DOCKER_BIN" ps --format '{{.Names}}' 2>/dev/null | grep -qx "$RESET_CONTAINER"; then

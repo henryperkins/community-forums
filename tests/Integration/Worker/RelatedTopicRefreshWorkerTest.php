@@ -19,9 +19,16 @@ final class RelatedTopicRefreshWorkerTest extends TestCase
         (new SettingRepository($this->db))->set('features', $flags);
     }
 
+    public function test_worker_is_live_without_an_override(): void
+    {
+        $worker = new RelatedTopicRefreshWorker($this->db, new FeatureFlags(new SettingRepository($this->db)));
+
+        self::assertSame(['linked' => 0, 'skipped' => 0], $worker->run());
+    }
+
     public function test_worker_is_dark_without_automation_flag(): void
     {
-        $this->setFlags(['community_memory' => true]);
+        $this->setFlags(['community_memory' => true, 'automated_context' => false]);
         $worker = new RelatedTopicRefreshWorker($this->db, new FeatureFlags(new SettingRepository($this->db)));
 
         self::assertSame(['linked' => 0, 'skipped' => 1], $worker->run());

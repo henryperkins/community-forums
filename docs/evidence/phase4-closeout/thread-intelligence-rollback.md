@@ -3,7 +3,7 @@
 **Scope:** independent feature rollback, global generation brake, credential
 removal, restoration, and the fixture-free migration rehearsal.
 
-**Status:** sequence implemented; focused command result pending.
+**Status:** sequence implemented; focused commands recorded 2026-07-12.
 
 ## Data-Preserving Runtime Order
 
@@ -43,6 +43,21 @@ Production rollback is runtime-only and data-preserving. The full
 
 ## Verification
 
-Focused runtime and migration command results will be added after their fresh
-runs. Operator syntax and recovery decisions are in
+Recorded 2026-07-12 (UTC), local Windows host, MariaDB 11.4 dev container:
+
+- 09:51:48Z `vendor/bin/phpunit
+  tests/Integration/ThreadIntelligence/ThreadIntelligenceOperationsServiceTest.php
+  --filter test_data_preserving_runtime_rollback_sequence` — OK
+  (1 test, 30 assertions): zero provider calls and unchanged
+  summary/job/generation IDs across pause, both feature pins, and credential
+  removal; the retained published version renders after restoration without a
+  replacement provider call.
+- 09:51:29Z `DB_TEST_DATABASE=retroboards_thread_intelligence_clean
+  vendor/bin/phpunit tests/Integration/Core/AppThreadIntelligenceMigrationTest.php
+  --filter test_0077_down_and_up_rehearsal_on_fixture_free_schema` — OK
+  (1 test, 26 assertions) on the dedicated fixture-free database; off that
+  database the rehearsal now skips with the exact invocation in its skip
+  message.
+
+Operator syntax and recovery decisions are in
 `docs/runbooks/thread_intelligence.md`.

@@ -2,10 +2,10 @@
 
 All notable changes to RetroBoards are recorded here. Dates are UTC.
 
-## [Unreleased] - Thread Intelligence pre-flip implementation and evidence collection
+## [Unreleased] - Thread Intelligence default-on graduation
 
-- Implemented the public-only, evidence-bound Living Brief pipeline behind the
-  still-default-off `community_memory` and `automated_context` flags: durable
+- Graduated the public-only, evidence-bound Living Brief pipeline by changing
+  only `community_memory` and `automated_context` to default-on: durable
   leased jobs/attempt metadata, locally validated and moderated publication,
   source/visibility rechecks, curator lineage, redacted admin operations, UTC
   cost budgets, board-visibility sweeps, and bounded evidence retention.
@@ -19,8 +19,20 @@ All notable changes to RetroBoards are recorded here. Dates are UTC.
   rollback pins, failure/budget/source recovery, retention, board-sweep resume,
   processor boundaries, and data-preserving rollback order.
 - Reconciled member, curator, operator, design, Phase 4 history/ledger, Imladris,
-  and ADR documentation. This entry does **not** authorize default-on; both
-  production feature defaults remain `false` until the final graduation change.
+  and ADR documentation for the 2026-07-12 default-on posture. Explicit
+  `features.community_memory=false` and `features.automated_context=false`
+  remain independent data-preserving rollback pins.
+- Completed the pre-flip graduation evidence index: all twelve gates run and
+  recorded on 2026-07-12 (live eval + rubric, browser/no-JS/axe, adversarial
+  security, worker concurrency, clean-install/upgrade and the dedicated `0077`
+  rehearsal, backup/restore, runtime rollback, runbook). Browser fixtures moved
+  to the dedicated public `ti-briefs` board so the gate-a `/c/general` journeys
+  stay stable. Task 14 converted the dark assumptions to rollback tests and
+  established the 57-declared / 49-on / 8-dark posture.
+- Completed the post-flip release gate: upgrade **17/17**, backup/restore **116
+  tables / 744 rows**, browser **83 passed / 1 intentionally skipped**, a11y
+  **28 + 4 passed**, and identical fresh/reused PHPUnit runs at **2177 tests /
+  12564 assertions / 1 skipped**.
 
 ## [Unreleased] - Phase 5 Gate A defaults on
 

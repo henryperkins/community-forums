@@ -1,6 +1,6 @@
 # Deploy-Dark Feature Inventory
 
-**Date:** 2026-07-09 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
+**Date:** 2026-07-12 (`FeatureFlags::DEFAULTS` source audit; 2026-07-03
 profile-media graduation reconciled; Phase 5 passkeys row reconciled with
 `PHASE_5_STATUS.md`; custom-emoji graduation reconciled; **2026-07-04
 `split_merge` + `custom_profile_fields` graduations reconciled** — both flipped
@@ -13,10 +13,11 @@ added with no flag gate at all, both reconciled below and against
 PR #40) landed deploy-dark and are now *consumed*, no longer inert/reserved;
 **2026-07-09 Phase 5 Gate A/B2 default-on authorization reconciled** — accepted
 Gate A and B2 support flags now default-ON (any install without an explicit
-override) while Gate B and
-unfinished Phase 3/4 carryovers remain default-dark; the Source Code Audit below
-is re-run to 2026-07-09 (53 literal `enabled()` keys) and the `invitations` row
-carries its two-pass pre-merge review hardening.
+override) while Gate B and unfinished Phase 3/4 carryovers remain default-dark;
+**2026-07-12 Thread Intelligence graduation reconciled** — `community_memory`
+and `automated_context` now default on together with independent rollback pins;
+the Source Code Audit below is re-run to 2026-07-12 (53 literal `enabled()`
+keys) and the `invitations` row carries its two-pass pre-merge review hardening.
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -38,17 +39,18 @@ out in the rows and the Notes below, not derivable from `DEFAULTS` alone.
 
 ## Source Code Audit
 
-Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
+Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
 `FeatureFlags::enabled('...')` call sites in `src/`, and shared
 `$features[...]` consumers in templates/bootstrapping code.
 
-- `FeatureFlags::DEFAULTS` declares 57 flags: 47 default `true`, 10 default
-  `false`. (Phase 5 Gate A/B2 support flipped `false`->`true` on 2026-07-09;
+- `FeatureFlags::DEFAULTS` declares 57 flags: 49 default `true`, 8 default
+  `false`. (Phase 5 Gate A/B2 support flipped `false`->`true` on 2026-07-09 and
+  Thread Intelligence flipped its two owning defaults on 2026-07-12;
   the admin feature-inventory canary in
-  `tests/Integration/Admin/AppAdminFeaturesTest.php` enforces the `47`/`10`
+  `tests/Integration/Admin/AppAdminFeaturesTest.php` enforces the `49`/`8`
   split.)
-- This deploy-dark inventory has 39 table rows: all 10 current default-dark
-  flags, plus 29 retained graduated flags that are default-ON and
+- This deploy-dark inventory has 39 table rows: all 8 current default-dark
+  flags, plus 31 retained graduated flags that are default-ON and
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
@@ -84,9 +86,13 @@ Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
   count 51 -> 53) and their Phase 5 Gate A rows below reflect landed evidence.
   Inc 9's `invitations` row additionally reflects two pre-merge
   review-hardening passes merged with PR #40 (honest `invitation.redemption_p95`
-  461.79 ms under production-cost Argon2id). Gate B plus the six unfinished
-  Phase 3/4 carryovers (`custom_css`, `group_dms`, `community_memory`,
-  `link_previews`, `expanded_files`, `automated_context`) remain default-dark.
+  461.79 ms under production-cost Argon2id).
+- **Thread Intelligence default flip (2026-07-12):** the default split changed
+  from `47`/`10` to `49`/`8`. `community_memory` and `automated_context`
+  graduated together after the ADR 0019 evidence package; both remain
+  independently reversible. Gate B plus the four unfinished Phase 3/4
+  carryovers (`custom_css`, `group_dms`, `link_previews`, `expanded_files`)
+  remain default-dark.
 
 ## Phase 3 / Phase 3 Carryover
 
@@ -107,7 +113,7 @@ Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
 | `expanded_feeds` | Board/tag follows, expanded Following and Latest feeds | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `reputation_ledger` | Reputation-event ledger and windowed rankings | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppLeaderboardTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `badge_rules` | Custom badge rules, preview, backfill, revoke history | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppAdminBadgeRulesTest` (available-by-default + flag-rollback-with-history-intact), `AppFeatureFlagTest`, browser `32-badge-rules`/`33-badge-rule-preview`/`34-badge-rule-backfilled`, `/admin/badge-rules` axe pass, runbook `docs/runbooks/badge_rules.md`. Retained here for traceability. |
-| `community_memory` | Summaries, related topics, wiki revisions | Accepted Gate A engineering baseline; default-dark until intentional enablement |
+| `community_memory` | Summaries, related topics, wiki revisions | **Graduated with Thread Intelligence 2026-07-12 — now default-ON** (independently reversible via `features.community_memory=false`). Acceptance evidence: ADR 0019; `AppFeatureFlagTest` zero-override liveness + route/mutation rollback; Living Brief desktop/mobile/no-JS/axe captures; security/privacy, migration, backup/restore, and runtime-rollback evidence indexed in `docs/evidence/phase4-closeout/thread-intelligence-index.md`; operator runbook `docs/runbooks/thread_intelligence.md`. Retained here for traceability. |
 | `content_references` | Persisted references from post/DM/summary bodies, rendered as read-gated board/thread/post/tag cards | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest` (default-on + operator rollback), `AppContentReferenceTest` (post/DM/summary/tag references through read gate), `AppPhase4CarryoverFoundationTest` (default posture), browser `43-content-references-redacted`, `.reference-cards` axe pass. Retained here for traceability. |
 
 ## Phase 4 Carryover Completion
@@ -126,7 +132,7 @@ Audited 2026-07-09 against `src/Core/FeatureFlags.php`, literal
 | `saved_feeds` | Private saved feed filters and digest-composition groundwork | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `custom_profile_fields` | Bounded extra public profile fields | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override; the `/settings/account` panel + public *Profile details* section render-gate on the flag). Acceptance evidence: `AppBoardFoldersSavedFeedsTest` (public-profile render + bounded 422), `AppFeatureFlagTest` (default-on + operator rollback hides the panel while core editing survives), browser `52-custom-profile-fields-edit`/`53-custom-profile-fields-profile`, `.custom-profile-fields` axe pass, runbook `docs/runbooks/custom_profile_fields.md`, privacy/copy review `docs/evidence/custom-profile-fields-privacy-review.md`. Retained here for traceability. |
 | `account_lifecycle` | Export, deactivate/reactivate, 30-day deletion request/cancel, purge/anonymization | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppAccountLifecycleTest`, `AppFeatureFlagTest` (default-on + operator rollback), browser `35-account-lifecycle`/`36-account-deletion-scheduled` (no-JS member journey), `/settings/account/lifecycle` axe pass, runbook `docs/runbooks/account_lifecycle.md`. Retained here for traceability. |
-| `automated_context` | Since-last-read context and suggested related topics | Deploy-dark; awaiting browser/no-JS evidence, replay/disable runbook, worker proof, and stale-link policy |
+| `automated_context` | Since-last-read context, suggested related topics, and bounded AI generation | **Graduated with Thread Intelligence 2026-07-12 — now default-ON** (independently reversible via `features.automated_context=false`; provider calls remain inert without `OPENAI_API_KEY`). Acceptance evidence: ADR 0019; `AppAutomatedContextTest` and `RelatedTopicRefreshWorkerTest` zero-override liveness + rollback; live quality gate; worker concurrency; browser/no-JS/axe; runbook and evidence index. Retained here for traceability. |
 
 ## Graduation Readiness Ranking (Phase 3/4 Dark Flags)
 
@@ -308,14 +314,16 @@ still listed as "Need: runbook" do not yet.
     - Have: `AppBrandingThemeTest`; ADR 0009.
     - Need: safe-mode recovery evidence (prove an operator can boot out of
       broken CSS), mobile evidence, and an operator runbook.
-13. **`automated_context`** — deterministic since-last-read context built from
+13. **`automated_context`** — ✓ **Graduated with Thread Intelligence 2026-07-12
+    (default-ON).** Deterministic since-last-read context built from
     local post/read-state data before the current view advances the read
     marker, plus suggested related topics refreshed by `worker:related-topics`
     (public threads only).
-    - Have: `AppAutomatedContextTest` + `RelatedTopicRefreshWorkerTest`; worker
-      smokes recorded (dark run `linked=0 skipped=1`; e2e exit 0).
-    - Need: browser/no-JS evidence, replay/disable runbook, worker proof on
-      live data, and a stale-link policy.
+    - Evidence completed: `AppAutomatedContextTest` +
+      `RelatedTopicRefreshWorkerTest` zero-override and rollback coverage; worker
+      smokes recorded (rollback run `linked=0 skipped=1`; enabled e2e exit 0),
+      browser/no-JS evidence, independent rollback rehearsal, and the canonical
+      Thread Intelligence runbook.
 
 ### Tier 5 — full graduation packages across large surfaces
 
@@ -326,13 +334,16 @@ still listed as "Need: runbook" do not yet.
     - Have: `AppLinkPreviewTest`.
     - Need: browser, crawler/noindex, and load evidence, plus a runbook covering
       the egress/allowlist posture.
-15. **`community_memory`** — manual summaries with source display and
+15. **`community_memory`** — ✓ **Graduated with Thread Intelligence 2026-07-12
+    (default-ON).** Manual summaries with source display and
     publish/retire/restore, curated related topics, and wiki edit history with
     revert under board `wiki_enabled` enforcement. Accepted Gate A engineering
     baseline.
-    - Have: Gate A regression coverage in `AppPhase4GateATest`.
-    - Need: browser/a11y across several journeys (summary lifecycle, wiki
-      history/revert) + runbook + the intentional-enablement decision.
+    - Evidence completed: Gate A regression coverage in `AppPhase4GateATest`,
+      default-on/rollback canaries in `AppFeatureFlagTest`, ADR 0019, browser
+      and accessibility captures, migration/backup/security evidence, and the
+      data-preserving rollback rehearsal indexed in the Thread Intelligence
+      evidence package, plus the ADR 0019 intentional-enablement decision.
 16. **`group_dms`** — bounded group-conversation creation, membership
     intervals, owner actions, unread/history boundaries, admin-actionable
     reports, inactive-account rejection, and DM-report rate limiting. Largest
@@ -482,5 +493,6 @@ as of 2026-07-09.
   stored `user_profile_fields` rows.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
-  decision. `group_dms` and `community_memory` additionally require an
-  intentional-enablement decision on top of their evidence packages.
+  decision. `group_dms` still requires an intentional-enablement decision;
+  `community_memory` received that decision through ADR 0019 and graduated with
+  `automated_context` on 2026-07-12.

@@ -4,12 +4,11 @@ This runbook covers the AI-assisted Living Brief worker, its public-only data
 boundary, cost controls, recovery paths, evidence retention, and data-preserving
 rollback. Run commands from the application root.
 
-> **Pre-flip status:** the implementation and bounded live evaluation are
-> complete, but `community_memory` and `automated_context` still default to
-> `false`. Do not describe Thread Intelligence as default-on or remove explicit
-> test pins until the remaining browser, accessibility, migration,
-> backup/restore, security/privacy, concurrency, and rollback evidence is
-> accepted. The selected live-evaluation contract is reasoning effort `low`
+> **Default-on status:** `community_memory` and `automated_context` graduated
+> together on 2026-07-12 after the browser, accessibility, migration,
+> backup/restore, security/privacy, concurrency, rollback, and live-quality
+> gates passed. Both remain independently reversible through explicit
+> `features.<flag>=false` overrides. The selected live-evaluation contract is reasoning effort `low`
 > with `THREAD_INTELLIGENCE_MAX_OUTPUT_TOKENS=16000`: 46/46 runs completed,
 > 149/149 material claims were supported, and there were zero incomplete
 > responses, private-sentinel transmissions, or fabricated decisions.
@@ -92,9 +91,9 @@ Both product gates are required for provider generation:
 - `automated_context` owns AI generation and deterministic return/related
   automation.
 
-At this pre-flip stage both code defaults are `false`. Controlled evidence must
-enable them explicitly; production remains dark. After a later default-on
-graduation, explicit `false` values are the independent rollback pins.
+Both code defaults are `true` for fresh and upgraded installs without an
+explicit override. Explicit `false` values are the independent rollback pins;
+changing one must not replace or discard the other or any unrelated override.
 
 Inspect the override map before changing it:
 
@@ -148,9 +147,9 @@ if (!is_array($f)) { fwrite(STDERR,"settings.features is not an object; aborting
 unset($f[$flag]); $s->set("features",$f);'
 ```
 
-Before the default flip, removing either override restores its current `false`
-code default; it does not enable the feature. Explicit `true` pins are reserved
-for controlled pre-flip testing.
+Removing either rollback override restores its `true` code default. An explicit
+`true` override is unnecessary for normal operation and should be removed after
+controlled testing so the code default remains visible to operators.
 
 ## 4. Worker schedule and heartbeat
 

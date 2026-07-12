@@ -55,8 +55,8 @@ The Phase 4 community-memory foundation is human-controlled: sourced manual
 summaries, curated related topics, wiki revisions, and deterministic return
 context. ADR 0019 adds a bounded Thread Intelligence path for AI-generated
 **Living Briefs** and related explanations on sufficiently active public
-threads. It is implemented pre-flip, while `community_memory` and
-`automated_context` remain default-off pending graduation.
+threads. `community_memory` and `automated_context` graduated together to
+default-on on 2026-07-12 and remain independently reversible.
 
 For members, a Living Brief is navigational context, not canonical authority. It
 shows AI/curator attribution, version/time, and current readable sources; an
@@ -269,7 +269,7 @@ To be explicit: **there are no Discourse-style trust levels.** Reputation, title
 
 ## 13. Cross-Doc Deltas
 
-- **DESIGN.md** — finalises §6.16 reputation (resolves open question #15: reputation = Σ reactions received, +1 each, no separate Like). Gives §6.18 "Solved" a concrete home (`threads.accepted_answer_post_id`) and §6.19 owns the implemented pre-flip Thread Intelligence contract.
+- **DESIGN.md** — finalises §6.16 reputation (resolves open question #15: reputation = Σ reactions received, +1 each, no separate Like). Gives §6.18 "Solved" a concrete home (`threads.accepted_answer_post_id`) and §6.19 owns the graduated Thread Intelligence contract.
 - **USER.md** — completes the profile community elements (§5.1) and resolves the rank/title stub (§5.5) as cosmetic. Adds follow/badge/solved notification types (§4.6), a leaderboard opt-out privacy pref (§4.7), and the Living Brief processor/provenance disclosure (§4.9).
 - **ADMIN.md** — reputation/badges/leaderboards add moderation levers (§10 here) but **no** new role gating; §3.10 owns Thread Intelligence operator and curator recovery.
 - **Schema** — new: `follows`, `badges`, `user_badges`, `reputation_events` (optional); `threads.accepted_answer_post_id`.
@@ -281,10 +281,10 @@ To be explicit: **there are no Discourse-style trust levels.** Reputation, title
 - **P1** (priority tier → **delivery Phase 2**) — reputation (reactions→rep, displayed); reactions persisted; **following/followers** (user→user) + **Following feed** (query-time) + new-follower notification; the **fixed badge set** (auto-awarded); cosmetic **titles**; **all-time leaderboard**; **accepted/solved answers** (mark + rep bonus + Problem Solver badge).
 - **P2** (priority tier → **delivery Phase 4+**) — follow tags/boards; time-windowed leaderboards (`reputation_events`); admin-defined custom badges; global "Latest" feed; remove-a-follower; follow-activity notifications/digest; fan-out feed if scale demands; community-memory (summaries/related/wiki/split-merge).
 
-The human-controlled community-memory foundation and the pre-flip Thread
-Intelligence implementation now exist, but this phasing record does not claim
-automatic publication default-on. Both owning feature defaults remain `false`
-until the separate graduation flip.
+The human-controlled community-memory foundation and Thread Intelligence
+implementation now exist. ADR 0019's follow-on graduation made both owning
+feature defaults `true` on 2026-07-12 without rewriting the original Phase 4
+acceptance boundary.
 
 ### 14.2 Open questions
 
@@ -299,6 +299,6 @@ until the separate graduation flip.
 
 | Version | Date | Notes |
 |---|---|---|
-| v0.3 | 2026-07-12 | Added §1.1 and reconciled the cross-doc/phasing notes for the implemented pre-flip Living Brief member and curator workflows, processor boundary, provenance, retention, and last-good behavior. Both feature defaults remain off pending graduation. |
+| v0.3 | 2026-07-12 | Added §1.1 and reconciled the Living Brief member and curator workflows, processor boundary, provenance, retention, last-good behavior, and joint default-on graduation with independent rollback pins. |
 | v0.2 | 2026-06-26 | Consistency pass: relabeled §14.1 "P1/P2" with their delivery phases (P1 priority → Phase 2, P2 priority → Phase 4+) to remove the priority-vs-phase ambiguity; marked §14.2 rows 2 (titles) and 3 (who marks "solved") **Resolved**, matching §8 and the Phase 2 build (DECISIONS §8 updated to match). |
 | v0.1 | 2026-06-19 | Initial community-layer design — **lightweight / Twitter-like** (no Discourse trust-level gating). Reputation (Σ reactions received, resolves DESIGN.md Q15); reactions/likes; following/followers + activity feed (vs the inbox); a minimal fixed badge set; light opt-out leaderboards; cosmetic titles (resolves the rank stub); notifications integration; anti-abuse & humane-design wellbeing rules; data model (`follows`, `badges`, `user_badges`, `reputation_events`, `threads.accepted_answer_post_id`); explicit no-trust-gating stance; phasing & open questions. |

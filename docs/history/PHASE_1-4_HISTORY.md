@@ -747,15 +747,15 @@ closeout fixes and test runs.
 > `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md` and
 > `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
 
-### Thread Intelligence Follow-on (Pre-flip)
+### Thread Intelligence Follow-on (Graduated 2026-07-12)
 
 ADR 0019 separately authorizes the bounded automatic-publication design that
 the original human-only Phase 4 boundary required. Migration `0077`, the
 public-only evidence/worker/provider pipeline, Living Brief and curator/admin
 surfaces, redacted operations, retention, and rollback controls are implemented,
-but `community_memory` and `automated_context` both remain default `false`.
-This is a pending graduation record, not a rewrite of the 2026-06-28 Phase 4
-acceptance and not a claim that automatic publication is default-on.
+and `community_memory` plus `automated_context` graduated together to default
+`true` on 2026-07-12. This is a follow-on graduation record, not a rewrite of
+the 2026-06-28 Phase 4 acceptance.
 
 The Task 12 live comparison selected `low` reasoning and a `16000` output-token
 ceiling. It completed 46/46 runs with 149/149 supported material claims and zero
@@ -765,8 +765,8 @@ Evidence is in
 `thread-intelligence-live-rubric.json`; operations are in
 `docs/runbooks/thread_intelligence.md`. Browser/mobile/no-JS/a11y,
 security/privacy, concurrency, migration/upgrade, backup/restore, and rehearsed
-runtime rollback remain pre-flip gates. The defaults may change only in the
-separate final graduation change followed by two identical complete suites.
+runtime rollback all passed before the default flip; the evidence index records
+the gates and final post-flip verification.
 
 ### Accepted Gate A Scope
 
@@ -847,10 +847,11 @@ runtime source of truth.
 - Standalone index: `docs/evidence/phase4-gate-a.md`.
 - Deferral ADR: `docs/adr/0003-phase-4-closeout-deferrals.md`.
 - Carryover ledger: `docs/evidence/phase4-closeout/phase3-4-closeout-ledger.md`.
-- Thread Intelligence pre-flip live evaluation:
+- Thread Intelligence live evaluation and graduation index:
   `docs/evidence/phase4-closeout/thread-intelligence-live-eval.md` and
   `thread-intelligence-live-rubric.json` (`low`/`16000`, 46/46 runs, 149/149
-  supported, zero incomplete/private-sentinel/fabricated-decision outcomes).
+  supported, zero incomplete/private-sentinel/fabricated-decision outcomes),
+  plus `thread-intelligence-index.md`.
 - Thread Intelligence operations: `docs/runbooks/thread_intelligence.md`.
 - Current carryover stopping point: `docs/evidence/phase4-closeout/carryover-partial-stopping-point.md`.
 - Full suite: `composer test` → 984 tests / 5213 assertions.
@@ -879,10 +880,10 @@ runtime source of truth.
 ### Operating Notes
 
 - `php bin/console repair:reputation`, `repair:reputation-ledger`, and `reputation:reconcile` now rebuild `reputation_events` from canonical reactions/accepted answers, reverse stale events, and reconcile `users.reputation`.
-- Phase 4 Gate A feature flags still default `false`: `group_dms`,
-  `community_memory`; the follow-on `automated_context` flag also remains
-  default `false`. Thread Intelligence requires the latter two together and is
-  still pre-flip.
+- The remaining Phase 4 Gate A feature flag that still defaults `false` is
+  `group_dms`. Thread Intelligence requires `community_memory` and
+  `automated_context` together for provider generation; both graduated to
+  default-on on 2026-07-12 and retain independent explicit-false rollback pins.
 - `topic_workflow` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppFeatureFlagTest::test_topic_workflow_is_available_by_default_and_can_be_disabled`, browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, `docs/runbooks/topic_workflow.md`). Reversible via the `features` override.
 - `tags`, `expanded_feeds`, and `reputation_ledger` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`, `AppLeaderboardTest`, `docs/runbooks/phase4-tags-feeds-reputation.md`, and `docs/design-system/imladris/ACTIVATED_FEATURES.md`). Reversible via the `features` override.
 - `board_folders`, `bookmark_folders`, and `saved_feeds` graduated to default-ON on 2026-07-01 (acceptance evidence: `AppPhase4CarryoverFoundationTest`, `AppBoardFoldersSavedFeedsTest`, and `docs/design-system/imladris/ACTIVATED_FEATURES.md`). Reversible via the `features` override.

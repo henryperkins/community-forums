@@ -56,7 +56,7 @@ final class FeatureFlags
         'expanded_feeds' => true,     // board/tag follows, Following + Latest feeds — GA default-on (2026-07-01; reversible via features override)
         'reputation_ledger' => true,  // idempotent reputation events + windowed ranks — GA default-on (2026-07-01; reversible via features override)
         'badge_rules' => true,        // custom badge rules/backfill/revoke history — GA default-on (2026-07-02; reversible via features override)
-        'community_memory' => false,   // summaries, related topics, wiki revisions
+        'community_memory' => true,    // summaries, related topics, wiki revisions — Thread Intelligence GA default-on (2026-07-12; reversible via features override)
         'content_references' => true,  // persisted board/thread/post references + read-gated cards — GA default-on (2026-07-02; reversible via features override)
 
         // ── Phase 4 carryover completion (mixed: graduated default-on, rest dark)
@@ -72,7 +72,7 @@ final class FeatureFlags
         'saved_feeds' => true,         // private saved feed filters/digest composition — GA default-on (2026-07-01; reversible via features override)
         'custom_profile_fields' => true,  // GA default-on (2026-07-03; reversible via features override) — bounded extra public profile fields
         'account_lifecycle' => true,   // self-serve export/deactivate/reactivate/30-day-grace delete — GA default-on (2026-07-02; ADR 0006; reversible via features override)
-        'automated_context' => false,  // since-last-read context + suggested related topics
+        'automated_context' => true,   // since-last-read context + suggested related topics — Thread Intelligence GA default-on (2026-07-12; reversible via features override)
 
         // -- Phase 5 Gate A (accepted; default-on, independently reversible) -----
         // Gate A closed on 2026-07-09 (ADR 0018). Defaults apply to any install
