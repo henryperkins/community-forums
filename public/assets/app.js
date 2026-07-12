@@ -183,9 +183,11 @@
     var inbox = document.querySelector('[data-inbox]');
     if (inbox && window.fetch && window.history && window.DOMParser) {
         var reading = inbox.querySelector('[data-inbox-reading]');
+        var readingContent = inbox.querySelector('[data-inbox-reading-content]');
         var inboxList = inbox.querySelector('[data-inbox-list]');
-        var emptyHtml = reading.innerHTML;                 // the server-rendered placeholder
-        try { history.replaceState({}, '', window.location.href); } catch (e) { /* ignore */ }
+        var inboxBack = inbox.querySelector('[data-inbox-back]');
+        var emptyHtml = readingContent ? readingContent.innerHTML : '';
+        var selectedLink = null;
         var idOf = function (href) { var m = href && href.match(/\/t\/(\d+)/); return m ? m[1] : null; };
         var markActive = function (href) {
             var rows = inboxList.querySelectorAll('.thread-row');
@@ -194,60 +196,119 @@
                 rows[i].classList.toggle('is-active', !!a && a.getAttribute('href') === href);
             }
         };
-        var showEmpty = function () { reading.innerHTML = emptyHtml; reading.scrollTop = 0; markActive(''); };
-        var loadThread = function (href, push, focus) {
+        var setReadingOpen = function (open) {
+            inboxList.classList.toggle('is-hidden', open);
+            reading.classList.toggle('is-open', open);
+        };
+        var showEmpty = function (restoreFocus) {
+            readingContent.innerHTML = emptyHtml;
+            reading.removeAttribute('aria-busy');
+            reading.scrollTop = 0;
+            markActive('');
+            setReadingOpen(false);
+            if (restoreFocus && selectedLink && document.documentElement.contains(selectedLink)) {
+                selectedLink.focus();
+            }
+        };
+        var canonicalFallback = function (href) { window.location.href = href; };
+        var loadThread = function (href, push, focus, sourceLink) {
             reading.setAttribute('aria-busy', 'true');
             fetch(href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
                 .then(function (r) {
-                    if (r.redirected) { window.location.href = r.url; return null; }  // e.g. session expired → /login
-                    return r.ok ? r.text() : null;
+                    if (r.redirected) { canonicalFallback(r.url); return null; }
+                    if (!r.ok) { canonicalFallback(href); return null; }
+                    return r.text();
                 })
                 .then(function (html) {
                     if (html === null) { return; }
                     var doc = new DOMParser().parseFromString(html, 'text/html');
                     var main = doc.querySelector('#main');
                     if (!main || !main.querySelector('.thread-view, .post-stream, .thread-head')) {
-                        window.location.href = href; return;     // not a topic page → real navigation
+                        canonicalFallback(href); return;
                     }
-                    reading.innerHTML = main.innerHTML;
+                    readingContent.innerHTML = main.innerHTML;
                     reading.removeAttribute('aria-busy');
                     reading.scrollTop = 0;
+                    selectedLink = sourceLink || inboxList.querySelector(rowSelector(idOf(href)));
                     markActive(href);
+                    setReadingOpen(true);
                     if (push) {
                         var id = idOf(href);
                         var url = new URL(window.location.href);
                         if (id) { url.searchParams.set('t', id); }
-                        history.pushState({ href: href }, '', url.toString());
+                        history.pushState({ rbInboxTopic: true, href: href }, '', url.toString());
                     }
                     if (focus) {                                  // move focus, don't announce the whole thread
-                        var h = reading.querySelector('h1, h2, .thread-head');
+                        var h = readingContent.querySelector('h1, h2');
+                        if (!h) { h = readingContent.querySelector('.thread-head'); }
                         if (h) { h.setAttribute('tabindex', '-1'); h.focus(); }
                         else { reading.focus(); }
                     }
-                }).catch(function () { window.location.href = href; });
+                }).catch(function () { canonicalFallback(href); });
         };
         var rowSelector = function (id) {
             return 'a.thread-title[href^="/t/' + id + '-"], a.thread-title[href="/t/' + id + '"]';
         };
-        inboxList.addEventListener('click', function (e) {
-            var a = e.target.closest ? e.target.closest('a.thread-title') : null;
-            if (!a || !inboxList.contains(a)) { return; }
-            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
-            e.preventDefault();
-            loadThread(a.getAttribute('href'), true, true);
-        });
-        window.addEventListener('popstate', function () {
-            var id = new URL(window.location.href).searchParams.get('t');
-            if (!id) { showEmpty(); return; }              // Back to the bare /inbox restores the placeholder
-            var a = inboxList.querySelector(rowSelector(id));
-            if (a) { loadThread(a.getAttribute('href'), false, false); } else { showEmpty(); }
-        });
-        var initId = new URL(window.location.href).searchParams.get('t');
-        if (initId) {
-            var initA = inboxList.querySelector(rowSelector(initId));
-            if (initA) { loadThread(initA.getAttribute('href'), false, false); }
+        if (reading && readingContent && inboxList) {
+            var initialUrl = new URL(window.location.href);
+            try {
+                history.replaceState(initialUrl.searchParams.has('t') ? { rbInboxDirect: true } : { rbInboxList: true }, '', initialUrl.toString());
+            } catch (e) { /* ignore */ }
+            inboxList.addEventListener('click', function (e) {
+                var a = e.target.closest ? e.target.closest('a.thread-title') : null;
+                if (!a || !inboxList.contains(a)) { return; }
+                if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
+                e.preventDefault();
+                selectedLink = a;
+                loadThread(a.getAttribute('href'), true, true, a);
+            });
+            if (inboxBack) {
+                inboxBack.addEventListener('click', function () {
+                    if (history.state && history.state.rbInboxTopic) {
+                        history.back();
+                        return;
+                    }
+                    var url = new URL(window.location.href);
+                    url.searchParams.delete('t');
+                    try { history.replaceState({ rbInboxList: true }, '', url.toString()); } catch (e) { /* ignore */ }
+                    showEmpty(true);
+                });
+            }
+            window.addEventListener('popstate', function () {
+                var id = new URL(window.location.href).searchParams.get('t');
+                if (!id) { showEmpty(true); return; }
+                var a = inboxList.querySelector(rowSelector(id));
+                if (a) {
+                    selectedLink = a;
+                    loadThread(a.getAttribute('href'), false, false, a);
+                } else {
+                    canonicalFallback('/t/' + encodeURIComponent(id));
+                }
+            });
+            var initId = initialUrl.searchParams.get('t');
+            if (initId) {
+                var initA = inboxList.querySelector(rowSelector(initId));
+                if (initA) {
+                    selectedLink = initA;
+                    loadThread(initA.getAttribute('href'), false, false, initA);
+                } else {
+                    canonicalFallback('/t/' + encodeURIComponent(initId));
+                }
+            }
         }
     }
+
+    // The reply dock rests compactly on small screens, then stays expanded once
+    // a member starts composing. Delegation also covers topics fetched into the
+    // Community Inbox after this script has loaded.
+    document.addEventListener('focusin', function (e) {
+        var form = e.target.closest ? e.target.closest('.reply-composer') : null;
+        if (form) { form.classList.add('is-expanded'); }
+    });
+    document.addEventListener('input', function (e) {
+        var form = e.target.closest ? e.target.closest('.reply-composer') : null;
+        if (form) { form.classList.add('is-expanded'); }
+    });
 
     // Mobile navigation drawer (Phase 4): the sidebar rail slides in over a scrim
     // on small screens. Without JS the rail simply stacks above the content (the

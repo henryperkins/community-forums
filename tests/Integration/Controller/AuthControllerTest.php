@@ -24,7 +24,7 @@ final class AuthControllerTest extends TestCase
             'password' => 'password123',
             'password_confirm' => 'password123',
         ]);
-        $this->assertRedirect($response, '/');
+        $this->assertRedirect($response, '/inbox');
 
         $row = $this->users()->findByUsername('newcomer');
         self::assertNotNull($row);
@@ -55,8 +55,44 @@ final class AuthControllerTest extends TestCase
         $this->makeUser(['email' => 'member@example.test', 'password' => 'password123']);
         $this->get('/login');
         $response = $this->post('/login', ['email' => 'member@example.test', 'password' => 'password123']);
-        $this->assertRedirect($response, '/');
+        $this->assertRedirect($response, '/inbox');
         $this->assertSeeText($this->get('/'), 'Log out');
+    }
+
+    public function test_login_preserves_an_explicit_safe_next_destination(): void
+    {
+        $this->makeUser(['email' => 'safe-next@example.test', 'password' => 'password123']);
+        $this->get('/login', ['next' => '/']);
+
+        $response = $this->post('/login', [
+            'email' => 'safe-next@example.test',
+            'password' => 'password123',
+            'next' => '/',
+        ]);
+
+        $this->assertRedirect($response, '/');
+    }
+
+    public function test_login_rejects_an_unsafe_next_destination_to_the_inbox(): void
+    {
+        $this->makeUser(['email' => 'unsafe-next@example.test', 'password' => 'password123']);
+        $this->get('/login', ['next' => '//evil.example']);
+
+        $response = $this->post('/login', [
+            'email' => 'unsafe-next@example.test',
+            'password' => 'password123',
+            'next' => '//evil.example',
+        ]);
+
+        $this->assertRedirect($response, '/inbox');
+    }
+
+    public function test_authenticated_login_and_register_pages_redirect_to_the_inbox(): void
+    {
+        $this->actingAs($this->makeUser());
+
+        $this->assertRedirect($this->get('/login'), '/inbox');
+        $this->assertRedirect($this->get('/register'), '/inbox');
     }
 
     public function test_invalid_credentials_fail_without_enumeration(): void
@@ -161,7 +197,7 @@ final class AuthControllerTest extends TestCase
         $this->makeUser(['email' => 'susp@example.test', 'password' => 'password123', 'status' => 'suspended']);
         $this->get('/login');
         $response = $this->post('/login', ['email' => 'susp@example.test', 'password' => 'password123']);
-        $this->assertRedirect($response, '/');
+        $this->assertRedirect($response, '/inbox');
         $this->assertSeeText($this->get('/'), 'Log out');
     }
 

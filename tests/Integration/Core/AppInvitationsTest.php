@@ -294,7 +294,7 @@ final class AppInvitationsTest extends TestCase
         self::assertStringNotContainsString($expired['token'], $res->body(), 'a dead token must not be re-embedded');
 
         $retry = $this->post('/register', $this->registerFields('retryer', 'retryer@example.test'));
-        $this->assertRedirect($retry, '/');
+        $this->assertRedirect($retry, '/inbox');
     }
 
     public function test_invite_mode_error_rerenders_keep_the_typed_draft(): void
@@ -358,7 +358,7 @@ final class AppInvitationsTest extends TestCase
 
         $this->get('/register');
         $res = $this->post('/register', $this->registerFields('arrayproof', 'arrayproof@example.test') + ['invite' => ['x', 'y']]);
-        $this->assertRedirect($res, '/'); // malformed carrier = no token; plain signup
+        $this->assertRedirect($res, '/inbox'); // malformed carrier = no token; plain signup
     }
 
     public function test_array_shaped_admin_invite_fields_are_treated_as_absent(): void
@@ -398,12 +398,12 @@ final class AppInvitationsTest extends TestCase
 
         $this->get('/register', ['invite' => $firstInvite['token']]);
         $r1 = $this->post('/register', $this->registerFields('invitee1', 'invitee1@example.test') + ['invite' => $firstInvite['token']]);
-        $this->assertRedirect($r1, '/');
+        $this->assertRedirect($r1, '/inbox');
         $this->logoutClient();
 
         $this->get('/register', ['invite' => $secondInvite['token']]);
         $r2 = $this->post('/register', $this->registerFields('invitee2', 'invitee2@example.test') + ['invite' => $secondInvite['token']]);
-        $this->assertRedirect($r2, '/'); // must NOT be a `register` 429
+        $this->assertRedirect($r2, '/inbox'); // must NOT be a `register` 429
         self::assertNotNull($this->users()->findByUsername('invitee2'));
     }
 
@@ -421,7 +421,7 @@ final class AppInvitationsTest extends TestCase
         self::assertStringContainsString('been invited', $form->body());
 
         $res = $this->post('/register', $this->registerFields('invitee9', 'invitee9@example.test') + ['invite' => $invite['token']]);
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
         $this->assertSeeText($this->get('/'), 'invitee9'); // session established
 
         $user = $this->users()->findByUsername('invitee9');
@@ -492,7 +492,7 @@ final class AppInvitationsTest extends TestCase
 
         // A present valid invite is honored (board grant + consumption).
         $ok = $this->post('/register', $this->registerFields('openinvite', 'openinvite@example.test') + ['invite' => $invite['token']]);
-        $this->assertRedirect($ok, '/');
+        $this->assertRedirect($ok, '/inbox');
         $user = $this->users()->findByUsername('openinvite');
         self::assertNotNull($user);
         self::assertTrue((new BoardMemberRepository($this->db))->isMember((int) $board['id'], (int) $user['id']));
@@ -522,7 +522,7 @@ final class AppInvitationsTest extends TestCase
             'onboarding_role_id' => '1',
             'onboarding_board_id' => (string) $otherBoard['id'],
         ]);
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
 
         $user = $this->users()->findByUsername('forger');
         self::assertNotNull($user);

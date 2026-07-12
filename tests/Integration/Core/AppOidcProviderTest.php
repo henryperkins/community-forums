@@ -118,7 +118,7 @@ final class AppOidcProviderTest extends TestCase
         $q = $this->startFlow();
         $res = $this->completeCallback($q, ['id_token' => $this->idToken(['nonce' => $q['nonce']])]);
 
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
         self::assertSame($before + 1, $this->users()->count());
 
         $identity = (new OAuthIdentityRepository($this->db))->findByProvider('gitlab', '4213');
@@ -154,7 +154,7 @@ final class AppOidcProviderTest extends TestCase
         $q2 = $this->startFlow();
         $res = $this->completeCallback($q2, ['id_token' => $this->idToken(['nonce' => $q2['nonce']])]);
 
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
         $again = (new OAuthIdentityRepository($this->db))->findByProvider('gitlab', '4213');
         self::assertSame((int) $first['user_id'], (int) $again['user_id']);
     }
@@ -212,7 +212,7 @@ final class AppOidcProviderTest extends TestCase
         $this->provisionProvider();
         $q = $this->startFlow();
         $token = ['id_token' => $this->idToken(['nonce' => $q['nonce']])];
-        $this->assertRedirect($this->completeCallback($q, $token), '/');
+        $this->assertRedirect($this->completeCallback($q, $token), '/inbox');
         $countAfterFirst = $this->users()->count();
         $this->logoutClient(); // fresh browser; attacker replays the captured URL
 
@@ -234,7 +234,7 @@ final class AppOidcProviderTest extends TestCase
             'id_token' => $this->idToken(['nonce' => $q['nonce']], kid: 'kid-2'),
         ]);
 
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
         $jwksFetches = array_values(array_filter($this->http->urls(), fn (string $u) => $u === self::JWKS));
         self::assertCount(1, $jwksFetches, 'exactly one forced refresh, from the pinned URL');
     }
@@ -252,7 +252,7 @@ final class AppOidcProviderTest extends TestCase
             'id_token' => $this->signToken($this->claims(['nonce' => $q['nonce']]), kid: 'kid-2', omitKid: true),
         ]);
 
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
         $jwksFetches = array_values(array_filter($this->http->urls(), fn (string $u) => $u === self::JWKS));
         self::assertCount(1, $jwksFetches, 'exactly one forced refresh answers a kid-less rotation');
     }
@@ -270,7 +270,7 @@ final class AppOidcProviderTest extends TestCase
 
         $res = $this->completeCallback($q, ['id_token' => $this->idToken(['nonce' => $q['nonce']])]);
 
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
         $discoveryFetches = array_values(array_filter($this->http->urls(), fn (string $u) => $u === self::WELL_KNOWN));
         self::assertCount(1, $discoveryFetches, 'exchange() and identity() share one resolved document per callback');
     }

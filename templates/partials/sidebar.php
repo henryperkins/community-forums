@@ -12,6 +12,11 @@ $isDmRoute = $request_path === '/messages'
     <?php if ($current_user !== null): ?>
         <nav class="rail-filters-nav" aria-label="Quick filters">
             <ul class="rail-filters">
+                <?php if (!empty($features['search'])): ?>
+                    <li><a class="rail-filter mobile-only mobile-search-link" href="/search">
+                        <?= $this->partial('partials/icon', ['name' => 'search', 'class' => 'rail-ic']) ?>
+                        <span>Search</span></a></li>
+                <?php endif; ?>
                 <?php if (!empty($features['engagement'])): ?>
                     <li><a class="rail-filter<?= $request_path === '/inbox' ? ' active' : '' ?>" href="/inbox">
                         <svg class="rail-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.4-6.5A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.5z"/></svg>

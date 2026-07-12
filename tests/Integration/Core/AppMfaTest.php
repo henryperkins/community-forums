@@ -49,7 +49,7 @@ final class AppMfaTest extends TestCase
             'mfa_token' => $this->extractMfaToken($password),
             'code' => strtolower($codes[0]),
         ]);
-        $this->assertRedirect($mfa, '/');
+        $this->assertRedirect($mfa, '/inbox');
         self::assertSame(9, (int) $this->db->fetchValue(
             'SELECT COUNT(*) FROM user_recovery_codes WHERE user_id = ? AND used_at IS NULL',
             [(int) $user['id']],
@@ -75,9 +75,23 @@ final class AppMfaTest extends TestCase
         $newCodes = $this->extractRecoveryCodes($rotated);
         self::assertCount(10, $newCodes);
 
+        $this->logoutClient();
+        $this->get('/login', ['next' => '/settings/security']);
+        $withNext = $this->post('/login', [
+            'email' => $user['email'],
+            'password' => 'password123',
+            'next' => '/settings/security',
+        ]);
+        $completedWithNext = $this->post('/login/mfa', [
+            'mfa_token' => $this->extractMfaToken($withNext),
+            'code' => $newCodes[0],
+            'next' => '/settings/security',
+        ]);
+        $this->assertRedirect($completedWithNext, '/settings/security');
+
         $disabled = $this->post('/settings/security/totp/disable', [
             'current_password' => 'password123',
-            'disable_code' => $newCodes[0],
+            'disable_code' => $newCodes[1],
         ]);
         $this->assertRedirect($disabled, '/settings/security');
         self::assertFalse((bool) $this->db->fetchValue(
@@ -91,7 +105,7 @@ final class AppMfaTest extends TestCase
             'email' => $user['email'],
             'password' => 'password123',
         ]);
-        $this->assertRedirect($plain, '/');
+        $this->assertRedirect($plain, '/inbox');
     }
 
     public function test_totp_mfa_code_guessing_is_throttled_per_account_across_fresh_login_tokens(): void

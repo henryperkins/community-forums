@@ -139,6 +139,10 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('action="/t/' . (int) $thread['thread_id'] . '/reply"', $threadPage->body());
         self::assertStringContainsString('action="/posts/' . $postId . '/edit"', $threadPage->body());
         self::assertStringContainsString('class="composer-input"', $threadPage->body());
+        self::assertStringContainsString('class="thread thread-conversation"', $threadPage->body());
+        self::assertStringContainsString('class="thread-scroll"', $threadPage->body());
+        self::assertStringContainsString('class="thread-dock"', $threadPage->body());
+        self::assertStringContainsString('class="composer reply-composer"', $threadPage->body());
 
         $newDm = $this->get('/messages/new');
         $this->assertStatus(200, $newDm);
@@ -263,6 +267,25 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('class="post-edit" open', $res->body(), 'the failing post\'s edit form is re-opened');
         // The stored post is untouched by the failed edit.
         self::assertSame('Original body.', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+    }
+
+    public function test_failed_reply_rerenders_the_thread_with_an_expanded_dock(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'reply-rerender']);
+        $user = $this->makeUser(['username' => 'replyrerender']);
+        $thread = $this->makeThread($board, $user, 'Reply validation', 'Opening body.');
+        $this->actingAs($user);
+
+        $tooLong = str_repeat('z', 20001);
+        $response = $this->post('/t/' . (int) $thread['thread_id'] . '/reply', [
+            'body' => $tooLong,
+            'idempotency_key' => bin2hex(random_bytes(16)),
+        ]);
+
+        $this->assertStatus(422, $response);
+        self::assertStringContainsString('Your post is too long.', $response->body());
+        self::assertStringContainsString($tooLong, $response->body(), 'the rejected reply body remains in the composer');
+        self::assertStringContainsString('class="composer reply-composer is-expanded"', $response->body());
     }
 
     /**

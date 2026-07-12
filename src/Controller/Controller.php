@@ -55,6 +55,12 @@ abstract class Controller
         return $this->session()->user();
     }
 
+    /** Default destination after a successful authentication journey. */
+    protected function authenticatedHome(): string
+    {
+        return '/inbox';
+    }
+
     /** @param array<string,mixed> $data */
     protected function view(string $template, array $data = [], int $status = 200): Response
     {

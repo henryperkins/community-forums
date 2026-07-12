@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Controller\OAuthController;
 use App\Core\FeatureFlags;
+use App\Core\Request;
 use App\Domain\User;
 use App\Repository\OAuthIdentityRepository;
 use App\Repository\SettingRepository;
@@ -78,6 +80,30 @@ final class AppOAuthTest extends TestCase
 
         self::assertSame('login', $again['action']);
         self::assertSame($first['user']->id(), $again['user']->id());
+    }
+
+    public function test_login_and_created_outcomes_redirect_to_the_community_inbox(): void
+    {
+        $request = new Request('GET', '/auth/google/callback', [], [], [], [
+            'REMOTE_ADDR' => '127.0.0.1',
+            'HTTP_USER_AGENT' => 'phpunit',
+        ]);
+        $buildContainer = new \ReflectionMethod($this->app, 'buildContainer');
+        $container = $buildContainer->invoke($this->app, $request);
+        $controller = new OAuthController($container);
+        $handleOutcome = new \ReflectionMethod($controller, 'handleOutcome');
+
+        $returning = User::fromRow($this->makeUser(['username' => 'oauth_returning']));
+        $this->assertRedirect($handleOutcome->invoke($controller, [
+            'action' => 'login',
+            'user' => $returning,
+        ], 'google'), '/inbox');
+
+        $created = User::fromRow($this->makeUser(['username' => 'oauth_created']));
+        $this->assertRedirect($handleOutcome->invoke($controller, [
+            'action' => 'created',
+            'user' => $created,
+        ], 'google'), '/inbox');
     }
 
     public function test_verified_email_collision_never_auto_merges(): void

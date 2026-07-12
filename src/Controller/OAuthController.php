@@ -177,20 +177,20 @@ final class OAuthController extends Controller
             case 'login':
                 if ($this->container->get(MfaService::class)->enabledForUser($outcome['user']->id())) {
                     $token = $this->container->get(MfaService::class)
-                        ->beginLoginChallenge($outcome['user'], $this->request(), '/');
+                        ->beginLoginChallenge($outcome['user'], $this->request(), $this->authenticatedHome());
                     $response = $this->view('auth/mfa', [
                         'token' => $token,
-                        'next' => '/',
+                        'next' => $this->authenticatedHome(),
                         'errors' => [],
                     ]);
                     break;
                 }
                 $this->session()->login($outcome['user']);
-                $response = $this->redirectWithFlash('/', 'Signed in with ' . $label . '.');
+                $response = $this->redirectWithFlash($this->authenticatedHome(), 'Signed in with ' . $label . '.');
                 break;
             case 'created':
                 $this->session()->login($outcome['user']);
-                $response = $this->redirectWithFlash('/', 'Welcome! Your account is ready.');
+                $response = $this->redirectWithFlash($this->authenticatedHome(), 'Welcome! Your account is ready.');
                 break;
             case 'linked':
                 $response = $this->redirectWithFlash('/settings/connections', 'Connected ' . $label . '.');

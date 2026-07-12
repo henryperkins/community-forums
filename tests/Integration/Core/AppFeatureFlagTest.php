@@ -438,7 +438,7 @@ final class AppFeatureFlagTest extends TestCase
             'password_confirm' => 'password123',
             'invite' => $invite['token'],
         ]);
-        $this->assertRedirect($res, '/');
+        $this->assertRedirect($res, '/inbox');
         $user = (new \App\Repository\UserRepository($this->db))->findByUsername('darkordinary');
         self::assertNotNull($user, 'open-mode signup still works while the flag is dark');
         self::assertSame(0, (int) $this->db->fetchValue('SELECT used_count FROM invitations WHERE id = ?', [$invite['id']]), 'the token must stay unconsumed while dark');
