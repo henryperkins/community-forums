@@ -12,20 +12,34 @@ $this->section('description', mb_strimwidth(preg_replace('/\s+/', ' ', (string) 
 if (($thread['board_visibility'] ?? 'public') !== 'public') {
     $this->section('robots', 'noindex, nofollow');
 }
+$topicToolSections = [
+    'watch' => $current_user !== null && !empty($can_write) && (($notifications_on ?? false) || ($workflow_on ?? false)),
+    'standing' => $current_user !== null && ($workflow_on ?? false),
+    'tags' => $current_user !== null && ($tags_on ?? false) && (!empty($thread_tags) || !empty($can_edit_tags)),
+    'memory' => $current_user !== null && !empty($can_write) && !empty($can_curate_memory),
+    'management' => $current_user !== null && !empty($can_write) && (
+        !empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)
+        || !empty($can_mark_solved) || !empty($can_pin) || !empty($can_lock)
+        || !empty($can_create_poll) || !empty($poll['can_close']) || !empty($can_split_merge)
+    ),
+];
+$hasTopicTools = in_array(true, $topicToolSections, true);
+$status = ($workflow_on ?? false)
+    ? (string) ($thread['status'] ?? 'open')
+    : (($accepted_post_id ?? null) !== null ? 'solved' : null);
+$statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replace('_', ' ', $status))) : null;
 ?>
-<article class="thread thread-conversation">
+<article class="thread thread-conversation thread-study" data-thread-study>
     <div class="thread-scroll">
-    <header class="thread-head">
+    <header class="thread-head thread-study-head">
         <p class="breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Home</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
-        <h1>
-            <?php if ((int) $thread['is_pinned'] === 1): ?><span class="badge">Pinned</span><?php endif; ?>
-            <?php if ((int) $thread['is_locked'] === 1): ?><span class="badge badge-muted">Locked</span><?php endif; ?>
-            <?php if (($workflow_on ?? false) && !empty($thread['status']) && $thread['status'] !== 'open'): ?>
-                <span class="badge"><?= $e($status_labels[$thread['status']] ?? ucwords(str_replace('_', ' ', (string) $thread['status']))) ?></span>
-            <?php endif; ?>
-            <?php if (($accepted_post_id ?? null) !== null): ?><span class="badge badge-solved">✓ Solved</span><?php endif; ?>
+        <h1 class="thread-study-title">
+            <?php if ((int) $thread['is_pinned'] === 1): ?><span class="thread-state-chip is-pinned">Pinned</span><?php endif; ?>
+            <?php if ((int) $thread['is_locked'] === 1): ?><span class="thread-state-chip is-locked">Locked</span><?php endif; ?>
+            <?php if ($status !== null): ?><span class="thread-status-chip is-<?= $e($status) ?>" data-thread-status="<?= $e($status) ?>"><?= $status === 'solved' ? '✓ ' : '' ?><?= $e($statusLabel) ?></span><?php endif; ?>
             <?= $e($thread['title']) ?>
         </h1>
+        <div class="thread-facts">
         <?php
         // "Opened by" byline — derive OP anonymity from the OP post on this page so an
         // anonymous opener is never deanonymised; omit the opener name if the OP isn't loaded here.
@@ -35,7 +49,8 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
         }
         $byReplies = (int) ($thread['reply_count'] ?? 0);
         ?>
-        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?></p>
+        <p class="thread-byline"><?php if ($opAnon !== null): $ba = mask_author($thread['author_display_name'] ?? null, $thread['author_username'] ?? null, 'user', $opAnon); ?>Opened by <?= $e($ba['label']) ?> · <?php endif; ?><?= $byReplies ?> repl<?= $byReplies === 1 ? 'y' : 'ies' ?><?php if (!empty($assignment)): ?> · Tended by @<?= $e($assignment['assigned_username']) ?><?php endif; ?><?php if (!empty($my_snooze)): ?> · Quiet until <?= $e(human_datetime($my_snooze)) ?><?php endif; ?></p>
+        <?php foreach (($thread_tags ?? []) as $tag): ?><a class="tag" href="/tags/<?= $e($tag['slug']) ?>"><?= $e($tag['name']) ?></a><?php endforeach; ?>
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
             <span class="thread-participants-label">In council</span>
@@ -49,178 +64,19 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
                 <?php endif; ?>
             </div>
         <?php endif; ?>
-        <?php
-        // Topic action bar (§5.1, consolidated §5b): the star — the one-tap
-        // engagement primary — stays on the line; notify, clear-accepted, and
-        // the pin/lock mod switches tuck into a single ··· overflow (the DM
-        // popover pattern: native <details>, existing forms verbatim).
-        $hasThreadOverflow = (($notifications_on ?? false) && $current_user !== null)
-            || (($accepted_post_id ?? null) !== null && !empty($can_mark_solved))
-            || !empty($can_pin) || !empty($can_lock);
-        $hasThreadActions = ((($engagement ?? false) && $current_user !== null)) || $hasThreadOverflow;
-        ?>
-        <?php if ($hasThreadActions): ?>
-            <div class="thread-actions">
-                <?php if (($engagement ?? false) && $current_user !== null): ?>
-                    <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
-                        <?= $this->csrfField() ?>
-                        <input type="hidden" name="return" value="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">
-                        <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>">
-                            <?= ($is_starred ?? false) ? '★ Starred' : '☆ Star' ?>
-                        </button>
-                    </form>
-                <?php endif; ?>
-                <?php if ($hasThreadOverflow): ?>
-                    <details class="dm-menu">
-                        <summary class="dm-iconbtn" aria-label="Topic actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
-                        <div class="dm-menu-pop" role="menu">
-                            <?php if (($notifications_on ?? false) && $current_user !== null): ?>
-                                <?php $freq = $subscription['frequency'] ?? 'off'; ?>
-                                <form class="subscribe-form dm-menu-form" method="post" action="/t/<?= (int) $thread['id'] ?>/subscribe">
-                                    <?= $this->csrfField() ?>
-                                    <label class="sr-only" for="sub-freq">Notify me</label>
-                                    <select class="input input-small" id="sub-freq" name="frequency">
-                                        <option value="instant"<?= $freq === 'instant' ? ' selected' : '' ?>>Notify: Instant</option>
-                                        <option value="daily"<?= $freq === 'daily' ? ' selected' : '' ?>>Notify: Daily</option>
-                                        <option value="off"<?= $freq === 'off' ? ' selected' : '' ?>>Notify: Off</option>
-                                    </select>
-                                    <input type="hidden" name="in_app" value="1">
-                                    <input type="hidden" name="email" value="1">
-                                    <button class="linkbtn" type="submit">Save</button>
-                                </form>
-                            <?php endif; ?>
-                            <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
-                                <form method="post" action="/t/<?= (int) $thread['id'] ?>/unaccept">
-                                    <?= $this->csrfField() ?>
-                                    <button class="dm-menu-item" type="submit"><span>Clear accepted answer</span></button>
-                                </form>
-                            <?php endif; ?>
-                            <?php if (!empty($can_pin) || !empty($can_lock)): ?>
-                                <div class="dm-menu-sep"></div>
-                                <?php if (!empty($can_pin)): ?>
-                                <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/pin">
-                                    <?= $this->csrfField() ?>
-                                    <button class="dm-menu-item" type="submit"><span><?= (int) $thread['is_pinned'] === 1 ? 'Unpin' : 'Pin' ?></span></button>
-                                </form>
-                                <?php endif; ?>
-                                <?php if (!empty($can_lock)): ?>
-                                <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/lock">
-                                    <?= $this->csrfField() ?>
-                                    <button class="dm-menu-item danger" type="submit"><span><?= (int) $thread['is_locked'] === 1 ? 'Unlock' : 'Lock' ?></span></button>
-                                </form>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </div>
-                    </details>
-                <?php endif; ?>
-            </div>
+        <?php if (($engagement ?? false) && $current_user !== null && !empty($can_write)): ?>
+            <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
+                <?= $this->csrfField() ?>
+                <input type="hidden" name="return" value="/t/<?= (int) $thread['id'] ?>-<?= $e($thread['slug']) ?>">
+                <button class="linkbtn star-btn<?= ($is_starred ?? false) ? ' star-on' : '' ?>" type="submit" aria-pressed="<?= ($is_starred ?? false) ? 'true' : 'false' ?>"><?= ($is_starred ?? false) ? '★ Starred' : '☆ Star' ?></button>
+            </form>
         <?php endif; ?>
-        <?php if ($workflow_on ?? false): ?>
-            <div class="workflow-bar wf-bar">
-                <span class="wf-bar-label">Workflow</span>
-                <span class="muted">Status: <?= $e($status_labels[$thread['status'] ?? 'open'] ?? 'Open') ?></span>
-                <?php if (!empty($assignment)): ?>
-                    <span class="muted">Assigned to @<?= $e($assignment['assigned_username']) ?></span>
-                <?php endif; ?>
-                <?php if (!empty($my_snooze)): ?>
-                    <span class="muted">Snoozed until <?= $e(human_datetime($my_snooze)) ?></span>
-                <?php endif; ?>
-            </div>
-
-            <?php if ($current_user !== null): ?>
-                <div class="workflow-actions wf-actions">
-                    <?php if (!empty(array_filter($can_change_statuses ?? []))): ?>
-                        <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/status">
-                            <?= $this->csrfField() ?>
-                            <label class="sr-only" for="thread-status">Topic status</label>
-                            <select id="thread-status" class="input input-small" name="status">
-                                <?php foreach ($status_labels as $value => $label): ?>
-                                    <?php if (!empty($can_change_statuses[$value]) || $value === ($thread['status'] ?? 'open')): ?>
-                                        <option value="<?= $e($value) ?>"<?= $value === ($thread['status'] ?? 'open') ? ' selected' : '' ?>><?= $e($label) ?></option>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </select>
-                            <input class="input input-small" type="text" name="reason" maxlength="255" placeholder="Reason">
-                            <button class="linkbtn wf-btn" type="submit">Update status</button>
-                        </form>
-                    <?php endif; ?>
-
-                    <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/snooze">
-                        <?= $this->csrfField() ?>
-                        <label class="sr-only" for="thread-snooze">Snooze</label>
-                        <select id="thread-snooze" class="input input-small" name="until">
-                            <option value="">Clear snooze</option>
-                            <option value="later_today">Later today</option>
-                            <option value="tomorrow">Tomorrow</option>
-                            <option value="week">Next week</option>
-                        </select>
-                        <button class="linkbtn wf-btn" type="submit">Snooze</button>
-                    </form>
-
-                    <?php if (!empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)): ?>
-                        <form class="inline" method="post" action="/t/<?= (int) $thread['id'] ?>/assign">
-                            <?= $this->csrfField() ?>
-                            <?php if (!empty($can_staff_assign)): ?>
-                                <label class="sr-only" for="thread-assignee">Assign to</label>
-                                <input id="thread-assignee" class="input input-small" type="text" name="assignee" maxlength="32" placeholder="username">
-                                <button class="linkbtn wf-btn" type="submit">Assign</button>
-                            <?php elseif (!empty($can_self_assign)): ?>
-                                <input type="hidden" name="self" value="1">
-                                <button class="linkbtn wf-btn" type="submit">Assign to me</button>
-                            <?php endif; ?>
-                            <?php if (!empty($assignment)): ?>
-                                <button class="linkbtn wf-btn muted" type="submit" name="action" value="unassign">Unassign</button>
-                            <?php endif; ?>
-                        </form>
-                    <?php else: ?>
-                        <span class="wf-btn muted" aria-disabled="true">Assign</span>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($status_history)): ?>
-                <details class="workflow-history wf-history">
-                    <summary>Status history</summary>
-                    <ol class="wf-history-list">
-                        <?php foreach ($status_history as $wfEvent): ?>
-                            <li class="wf-history-item">
-                                <span class="wf-history-to"><?= $e($status_labels[$wfEvent['new_status']] ?? $wfEvent['new_status']) ?></span>
-                                <?php if (!empty($wfEvent['previous_status'])): ?>
-                                    <span class="muted">from <?= $e($status_labels[$wfEvent['previous_status']] ?? $wfEvent['previous_status']) ?></span>
-                                <?php endif; ?>
-                                <span class="wf-history-actor"><?= $e($wfEvent['actor_display_name'] ?? $wfEvent['actor_username'] ?? 'system') ?></span>
-                                <span class="muted"><?= $e(human_datetime($wfEvent['created_at'])) ?></span>
-                                <?php if (!empty($wfEvent['reason'])): ?>
-                                    <span class="wf-history-reason">— <?= $e($wfEvent['reason']) ?></span>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                </details>
-            <?php endif; ?>
+        <?php if ($hasTopicTools): ?>
+            <button type="button" class="topic-tools-open" data-topic-tools-open hidden aria-controls="topic-tools-<?= (int) $thread['id'] ?>" aria-expanded="false"><?= $this->partial('partials/icon', ['name' => 'eight-point-star']) ?><span>Topic tools</span></button>
         <?php endif; ?>
-        <?php if (($tags_on ?? false) && !empty($thread_tags)): ?>
-            <div class="workflow-bar" aria-label="Topic tags">
-                <?php foreach ($thread_tags as $tag): ?>
-                    <a class="tag" href="/tags/<?= $e($tag['slug']) ?>"><?= $e($tag['name']) ?></a>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-        <?php if (($tags_on ?? false) && !empty($all_tags) && !empty($can_edit_tags)): ?>
-            <details class="workflow-actions">
-                <summary class="linkbtn">Edit tags</summary>
-                <form class="inline-form" method="post" action="/t/<?= (int) $thread['id'] ?>/tags">
-                    <?= $this->csrfField() ?>
-                    <?php $currentTagIds = array_flip(array_map(static fn ($tag) => (int) $tag['id'], $thread_tags ?? [])); ?>
-                    <?php foreach ($all_tags as $tag): ?>
-                        <label class="checkline">
-                            <input type="checkbox" name="tag_ids[]" value="<?= (int) $tag['id'] ?>" <?= isset($currentTagIds[(int) $tag['id']]) ? 'checked' : '' ?>>
-                            <?= $e($tag['name']) ?>
-                        </label>
-                    <?php endforeach; ?>
-                    <button class="btn btn-small" type="submit">Save tags</button>
-                </form>
-            </details>
-        <?php endif; ?>
+        </div>
+        <?php if ($current_user === null): ?><?= $this->partial('partials/thread_status_history', compact('status_history', 'status_labels')) ?><?php endif; ?>
+    </header>
         <?php if (!empty($polls_on) && !empty($poll)): ?>
             <section class="poll-card poll-panel">
                 <div class="poll-head">
@@ -338,8 +194,6 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             </section>
             </details>
         <?php endif; ?>
-    </header>
-
     <?php if ($living_brief !== null || $related_fallback !== [] || $can_curate_memory): ?>
     <div class="thread-memory-slot">
         <?php if ($living_brief !== null): ?>
@@ -451,4 +305,33 @@ if (($thread['board_visibility'] ?? 'public') !== 'public') {
             <div class="joinbar">You don't have permission to reply in this board.</div>
         <?php endif; ?>
     </div>
+    <?= $this->partial('partials/thread_tools', [
+        'thread' => $thread,
+        'topic_tool_sections' => $topicToolSections,
+        'subscription' => $subscription,
+        'notifications_on' => $notifications_on,
+        'workflow_on' => $workflow_on,
+        'can_write' => $can_write,
+        'can_change_statuses' => $can_change_statuses,
+        'status_labels' => $status_labels,
+        'status_history' => $status_history,
+        'tags_on' => $tags_on,
+        'thread_tags' => $thread_tags,
+        'all_tags' => $all_tags,
+        'can_edit_tags' => $can_edit_tags,
+        'living_brief' => $living_brief,
+        'memory_history' => $memory_history,
+        'memory_refresh' => $memory_refresh,
+        'memory_automation_paused' => $memory_automation_paused,
+        'assignment' => $assignment,
+        'can_self_assign' => $can_self_assign,
+        'can_staff_assign' => $can_staff_assign,
+        'accepted_post_id' => $accepted_post_id,
+        'can_mark_solved' => $can_mark_solved,
+        'can_pin' => $can_pin,
+        'can_lock' => $can_lock,
+        'poll' => $poll,
+        'can_create_poll' => $can_create_poll,
+        'can_split_merge' => $can_split_merge,
+    ]) ?>
 </article>

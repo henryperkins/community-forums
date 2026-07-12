@@ -37,8 +37,13 @@ $iconStroke = [
 $iconFilled = [
     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',
 ];
+$iconBrand = [
+    'eight-point-star' => '<path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z" opacity="0.5"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/>',
+];
 ?>
-<?php if (isset($iconFilled[$iconName])): ?>
+<?php if (isset($iconBrand[$iconName])): ?>
+<svg class="icon icon-<?= $e($iconName) . $e($iconExtra) ?>" viewBox="0 0 100 100" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?= $iconBrand[$iconName] /* static, trusted markup */ ?></svg>
+<?php elseif (isset($iconFilled[$iconName])): ?>
 <svg class="icon icon-<?= $e($iconName) . $e($iconExtra) ?>" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none" aria-hidden="true"><?= $iconFilled[$iconName] /* static, trusted markup */ ?></svg>
 <?php elseif (isset($iconStroke[$iconName])): ?>
 <svg class="icon icon-<?= $e($iconName) . $e($iconExtra) ?>" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><?= $iconStroke[$iconName] /* static, trusted markup */ ?></svg>

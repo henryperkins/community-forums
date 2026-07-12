@@ -139,7 +139,7 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('action="/t/' . (int) $thread['thread_id'] . '/reply"', $threadPage->body());
         self::assertStringContainsString('action="/posts/' . $postId . '/edit"', $threadPage->body());
         self::assertStringContainsString('class="composer-input"', $threadPage->body());
-        self::assertStringContainsString('class="thread thread-conversation"', $threadPage->body());
+        self::assertStringContainsString('class="thread thread-conversation thread-study"', $threadPage->body());
         self::assertStringContainsString('class="thread-scroll"', $threadPage->body());
         self::assertStringContainsString('class="thread-dock"', $threadPage->body());
         self::assertStringContainsString('class="composer reply-composer"', $threadPage->body());

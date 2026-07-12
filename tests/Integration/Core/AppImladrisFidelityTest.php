@@ -366,7 +366,7 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'wardens-table-report-marker');
     }
 
-    public function test_topic_workflow_renders_the_warden_bar_controls(): void
+    public function test_topic_workflow_renders_topic_tools_controls(): void
     {
         (new SettingRepository($this->db))->set('features', ['topic_workflow' => true]);
         $admin = $this->makeAdmin(['username' => 'warden_bar_admin']);
@@ -378,11 +378,11 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'wf-bar');
-        $this->assertSeeText($res, 'wf-btn');
-        $this->assertSeeText($res, 'Assign');
-        $this->assertSeeText($res, 'Snooze');
-        $this->assertSeeText($res, 'Workflow');
+        $this->assertSeeText($res, 'data-topic-tools');
+        $this->assertSeeText($res, 'data-topic-tools-section="standing"');
+        $this->assertSeeText($res, 'action="/t/' . (int) $thread['thread_id'] . '/status"');
+        $this->assertSeeText($res, 'action="/t/' . (int) $thread['thread_id'] . '/snooze"');
+        $this->assertDontSeeText($res, 'class="workflow-bar');
     }
 
     public function test_split_merge_flag_renders_topic_restructuring_surface(): void
@@ -460,7 +460,7 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'accepted-flag');
     }
 
-    public function test_thread_action_bar_groups_member_controls(): void
+    public function test_quiet_thread_header_and_topic_tools_keep_member_controls_once(): void
     {
         $opener = $this->makeUser();
         $reader = $this->makeUser();
@@ -470,9 +470,10 @@ final class AppImladrisFidelityTest extends TestCase
         $this->actingAs($reader);
         $res = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'thread-actions');   // the one-line member control bar renders…
-        $this->assertSeeText($res, 'star-btn');         // …with the star control…
-        $this->assertSeeText($res, 'Notify: Instant');  // …and the notify control gathered into it
+        $this->assertSeeText($res, 'thread-facts');
+        $this->assertSeeText($res, 'star-btn');
+        $this->assertSeeText($res, 'data-topic-tools-section="watch"');
+        self::assertSame(1, substr_count($res->body(), 'action="/t/' . (int) $thread['thread_id'] . '/subscribe"'));
     }
 
     public function test_profile_tabs_render_and_posts_tab_lists_activity(): void

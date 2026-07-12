@@ -379,6 +379,7 @@ final class ThreadController extends Controller
             'total' => $total,
             'per_page' => $perPage,
             'can_reply' => $canReply,
+            'can_write' => $canWriteUser,
             'locked' => $locked,
             'is_admin' => $user?->isAdmin() ?? false,
             'can_pin' => $canPin,
