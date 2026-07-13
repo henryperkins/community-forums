@@ -175,6 +175,301 @@
         }
     }
 
+    // The Study thread view keeps every control usable as server-rendered HTML,
+    // then promotes its quiet drawer, modal, and post toolbar once JavaScript is
+    // active. Initialization only reveals hooks; all behavior is delegated so
+    // topics fetched into the Community Inbox do not accumulate listeners.
+    function enhanceThreadViews(scope) {
+        if (!scope) { return; }
+        var roots = [];
+        if (scope.matches && scope.matches('[data-thread-study]')) { roots.push(scope); }
+        if (scope.querySelectorAll) {
+            var descendants = scope.querySelectorAll('[data-thread-study]');
+            for (var d = 0; d < descendants.length; d++) { roots.push(descendants[d]); }
+        }
+        for (var i = 0; i < roots.length; i++) {
+            var root = roots[i];
+            if (root.getAttribute('data-thread-enhanced') === '1') { continue; }
+            root.setAttribute('data-thread-enhanced', '1');
+            var tools = root.querySelector('[data-topic-tools]');
+            var openers = root.querySelectorAll('[data-topic-tools-open]');
+            if (tools && openers.length) {
+                tools.hidden = true;
+                for (var k = 0; k < openers.length; k++) { openers[k].hidden = false; }
+                var close = tools.querySelector('[data-topic-tools-close]');
+                if (close) { close.hidden = false; }
+            }
+            var enhancedOnly = root.querySelectorAll('[data-post-disclosure-open], [data-thread-restructure-open], [data-thread-restructure-close]');
+            for (var j = 0; j < enhancedOnly.length; j++) { enhancedOnly[j].hidden = false; }
+            if (root.querySelector('#reply textarea[name="body"]')) {
+                var quoteButtons = root.querySelectorAll('[data-quote-post]');
+                for (var q = 0; q < quoteButtons.length; q++) { quoteButtons[q].hidden = false; }
+            }
+        }
+    }
+
+    var topicToolsFocus = new WeakMap();
+    var restructureFocus = new WeakMap();
+    var disclosureFocus = new WeakMap();
+
+    function visible(element) {
+        return !!element && element.getClientRects().length > 0;
+    }
+
+    function accordTopicTools(tools, section) {
+        if (!section) { return; }
+        var sections = tools.querySelectorAll('[data-topic-tools-section]');
+        for (var i = 0; i < sections.length; i++) {
+            sections[i].open = sections[i].getAttribute('data-topic-tools-section') === section;
+        }
+    }
+
+    function setTopicTools(root, open, section, invoker) {
+        if (!root) { return; }
+        var tools = root.querySelector('[data-topic-tools]');
+        var openers = root.querySelectorAll('[data-topic-tools-open]');
+        if (!tools || !openers.length) { return; }
+        if (open) {
+            var alreadyOpen = document.querySelectorAll('[data-topic-tools]:not([hidden])');
+            for (var i = 0; i < alreadyOpen.length; i++) {
+                var otherRoot = alreadyOpen[i].closest('[data-thread-study]');
+                if (otherRoot && otherRoot !== root) { setTopicTools(otherRoot, false); }
+            }
+            topicToolsFocus.set(root, invoker || document.activeElement);
+            accordTopicTools(tools, section);
+            tools.hidden = false;
+            tools.setAttribute('role', 'dialog');
+            tools.setAttribute('aria-modal', 'true');
+            for (var oi = 0; oi < openers.length; oi++) { openers[oi].setAttribute('aria-expanded', 'true'); }
+            var scrim = root.querySelector('[data-topic-tools-scrim]');
+            if (scrim) { scrim.hidden = false; }
+            document.body.classList.add('topic-tools-open');
+            var first = tools.querySelector('[data-topic-tools-close], summary, button, input, select, textarea, a[href]');
+            if (first) { first.focus(); }
+        } else {
+            tools.hidden = true;
+            tools.removeAttribute('role');
+            tools.removeAttribute('aria-modal');
+            for (var ci = 0; ci < openers.length; ci++) { openers[ci].setAttribute('aria-expanded', 'false'); }
+            var closeScrim = root.querySelector('[data-topic-tools-scrim]');
+            if (closeScrim) { closeScrim.hidden = true; }
+            if (!document.querySelector('[data-topic-tools]:not([hidden])')) { document.body.classList.remove('topic-tools-open'); }
+            var restore = topicToolsFocus.get(root);
+            if (restore && document.documentElement.contains(restore)) { restore.focus(); }
+            topicToolsFocus.delete(root);
+        }
+    }
+
+    function setThreadRestructure(root, open) {
+        if (!root) { return; }
+        var details = root.querySelector('[data-thread-restructure]');
+        var dialog = details ? details.querySelector('.thread-restructure-dialog') : null;
+        var scrim = root.querySelector('[data-thread-restructure-scrim]');
+        if (!details || !dialog) { return; }
+        if (open) {
+            setTopicTools(root, false);
+            restructureFocus.set(root, document.activeElement);
+            details.open = true;
+            dialog.setAttribute('role', 'dialog');
+            dialog.setAttribute('aria-modal', 'true');
+            if (scrim) { scrim.hidden = false; }
+            document.body.classList.add('thread-restructure-open');
+            var first = dialog.querySelector('[data-thread-restructure-close], input, button, select, textarea');
+            if (first) { first.focus(); }
+        } else {
+            details.open = false;
+            dialog.removeAttribute('role');
+            dialog.removeAttribute('aria-modal');
+            if (scrim) { scrim.hidden = true; }
+            if (!document.querySelector('[data-thread-restructure][open]')) { document.body.classList.remove('thread-restructure-open'); }
+            var restore = restructureFocus.get(root);
+            if (restore && document.documentElement.contains(restore)) { restore.focus(); }
+            restructureFocus.delete(root);
+        }
+    }
+
+    function closePostMenus(except) {
+        var menus = document.querySelectorAll('[data-post-menu][open]');
+        for (var i = 0; i < menus.length; i++) {
+            if (menus[i] !== except) { menus[i].open = false; }
+        }
+    }
+
+    function focusPostDisclosure(disclosure, state) {
+        if (!disclosure.open) { return; }
+        if (state.form && state.form._rbComposerAdapter && typeof state.form._rbComposerAdapter.focus === 'function') {
+            state.form._rbComposerAdapter.focus();
+        } else if (state.target && document.documentElement.contains(state.target)) {
+            state.target.focus();
+        }
+    }
+
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        if (!target || !target.closest) { return; }
+        var clickedMenu = target.closest('[data-post-menu]');
+        closePostMenus(clickedMenu);
+
+        var opener = target.closest('[data-topic-tools-open]');
+        if (opener) {
+            var openRoot = opener.closest('[data-thread-study]');
+            if (openRoot) { setTopicTools(openRoot, true, opener.getAttribute('data-topic-tools-open') || '', opener); }
+            return;
+        }
+        var closer = target.closest('[data-topic-tools-close], [data-topic-tools-scrim]');
+        if (closer) {
+            var closeRoot = closer.closest('[data-thread-study]');
+            if (closeRoot) { setTopicTools(closeRoot, false); }
+            return;
+        }
+
+        var root = target.closest('[data-thread-study]');
+        if (!root) { return; }
+        if (target.closest('[data-thread-restructure-open]')) {
+            setThreadRestructure(root, true);
+            return;
+        }
+        if (target.closest('[data-thread-restructure-close], [data-thread-restructure-scrim]')) {
+            setThreadRestructure(root, false);
+            return;
+        }
+        var disclosureOpen = target.closest('[data-post-disclosure-open]');
+        if (disclosureOpen) {
+            var disclosure = document.getElementById(disclosureOpen.getAttribute('data-post-disclosure-open'));
+            if (disclosure && root.contains(disclosure)) {
+                var disclosureForm = disclosure.querySelector('form.composer');
+                var disclosureTarget = disclosure.querySelector('textarea, input, select') || disclosure.querySelector('button');
+                var disclosureState = { form: disclosureForm, target: disclosureTarget };
+                if (clickedMenu) { clickedMenu.open = false; }
+                if (disclosure.open) {
+                    focusPostDisclosure(disclosure, disclosureState);
+                } else {
+                    disclosureFocus.set(disclosure, disclosureState);
+                    disclosure.open = true;
+                }
+            }
+            return;
+        }
+        var quote = target.closest('[data-quote-post]');
+        if (quote) {
+            var post = quote.closest('[data-post]');
+            var textarea = root.querySelector('#reply textarea[name="body"]');
+            if (post && textarea) {
+                var body = post.querySelector('.post-body');
+                var source = body ? body.textContent : '';
+                var line = source.trim().replace(/\s+/g, ' ').slice(0, 120);
+                textarea.value += (textarea.value ? '\n\n' : '') + '> ' + line + (source.trim().length > 120 ? '…' : '') + '\n\n';
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                textarea.focus();
+            }
+            return;
+        }
+        var copy = target.closest('[data-copy-post]');
+        if (copy && navigator.clipboard && navigator.clipboard.writeText) {
+            event.preventDefault();
+            var fallback = function () { window.location.href = copy.href; };
+            try {
+                navigator.clipboard.writeText(copy.href).then(function () {
+                    if (clickedMenu) { clickedMenu.open = false; }
+                }).catch(fallback);
+            } catch (error) {
+                fallback();
+            }
+        }
+    });
+
+    document.addEventListener('toggle', function (event) {
+        var opened = event.target;
+        var pendingDisclosure = disclosureFocus.get(opened);
+        if (pendingDisclosure) {
+            disclosureFocus.delete(opened);
+            focusPostDisclosure(opened, pendingDisclosure);
+        }
+        if (!opened.matches || !opened.matches('[data-topic-tools-section][open]')) { return; }
+        var siblings = opened.parentElement.querySelectorAll('[data-topic-tools-section][open]');
+        for (var i = 0; i < siblings.length; i++) {
+            if (siblings[i] !== opened) { siblings[i].open = false; }
+        }
+    }, true);
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            var menus = document.querySelectorAll('[data-post-menu][open]');
+            for (var mi = menus.length - 1; mi >= 0; mi--) {
+                if (!visible(menus[mi])) { continue; }
+                var menuTrigger = menus[mi].querySelector('summary');
+                menus[mi].open = false;
+                if (menuTrigger) { menuTrigger.focus(); }
+                event.preventDefault();
+                return;
+            }
+            var restructures = document.querySelectorAll('[data-thread-restructure][open]');
+            for (var ri = restructures.length - 1; ri >= 0; ri--) {
+                var restructureDialog = restructures[ri].querySelector('.thread-restructure-dialog');
+                if (!visible(restructureDialog)) { continue; }
+                setThreadRestructure(restructures[ri].closest('[data-thread-study]'), false);
+                event.preventDefault();
+                return;
+            }
+            var openTools = document.querySelectorAll('[data-topic-tools]:not([hidden])');
+            for (var ti = openTools.length - 1; ti >= 0; ti--) {
+                if (!visible(openTools[ti])) { continue; }
+                setTopicTools(openTools[ti].closest('[data-thread-study]'), false);
+                event.preventDefault();
+                return;
+            }
+            return;
+        }
+        if (event.key !== 'Tab') { return; }
+        var dialog = null;
+        var openRestructures = document.querySelectorAll('[data-thread-restructure][open] .thread-restructure-dialog');
+        for (var rdi = openRestructures.length - 1; rdi >= 0; rdi--) {
+            if (visible(openRestructures[rdi])) { dialog = openRestructures[rdi]; break; }
+        }
+        if (!dialog) {
+            var toolDialogs = document.querySelectorAll('[data-topic-tools]:not([hidden])');
+            for (var tdi = toolDialogs.length - 1; tdi >= 0; tdi--) {
+                if (visible(toolDialogs[tdi])) { dialog = toolDialogs[tdi]; break; }
+            }
+        }
+        if (!dialog) { return; }
+        var candidates = dialog.querySelectorAll('a[href], button:not([disabled]), summary, input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        var focusable = Array.prototype.filter.call(candidates, function (item) {
+            var closedDetails = item.closest('details:not([open])');
+            var closedSummary = closedDetails ? closedDetails.querySelector(':scope > summary') : null;
+            return visible(item) && !item.closest('[hidden]')
+                && (!closedDetails || item === closedSummary)
+                && item.getAttribute('tabindex') !== '-1'
+                && !item.matches(':disabled') && item.getAttribute('aria-disabled') !== 'true';
+        });
+        if (!focusable.length) { event.preventDefault(); return; }
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (!dialog.contains(document.activeElement)) {
+            (event.shiftKey ? last : first).focus();
+            event.preventDefault();
+        } else if (event.shiftKey && document.activeElement === first) {
+            last.focus();
+            event.preventDefault();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            first.focus();
+            event.preventDefault();
+        }
+    });
+
+    function syncKeyboardInset() {
+        var viewport = window.visualViewport;
+        var inset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+        document.documentElement.style.setProperty('--keyboard-inset', inset + 'px');
+    }
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncKeyboardInset);
+        window.visualViewport.addEventListener('scroll', syncKeyboardInset);
+        syncKeyboardInset();
+    }
+
+    enhanceThreadViews(document);
+
     // Community Inbox — load a topic into the reading pane (enhancement only; with
     // JS off, the thread-title links open each topic as its own page). Short-fetch
     // the thread HTML, lift its #main content into the reading pane, and keep the
@@ -227,6 +522,7 @@
                         canonicalFallback(href); return;
                     }
                     readingContent.innerHTML = main.innerHTML;
+                    enhanceThreadViews(readingContent);
                     reading.removeAttribute('aria-busy');
                     reading.scrollTop = 0;
                     selectedLink = sourceLink || inboxList.querySelector(rowSelector(idOf(href)));
