@@ -136,7 +136,7 @@ test('split or merge closes by every dismissal path and restores focus', async (
   }
 });
 
-test('post menus are exclusive, dismiss outside, and open real disclosures safely', async ({ page }) => {
+test('post menus are exclusive, dismiss outside, and open real disclosures safely', async ({ page }, info) => {
   await login(page);
   await openSeedTopic(page);
 
@@ -175,7 +175,14 @@ test('post menus are exclusive, dismiss outside, and open real disclosures safel
   await secondMenu.getByRole('button', { name: 'Report' }).click();
   const reportDisclosure = posts.nth(1).locator('.post-native-disclosure[id^="post-report-"]');
   await expect(reportDisclosure).toHaveAttribute('open', '');
-  await reportDisclosure.getByRole('button', { name: 'Close report form' }).click();
+  const reportClose = reportDisclosure.getByRole('button', { name: 'Close report form' });
+  if (info.project.name === 'mobile') {
+    const closeBox = await reportClose.boundingBox();
+    expect(closeBox).not.toBeNull();
+    expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+    expect(closeBox!.height).toBeGreaterThanOrEqual(44);
+  }
+  await reportClose.click();
   await expect(reportDisclosure).not.toHaveAttribute('open', '');
   await expect(secondMenu.locator(':scope > summary')).toBeFocused();
 
