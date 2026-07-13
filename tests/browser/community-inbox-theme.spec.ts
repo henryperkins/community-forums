@@ -19,6 +19,17 @@ async function login(page: Page): Promise<void> {
   await dismissTour(page);
 }
 
+async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
+  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  await trigger.click();
+  const tools = page.locator('[data-topic-tools]');
+  await expect(tools).toBeVisible();
+  await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const details = tools.locator(`[data-topic-tools-section="${section}"]`);
+  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) await details.locator(':scope > summary').click();
+  return { tools, details };
+}
+
 async function expectNoSeriousA11yViolations(page: Page, include: string): Promise<void> {
   const results = await new AxeBuilder({ page })
     .include(include)
@@ -45,6 +56,34 @@ test('responsive Inbox opens a topic in place and mobile Back restores its link'
   await expect(reading.locator('.thread')).toBeVisible();
   await expect(reading.locator('h1').first()).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+  const topicTools = await openTopicTools(page, 'watch');
+  await expect(topicTools.details).toBeVisible();
+  await reading.getByRole('button', { name: 'Close Topic tools' }).click();
+  await expect(topicTools.tools).toBeHidden();
+
+  const posts = reading.locator('article[data-post]');
+  expect(await posts.count()).toBeGreaterThan(0);
+  const post = posts.first();
+  const toolbar = post.locator('[data-post-toolbar]');
+  await post.hover();
+  await expect(toolbar).toBeVisible();
+  const moreActions = post.locator('[data-post-menu] > summary');
+  await moreActions.focus();
+  await expect(moreActions).toBeFocused();
+  await expect(toolbar).toBeVisible();
+
+  const dockContainment = await reading.evaluate((element) => {
+    const readingBox = element.getBoundingClientRect();
+    const dockBox = element.querySelector('.thread-dock')!.getBoundingClientRect();
+    return {
+      left: dockBox.left >= readingBox.left - 1,
+      right: dockBox.right <= readingBox.right + 1,
+      top: dockBox.top >= readingBox.top - 1,
+      bottom: dockBox.bottom <= readingBox.bottom + 1,
+    };
+  });
+  expect(dockContainment).toEqual({ left: true, right: true, top: true, bottom: true });
 
   if (info.project.name === 'mobile') {
     await expect(list).toBeHidden();

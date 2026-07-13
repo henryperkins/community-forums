@@ -41,6 +41,17 @@ async function visit(page: Page, url: string): Promise<void> {
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
+async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
+  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  await trigger.click();
+  const tools = page.locator('[data-topic-tools]');
+  await expect(tools).toBeVisible();
+  await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const details = tools.locator(`[data-topic-tools-section="${section}"]`);
+  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) await details.locator(':scope > summary').click();
+  return { tools, details };
+}
+
 async function openPackageDetailByUid(page: Page, uid: string): Promise<string> {
   await visit(page, '/admin/packages');
   const row = page.locator('table.audit tbody tr').filter({ hasText: uid }).first();
@@ -241,7 +252,7 @@ test('server-draft conflict panel has no serious axe violations', async ({ page 
   // feature's interactive surface is the composer's conflict panel (keep local /
   // keep server / save local as next revision); scope the scan to it so this
   // gate isn't blocked by unrelated pre-existing composer issues, mirroring the
-  // polls (.poll-panel) and topic_workflow (.wf-actions) axe precedent.
+  // polls (.poll-panel) and topic_workflow ([data-topic-tools]) axe precedent.
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
   await page.locator('details.composer-details > summary').click();
@@ -290,10 +301,10 @@ test('phase 4 poll panel has no serious axe violations (vote form and results)',
   }
 });
 
-test('phase 4 topic workflow bar has no serious axe violations (actions and summary)', async ({ page }, info) => {
-  // topic_workflow graduated to default-on (GA 2026-07-01). Scan the no-JS
-  // workflow surface as alice (moderator of #general → the full status/snooze/
-  // assign control set renders). Scope to the workflow selectors so this gate
+test('phase 4 topic workflow tools have no serious axe violations (actions and history)', async ({ page }, info) => {
+  // topic_workflow graduated to default-on (GA 2026-07-01). Scan the Study
+  // tools as alice (moderator of #general → the full status/snooze/assign
+  // control set renders). Scope to the tools so this gate
   // isn't blocked by unrelated pre-existing thread-page issues.
   await login(page, 'alice@retro.test');
 
@@ -301,21 +312,20 @@ test('phase 4 topic workflow bar has no serious axe violations (actions and summ
   await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
   await page.waitForURL(/\/t\//);
 
-  await expect(page.locator('.wf-actions')).toBeVisible();
-  await expectNoSeriousA11yViolations(page, info, '.wf-actions');
-
-  await expect(page.locator('.wf-bar')).toBeVisible();
-  await expectNoSeriousA11yViolations(page, info, '.wf-bar');
+  let standing = await openTopicTools(page, 'standing');
+  await expectNoSeriousA11yViolations(page, info, '[data-topic-tools]');
 
   // Status history is surfaced as a collapsible audit list. Generate a change so
   // the list exists regardless of run order vs the gate-a flow, then expand and
   // scan it (a no-op change simply reuses the existing history row).
-  await page.locator('#thread-status').selectOption('needs_answer');
-  await page.getByRole('button', { name: 'Update status' }).click();
-  await expect(page.locator('.wf-history')).toBeVisible();
-  await page.locator('.wf-history > summary').click();
-  await expect(page.locator('.wf-history-list')).toBeVisible();
-  await expectNoSeriousA11yViolations(page, info, '.wf-history');
+  await standing.details.locator('select[name="status"]').selectOption('needs_answer');
+  await standing.details.getByRole('button', { name: 'Update status' }).click();
+  standing = await openTopicTools(page, 'standing');
+  const history = standing.details.locator('[data-thread-status-history]');
+  await expect(history).toBeVisible();
+  if (!(await history.evaluate((element) => (element as HTMLDetailsElement).open))) await history.locator(':scope > summary').click();
+  await expect(history.locator('.thread-status-history-list')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '[data-topic-tools]');
 });
 
 test('wysiwyg composer toolbar and reference picker have no serious axe violations', async ({ page }, info) => {
@@ -480,17 +490,18 @@ test('phase 4 slash combobox has no serious axe violations and is keyboard opera
 });
 
 test('phase 4 split/merge moderator panel has no serious axe violations', async ({ page }, info) => {
-  // split_merge default-on: the restructure panel renders for alice (board
+  // split_merge default-on: the Study restructure dialog renders for alice (board
   // moderator of #general). Read-only scan — nothing is submitted, so the shared
-  // seed thread is untouched. Scope to `.sm-panel` so an unrelated pre-existing
+  // seed thread is untouched. Scope to the dialog so an unrelated pre-existing
   // thread-page issue can't block this feature's gate.
   await login(page, 'alice@retro.test');
   await visit(page, '/c/general');
   await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
   await page.waitForURL(/\/t\//);
-  await page.getByText('Split or merge topic', { exact: true }).click();
-  await expect(page.locator('.sm-panel')).toBeVisible();
-  await expectNoSeriousA11yViolations(page, info, '.sm-panel');
+  const management = await openTopicTools(page, 'management');
+  await management.details.locator('[data-thread-restructure-open]').click();
+  await expect(page.locator('.thread-restructure-dialog')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.thread-restructure-dialog');
 });
 
 test('phase 4 custom profile fields settings panel has no serious axe violations', async ({ page }, info) => {

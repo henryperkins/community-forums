@@ -44,6 +44,7 @@ async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({
     path: path.join(evidenceDir, info.project.name, `${name}.png`),
     fullPage: true,
+    animations: 'disabled',
   });
 }
 
@@ -51,6 +52,17 @@ async function visit(page: Page, url: string): Promise<void> {
   const response = await page.goto(url);
   expect(response, `no response for ${url}`).not.toBeNull();
   expect(response!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
+}
+
+async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
+  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  await trigger.click();
+  const tools = page.locator('[data-topic-tools]');
+  await expect(tools).toBeVisible();
+  await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const details = tools.locator(`[data-topic-tools-section="${section}"]`);
+  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) await details.locator(':scope > summary').click();
+  return { tools, details };
 }
 
 async function dismissTour(page: Page): Promise<void> {
@@ -170,12 +182,11 @@ test('curator edit, real-worker refresh, retirement, restoration, and explicit r
   await login(page, 'alice@retro.test');
   await visit(page, state.brief.path);
 
-  const tools = page.locator('.memory-curator-tools');
-  await tools.locator('summary').click();
-  await expect(tools.locator('form[action$="/summary"]')).toBeVisible();
+  let memory = await openTopicTools(page, 'memory');
+  await expect(memory.details.locator('form[action$="/summary"]')).toBeVisible();
   await shot(page, info, '77-living-brief-curator-controls');
 
-  const editor = tools.locator('form[action$="/summary"]');
+  const editor = memory.details.locator('form[action$="/summary"]');
   await editor.locator('textarea[name="body"]').fill(`Curator baseline for ${projectKey(info)} with retained public evidence.`);
   await editor.locator('input[name="source_post_ids"]').fill(String(state.brief.source_id));
   await editor.getByRole('button', { name: 'Publish summary' }).click();
@@ -184,29 +195,29 @@ test('curator edit, real-worker refresh, retirement, restoration, and explicit r
 
   fixture('prepare-refresh', info);
   await page.reload();
-  await page.locator('.memory-curator-tools summary').click();
-  await page.getByRole('button', { name: 'Refresh living brief' }).click();
+  memory = await openTopicTools(page, 'memory');
+  await memory.details.getByRole('button', { name: 'Refresh living brief' }).click();
   await expect(page.getByRole('status')).toContainText('Refresh queued');
   fixture('run-refresh', info);
   await page.reload();
   await expect(page.locator('.living-brief')).toContainText('AI-generated living brief');
   await expect(page.locator('.living-brief')).toContainText('Curator baseline carried forward');
-  await page.locator('.memory-curator-tools summary').click();
-  await expect(page.locator('form[action$="/summary/restore"] select')).toContainText('AI-generated · curator edited');
+  memory = await openTopicTools(page, 'memory');
+  await expect(memory.details.locator('form[action$="/summary/restore"] select')).toContainText('AI-generated · curator edited');
 
-  await page.getByRole('button', { name: 'Retire summary' }).click();
+  await memory.details.getByRole('button', { name: 'Retire summary' }).click();
   await expect(page.locator('.living-brief')).toHaveCount(0);
-  await page.locator('.memory-curator-tools summary').click();
-  await expect(page.getByText('Automatic refresh is paused for this topic.')).toBeVisible();
+  memory = await openTopicTools(page, 'memory');
+  await expect(memory.details.getByText('Automatic refresh is paused for this topic.')).toBeVisible();
 
-  const restore = page.locator('form[action$="/summary/restore"]');
+  const restore = memory.details.locator('form[action$="/summary/restore"]');
   await restore.locator('select[name="summary_id"]').selectOption({ index: 0 });
   await restore.getByRole('button', { name: 'Restore summary' }).click();
   await expect(page.locator('.living-brief')).toBeVisible();
-  await page.locator('.memory-curator-tools summary').click();
-  await page.getByRole('button', { name: 'Resume automatic refresh' }).click();
-  await page.locator('.memory-curator-tools summary').click();
-  await expect(page.getByRole('button', { name: 'Resume automatic refresh' })).toHaveCount(0);
+  memory = await openTopicTools(page, 'memory');
+  await memory.details.getByRole('button', { name: 'Resume automatic refresh' }).click();
+  memory = await openTopicTools(page, 'memory');
+  await expect(memory.details.getByRole('button', { name: 'Resume automatic refresh' })).toHaveCount(0);
 });
 
 test('provider failure, budget exhaustion, and stale sources preserve or suppress the correct last-good content', async ({ page }, info) => {
@@ -216,8 +227,8 @@ test('provider failure, budget exhaustion, and stale sources preserve or suppres
     await visit(page, state.last_good.path);
     await expect(page.locator('.living-brief')).toContainText('Last good brief remains published');
     await expect(page.locator('.living-brief')).toContainText('Version 1');
-    await page.locator('.memory-curator-tools summary').click();
-    await expect(page.getByText('Daily refresh capacity has been reached')).toBeVisible();
+    const memory = await openTopicTools(page, 'memory');
+    await expect(memory.details.getByText('Daily refresh capacity has been reached')).toBeVisible();
     await shot(page, info, '78-living-brief-last-good');
 
     fixture('invalidate-source', info);
@@ -298,12 +309,22 @@ test('no-JS: Living Brief, source and related navigation, details, and curator f
     await page.locator('.living-brief-sources a').first().click();
     await expect(page).toHaveURL(new RegExp(`#p${state.brief.source_id}$`));
     await page.goBack();
-    await page.locator('.living-brief-related-card').click();
+    const related = page.locator('.living-brief-related-card');
+    await related.focus();
+    await expect(related).toBeFocused();
+    await related.press('Enter');
     await expect(page).toHaveURL(new RegExp(state.brief.related_path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
     await page.goBack();
 
-    const details = page.locator('.memory-curator-tools');
-    await details.locator('summary').click();
+    const tools = page.locator('[data-topic-tools]');
+    const details = tools.locator('[data-topic-tools-section="memory"]');
+    const summary = details.locator(':scope > summary');
+    await expect(tools).toBeVisible();
+    await expect(details).toBeVisible();
+    await expect(summary).toBeVisible();
+    await summary.focus();
+    await expect(summary).toBeFocused();
+    await summary.press('Enter');
     await expect(details).toHaveAttribute('open', '');
     await expect(details.locator('form[action$="/summary"]')).toBeVisible();
     await expect(details.locator('form[action$="/summary/restore"]')).toBeVisible();
@@ -326,8 +347,8 @@ test('axe: Living Brief, provenance, history, curator, fallback, and admin surfa
     await expectNoSeriousA11yViolations(page, info, '.living-brief');
     await expectNoSeriousA11yViolations(page, info, '.living-brief-sources');
     await expectNoSeriousA11yViolations(page, info, '.living-brief-related');
-    await page.locator('.memory-curator-tools summary').click();
-    await expectNoSeriousA11yViolations(page, info, '.memory-curator-tools');
+    await openTopicTools(page, 'memory');
+    await expectNoSeriousA11yViolations(page, info, '[data-topic-tools]');
 
     await visit(page, state.fallback.path);
     await expectNoSeriousA11yViolations(page, info, '.related-topic-fallback');

@@ -47,6 +47,7 @@ async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
     fullPage: true,
+    animations: 'disabled',
   });
 }
 
@@ -54,6 +55,17 @@ async function visit(page: Page, url: string): Promise<void> {
   const resp = await page.goto(url);
   expect(resp, `no response for ${url}`).not.toBeNull();
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
+}
+
+async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
+  const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
+  await trigger.click();
+  const tools = page.locator('[data-topic-tools]');
+  await expect(tools).toBeVisible();
+  await tools.evaluate(async (element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
+  const details = tools.locator(`[data-topic-tools-section="${section}"]`);
+  if (!(await details.evaluate((element) => (element as HTMLDetailsElement).open))) await details.locator(':scope > summary').click();
+  return { tools, details };
 }
 
 function lifecyclePackageUid(info: TestInfo): string {
@@ -248,38 +260,46 @@ test('phase 4 poll vote works through the server-rendered thread flow', async ({
 });
 
 test('phase 4 topic workflow: status, snooze, and assignment via the server-rendered thread', async ({ page }, info) => {
-  // topic_workflow graduated to default-on (GA 2026-07-01). Drive the no-JS
-  // workflow bar as alice — moderator of #general (staff), which #general opts
+  // topic_workflow graduated to default-on (GA 2026-07-01). Drive the enhanced
+  // Study tools as alice — moderator of #general (staff), which #general opts
   // into assignment via assignment_mode=staff (seed). Each control is a plain
-  // form POST → PRG redirect back to the thread; the summary bar reflects it.
+  // form POST → PRG redirect back to the thread; reopen the fresh tools HTML
+  // after every mutation and verify the quiet thread facts reflect it.
   await login(page, 'alice@retro.test');
 
   await visit(page, '/c/general');
   await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
   await page.waitForURL(/\/t\//);
-  await expect(page.locator('.wf-bar')).toBeVisible();
+  await expect(page.locator('[data-thread-study]')).toBeVisible();
 
   // Status: staff moves the topic to "Needs answer".
-  await page.locator('#thread-status').selectOption('needs_answer');
-  await page.locator('.wf-actions input[name="reason"]').fill('Needs a reply');
-  await page.getByRole('button', { name: 'Update status' }).click();
-  await expect(page.locator('.wf-bar')).toContainText('Needs answer');
+  let standing = await openTopicTools(page, 'standing');
+  await standing.details.locator('select[name="status"]').selectOption('needs_answer');
+  await standing.details.locator('input[name="reason"]').fill('Needs a reply');
+  await standing.details.getByRole('button', { name: 'Update status' }).click();
+  await expect(page.locator('[data-thread-status="needs_answer"]')).toBeVisible();
 
   // Snooze: a personal reminder (no cross-user effect).
-  await page.locator('#thread-snooze').selectOption('tomorrow');
-  await page.getByRole('button', { name: 'Snooze', exact: true }).click();
-  await expect(page.locator('.wf-bar')).toContainText('Snoozed until');
+  const watch = await openTopicTools(page, 'watch');
+  await watch.details.locator('select[name="until"]').selectOption('tomorrow');
+  await watch.details.getByRole('button', { name: 'Save snooze' }).click();
+  await expect(page.locator('.thread-byline')).toContainText('Quiet until');
 
   // Assignment: staff assigns the topic to @bob (board is opted into assignment).
-  await page.locator('#thread-assignee').fill('bob');
-  await page.getByRole('button', { name: 'Assign', exact: true }).click();
-  await expect(page.locator('.wf-bar')).toContainText('Assigned to @bob');
-  await expect(page.getByRole('button', { name: 'Unassign' })).toBeVisible();
+  let management = await openTopicTools(page, 'management');
+  await management.details.locator('input[name="assignee"]').fill('bob');
+  await management.details.getByRole('button', { name: 'Assign', exact: true }).click();
+  await expect(page.locator('.thread-byline')).toContainText('Tended by @bob');
+  management = await openTopicTools(page, 'management');
+  await expect(management.details.getByRole('button', { name: 'Unassign' })).toBeVisible();
 
   // Status history is surfaced (audit trail) — expand it so the evidence
-  // screenshot captures the recorded transitions.
-  await page.locator('.wf-history > summary').click();
-  await expect(page.locator('.wf-history-list')).toContainText('Needs answer');
+  // screenshot captures the recorded transitions in the Study drawer.
+  await page.getByRole('button', { name: 'Close Topic tools' }).click();
+  standing = await openTopicTools(page, 'standing');
+  const history = standing.details.locator('[data-thread-status-history]');
+  if (!(await history.evaluate((element) => (element as HTMLDetailsElement).open))) await history.locator(':scope > summary').click();
+  await expect(history.locator('.thread-status-history-list')).toContainText('Needs answer');
 
   await shot(page, info, '29-topic-workflow');
 });
@@ -1195,9 +1215,11 @@ test('phase 4 split/merge: moderator splits a reply out then merges it back', as
     page.locator('.post-body', { hasText: 'A reply that will be split into its own topic.' }),
   ).toBeVisible();
 
-  // Open the collapsed moderator panel and capture both restructure forms.
-  await page.getByText('Split or merge topic', { exact: true }).click();
-  const panel = page.locator('.sm-panel');
+  // Open Topic management and use the enhanced trigger for the same native
+  // restructure forms, then capture the Study modal.
+  let management = await openTopicTools(page, 'management');
+  await management.details.locator('[data-thread-restructure-open]').click();
+  const panel = page.locator('.thread-restructure-dialog');
   await expect(panel).toBeVisible();
   await shot(page, info, '50-split-merge-panel');
 
@@ -1211,8 +1233,9 @@ test('phase 4 split/merge: moderator splits a reply out then merges it back', as
 
   // Merge the split-out topic back into the source (both in #general, which
   // alice moderates) — redirects to the source, flash "Thread merged.".
-  await page.getByText('Split or merge topic', { exact: true }).click();
-  const mergePanel = page.locator('.sm-panel');
+  management = await openTopicTools(page, 'management');
+  await management.details.locator('[data-thread-restructure-open]').click();
+  const mergePanel = page.locator('.thread-restructure-dialog');
   await expect(mergePanel).toBeVisible();
   await mergePanel.locator('form[action$="/merge"] input[name="target_thread_id"]').fill(sourceId);
   await mergePanel.locator('form[action$="/merge"]').getByRole('button', { name: 'Merge topics' }).click();

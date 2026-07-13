@@ -48,9 +48,12 @@ harness grows. The current branch also captures:
 - `25-poll-voted` (Phase 4 carryover poll no-JS vote/result flow)
 - `26-slash-menu`, `27-giphy-inserted` (Phase 4 carryover slash menu and direct GIPHY insertion)
 - `28-server-draft-conflict` (`server_drafts` cross-device conflict controls; graduated to default-on 2026-07-02, now captured in the standard `evidence` run)
+- `29-topic-workflow` (status history plus snooze and assignment controls in the Study Topic tools drawer/sheet)
 - `46-profile-media-avatar`, `47-profile-media-moderation` (`profile_media` member avatar/signature flow plus admin moderation controls; graduated to default-on 2026-07-03)
 - `48-custom-emoji-admin`, `49-custom-emoji-thread` (`custom_emoji` admin catalogue, Markdown rendering, and reaction compatibility; graduated to default-on 2026-07-03)
-- `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (Thread Intelligence fallback, generated provenance, curator lifecycle, last-good guardrails, and operator recovery evidence; captured before and reverified after the default-on flip)
+- `50-split-merge-panel`, `51-thread-merged` (the Study split/merge modal and the merged topic result)
+- `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (Thread Intelligence fallback, generated provenance, curator lifecycle in the Study Memory section, last-good guardrails, and operator recovery evidence; captured before and reverified after the default-on flip)
+- `80-thread-study`, `81-thread-tools` (the closed Study reading surface and its open desktop drawer/mobile sheet)
 
 Focused acceptance specs that do not write numbered screenshots:
 

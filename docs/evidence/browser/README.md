@@ -28,3 +28,10 @@ deploy-dark poll UI through the real server-rendered vote POST/redirect/result
 flow on desktop and mobile, plus `26-slash-menu` and `27-giphy-inserted`, which
 prove the deploy-dark slash insertion menu and direct GIPHY media insert path on
 desktop and mobile.
+
+The Study thread-view evidence adds `80-thread-study` for the closed reading
+surface and `81-thread-tools` for the open Topic tools drawer/sheet. Existing
+journeys now capture their controls in the Study locations: `29-topic-workflow`
+uses Standing, Watch, and Topic management; `50-split-merge-panel` records the
+restructure modal; `51-thread-merged` records its merged result; and
+`77-living-brief-curator-controls` records curator forms in the Memory section.
