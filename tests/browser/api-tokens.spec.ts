@@ -42,18 +42,23 @@ async function login(page: Page, email: string): Promise<void> {
 }
 
 // Neutralise any package theme gate-a left active site-wide on the shared evidence DB so
-// the api-tokens surface is certified under the standard appearance. Idempotent: if safe
-// mode is already on the "Enter" button is absent and this is a no-op.
-async function enterThemeSafeMode(page: Page): Promise<void> {
+// the api-tokens surface is certified under the standard appearance. The recovery page
+// always renders both forms, so ownership is determined from its status copy.
+async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
-  if (await enter.isVisible({ timeout: 1000 }).catch(() => false)) {
-    await enter.click();
-    await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+    return false;
   }
+
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  await enter.click();
+  await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  return true;
 }
 
-async function exitThemeSafeMode(page: Page): Promise<void> {
+async function exitThemeSafeMode(page: Page, changed: boolean): Promise<void> {
+  if (!changed) return;
+
   await page.goto('/admin/themes/safe-mode');
   const exit = page.getByRole('button', { name: 'Exit safe mode' });
   if (await exit.isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -74,7 +79,7 @@ async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include
 
 test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
-  await enterThemeSafeMode(page);
+  const themeSafeModeChanged = await enterThemeSafeMode(page);
 
   // Flag-gated discovery link off the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
@@ -108,5 +113,5 @@ test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke
   await shot(page, info, 'api-token-revoked');
 
   // Leave the shared site appearance as we found it for any later spec in the run.
-  await exitThemeSafeMode(page);
+  await exitThemeSafeMode(page, themeSafeModeChanged);
 });

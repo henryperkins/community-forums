@@ -92,16 +92,21 @@ async function loginWithoutJavaScript(page: Page, email: string): Promise<void> 
   ]);
 }
 
-async function enterThemeSafeMode(page: Page): Promise<void> {
+async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await visit(page, '/admin/themes/safe-mode');
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
-  if (await enter.isVisible({ timeout: 1_000 }).catch(() => false)) {
-    await enter.click();
-    await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+    return false;
   }
+
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  await enter.click();
+  await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  return true;
 }
 
-async function exitThemeSafeMode(page: Page): Promise<void> {
+async function exitThemeSafeMode(page: Page, changed: boolean): Promise<void> {
+  if (!changed) return;
+
   await visit(page, '/admin/themes/safe-mode');
   const exit = page.getByRole('button', { name: 'Exit safe mode' });
   if (await exit.isVisible({ timeout: 1_000 }).catch(() => false)) {
@@ -248,7 +253,7 @@ test('provider failure, budget exhaustion, and stale sources preserve or suppres
 test('admin status and restorative retry, reconcile, latch, pause, thread, and budget controls remain operable', async ({ page }, info) => {
   const state = fixture('reset-admin', info);
   await login(page, 'admin@retro.test');
-  await enterThemeSafeMode(page);
+  const themeSafeModeChanged = await enterThemeSafeMode(page);
 
   try {
     await visit(page, '/admin/thread-intelligence');
@@ -293,7 +298,7 @@ test('admin status and restorative retry, reconcile, latch, pause, thread, and b
     await shot(page, info, '79-admin-thread-intelligence');
   } finally {
     fixture('reset-admin', info);
-    await exitThemeSafeMode(page);
+    await exitThemeSafeMode(page, themeSafeModeChanged);
   }
 });
 
@@ -337,7 +342,7 @@ test('no-JS: Living Brief, source and related navigation, details, and curator f
 test('axe: Living Brief, provenance, history, curator, fallback, and admin surfaces have no serious findings', async ({ page }, info) => {
   const state = fixture('reset-admin', info);
   await login(page, 'admin@retro.test');
-  await enterThemeSafeMode(page);
+  const themeSafeModeChanged = await enterThemeSafeMode(page);
   try {
     await visit(page, '/admin/thread-intelligence');
     await expectNoSeriousA11yViolations(page, info, '.thread-intelligence-admin');
@@ -354,6 +359,6 @@ test('axe: Living Brief, provenance, history, curator, fallback, and admin surfa
     await expectNoSeriousA11yViolations(page, info, '.related-topic-fallback');
   } finally {
     await login(page, 'admin@retro.test');
-    await exitThemeSafeMode(page);
+    await exitThemeSafeMode(page, themeSafeModeChanged);
   }
 });

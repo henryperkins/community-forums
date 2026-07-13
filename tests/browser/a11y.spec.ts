@@ -447,11 +447,13 @@ test('phase 4 custom emoji surfaces have no serious axe violations', async ({ pa
   await expect(page.locator(`.post-body img[src="${imagePath}"][alt="${token}"]`)).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '.post-body');
 
-  const reactions = page.locator('.reactions').first();
-  await expect(reactions).toBeVisible();
-  await reactions.locator('.reaction-add > summary').click();
-  await expect(reactions.getByRole('button', { name: token })).toBeVisible();
-  await expectNoSeriousA11yViolations(page, info, '.reactions');
+  const post = page.locator('article[data-post]').first();
+  await post.hover();
+  const toolbar = post.locator('[data-post-toolbar]');
+  await expect(toolbar).toBeVisible();
+  await toolbar.locator('.reaction-add > summary').click();
+  await expect(toolbar.getByRole('button', { name: token })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '[data-post-toolbar]');
 });
 
 test('phase 4 slash combobox has no serious axe violations and is keyboard operable', async ({ page }, info) => {

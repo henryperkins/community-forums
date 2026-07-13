@@ -80,6 +80,12 @@ function themeEvidenceAltUid(): string {
   return 'acme/theme-evidence-alt';
 }
 
+function themeEvidenceJourneyUids(info: TestInfo): [string, string] {
+  return info.project.name === 'mobile'
+    ? [themeEvidenceAltUid(), themeEvidenceUid()]
+    : [themeEvidenceUid(), themeEvidenceAltUid()];
+}
+
 async function openLifecyclePackageDetail(page: Page, info: TestInfo): Promise<void> {
   await visit(page, '/admin/packages');
   const row = page.locator('table.audit tbody tr').filter({ hasText: lifecyclePackageUid(info) }).first();
@@ -132,6 +138,26 @@ async function activeThemeDigest(page: Page): Promise<string> {
   expect(match, `active theme href should be digest-addressed: ${href}`).not.toBeNull();
 
   return match![1];
+}
+
+async function setThemeSafeMode(page: Page, enabled: boolean): Promise<void> {
+  await visit(page, '/admin/themes/safe-mode');
+
+  if (enabled) {
+    const enter = page.getByRole('button', { name: 'Enter safe mode' });
+    if (await enter.isVisible()) {
+      await enter.click();
+      await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+    }
+    return;
+  }
+
+  const exit = page.getByRole('button', { name: 'Exit safe mode' });
+  if (await exit.isVisible()) {
+    await page.fill('form:has(input[name="exit"]) input[name="current_password"]', 'password123');
+    await exit.click();
+    await expect(page.getByRole('status').getByText('Theme safe mode was exited.')).toBeVisible();
+  }
 }
 
 async function dismissTour(page: Page): Promise<void> {
@@ -381,8 +407,10 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
 
 test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', async ({ page, browser, baseURL }, info) => {
   await login(page, 'admin@retro.test');
+  await setThemeSafeMode(page, false);
+  const [firstThemeUid, secondThemeUid] = themeEvidenceJourneyUids(info);
 
-  await clickThemePreview(page, themeEvidenceUid());
+  await clickThemePreview(page, firstThemeUid);
   await expect(page.locator('link[href^="/theme/preview.css"]')).toHaveCount(1);
   await shot(page, info, '39-admin-themes-preview');
 
@@ -395,7 +423,7 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
     await anonymous.close();
   }
 
-  await activateTheme(page, themeEvidenceUid());
+  await activateTheme(page, firstThemeUid);
   await visit(page, '/');
   const firstDigest = await activeThemeDigest(page);
   await shot(page, info, '40-admin-theme-active');
@@ -412,7 +440,7 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
   await page.getByRole('button', { name: 'Exit safe mode' }).click();
   await expect(page.getByRole('status').getByText('Theme safe mode was exited.')).toBeVisible();
 
-  await activateTheme(page, themeEvidenceAltUid());
+  await activateTheme(page, secondThemeUid);
   await visit(page, '/');
   const secondDigest = await activeThemeDigest(page);
   expect(secondDigest).not.toBe(firstDigest);
@@ -424,6 +452,10 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
   await visit(page, '/');
   await expect(page.locator(`link[href="/theme/${firstDigest}.css"]`)).toHaveCount(1);
   await shot(page, info, '42-admin-theme-rollback');
+
+  // Safe mode is global, so leave the built-in theme active for later
+  // evidence journeys and for the next Playwright project in this run.
+  await setThemeSafeMode(page, true);
 });
 
 test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
@@ -654,7 +686,9 @@ test('phase 4 custom emoji: admin catalogue, Markdown render, and reaction', asy
 
   await expect(page.locator(`.post-body img[src="${imagePath}"][alt="${token}"]`)).toBeVisible();
   await expect(page.locator('.post-body code').filter({ hasText: token })).toBeVisible();
-  await page.locator('.reaction-add > summary').first().click();
+  const emojiPost = page.locator('article[data-post]').first();
+  await emojiPost.hover();
+  await emojiPost.locator('.reaction-add > summary').click();
   await page.getByRole('button', { name: token }).click();
   await expect(page.locator('.reaction-on').filter({ hasText: token })).toBeVisible();
   const postBody = page.locator('.post-body').first();

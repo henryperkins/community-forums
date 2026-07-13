@@ -96,6 +96,21 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'brand-preview');
     }
 
+    public function test_app_chrome_brand_link_keeps_the_dynamic_site_name_as_its_accessible_name(): void
+    {
+        (new SettingRepository($this->db))->set('site_name', 'Rivendell & Sons');
+        $user = $this->makeUser(['username' => 'brand_reader']);
+        $this->actingAs($user);
+
+        $res = $this->get('/');
+
+        $this->assertStatus(200, $res);
+        self::assertStringContainsString(
+            '<a class="brand" href="/" aria-label="Rivendell &amp; Sons">',
+            $res->body(),
+        );
+    }
+
     public function test_admin_sibling_pages_render_inside_the_operator_console_register(): void
     {
         $admin = $this->makeAdmin(['username' => 'consolekeeper']);

@@ -47,16 +47,21 @@ async function login(page: Page, email: string): Promise<void> {
   }
 }
 
-async function enterThemeSafeMode(page: Page): Promise<void> {
+async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
-  if (await enter.isVisible({ timeout: 1000 }).catch(() => false)) {
-    await enter.click();
-    await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+    return false;
   }
+
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  await enter.click();
+  await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+  return true;
 }
 
-async function exitThemeSafeMode(page: Page): Promise<void> {
+async function exitThemeSafeMode(page: Page, changed: boolean): Promise<void> {
+  if (!changed) return;
+
   await page.goto('/admin/themes/safe-mode');
   const exit = page.getByRole('button', { name: 'Exit safe mode' });
   if (await exit.isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -91,7 +96,6 @@ test.afterAll(async ({ browser }) => {
   try {
     await login(page, 'admin@retro.test');
     await setRegistrationMode(page, 'open');
-    await exitThemeSafeMode(page);
   } finally {
     await context.close();
   }
@@ -101,7 +105,7 @@ test('invitations: show-once issue + revoke console, invite-only registration, u
   const who = `${info.project.name}${Date.now().toString(36)}`.replace(/[^a-zA-Z0-9]/g, '').slice(-12);
 
   await login(page, 'admin@retro.test');
-  await enterThemeSafeMode(page);
+  const themeSafeModeChanged = await enterThemeSafeMode(page);
 
   try {
     // ---- issue: the raw link is rendered exactly once --------------------
@@ -146,7 +150,7 @@ test('invitations: show-once issue + revoke console, invite-only registration, u
     await page.fill('input[name="password"]', 'password123');
     await page.fill('input[name="password_confirm"]', 'password123');
     await page.getByRole('button', { name: 'Accept invitation' }).click();
-    await page.waitForURL((u) => u.pathname === '/');
+    await page.waitForURL((u) => u.pathname === '/inbox');
     const skip = page.getByRole('button', { name: 'Skip' });
     if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) {
       await skip.click();
@@ -167,6 +171,6 @@ test('invitations: show-once issue + revoke console, invite-only registration, u
     // Restore the shared evidence DB for the specs that follow.
     await login(page, 'admin@retro.test');
     await setRegistrationMode(page, 'open');
-    await exitThemeSafeMode(page);
+    await exitThemeSafeMode(page, themeSafeModeChanged);
   }
 });
