@@ -199,7 +199,7 @@
                 var close = tools.querySelector('[data-topic-tools-close]');
                 if (close) { close.hidden = false; }
             }
-            var enhancedOnly = root.querySelectorAll('[data-post-disclosure-open], [data-thread-restructure-open], [data-thread-restructure-close]');
+            var enhancedOnly = root.querySelectorAll('[data-post-disclosure-open], [data-post-disclosure-close], [data-thread-restructure-open], [data-thread-restructure-close]');
             for (var j = 0; j < enhancedOnly.length; j++) { enhancedOnly[j].hidden = false; }
             if (root.querySelector('#reply textarea[name="body"]')) {
                 var quoteButtons = root.querySelectorAll('[data-quote-post]');
@@ -211,6 +211,7 @@
     var topicToolsFocus = new WeakMap();
     var restructureFocus = new WeakMap();
     var disclosureFocus = new WeakMap();
+    var disclosureOpeners = new WeakMap();
 
     function visible(element) {
         return !!element && element.getClientRects().length > 0;
@@ -304,6 +305,15 @@
         }
     }
 
+    function closePostDisclosure(disclosure) {
+        if (!disclosure) { return; }
+        disclosure.open = false;
+        disclosureFocus.delete(disclosure);
+        var restore = disclosureOpeners.get(disclosure);
+        if (restore && document.documentElement.contains(restore)) { restore.focus(); }
+        disclosureOpeners.delete(disclosure);
+    }
+
     document.addEventListener('click', function (event) {
         var target = event.target;
         if (!target || !target.closest) { return; }
@@ -333,6 +343,11 @@
             setThreadRestructure(root, false);
             return;
         }
+        var disclosureClose = target.closest('[data-post-disclosure-close]');
+        if (disclosureClose) {
+            closePostDisclosure(disclosureClose.closest('.post-native-disclosure'));
+            return;
+        }
         var disclosureOpen = target.closest('[data-post-disclosure-open]');
         if (disclosureOpen) {
             var disclosure = document.getElementById(disclosureOpen.getAttribute('data-post-disclosure-open'));
@@ -340,6 +355,8 @@
                 var disclosureForm = disclosure.querySelector('form.composer');
                 var disclosureTarget = disclosure.querySelector('textarea, input, select') || disclosure.querySelector('button');
                 var disclosureState = { form: disclosureForm, target: disclosureTarget };
+                var disclosureRestore = clickedMenu ? clickedMenu.querySelector(':scope > summary') : disclosureOpen;
+                disclosureOpeners.set(disclosure, disclosureRestore);
                 if (clickedMenu) { clickedMenu.open = false; }
                 if (disclosure.open) {
                     focusPostDisclosure(disclosure, disclosureState);
@@ -358,9 +375,18 @@
                 var body = post.querySelector('.post-body');
                 var source = body ? body.textContent : '';
                 var line = source.trim().replace(/\s+/g, ' ').slice(0, 120);
-                textarea.value += (textarea.value ? '\n\n' : '') + '> ' + line + (source.trim().length > 120 ? '…' : '') + '\n\n';
-                textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                textarea.focus();
+                var replyForm = textarea.closest('form.composer');
+                var adapter = replyForm && replyForm._rbComposerAdapter;
+                var existing = adapter && typeof adapter.getMarkdown === 'function' ? adapter.getMarkdown() : textarea.value;
+                var markdown = (existing ? '\n\n' : '') + '> ' + line + (source.trim().length > 120 ? '…' : '') + '\n\n';
+                if (adapter && typeof adapter.insertMarkdown === 'function') {
+                    adapter.insertMarkdown(markdown);
+                    if (typeof adapter.focus === 'function') { adapter.focus(); }
+                } else {
+                    textarea.value += markdown;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    textarea.focus();
+                }
             }
             return;
         }
@@ -400,6 +426,13 @@
                 var menuTrigger = menus[mi].querySelector('summary');
                 menus[mi].open = false;
                 if (menuTrigger) { menuTrigger.focus(); }
+                event.preventDefault();
+                return;
+            }
+            var disclosures = document.querySelectorAll('[data-thread-study] .post-native-disclosure[open]');
+            for (var di = disclosures.length - 1; di >= 0; di--) {
+                if (!visible(disclosures[di])) { continue; }
+                closePostDisclosure(disclosures[di]);
                 event.preventDefault();
                 return;
             }

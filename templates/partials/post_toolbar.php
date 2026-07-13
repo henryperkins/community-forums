@@ -78,6 +78,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
         <?php // Failed edits reopen with the rejected body and validation error. ?>
         <details class="post-native-disclosure post-edit" id="post-edit-<?= (int) $p['id'] ?>"<?= $editingThis ? ' open' : '' ?>>
             <summary class="linkbtn">Edit</summary>
+            <button type="button" class="post-disclosure-close linkbtn muted" data-post-disclosure-close hidden aria-label="Close edit form">Close</button>
             <?php if ($editingThis && ($edit_error ?? '') !== ''): ?><p class="field-error"><?= $e($edit_error) ?></p><?php endif; ?>
             <form method="post" action="/posts/<?= (int) $p['id'] ?>/edit" class="composer" data-composer-context="edit" data-composer-target-id="<?= (int) $p['id'] ?>" data-no-draft>
                 <?= $this->csrfField() ?>
@@ -92,6 +93,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
     <div class="post-actions">
         <details class="post-native-disclosure post-edit" id="post-remove-<?= (int) $p['id'] ?>">
             <summary class="linkbtn danger"><?= $opRemoval ? 'Remove topic (warden)' : 'Remove (warden)' ?></summary>
+            <button type="button" class="post-disclosure-close linkbtn muted" data-post-disclosure-close hidden aria-label="Close remove form">Close</button>
             <form method="post" action="/posts/<?= (int) $p['id'] ?>/delete" class="composer">
                 <?= $this->csrfField() ?>
                 <input type="text" name="reason" class="input" placeholder="Reason (required)" maxlength="255" required>
@@ -131,6 +133,7 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
     <div class="post-report">
         <details class="post-native-disclosure" id="post-report-<?= (int) $p['id'] ?>">
             <summary class="linkbtn muted">Report</summary>
+            <button type="button" class="post-disclosure-close linkbtn muted" data-post-disclosure-close hidden aria-label="Close report form">Close</button>
             <form method="post" action="/posts/<?= (int) $p['id'] ?>/report" class="composer">
                 <?= $this->csrfField() ?>
                 <select name="reason_code" class="input input-small">

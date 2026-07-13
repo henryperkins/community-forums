@@ -1,7 +1,30 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const repoRoot = path.resolve(__dirname, '..', '..');
+const EVIDENCE_DIR = path.join(repoRoot, 'docs/evidence/browser');
+
+function setWysiwygComposer(enabled: boolean | null): boolean | null {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$settings = new \\App\\Repository\\SettingRepository($db);
+$features = $settings->get('features', []);
+if (!is_array($features)) { $features = []; }
+$previous = array_key_exists('wysiwyg_composer', $features) ? (bool) $features['wysiwyg_composer'] : null;
+${enabled === null ? "unset($features['wysiwyg_composer']);" : `$features['wysiwyg_composer'] = ${enabled ? 'true' : 'false'};`}
+$settings->set('features', $features);
+echo json_encode($previous);
+`;
+  const previous = execFileSync('php', ['-r', php], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  }).toString().trim();
+  return JSON.parse(previous) as boolean | null;
+}
 
 async function shot(page: Page, info: TestInfo, name: '80-thread-study' | '81-thread-tools'): Promise<void> {
   await expect(page.locator('.error-card')).toHaveCount(0);
@@ -12,9 +35,9 @@ async function shot(page: Page, info: TestInfo, name: '80-thread-study' | '81-th
   });
 }
 
-async function login(page: Page): Promise<void> {
+async function login(page: Page, email = 'alice@retro.test'): Promise<void> {
   await page.goto('/login');
-  await page.fill('input[name="email"]', 'alice@retro.test');
+  await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', 'password123');
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/inbox(?:\?|$)/);
@@ -143,6 +166,32 @@ test('post menus are exclusive, dismiss outside, and open real disclosures safel
   await expect(firstMenu).not.toHaveAttribute('open', '');
   await expect(editDisclosure).toHaveAttribute('open', '');
   expect(await editDisclosure.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(editDisclosure).not.toHaveAttribute('open', '');
+  await expect(firstMenu.locator(':scope > summary')).toBeFocused();
+
+  await posts.nth(1).hover();
+  await secondMenu.locator(':scope > summary').click();
+  await secondMenu.getByRole('button', { name: 'Report' }).click();
+  const reportDisclosure = posts.nth(1).locator('.post-native-disclosure[id^="post-report-"]');
+  await expect(reportDisclosure).toHaveAttribute('open', '');
+  await reportDisclosure.getByRole('button', { name: 'Close report form' }).click();
+  await expect(reportDisclosure).not.toHaveAttribute('open', '');
+  await expect(secondMenu.locator(':scope > summary')).toBeFocused();
+
+  await page.context().clearCookies();
+  await login(page, 'admin@retro.test');
+  await openSeedTopic(page);
+  const adminPost = page.locator('article[data-post]').first();
+  const adminMenu = adminPost.locator('[data-post-menu]');
+  await adminPost.hover();
+  await adminMenu.locator(':scope > summary').click();
+  await adminMenu.getByRole('button', { name: /Remove .*warden/ }).click();
+  const removeDisclosure = adminPost.locator('.post-native-disclosure[id^="post-remove-"]');
+  await expect(removeDisclosure).toHaveAttribute('open', '');
+  await removeDisclosure.getByRole('button', { name: 'Close remove form' }).click();
+  await expect(removeDisclosure).not.toHaveAttribute('open', '');
+  await expect(adminMenu.locator(':scope > summary')).toBeFocused();
 });
 
 test('copy link keeps anchor navigation when Clipboard is absent or rejects', async ({ page }, info) => {
@@ -192,6 +241,44 @@ test('quote controls stay hidden when the rendered topic has no reply composer t
   const quoteButtons = page.locator('[data-thread-study] [data-quote-post]');
   expect(await quoteButtons.count()).toBeGreaterThan(0);
   await expect(quoteButtons.first()).toBeHidden();
+});
+
+test('quote inserts through the active WYSIWYG adapter and survives submit synchronization', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one project proves the default WYSIWYG adapter contract');
+  const previous = setWysiwygComposer(true);
+  try {
+    await login(page);
+    await openSeedTopic(page);
+
+    const form = page.locator('#reply');
+    const editor = form.locator('.wysiwyg-composer .ProseMirror');
+    await expect(editor).toBeVisible();
+    await editor.fill('My response');
+
+    const post = page.locator('article[data-post]').nth(1);
+    await post.hover();
+    await post.getByRole('button', { name: 'Quote in your reply' }).click();
+
+    await expect.poll(async () => form.evaluate((element) => {
+      const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { getMarkdown?: () => string } })._rbComposerAdapter;
+      return adapter?.getMarkdown?.() ?? '';
+    })).toMatch(/^My response\n+> [^\n]+$/);
+
+    const adapterMarkdown = await form.evaluate((element) => {
+      const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { getMarkdown?: () => string } })._rbComposerAdapter;
+      return adapter?.getMarkdown?.() ?? '';
+    });
+
+    const submittedMarkdown = await form.evaluate((element) => {
+      const composer = element as HTMLFormElement;
+      composer.addEventListener('submit', (event) => event.preventDefault(), { once: true });
+      composer.requestSubmit();
+      return (composer.querySelector('textarea[name="body"]') as HTMLTextAreaElement).value;
+    });
+    expect(submittedMarkdown).toBe(adapterMarkdown);
+  } finally {
+    setWysiwygComposer(previous);
+  }
 });
 
 test('Inbox-inserted topics get idempotent drawer, quote, and keyboard enhancement', async ({ page }) => {

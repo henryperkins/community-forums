@@ -5061,6 +5061,7 @@ body.thread-restructure-open { overflow: hidden; }
     box-shadow: var(--shadow-lg);
 }
 [data-thread-enhanced="1"] .post-native-disclosure > summary { display: none; }
+.post-disclosure-close { margin: 0 0 8px auto; }
 .thread-restructure-scrim:not([hidden]) {
     position: fixed;
     inset: 0;
