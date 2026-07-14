@@ -17,7 +17,14 @@ override) while Gate B and unfinished Phase 3/4 carryovers remain default-dark;
 **2026-07-12 Thread Intelligence graduation reconciled** — `community_memory`
 and `automated_context` now default on together with independent rollback pins;
 the Source Code Audit below is re-run to 2026-07-12 (53 literal `enabled()`
-keys) and the `invitations` row carries its two-pass pre-merge review hardening.
+keys) and the `invitations` row carries its two-pass pre-merge review hardening;
+**2026-07-13 dark-flag readiness live-drive reconciled** — the eight current
+default-dark rows carry refreshed findings from an enable-and-drive pass (only
+`group_dms` is close to graduation; `custom_css` is safety-blocked), a new
+[Operationally dormant](#operationally-dormant-default-on-but-inert-in-practice)
+section records default-ON flags that are inert in practice, and a
+[recommended activation order](#recommended-activation-order-2026-07-13) is
+added; `/admin/features` now renders these readiness categories read-only.
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -101,14 +108,14 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
 | `server_drafts` | Authenticated cross-device draft sync, conflict handling, `/drafts` server list/discard | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppServerDraftsTest` (available-by-default + rollback), `AppAccountLifecycleTest` (export/purge), browser `28-server-draft-conflict`, `.composer-draft-sync` axe pass, runbook `docs/runbooks/server_drafts.md`, ADR 0010. Retained here for traceability. |
 | `wysiwyg_composer` | Milkdown WYSIWYG layer over the canonical Markdown textarea | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override; `rich_composer=false` remains the emergency kill switch). Acceptance evidence: ADR 0013, runbook `docs/runbooks/wysiwyg_composer.md`, `AppComposerTest`, `AppComposerSuggestTest`, `AppMentionLinkRenderTest`, `MarkdownRoundTripTest`, `npm run check:wysiwyg`, browser `wysiwyg-composer.spec.ts` (CSP + GA-default mount with no override, source mode, no-op edit, preview parity, chips, internal URL paste, mobile smoke, textarea fallback), and `a11y.spec.ts` WYSIWYG toolbar/picker/source scans. Retained here for traceability. |
 | `appeals` | Self-service moderation appeals and staff appeal queue | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppModerationAppealsTest`, `AppFeatureFlagTest` (default-on + operator rollback to 404), browser `44-appeals-member`/`45-appeals-staff-queue`, `/appeals` + `.appeal-resolve` axe pass, runbook `docs/runbooks/appeals.md`, ADR 0007. Retained here for traceability. |
-| `custom_css` | Guarded raw CSS editor for trusted operators | Deploy-dark; awaiting safe-mode/mobile/operator evidence |
+| `custom_css` | Guarded raw CSS editor for trusted operators | Deploy-dark; **safety-blocked** (2026-07-13 live drive): theme safe mode does not suppress the `custom_css` block in `/brand.css`, so broken custom CSS stays active through the documented recovery path — make safe mode bypass custom CSS/branding independently before capturing recovery/mobile/operator evidence |
 
 ## Phase 4 Gate A
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
 | `topic_workflow` | Canonical status, history, snooze, assignment | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, runbook `docs/runbooks/topic_workflow.md`. Retained here for traceability. |
-| `group_dms` | Group conversation creation and invites | Accepted Gate A engineering baseline; default-dark until intentional enablement |
+| `group_dms` | Group conversation creation and invites | Accepted Gate A engineering baseline; default-dark until intentional enablement. 2026-07-13 live drive: the member journey works end-to-end on desktop + mobile (creation, validation draft preservation, membership intervals, owner actions, mute/leave, reporting) — remaining work is the committed Playwright/no-JS/a11y evidence, the abuse/moderation runbook, and the enablement decision; admin access stays report-only (no private-message browser) |
 | `tags` | Curated tag catalogue and thread tagging | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `expanded_feeds` | Board/tag follows, expanded Following and Latest feeds | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `reputation_ledger` | Reputation-event ledger and windowed rankings | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppLeaderboardTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
@@ -120,8 +127,8 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
-| `link_previews` | Allowlisted server-fetched URL metadata, admin purge/refresh | Deploy-dark; awaiting browser, crawler/noindex, load, and runbook evidence |
-| `expanded_files` | PDF/text-family uploads, scanner/quarantine state, download-only serving | Deploy-dark; awaiting browser/no-JS, scanner-outage smoke, and operator runbook |
+| `link_previews` | Allowlisted server-fetched URL metadata, admin purge/refresh | Deploy-dark; 2026-07-13 live drive: the fetch/render pipeline works but is inert until `link_preview_allowed_hosts` is populated, `GET /admin/link-previews` does not exist (the POST refresh/purge routes are unlinked from any page), and the DECISIONS §6 #5 per-board opt-in plus author preview removal are absent — build the admin console, board setting, author suppression, and worker/kill-switch status surface before the browser/crawler/load/runbook evidence |
+| `expanded_files` | PDF/text-family uploads, scanner/quarantine state, download-only serving | Deploy-dark; 2026-07-13 live drive: backend `POST /upload/file` exists but enabling the flag surfaces no member file chooser or no-JS upload form (composer JS still uploads images only via `/upload`) — build the member upload/download/quarantine states plus admin scanner health/outage/quarantine workflows before the browser/no-JS, scanner-outage, and runbook evidence |
 | `polls` | One-poll-per-thread no-JS create/vote/close/result flow | **Graduated 2026-06-30 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `25-poll-voted`, `.poll-panel` axe pass, runbook `docs/runbooks/polls.md`. Retained here for traceability. |
 | `custom_emoji` | Operator-managed shortcode assets and optional reactions | **Graduated 2026-07-03 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppCustomEmojiGiphyTest` (available-by-default + rollback, Markdown rendering, reaction compatibility), `AppPhase4CarryoverFoundationTest`, browser `48-custom-emoji-admin`/`49-custom-emoji-thread`, `.custom-emoji-panel`/`.post-body`/`.reactions` axe passes, runbook `docs/runbooks/custom_emoji.md`. Retained here for traceability. |
 | `slash_giphy` | Progressive slash insertion and client-side GIPHY picker config | **Graduated 2026-07-02 — now default-ON** (no longer deploy-dark; **inert until `giphy_public_key` is set**; reversible via `features` override or by clearing the key). Acceptance evidence: `AppCustomEmojiGiphyTest` (incl. operator-rollback re-gate), `AppPhase4CarryoverFoundationTest`, browser `26-slash-menu`/`27-giphy-inserted`, `.composer-slash-menu` axe + keyboard pass, runbook `docs/runbooks/slash_giphy.md`. Retained here for traceability. |
@@ -148,6 +155,17 @@ missing evidence → flip the `FeatureFlags` default and update
 `AppFeatureFlagTest` → land the runbook under `docs/runbooks/` → update this
 inventory. The entries already marked graduated below have runbooks; entries
 still listed as "Need: runbook" do not yet.
+
+**2026-07-13 re-rank (live enable-and-drive pass over the four remaining dark
+carryovers):** the effective order is now `group_dms` (evidence + runbook only —
+the member journey already works end-to-end) → `link_previews` (the admin
+console, per-board opt-in, and author removal must be *built*, not just
+evidenced) → `expanded_files` (the member-facing upload/download/quarantine UI
+and the scanner operations surface must be built) → `custom_css`
+(**safety-blocked**: theme safe mode does not suppress `/brand.css` custom CSS,
+so the documented recovery path is unsafe until that is repaired). The original
+tier labels below are retained for history; the per-entry Have/Need lists are
+updated in place.
 
 ### Tier 1 — browser evidence already captured; docs and sign-off remain
 
@@ -305,15 +323,29 @@ still listed as "Need: runbook" do not yet.
 11. **`expanded_files`** — PDF/text-family uploads with content sniffing,
     scan-pending default, quarantine helpers, stale-scan cleanup, and
     download-only `nosniff` delivery.
-    - Have: `AppExpandedFilesTest`; `worker:attachment-scans` smoke exit 0.
-    - Need: browser/no-JS evidence + a deliberate scanner-outage smoke +
-      operator runbook.
+    - Have: `AppExpandedFilesTest`; `worker:attachment-scans` smoke exit 0; the
+      backend `POST /upload/file` route.
+    - Need (revised 2026-07-13 — this is build work, not just evidence): the
+      member-facing surface itself — enabling the flag surfaces no file chooser
+      or no-JS upload form (composer JS still uploads images only via
+      `/upload`), and no member-visible scan-pending/quarantined/download
+      states render; the admin scanner health, outage, and quarantine
+      workflows; then browser/no-JS evidence + a deliberate scanner-outage
+      smoke + operator runbook.
 12. **`custom_css`** — guarded raw CSS editor for trusted operators (part of the
     advanced-theming slice); policy ADR 0009. Highest-trust surface in this
     list.
-    - Have: `AppBrandingThemeTest`; ADR 0009.
-    - Need: safe-mode recovery evidence (prove an operator can boot out of
-      broken CSS), mobile evidence, and an operator runbook.
+    - Have: `AppBrandingThemeTest`; ADR 0009; the `/admin/branding` editor
+      renders when the flag is enabled.
+    - Need (revised 2026-07-13 — **safety-blocked**): first *fix* the recovery
+      path — the live drive showed theme safe mode (`/admin/themes/safe-mode`)
+      does not suppress the `custom_css` block emitted into `/brand.css`
+      (`BrandingController::css()` checks only the flag and the
+      `brand_custom_css_enabled` setting), so an operator entering safe mode to
+      escape broken CSS still gets the broken CSS; safe mode must bypass custom
+      CSS/branding independently. Only then capture the safe-mode recovery
+      evidence (prove an operator can boot out of broken CSS), mobile evidence,
+      and an operator runbook.
 13. **`automated_context`** — ✓ **Graduated with Thread Intelligence 2026-07-12
     (default-ON).** Deterministic since-last-read context built from
     local post/read-state data before the current view advances the read
@@ -331,9 +363,15 @@ still listed as "Need: runbook" do not yet.
     validation, metadata sanitization, kill switch, and admin purge/refresh;
     private-board posts and DMs are never fetched. The only flag with a load
     requirement.
-    - Have: `AppLinkPreviewTest`.
-    - Need: browser, crawler/noindex, and load evidence, plus a runbook covering
-      the egress/allowlist posture.
+    - Have: `AppLinkPreviewTest`; the fetch/render pipeline verified working
+      (2026-07-13) once `link_preview_allowed_hosts` is populated.
+    - Need (revised 2026-07-13 — this is build work, not just evidence): the
+      admin console itself — `GET /admin/link-previews` does not exist and the
+      POST refresh/purge routes are unlinked from any page; the
+      DECISIONS §6 #5 per-board opt-in; author preview suppression/removal; a
+      worker/kill-switch status surface; then browser, crawler/noindex, load,
+      and privacy evidence, plus a runbook covering the egress/allowlist
+      posture.
 15. **`community_memory`** — ✓ **Graduated with Thread Intelligence 2026-07-12
     (default-ON).** Manual summaries with source display and
     publish/retire/restore, curated related topics, and wiki edit history with
@@ -348,10 +386,16 @@ still listed as "Need: runbook" do not yet.
     intervals, owner actions, unread/history boundaries, admin-actionable
     reports, inactive-account rejection, and DM-report rate limiting. Largest
     remaining member-facing surface; accepted Gate A engineering baseline.
+    **Re-ranked first among the remaining dark carryovers on 2026-07-13** —
+    the closest to graduation despite its original tier-5 slot.
     - Have: Gate A regression coverage (`AppPhase4GateATest`;
-      `AppDirectMessageTest` covers the DM substrate).
-    - Need: journey browser/a11y evidence, abuse/moderation runbook, and the
-      intentional-enablement decision.
+      `AppDirectMessageTest` covers the DM substrate); 2026-07-13 live drive:
+      the member journey works end-to-end on desktop + mobile — creation,
+      validation draft preservation, membership intervals, owner actions,
+      mute/leave, and reporting.
+    - Need: committed journey browser/no-JS/a11y evidence, the
+      abuse/moderation runbook, and the intentional-enablement decision. Admin
+      access must remain report-only — no private-message browser.
 
 ## Phase 5 Gate A
 
@@ -382,6 +426,40 @@ as of 2026-07-09.
 | `governance` | Operator groups, approvals, access review | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
 | `service_principals` | Remote-app service identities | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
 | `verified_links` | Verified profile links and richer profile fields | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
+
+## Operationally dormant (default-ON but inert in practice)
+
+Recorded 2026-07-13. Two flags are default-ON in `FeatureFlags::DEFAULTS` yet
+deliver no (or reduced) behavior on a stock install because a **config gate**
+outside the flag map is unsatisfied. They are not graduation candidates — they
+already graduated — but a deploy-dark inventory that omitted them would
+overstate what a fresh install actually runs. Closing each gap is an
+operational or product step, not another flag flip.
+
+| Flag | Why dormant | Path to live |
+|---|---|---|
+| `capabilities` | Default-ON, but the resolver posture defaults to `shadow` (`CAPABILITIES_MODE` unset): legacy authorization still decides every live answer; roles/grants are reachable and feed only `resolver.shadow_mismatch` telemetry. | Run the documented mismatch soak, then intentionally set `CAPABILITIES_MODE=enforce` (`docs/runbooks/capabilities.md` §Staged rollout — the only expected soak mismatch is the ADR 0016 suspended-staff pending-view divergence). This is an **operational cutover**, not a flag graduation. `/admin/roles` displays the effective posture. |
+| `slash_giphy` | Default-ON, but inert until `giphy_public_key` is set — and the key currently gates the **entire** slash menu (`SlashGiphyController::pickerConfig` 404s without it), so the non-GIPHY inserts (table, task list, poll, custom emoji) stay hidden on keyless installs too. | Either configure a key together with the runbook's required privacy-policy disclosure (member search terms/IPs go client→GIPHY directly), or decouple the non-GIPHY insert commands from the provider key — a product decision to record (`docs/runbooks/slash_giphy.md`). |
+
+## Recommended activation order (2026-07-13)
+
+Engineering-readiness order from the live-drive pass; enablement itself stays a
+product decision per flag.
+
+1. Close the group-DM evidence/runbook package and graduate `group_dms`
+   (admin access stays report-only — no private-message browser).
+2. Soak `capabilities` shadow mismatches, then intentionally flip
+   `CAPABILITIES_MODE=enforce` (operational cutover, not a flag change).
+3. Decide GIPHY: configure `giphy_public_key` with the privacy disclosure, or
+   decouple the core slash inserts from the provider key.
+4. Build the link-preview admin console, per-board opt-in, and author
+   suppression/removal; then capture its evidence package.
+5. Build the expanded-files member upload/download/quarantine UI and the
+   scanner health/outage workflows; then capture its evidence package.
+6. Repair custom-CSS recovery — theme safe mode must suppress `/brand.css`
+   custom CSS/branding independently — before reconsidering activation.
+7. Leave all four Phase 5 Gate B flags (`server_extensions`, `governance`,
+   `service_principals`, `verified_links`) dark per ADR 0018.
 
 ## Notes
 
@@ -496,3 +574,18 @@ as of 2026-07-09.
   decision. `group_dms` still requires an intentional-enablement decision;
   `community_memory` received that decision through ADR 0019 and graduated with
   `automated_context` on 2026-07-12.
+- Since 2026-07-13 the `/admin/features` inventory renders these readiness
+  categories beside each affected flag (read-only — deliberately no toggles:
+  enablement stays a deliberate `settings.features` write per
+  `docs/runbooks/operations.md` §2): *Ready for acceptance* (`group_dms`),
+  *Missing user UI* (`expanded_files`), *Missing admin operations*
+  (`link_previews`), *Safety-blocked* (`custom_css`), *Operational
+  configuration required* (`capabilities` until the posture is `enforce`;
+  `slash_giphy` until a GIPHY key is set — both computed live, so the badge
+  clears when the operational step is done), and *Reserved (ADR 0018)* (the
+  four Gate B flags). Actionable rows link to their real surfaces; a surface
+  that would 404 while its flag is dark is never linked. Evidence:
+  `AppAdminFeaturesTest` (classification, live-clearing, no-dark-links), the
+  `tests/browser/admin-features.spec.ts` journey with desktop + mobile
+  captures `docs/evidence/browser/{desktop,mobile}/admin-feature-readiness.png`,
+  and an `.admin-pane`-scoped axe pass on `/admin/features` in the same spec.

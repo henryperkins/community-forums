@@ -8,6 +8,7 @@ use App\Core\FeatureFlags;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\SettingRepository;
+use App\Security\AuthorityGate;
 
 final class AdminFeatureController extends Controller
 {
@@ -44,6 +45,80 @@ final class AdminFeatureController extends Controller
         ],
     ];
 
+    private const GATE_B_RESERVED = [
+        'status' => 'Reserved (ADR 0018)',
+        'class' => '',
+        'note' => 'Phase 5 Gate B; stays dark until its workstream lands its own release evidence.',
+    ];
+
+    /**
+     * Read-only readiness classification for the rows that are not simply
+     * shipped: the default-dark carryovers and the ADR-reserved Gate B set.
+     * The two "Operational configuration required" rows (`capabilities` in
+     * shadow posture, `slash_giphy` without a key) are computed live in
+     * readiness() so the badge clears once the operational step is done.
+     * Deliberately not a toggle — enablement stays an explicit
+     * settings.features write (docs/runbooks/operations.md §2). Findings and
+     * next steps trace to docs/evidence/deploy-dark-features.md (2026-07-13).
+     *
+     * @var array<string,array{status:string,class:string,note:string,href?:string,link?:string}>
+     */
+    private const READINESS = [
+        'group_dms' => [
+            'status' => 'Ready for acceptance',
+            'class' => 'state-active',
+            'note' => 'Member journey verified end-to-end on desktop and mobile (2026-07-13); needs committed browser/no-JS/a11y evidence and the moderation runbook, then the enablement decision. Admin access stays report-only.',
+            'href' => '/mod/reports',
+            'link' => 'Report queue',
+        ],
+        'expanded_files' => [
+            'status' => 'Missing user UI',
+            'class' => 'state-paused',
+            'note' => 'Backend POST /upload/file exists, but no member file chooser, no-JS upload form, or quarantine states render; the admin scanner health/outage workflows are also unbuilt.',
+        ],
+        'link_previews' => [
+            'status' => 'Missing admin operations',
+            'class' => 'state-paused',
+            'note' => 'Inert until link_preview_allowed_hosts is populated; GET /admin/link-previews does not exist (the POST refresh/purge routes are unlinked), and the per-board opt-in and author removal are absent.',
+        ],
+        'custom_css' => [
+            'status' => 'Safety-blocked',
+            'class' => 'state-failed',
+            'note' => 'Theme safe mode does not suppress /brand.css custom CSS, so the documented recovery path leaves broken CSS active. Repair that before considering enablement.',
+            'href' => '/admin/branding',
+            'link' => 'Custom CSS editor',
+        ],
+        'server_extensions' => self::GATE_B_RESERVED,
+        'governance' => self::GATE_B_RESERVED,
+        'service_principals' => self::GATE_B_RESERVED,
+        'verified_links' => self::GATE_B_RESERVED,
+    ];
+
+    /**
+     * Operations/health surface per flag, linked only while the flag is
+     * effectively on — most of these consoles 404 while their flag is dark,
+     * and the readiness / rollback columns already carry the dark story.
+     *
+     * @var array<string,string>
+     */
+    private const OPERATIONS = [
+        'email' => '/admin/email',
+        'announcements' => '/admin/announcements',
+        'branding' => '/admin/branding',
+        'tags' => '/admin/tags',
+        'badge_rules' => '/admin/badge-rules',
+        'community_memory' => '/admin/thread-intelligence',
+        'automated_context' => '/admin/thread-intelligence',
+        'package_registry' => '/admin/packages',
+        'package_themes' => '/admin/themes',
+        'capabilities' => '/admin/roles',
+        'provider_registry' => '/admin/providers',
+        'invitations' => '/admin/invitations',
+        'api_tokens' => '/admin/api-tokens',
+        'webhooks' => '/admin/webhooks',
+        'server_extensions' => '/admin/extensions',
+    ];
+
     /** @param array<string,string> $params */
     public function index(Request $request, array $params): Response
     {
@@ -52,8 +127,11 @@ final class AdminFeatureController extends Controller
         $flags = $this->container->get(FeatureFlags::class);
         $defaults = FeatureFlags::defaults();
         $effective = $flags->all();
-        $overrides = $this->container->get(SettingRepository::class)->get('features', []);
+        $settings = $this->container->get(SettingRepository::class);
+        $overrides = $settings->get('features', []);
         $overrides = is_array($overrides) ? $overrides : [];
+
+        $readiness = $this->readiness($effective, $settings);
 
         $rowsByGroup = [];
         foreach (self::GROUPS as $label => $flagNames) {
@@ -62,7 +140,7 @@ final class AdminFeatureController extends Controller
                 if (!array_key_exists($flag, $defaults)) {
                     continue;
                 }
-                $rowsByGroup[$label][] = $this->row($flag, $defaults, $effective, $overrides);
+                $rowsByGroup[$label][] = $this->row($flag, $defaults, $effective, $overrides, $readiness);
             }
         }
 
@@ -71,7 +149,7 @@ final class AdminFeatureController extends Controller
         if ($uncategorized !== []) {
             $rowsByGroup['Uncategorized'] = [];
             foreach ($uncategorized as $flag) {
-                $rowsByGroup['Uncategorized'][] = $this->row($flag, $defaults, $effective, $overrides);
+                $rowsByGroup['Uncategorized'][] = $this->row($flag, $defaults, $effective, $overrides, $readiness);
             }
         }
 
@@ -109,17 +187,64 @@ final class AdminFeatureController extends Controller
     }
 
     /**
+     * The full readiness map for this request: the static classification plus
+     * the two live-computed "Operational configuration required" rows, with
+     * every href dropped when the surface it points at would 404 right now.
+     *
+     * @param array<string,bool> $effective
+     * @return array<string,array{status:string,class:string,note:string,href?:string,link?:string}>
+     */
+    private function readiness(array $effective, SettingRepository $settings): array
+    {
+        $readiness = self::READINESS;
+        if (!($effective['moderation_queue'] ?? false)) {
+            unset($readiness['group_dms']['href'], $readiness['group_dms']['link']);
+        }
+        if (!($effective['branding'] ?? false)) {
+            unset($readiness['custom_css']['href'], $readiness['custom_css']['link']);
+        }
+
+        if ($effective['capabilities'] ?? false) {
+            $mode = $this->container->get(AuthorityGate::class)->mode();
+            if ($mode !== 'enforce') {
+                $readiness['capabilities'] = [
+                    'status' => 'Operational configuration required',
+                    'class' => 'state-pending',
+                    'note' => 'Resolver posture is "' . $mode . '" — legacy authorization still decides every live answer. Soak resolver.shadow_mismatch, then set CAPABILITIES_MODE=enforce (docs/runbooks/capabilities.md §Staged rollout).',
+                    'href' => '/admin/roles',
+                    'link' => 'Roles & resolver posture',
+                ];
+            }
+        }
+
+        if ($effective['slash_giphy'] ?? false) {
+            $key = $settings->getString('giphy_public_key', (string) $this->config()->get('giphy.public_key', ''));
+            if ($key === '') {
+                $readiness['slash_giphy'] = [
+                    'status' => 'Operational configuration required',
+                    'class' => 'state-pending',
+                    'note' => 'giphy_public_key is unset, which hides the entire slash menu (all insert commands, not just GIPHY search). Configure a key with the required privacy disclosure, or decouple the non-GIPHY inserts from the provider key (docs/runbooks/slash_giphy.md).',
+                ];
+            }
+        }
+
+        return $readiness;
+    }
+
+    /**
      * @param array<string,bool> $defaults
      * @param array<string,bool> $effective
      * @param array<string,mixed> $overrides
+     * @param array<string,array{status:string,class:string,note:string,href?:string,link?:string}> $readiness
      * @return array<string,mixed>
      */
-    private function row(string $flag, array $defaults, array $effective, array $overrides): array
+    private function row(string $flag, array $defaults, array $effective, array $overrides, array $readiness): array
     {
         $default = (bool) $defaults[$flag];
         $current = (bool) ($effective[$flag] ?? $default);
         $hasOverride = array_key_exists($flag, $overrides);
         $override = $hasOverride ? FeatureFlags::normalizeOverride($overrides[$flag]) : null;
+        $meta = $readiness[$flag] ?? null;
 
         return [
             'flag' => $flag,
@@ -130,9 +255,12 @@ final class AdminFeatureController extends Controller
             'override_text' => $hasOverride ? ($override ? 'Override on' : 'Override off') : 'No override',
             'override_class' => $hasOverride ? ($override ? 'state-active' : 'state-paused') : 'state-pending',
             'rollback' => $this->rollbackNote($flag, $default, $current),
-            'operations_href' => in_array($flag, ['community_memory', 'automated_context'], true)
-                ? '/admin/thread-intelligence'
-                : null,
+            'operations_href' => $current ? (self::OPERATIONS[$flag] ?? null) : null,
+            'readiness_status' => $meta['status'] ?? null,
+            'readiness_class' => $meta['class'] ?? '',
+            'readiness_note' => $meta['note'] ?? '',
+            'readiness_href' => $meta['href'] ?? null,
+            'readiness_link' => $meta['link'] ?? 'Open',
         ];
     }
 

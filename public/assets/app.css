@@ -249,8 +249,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 
 /* Generic */
 .muted { color: var(--text-muted); }
-/* Links embedded in muted admin prose need a distinguishing style (WCAG 1.4.1). */
-.admin-pane .muted a {
+/* Links embedded in muted admin prose, and the bare Operations/readiness
+   links inside the feature-inventory table cells, need a distinguishing
+   style (WCAG 1.4.1). */
+.admin-pane .muted a,
+.admin-pane .audit-flags td a {
     text-decoration: underline;
     text-decoration-thickness: .08em;
     text-underline-offset: .18em;

@@ -71,6 +71,66 @@ final class AppAdminFeaturesTest extends TestCase
         self::assertStringContainsString('overrides are being ignored', $page->body());
     }
 
+    public function test_feature_inventory_classifies_readiness_and_links_actionable_surfaces(): void
+    {
+        // Pristine defaults: no features override, shadow resolver posture,
+        // no GIPHY key — the 2026-07-13 readiness audit posture.
+        $this->actingAs($this->makeAdmin(['username' => 'readiness-admin']));
+
+        $page = $this->get('/admin/features');
+
+        $this->assertStatus(200, $page);
+        $body = $page->body();
+        self::assertStringContainsString('Readiness / next step', $body);
+
+        // The six categories, each anchored by its row-specific finding.
+        self::assertStringContainsString('Ready for acceptance', $body);
+        self::assertStringContainsString('Member journey verified end-to-end', $body); // group_dms
+        self::assertStringContainsString('Missing user UI', $body);
+        self::assertStringContainsString('no member file chooser', $body); // expanded_files
+        self::assertStringContainsString('Missing admin operations', $body);
+        self::assertStringContainsString('GET /admin/link-previews does not exist', $body); // link_previews
+        self::assertStringContainsString('Safety-blocked', $body);
+        self::assertStringContainsString('Theme safe mode does not suppress', $body); // custom_css
+        self::assertStringContainsString('Operational configuration required', $body);
+        self::assertStringContainsString('Resolver posture is', $body); // capabilities still in shadow
+        self::assertStringContainsString('giphy_public_key is unset', $body); // slash_giphy without a key
+        self::assertStringContainsString('Reserved (ADR 0018)', $body);
+        self::assertStringContainsString('stays dark until its workstream lands its own release evidence', $body);
+
+        // Actionable rows link to their real surfaces…
+        self::assertStringContainsString('<a href="/mod/reports">Report queue</a>', $body);
+        self::assertStringContainsString('<a href="/admin/roles">Roles &amp; resolver posture</a>', $body);
+        self::assertStringContainsString('<a href="/admin/branding">Custom CSS editor</a>', $body);
+        // …shipped default-on flags carry an Operations link to their console…
+        self::assertStringContainsString('<a href="/admin/webhooks">Operations</a>', $body);
+        self::assertStringContainsString('<a href="/admin/thread-intelligence">Operations</a>', $body);
+        // …but a console that 404s while its flag is dark is never linked.
+        self::assertStringNotContainsString('href="/admin/extensions"', $body);
+    }
+
+    public function test_operational_configuration_rows_clear_when_the_step_is_done(): void
+    {
+        // The two "Operational configuration required" rows are computed live:
+        // a stored GIPHY key and an enforce resolver posture must clear them,
+        // and readiness links must never point at a surface that would 404
+        // (moderation_queue / branding rolled back drop the link, not the badge).
+        (new SettingRepository($this->db))->set('giphy_public_key', 'pk-public-test');
+        $this->withCapabilitiesEnforced(['moderation_queue' => false, 'branding' => false]);
+        $this->actingAs($this->makeAdmin(['username' => 'dormant-clear-admin']));
+
+        $page = $this->get('/admin/features');
+
+        $this->assertStatus(200, $page);
+        $body = $page->body();
+        self::assertStringNotContainsString('Resolver posture is', $body);
+        self::assertStringNotContainsString('giphy_public_key is unset', $body);
+        self::assertStringContainsString('Ready for acceptance', $body);
+        self::assertStringContainsString('Safety-blocked', $body);
+        self::assertStringNotContainsString('href="/mod/reports"', $body);
+        self::assertStringNotContainsString('href="/admin/branding"', $body);
+    }
+
     public function test_feature_flag_inventory_is_admin_only_but_not_feature_gated(): void
     {
         $this->makeAdmin();
