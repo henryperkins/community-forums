@@ -202,7 +202,7 @@ test('curator edit, real-worker refresh, retirement, restoration, and explicit r
   await page.reload();
   memory = await openTopicTools(page, 'memory');
   await memory.details.getByRole('button', { name: 'Refresh living brief' }).click();
-  await expect(page.getByRole('status')).toContainText('Refresh queued');
+  await expect(page.getByRole('status').filter({ hasText: 'Refresh queued' })).toBeVisible();
   fixture('run-refresh', info);
   await page.reload();
   await expect(page.locator('.living-brief')).toContainText('AI-generated living brief');
@@ -267,10 +267,10 @@ test('admin status and restorative retry, reconcile, latch, pause, thread, and b
 
     let row = generationRow(page, state.admin.thread_title);
     await row.getByRole('button', { name: 'Retry', exact: true }).click();
-    await expect(page.getByRole('status')).toContainText('Refresh queued');
+    await expect(page.getByRole('status').filter({ hasText: 'Refresh queued' })).toBeVisible();
     row = generationRow(page, state.admin.thread_title);
     await row.getByRole('button', { name: 'Reconcile', exact: true }).click();
-    await expect(page.getByRole('status')).toContainText('Reconciliation queued');
+    await expect(page.getByRole('status').filter({ hasText: 'Reconciliation queued' })).toBeVisible();
 
     row = generationRow(page, state.admin.thread_title);
     await row.getByRole('button', { name: 'Pause', exact: true }).click();

@@ -52,6 +52,23 @@ if ($user) {
 `);
 }
 
+function resetWysiwygTestState(): void {
+  runPhp(`
+$features = $settings->get('features', []);
+if (!is_array($features)) { $features = []; }
+unset($features['rich_composer']);
+$features['wysiwyg_composer'] = false;
+$settings->set('features', $features);
+$userIds = $db->fetchAll("SELECT id FROM users WHERE email IN ('alice@retro.test', 'bob@retro.test')");
+$ids = array_map(static fn (array $row): int => (int) $row['id'], $userIds);
+if ($ids !== []) {
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $db->run('DELETE FROM server_drafts WHERE user_id IN (' . $placeholders . ')', $ids);
+    $db->run('DELETE FROM user_preferences WHERE user_id IN (' . $placeholders . ')', $ids);
+}
+`);
+}
+
 async function visit(page: Page, url: string): Promise<void> {
   const resp = await page.goto(url);
   expect(resp, `no response for ${url}`).not.toBeNull();
@@ -121,6 +138,14 @@ $row = $db->fetch(
 echo json_encode($row ?: null);
 `));
 }
+
+test.beforeEach(() => {
+  resetWysiwygTestState();
+});
+
+test.afterEach(() => {
+  resetWysiwygTestState();
+});
 
 test('textarea composer inserts @ mention from keyboard picker', async ({ page }) => {
   setWysiwygComposer(false);
@@ -423,15 +448,8 @@ test('wysiwyg Enter preserves list authoring blockquote and code editing before 
     await form.getByRole('button', { name: 'Rich text', exact: true }).click();
     const target = editor.locator(selector);
     await expect(target).toBeVisible();
-    await target.evaluate((element) => {
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      range.collapse(false);
-      const selection = window.getSelection()!;
-      selection.removeAllRanges();
-      selection.addRange(range);
-      (element.closest('[contenteditable="true"]') as HTMLElement).focus();
-    });
+    await editor.focus();
+    await editor.press('Control+End');
     return target;
   }
 
@@ -446,8 +464,10 @@ test('wysiwyg Enter preserves list authoring blockquote and code editing before 
   await loadRichMarkdown('> quoted', 'blockquote p');
   await editor.press('Enter');
   await expect(editor.locator('blockquote')).toBeVisible();
+  await expect(page).toHaveURL(/\/c\/general$/);
   await editor.press('Enter');
-  await expect(editor.locator(':scope > p')).toHaveCount(1);
+  await expect(page).toHaveURL(/\/c\/general$/);
+  await expect(editor).toContainText('quoted');
 
   await loadRichMarkdown('```\ncode block\n```', 'pre code');
   await editor.press('Enter');

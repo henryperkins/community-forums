@@ -588,10 +588,26 @@ test('emoji dialog traps focus, remembers the caret, persists capped recents, an
   await trigger.click();
   const dialog = form.getByRole('dialog', { name: 'Emoji' });
   const search = dialog.getByRole('searchbox', { name: 'Search emoji' });
+  const catalogGroups = [
+    'Smileys & emotion',
+    'People & body',
+    'Animals & nature',
+    'Food & drink',
+    'Activities',
+    'Travel & places',
+    'Objects',
+    'Symbols',
+    'Flags',
+  ];
+  async function expectCatalogGroups(): Promise<void> {
+    for (const group of catalogGroups) {
+      await expect(dialog.getByRole('grid', { name: group, exact: true })).toBeVisible();
+    }
+  }
   await expect(dialog).toBeVisible();
   await expect(search).toBeFocused();
   await expect(dialog.getByRole('grid', { name: 'Smileys & emotion' })).toBeVisible();
-  await expect(dialog.getByRole('grid')).toHaveCount(9);
+  await expectCatalogGroups();
   const placement = await dialog.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     return {
@@ -606,7 +622,7 @@ test('emoji dialog traps focus, remembers the caret, persists capped recents, an
   await search.fill('tada');
   await expect(dialog.getByRole('gridcell', { name: 'Party popper' })).toBeVisible();
   await search.fill('');
-  await expect(dialog.getByRole('grid')).toHaveCount(9);
+  await expectCatalogGroups();
   await expectNoSeriousA11yViolations(page, '.composer-emoji-dialog');
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, info.project.name, '82-composer-emoji.png'),

@@ -44,11 +44,23 @@ async function runWebhookWorker(repoRoot: string): Promise<{ stdout: string; std
 }
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
-  await page.screenshot({
+  const options = {
     path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`),
     fullPage: true,
-    animations: 'disabled',
-  });
+    animations: 'disabled' as const,
+  };
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.screenshot(options);
+      return;
+    } catch (error) {
+      const isTransientWindowsOpenError = error instanceof Error
+        && error.message.includes('UNKNOWN: unknown error, open');
+      if (!isTransientWindowsOpenError || attempt === 2) throw error;
+      await page.waitForTimeout(100 * (attempt + 1));
+    }
+  }
 }
 
 async function visit(page: Page, url: string): Promise<void> {
