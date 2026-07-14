@@ -6,6 +6,8 @@ import path from 'node:path';
 const repoRoot = path.resolve(__dirname, '..', '..');
 const EVIDENCE_DIR = path.join(repoRoot, 'docs/evidence/browser');
 const TEST_EMAIL = 'alice@retro.test';
+const PNG_1X1 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
 
 function runPhp(code: string): string {
   const php = `
@@ -72,7 +74,8 @@ function resetComposerOverrides(): void {
   runPhp(`
 $features = $settings->get('features', []);
 if (!is_array($features)) { $features = []; }
-unset($features['rich_composer'], $features['wysiwyg_composer']);
+unset($features['rich_composer']);
+$features['wysiwyg_composer'] = false;
 $settings->set('features', $features);
 $email = base64_decode('${email64}');
 $user = $db->fetch('SELECT id FROM users WHERE email = ?', [$email]);
@@ -202,7 +205,10 @@ test('contained anatomy uses the format row and named action slots', async ({ pa
   await expect(form.locator('[data-composer-actions-start-slot]').getByRole('button', { name: 'Formatting' })).toBeVisible();
   await expect(form.locator('[data-composer-actions-end-slot]').getByRole('button', { name: 'Preview' })).toBeVisible();
   await expect(form.getByRole('button', { name: 'Emoji', exact: true })).toBeVisible();
-  await expect(form.getByRole('button', { name: 'Attach images', exact: true })).toHaveCount(0);
+  await expect(form.getByRole('button', { name: 'Attach images', exact: true })).toBeVisible();
+  expect(await form.locator('[data-composer-actions-start-slot] > button').evaluateAll((buttons) =>
+    buttons.map((button) => button.getAttribute('aria-label')),
+  )).toEqual(['Attach images', 'Formatting', 'Emoji']);
   await expect(form.locator('.composer-send')).toBeDisabled();
   await expect(form.locator('.composer-count')).toBeHidden();
 
@@ -652,6 +658,87 @@ test('emoji dialog traps focus, remembers the caret, persists capped recents, an
   await expect(dialog.getByRole('grid', { name: 'Recent' }).getByRole('gridcell', { name: 'Smiling face with open mouth' })).toBeVisible();
   await dialog.press('Escape');
   await expect(trigger).toBeFocused();
+});
+
+test('Attach images uses the upload pipeline and renders one accessible compact chip', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'file chooser contract is verified once');
+  setWysiwygComposer(false);
+  await login(page);
+  const form = await openBoardComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  const attach = form.getByRole('button', { name: 'Attach images', exact: true });
+  const input = form.locator('input[type="file"][data-composer-upload-input]');
+  await expect(attach).toBeVisible();
+  await expect(input).toBeAttached();
+  await expect(input).toHaveAttribute('accept', '.png,.jpg,.jpeg,.webp,.gif');
+  await expect(input).toHaveAttribute('multiple', '');
+
+  let releaseUpload = () => {};
+  const uploadGate = new Promise<void>((resolve) => { releaseUpload = resolve; });
+  let uploadRequests = 0;
+  await page.route('**/upload', async (route) => {
+    uploadRequests++;
+    await uploadGate;
+    await route.continue();
+  });
+
+  try {
+    const chooserPromise = page.waitForEvent('filechooser');
+    await attach.click();
+    const chooser = await chooserPromise;
+    await chooser.setFiles({ name: 'tiny.png', mimeType: 'image/png', buffer: Buffer.from(PNG_1X1, 'base64') });
+    await expect(textarea).toHaveValue(/!\[uploading…\]\(rbup-/);
+    await expect(form.locator('[data-composer-upload-tray]')).toHaveAttribute('aria-live', 'polite');
+    const chip = form.locator('.composer-upload-chip');
+    await expect(chip).toHaveCount(1);
+    await expect(chip.locator('.composer-upload-name')).toHaveText('tiny.png');
+    await expect(chip.locator('.composer-upload-status')).toContainText('Uploading');
+    await expect(chip.locator('progress')).toBeVisible();
+    await expect(chip.locator('progress')).toHaveCSS('height', '6px');
+    await expect(chip.getByRole('textbox', { name: 'Image alt text' })).toBeDisabled();
+    await expect(chip.getByRole('button', { name: 'Up' })).toBeVisible();
+    await expect(chip.getByRole('button', { name: 'Down' })).toBeVisible();
+    await expect(chip.getByRole('button', { name: 'Remove' })).toBeVisible();
+    expect(await input.evaluate((element: HTMLInputElement) => element.value)).toBe('');
+    expect(await chip.evaluate((element) => Boolean(element.closest('.composer-box')))).toBe(true);
+
+    releaseUpload();
+    await expect(chip.locator('.composer-upload-status')).toContainText('Uploaded image', { timeout: 5000 });
+    await expect(textarea).toHaveValue(/!\[\]\(\/media\/\d+\)/);
+    await expect(chip.locator('.composer-upload-thumb')).toHaveCSS('width', '48px');
+    await expect(chip.locator('.composer-upload-thumb')).toHaveCSS('height', '48px');
+    await expect(chip.getByRole('textbox', { name: 'Image alt text' })).toBeEnabled();
+    await chip.getByRole('textbox', { name: 'Image alt text' }).fill('Tiny test image');
+    await expect(textarea).toHaveValue(/!\[Tiny test image\]\(\/media\/\d+\)/);
+    expect(uploadRequests).toBe(1);
+    await expectNoSeriousA11yViolations(page, `[data-composer-instance="${await form.getAttribute('data-composer-instance')}"]`);
+  } finally {
+    releaseUpload();
+  }
+});
+
+test('reduced motion keeps composer transitions and sending state static', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'reduced-motion contract is verified once');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  setWysiwygComposer(false);
+  await login(page);
+  const form = await openBoardComposer(page);
+  await form.locator('input[name="title"]').fill('Reduced motion state');
+  const textarea = form.locator('textarea.composer-input');
+  await textarea.fill('Static sending state');
+  const trigger = form.getByRole('button', { name: 'Emoji', exact: true });
+  await trigger.click();
+  const dialog = form.getByRole('dialog', { name: 'Emoji' });
+  await expect(dialog).toBeVisible();
+  expect(parseFloat(await dialog.evaluate((element) => getComputedStyle(element).transitionDuration))).toBeLessThan(0.001);
+  await dialog.press('Escape');
+  await expect.poll(() => form.locator('.composer-box').evaluate((element) => getComputedStyle(element).transitionProperty)).toBe('none');
+
+  await form.evaluate((element) => element.addEventListener('submit', (event) => event.preventDefault(), { once: true }));
+  await form.locator('.composer-send').click();
+  await expect(form).toHaveClass(/\bis-submitting\b/);
+  expect(await form.locator('.composer-send > span').evaluate((element) => getComputedStyle(element).animationName)).toBe('none');
+  await expect(form.locator('[data-composer-submit-status]')).toHaveText('Sending…');
 });
 
 test('mobile compact dock expands to a contained formatting overflow and anonymous disclosure', async ({ page }, info) => {

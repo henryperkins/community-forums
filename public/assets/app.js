@@ -556,6 +556,9 @@
                     }
                     readingContent.innerHTML = main.innerHTML;
                     enhanceThreadViews(readingContent);
+                    if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.enhanceWithin === 'function') {
+                        window.RetroBoardsComposer.enhanceWithin(readingContent);
+                    }
                     reading.removeAttribute('aria-busy');
                     reading.scrollTop = 0;
                     selectedLink = sourceLink || inboxList.querySelector(rowSelector(idOf(href)));

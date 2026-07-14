@@ -1,5 +1,55 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+
+const repoRoot = path.resolve(__dirname, '..', '..');
+
+function setRichComposer(enabled: boolean | null): boolean | null {
+  const mutation = enabled === null
+    ? "unset($features['rich_composer']);"
+    : `$features['rich_composer'] = ${enabled ? 'true' : 'false'};`;
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$settings = new \\App\\Repository\\SettingRepository($db);
+$features = $settings->get('features', []);
+if (!is_array($features)) { $features = []; }
+$previous = array_key_exists('rich_composer', $features) ? (bool) $features['rich_composer'] : null;
+${mutation}
+$settings->set('features', $features);
+echo json_encode($previous);
+`;
+  return JSON.parse(execFileSync('php', ['-r', php], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  }).toString().trim()) as boolean | null;
+}
+
+function setWysiwygComposer(enabled: boolean | null): boolean | null {
+  const mutation = enabled === null
+    ? "unset($features['wysiwyg_composer']);"
+    : `$features['wysiwyg_composer'] = ${enabled ? 'true' : 'false'};`;
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$settings = new \\App\\Repository\\SettingRepository($db);
+$features = $settings->get('features', []);
+if (!is_array($features)) { $features = []; }
+$previous = array_key_exists('wysiwyg_composer', $features) ? (bool) $features['wysiwyg_composer'] : null;
+${mutation}
+$settings->set('features', $features);
+echo json_encode($previous);
+`;
+  return JSON.parse(execFileSync('php', ['-r', php], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  }).toString().trim()) as boolean | null;
+}
 
 async function dismissTour(page: Page): Promise<void> {
   const skip = page.getByRole('button', { name: 'Skip' });
@@ -17,6 +67,17 @@ async function login(page: Page): Promise<void> {
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/inbox(?:\?|$)/);
   await dismissTour(page);
+}
+
+async function openShortcutInboxTopic(page: Page) {
+  const link = page.locator('[data-inbox-list] .thread-row')
+    .filter({ hasText: 'Share your favourite keyboard shortcuts' })
+    .locator('a.thread-title');
+  await expect(link).toHaveCount(1);
+  await link.click();
+  const reading = page.locator('[data-inbox-reading]');
+  await expect(reading.locator('[data-thread-study]')).toBeVisible();
+  return { link, reading, form: reading.locator('#reply') };
 }
 
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
@@ -101,6 +162,111 @@ test('responsive Inbox opens a topic in place and mobile Back restores its link'
   } else {
     await expect(list).toBeVisible();
     await expect(reading).toBeVisible();
+  }
+});
+
+test('Inbox fragments receive one complete composer enhancement', async ({ page }) => {
+  await login(page);
+  let opened = await openShortcutInboxTopic(page);
+  let form = opened.form;
+  await expect(form.locator('textarea.composer-input')).toHaveAttribute('data-rb-enhanced', '1');
+  await expect(form.locator('.composer-toolbar')).toHaveCount(1);
+  await expect(form.locator('.composer-emoji-toggle')).toHaveCount(1);
+  await expect(form.locator('.composer-attach-toggle')).toHaveCount(1);
+
+  const editor = form.locator('.ProseMirror:visible, textarea[name="body"]:visible').first();
+  await editor.focus();
+  await expect(form).toHaveClass(/\bis-expanded\b/);
+  await expect(form.getByRole('button', { name: 'Emoji', exact: true })).toBeVisible();
+  await expect(form.getByRole('button', { name: 'Attach images', exact: true })).toBeVisible();
+  await editor.fill(':sm');
+  await expect(form.locator('.composer-reference-menu')).toBeVisible();
+  await editor.press('Escape');
+  await form.getByRole('button', { name: 'Emoji', exact: true }).click();
+  await expect(form.getByRole('dialog', { name: 'Emoji' })).toBeVisible();
+  await form.getByRole('dialog', { name: 'Emoji' }).press('Escape');
+
+  await editor.fill(`Inbox draft ${Date.now()}`);
+  await expect(form.locator('[data-composer-draft-slot]')).toContainText('Draft saved', { timeout: 5000 });
+  await expectNoSeriousA11yViolations(page, '[data-inbox-reading] .thread-dock');
+  const discard = form.getByRole('button', { name: 'Discard draft' });
+  await expect(discard).toBeVisible();
+  await discard.click();
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/inbox$/);
+  opened = await openShortcutInboxTopic(page);
+  form = opened.form;
+  await expect(form.locator('.composer-toolbar')).toHaveCount(1);
+  await expect(form.locator('.composer-emoji-toggle')).toHaveCount(1);
+  await expect(form.locator('.composer-attach-toggle')).toHaveCount(1);
+  await expect(form.locator('input[type="file"][data-composer-upload-input]')).toHaveCount(1);
+});
+
+test('Inbox Study Quote inserts exactly once through source and rich adapters', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'source and rich adapter quote paths are verified once');
+  const previous = setWysiwygComposer(true);
+  try {
+    await login(page);
+    const { reading, form } = await openShortcutInboxTopic(page);
+    await expect(form.getByRole('button', { name: 'Source' })).toBeVisible();
+    await form.getByRole('button', { name: 'Source' }).click();
+    const textarea = form.locator('textarea[name="body"]');
+    await textarea.fill('');
+    const post = reading.locator('article[data-post]').nth(1);
+    await post.hover();
+    await post.getByRole('button', { name: 'Quote in your reply' }).click();
+    expect((await textarea.inputValue()).match(/^> /gm) ?? []).toHaveLength(1);
+
+    await textarea.fill('');
+    await form.getByRole('button', { name: 'Rich text' }).click();
+    const editor = form.locator('.wysiwyg-composer .ProseMirror');
+    await editor.fill('');
+    await post.hover();
+    await post.getByRole('button', { name: 'Quote in your reply' }).click();
+    await expect.poll(async () => form.evaluate((element) => {
+      const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { getMarkdown?: () => string } })._rbComposerAdapter;
+      return adapter?.getMarkdown?.() ?? '';
+    })).toMatch(/^> [^\n]+\n*$/);
+    const richMarkdown = await form.evaluate((element) => {
+      const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { getMarkdown?: () => string } })._rbComposerAdapter;
+      return adapter?.getMarkdown?.() ?? '';
+    });
+    expect(richMarkdown.match(/^> /gm) ?? []).toHaveLength(1);
+  } finally {
+    setWysiwygComposer(previous);
+  }
+});
+
+test('Inbox Enter submission navigates to the canonical posted reply', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop Enter-to-send navigation contract');
+  await login(page);
+  const { form } = await openShortcutInboxTopic(page);
+  const body = `Inbox Enter reply ${Date.now()}`;
+  const textarea = form.locator('textarea[name="body"]');
+  await expect(textarea).toBeVisible();
+  await textarea.fill(body);
+  await textarea.press('Enter');
+  await expect(page).toHaveURL(/\/t\/\d+-[^#]+#p\d+$/);
+  await expect(page.locator('.post-body').getByText(body, { exact: true })).toBeVisible();
+});
+
+test('rich composer off keeps Inbox loading in pane with a plain shell', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'kill-switch contract is verified once');
+  const previous = setRichComposer(false);
+  const pageErrors: string[] = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  try {
+    await login(page);
+    const { form } = await openShortcutInboxTopic(page);
+    await expect(page).toHaveURL(/\/inbox\?.*t=\d+/);
+    await expect(form.locator('textarea[name="body"]')).toBeVisible();
+    await expect(form.locator('.composer-toolbar')).toHaveCount(0);
+    await expect(form.locator('textarea.composer-input')).not.toHaveAttribute('data-rb-enhanced', '1');
+    expect(await page.evaluate(() => typeof (window as Window & { RetroBoardsComposer?: unknown }).RetroBoardsComposer)).toBe('undefined');
+    expect(pageErrors).toEqual([]);
+  } finally {
+    setRichComposer(previous);
   }
 });
 
@@ -256,7 +422,7 @@ test('Inbox and reply dock have no serious or critical axe violations', async ({
   await expectNoSeriousA11yViolations(page, '.thread-dock');
 });
 
-test('the no-JavaScript journey uses canonical topics and the server reply form', async ({ browser, baseURL }, info) => {
+test('the no-JavaScript 390px journey keeps disclosure and submits the server reply form', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'desktop', 'run the no-JavaScript journey once');
   const context = await browser.newContext({
     baseURL: baseURL!,
@@ -271,11 +437,18 @@ test('the no-JavaScript journey uses canonical topics and the server reply form'
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL(/\/inbox(?:\?|$)/);
 
-    const topic = page.locator('[data-inbox-list] a.thread-title').first();
+    const topic = page.locator('[data-inbox-list] .thread-row')
+      .filter({ hasText: 'Share your favourite keyboard shortcuts' })
+      .locator('a.thread-title');
     const href = await topic.getAttribute('href');
     await topic.click();
     await expect(page).toHaveURL(new RegExp(`${href!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
     await expect(page.locator('.thread-dock #reply textarea[name="body"]')).toBeVisible();
+    const disclosure = page.locator('#reply .composer-anonymous-disclosure');
+    const anonymous = page.getByRole('checkbox', { name: 'Anonymous' });
+    await expect(disclosure).toBeVisible();
+    await anonymous.check();
+    await expect(disclosure).toBeVisible();
 
     const body = `No-JavaScript reply ${Date.now()}`;
     await page.fill('#reply textarea[name="body"]', body);

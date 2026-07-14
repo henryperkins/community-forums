@@ -1036,13 +1036,16 @@
         var ta = adapter.ta;
         var tray = uploadTray(form);
         var card = document.createElement('div');
-        card.className = 'composer-upload-card is-uploading';
+        card.className = 'composer-upload-chip composer-upload-card is-uploading';
         var preview = document.createElement('img');
         preview.className = 'composer-upload-thumb';
         preview.alt = '';
         preview.hidden = true;
         var meta = document.createElement('div');
         meta.className = 'composer-upload-meta';
+        var name = document.createElement('div');
+        name.className = 'composer-upload-name';
+        name.textContent = file && file.name ? file.name : 'image';
         var status = document.createElement('div');
         status.className = 'composer-upload-status';
         status.textContent = 'Uploading ' + (file && file.name ? file.name : 'image') + '...';
@@ -1072,6 +1075,7 @@
         actions.appendChild(up);
         actions.appendChild(down);
         actions.appendChild(remove);
+        meta.appendChild(name);
         meta.appendChild(status);
         meta.appendChild(progress);
         meta.appendChild(alt);
@@ -1163,32 +1167,60 @@
         if (!uploadTray(form)) { return; }
         var ta = adapter.ta;
         var targets = adapterEventTargets(adapter, ta, 'uploadTargets');
+        function queueImageFiles(files) {
+            for (var i = 0; i < files.length; i++) {
+                if (files[i] && files[i].type && files[i].type.indexOf('image/') === 0) {
+                    uploadImage(form, adapter, files[i]);
+                }
+            }
+        }
         function onPaste(e) {
             var items = (e.clipboardData || {}).items || [];
+            var files = [];
             for (var i = 0; i < items.length; i++) {
                 if (items[i].type && items[i].type.indexOf('image/') === 0) {
-                    e.preventDefault();
-                    uploadImage(form, adapter, items[i].getAsFile());
+                    var file = items[i].getAsFile();
+                    if (file) { files.push(file); }
                 }
+            }
+            if (files.length) {
+                e.preventDefault();
+                queueImageFiles(files);
             }
         }
         function onDrop(e) {
             var files = (e.dataTransfer || {}).files || [];
             if (!files.length) { return; }
             e.preventDefault();
-            var handled = false;
-            for (var i = 0; i < files.length; i++) {
-                if (files[i].type && files[i].type.indexOf('image/') === 0) {
-                    handled = true;
-                    uploadImage(form, adapter, files[i]);
-                }
-            }
+            queueImageFiles(files);
         }
         targets.forEach(function (target) {
             target.addEventListener('paste', onPaste, target !== ta);
             target.addEventListener('dragover', function (e) { e.preventDefault(); }, target !== ta);
             target.addEventListener('drop', onDrop, target !== ta);
         });
+
+        var actionSlot = shellPart(form, '[data-composer-actions-start-slot]');
+        if (!actionSlot) { return; }
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.hidden = true;
+        input.multiple = true;
+        input.accept = '.png,.jpg,.jpeg,.webp,.gif';
+        input.setAttribute('data-composer-upload-input', '');
+        var attach = document.createElement('button');
+        attach.type = 'button';
+        attach.className = 'composer-attach-toggle';
+        attach.textContent = '＋';
+        attach.setAttribute('aria-label', 'Attach images');
+        attach.setAttribute('title', 'Attach images');
+        attach.addEventListener('click', function () { input.click(); });
+        input.addEventListener('change', function () {
+            queueImageFiles(input.files || []);
+            input.value = '';
+        });
+        actionSlot.insertBefore(input, actionSlot.firstChild);
+        actionSlot.insertBefore(attach, actionSlot.firstChild);
     }
 
     // ---- Slash inserts + GIPHY picker (Phase 4 carryover) ----------------

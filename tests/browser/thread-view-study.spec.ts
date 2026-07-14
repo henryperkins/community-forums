@@ -289,35 +289,40 @@ test('quote inserts through the active WYSIWYG adapter and survives submit synch
 });
 
 test('Inbox-inserted topics get idempotent drawer, quote, and keyboard enhancement', async ({ page }) => {
-  await login(page);
-  const shortcutRow = page.locator('[data-inbox-list] .thread-row', { hasText: 'Share your favourite keyboard shortcuts' });
-  await shortcutRow.locator('a.thread-title').click();
+  const previous = setWysiwygComposer(false);
+  try {
+    await login(page);
+    const shortcutRow = page.locator('[data-inbox-list] .thread-row', { hasText: 'Share your favourite keyboard shortcuts' });
+    await shortcutRow.locator('a.thread-title').click();
 
-  const reading = page.locator('[data-inbox-reading]');
-  const root = reading.locator('[data-thread-study]');
-  await expect(root).toHaveAttribute('data-thread-enhanced', '1');
-  await reading.getByRole('button', { name: 'Topic tools' }).click();
-  await expect(reading.locator('[data-topic-tools]')).toBeVisible();
-  await reading.getByRole('button', { name: 'Close Topic tools' }).click();
+    const reading = page.locator('[data-inbox-reading]');
+    const root = reading.locator('[data-thread-study]');
+    await expect(root).toHaveAttribute('data-thread-enhanced', '1');
+    await reading.getByRole('button', { name: 'Topic tools' }).click();
+    await expect(reading.locator('[data-topic-tools]')).toBeVisible();
+    await reading.getByRole('button', { name: 'Close Topic tools' }).click();
 
-  await page.goBack();
-  await expect(page).toHaveURL(/\/inbox$/);
-  await shortcutRow.locator('a.thread-title').click();
-  await expect(root).toHaveAttribute('data-thread-enhanced', '1');
-  await expect(reading.locator('[data-topic-tools]')).toHaveCount(1);
-  await expect(reading.getByRole('button', { name: 'Topic tools' })).toHaveCount(1);
-  await reading.getByRole('button', { name: 'Topic tools' }).click();
-  await expect(reading.locator('[data-topic-tools]')).toBeVisible();
-  await reading.getByRole('button', { name: 'Close Topic tools' }).click();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/inbox$/);
+    await shortcutRow.locator('a.thread-title').click();
+    await expect(root).toHaveAttribute('data-thread-enhanced', '1');
+    await expect(reading.locator('[data-topic-tools]')).toHaveCount(1);
+    await expect(reading.getByRole('button', { name: 'Topic tools' })).toHaveCount(1);
+    await reading.getByRole('button', { name: 'Topic tools' }).click();
+    await expect(reading.locator('[data-topic-tools]')).toBeVisible();
+    await reading.getByRole('button', { name: 'Close Topic tools' }).click();
 
-  const reply = reading.locator('#reply textarea[name="body"]');
-  await reading.locator('article[data-post]').nth(1).hover();
-  await reading.locator('article[data-post]').nth(1).getByRole('button', { name: 'Quote in your reply' }).click();
-  const quotedValue = await reply.inputValue();
-  expect(quotedValue.match(/^> /gm) ?? []).toHaveLength(1);
-  expect(quotedValue).toMatch(/^> [^\n]+\n\n$/);
-  await expect(reply).toBeFocused();
-  await expect(page.locator('html')).toHaveCSS('--keyboard-inset', /\d+px/);
+    const reply = reading.locator('#reply textarea[name="body"]');
+    await reading.locator('article[data-post]').nth(1).hover();
+    await reading.locator('article[data-post]').nth(1).getByRole('button', { name: 'Quote in your reply' }).click();
+    const quotedValue = await reply.inputValue();
+    expect(quotedValue.match(/^> /gm) ?? []).toHaveLength(1);
+    expect(quotedValue).toMatch(/^> [^\n]+\n\n$/);
+    await expect(reply).toBeFocused();
+    await expect(page.locator('html')).toHaveCSS('--keyboard-inset', /\d+px/);
+  } finally {
+    setWysiwygComposer(previous);
+  }
 });
 
 test('Study layout matches desktop and mobile geometry', async ({ page }, info) => {
@@ -332,6 +337,9 @@ test('Study layout matches desktop and mobile geometry', async ({ page }, info) 
   expect(box).not.toBeNull();
   expect(box!.width).toBeLessThanOrEqual(860);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await expect(thread.locator('#reply textarea.composer-input')).toHaveAttribute('data-rb-enhanced', '1');
+  await expect(thread.locator('#reply .composer-toolbar')).toHaveCount(1);
+  await expect(thread.locator('#reply .composer-attach-toggle')).toHaveCount(1);
   await shot(page, info, '80-thread-study');
 
   if (info.project.name === 'desktop') {

@@ -174,18 +174,6 @@ async function openNewTopicComposer(page: Page): Promise<void> {
   await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
 }
 
-async function dropTinyPng(page: Page): Promise<void> {
-  const dataTransfer = await page.evaluateHandle((base64) => {
-    const bin = atob(base64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const dt = new DataTransfer();
-    dt.items.add(new File([bytes], 'tiny.png', { type: 'image/png' }));
-    return dt;
-  }, PNG_1X1);
-  await page.locator('form.composer textarea.composer-input').first().dispatchEvent('drop', { dataTransfer });
-}
-
 async function expectOneTimeSecret(page: Page, context: string): Promise<void> {
   const secret = page.getByText(/will not be shown again/);
   if (await secret.isVisible({ timeout: 10_000 }).catch(() => false)) {
@@ -487,11 +475,15 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await shot(page, info, '15-reading-preferences');
 
   await openNewTopicComposer(page);
-  const textarea = page.locator('form.composer textarea.composer-input').first();
-  await expect(page.getByRole('button', { name: 'Insert bold' }).first()).toBeVisible();
-  await page.getByRole('button', { name: 'Insert bold' }).first().click();
+  let composer = page.locator('form.composer').first();
+  const source = composer.getByRole('button', { name: 'Source' });
+  if (await source.isVisible().catch(() => false)) await source.click();
+  const textarea = composer.locator('textarea.composer-input');
+  const bold = composer.getByRole('button', { name: 'Bold (Ctrl+B)', exact: true });
+  await expect(bold).toBeVisible();
+  await bold.click();
   await expect(textarea).toHaveValue('****');
-  await expect(page.getByRole('button', { name: 'Insert bold' }).first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(bold).toHaveAttribute('aria-pressed', 'true');
 
   await textarea.fill('Browser evidence **bold** :smile:');
   await expect(page.locator('.composer-preview strong').first()).toHaveText('bold');
@@ -522,10 +514,15 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await page.evaluate(() => { try { localStorage.removeItem('rb-draft:bob:/threads'); } catch (e) {} });
 
   await openNewTopicComposer(page);
-  await dropTinyPng(page);
-  await expect(page.locator('.composer-upload-status').first()).toContainText('Uploaded image');
+  composer = page.locator('form.composer').first();
+  const chooserPromise = page.waitForEvent('filechooser');
+  await composer.getByRole('button', { name: 'Attach images', exact: true }).click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles({ name: 'tiny.png', mimeType: 'image/png', buffer: Buffer.from(PNG_1X1, 'base64') });
+  const chip = composer.locator('.composer-upload-chip');
+  await expect(chip.locator('.composer-upload-status')).toContainText('Uploaded image');
   await expect(textarea).toHaveValue(/!\[\]\(\/media\/\d+\)/);
-  await page.locator('.composer-upload-card input[aria-label="Image alt text"]').fill('Tiny test image');
+  await chip.getByRole('textbox', { name: 'Image alt text' }).fill('Tiny test image');
   await expect(textarea).toHaveValue(/!\[Tiny test image\]\(\/media\/\d+\)/);
   await shot(page, info, '17-composer-upload');
 
