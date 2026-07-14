@@ -1,13 +1,19 @@
 import { defaultValueCtx, Editor, editorViewCtx, rootCtx } from '@milkdown/core';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
-import { commonmark } from '@milkdown/preset-commonmark';
-import { gfm } from '@milkdown/preset-gfm';
+import {
+  commonmark,
+  toggleEmphasisCommand,
+  toggleInlineCodeCommand,
+  toggleStrongCommand,
+} from '@milkdown/preset-commonmark';
+import { gfm, toggleStrikethroughCommand } from '@milkdown/preset-gfm';
+import { toggleMark } from '@milkdown/prose/commands';
 import { closeHistory } from '@milkdown/prose/history';
 import type { Node as ProseMirrorNode } from '@milkdown/prose/model';
 import { Plugin, PluginKey } from '@milkdown/prose/state';
 import { Decoration, DecorationSet, type EditorView } from '@milkdown/prose/view';
-import { $prose, getMarkdown, insert, markdownToSlice, replaceAll } from '@milkdown/utils';
+import { $prose, callCommand, getMarkdown, insert, markdownToSlice, replaceAll } from '@milkdown/utils';
 
 type FallbackAdapter = {
   getMarkdown(): string;
@@ -376,13 +382,32 @@ class MilkdownComposerAdapter {
     return [this.host, this.textarea];
   }
 
-  applyAction(_key: string, action: MarkdownAction): boolean {
+  applyAction(key: string, action: MarkdownAction): boolean {
     if (!this.richMode || this.failed || this.destroyed) {
       return false;
     }
     const view = this.currentView();
     if (!view) {
       return false;
+    }
+    let applied: boolean | null = null;
+    if (key === 'bold' && this.editor) {
+      applied = this.editor.action(callCommand(toggleStrongCommand.key));
+    } else if (key === 'italic' && this.editor) {
+      applied = this.editor.action(callCommand(toggleEmphasisCommand.key));
+    } else if (key === 'strike' && this.editor) {
+      applied = this.editor.action(callCommand(toggleStrikethroughCommand.key));
+    } else if (key === 'code' && this.editor) {
+      const markType = view.state.schema.marks.inlineCode;
+      applied = view.state.selection.empty && markType
+        ? toggleMark(markType)(view.state, view.dispatch, view)
+        : this.editor.action(callCommand(toggleInlineCodeCommand.key));
+    }
+    if (applied !== null) {
+      if (applied) {
+        this.focus();
+      }
+      return applied;
     }
     const { selection } = view.state;
     const selected = view.state.doc.textBetween(selection.from, selection.to, '\n', '\n');

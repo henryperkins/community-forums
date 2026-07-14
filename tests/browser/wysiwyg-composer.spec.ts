@@ -312,6 +312,58 @@ test('wysiwyg toolbar actions update the rich editor canonical markdown', async 
   await expect(form.locator('textarea.composer-input')).toHaveValue('**toolbar text**');
 });
 
+test('wysiwyg bold toolbar toggles bold typing at an empty caret without inserting a rule', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+
+  await editor.click();
+  await form.getByRole('button', { name: 'Bold (Ctrl+B)', exact: true }).click();
+  await editor.type('bold from caret');
+
+  const strong = editor.locator('strong');
+  await expect(strong).toHaveText('bold from caret');
+  await expect(strong).toHaveCSS('font-weight', '700');
+  await expect(editor.locator('hr')).toHaveCount(0);
+  await expect(form.locator('textarea.composer-input')).toHaveValue('**bold from caret**');
+});
+
+test('wysiwyg inline mark toolbar toggles rich typing at an empty caret', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+
+  const cases = [
+    { label: 'Italic (Ctrl+I)', text: 'italic from caret', selector: 'em', markdown: '*italic from caret*' },
+    { label: 'Strike', text: 'strike from caret', selector: 'del', markdown: '~~strike from caret~~' },
+    { label: 'Inline code (Ctrl+E)', text: 'code from caret', selector: 'code', markdown: '`code from caret`' },
+  ];
+
+  for (const current of cases) {
+    await form.evaluate((element) => {
+      const adapter = (element as HTMLFormElement & {
+        _rbComposerAdapter?: { setMarkdown?: (markdown: string) => void };
+      })._rbComposerAdapter;
+      adapter?.setMarkdown?.('');
+    });
+    await expect(editor).toHaveText('');
+    await editor.click();
+    const action = form.getByRole('button', { name: current.label, exact: true });
+    if (!await action.isVisible()) {
+      await form.getByRole('button', { name: 'More formatting', exact: true }).click();
+    }
+    await action.click();
+    await editor.type(current.text);
+
+    await expect(editor.locator(current.selector)).toHaveText(current.text);
+    await expect(form.locator('textarea.composer-input')).toHaveValue(current.markdown);
+  }
+});
+
 test('wysiwyg reference selections become chips and serialize to markdown', async ({ page }) => {
   setWysiwygComposer(true);
   await login(page, 'bob@retro.test');
