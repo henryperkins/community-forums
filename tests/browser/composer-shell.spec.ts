@@ -228,6 +228,162 @@ test('submit state keeps canonical markdown successful and announces sending', a
   await expect(form.getByRole('button', { name: 'Formatting', exact: true })).toBeEnabled();
 });
 
+test('textarea Enter keeps list authoring quote and code contexts editorial before sending', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop Enter-to-send contract');
+  setWysiwygComposer(false);
+  setComposingPrefs({ enterToSend: true, smartLists: true });
+  await login(page);
+  const form = await openBoardComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  const title = `Textarea Enter matrix ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+
+  await textarea.fill('1. first');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('1. first\n2. ');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('1. first\n');
+
+  await textarea.fill('> quoted');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('> quoted\n> ');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('> quoted\n');
+
+  await textarea.fill('```\ncode');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('```\ncode\n');
+  await textarea.fill('`inline');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('`inline\n');
+  await textarea.fill('hard break');
+  await textarea.press('Shift+Enter');
+  await expect(textarea).toHaveValue('hard break\n');
+
+  await textarea.fill('- final item');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('- final item\n- ');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('- final item\n');
+  await textarea.press('Enter');
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
+
+test('textarea list Enter stays editorial when smart continuation is off', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop Enter-to-send contract');
+  setWysiwygComposer(false);
+  setComposingPrefs({ enterToSend: true, smartLists: false });
+  await login(page);
+  const form = await openBoardComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  const before = page.url();
+  await form.locator('input[name="title"]').fill('No smart continuation');
+  await textarea.fill('- item');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('- item\n');
+  expect(page.url()).toBe(before);
+});
+
+test('textarea Ctrl+Enter sends from a list when the preference is off', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop modifier contract');
+  setWysiwygComposer(false);
+  setComposingPrefs({ enterToSend: false });
+  await login(page);
+  const form = await openBoardComposer(page);
+  const title = `Textarea forced send ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await form.locator('textarea.composer-input').fill('- forced from list');
+  await form.locator('textarea.composer-input').press('Control+Enter');
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
+
+test('textarea mobile Enter edits and the send button submits', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile soft-Enter contract');
+  setWysiwygComposer(false);
+  setComposingPrefs({ enterToSend: true });
+  await login(page);
+  const form = await openBoardComposer(page);
+  const title = `Textarea mobile send ${Date.now()}`;
+  const textarea = form.locator('textarea.composer-input');
+  await form.locator('input[name="title"]').fill(title);
+  await textarea.fill('first line');
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('first line\n');
+  await textarea.type('second line');
+  await form.locator('.composer-send').click();
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
+
+test('textarea in-flight Enter produces one POST and announces sending', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop in-flight keyboard contract');
+  setWysiwygComposer(false);
+  setComposingPrefs({ enterToSend: true });
+  let releaseRoute = () => {};
+  const routeGate = new Promise<void>((resolve) => { releaseRoute = resolve; });
+  let postCount = 0;
+  let submitState: { busy: string | null; disabled: boolean; status: string | null } | null = null;
+  page.on('console', (message) => {
+    if (!message.text().startsWith('__rb_submit_state__')) return;
+    submitState = JSON.parse(message.text().slice('__rb_submit_state__'.length));
+  });
+  await page.route('**/threads', async (route) => {
+    if (route.request().method() === 'POST') {
+      postCount++;
+      await routeGate;
+    }
+    await route.continue();
+  });
+  await login(page);
+  const form = await openBoardComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  await form.locator('input[name="title"]').fill(`Textarea in-flight ${Date.now()}`);
+  await textarea.fill('One request only');
+  await form.evaluate((element) => {
+    element.addEventListener('submit', () => {
+      console.log('__rb_submit_state__' + JSON.stringify({
+        busy: element.getAttribute('aria-busy'),
+        disabled: (element.querySelector('.composer-send') as HTMLButtonElement).disabled,
+        status: element.querySelector('[data-composer-submit-status]')!.textContent,
+      }));
+      window.setTimeout(() => {
+        element.querySelector('textarea.composer-input')!.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+        );
+      }, 0);
+    }, { once: true });
+  });
+  try {
+    await textarea.press('Enter', { noWaitAfter: true });
+    await expect.poll(() => postCount).toBe(1);
+    await expect.poll(() => submitState).toEqual({ busy: 'true', disabled: true, status: 'Sending…' });
+    await page.waitForTimeout(150);
+    expect(postCount).toBe(1);
+  } finally {
+    releaseRoute();
+  }
+  await page.waitForURL(/\/t\/\d+-/);
+});
+
+test('Escape blurs the textarea unless an open suggestion menu consumes it', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'shared keyboard precedence is verified once');
+  setWysiwygComposer(false);
+  await login(page);
+  const form = await openBoardComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  await textarea.focus();
+  await textarea.press('Escape');
+  await expect(textarea).not.toBeFocused();
+
+  await textarea.fill('@ali');
+  await expect(form.locator('.composer-reference-menu')).toBeVisible();
+  await textarea.press('Escape');
+  await expect(form.locator('.composer-reference-menu')).toBeHidden();
+  await expect(textarea).toBeFocused();
+});
+
 test('format row toggle persists and icon tooltips work for pointer and keyboard', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'tooltip register is verified once on desktop');
   setWysiwygComposer(false);

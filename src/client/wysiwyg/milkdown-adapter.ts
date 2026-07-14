@@ -18,6 +18,8 @@ type FallbackAdapter = {
   focus(): void;
   onChange(callback: (markdown: string) => void): void;
   setDisabled(disabled: boolean): void;
+  enterShouldSubmit(): boolean;
+  isSourceMode(): boolean;
 };
 
 type ReferenceState = {
@@ -308,6 +310,30 @@ class MilkdownComposerAdapter {
       editor.setAttribute('contenteditable', disabled ? 'false' : 'true');
     }
     this.toggle.disabled = disabled;
+  }
+
+  enterShouldSubmit(): boolean {
+    if (this.isSourceMode()) {
+      return this.fallback.enterShouldSubmit();
+    }
+    const view = this.currentView();
+    if (!view) {
+      return this.fallback.enterShouldSubmit();
+    }
+    const { selection } = view.state;
+    for (let depth = selection.$from.depth; depth >= 0; depth--) {
+      const node = selection.$from.node(depth);
+      const name = node.type.name;
+      if (name === 'list_item' || name === 'listItem' || name === 'blockquote' || node.type.spec.code) {
+        return false;
+      }
+    }
+    const marks = view.state.storedMarks || selection.$from.marks();
+    return !marks.some((mark) => mark.type.name === 'inlineCode' || mark.type.name === 'code');
+  }
+
+  isSourceMode(): boolean {
+    return !this.richMode || this.failed || this.destroyed;
   }
 
   keyTargets(): HTMLElement[] {

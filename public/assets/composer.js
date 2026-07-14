@@ -75,6 +75,8 @@
     TextareaComposerAdapter.prototype.focus = function () { this.ta.focus(); };
     TextareaComposerAdapter.prototype.onChange = function (callback) { this.changeHandlers.push(callback); };
     TextareaComposerAdapter.prototype.setDisabled = function (disabled) { this.ta.disabled = !!disabled; };
+    TextareaComposerAdapter.prototype.enterShouldSubmit = function () { return textareaEnterShouldSubmit(this.ta); };
+    TextareaComposerAdapter.prototype.isSourceMode = function () { return true; };
     TextareaComposerAdapter.prototype.destroy = function () {};
 
     var wysiwygFactory = null;
@@ -1799,7 +1801,24 @@
         });
     }
 
-    // ---- Enter-to-send + smart list continuation (P3-01) ------------------
+    // ---- Context-aware Enter-to-send + block continuation (P3-01) ---------
+    function textareaInlineCodeOpen(ta) {
+        var pos = ta.selectionStart || 0;
+        var lineStart = ta.value.lastIndexOf('\n', pos - 1) + 1;
+        var before = ta.value.slice(lineStart, pos);
+        if (/^\s*```/.test(before)) { return false; }
+        var unescaped = before.replace(/\\./g, '');
+        return ((unescaped.match(/`/g) || []).length % 2) === 1;
+    }
+    function textareaEnterShouldSubmit(ta) {
+        var line = currentLine(ta);
+        if (/^\s*(?:[-*+]|\d+[.)])\s/.test(line)) { return false; }
+        if (/^\s*>\s?/.test(line)) { return false; }
+        if (inFence(ta)) { return false; }
+        if (textareaInlineCodeOpen(ta)) { return false; }
+        return true;
+    }
+
     // Continue or end a Markdown list when Enter is pressed inside one. Returns
     // true when it handled the key (so the caller suppresses the default newline).
     function continueList(ta) {
@@ -1824,6 +1843,39 @@
         ta.dispatchEvent(new Event('input', { bubbles: true }));
         return true;
     }
+    function continueQuote(ta) {
+        if (ta.selectionStart !== ta.selectionEnd) { return false; }
+        var v = ta.value, pos = ta.selectionStart;
+        var lineStart = v.lastIndexOf('\n', pos - 1) + 1;
+        var line = v.slice(lineStart, pos);
+        var match = line.match(/^(\s*)>\s?(.*)$/);
+        if (!match) { return false; }
+        if (!match[2] || !match[2].trim()) {
+            ta.value = v.slice(0, lineStart) + v.slice(pos);
+            ta.selectionStart = ta.selectionEnd = lineStart;
+        } else {
+            var next = '\n' + match[1] + '> ';
+            ta.value = v.slice(0, pos) + next + v.slice(pos);
+            ta.selectionStart = ta.selectionEnd = pos + next.length;
+        }
+        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+    }
+    function continueEditorialBlock(ta) {
+        return continueList(ta) || continueQuote(ta);
+    }
+    function coarsePointer() {
+        try { return !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); } catch (e) { return false; }
+    }
+    function requestComposerSubmit(form) {
+        if (form._rbSubmitting) { return false; }
+        var send = shellPart(form, '.composer-send');
+        if (send && send.disabled) { return false; }
+        if (typeof form.requestSubmit === 'function') { form.requestSubmit(); }
+        else if (send) { send.click(); }
+        else { form.submit(); }
+        return true;
+    }
     function wireKeys(form, adapter, prefs) {
         var ta = adapter.ta;
         var targets = adapterEventTargets(adapter, ta, 'keyTargets');
@@ -1842,16 +1894,34 @@
                     return;
                 }
             }
-            if (e.key !== 'Enter' || e.isComposing) { return; }
-            // Shift/modifier+Enter always inserts a newline (default behaviour).
-            if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) { return; }
-            if (prefs.enterToSend) {
+            if (e.key === 'Escape') {
                 e.preventDefault();
-                if (typeof form.requestSubmit === 'function') { form.requestSubmit(); }
-                else { form.submit(); }
+                e.stopPropagation();
+                var focused = document.activeElement;
+                if (focused && typeof focused.blur === 'function') { focused.blur(); }
+                else if (target && typeof target.blur === 'function') { target.blur(); }
                 return;
             }
-            if (target === ta && prefs.smartLists && continueList(ta)) { e.preventDefault(); }
+            if (e.isComposing || e.key !== 'Enter') { return; }
+            if (e.shiftKey || e.altKey) { return; }
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                requestComposerSubmit(form);
+                return;
+            }
+            if (coarsePointer() || !prefs.enterToSend) { return; }
+
+            var active = form._rbComposerAdapter || adapter;
+            var shouldSubmit = true;
+            if (active && typeof active.enterShouldSubmit === 'function') {
+                try { shouldSubmit = !!active.enterShouldSubmit(); } catch (error) { shouldSubmit = true; }
+            }
+            if (!shouldSubmit) {
+                if (target === ta && prefs.smartLists && continueEditorialBlock(ta)) { e.preventDefault(); }
+                return;
+            }
+            e.preventDefault();
+            requestComposerSubmit(form);
         }
         targets.forEach(function (target) {
             target.addEventListener('keydown', function (e) { onKeyDown(e, target); }, target !== ta);

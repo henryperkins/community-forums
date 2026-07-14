@@ -346,7 +346,8 @@ test('unsupported file drops are cancelled in rich and source composer modes', a
   await expect.poll(() => unsupportedFileDropWasPrevented(textarea)).toBe(true);
 });
 
-test('wysiwyg enter-to-send preference submits from the rich editor', async ({ page }) => {
+test('wysiwyg Enter sends from a plain rich paragraph on desktop', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop Enter-to-send contract');
   setWysiwygComposer(true);
   setComposingPrefs('bob@retro.test', { enterToSend: true });
   await login(page, 'bob@retro.test');
@@ -363,6 +364,175 @@ test('wysiwyg enter-to-send preference submits from the rich editor', async ({ p
   await page.waitForURL(/\/t\/\d+-/);
   await expect(page.getByRole('heading', { name: title })).toBeVisible();
   await expect(page.locator('.post-op .post-body')).toContainText('Submitted by Enter from rich mode');
+});
+
+test('wysiwyg Enter preserves list authoring blockquote and code editing before sending', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop rich Enter contract');
+  setWysiwygComposer(true);
+  setComposingPrefs('bob@retro.test', { enterToSend: true, smartLists: true });
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const textarea = form.locator('textarea.composer-input');
+  const title = `WYSIWYG Enter matrix ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+
+  async function loadRichMarkdown(markdown: string, selector: string): Promise<Locator> {
+    await form.getByRole('button', { name: 'Source', exact: true }).click();
+    await textarea.fill(markdown);
+    await form.getByRole('button', { name: 'Rich text', exact: true }).click();
+    const target = editor.locator(selector);
+    await expect(target).toBeVisible();
+    await target.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false);
+      const selection = window.getSelection()!;
+      selection.removeAllRanges();
+      selection.addRange(range);
+      (element.closest('[contenteditable="true"]') as HTMLElement).focus();
+    });
+    return target;
+  }
+
+  await editor.fill('');
+  await editor.pressSequentially('1. first');
+  await expect(editor.locator('ol li')).toHaveCount(1);
+  await editor.press('Enter');
+  await expect(editor.locator('ol li')).toHaveCount(2);
+  await editor.press('Enter');
+  await expect(editor.locator('ol li')).toHaveCount(1);
+
+  await loadRichMarkdown('> quoted', 'blockquote p');
+  await editor.press('Enter');
+  await expect(editor.locator('blockquote')).toBeVisible();
+  await editor.press('Enter');
+  await expect(editor.locator(':scope > p')).toHaveCount(1);
+
+  await loadRichMarkdown('```\ncode block\n```', 'pre code');
+  await editor.press('Enter');
+  await expect(editor.locator('pre')).toBeVisible();
+
+  await loadRichMarkdown('`inline code`', 'p code');
+  await editor.press('Enter');
+  await expect(editor).toBeVisible();
+
+  await editor.fill('hard break');
+  await editor.press('Shift+Enter');
+  await expect(editor.locator('br:not(.ProseMirror-trailingBreak)')).toHaveCount(1);
+
+  await editor.fill('');
+  await editor.pressSequentially('- final item');
+  await expect(editor.locator('ul li')).toHaveCount(1);
+  await editor.press('Enter');
+  await expect(editor.locator('ul li')).toHaveCount(2);
+  await editor.press('Enter');
+  await expect(editor.locator('ul li')).toHaveCount(1);
+  await editor.press('Enter');
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
+
+test('wysiwyg Meta+Enter sends from a list when the preference is off', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop modifier contract');
+  setWysiwygComposer(true);
+  setComposingPrefs('bob@retro.test', { enterToSend: false });
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const title = `WYSIWYG forced send ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await editor.pressSequentially('- forced from list');
+  await expect(editor.locator('ul li')).toHaveCount(1);
+  await editor.press('Meta+Enter');
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
+
+test('wysiwyg mobile Enter edits and the send button submits', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile soft-Enter contract');
+  setWysiwygComposer(true);
+  setComposingPrefs('bob@retro.test', { enterToSend: true });
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const title = `WYSIWYG mobile Enter ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await editor.fill('first line');
+  await editor.press('Enter');
+  await editor.pressSequentially('second line');
+  await expect(editor).toContainText('first line');
+  await expect(editor).toContainText('second line');
+  await form.locator('.composer-send').click();
+  await page.waitForURL(/\/t\/\d+-/);
+  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+});
+
+test('wysiwyg in-flight Enter produces one POST and announces sending', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop in-flight keyboard contract');
+  setWysiwygComposer(true);
+  setComposingPrefs('bob@retro.test', { enterToSend: true });
+  let releaseRoute = () => {};
+  const routeGate = new Promise<void>((resolve) => { releaseRoute = resolve; });
+  let postCount = 0;
+  let submitState: { busy: string | null; disabled: boolean; status: string | null } | null = null;
+  page.on('console', (message) => {
+    if (!message.text().startsWith('__rb_submit_state__')) return;
+    submitState = JSON.parse(message.text().slice('__rb_submit_state__'.length));
+  });
+  await page.route('**/threads', async (route) => {
+    if (route.request().method() === 'POST') {
+      postCount++;
+      await routeGate;
+    }
+    await route.continue();
+  });
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await form.locator('input[name="title"]').fill(`WYSIWYG in-flight ${Date.now()}`);
+  await editor.fill('One rich request only');
+  await form.evaluate((element) => {
+    element.addEventListener('submit', () => {
+      console.log('__rb_submit_state__' + JSON.stringify({
+        busy: element.getAttribute('aria-busy'),
+        disabled: (element.querySelector('.composer-send') as HTMLButtonElement).disabled,
+        status: element.querySelector('[data-composer-submit-status]')!.textContent,
+      }));
+      window.setTimeout(() => {
+        element.querySelector('.ProseMirror')!.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+        );
+      }, 0);
+    }, { once: true });
+  });
+  try {
+    await editor.press('Enter', { noWaitAfter: true });
+    await expect.poll(() => postCount).toBe(1);
+    await expect.poll(() => submitState).toEqual({ busy: 'true', disabled: true, status: 'Sending…' });
+    await page.waitForTimeout(150);
+    expect(postCount).toBe(1);
+  } finally {
+    releaseRoute();
+  }
+  await page.waitForURL(/\/t\/\d+-/);
+});
+
+test('wysiwyg Escape blurs unless an open suggestion menu consumes it', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'shared rich keyboard precedence is verified once');
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await editor.focus();
+  await editor.press('Escape');
+  await expect(editor).not.toBeFocused();
+
+  await editor.fill('@ali');
+  await expect(form.locator('.composer-reference-menu')).toBeVisible();
+  await editor.press('Escape');
+  await expect(form.locator('.composer-reference-menu')).toBeHidden();
+  await expect(editor).toBeFocused();
 });
 
 test('pasted internal topic url becomes canonical markdown chip', async ({ page }) => {
@@ -401,7 +571,9 @@ test('no-op edit does not rewrite body', async ({ page }) => {
   await page.reload();
   await expect(page.locator('body')).toHaveAttribute('data-wysiwyg-composer', '1');
   const post = page.locator(`#p${before.id}`);
-  await post.locator('details.post-edit > summary').click();
+  await post.hover();
+  await post.locator('[data-post-menu] > summary').click();
+  await post.locator(`[data-post-disclosure-open="post-edit-${before.id}"]`).click();
   await expect(post.locator('.wysiwyg-composer .ProseMirror')).toBeVisible();
   await post.locator(`form[action="/posts/${before.id}/edit"] button[type="submit"]`).click();
   await page.waitForLoadState('domcontentloaded');
