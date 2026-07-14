@@ -793,7 +793,7 @@ CREATE TABLE submission_idempotency (
   id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id     BIGINT UNSIGNED NOT NULL,
   idem_key    CHAR(64)        NOT NULL,                     -- sha256 of the client token
-  context     VARCHAR(32)     NOT NULL,                     -- thread | reply | dm
+  context     VARCHAR(32)     NOT NULL,                     -- thread | reply | dm_start | dm_reply | post_edit | wiki_edit
   result_type VARCHAR(32)     NOT NULL,                     -- thread | post | dm_message
   result_id   BIGINT UNSIGNED NOT NULL,
   created_at  DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,

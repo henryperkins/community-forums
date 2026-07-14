@@ -233,6 +233,42 @@ final class AppComposerShellTest extends TestCase
         self::assertStringNotContainsString('composer-anonymous-disclosure', $privateForm);
     }
 
+    public function test_show_avatars_off_hides_identity_monograms_in_every_identity_bearing_mount_and_422_path(): void
+    {
+        $fixture = $this->makeComposerFixture('avatarprefs');
+        $this->actingAs($fixture['author']);
+        $this->post('/settings/preferences', [
+            'show_signatures' => '1',
+            'show_reactions' => '1',
+            'thread_sort' => 'last_post',
+        ]);
+
+        $threadId = (int) $fixture['thread']['thread_id'];
+        $boardId = (int) $fixture['board']['id'];
+        $conversationId = (int) $fixture['conversation_id'];
+        $pages = [
+            [$this->get('/t/' . $threadId . '-' . $fixture['thread']['slug'])->body(), 'reply-thread-' . $threadId],
+            [$this->get('/c/' . $fixture['board']['slug'])->body(), 'new-thread-board-' . $boardId],
+            [$this->post('/threads', [
+                'board_id' => $boardId,
+                'title' => '',
+                'body' => '',
+            ])->body(), 'new-thread-page'],
+            [$this->post('/messages', [
+                'to' => $fixture['recipient']['username'],
+                'body' => '',
+            ])->body(), 'dm-new-page'],
+            [$this->get('/messages')->body(), 'dm-new-dialog'],
+            [$this->post('/messages/' . $conversationId, ['body' => ''])->body(), 'dm-conversation-' . $conversationId],
+        ];
+
+        foreach ($pages as [$page, $instance]) {
+            $form = $this->composerForm($page, $instance);
+            self::assertStringContainsString('class="composer-identity"', $form, $instance . ' keeps its identity label');
+            self::assertStringNotContainsString('class="monogram', $form, $instance . ' honors show_avatars=false');
+        }
+    }
+
     public function test_failed_reply_and_edit_keep_body_error_and_expanded_shell_state(): void
     {
         $fixture = $this->makeComposerFixture('validation');

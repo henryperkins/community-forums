@@ -16,6 +16,7 @@ use App\Repository\DmMessageRepository;
 use App\Repository\UserRepository;
 use App\Service\ContentReferenceService;
 use App\Service\DirectMessageService;
+use App\Service\PreferenceService;
 use App\Service\RateLimitService;
 
 /**
@@ -48,6 +49,7 @@ final class ConversationController extends Controller
             'filter' => $filter,
             'q' => $q,
             'allow_groups' => $this->container->get(FeatureFlags::class)->enabled('group_dms'),
+            'show_avatars' => $this->showAvatars($user),
         ]);
     }
 
@@ -56,7 +58,14 @@ final class ConversationController extends Controller
         $user = $this->requireDms();
         $to = trim((string) $request->query('to', ''));
         $allowGroups = $this->container->get(FeatureFlags::class)->enabled('group_dms');
-        return $this->view('dm/new', ['to' => $to, 'title' => '', 'errors' => [], 'body' => '', 'allowGroups' => $allowGroups]);
+        return $this->view('dm/new', [
+            'to' => $to,
+            'title' => '',
+            'errors' => [],
+            'body' => '',
+            'allowGroups' => $allowGroups,
+            'show_avatars' => $this->showAvatars($user),
+        ]);
     }
 
     public function create(Request $request): Response
@@ -82,10 +91,17 @@ final class ConversationController extends Controller
             }
             $service = $this->container->get(DirectMessageService::class);
             $result = $isDirect
-                ? $service->start($user, $recipientIds[0], $body)
-                : $service->startGroup($user, $recipientIds, $title, $body);
+                ? $service->start($user, $recipientIds[0], $body, $request->post('idempotency_key'))
+                : $service->startGroup($user, $recipientIds, $title, $body, $request->post('idempotency_key'));
         } catch (ValidationException $e) {
-            return $this->view('dm/new', ['to' => $to, 'title' => $title, 'errors' => $e->errors, 'body' => $body, 'allowGroups' => $allowGroups], 422);
+            return $this->view('dm/new', [
+                'to' => $to,
+                'title' => $title,
+                'errors' => $e->errors,
+                'body' => $body,
+                'allowGroups' => $allowGroups,
+                'show_avatars' => $this->showAvatars($user),
+            ], 422);
         }
         $this->discardServerDraftFor($user, $request->path());
         return $this->redirect('/messages/' . $result['conversation_id']);
@@ -172,6 +188,7 @@ final class ConversationController extends Controller
             'reasons' => self::REASONS,
             'errors' => [],
             'body' => '',
+            'show_avatars' => $this->showAvatars($user),
         ], $extra), $status);
     }
 
@@ -184,7 +201,12 @@ final class ConversationController extends Controller
         $body = (string) $request->post('body', '');
 
         try {
-            $this->container->get(DirectMessageService::class)->reply($user, $conversationId, $body);
+            $this->container->get(DirectMessageService::class)->reply(
+                $user,
+                $conversationId,
+                $body,
+                $request->post('idempotency_key'),
+            );
         } catch (ValidationException $e) {
             return $this->renderConversation($request, $user, $conversationId, [
                 'errors' => $e->errors,
@@ -302,6 +324,11 @@ final class ConversationController extends Controller
     private function throttle(Request $request, User $user): void
     {
         $this->container->get(RateLimitService::class)->enforce('dm', $request, $user);
+    }
+
+    private function showAvatars(User $user): bool
+    {
+        return (bool) $this->container->get(PreferenceService::class)->reading($user->id())['show_avatars'];
     }
 
     /** @return list<int> */

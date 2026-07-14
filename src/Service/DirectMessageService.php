@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Core\Config;
 use App\Core\Database;
+use App\Core\DuplicateSubmissionException;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
@@ -14,6 +15,7 @@ use App\Repository\AttachmentRepository;
 use App\Repository\BlockRepository;
 use App\Repository\ConversationRepository;
 use App\Repository\DmMessageRepository;
+use App\Repository\IdempotencyRepository;
 use App\Repository\UserRepository;
 use App\Security\WriteGate;
 use App\Support\Markdown;
@@ -44,6 +46,7 @@ final class DirectMessageService
         private Config $config,
         private ?AttachmentRepository $attachments = null,
         private ?ContentReferenceService $contentReferences = null,
+        private ?IdempotencyRepository $idempotency = null,
     ) {
     }
 
@@ -52,7 +55,7 @@ final class DirectMessageService
      *
      * @return array{conversation_id:int, message_id:int}
      */
-    public function start(User $sender, int $recipientId, string $body): array
+    public function start(User $sender, int $recipientId, string $body, mixed $idempotencyToken = null): array
     {
         $this->writeGate->assertCanWrite($sender);
         $recipient = $this->users->find($recipientId);
@@ -62,11 +65,25 @@ final class DirectMessageService
         $this->assertCanContact($sender, $recipient, newConversation: true);
         $body = $this->validateBody($body);
 
-        return $this->db->transaction(function () use ($sender, $recipientId, $body): array {
-            $conversationId = $this->conversations->findOrCreateBetween($sender->id(), $recipientId);
-            $messageId = $this->deliver($sender, $conversationId, $body);
-            return ['conversation_id' => $conversationId, 'message_id' => $messageId];
-        });
+        $idemKey = $this->idempotency?->hash($idempotencyToken);
+        $existing = $this->replayMessage($sender->id(), $idemKey, 'dm_start');
+        if ($existing !== null) {
+            return ['conversation_id' => (int) $existing['conversation_id'], 'message_id' => (int) $existing['id']];
+        }
+
+        try {
+            return $this->db->transaction(function () use ($sender, $recipientId, $body, $idemKey): array {
+                $conversationId = $this->conversations->findOrCreateBetween($sender->id(), $recipientId);
+                $messageId = $this->deliver($sender, $conversationId, $body, $idemKey, 'dm_start');
+                return ['conversation_id' => $conversationId, 'message_id' => $messageId];
+            });
+        } catch (DuplicateSubmissionException) {
+            $prior = $this->replayMessage($sender->id(), $idemKey, 'dm_start');
+            if ($prior !== null) {
+                return ['conversation_id' => (int) $prior['conversation_id'], 'message_id' => (int) $prior['id']];
+            }
+            throw new ValidationException(['body' => 'That message was already sent.']);
+        }
     }
 
     /**
@@ -75,7 +92,7 @@ final class DirectMessageService
      * @param list<int> $recipientIds
      * @return array{conversation_id:int, message_id:int}
      */
-    public function startGroup(User $sender, array $recipientIds, string $title, string $body): array
+    public function startGroup(User $sender, array $recipientIds, string $title, string $body, mixed $idempotencyToken = null): array
     {
         $this->writeGate->assertCanWrite($sender);
         $recipientIds = array_values(array_unique(array_filter(array_map('intval', $recipientIds), fn (int $id): bool => $id > 0 && $id !== $sender->id())));
@@ -96,15 +113,29 @@ final class DirectMessageService
         }
         $body = $this->validateBody($body);
 
-        return $this->db->transaction(function () use ($sender, $recipientIds, $title, $body): array {
-            $conversationId = $this->conversations->createGroup($sender->id(), $title, $recipientIds, 0);
-            $messageId = $this->deliver($sender, $conversationId, $body);
-            return ['conversation_id' => $conversationId, 'message_id' => $messageId];
-        });
+        $idemKey = $this->idempotency?->hash($idempotencyToken);
+        $existing = $this->replayMessage($sender->id(), $idemKey, 'dm_start');
+        if ($existing !== null) {
+            return ['conversation_id' => (int) $existing['conversation_id'], 'message_id' => (int) $existing['id']];
+        }
+
+        try {
+            return $this->db->transaction(function () use ($sender, $recipientIds, $title, $body, $idemKey): array {
+                $conversationId = $this->conversations->createGroup($sender->id(), $title, $recipientIds, 0);
+                $messageId = $this->deliver($sender, $conversationId, $body, $idemKey, 'dm_start');
+                return ['conversation_id' => $conversationId, 'message_id' => $messageId];
+            });
+        } catch (DuplicateSubmissionException) {
+            $prior = $this->replayMessage($sender->id(), $idemKey, 'dm_start');
+            if ($prior !== null) {
+                return ['conversation_id' => (int) $prior['conversation_id'], 'message_id' => (int) $prior['id']];
+            }
+            throw new ValidationException(['body' => 'That message was already sent.']);
+        }
     }
 
     /** Reply within an existing conversation the sender belongs to. */
-    public function reply(User $sender, int $conversationId, string $body): int
+    public function reply(User $sender, int $conversationId, string $body, mixed $idempotencyToken = null): int
     {
         $this->writeGate->assertCanWrite($sender);
         if (!$this->conversations->isParticipant($conversationId, $sender->id())) {
@@ -128,7 +159,23 @@ final class DirectMessageService
         }
         $body = $this->validateBody($body);
 
-        return $this->db->transaction(fn (): int => $this->deliver($sender, $conversationId, $body));
+        $idemKey = $this->idempotency?->hash($idempotencyToken);
+        $existing = $this->replayMessage($sender->id(), $idemKey, 'dm_reply', $conversationId);
+        if ($existing !== null) {
+            return (int) $existing['id'];
+        }
+
+        try {
+            return $this->db->transaction(
+                fn (): int => $this->deliver($sender, $conversationId, $body, $idemKey, 'dm_reply'),
+            );
+        } catch (DuplicateSubmissionException) {
+            $prior = $this->replayMessage($sender->id(), $idemKey, 'dm_reply', $conversationId);
+            if ($prior !== null) {
+                return (int) $prior['id'];
+            }
+            throw new ValidationException(['body' => 'That message was already sent.']);
+        }
     }
 
     public function addParticipant(User $actor, int $conversationId, int $userId): void
@@ -232,10 +279,25 @@ final class DirectMessageService
     }
 
     /** Insert the message, advance conversation + read marker, notify the recipient. */
-    private function deliver(User $sender, int $conversationId, string $body): int
+    private function deliver(
+        User $sender,
+        int $conversationId,
+        string $body,
+        ?string $idemKey = null,
+        string $idemContext = 'dm_reply',
+    ): int
     {
         $now = gmdate('Y-m-d H:i:s');
         $messageId = $this->messages->create($conversationId, $sender->id(), $body, $this->markdown->render($body, ['link_mentions' => true]));
+        if ($idemKey !== null && !$this->idempotency->record(
+            $sender->id(),
+            $idemKey,
+            $idemContext,
+            'dm_message',
+            $messageId,
+        )) {
+            throw new DuplicateSubmissionException();
+        }
         // Bind any /media/{id} the message references to this DM (private). P3-04.
         if ($this->attachments !== null) {
             $ids = \App\Service\AttachmentService::referencedIds($body);
@@ -252,6 +314,23 @@ final class DirectMessageService
             }
         }
         return $messageId;
+    }
+
+    /** @return array<string,mixed>|null */
+    private function replayMessage(int $userId, ?string $idemKey, string $context, ?int $conversationId = null): ?array
+    {
+        if ($idemKey === null || $this->idempotency === null) {
+            return null;
+        }
+        $prior = $this->idempotency->findWithContext($userId, $idemKey);
+        if ($prior === null || $prior['context'] !== $context || $prior['result_type'] !== 'dm_message') {
+            return null;
+        }
+        $message = $this->messages->find($prior['result_id']);
+        if ($message === null || ($conversationId !== null && (int) $message['conversation_id'] !== $conversationId)) {
+            return null;
+        }
+        return $message;
     }
 
     /** @param array<string,mixed> $recipient users row */

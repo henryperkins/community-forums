@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Core\Database;
+use App\Core\DuplicateSubmissionException;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
+use App\Repository\IdempotencyRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
@@ -35,6 +37,7 @@ final class CommunityMemoryService
         private ?ContentReferenceService $contentReferences = null,
         private ?AuthorityGate $authority = null,
         private ?ThreadIntelligenceQueue $threadIntelligence = null,
+        private ?IdempotencyRepository $idempotency = null,
     ) {
     }
 
@@ -205,7 +208,13 @@ final class CommunityMemoryService
         });
     }
 
-    public function editWiki(User $actor, int $postId, string $body, ?string $reason = null): void
+    public function editWiki(
+        User $actor,
+        int $postId,
+        string $body,
+        ?string $reason = null,
+        mixed $idempotencyToken = null,
+    ): void
     {
         $this->writeGate->assertCanWrite($actor);
         $post = $this->postOrFail($postId);
@@ -220,11 +229,31 @@ final class CommunityMemoryService
         }
         $html = $this->markdown->render($body);
         $threadId = (int) $post['thread_id'];
-        $this->db->transaction(function () use ($actor, $postId, $body, $html, $reason, $threadId): void {
-            $this->recordRevision($postId, $actor->id(), $body, $html, $reason);
-            $this->posts->update($postId, $body, $html, $actor->id());
-            $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_WIKI_EDITED);
-        });
+        $idemKey = $this->idempotency?->hash($idempotencyToken);
+        if ($idemKey !== null) {
+            $existing = $this->idempotency->findWithContext($actor->id(), $idemKey);
+            if ($existing !== null && $existing['context'] === 'wiki_edit'
+                && $existing['result_type'] === 'post' && $existing['result_id'] === $postId) {
+                return;
+            }
+        }
+        try {
+            $this->db->transaction(function () use ($actor, $postId, $body, $html, $reason, $threadId, $idemKey): void {
+                if ($idemKey !== null && !$this->idempotency->record($actor->id(), $idemKey, 'wiki_edit', 'post', $postId)) {
+                    throw new DuplicateSubmissionException();
+                }
+                $this->recordRevision($postId, $actor->id(), $body, $html, $reason);
+                $this->posts->update($postId, $body, $html, $actor->id());
+                $this->threadIntelligence?->markStale($threadId, ThreadIntelligenceQueue::TRIGGER_WIKI_EDITED);
+            });
+        } catch (DuplicateSubmissionException) {
+            $prior = $idemKey !== null ? $this->idempotency->findWithContext($actor->id(), $idemKey) : null;
+            if ($prior !== null && $prior['context'] === 'wiki_edit'
+                && $prior['result_type'] === 'post' && $prior['result_id'] === $postId) {
+                return;
+            }
+            throw new ValidationException(['body' => 'That wiki edit was already submitted.']);
+        }
     }
 
     public function revertWiki(User $actor, int $postId, int $revisionId): void

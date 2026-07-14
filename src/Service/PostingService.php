@@ -113,8 +113,8 @@ final class PostingService
         // token already produced a thread (double-click, retry, browser resend).
         $idemKey = $this->idempotency?->hash($input['idempotency_key'] ?? null);
         if ($idemKey !== null) {
-            $existing = $this->idempotency->find($user->id(), $idemKey);
-            if ($existing !== null && $existing['result_type'] === 'thread') {
+            $existing = $this->idempotency->findWithContext($user->id(), $idemKey);
+            if ($existing !== null && $existing['context'] === 'thread' && $existing['result_type'] === 'thread') {
                 $prior = $this->threads->find($existing['result_id']);
                 if ($prior !== null) {
                     return ['thread_id' => (int) $prior['id'], 'slug' => (string) $prior['slug'], 'pending' => (int) $prior['is_pending'] === 1, 'duplicate' => true];
@@ -198,10 +198,12 @@ final class PostingService
             }
             return $result;
         } catch (DuplicateSubmissionException) {
-            $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
+            $prior = $idemKey !== null ? $this->idempotency->findWithContext($user->id(), $idemKey) : null;
             // Only replay when the stored result is actually a thread — a token
             // reused across a thread and a reply must not cross result types.
-            $thread = ($prior !== null && $prior['result_type'] === 'thread') ? $this->threads->find($prior['result_id']) : null;
+            $thread = ($prior !== null && $prior['context'] === 'thread' && $prior['result_type'] === 'thread')
+                ? $this->threads->find($prior['result_id'])
+                : null;
             if ($thread !== null) {
                 return ['thread_id' => (int) $thread['id'], 'slug' => (string) $thread['slug'], 'pending' => (int) $thread['is_pending'] === 1, 'duplicate' => true];
             }
@@ -245,8 +247,8 @@ final class PostingService
         // Idempotent submit (P3-03): replay the original reply on a duplicate.
         $idemKey = $this->idempotency?->hash($input['idempotency_key'] ?? null);
         if ($idemKey !== null) {
-            $existing = $this->idempotency->find($user->id(), $idemKey);
-            if ($existing !== null && $existing['result_type'] === 'post') {
+            $existing = $this->idempotency->findWithContext($user->id(), $idemKey);
+            if ($existing !== null && $existing['context'] === 'reply' && $existing['result_type'] === 'post') {
                 return $existing['result_id'];
             }
         }
@@ -319,8 +321,8 @@ final class PostingService
             }
             return $postId;
         } catch (DuplicateSubmissionException) {
-            $prior = $idemKey !== null ? $this->idempotency->find($user->id(), $idemKey) : null;
-            if ($prior !== null && $prior['result_type'] === 'post') {
+            $prior = $idemKey !== null ? $this->idempotency->findWithContext($user->id(), $idemKey) : null;
+            if ($prior !== null && $prior['context'] === 'reply' && $prior['result_type'] === 'post') {
                 return $prior['result_id'];
             }
             throw new ValidationException(['body' => 'That reply was already submitted.'], $input);
@@ -347,6 +349,14 @@ final class PostingService
         $body = (string) ($input['body'] ?? '');
         $this->validate(null, $body, $input, requireTitle: false);
         $changed = $body !== (string) $post['body'];
+        $idemKey = $this->idempotency?->hash($input['idempotency_key'] ?? null);
+        if ($idemKey !== null) {
+            $existing = $this->idempotency->findWithContext($user->id(), $idemKey);
+            if ($existing !== null && $existing['context'] === 'post_edit'
+                && $existing['result_type'] === 'post' && $existing['result_id'] === $postId) {
+                return $post;
+            }
+        }
 
         // Only NEW @mentions introduced by the edit are notified; existing ones
         // are not resent (PHASE_2_PLAN §8 "Mention edit").
@@ -355,32 +365,44 @@ final class PostingService
         $beforeLower = array_map('strtolower', $before);
         $added = array_values(array_filter($after, static fn (string $h): bool => !in_array(strtolower($h), $beforeLower, true)));
 
-        $this->db->transaction(function () use ($post, $postId, $body, $user, $added, $changed): void {
-            $this->posts->update($postId, $body, $this->markdown->render($body, ['link_mentions' => true]), $user->id());
-            // Bind images the edit newly references. The edit composer uploads
-            // pasted/dropped images as temp attachments exactly like create/reply;
-            // without finalizing here they stay 'temp' (invisible to other readers)
-            // and the orphan sweep permanently purges them while the live post
-            // still links /media/{id}. finalizeForPost is owner/temp-scoped, so
-            // re-finalizing already-bound images is a harmless no-op.
-            $this->finalizeAttachments($user->id(), $postId, $body, (string) ($post['board_visibility'] ?? 'public'));
-            $this->contentReferences?->capture('post', $postId, $body);
-            $this->linkPreviews?->queueFromBody('post', $postId, $body);
-            if ($this->notifications !== null && $added !== []) {
-                $threadCtx = [
-                    'id' => (int) $post['thread_id'],
-                    'board_id' => (int) $post['board_id'],
-                    'board_visibility' => $post['board_visibility'] ?? 'public',
-                ];
-                $this->notifications->notifyMentions($user->id(), $threadCtx, $postId, $added);
+        try {
+            $this->db->transaction(function () use ($post, $postId, $body, $user, $added, $changed, $idemKey): void {
+                if ($idemKey !== null && !$this->idempotency->record($user->id(), $idemKey, 'post_edit', 'post', $postId)) {
+                    throw new DuplicateSubmissionException();
+                }
+                $this->posts->update($postId, $body, $this->markdown->render($body, ['link_mentions' => true]), $user->id());
+                // Bind images the edit newly references. The edit composer uploads
+                // pasted/dropped images as temp attachments exactly like create/reply;
+                // without finalizing here they stay 'temp' (invisible to other readers)
+                // and the orphan sweep permanently purges them while the live post
+                // still links /media/{id}. finalizeForPost is owner/temp-scoped, so
+                // re-finalizing already-bound images is a harmless no-op.
+                $this->finalizeAttachments($user->id(), $postId, $body, (string) ($post['board_visibility'] ?? 'public'));
+                $this->contentReferences?->capture('post', $postId, $body);
+                $this->linkPreviews?->queueFromBody('post', $postId, $body);
+                if ($this->notifications !== null && $added !== []) {
+                    $threadCtx = [
+                        'id' => (int) $post['thread_id'],
+                        'board_id' => (int) $post['board_id'],
+                        'board_visibility' => $post['board_visibility'] ?? 'public',
+                    ];
+                    $this->notifications->notifyMentions($user->id(), $threadCtx, $postId, $added);
+                }
+                if ($changed) {
+                    $this->threadIntelligence?->markStale(
+                        (int) $post['thread_id'],
+                        ThreadIntelligenceQueue::TRIGGER_POST_EDITED,
+                    );
+                }
+            });
+        } catch (DuplicateSubmissionException) {
+            $prior = $idemKey !== null ? $this->idempotency->findWithContext($user->id(), $idemKey) : null;
+            if ($prior !== null && $prior['context'] === 'post_edit'
+                && $prior['result_type'] === 'post' && $prior['result_id'] === $postId) {
+                return $post;
             }
-            if ($changed) {
-                $this->threadIntelligence?->markStale(
-                    (int) $post['thread_id'],
-                    ThreadIntelligenceQueue::TRIGGER_POST_EDITED,
-                );
-            }
-        });
+            throw new ValidationException(['body' => 'That edit was already submitted.'], $input);
+        }
 
         if ($changed) {
             $updated = $this->posts->findWithContext($postId);

@@ -1280,6 +1280,7 @@ final class App
             $config,
             $c->get(FeatureFlags::class)->enabled('uploads') ? $c->get(AttachmentRepository::class) : null,
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
+            $c->get(IdempotencyRepository::class),
         ));
         $c->bind(ReactionService::class, fn (Container $c) => new ReactionService(
             $c->get(Database::class),
@@ -1383,6 +1384,7 @@ final class App
             $c->get(FeatureFlags::class)->enabled('content_references') ? $c->get(ContentReferenceService::class) : null,
             $c->get(AuthorityGate::class),
             $c->get(ThreadIntelligenceQueue::class),
+            $c->get(IdempotencyRepository::class),
         ));
 
         // Session + CSRF.

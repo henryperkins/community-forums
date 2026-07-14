@@ -131,6 +131,7 @@ final class CommunityMemoryController extends Controller
                 $postId,
                 (string) $request->post('body', ''),
                 (string) $request->post('reason', ''),
+                $request->post('idempotency_key'),
             ),
             $this->threadUrl((int) $post['thread_id']) . '#p' . $postId,
             'Wiki post updated.',

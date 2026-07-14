@@ -35,6 +35,84 @@
         return form.querySelector(selector);
     }
 
+    function addCleanup(form, cleanup) {
+        if (!form._rbComposerCleanups) { form._rbComposerCleanups = []; }
+        form._rbComposerCleanups.push(cleanup);
+    }
+
+    function listenWithCleanup(form, target, type, listener, options) {
+        target.addEventListener(type, listener, options);
+        addCleanup(form, function () { target.removeEventListener(type, listener, options); });
+    }
+
+    function trackComposerRequest(form, request) {
+        if (!form._rbComposerRequests) { form._rbComposerRequests = []; }
+        form._rbComposerRequests.push(request);
+    }
+
+    function untrackComposerRequest(form, request) {
+        var requests = form._rbComposerRequests || [];
+        var index = requests.indexOf(request);
+        if (index !== -1) { requests.splice(index, 1); }
+    }
+
+    function composerFetch(form, input, options) {
+        if (form._rbComposerDestroyed) { return Promise.reject(new Error('Composer destroyed.')); }
+        var controller = typeof window.AbortController === 'function' ? new AbortController() : null;
+        var fetchOptions = options || {};
+        if (controller) {
+            var copied = {};
+            Object.keys(fetchOptions).forEach(function (key) { copied[key] = fetchOptions[key]; });
+            copied.signal = controller.signal;
+            fetchOptions = copied;
+            trackComposerRequest(form, controller);
+        }
+        return fetch(input, fetchOptions).then(function (response) {
+            if (controller) { untrackComposerRequest(form, controller); }
+            return response;
+        }, function (error) {
+            if (controller) { untrackComposerRequest(form, controller); }
+            throw error;
+        });
+    }
+
+    function formsWithin(root) {
+        var forms = [];
+        if (root && root.matches && root.matches('form.composer')) { forms.push(root); }
+        if (root && root.querySelectorAll) {
+            root.querySelectorAll('form.composer').forEach(function (form) { forms.push(form); });
+        }
+        return forms;
+    }
+
+    function destroyForm(form) {
+        if (!form || form._rbComposerDestroyed || !form.querySelector('.composer-input')) { return; }
+        form._rbComposerDestroyed = true;
+        var requests = (form._rbComposerRequests || []).slice();
+        form._rbComposerRequests = [];
+        requests.forEach(function (request) {
+            try { if (request && typeof request.abort === 'function') { request.abort(); } } catch (e) {}
+        });
+        var cleanups = (form._rbComposerCleanups || []).slice().reverse();
+        form._rbComposerCleanups = [];
+        cleanups.forEach(function (cleanup) {
+            try { cleanup(); } catch (e) {}
+        });
+        var active = form._rbComposerAdapter;
+        var fallback = form._rbComposerFallbackAdapter;
+        try { if (active && typeof active.destroy === 'function') { active.destroy(); } } catch (e) {}
+        try {
+            if (fallback && fallback !== active && typeof fallback.destroy === 'function') { fallback.destroy(); }
+        } catch (e) {}
+        form._rbPreviewController = null;
+        form._rbSubmitController = null;
+        form._rbComposerEnhance = null;
+    }
+
+    function destroyWithin(root) {
+        formsWithin(root).forEach(destroyForm);
+    }
+
     function storageRead(key) {
         try { return window.localStorage.getItem(key); } catch (e) { return null; }
     }
@@ -48,9 +126,10 @@
         this.ta = ta;
         this.changeHandlers = [];
         var self = this;
-        ta.addEventListener('input', function () {
+        this.inputHandler = function () {
             self.changeHandlers.forEach(function (cb) { cb(self.getMarkdown()); });
-        });
+        };
+        ta.addEventListener('input', this.inputHandler);
     }
     TextareaComposerAdapter.prototype.getMarkdown = function () { return this.ta.value; };
     TextareaComposerAdapter.prototype.setMarkdown = function (markdown) {
@@ -85,7 +164,10 @@
     TextareaComposerAdapter.prototype.setDisabled = function (disabled) { this.ta.disabled = !!disabled; };
     TextareaComposerAdapter.prototype.enterShouldSubmit = function () { return textareaEnterShouldSubmit(this.ta); };
     TextareaComposerAdapter.prototype.isSourceMode = function () { return true; };
-    TextareaComposerAdapter.prototype.destroy = function () {};
+    TextareaComposerAdapter.prototype.destroy = function () {
+        this.ta.removeEventListener('input', this.inputHandler);
+        this.changeHandlers = [];
+    };
 
     var wysiwygFactory = null;
 
@@ -97,18 +179,14 @@
     }
 
     function enhanceWithin(root) {
-        var forms = [];
-        if (root && root.matches && root.matches('form.composer')) { forms.push(root); }
-        if (root && root.querySelectorAll) {
-            root.querySelectorAll('form.composer').forEach(function (form) { forms.push(form); });
-        }
         var prefs = composingPrefs();
-        forms.forEach(function (form) { enhance(form, prefs); });
+        formsWithin(root).forEach(function (form) { enhance(form, prefs); });
     }
 
     window.RetroBoardsComposer = {
         registerWysiwygAdapter: registerWysiwygAdapter,
-        enhanceWithin: enhanceWithin
+        enhanceWithin: enhanceWithin,
+        destroyWithin: destroyWithin
     };
 
     function shouldUseWysiwyg(form) {
@@ -374,7 +452,7 @@
             actionSlot.appendChild(formatToggle);
         }
 
-        document.addEventListener('click', function (event) {
+        listenWithCleanup(form, document, 'click', function (event) {
             if (moreWrap.contains(event.target) || overflow.contains(event.target)) { return; }
             overflow.hidden = true;
             more.setAttribute('aria-expanded', 'false');
@@ -455,7 +533,7 @@
             var data = new FormData();
             data.append('_token', tokenField(form));
             data.append('body', active.getMarkdown());
-            fetch('/composer/preview', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            composerFetch(form, '/composer/preview', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (j) {
                     if (seq === requestSeq && open && j && j.ok) { pane.innerHTML = j.html; }
@@ -497,6 +575,11 @@
         attach(adapter);
         setOpen(open, false, false);
         form._rbPreviewController = { reconcile: reconcile };
+        addCleanup(form, function () {
+            open = false;
+            requestSeq++;
+            if (timer) { clearTimeout(timer); timer = null; }
+        });
     }
 
     // ---- Idempotency: stamp a fresh token per composer instance -----------
@@ -577,7 +660,7 @@
                 data.append('_token', tokenField(form));
                 options.body = data;
             }
-            return fetch('/api/drafts/' + apiKey + (suffix || ''), options);
+            return composerFetch(form, '/api/drafts/' + apiKey + (suffix || ''), options);
         }
         function saveWithRevision(expectedRevision, body, title) {
             var data = new FormData();
@@ -719,6 +802,12 @@
                 }
             })
             .catch(function () {});
+
+        addCleanup(form, function () {
+            paused = true;
+            applying = false;
+            if (timer) { clearTimeout(timer); timer = null; }
+        });
 
         return {
             input: scheduleSave,
@@ -1008,32 +1097,20 @@
     function uploadTray(form) {
         return shellPart(form, '[data-composer-upload-tray]');
     }
-    function moveSnippetBefore(ta, moving, anchor) {
+    function moveMarkdownSnippet(adapter, moving, anchor, before) {
         if (!moving || !anchor || moving === anchor) { return false; }
-        var v = ta.value;
+        if (!adapter || typeof adapter.getMarkdown !== 'function' || typeof adapter.setMarkdown !== 'function') { return false; }
+        var v = adapter.getMarkdown();
         var mi = v.indexOf(moving);
         if (mi < 0 || v.indexOf(anchor) < 0) { return false; }
         v = v.slice(0, mi) + v.slice(mi + moving.length);
         var ai = v.indexOf(anchor);
         if (ai < 0) { return false; }
-        ta.value = v.slice(0, ai) + moving + v.slice(ai);
-        ta.dispatchEvent(new Event('input', { bubbles: true }));
-        return true;
-    }
-    function moveSnippetAfter(ta, moving, anchor) {
-        if (!moving || !anchor || moving === anchor) { return false; }
-        var v = ta.value;
-        var mi = v.indexOf(moving);
-        if (mi < 0 || v.indexOf(anchor) < 0) { return false; }
-        v = v.slice(0, mi) + v.slice(mi + moving.length);
-        var ai = v.indexOf(anchor);
-        if (ai < 0) { return false; }
-        ta.value = v.slice(0, ai + anchor.length) + moving + v.slice(ai + anchor.length);
-        ta.dispatchEvent(new Event('input', { bubbles: true }));
+        var insertAt = before ? ai : ai + anchor.length;
+        adapter.setMarkdown(v.slice(0, insertAt) + moving + v.slice(insertAt));
         return true;
     }
     function uploadCard(form, adapter, file, placeholder) {
-        var ta = adapter.ta;
         var tray = uploadTray(form);
         var card = document.createElement('div');
         card.className = 'composer-upload-chip composer-upload-card is-uploading';
@@ -1084,26 +1161,27 @@
         card.appendChild(meta);
         tray.appendChild(card);
         card._rbMarkdown = '';
+        function activeAdapter() { return form._rbComposerAdapter || adapter; }
         remove.addEventListener('click', function () {
-            adapter.replacePendingUpload(card._rbMarkdown || placeholder, '');
+            activeAdapter().replacePendingUpload(card._rbMarkdown || placeholder, '');
             card.remove();
         });
         up.addEventListener('click', function () {
             var prev = card.previousElementSibling;
-            if (prev && moveSnippetBefore(ta, card._rbMarkdown, prev._rbMarkdown || '')) {
+            if (prev && moveMarkdownSnippet(activeAdapter(), card._rbMarkdown, prev._rbMarkdown || '', true)) {
                 card.parentNode.insertBefore(card, prev);
             }
         });
         down.addEventListener('click', function () {
             var next = card.nextElementSibling;
-            if (next && moveSnippetAfter(ta, card._rbMarkdown, next._rbMarkdown || '')) {
+            if (next && moveMarkdownSnippet(activeAdapter(), card._rbMarkdown, next._rbMarkdown || '', false)) {
                 card.parentNode.insertBefore(next, card);
             }
         });
         alt.addEventListener('input', function () {
             if (!card._rbUrl || !card._rbMarkdown) { return; }
             var next = imageMarkdown(card._rbUrl, alt.value);
-            if (adapter.replacePendingUpload(card._rbMarkdown, next)) {
+            if (activeAdapter().replacePendingUpload(card._rbMarkdown, next)) {
                 card._rbMarkdown = next;
                 preview.alt = alt.value;
             }
@@ -1112,7 +1190,7 @@
             progress: function (pct) { progress.value = Math.max(0, Math.min(100, pct)); },
             complete: function (json) {
                 var markdown = imageMarkdown(json.url, '');
-                adapter.replacePendingUpload(placeholder, markdown);
+                activeAdapter().replacePendingUpload(placeholder, markdown);
                 card._rbUrl = json.url;
                 card._rbMarkdown = markdown;
                 preview.src = json.url;
@@ -1125,7 +1203,7 @@
                 card.classList.add('is-complete');
             },
             fail: function (message) {
-                adapter.replacePendingUpload(placeholder, '');
+                activeAdapter().replacePendingUpload(placeholder, '');
                 progress.remove();
                 alt.disabled = true;
                 status.textContent = message || 'Upload failed.';
@@ -1143,15 +1221,18 @@
         // into their OWN marker — String.replace(str) only swaps the first match.
         var token = 'rbup-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
         var placeholder = '![uploading…](' + token + ')';
-        adapter.insertMarkdown(placeholder);
+        (form._rbComposerAdapter || adapter).insertMarkdown(placeholder);
         var card = uploadCard(form, adapter, file, placeholder);
         var xhr = new XMLHttpRequest();
+        trackComposerRequest(form, xhr);
         xhr.open('POST', '/upload');
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.upload.onprogress = function (e) {
             if (e.lengthComputable) { card.progress((e.loaded / e.total) * 95); }
         };
         xhr.onload = function () {
+            untrackComposerRequest(form, xhr);
+            if (form._rbComposerDestroyed) { return; }
             var j = null;
             try { j = JSON.parse(xhr.responseText || '{}'); } catch (e) {}
             if (xhr.status >= 200 && xhr.status < 300 && j && j.ok) {
@@ -1160,7 +1241,10 @@
                 card.fail((j && j.error) || 'Upload failed.');
             }
         };
-        xhr.onerror = function () { card.fail('Upload failed. Check your connection and try again.'); };
+        xhr.onerror = function () {
+            untrackComposerRequest(form, xhr);
+            if (!form._rbComposerDestroyed) { card.fail('Upload failed. Check your connection and try again.'); }
+        };
         xhr.send(data);
     }
     function wireUploads(form, adapter) {
@@ -1486,9 +1570,10 @@
                 + '&q=' + encodeURIComponent(term)
                 + '&rating=' + encodeURIComponent(config.rating || 'pg')
                 + '&limit=6';
-            fetch(url).then(function (r) {
+            composerFetch(form, url).then(function (r) {
                 return r.ok ? r.json() : null;
             }).then(function (j) {
+                if (form._rbComposerDestroyed) { return; }
                 var items = j && Array.isArray(j.data) ? j.data : [];
                 menu.innerHTML = '';
                 if (items.length === 0) { showStatus('No GIFs found.'); return; }
@@ -1528,6 +1613,7 @@
         }
 
         loadSlashConfig().then(function (j) {
+            if (form._rbComposerDestroyed) { return; }
             config = j;
             ready = true;
             if (config === null) { return; }
@@ -1586,7 +1672,7 @@
                 }
             }, target !== ta);
         });
-        document.addEventListener('click', function (e) {
+        listenWithCleanup(form, document, 'click', function (e) {
             if (menu.contains(e.target)) { return; }
             for (var i = 0; i < targets.length; i++) {
                 if (e.target === targets[i] || (targets[i].contains && targets[i].contains(e.target))) { return; }
@@ -1799,7 +1885,7 @@
             activeState = state;
             if (key === lastRenderKey && !menu.hidden) { return; }
             var seq = ++requestSeq;
-            fetch(suggestionUrl(form, state), {
+            composerFetch(form, suggestionUrl(form, state), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin'
             }).then(function (r) {
@@ -1848,7 +1934,7 @@
                 }
             }, target !== ta);
         });
-        document.addEventListener('click', function (e) {
+        listenWithCleanup(form, document, 'click', function (e) {
             if (menu.contains(e.target)) { return; }
             for (var i = 0; i < targets.length; i++) {
                 if (e.target === targets[i] || (targets[i].contains && targets[i].contains(e.target))) { return; }
@@ -2130,7 +2216,7 @@
             var seq = ++requestSeq;
             status.textContent = 'Loading emoji…';
             clearGroups();
-            fetch(suggestionUrl(form, { trigger: ':', query: query }), {
+            composerFetch(form, suggestionUrl(form, { trigger: ':', query: query }), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin'
             }).then(function (response) {
@@ -2191,9 +2277,17 @@
             event.preventDefault();
             focusable[next].focus();
         });
-        document.addEventListener('mousedown', function (event) {
+        listenWithCleanup(form, document, 'mousedown', function (event) {
             if (dialog.hidden || dialog.contains(event.target) || trigger.contains(event.target)) { return; }
             closeDialog('trigger');
+        });
+        addCleanup(form, function () {
+            requestSeq++;
+            if (searchTimer !== null) {
+                window.clearTimeout(searchTimer);
+                searchTimer = null;
+            }
+            dialog.hidden = true;
         });
     }
 
@@ -2385,6 +2479,9 @@
             form._rbComposerEnhance();
             return;
         }
+        form._rbComposerDestroyed = false;
+        form._rbComposerCleanups = [];
+        form._rbComposerRequests = [];
         ta.setAttribute('data-rb-enhanced', '1');
         var adapter = new TextareaComposerAdapter(form, ta);
         form._rbComposerFallbackAdapter = adapter;

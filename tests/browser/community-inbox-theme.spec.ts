@@ -203,6 +203,50 @@ test('Inbox fragments receive one complete composer enhancement', async ({ page 
   await expect(form.locator('input[type="file"][data-composer-upload-input]')).toHaveCount(1);
 });
 
+test('Inbox replacement destroys the previous composer lifecycle before enhancing the next fragment', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'fragment lifecycle is verified once');
+  await login(page);
+  const opened = await openShortcutInboxTopic(page);
+  await expect(opened.form.locator('.ProseMirror:visible, textarea.composer-input:visible').first()).toBeVisible();
+  expect(await page.evaluate(() => typeof (window as Window & {
+    RetroBoardsComposer?: { destroyWithin?: (root: ParentNode) => void };
+  }).RetroBoardsComposer?.destroyWithin)).toBe('function');
+
+  await opened.form.evaluate((element) => {
+    const trackedWindow = window as Window & {
+      __rbComposerLifecycle?: { destroyWithin: number; adapterDestroy: number };
+      RetroBoardsComposer?: { destroyWithin?: (root: ParentNode) => void };
+    };
+    trackedWindow.__rbComposerLifecycle = { destroyWithin: 0, adapterDestroy: 0 };
+    const api = trackedWindow.RetroBoardsComposer!;
+    const originalDestroyWithin = api.destroyWithin!.bind(api);
+    api.destroyWithin = (root) => {
+      trackedWindow.__rbComposerLifecycle!.destroyWithin++;
+      originalDestroyWithin(root);
+    };
+    const adapter = (element as HTMLFormElement & {
+      _rbComposerAdapter?: { destroy?: () => void };
+    })._rbComposerAdapter;
+    const originalAdapterDestroy = adapter?.destroy?.bind(adapter);
+    if (adapter && originalAdapterDestroy) {
+      adapter.destroy = () => {
+        trackedWindow.__rbComposerLifecycle!.adapterDestroy++;
+        originalAdapterDestroy();
+      };
+    }
+  });
+
+  const nextTopic = page.locator('[data-inbox-list] .thread-row:not(.is-active) a.thread-title').first();
+  await expect(nextTopic).toBeVisible();
+  const previousUrl = page.url();
+  await nextTopic.click();
+  await page.waitForURL((url) => url.toString() !== previousUrl && url.searchParams.has('t'));
+  await expect(page.locator('[data-inbox-reading] form.reply-composer textarea.composer-input')).toHaveAttribute('data-rb-enhanced', '1');
+  expect(await page.evaluate(() => (window as Window & {
+    __rbComposerLifecycle?: { destroyWithin: number; adapterDestroy: number };
+  }).__rbComposerLifecycle)).toEqual({ destroyWithin: 1, adapterDestroy: 1 });
+});
+
 test('Inbox Study Quote inserts exactly once through source and rich adapters', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'source and rich adapter quote paths are verified once');
   const previous = setWysiwygComposer(true);

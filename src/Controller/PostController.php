@@ -19,6 +19,7 @@ use App\Security\Cap;
 use App\Service\BadgeService;
 use App\Service\ModerationService;
 use App\Service\PostingService;
+use App\Service\PreferenceService;
 
 /**
  * Thread/post writes: create thread, reply, edit own, soft-delete (owner self
@@ -42,6 +43,8 @@ final class PostController extends Controller
                 'old' => $e->old,
                 'boards' => $this->postableBoards(),
                 'selected_board' => (int) $request->int('board_id', 0),
+                'show_avatars' => (bool) $this->container->get(PreferenceService::class)
+                    ->reading($user->id())['show_avatars'],
             ], 422);
         }
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\ConversationRepository;
 use App\Repository\IdempotencyRepository;
+use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -59,6 +61,117 @@ final class AppSubmitIdempotencyTest extends TestCase
             [$thread['thread_id']],
         ));
         self::assertSame($before + 1, (int) $this->db->fetchValue('SELECT reply_count FROM threads WHERE id = ?', [$thread['thread_id']]));
+    }
+
+    public function test_duplicate_direct_message_start_replays_one_message(): void
+    {
+        $sender = $this->makeAdmin(['username' => 'idemdmstart']);
+        $recipient = $this->makeUser(['username' => 'idemdmrecipient']);
+        $this->actingAs($sender);
+        $payload = [
+            'to' => $recipient['username'],
+            'body' => 'One private hello.',
+            'idempotency_key' => 'tok-dm-start-1',
+        ];
+
+        $first = $this->post('/messages', $payload);
+        $second = $this->post('/messages', $payload);
+
+        $this->assertRedirectContains($first, '/messages/');
+        self::assertSame($first->getHeader('location'), $second->getHeader('location'));
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM dm_messages WHERE user_id = ? AND body = ?',
+            [(int) $sender['id'], 'One private hello.'],
+        ));
+        $repo = new IdempotencyRepository($this->db);
+        $claim = $repo->findWithContext((int) $sender['id'], (string) $repo->hash('tok-dm-start-1'));
+        self::assertSame('dm_start', $claim['context'] ?? null);
+        self::assertSame('dm_message', $claim['result_type'] ?? null);
+    }
+
+    public function test_duplicate_direct_message_reply_replays_one_message(): void
+    {
+        $sender = $this->makeAdmin(['username' => 'idemdmreply']);
+        $recipient = $this->makeUser(['username' => 'idemdmreplyto']);
+        $conversationId = (new ConversationRepository($this->db))->findOrCreateBetween(
+            (int) $sender['id'],
+            (int) $recipient['id'],
+        );
+        $this->actingAs($sender);
+        $payload = ['body' => 'One private reply.', 'idempotency_key' => 'tok-dm-reply-1'];
+
+        $this->post('/messages/' . $conversationId, $payload);
+        $this->post('/messages/' . $conversationId, $payload);
+
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM dm_messages WHERE conversation_id = ? AND user_id = ? AND body = ?',
+            [$conversationId, (int) $sender['id'], 'One private reply.'],
+        ));
+        $repo = new IdempotencyRepository($this->db);
+        $claim = $repo->findWithContext((int) $sender['id'], (string) $repo->hash('tok-dm-reply-1'));
+        self::assertSame('dm_reply', $claim['context'] ?? null);
+        self::assertSame('dm_message', $claim['result_type'] ?? null);
+    }
+
+    public function test_duplicate_post_edit_claims_the_shared_shell_token(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'idem-edit']);
+        $author = $this->makeUser(['username' => 'idemeditor']);
+        $thread = $this->makeThread($board, $author, 'Editable', 'Before edit.');
+        $postId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [(int) $thread['thread_id']],
+        );
+        $this->actingAs($author);
+        $payload = ['body' => 'After edit.', 'idempotency_key' => 'tok-post-edit-1'];
+
+        $this->post('/posts/' . $postId . '/edit', $payload);
+        $this->post('/posts/' . $postId . '/edit', $payload);
+
+        $repo = new IdempotencyRepository($this->db);
+        self::assertSame(
+            ['context' => 'post_edit', 'result_type' => 'post', 'result_id' => $postId],
+            $repo->findWithContext((int) $author['id'], (string) $repo->hash('tok-post-edit-1')),
+        );
+        self::assertSame('After edit.', $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+    }
+
+    public function test_duplicate_wiki_edit_creates_one_revision(): void
+    {
+        $settings = new SettingRepository($this->db);
+        $features = $settings->get('features', []);
+        $features = is_array($features) ? $features : [];
+        $features['community_memory'] = true;
+        $settings->set('features', $features);
+
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'idem-wiki']);
+        $this->db->run('UPDATE boards SET wiki_enabled = 1 WHERE id = ?', [(int) $board['id']]);
+        $author = $this->makeAdmin(['username' => 'idemwikieditor']);
+        $thread = $this->makeThread($board, $author, 'Wiki', 'Before wiki edit.');
+        $postId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [(int) $thread['thread_id']],
+        );
+        $this->db->run('UPDATE posts SET is_wiki = 1 WHERE id = ?', [$postId]);
+        $this->actingAs($author);
+        $payload = [
+            'body' => 'After wiki edit.',
+            'reason' => 'Clarify once',
+            'idempotency_key' => 'tok-wiki-edit-1',
+        ];
+
+        $this->post('/posts/' . $postId . '/wiki/edit', $payload);
+        $this->post('/posts/' . $postId . '/wiki/edit', $payload);
+
+        self::assertSame(1, (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM post_revisions WHERE post_id = ? AND body = ?',
+            [$postId, 'After wiki edit.'],
+        ));
+        $repo = new IdempotencyRepository($this->db);
+        self::assertSame(
+            ['context' => 'wiki_edit', 'result_type' => 'post', 'result_id' => $postId],
+            $repo->findWithContext((int) $author['id'], (string) $repo->hash('tok-wiki-edit-1')),
+        );
     }
 
     public function test_missing_key_does_not_dedupe(): void

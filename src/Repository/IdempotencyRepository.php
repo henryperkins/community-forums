@@ -11,8 +11,8 @@ use PDOException;
  * At-most-once submission keys (P3-03). A composer submit carries a client
  * idempotency token; the first commit records (user, hashed key) → result here
  * in the same transaction. A duplicate (double-click, retry, browser resend)
- * collides on the unique key and replays the original result instead of creating
- * a second post (PHASE_3_PLAN §8.5).
+ * collides on the unique key and replays the original matching-context result
+ * instead of applying the logical write twice (PHASE_3_PLAN §8.5).
  */
 final class IdempotencyRepository
 {
@@ -36,14 +36,28 @@ final class IdempotencyRepository
     /** @return array{result_type:string,result_id:int}|null */
     public function find(int $userId, string $hashedKey): ?array
     {
+        $row = $this->findWithContext($userId, $hashedKey);
+        if ($row === null) {
+            return null;
+        }
+        return ['result_type' => $row['result_type'], 'result_id' => $row['result_id']];
+    }
+
+    /** @return array{context:string,result_type:string,result_id:int}|null */
+    public function findWithContext(int $userId, string $hashedKey): ?array
+    {
         $row = $this->db->fetch(
-            'SELECT result_type, result_id FROM submission_idempotency WHERE user_id = ? AND idem_key = ?',
+            'SELECT context, result_type, result_id FROM submission_idempotency WHERE user_id = ? AND idem_key = ?',
             [$userId, $hashedKey],
         );
         if ($row === null) {
             return null;
         }
-        return ['result_type' => (string) $row['result_type'], 'result_id' => (int) $row['result_id']];
+        return [
+            'context' => (string) $row['context'],
+            'result_type' => (string) $row['result_type'],
+            'result_id' => (int) $row['result_id'],
+        ];
     }
 
     /**

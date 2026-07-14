@@ -113,16 +113,17 @@ Auto-continue lists and blockquotes on Enter (empty item exits the list); auto-c
 
 ## 4. Toolbar & Formatting Controls
 
-A compact toolbar above (desktop) or in a bar above the keyboard (mobile). Every control mirrors a shortcut (§5) and shows **active state** when the selection already has that format.
+A compact engraved formatting row sits inside the top of the composer box on desktop and mobile. Every bound control mirrors a shortcut (§5) and shows **active state** when the selection already has that format; Attach, Emoji, identity/anonymity, Preview, and Send live in the separate in-box action bar.
 
 | Group | Controls |
 |---|---|
 | Text | **Bold**, *Italic*, ~~Strikethrough~~, `Inline code` |
 | Blocks | Code block, Blockquote, Bulleted list, Numbered list, Heading, Spoiler |
-| Insert | Link, Image/Attach, Emoji, **@** Mention, Table (P2) |
-| Right side | Preview toggle, Send |
+| Insert formatting | Link (Table remains P2) |
+| Action bar start | Attach, Emoji, identity / Anonymous where allowed |
+| Action bar end | Preview toggle, Send |
 
-- **Responsive overflow:** on narrow screens the toolbar shows an essential set (Bold, Italic, Link, Image, Emoji, @) and tucks the rest behind a **“+”** overflow menu.
+- **Responsive overflow:** on narrow screens the formatting row keeps Bold, Italic, Bulleted list, and Link visible and tucks the other formatting commands behind the named **“More formatting”** (`＋`) overflow menu. Attach and Emoji remain in the action bar rather than the formatting overflow.
 - **Active-state reflection:** toggling is idempotent (B on bold text un-bolds it).
 - Controls are real buttons (keyboard-focusable, labelled), not icon-only without `aria-label`.
 
@@ -315,7 +316,7 @@ Avoid heavy block-document editors — **the composer is an input system, not a 
 - Server renders a `<form>` with a `<textarea>` holding the Markdown. `public/assets/composer.js` builds the shared bridge for toolbar, preview, drafts, uploads, slash inserts, and `@`/`#` suggestions. When both `rich_composer` and `wysiwyg_composer` are enabled, the committed Milkdown bundle registers a bridge adapter and hides the textarea behind the WYSIWYG surface.
 - **No JS, `wysiwyg_composer=false`, or adapter failure → the textarea posts the form**; the server renders Markdown → sanitised HTML. **`rich_composer=false`** is the broad emergency kill switch and prevents all enhanced composer assets from loading.
 - **Server submit:** validate → run content filters → persist `body` (Markdown) + cached `body_html` (sanitised) → update counters → fan out notifications (DESIGN.md §9.6) → parse mentions → notify. Wrapped in a transaction; returns the rendered post for the client to reconcile.
-- **Idempotency:** the client sends an idempotency key; the server applies a **short-lived/transient dedupe** (covers double-submit + brief client retries, not durable persistence). A durable post idempotency column is **foreshadowed in SCHEMA §8**, not yet committed.
+- **Idempotency:** every shared shell server-renders a fresh idempotency key. The first successful topic, reply, DM start/reply, post edit, or wiki edit records `(user, hashed key, context) → result` in the existing `submission_idempotency` ledger inside the write transaction; retries replay the matching result and cross-context key reuse is rejected. JavaScript's in-flight guard is immediate feedback, not the consistency guarantee.
 
 ### 14.4 The payoff
 
@@ -382,9 +383,9 @@ CREATE TABLE attachments (
 
 ### 17.1 Phasing
 
-> **Priority tier ≠ delivery phase (DECISIONS §2).** The P0/P1/P2 below are *priority* tiers. In **delivery** terms: **Phase 1** ships the no-JS `<textarea>` Markdown baseline (server-rendered + sanitised render, edit reuse); **Phase 2** adds **@mentions** (parse-on-submit notifications + autocomplete) and the **DM** mount; the **unified rich `Composer`** (toolbar, source mode, optimistic send, localStorage Drafts/recovery, preview, and the §15 "identical everywhere" surface) is delivered in **Phase 3 Gate A** (PHASE_3_PLAN); **server-side draft sync** is Phase 3 Gate B; the Milkdown WYSIWYG adapter (ADR 0013) shipped deploy-dark behind `wysiwyg_composer` and graduated to **default-ON on 2026-07-02**. A P0-tier composer feature is therefore MVP-critical *in priority* but may be delivered through staged flags rather than Phase 1.
+> **Priority tier ≠ delivery phase (DECISIONS §2).** The P0/P1/P2 below are *priority* tiers. In **delivery** terms: **Phase 1** ships the no-JS `<textarea>` Markdown baseline (server-rendered + sanitised render, edit reuse); **Phase 2** adds **@mentions** (parse-on-submit notifications + autocomplete) and the **DM** mount; the **unified rich `Composer`** (toolbar, source mode, localStorage Drafts/recovery, preview, and the §15 "identical everywhere" surface) is delivered in **Phase 3 Gate A** (PHASE_3_PLAN); **server-side draft sync** is Phase 3 Gate B; the Milkdown WYSIWYG adapter (ADR 0013) shipped deploy-dark behind `wysiwyg_composer` and graduated to **default-ON on 2026-07-02**. Optimistic send/reconcile remains deferred in ADR 0020. A P0-tier composer feature is therefore MVP-critical *in priority* but may be delivered through staged flags rather than Phase 1.
 
-- **P0** — the shared `Composer` + Markdown editing core (bold/italic/strike/inline-code/quote/lists/links), Enter-to-send + core shortcuts, **drafts** (localStorage), validation + **optimistic send** + rollback, signed-out join-bar, **edit reuse**, the no-JS/source-mode `<textarea>` fallback, and the accessibility baseline. (Resolves the markup decision.)
+- **P0** — the shared `Composer` + Markdown editing core (bold/italic/strike/inline-code/quote/lists/links), Enter-to-send + core shortcuts, **drafts** (localStorage), validation, signed-out join-bar, **edit reuse**, the no-JS/source-mode `<textarea>` fallback, and the accessibility baseline. **Optimistic send + rollback remains a P0-priority follow-up, not a shipped behavior** (ADR 0020).
 - **P1** — @mentions + emoji picker, **image upload/paste/drag**, code blocks (+language), limited headings, spoilers, **preview toggle**, toolbar overflow, board-aware limits, character counter, content-filter integration.
 - **P2** — file attachments, link unfurl/embeds, tables, task lists, `#board` references, **server draft sync**, custom emoji, a slash-command (`/`) menu, GIFs/polls.
 
@@ -414,4 +415,4 @@ CREATE TABLE attachments (
 | v0.4 | 2026-06-26 | Consistency fix: §17.1 now maps the P0/P1/P2 *priority* tiers to *delivery* phases — Phase 1 = no-JS Markdown baseline, Phase 2 = @mentions + DM, the unified rich `Composer` = Phase 3 Gate A, server draft sync = Phase 3 Gate B — resolving the "P0 composer vs Phase 3 delivery" ambiguity (DESIGN §13.1 / PHASE_3_PLAN). §6.1 @mentions clarified as priority P1 / delivery Phase 2. |
 | v0.5 | 2026-07-02 | WYSIWYG closeout: recorded ADR 0013's Milkdown selection, the `wysiwyg_composer` narrow flag under the `rich_composer` kill switch, source-mode textarea contract, adapter-based `@`/`#` pickers and chips, internal URL paste normalization, server-preview parity, no-op edit protection, committed static bundle, and `content_references.target_type='tag'` schema follow-up. |
 | v0.6 | 2026-07-02 | `wysiwyg_composer` graduated to **default-ON** (GA 2026-07-02; reversible via `features` override; `rich_composer` remains the broad kill switch). §17.1 delivery note updated. Browser evidence split recorded: gate-a screenshots keep the textarea baseline via a seed pin; `wysiwyg-composer.spec.ts` proves the GA default mounts with no override. |
-| v0.7 | 2026-07-13 | Slack-style shell closeout: one server-rendered shell now covers all four mount types across the eight `.composer-input` forms; the engraved icon toolbar and contained narrow overflow supersede the earlier sentence-case handoff detail. Desktop Enter-to-send is context-aware, `Cmd/Ctrl+Enter` always sends, touch soft-Enter stays editorial, and an in-flight guard prevents duplicate sends. Preview state follows the composing preference and source-mode initialization contract; every input gains a near-limit counter. Unicode and custom emoji use a server-backed autocomplete plus accessible dialog/grid picker. Image upload has a visible Attach path and compact in-box chips. Inbox-installed fragments call the guarded composer enhancer exactly once. Optimistic send, global navigation keys, edit-last, and a visual replying-to chip remain engineering follow-ups in ADR 0020. |
+| v0.7 | 2026-07-13 | Slack-style shell closeout: one server-rendered shell now covers all four mount types across the eight `.composer-input` forms; the engraved icon toolbar and contained narrow overflow supersede the earlier sentence-case handoff detail. Desktop Enter-to-send is context-aware, `Cmd/Ctrl+Enter` always sends, touch soft-Enter stays editorial, and an in-flight guard prevents duplicate sends. Preview state follows the composing preference and source-mode initialization contract; every input gains a near-limit counter. Unicode and custom emoji use a server-backed autocomplete plus accessible dialog/grid picker. Image upload has a visible Attach path and compact in-box chips, with rich-mode reorder preserved in canonical Markdown. Inbox fragment replacement now destroys adapter/listener/request state before enhancing the next shell. All shared-shell writes consume the server-rendered idempotency token, and every identity-bearing mount honors `show_avatars`. Optimistic send, global navigation keys, edit-last, and a visual replying-to chip remain engineering follow-ups in ADR 0020. |

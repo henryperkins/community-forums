@@ -529,6 +529,9 @@
             reading.classList.toggle('is-open', open);
         };
         var showEmpty = function (restoreFocus) {
+            if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
+                window.RetroBoardsComposer.destroyWithin(readingContent);
+            }
             readingContent.innerHTML = emptyHtml;
             reading.removeAttribute('aria-busy');
             reading.scrollTop = 0;
@@ -553,6 +556,9 @@
                     var main = doc.querySelector('#main');
                     if (!main || !main.querySelector('.thread-view, .post-stream, .thread-head')) {
                         canonicalFallback(href); return;
+                    }
+                    if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
+                        window.RetroBoardsComposer.destroyWithin(readingContent);
                     }
                     readingContent.innerHTML = main.innerHTML;
                     enhanceThreadViews(readingContent);

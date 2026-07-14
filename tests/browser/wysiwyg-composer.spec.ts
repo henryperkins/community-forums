@@ -235,6 +235,45 @@ test('new topic WYSIWYG compose and submit', async ({ page }) => {
   await expect(page.locator('.post-op .post-body')).toContainText('WYSIWYG topic body');
 });
 
+test('rich upload reordering is preserved in canonical Markdown on submit', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'rich upload ordering is verified once');
+  setWysiwygComposer(true);
+  let uploadId = 9100;
+  await page.route('**/upload', async (route) => {
+    uploadId++;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, url: `/media/${uploadId}`, width: 1, height: 1 }),
+    });
+  });
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  await expect(form.locator('.wysiwyg-composer .ProseMirror')).toBeVisible();
+  const input = form.locator('input[type="file"][data-composer-upload-input]');
+  const chips = form.locator('.composer-upload-chip');
+
+  await input.setInputFiles({ name: 'first.png', mimeType: 'image/png', buffer: Buffer.from(PNG_1X1, 'base64') });
+  await expect(chips).toHaveCount(1);
+  await expect(chips.nth(0).locator('.composer-upload-status')).toContainText('Uploaded image');
+  await input.setInputFiles({ name: 'second.png', mimeType: 'image/png', buffer: Buffer.from(PNG_1X1, 'base64') });
+  await expect(chips).toHaveCount(2);
+  await expect(chips.nth(1).locator('.composer-upload-status')).toContainText('Uploaded image');
+
+  await chips.nth(1).getByRole('button', { name: 'Up' }).click();
+  await expect(chips.nth(0).locator('.composer-upload-name')).toHaveText('second.png');
+  await expect.poll(() => form.evaluate((element) => {
+    const adapter = (element as HTMLFormElement & { _rbComposerAdapter?: { getMarkdown?: () => string } })._rbComposerAdapter;
+    return adapter?.getMarkdown?.() ?? '';
+  })).toMatch(/\/media\/9102[\s\S]*\/media\/9101/);
+
+  const title = `WYSIWYG reordered uploads ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await form.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/t\/\d+-/);
+  expect(postByTitle(title).body).toMatch(/\/media\/9102[\s\S]*\/media\/9101/);
+});
+
 test('source mode edits canonical Markdown and switches back', async ({ page }) => {
   setWysiwygComposer(true);
   await login(page, 'bob@retro.test');
