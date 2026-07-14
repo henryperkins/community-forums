@@ -36,7 +36,8 @@ async function login(page: Page): Promise<void> {
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/inbox(?:\?|$)/);
   const skip = page.getByRole('button', { name: 'Skip' });
-  if (await skip.isVisible().catch(() => false)) await skip.click();
+  if (await skip.isVisible({ timeout: 1500 }).catch(() => false)) await skip.click();
+  await expect(skip).toBeHidden();
 }
 
 async function openRichTopic(page: Page): Promise<void> {

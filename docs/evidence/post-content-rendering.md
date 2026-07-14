@@ -1,50 +1,74 @@
-# Post Content Rendering Evidence
+# Post content rendering evidence
 
-Updated: 2026-07-14
+**Date:** 2026-07-14
+**Scope:** canonical Markdown rendering for posts, direct messages, composer
+preview, living briefs, and derived-cache recovery.
 
-## Scope
+## Automated PHP evidence
 
-This evidence covers the shared server-rendered Markdown contract for posts,
-direct messages, composer previews, and living briefs; responsive presentation;
-read-time fallback for missing derived HTML; and the bounded render-cache repair
-command. Canonical `body` values, write metadata, counters, notifications, and
-mention events are not changed by reads or repair.
+The full PHPUnit inventory was run against a freshly migrated, dedicated
+`retroboards_test_post_render` database. It was split into bounded invocations
+so the Windows runner could retain an exit status for every group:
 
-## PHP verification
+| Scope | Tests | Assertions | Result |
+|---|---:|---:|---|
+| Unit | 577 | 6,916 | Pass |
+| Admin, API, Controller, Repository, Security integration | 224 | 1,011 | Pass |
+| Core integration | 876 | 5,394 | Pass; 1 expected skip |
+| Service integration | 321 | 1,386 | Pass |
+| Thread Intelligence and Worker integration | 230 | 1,484 | Pass |
+| **Total** | **2,228** | **16,191** | **Pass; 1 expected skip** |
 
-- `php vendor/phpunit/phpunit/phpunit --testsuite unit` passed 577 tests and
-  6,916 assertions.
-- The complete `tests/Integration` suite was run in seven bounded partitions to
-  stay below the Windows command-runner limit. The partitions passed 1,651
-  tests and 9,275 assertions, with one intentional existing skip.
-- Combined result: 2,228 tests and 16,191 assertions, with one skip.
-- The focused rendering regression slice passed 97 tests and 368 assertions.
-- `git diff --check` and PHP syntax checks were clean before publication.
+The rendering-focused slice also passed independently: 97 tests and 368
+assertions covering sanitizer fidelity, post/DM/living-brief read fallback,
+shared presentation hooks, cache repair, custom emoji, and the CLI contract.
 
-## Browser verification
+## Repair-command rehearsal
 
-The browser database was dropped, migrated through all 77 migrations, and
-seeded immediately before these runs.
+On a freshly migrated and seeded `retroboards_e2e` database:
 
-- `npx playwright test thread-view-study.spec.ts` passed 18 checks with six
-  project-specific skips.
-- `npx playwright test rich-content.spec.ts` passed desktop and mobile semantic,
-  containment, keyboard-scroll, serious/critical axe, and narrow no-JavaScript
-  checks: three passed with one duplicate-project skip.
-- `npx playwright test wysiwyg-composer.spec.ts --grep "server preview matches final rendered post"`
-  passed in desktop and mobile projects (two passed). The preview and final
-  formatted-content subtrees matched exactly.
+```text
+php bin/console repair:render-cache --dry-run --batch=1
+php bin/console repair:render-cache --batch=1
+php bin/console repair:render-cache --dry-run --batch=1
 
-Captured evidence:
+posts              scanned=120 changed=0
+dm_messages        scanned=0   changed=0
+thread_summaries   scanned=14  changed=0
+post_revisions     scanned=0   changed=0
+```
 
-- `browser/desktop/83-rich-content.png`
-- `browser/desktop/84-rich-content-table.png`
-- `browser/mobile/83-rich-content.png`
-- `browser/mobile/84-rich-content-table.png`
+All three commands exited zero. The second dry run remained at zero changes,
+confirming byte-comparison idempotence on the seeded dataset. Integration tests
+separately prove stale-cache writes, dry-run no-write behavior, batch size one,
+all four cache tables, mention-context differences, and contextual failure
+reporting without a partial render batch.
 
-## Operator rehearsal
+## Browser and accessibility evidence
 
-On the disposable browser database, `repair:render-cache --dry-run --batch=1`,
-the execute command, and a second dry run all completed successfully. Each run
-scanned 123 posts and 14 thread summaries (with no DM or revision fixtures) and
-reported zero changes, confirming byte-idempotence for already-current caches.
+`npx playwright test thread-view-study.spec.ts rich-content.spec.ts` passed 21
+tests with 7 intentional project-specific skips. A fresh-fixture rerun of
+`rich-content.spec.ts` passed 3 tests with the one intentional duplicate mobile
+no-JavaScript skip. The checks cover:
+
+- desktop and 390px mobile geometry with no document-level horizontal overflow;
+- server-rendered headings, ordered-list starts, task lists, fenced-code language,
+  table alignment, spoilers, mentions, custom emoji, and ordinary images;
+- a labelled, focusable wide-table region that scrolls with the keyboard;
+- bounded ordinary images and inline custom-emoji geometry;
+- a narrow JavaScript-disabled thread render; and
+- zero serious or critical axe violations in the rich post body.
+
+`npx playwright test wysiwyg-composer.spec.ts --grep "server preview matches final rendered post"`
+passed on desktop and mobile. It asserts the preview and final post use the same
+`formatted-content` contract and have byte-identical rendered subtrees.
+
+Visual artifacts:
+
+- [Desktop rich-content top](browser/desktop/83-rich-content.png)
+- [Desktop table and media](browser/desktop/84-rich-content-table.png)
+- [Mobile rich-content top](browser/mobile/83-rich-content.png)
+- [Mobile table and media](browser/mobile/84-rich-content-table.png)
+
+The artifacts were inspected after capture; the onboarding tour is dismissed
+before screenshots so it cannot obscure the rendering evidence.
