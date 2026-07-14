@@ -1,6 +1,6 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.5 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-02
+**Status:** v0.7 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-13
 **Companion to [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
@@ -132,8 +132,8 @@ Identical in all three contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 
 | Action | Shortcut |
 |---|---|
-| **Send** | `Enter` (default) — or `Cmd/Ctrl+Enter` if the user prefers Enter-inserts-newline (USER.md §4.5) |
-| New line | `Shift+Enter` (always) |
+| **Send** | Desktop: `Enter` outside list, blockquote, and code contexts when Enter-to-send is enabled; `Cmd/Ctrl+Enter` always sends. |
+| New line | `Shift+Enter`; touch soft-`Enter` remains a newline. |
 | Blur / cancel focus | `Esc` (with unsaved text, `Esc` blurs but the draft is kept; an explicit **Discard** is required to delete) |
 | Bold / Italic / Strikethrough | `Cmd/Ctrl+B` · `Cmd/Ctrl+I` · `Cmd/Ctrl+Shift+X` |
 | Inline code / Code block | `Cmd/Ctrl+Shift+C` · `Cmd/Ctrl+Alt+C` |
@@ -142,7 +142,7 @@ Identical in all three contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 | Blockquote | `Cmd/Ctrl+Shift+9` |
 | Indent / outdent list item | `Tab` / `Shift+Tab` |
 | Mention / Emoji pickers | type `@` / `:` |
-| Preview toggle | `Cmd/Ctrl+Shift+P` |
+| Preview toggle | Named **Preview** button. `Cmd/Ctrl+Shift+P` is intentionally unbound because it collides with Firefox's private-window shortcut. |
 | Undo / Redo | `Cmd/Ctrl+Z` · `Cmd/Ctrl+Shift+Z` |
 | Edit your last post (when composer empty, in a thread) | `↑` |
 
@@ -414,3 +414,4 @@ CREATE TABLE attachments (
 | v0.4 | 2026-06-26 | Consistency fix: §17.1 now maps the P0/P1/P2 *priority* tiers to *delivery* phases — Phase 1 = no-JS Markdown baseline, Phase 2 = @mentions + DM, the unified rich `Composer` = Phase 3 Gate A, server draft sync = Phase 3 Gate B — resolving the "P0 composer vs Phase 3 delivery" ambiguity (DESIGN §13.1 / PHASE_3_PLAN). §6.1 @mentions clarified as priority P1 / delivery Phase 2. |
 | v0.5 | 2026-07-02 | WYSIWYG closeout: recorded ADR 0013's Milkdown selection, the `wysiwyg_composer` narrow flag under the `rich_composer` kill switch, source-mode textarea contract, adapter-based `@`/`#` pickers and chips, internal URL paste normalization, server-preview parity, no-op edit protection, committed static bundle, and `content_references.target_type='tag'` schema follow-up. |
 | v0.6 | 2026-07-02 | `wysiwyg_composer` graduated to **default-ON** (GA 2026-07-02; reversible via `features` override; `rich_composer` remains the broad kill switch). §17.1 delivery note updated. Browser evidence split recorded: gate-a screenshots keep the textarea baseline via a seed pin; `wysiwyg-composer.spec.ts` proves the GA default mounts with no override. |
+| v0.7 | 2026-07-13 | Slack-style shell closeout: one server-rendered shell now covers all four mount types across the eight `.composer-input` forms; the engraved icon toolbar and contained narrow overflow supersede the earlier sentence-case handoff detail. Desktop Enter-to-send is context-aware, `Cmd/Ctrl+Enter` always sends, touch soft-Enter stays editorial, and an in-flight guard prevents duplicate sends. Preview state follows the composing preference and source-mode initialization contract; every input gains a near-limit counter. Unicode and custom emoji use a server-backed autocomplete plus accessible dialog/grid picker. Image upload has a visible Attach path and compact in-box chips. Inbox-installed fragments call the guarded composer enhancer exactly once. Optimistic send, global navigation keys, edit-last, and a visual replying-to chip remain engineering follow-ups in ADR 0020. |

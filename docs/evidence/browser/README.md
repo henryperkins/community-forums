@@ -11,6 +11,13 @@ the admin **board-roster UI** (`09-admin-board-roster`), the no-JS login path, a
 member's view of a private board, and the Phase 3 composer/drafts/upload,
 preferences, branding, product-tour, API-token, and webhook paths.
 
+The composer set includes `17-composer-upload` for the visible file picker and
+compact in-box chip, `26-slash-menu` for the floating non-reflowing insert menu,
+`80-thread-study` for the new reply shell in its reading context, and
+`82-composer-emoji` for the accessible server-backed dialog/grid picker. Focused
+coverage spans inline axe scans, JavaScript-disabled and reduced-motion modes,
+source/rich Enter behavior, attach, and the `rich_composer=false` Inbox path.
+
 They also cover the **Phase 2 operator-surface closeout** (2026-06-29): the per-user
 admin record (`14-admin-users`, `15-admin-user-record`), board reorder + archive
 (`20-structure-before`, `21-structure-after-move`, `22-board-archived-readonly`,
@@ -30,7 +37,7 @@ prove the deploy-dark slash insertion menu and direct GIPHY media insert path on
 desktop and mobile.
 
 The Study thread-view evidence adds `80-thread-study` for the closed reading
-surface and `81-thread-tools` for the open Topic tools drawer/sheet. Existing
+surface including its reply shell and `81-thread-tools` for the open Topic tools drawer/sheet. Existing
 journeys now capture their controls in the Study locations: `29-topic-workflow`
 uses Standing, Watch, and Topic management; `50-split-merge-panel` records the
 restructure modal; `51-thread-merged` records its merged result; and

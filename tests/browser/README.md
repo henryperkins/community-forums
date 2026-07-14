@@ -31,7 +31,7 @@ Written to `docs/evidence/browser/<viewport>/<page>.png`:
 | 14 | Private board, viewed by a member |
 | 15 | Reading preferences default selects |
 | 16 | Drafts view with server and browser-local draft lists |
-| 17 | Composer upload tray with thumbnail/alt controls |
+| 17 | Composer visible file-picker path with compact upload chip, thumbnail, status, alt, and reorder/remove controls |
 | 18 | Branding live preview |
 | 19 | Product-tour replay dialog |
 | 20 | Admin API token minted with show-once token |
@@ -46,18 +46,20 @@ harness grows. The current branch also captures:
 - `20-structure-before`, `21-structure-after-move`, `22-board-archived-readonly`, `23-board-unarchived`
 - `22-admin-email-dashboard`, `23-admin-email-suppressed`, `24-admin-email-test-sent`
 - `25-poll-voted` (Phase 4 carryover poll no-JS vote/result flow)
-- `26-slash-menu`, `27-giphy-inserted` (Phase 4 carryover slash menu and direct GIPHY insertion)
+- `26-slash-menu`, `27-giphy-inserted` (floating, non-reflowing Phase 4 slash menu and direct GIPHY insertion)
 - `28-server-draft-conflict` (`server_drafts` cross-device conflict controls; graduated to default-on 2026-07-02, now captured in the standard `evidence` run)
 - `29-topic-workflow` (status history plus snooze and assignment controls in the Study Topic tools drawer/sheet)
 - `46-profile-media-avatar`, `47-profile-media-moderation` (`profile_media` member avatar/signature flow plus admin moderation controls; graduated to default-on 2026-07-03)
 - `48-custom-emoji-admin`, `49-custom-emoji-thread` (`custom_emoji` admin catalogue, Markdown rendering, and reaction compatibility; graduated to default-on 2026-07-03)
 - `50-split-merge-panel`, `51-thread-merged` (the Study split/merge modal and the merged topic result)
 - `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (Thread Intelligence fallback, generated provenance, curator lifecycle in the Study Memory section, last-good guardrails, and operator recovery evidence; captured before and reverified after the default-on flip)
-- `80-thread-study`, `81-thread-tools` (the closed Study reading surface and its open desktop drawer/mobile sheet)
+- `80-thread-study`, `81-thread-tools` (the closed Study reading surface with the new reply shell, and its open desktop drawer/mobile sheet)
+- `82-composer-emoji` (server-backed emoji dialog/grid with remembered insertion in desktop popover and mobile sheet layouts)
 
 Focused acceptance specs that do not write numbered screenshots:
 
 - `wysiwyg-composer.spec.ts` gates the WYSIWYG layer (graduated to default-on 2026-07-02; the seed pins it off so gate-a keeps the textarea baseline): strict CSP asset load with no features override (proving the GA default mounts), textarea fallback, new-topic submit, source-mode round trip, no-op edit preservation, server-preview parity, rich reference chips, internal URL paste normalization, and mobile smoke.
+- `composer-shell.spec.ts` is part of the standard `evidence` command and covers contained anatomy, source/rich Enter semantics, in-flight submission, inline axe scans, preview/counter/drafts, non-reflowing suggestions, emoji, visible attach/chips, reduced motion, and the mobile overflow dock. `community-inbox-theme.spec.ts` adds the JavaScript-disabled reply journey and the `rich_composer=false` in-pane Inbox kill-switch regression.
 
 ## Run it locally
 
