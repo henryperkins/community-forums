@@ -2,7 +2,7 @@
 <?php
 $variant = $this->block('variant', 'app');
 $appearance = $appearance ?? ['theme' => 'system', 'density' => 'comfortable', 'font_size' => 'medium', 'reduced_motion' => false];
-$composing = $composing ?? ['enter_to_send' => false, 'show_preview' => true, 'smart_lists' => true];
+$composing = $composing ?? ['enter_to_send' => true, 'show_preview' => true, 'smart_lists' => true];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
 $themePackage = $package_theme ?? ['active_css_digest' => null, 'preview_css_digest' => null];
 $appUrl = rtrim((string) ($app_url ?? ''), '/');

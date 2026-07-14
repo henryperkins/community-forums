@@ -22,6 +22,7 @@ final class PreferenceSchemaTest extends TestCase
         self::assertSame('medium', $d['font_size']);
         self::assertFalse($d['reduced_motion']);
         self::assertTrue($d['show_signatures']);
+        self::assertTrue($d['enter_to_send']);
         // Per-page keys carry a null default → absent from the flat defaults.
         self::assertArrayNotHasKey('threads_per_page', $d);
     }

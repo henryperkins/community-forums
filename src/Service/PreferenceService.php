@@ -108,7 +108,7 @@ final class PreferenceService
     {
         $r = $this->resolved($userId);
         return [
-            'enter_to_send' => (bool) ($r['enter_to_send'] ?? false),
+            'enter_to_send' => (bool) ($r['enter_to_send'] ?? true),
             'show_preview' => (bool) ($r['show_preview'] ?? true),
             'smart_lists' => (bool) ($r['smart_lists'] ?? true),
         ];

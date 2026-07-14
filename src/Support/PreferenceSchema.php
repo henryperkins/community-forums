@@ -53,7 +53,7 @@ final class PreferenceSchema
             'show_reactions'   => ['type' => 'bool', 'default' => true],
         ],
         'composing' => [
-            'enter_to_send' => ['type' => 'bool', 'default' => false],
+            'enter_to_send' => ['type' => 'bool', 'default' => true],
             'show_preview'  => ['type' => 'bool', 'default' => true],
             'smart_lists'   => ['type' => 'bool', 'default' => true],
         ],

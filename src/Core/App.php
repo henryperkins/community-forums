@@ -540,7 +540,7 @@ final class App
         // Composing prefs (P3-01) gate the shared composer client-side
         // (enter-to-send, live preview, smart list continuation). Stamped on
         // <body> for signed-in users; safe defaults if pre-migration or DB-less.
-        $composing = ['enter_to_send' => false, 'show_preview' => true, 'smart_lists' => true];
+        $composing = ['enter_to_send' => true, 'show_preview' => true, 'smart_lists' => true];
         try {
             $user = $session->user();
             if ($user !== null) {

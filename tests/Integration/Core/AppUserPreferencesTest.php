@@ -254,26 +254,45 @@ final class AppUserPreferencesTest extends TestCase
         self::assertStringContainsString('<option value="20" selected>20</option>', $reading->body());
     }
 
-    public function test_composing_preferences_are_stamped_on_the_page_body(): void
+    public function test_fresh_user_gets_the_slack_like_composing_defaults(): void
     {
         // composer.js reads these <body> data attributes to gate enter-to-send,
         // the live preview, and smart list continuation (P3-01).
-        $user = $this->makeUser(['username' => 'composeprefs']);
+        $user = $this->makeUser(['username' => 'freshcompose']);
         $this->actingAs($user);
 
-        // Schema defaults: enter-to-send off, preview on, smart lists on.
+        $home = $this->get('/')->body();
+        self::assertStringContainsString('data-enter-to-send="1"', $home);
+        self::assertStringContainsString('data-show-preview="1"', $home);
+        self::assertStringContainsString('data-smart-lists="1"', $home);
+    }
+
+    public function test_composing_settings_explain_the_send_and_preview_contract(): void
+    {
+        $user = $this->makeUser(['username' => 'composecopy']);
+        $this->actingAs($user);
+        $settings = $this->get('/settings/composing')->body();
+        self::assertStringContainsString('outside lists, quotes, and code', $settings);
+        self::assertStringContainsString('always sends', $settings);
+        self::assertStringContainsString('Start with the preview pane open (source mode)', $settings);
+    }
+
+    public function test_explicit_saved_off_enter_to_send_round_trips_unchanged(): void
+    {
+        $user = $this->makeUser(['username' => 'composeoff']);
+        $this->actingAs($user);
+
+        $response = $this->post('/settings/composing', [
+            'show_preview' => '1',
+            'smart_lists' => '1',
+            // enter_to_send deliberately omitted: unchecked persists false.
+        ]);
+        $this->assertRedirect($response);
+
         $home = $this->get('/')->body();
         self::assertStringContainsString('data-enter-to-send="0"', $home);
         self::assertStringContainsString('data-show-preview="1"', $home);
         self::assertStringContainsString('data-smart-lists="1"', $home);
-
-        // Posting the composing form with only enter_to_send checked turns the
-        // others off (unchecked boxes persist false) — the body must reflect it.
-        $this->post('/settings/composing', ['enter_to_send' => '1']);
-        $after = $this->get('/')->body();
-        self::assertStringContainsString('data-enter-to-send="1"', $after);
-        self::assertStringContainsString('data-show-preview="0"', $after);
-        self::assertStringContainsString('data-smart-lists="0"', $after);
     }
 
     public function test_guest_body_has_no_composing_attributes(): void
