@@ -1177,6 +1177,7 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(SearchService::class),
             $c->get(FeatureFlags::class),
+            $c->get(CustomEmojiService::class),
         ));
         $c->bind(Mailer::class, function (Container $c) use ($config): Mailer {
             $mail = (array) $config->get('mail', []);

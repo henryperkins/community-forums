@@ -14,6 +14,7 @@ use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Search\SearchService;
 use App\Security\BoardPolicy;
+use App\Support\EmojiCatalog;
 
 final class ComposerSuggestionService
 {
@@ -27,6 +28,7 @@ final class ComposerSuggestionService
         private BoardPolicy $policy,
         private SearchService $search,
         private FeatureFlags $flags,
+        private CustomEmojiService $customEmoji,
     ) {
     }
 
@@ -36,13 +38,14 @@ final class ComposerSuggestionService
     public function suggest(string $trigger, string $query, string $context, int $targetId, User $viewer): array
     {
         $query = $this->normalizeQuery($query, $trigger);
-        if ($query === '') {
+        if ($query === '' && $trigger !== ':') {
             return [];
         }
 
         $items = match ($trigger) {
             '@' => $this->userSuggestions($query, $context, $targetId, $viewer),
             '#' => $this->hashSuggestions($query, $viewer),
+            ':' => $this->emojiSuggestions($query),
             default => [],
         };
 
@@ -51,7 +54,7 @@ final class ComposerSuggestionService
             return $rank !== 0 ? $rank : strcasecmp($a->label, $b->label);
         });
 
-        return array_slice($items, 0, 20);
+        return $trigger === ':' && $query === '' ? $items : array_slice($items, 0, 20);
     }
 
     private function normalizeQuery(string $query, string $trigger): string
@@ -141,6 +144,68 @@ final class ComposerSuggestionService
         return $this->dedupe($out);
     }
 
+    /** @return list<ComposerSuggestion> */
+    private function emojiSuggestions(string $query): array
+    {
+        $catalog = EmojiCatalog::all();
+        $sourceIds = [];
+        foreach ($catalog as $index => $row) {
+            $sourceIds[$row['shortcodes'][0]] = $index + 1;
+        }
+
+        $rows = $query === '' ? $catalog : EmojiCatalog::search($query);
+        $out = [];
+        foreach ($rows as $position => $row) {
+            $shortcode = $row['shortcodes'][0];
+            $token = ':' . $shortcode . ':';
+            $out[] = new ComposerSuggestion(
+                type: 'emoji',
+                id: $sourceIds[$shortcode],
+                label: $row['name'],
+                token: $token,
+                url: '',
+                markdown: $row['emoji'],
+                meta: $token,
+                group: $row['category'],
+                rank: 100_000 - $position,
+            );
+        }
+
+        if (!$this->flags->enabled('custom_emoji')) {
+            return $out;
+        }
+
+        $needle = mb_strtolower(trim($query, ':'));
+        $customPosition = 0;
+        foreach ($this->customEmoji->catalogue() as $row) {
+            if ((int) $row['is_enabled'] !== 1) {
+                continue;
+            }
+            $shortcode = (string) $row['shortcode'];
+            $name = (string) $row['name'];
+            if ($needle !== ''
+                && !str_contains(mb_strtolower($shortcode), $needle)
+                && !str_contains(mb_strtolower($name), $needle)) {
+                continue;
+            }
+            $token = ':' . $shortcode . ':';
+            $out[] = new ComposerSuggestion(
+                type: 'custom_emoji',
+                id: 1_000_000 + (int) hexdec(substr(hash('sha256', $shortcode), 0, 7)),
+                label: $name,
+                token: $token,
+                url: (string) $row['image_path'],
+                markdown: $token,
+                meta: $token,
+                group: 'Custom',
+                rank: 50_000 - $customPosition,
+            );
+            $customPosition++;
+        }
+
+        return $this->dedupe($out);
+    }
+
     /** @param array<string,mixed> $result */
     private function fromSearchResult(array $result): ComposerSuggestion
     {
@@ -209,7 +274,7 @@ final class ComposerSuggestionService
         $seen = [];
         $out = [];
         foreach ($items as $item) {
-            $key = $item->type . ':' . $item->url;
+            $key = $item->type . ':' . $item->token;
             if (isset($seen[$key])) {
                 continue;
             }

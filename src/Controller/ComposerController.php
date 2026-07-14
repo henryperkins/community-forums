@@ -53,7 +53,7 @@ final class ComposerController extends Controller
         $context = (string) $request->query('context', '');
         $targetId = (int) $request->query('target_id', 0);
 
-        if (!in_array($trigger, ['@', '#'], true)) {
+        if (!in_array($trigger, ['@', '#', ':'], true)) {
             return Response::json(['ok' => false, 'error' => 'Unsupported trigger.'], 422);
         }
 

@@ -62,6 +62,7 @@ final class AppComposerSuggestTest extends TestCase
             'rich_composer' => true,
             'tags' => true,
             'content_references' => true,
+            'custom_emoji' => true,
         ]);
     }
 
@@ -153,5 +154,91 @@ final class AppComposerSuggestTest extends TestCase
         $json = json_decode($res->body(), true);
         $tokens = array_column($json['items'], 'token');
         self::assertLessThan(array_search('@anonrankalice', $tokens, true), array_search('@anonrankbob', $tokens, true));
+    }
+
+    public function test_unicode_emoji_suggestions_support_prefixes_plus_and_full_catalog(): void
+    {
+        $this->enableSuggestions();
+        $viewer = $this->makeUser(['username' => 'emojiviewer']);
+        $this->actingAs($viewer);
+
+        $smile = $this->get('/composer/suggest', ['trigger' => ':', 'q' => 'smil']);
+        $this->assertStatus(200, $smile);
+        $smileJson = json_decode($smile->body(), true);
+        self::assertTrue($smileJson['ok']);
+        self::assertNotEmpty($smileJson['items']);
+        $smileItems = array_values(array_filter(
+            $smileJson['items'],
+            static fn (array $item): bool => $item['token'] === ':smile:',
+        ));
+        self::assertCount(1, $smileItems);
+        self::assertSame('emoji', $smileItems[0]['type']);
+        self::assertSame('😄', $smileItems[0]['markdown']);
+        self::assertSame('', $smileItems[0]['url']);
+
+        $plus = $this->get('/composer/suggest', ['trigger' => ':', 'q' => '+1']);
+        $this->assertStatus(200, $plus);
+        $plusJson = json_decode($plus->body(), true);
+        self::assertSame('👍', $plusJson['items'][0]['markdown']);
+        self::assertSame(':+1:', $plusJson['items'][0]['token']);
+
+        $catalog = $this->get('/composer/suggest', ['trigger' => ':', 'q' => '']);
+        $this->assertStatus(200, $catalog);
+        $catalogJson = json_decode($catalog->body(), true);
+        self::assertGreaterThanOrEqual(280, count($catalogJson['items']));
+        self::assertLessThanOrEqual(320, count($catalogJson['items']));
+        self::assertContains('Smileys & emotion', array_column($catalogJson['items'], 'group'));
+
+        $emptyMention = $this->get('/composer/suggest', ['trigger' => '@', 'q' => '']);
+        $this->assertStatus(200, $emptyMention);
+        self::assertSame([], json_decode($emptyMention->body(), true)['items']);
+
+        $unsupported = $this->get('/composer/suggest', ['trigger' => '!', 'q' => 'smil']);
+        $this->assertStatus(422, $unsupported);
+    }
+
+    public function test_custom_emoji_suggestions_follow_row_and_feature_gates(): void
+    {
+        $this->enableSuggestions();
+        $this->db->run(
+            "INSERT INTO custom_emoji
+                (shortcode, name, image_path, mime, is_enabled, allow_reactions, created_at)
+             VALUES
+                ('party_blob', 'Party Blob', '/emoji/party-blob.webp', 'image/webp', 1, 0, UTC_TIMESTAMP()),
+                ('sleep_blob', 'Sleep Blob', '/emoji/sleep-blob.webp', 'image/webp', 0, 0, UTC_TIMESTAMP())",
+        );
+        $viewer = $this->makeUser(['username' => 'customemojiviewer']);
+        $this->actingAs($viewer);
+
+        $enabled = $this->get('/composer/suggest', ['trigger' => ':', 'q' => 'party_blob']);
+        $this->assertStatus(200, $enabled);
+        $enabledJson = json_decode($enabled->body(), true);
+        $custom = array_values(array_filter(
+            $enabledJson['items'],
+            static fn (array $item): bool => $item['type'] === 'custom_emoji',
+        ));
+        self::assertCount(1, $custom);
+        self::assertSame(':party_blob:', $custom[0]['token']);
+        self::assertSame(':party_blob:', $custom[0]['markdown']);
+        self::assertSame('/emoji/party-blob.webp', $custom[0]['url']);
+        self::assertSame('Custom', $custom[0]['group']);
+
+        $disabledRow = $this->get('/composer/suggest', ['trigger' => ':', 'q' => 'sleep_blob']);
+        $this->assertStatus(200, $disabledRow);
+        self::assertSame([], array_values(array_filter(
+            json_decode($disabledRow->body(), true)['items'],
+            static fn (array $item): bool => $item['type'] === 'custom_emoji',
+        )));
+
+        (new SettingRepository($this->db))->set('features', [
+            'rich_composer' => true,
+            'custom_emoji' => false,
+        ]);
+        $featureOff = $this->get('/composer/suggest', ['trigger' => ':', 'q' => 'party_blob']);
+        $this->assertStatus(200, $featureOff);
+        self::assertSame([], array_values(array_filter(
+            json_decode($featureOff->body(), true)['items'],
+            static fn (array $item): bool => $item['type'] === 'custom_emoji',
+        )));
     }
 }
