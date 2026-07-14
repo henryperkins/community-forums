@@ -30,7 +30,12 @@ if (($board['visibility'] ?? 'public') !== 'public') {
     <?php elseif ($can_post): ?>
         <details class="composer-details" id="new-topic">
             <summary class="btn">New Topic</summary>
-            <?= $this->partial('partials/new_thread_form', ['board' => $board, 'errors' => [], 'old' => []]) ?>
+            <?= $this->partial('partials/new_thread_form', [
+                'board' => $board,
+                'errors' => [],
+                'old' => [],
+                'show_avatars' => $show_avatars ?? true,
+            ]) ?>
         </details>
     <?php elseif ($current_user === null): ?>
         <div class="joinbar">You're browsing as a guest — <a href="/login?next=/c/<?= $e($board['slug']) ?>">log in</a> to start a topic.</div>
