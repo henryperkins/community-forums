@@ -1,6 +1,6 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.7 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-13
+**Status:** v0.8 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-14
 **Companion to [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
@@ -92,7 +92,7 @@ Everything in §3–§13 applies to **all three** unless a row above says otherw
 | Image | `![alt](url)` | upload / paste / drag (§7) | P1 |
 | Headings (limited) | `## `, `### ` | at line start | P1 |
 | Horizontal rule | `---` | at line start | P2 |
-| Spoiler | `::spoiler …::` | toolbar | P1 |
+| Spoiler | `||spoiler||` | toolbar | P1 |
 | Mention | `@username` | `@` picker (§6) | P1 |
 | Emoji | `:shortcode:` | `:` picker (§6) | P1 |
 | Table | pipes | toolbar / paste | P2 |
@@ -240,7 +240,7 @@ Editing an existing post or message mounts the **same** composer, pre-hydrated f
 
 ## 10. Preview
 
-The WYSIWYG surface is the inline editing view, not the source of truth for final rendering. The explicit **Preview toggle** renders the content **exactly as it will appear** once posted — final sanitised HTML, spoilers collapsed, mentions linked, emoji rendered, embeds shown. It uses the same server render path as live posts and remains the final truth for parity checks. Desktop: a toggle (optionally split-view); mobile: a full-screen preview.
+The WYSIWYG surface is the inline editing view, not the source of truth for final rendering. The explicit **Preview toggle** renders the content **exactly as it will appear** once posted — final sanitised HTML, spoilers collapsed, mentions linked, emoji rendered, embeds shown. It uses the same server render path and `.formatted-content` presentation contract as posts, direct messages, and living briefs, and remains the final truth for parity checks. Desktop: a toggle (optionally split-view); mobile: a full-screen preview.
 
 ## 11. Validation, Limits & Safety
 
@@ -416,3 +416,4 @@ CREATE TABLE attachments (
 | v0.5 | 2026-07-02 | WYSIWYG closeout: recorded ADR 0013's Milkdown selection, the `wysiwyg_composer` narrow flag under the `rich_composer` kill switch, source-mode textarea contract, adapter-based `@`/`#` pickers and chips, internal URL paste normalization, server-preview parity, no-op edit protection, committed static bundle, and `content_references.target_type='tag'` schema follow-up. |
 | v0.6 | 2026-07-02 | `wysiwyg_composer` graduated to **default-ON** (GA 2026-07-02; reversible via `features` override; `rich_composer` remains the broad kill switch). §17.1 delivery note updated. Browser evidence split recorded: gate-a screenshots keep the textarea baseline via a seed pin; `wysiwyg-composer.spec.ts` proves the GA default mounts with no override. |
 | v0.7 | 2026-07-13 | Slack-style shell closeout: one server-rendered shell now covers all four mount types across the eight `.composer-input` forms; the engraved icon toolbar and contained narrow overflow supersede the earlier sentence-case handoff detail. Desktop Enter-to-send is context-aware, `Cmd/Ctrl+Enter` always sends, touch soft-Enter stays editorial, and an in-flight guard prevents duplicate sends. Preview state follows the composing preference and source-mode initialization contract; every input gains a near-limit counter. Unicode and custom emoji use a server-backed autocomplete plus accessible dialog/grid picker. Image upload has a visible Attach path and compact in-box chips, with rich-mode reorder preserved in canonical Markdown. Inbox fragment replacement now destroys adapter/listener/request state before enhancing the next shell. All shared-shell writes consume the server-rendered idempotency token, and every identity-bearing mount honors `show_avatars`. Optimistic send, global navigation keys, edit-last, and a visual replying-to chip remain engineering follow-ups in ADR 0020. |
+| v0.8 | 2026-07-14 | Corrected spoiler syntax to canonical `||spoiler||` and made preview parity explicitly include the shared responsive formatted-content presentation used by final post, DM, and living-brief renders. |

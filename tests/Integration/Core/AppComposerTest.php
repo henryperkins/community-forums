@@ -116,6 +116,48 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('😄', $newThreadHtml);
     }
 
+    public function test_thread_read_renders_a_missing_html_cache_without_writing_it(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['slug' => 'post-cache-fallback']);
+        $author = $this->makeUser(['username' => 'postcachefallback']);
+        $thread = $this->makeThread($board, $author, 'Legacy post cache', "**Rendered post**\n\n3. third");
+        $postId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [(int) $thread['thread_id']],
+        );
+        $this->db->run('UPDATE posts SET body_html = NULL WHERE id = ?', [$postId]);
+
+        $page = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('<strong>Rendered post</strong>', $page->body());
+        self::assertStringContainsString('<ol start="3">', $page->body());
+        self::assertNull($this->db->fetchValue('SELECT body_html FROM posts WHERE id = ?', [$postId]));
+    }
+
+    public function test_dm_read_renders_an_empty_html_cache_without_writing_it(): void
+    {
+        $author = $this->makeUser(['username' => 'dmcacheauthor']);
+        $recipient = $this->makeUser(['username' => 'dmcacherecipient']);
+        $conversationId = (new ConversationRepository($this->db))->findOrCreateBetween(
+            (int) $author['id'],
+            (int) $recipient['id'],
+        );
+        $messageId = (new DmMessageRepository($this->db))->create(
+            $conversationId,
+            (int) $recipient['id'],
+            '**Rendered message**',
+            '',
+        );
+        $this->actingAs($author);
+
+        $page = $this->get('/messages/' . $conversationId);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('<strong>Rendered message</strong>', $page->body());
+        self::assertSame('', $this->db->fetchValue('SELECT body_html FROM dm_messages WHERE id = ?', [$messageId]));
+    }
+
     public function test_shared_composer_surfaces_render_plain_textareas(): void
     {
         $cat = $this->makeCategory();
@@ -136,6 +178,7 @@ final class AppComposerTest extends TestCase
 
         $threadPage = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $threadPage);
+        self::assertStringContainsString('class="post-body formatted-content"', $threadPage->body());
         self::assertStringContainsString('action="/t/' . (int) $thread['thread_id'] . '/reply"', $threadPage->body());
         self::assertStringContainsString('action="/posts/' . $postId . '/edit"', $threadPage->body());
         self::assertStringContainsString('class="composer-input"', $threadPage->body());
@@ -152,6 +195,7 @@ final class AppComposerTest extends TestCase
 
         $dmThread = $this->get('/messages/' . $convId);
         $this->assertStatus(200, $dmThread);
+        self::assertStringContainsString('class="dm-body formatted-content"', $dmThread->body());
         self::assertStringContainsString('action="/messages/' . $convId . '"', $dmThread->body());
         self::assertStringContainsString('class="composer-input"', $dmThread->body());
     }

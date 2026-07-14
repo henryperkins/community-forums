@@ -9,6 +9,7 @@ use App\Domain\User;
 use App\Repository\BoardMemberRepository;
 use App\Repository\ThreadIntelligenceJobRepository;
 use App\Security\BoardPolicy;
+use App\Support\Markdown;
 use DateTimeImmutable;
 use DateTimeZone;
 
@@ -26,6 +27,7 @@ final class ThreadIntelligenceViewService
         private readonly BoardPolicy $policy,
         private readonly ThreadIntelligenceEligibility $eligibility,
         private readonly ThreadIntelligenceJobRepository $jobs,
+        private readonly Markdown $markdown,
     ) {
     }
 
@@ -269,7 +271,9 @@ final class ThreadIntelligenceViewService
         $time = new DateTimeImmutable($published, new DateTimeZone('UTC'));
         return [
             'id' => (int) $summary['id'],
-            'body_html' => (string) ($summary['body_html'] ?? ''),
+            'body_html' => trim((string) ($summary['body_html'] ?? '')) !== ''
+                ? (string) $summary['body_html']
+                : (isset($summary['body']) ? $this->markdown->render((string) $summary['body']) : ''),
             'version' => (int) $summary['version'],
             'label' => $label,
             'metadata' => $metadata,

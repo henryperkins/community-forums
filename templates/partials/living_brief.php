@@ -18,7 +18,7 @@
         </p>
         <?php if (!empty($can_curate_memory)): ?><button type="button" class="living-brief-curate" data-topic-tools-open="memory" hidden>Curate</button><?php endif; ?>
     </div>
-    <div class="post-body"><?= $living_brief['body_html'] ?></div>
+    <div class="post-body formatted-content"><?= $living_brief['body_html'] ?></div>
 
     <?php if (!empty($living_brief_sources)): ?>
         <div class="living-brief-sources">

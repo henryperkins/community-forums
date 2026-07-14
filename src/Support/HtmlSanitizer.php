@@ -16,15 +16,17 @@ use DOMText;
  * known-safe tag set. Everything else is dropped or unwrapped:
  *
  *  - Allowed: p, br, hr, strong, em, del, s, code, pre, blockquote, ul, ol, li,
- *    a (href only), h2, h3, safe table markup, and disabled task-list inputs.
+ *    a, h2, h3, restricted images, safe table markup and its exact generated
+ *    scroll wrapper, and disabled task-list inputs.
  *  - Headings are clamped into [h2, h3] (h1→h2, h4–h6→h3) so a post can't
  *    impersonate page chrome (COMPOSER.md: only ## and ###).
- *  - Dangerous elements (script, style, iframe, img, table, form, svg, …) are
- *    removed with their subtree.
+ *  - Dangerous elements (script, style, iframe, form, svg, etc.) are removed
+ *    with their subtree.
  *  - Unknown elements are unwrapped (their text is kept, the tag is dropped).
  *  - <a href> is restricted to http/https/mailto + relative/fragment URLs and
- *    gets rel="nofollow ugc noopener noreferrer"; all other attributes (incl.
- *    every on* handler) are stripped from every element.
+ *    gets rel="nofollow ugc noopener noreferrer". A small, tag-specific set of
+ *    renderer semantics is retained; all other attributes, including every
+ *    on* handler, are stripped.
  */
 final class HtmlSanitizer
 {
@@ -44,6 +46,8 @@ final class HtmlSanitizer
         'input' => true,
         // P3-04: uploaded images, referenced from Markdown as /media/{id}.
         'img' => true, 'span' => true,
+        // Retained only for the exact generated formatted-table scroll wrapper.
+        'div' => true,
     ];
 
     /** @var array<string,true> elements dropped together with their content */
@@ -136,12 +140,31 @@ final class HtmlSanitizer
             return;
         }
 
-        // Images (P3-04): only same-origin /media/{id} sources survive; an <img>
-        // without a safe src is dropped entirely so it can't carry an onerror
-        // payload or hotlink an off-site tracker.
+        if ($tag === 'div') {
+            if (!$this->isFormattedTableWrapper($el)) {
+                $this->cleanChildren($el);
+                $this->unwrap($el);
+                return;
+            }
+            foreach (iterator_to_array($el->attributes ?? []) as $attr) {
+                $el->removeAttribute($attr->nodeName);
+            }
+            $el->setAttribute('class', 'formatted-table');
+            $el->setAttribute('tabindex', '0');
+            $el->setAttribute('role', 'region');
+            $el->setAttribute('aria-label', 'Scrollable table');
+            $this->cleanChildren($el);
+            return;
+        }
+
+        // Only approved media, operator emoji, or configured GIPHY sources
+        // survive. An <img> without a safe src is dropped entirely so it can't
+        // carry an onerror payload or hotlink an arbitrary off-site tracker.
         if ($tag === 'img') {
             $src = $this->safeImageSrc((string) $el->getAttribute('src'));
             $alt = (string) $el->getAttribute('alt');
+            $customEmoji = preg_match('~^/emoji/[A-Za-z0-9_.-]+\.(?:png|webp)$~', (string) $src) === 1
+                && trim((string) $el->getAttribute('class')) === 'custom-emoji';
             foreach (iterator_to_array($el->attributes ?? []) as $attr) {
                 $el->removeAttribute($attr->nodeName);
             }
@@ -152,12 +175,18 @@ final class HtmlSanitizer
             $el->setAttribute('src', $src);
             $el->setAttribute('alt', mb_substr($alt, 0, 255));
             $el->setAttribute('loading', 'lazy');
+            if ($customEmoji) {
+                $el->setAttribute('class', 'custom-emoji');
+            }
             return;
         }
 
         if ($tag === 'input') {
             $type = strtolower((string) $el->getAttribute('type'));
             $checked = $el->hasAttribute('checked');
+            $label = trim((string) ($el->parentNode?->textContent ?? ''));
+            $label = preg_replace('/\s+/u', ' ', $label) ?? '';
+            $label = $label !== '' ? mb_substr($label, 0, 255) : 'Task item';
             foreach (iterator_to_array($el->attributes ?? []) as $attr) {
                 $el->removeAttribute($attr->nodeName);
             }
@@ -170,6 +199,7 @@ final class HtmlSanitizer
             if ($checked) {
                 $el->setAttribute('checked', 'checked');
             }
+            $el->setAttribute('aria-label', $label);
             return;
         }
 
@@ -183,6 +213,11 @@ final class HtmlSanitizer
         $href = $tag === 'a' ? $this->safeHref((string) $el->getAttribute('href')) : null;
         // Spoilers (P3-02): a <span> keeps only class="spoiler"; all else is dropped.
         $spoiler = $tag === 'span' && $this->hasSpoilerClass((string) $el->getAttribute('class'));
+        $listStart = $tag === 'ol' ? $this->safeListStart((string) $el->getAttribute('start')) : null;
+        $languageClass = $tag === 'code' ? $this->safeLanguageClass((string) $el->getAttribute('class')) : null;
+        $alignment = in_array($tag, ['th', 'td'], true)
+            ? $this->safeTableAlignment((string) $el->getAttribute('align'))
+            : null;
 
         foreach (iterator_to_array($el->attributes ?? []) as $attr) {
             $el->removeAttribute($attr->nodeName);
@@ -196,6 +231,56 @@ final class HtmlSanitizer
             $el->setAttribute('class', 'spoiler');
             $el->setAttribute('tabindex', '0');
         }
+        if ($listStart !== null) {
+            $el->setAttribute('start', $listStart);
+        }
+        if ($languageClass !== null) {
+            $el->setAttribute('class', $languageClass);
+        }
+        if ($alignment !== null) {
+            $el->setAttribute('align', $alignment);
+        }
+    }
+
+    private function isFormattedTableWrapper(DOMElement $el): bool
+    {
+        if ($el->attributes === null || $el->attributes->length !== 4
+            || (string) $el->getAttribute('class') !== 'formatted-table'
+            || (string) $el->getAttribute('tabindex') !== '0'
+            || (string) $el->getAttribute('role') !== 'region'
+            || (string) $el->getAttribute('aria-label') !== 'Scrollable table') {
+            return false;
+        }
+
+        $elements = [];
+        foreach ($el->childNodes as $child) {
+            if ($child instanceof DOMText && trim($child->nodeValue ?? '') === '') {
+                continue;
+            }
+            if (!$child instanceof DOMElement) {
+                return false;
+            }
+            $elements[] = strtolower($child->localName ?? $child->nodeName);
+        }
+        return $elements === ['table'];
+    }
+
+    private function safeListStart(string $start): ?string
+    {
+        $start = trim($start);
+        return preg_match('/^(?:0|[1-9]\d{0,8})$/', $start) === 1 ? $start : null;
+    }
+
+    private function safeLanguageClass(string $class): ?string
+    {
+        $class = trim($class);
+        return preg_match('/^language-[A-Za-z0-9_.+#-]{1,64}$/', $class) === 1 ? $class : null;
+    }
+
+    private function safeTableAlignment(string $alignment): ?string
+    {
+        $alignment = strtolower(trim($alignment));
+        return in_array($alignment, ['left', 'center', 'right'], true) ? $alignment : null;
     }
 
     private function hasSpoilerClass(string $class): bool

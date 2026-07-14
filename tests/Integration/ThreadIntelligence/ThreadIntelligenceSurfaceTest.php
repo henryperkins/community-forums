@@ -150,6 +150,28 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
         self::assertStringNotContainsString('gpt-', $privacy->body());
     }
 
+    public function test_living_brief_read_renders_a_missing_html_cache_without_writing_it(): void
+    {
+        $seed = $this->seedThread(1, 'Living brief cache fallback');
+        $admin = $this->makeAdmin(['username' => 'brief-cache-admin']);
+        $this->memory()->publishSummary(
+            $this->userEntity($admin),
+            $seed['thread_id'],
+            '**Rendered living brief**',
+            [$seed['post_ids'][0]],
+        );
+        $summaryId = (int) $this->db->fetchValue(
+            'SELECT id FROM thread_summaries WHERE thread_id = ? AND status = ?',
+            [$seed['thread_id'], 'published'],
+        );
+        $this->db->run('UPDATE thread_summaries SET body_html = NULL WHERE id = ?', [$summaryId]);
+
+        $model = $this->viewService()->forThread($seed['thread_id'], null);
+
+        self::assertStringContainsString('<strong>Rendered living brief</strong>', $model['living_brief']['body_html']);
+        self::assertNull($this->db->fetchValue('SELECT body_html FROM thread_summaries WHERE id = ?', [$summaryId]));
+    }
+
     public function test_curator_refresh_feedback_and_retirement_resume_are_gated_and_non_bypassing(): void
     {
         $seed = $this->seedThread(8, 'Curator controls');
@@ -221,6 +243,7 @@ final class ThreadIntelligenceSurfaceTest extends TestCase
                 $jobs,
             ),
             jobs: $jobs,
+            markdown: new Markdown(new HtmlSanitizer()),
         );
     }
 

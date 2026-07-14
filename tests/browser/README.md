@@ -55,11 +55,13 @@ harness grows. The current branch also captures:
 - `75-thread-intelligence-fallback`, `76-living-brief`, `77-living-brief-curator-controls`, `78-living-brief-last-good`, `79-admin-thread-intelligence` (Thread Intelligence fallback, generated provenance, curator lifecycle in the Study Memory section, last-good guardrails, and operator recovery evidence; captured before and reverified after the default-on flip)
 - `80-thread-study`, `81-thread-tools` (the closed Study reading surface with the new reply shell, and its open desktop drawer/mobile sheet)
 - `82-composer-emoji` (server-backed emoji dialog/grid with remembered insertion in desktop popover and mobile sheet layouts)
+- `83-rich-content`, `84-rich-content-table` (shared semantic Markdown rendering at the top of the post, followed by responsive image containment and the keyboard-scrollable wide-table state)
 
 Focused acceptance specs that do not write numbered screenshots:
 
 - `wysiwyg-composer.spec.ts` gates the WYSIWYG layer (graduated to default-on 2026-07-02; the seed pins it off so gate-a keeps the textarea baseline): strict CSP asset load with no features override (proving the GA default mounts), textarea fallback, new-topic submit, source-mode round trip, no-op edit preservation, server-preview parity, rich reference chips, internal URL paste normalization, and mobile smoke.
 - `composer-shell.spec.ts` is part of the standard `evidence` command and covers contained anatomy, source/rich Enter semantics, in-flight submission, inline axe scans, preview/counter/drafts, non-reflowing suggestions, emoji, visible attach/chips, reduced motion, and the mobile overflow dock. `community-inbox-theme.spec.ts` adds the JavaScript-disabled reply journey and the `rich_composer=false` in-pane Inbox kill-switch regression.
+- `rich-content.spec.ts` is part of the standard `evidence` command and verifies the shared formatted-content contract at desktop/mobile widths, serious/critical axe results, horizontal table keyboard access, image/custom-emoji geometry, and a narrow JavaScript-disabled thread render.
 
 ## Run it locally
 

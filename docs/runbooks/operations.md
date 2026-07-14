@@ -124,10 +124,13 @@ for drift (e.g. after a restore):
 php bin/console repair             # all counters + reputation (reactions + solved bonus)
 php bin/console repair:counters    # post/thread/board counters only
 php bin/console repair:reputation  # reputation = Σ reactions received + solved bonuses
+php bin/console repair:render-cache --dry-run  # inspect stale Markdown-derived HTML
 php bin/console community:backfill-badges   # idempotent auto-badge award (cron-safe; Anniversary)
 ```
 
-All are idempotent and safe to run on a live database.
+All are idempotent and safe to run on a live database. Render-cache repair is a
+separate, bounded operation because it may touch every post, DM, living brief,
+and post revision; use `docs/runbooks/render_cache.md` for rollout and rollback.
 
 ## 5. Search index maintenance
 

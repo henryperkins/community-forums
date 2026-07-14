@@ -57,12 +57,8 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
             <span class="post-time"><?= $e(human_datetime($p['created_at'])) ?></span>
             <?php if (!empty($p['edited_at'])): ?><span class="muted post-edited">(edited)</span><?php endif; ?>
         </div>
-        <div class="post-body">
-            <?php if (($p['body_html'] ?? '') !== ''): ?>
-                <?= $p['body_html'] /* pre-sanitised at write time */ ?>
-            <?php else: ?>
-                <p><?= $e($p['body']) ?></p>
-            <?php endif; ?>
+        <div class="post-body formatted-content">
+            <?= $p['body_html'] /* pre-sanitised at write time or rendered read fallback */ ?>
         </div>
         <?php if (!empty($reference_cards)): ?>
             <div class="reference-cards" aria-label="Referenced content">

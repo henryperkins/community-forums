@@ -78,6 +78,7 @@ use App\Service\Registry\RegistrySnapshotService;
 use App\Service\Webhook\CurlWebhookTransport;
 use App\Service\BadgeService;
 use App\Service\RepairService;
+use App\Service\MarkdownCacheRepairService;
 use App\Service\ReputationLedgerService;
 use App\Service\SecretVault;
 use App\Repository\AttachmentRepository;
@@ -703,6 +704,48 @@ try {
             $log('Reputation ledger rebuilt and users.reputation reconciled.');
             break;
 
+        case 'repair:render-cache':
+            $batchSize = 500;
+            $dryRun = false;
+            foreach (array_slice($argv, 2) as $argument) {
+                if ($argument === '--dry-run') {
+                    $dryRun = true;
+                    continue;
+                }
+                if (str_starts_with($argument, '--batch=')) {
+                    $requested = filter_var(substr($argument, strlen('--batch=')), FILTER_VALIDATE_INT);
+                    if ($requested === false) {
+                        throw new InvalidArgumentException('The --batch value must be an integer between 1 and 5000.');
+                    }
+                    $batchSize = (int) $requested;
+                    continue;
+                }
+                throw new InvalidArgumentException('Unknown repair:render-cache option: ' . $argument);
+            }
+
+            $db = $database();
+            $settings = new SettingRepository($db);
+            $flags = new FeatureFlags($settings);
+            $giphyKey = $settings->getString('giphy_public_key', (string) $config->get('giphy.public_key', ''));
+            $markdown = new Markdown(
+                new HtmlSanitizer(
+                    allowGiphyImages: $flags->enabled('slash_giphy') && $giphyKey !== '',
+                ),
+                $flags->enabled('custom_emoji') ? new CustomEmojiService($db, new WriteGate()) : null,
+                new MentionLinker(new UserRepository($db), $flags->enabled('mentions')),
+            );
+            $stats = (new MarkdownCacheRepairService($db, $markdown))->rebuild($batchSize, $dryRun);
+            foreach ($stats as $table => $tableStats) {
+                $log(sprintf(
+                    '  %-18s scanned=%d changed=%d',
+                    $table,
+                    $tableStats['scanned'],
+                    $tableStats['changed'],
+                ));
+            }
+            $log($dryRun ? 'Render-cache dry run complete; no rows were written.' : 'Render-cache rebuild complete.');
+            break;
+
         case 'community:backfill-badges':
             // Idempotently award auto badges (incl. anniversary) from current
             // state, without synthesising historical notifications. Safe to run
@@ -1245,6 +1288,7 @@ try {
             $log('  repair:counters      Reconcile post/thread/board counters');
             $log('  repair:reputation    Rebuild reputation_events and reconcile users.reputation');
             $log('  repair:reputation-ledger  Rebuild reputation_events and reconcile users.reputation');
+            $log('  repair:render-cache [--dry-run] [--batch=500]  Rebuild all cached Markdown HTML');
             $log('  community:backfill-badges  Idempotently award auto badges (run on a cron for Anniversary)');
             $log('  verify:upgrade        Rehearse a Phase-1→Phase-2 upgrade on a scratch DB (destructive)');
             $log('  engagement:cutover [UTC]  Set the unread cutover timestamp');

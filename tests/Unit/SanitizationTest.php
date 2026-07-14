@@ -71,6 +71,67 @@ final class SanitizationTest extends TestCase
         self::assertStringNotContainsString('style=', $html);
     }
 
+    public function test_only_valid_renderer_semantics_survive_attribute_scrubbing(): void
+    {
+        $clean = $this->sanitizer->sanitize(
+            '<ol start="3" onclick="evil()"><li>x</li></ol>'
+            . '<ol start="3 nope"><li>y</li></ol>'
+            . '<pre><code class="language-c++" onmouseover="evil()">z</code></pre>'
+            . '<code class="language-php extra">bad</code>'
+            . '<table><tbody><tr><td align="center" style="color:red">cell</td>'
+            . '<td align="diagonal">bad</td></tr></tbody></table>',
+        );
+
+        self::assertStringContainsString('<ol start="3"><li>x</li></ol>', $clean);
+        self::assertStringContainsString('<ol><li>y</li></ol>', $clean);
+        self::assertStringContainsString('<code class="language-c++">z</code>', $clean);
+        self::assertStringContainsString('<code>bad</code>', $clean);
+        self::assertStringContainsString('<td align="center">cell</td>', $clean);
+        self::assertStringContainsString('<td>bad</td>', $clean);
+        self::assertStringNotContainsString('on', $clean);
+        self::assertStringNotContainsString('style=', $clean);
+    }
+
+    public function test_only_the_generated_scroll_wrapper_is_retained(): void
+    {
+        $valid = $this->sanitizer->sanitize(
+            '<div class="formatted-table" tabindex="0" role="region" aria-label="Scrollable table"><table><tbody><tr><td>x</td></tr></tbody></table></div>',
+        );
+        self::assertStringStartsWith('<div class="formatted-table" tabindex="0" role="region" aria-label="Scrollable table">', $valid);
+
+        $invalid = $this->sanitizer->sanitize(
+            '<div class="formatted-table evil" tabindex="1" role="alert" aria-label="Injected"><p>x</p></div>',
+        );
+        self::assertSame('<p>x</p>', $invalid);
+    }
+
+    public function test_custom_emoji_marker_is_narrowly_preserved(): void
+    {
+        $emoji = $this->sanitizer->sanitize(
+            '<img src="/emoji/party.webp" alt=":party:" class="custom-emoji" width="999" onerror="evil()">',
+        );
+        self::assertSame(
+            '<img src="/emoji/party.webp" alt=":party:" loading="lazy" class="custom-emoji">',
+            $emoji,
+        );
+
+        $media = $this->sanitizer->sanitize(
+            '<img src="/media/3" alt="photo" class="custom-emoji arbitrary">',
+        );
+        self::assertSame('<img src="/media/3" alt="photo" loading="lazy">', $media);
+    }
+
+    public function test_task_checkboxes_receive_bounded_labels_from_their_list_items(): void
+    {
+        $html = $this->markdown->render("- [x] Deploy the render cache\n- [ ] Verify the narrow layout");
+
+        self::assertStringContainsString('aria-label="Deploy the render cache"', $html);
+        self::assertStringContainsString('aria-label="Verify the narrow layout"', $html);
+
+        $fallback = $this->sanitizer->sanitize('<input type="checkbox" aria-label="injected">');
+        self::assertSame('<input type="checkbox" disabled aria-label="Task item">', $fallback);
+    }
+
     public function test_headings_are_clamped_to_h2_and_h3(): void
     {
         $html = $this->markdown->render("# One\n## Two\n### Three\n#### Four\n##### Five");

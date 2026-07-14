@@ -74,7 +74,7 @@ final class AppCustomEmojiGiphyTest extends TestCase
         $postId = (int) $this->db->fetchValue("SELECT id FROM posts WHERE body LIKE 'Hello%'");
         $page = $this->get('/t/' . (int) $this->db->fetchValue('SELECT thread_id FROM posts WHERE id = ?', [$postId]) . '-emoji-topic');
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('<img src="/emoji/party.webp" alt=":party:" loading="lazy">', $page->body());
+        self::assertStringContainsString('<img src="/emoji/party.webp" alt=":party:" loading="lazy" class="custom-emoji">', $page->body());
         self::assertStringContainsString('<code>:party:</code>', $page->body());
 
         $reactor = $this->makeUser(['username' => 'emoji_reactor']);

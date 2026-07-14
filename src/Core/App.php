@@ -1150,6 +1150,7 @@ final class App
             $c->get(BoardPolicy::class),
             $c->get(ThreadIntelligenceEligibility::class),
             $c->get(ThreadIntelligenceJobRepository::class),
+            $c->get(Markdown::class),
         ));
         $c->bind(ExtensionSandbox::class, fn () => new BubblewrapSandboxAdapter());
         $c->bind(FirstPartyHookRegistry::class, function (Container $c): FirstPartyHookRegistry {

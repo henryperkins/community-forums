@@ -75,6 +75,33 @@ final class MarkdownRoundTripTest extends TestCase
         self::assertStringContainsString('class="spoiler"', $html);
     }
 
+    public function test_semantic_markdown_attributes_survive_sanitization(): void
+    {
+        $html = $this->md()->render(implode("\n\n", [
+            "3. third\n4. fourth",
+            "```php\necho 'ok';\n```",
+            "| Left | Center | Right |\n| :--- | :---: | ---: |\n| a | b | c |",
+        ]));
+
+        self::assertStringContainsString('<ol start="3">', $html);
+        self::assertStringContainsString('<code class="language-php">', $html);
+        self::assertStringContainsString('<th align="left">Left</th>', $html);
+        self::assertStringContainsString('<th align="center">Center</th>', $html);
+        self::assertStringContainsString('<th align="right">Right</th>', $html);
+    }
+
+    public function test_tables_are_rendered_inside_the_keyboard_scroll_contract(): void
+    {
+        $html = $this->md()->render("| A | B |\n| - | - |\n| 1 | 2 |");
+
+        self::assertStringContainsString(
+            '<div class="formatted-table" tabindex="0" role="region" aria-label="Scrollable table">',
+            $html,
+        );
+        self::assertStringContainsString('<table>', $html);
+        self::assertStringContainsString('</table></div>', $html);
+    }
+
     /** @return array<string,array{0:string}> */
     public static function xssCorpus(): array
     {

@@ -747,18 +747,22 @@ test('server preview matches final rendered post for supported syntax', async ({
   await form.getByRole('button', { name: 'Preview', exact: true }).click();
   await form.locator('textarea.composer-input').fill(markdown);
   const preview = form.locator('.composer-preview');
+  await expect(preview).toHaveClass(/formatted-content/);
   await expect(preview.locator('h2')).toContainText('Preview Heading', { timeout: 5000 });
-  await expect(preview.locator('table')).toBeVisible();
+  await expect(preview.getByRole('region', { name: 'Scrollable table' })).toBeVisible();
   await expect(preview.locator('.spoiler')).toContainText('secret');
+  const previewHtml = await preview.innerHTML();
 
   const title = `Preview parity ${Date.now()}`;
   await form.locator('input[name="title"]').fill(title);
   await form.locator('button[type="submit"]').click();
   await page.waitForURL(/\/t\/\d+-/);
   const post = page.locator('.post-op .post-body');
+  await expect(post).toHaveClass(/formatted-content/);
   await expect(post.locator('h2')).toContainText('Preview Heading');
-  await expect(post.locator('table')).toBeVisible();
+  await expect(post.getByRole('region', { name: 'Scrollable table' })).toBeVisible();
   await expect(post.locator('.spoiler')).toContainText('secret');
+  expect((await post.innerHTML()).trim()).toBe(previewHtml.trim());
 });
 
 test('mobile WYSIWYG edits and submits through rich mode without textarea fallback', async ({ page }, info) => {

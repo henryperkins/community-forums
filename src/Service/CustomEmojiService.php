@@ -162,6 +162,7 @@ final class CustomEmojiService
             $img->setAttribute('src', $map[$token]['path']);
             $img->setAttribute('alt', $token);
             $img->setAttribute('title', $map[$token]['name']);
+            $img->setAttribute('class', 'custom-emoji');
             $fragment->appendChild($img);
             $cursor = $offset + strlen($token);
         }

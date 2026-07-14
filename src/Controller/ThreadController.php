@@ -92,6 +92,9 @@ final class ThreadController extends Controller
         $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage);
         $titleService = $this->container->get(TitleService::class);
         foreach ($posts as &$post) {
+            if (trim((string) ($post['body_html'] ?? '')) === '') {
+                $post['body_html'] = $markdown->render((string) $post['body'], ['link_mentions' => true]);
+            }
             $post['author_title_label'] = (int) ($post['is_anonymous'] ?? 0) === 1
                 ? null
                 : $titleService->resolve(

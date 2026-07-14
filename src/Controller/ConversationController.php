@@ -18,6 +18,7 @@ use App\Service\ContentReferenceService;
 use App\Service\DirectMessageService;
 use App\Service\PreferenceService;
 use App\Service\RateLimitService;
+use App\Support\Markdown;
 
 /**
  * Direct-message UI (P2-07): conversation list, a single conversation (marks
@@ -143,6 +144,13 @@ final class ConversationController extends Controller
         // an explicit ?page= still pages backwards through history.
         $page = min($pages, max(1, $request->int('page', $pages)));
         $messages = $msgRepo->listVisibleForUser($conversationId, $user->id(), $perPage, ($page - 1) * $perPage);
+        $markdown = $this->container->get(Markdown::class);
+        foreach ($messages as &$message) {
+            if (trim((string) ($message['body_html'] ?? '')) === '') {
+                $message['body_html'] = $markdown->render((string) $message['body'], ['link_mentions' => true]);
+            }
+        }
+        unset($message);
         $messageIds = array_map(static fn (array $message): int => (int) $message['id'], $messages);
         $referenceCards = [];
         if ($this->container->get(FeatureFlags::class)->enabled('content_references')) {

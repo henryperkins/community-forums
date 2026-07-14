@@ -509,7 +509,7 @@
         toggle.textContent = 'Preview';
         toggle.setAttribute('aria-label', 'Preview');
         var pane = document.createElement('div');
-        pane.className = 'composer-preview';
+        pane.className = 'composer-preview formatted-content';
         pane.id = 'composer-preview-' + (++previewSeq);
         pane.setAttribute('aria-live', 'polite');
         toggle.setAttribute('aria-controls', pane.id);

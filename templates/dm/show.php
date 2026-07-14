@@ -115,8 +115,8 @@ $this->section('title', $title);
                             </div>
                             <?php foreach ($g['items'] as $m): ?>
                                 <div class="dm-line" id="m<?= (int) $m['id'] ?>">
-                                    <div class="dm-body">
-                                        <?php if (($m['body_html'] ?? '') !== ''): ?><?= $m['body_html'] /* sanitised at write time */ ?><?php else: ?><p><?= $e($m['body']) ?></p><?php endif; ?>
+                                    <div class="dm-body formatted-content">
+                                        <?= $m['body_html'] /* sanitised at write time or rendered read fallback */ ?>
                                     </div>
                                     <?php if (!$mine): ?>
                                         <span class="dm-line-menu">

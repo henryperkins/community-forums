@@ -9,9 +9,11 @@ use League\CommonMark\Extension\Autolink\AutolinkExtension;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\Strikethrough\StrikethroughExtension;
 use League\CommonMark\Extension\Table\TableExtension;
+use League\CommonMark\Extension\Table\Table;
 use League\CommonMark\Extension\TaskList\TaskListExtension;
 use League\CommonMark\MarkdownConverter;
 use App\Support\Markdown\SpoilerExtension;
+use App\Support\Markdown\ScrollableTableRenderer;
 use App\Service\CustomEmojiService;
 
 /**
@@ -20,7 +22,7 @@ use App\Service\CustomEmojiService;
  * and to drop unsafe link schemes; the output then passes through the allowlist
  * HtmlSanitizer for defense in depth.
  */
-final class Markdown
+final class Markdown implements MarkdownRenderer
 {
     private MarkdownConverter $converter;
 
@@ -43,6 +45,9 @@ final class Markdown
         $environment->addExtension(new TaskListExtension());
         $environment->addExtension(new AutolinkExtension());
         $environment->addExtension(new SpoilerExtension());
+        // Override TableExtension's plain renderer while retaining its parser and
+        // cell renderers. The sanitizer admits only this exact wrapper contract.
+        $environment->addRenderer(Table::class, new ScrollableTableRenderer(), 100);
 
         $this->converter = new MarkdownConverter($environment);
     }

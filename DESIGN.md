@@ -1,6 +1,6 @@
 # RetroBoards — Product & Technical Design Document
 
-**Status:** v0.13 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-12
+**Status:** v0.14 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-14
 **Stack:** PHP + MySQL (server-rendered) with progressive-enhancement JavaScript
 **This document is the source of truth.** When a decision changes, update it here first. Code, tickets, and mockups defer to this file.
 
@@ -200,7 +200,7 @@ Legend: **Priority** = P0 / P1 / P2 / P3 (MoSCoW tiers, not delivery phases — 
 | Day dividers | P2 | Planned | "Today", date separators. |
 | Per-post actions (react, reply, more) | P1 | Planned | Hover toolbar. |
 | Edit / delete own post | P0 | Planned | With edited-at marker; soft delete. |
-| Spoiler tags | P1 | Planned | `::spoiler::` per board rules. |
+| Spoiler tags | P1 | Planned | `||spoiler||` per board rules. |
 | Permalink to a post | P1 | Planned | `/t/{id}-{slug}#p{post_id}`. |
 
 ### 6.5 Composer & Posting
@@ -782,7 +782,9 @@ GET  /notifications             → list + unread count    (auth)
 
 ### 9.5 Post rendering & sanitisation
 
-Posts are stored **raw** (`posts.body`) and rendered to a cached, **sanitised** `posts.body_html` using an allowlist (no raw HTML, no scripts). The markup language is **Markdown** (canonical; hybrid live-Markdown — DECISIONS §3 #2, COMPOSER.md). Spoiler tags and @mention **links** render at render time, but **mention notification rows are created once at submit** (inside the write transaction, §9.6) — never at render.
+Content is stored as canonical **Markdown** in `body`; `body_html` is only a cached, **sanitised** derivative (no raw HTML or scripts). Posts, direct messages, post revisions, and living briefs use the same server renderer and allowlist. Every member-facing body and composer preview uses the shared `.formatted-content` presentation contract: long text and code stay contained, ordinary images scale within the body, custom emoji remains inline, and wide tables live in a keyboard-focusable horizontal scroll region. The allowlist retains only renderer-owned semantics needed for faithful output — ordered-list starts, fenced-code language classes, table-cell alignment, and the exact scroll-region wrapper — while stripping those attributes from unrelated markup.
+
+Missing or blank cached HTML is rendered from canonical Markdown in memory on read so content remains available without mutating a GET request. Operators can inspect or rebuild all Markdown-derived caches in bounded, idempotent batches with `php bin/console repair:render-cache --dry-run` and `php bin/console repair:render-cache`; see `docs/runbooks/render_cache.md`. Spoilers use canonical `||spoiler||` syntax. @mention **links** render through this pipeline, but **mention notification rows are created once at submit** (inside the write transaction, §9.6) — never during a read or repair.
 
 ### 9.6 Search, notifications & realtime (v0.2)
 
@@ -965,6 +967,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.14 | 2026-07-14 | Unified post, DM, preview, revision, and living-brief rendering around canonical Markdown plus a shared responsive presentation contract; documented safe semantic attributes, read-time fallback for missing derived HTML, and the idempotent render-cache repair path. Corrected spoiler syntax to the shipped `||spoiler||` form. |
 | v0.13 | 2026-07-12 | Added §6.19 for the Thread Intelligence member, curator, processor, provenance, retention, failure, and operator contracts; later reconciled the completed evidence package and joint default-on graduation of `community_memory` and `automated_context`, with independent rollback pins. |
 | v0.12 | 2026-06-26 | **Cross-doc review fixes.** §8.2/§8.3 added `'announcement'` to the `notifications` enum (admin broadcast/system — SCHEMA §7 #13); §8.2 rewrote the session-handling note — the `sessions` table **ships in Phase 1** (canonical DDL in SCHEMA §1), not an optional "add if needed"; §1 + §9.3 stopped describing the mockup files as already existing (they are Phase 0 artifacts, not yet created — matching §6/§13); §13.1 clarified composer phasing — Phase 1 ships the no-JS Markdown box, Phase 2 adds @mentions/DM, the unified rich composer is Phase 3 (COMPOSER §17.1 / PHASE_3_PLAN). |
 | v0.11 | 2026-06-26 | **Stale-decision wording pass.** Reworded settled-but-still-"open" areas to match DECISIONS: **§9.1** framework is now stated as resolved — **vanilla PHP + micro-router**, no Slim/Laravel (§3 #1) — not an open question; **§9.5 + §8.2** markup is **Markdown canonical** (hybrid live-Markdown — §3 #2, COMPOSER.md), dropping the "Markdown vs BBCode" / "raw (Markdown/BBCode)" references; **§9.5** @mention notification rows are created **once at submit** (write-transaction, §9.6), with only the link rendered at render time; **§9.6** (and the §6.10 bell / §6.15 presence echoes) realtime is **short-polling v1**, SSE later (§3 #4), not an undecided "SSE or short-polling (§14)"; **§6.5** attachment storage is **resolved** (local-disk non-exec behind a storage interface, 5MB, png/jpg/webp/gif — §6 #6) with only the build deferred to Phase 3; **§13** Phase 3 "drafts" narrowed to **server-side draft sync** (localStorage drafts are Phase 1–2). Added the missing **`posts.ip`** column (`VARBINARY(16) NULL`) to the §8.2 DDL (DECISIONS §4 #5; SCHEMA §7 #10). No scope changes. |
