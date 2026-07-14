@@ -978,6 +978,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-toolbar-action:focus-visible,
 .composer-more-toggle:focus-visible,
 .composer-format-toggle:focus-visible,
+.composer-emoji-toggle:focus-visible,
 .composer-preview-toggle:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -1069,6 +1070,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-actions-start > [data-composer-actions-start-slot],
 .composer-actions-end > [data-composer-actions-end-slot] { display: inline-flex; align-items: center; flex: 0 0 auto; }
 .composer-format-toggle,
+.composer-emoji-toggle,
 .composer-preview-toggle {
     min-height: 28px;
     padding: 3px 7px;
@@ -1080,9 +1082,12 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     cursor: pointer;
 }
 .composer-format-toggle:hover,
+.composer-emoji-toggle:hover,
 .composer-preview-toggle:hover,
 .composer-format-toggle[aria-expanded="true"],
+.composer-emoji-toggle[aria-expanded="true"],
 .composer-preview-toggle[aria-expanded="true"] { border-color: var(--border-hair); background: var(--surface-sunken); color: var(--text-strong); }
+.composer-emoji-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
 .composer-identity { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: min(250px, 32vw); color: var(--text-muted); font-size: .8rem; }
 .composer-identity .monogram { width: 24px; height: 24px; flex: 0 0 24px; font-size: .58rem; }
 .composer-identity-copy { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1180,6 +1185,88 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-reference-option:hover { background: var(--surface-3); }
 .composer-reference-option .badge { grid-row: span 2; align-self: center; }
 .composer-reference-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); font-size: .86rem; }
+.composer-reference-option.is-emoji .badge { min-width: 28px; padding: 2px; text-align: center; font-size: 1.2rem; }
+.composer-reference-option.is-emoji .badge img { display: block; width: 24px; height: 24px; object-fit: contain; }
+
+.composer-emoji-dialog {
+    position: absolute;
+    z-index: 85;
+    left: 8px;
+    bottom: calc(100% + 7px);
+    display: flex;
+    width: min(440px, calc(100% - 16px));
+    max-height: min(440px, 30vh);
+    flex-direction: column;
+    gap: 9px;
+    padding: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-lg);
+    transition: opacity 140ms var(--ease-calm), translate 140ms var(--ease-calm);
+}
+.composer-emoji-dialog[hidden] { display: none; }
+.composer-emoji-dialog.is-below { top: calc(100% + 7px); bottom: auto; }
+.composer-emoji-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.composer-emoji-title,
+.composer-emoji-group-title { margin: 0; font-family: var(--font-label); color: var(--text-strong); }
+.composer-emoji-title { font-size: .95rem; }
+.composer-emoji-close {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+}
+.composer-emoji-close:hover { border-color: var(--border-hair); background: var(--surface-sunken); color: var(--text-strong); }
+.composer-emoji-search {
+    width: 100%;
+    min-height: 38px;
+    margin: 0;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--text);
+}
+.composer-emoji-status { margin: 0; color: var(--text-muted); font-size: .84rem; }
+.composer-emoji-status:empty { display: none; }
+.composer-emoji-groups { display: grid; gap: 13px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.composer-emoji-group { display: grid; gap: 6px; min-width: 0; }
+.composer-emoji-group-title { font-size: .74rem; letter-spacing: .035em; text-transform: uppercase; }
+.composer-emoji-grid-cells {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 4px;
+}
+.composer-emoji-cell {
+    display: inline-flex;
+    min-width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text);
+    font-size: 1.45rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.composer-emoji-cell img { width: 27px; height: 27px; object-fit: contain; }
+.composer-emoji-cell:hover { border-color: var(--border-hair); background: var(--surface-sunken); }
+.composer-emoji-cell:focus-visible,
+.composer-emoji-close:focus-visible,
+.composer-emoji-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 @media (max-width: 640px) {
     .composer-toolbar { overflow: hidden; }
@@ -1195,6 +1282,17 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
         max-height: 50dvh;
         border-radius: var(--radius-lg);
     }
+    .composer-emoji-dialog {
+        position: fixed;
+        z-index: 95;
+        left: 8px;
+        right: 8px;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        width: auto;
+        max-height: min(70dvh, 620px);
+        border-radius: var(--radius-lg);
+    }
+    .composer-emoji-dialog.is-below { top: auto; }
     .composer-meta-row { grid-template-columns: minmax(0, 1fr) auto; }
     .composer-anonymous-disclosure { grid-column: 1 / -1; }
 }
@@ -1203,11 +1301,15 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     .composer-toolbar-action,
     .composer-more-toggle,
     .composer-format-toggle,
+    .composer-emoji-toggle,
+    .composer-emoji-close,
+    .composer-emoji-cell,
     .composer-preview-toggle { min-width: 44px; min-height: 44px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .composer-toolbar-action[data-tip]::after { transition: none; }
+    .composer-emoji-dialog { transition: none; }
     .composer-shell.is-submitting .composer-send > span { animation: none; }
 }
 
@@ -1986,6 +2088,12 @@ body[data-route="thread"] .thread-conversation {
     background: var(--surface-raised); border: 1px solid var(--border-strong);
     border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); padding: 22px 24px;
     animation: rb-rise var(--dur-base) var(--ease-calm);
+}
+.has-js .composer-details[open] > .composer:has(.composer-suggestion-popover:not([hidden]), .composer-emoji-dialog:not([hidden])) {
+    overflow: visible;
+}
+.has-js .composer-details[open]:has(.composer-suggestion-popover:not([hidden]), .composer-emoji-dialog:not([hidden]))::before {
+    backdrop-filter: none;
 }
 .has-js .composer-details[open] > .composer .composer-cancel { display: inline-flex; }
 @keyframes rb-rise {

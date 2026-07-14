@@ -14,6 +14,8 @@ type FallbackAdapter = {
   setMarkdown(markdown: string): void;
   insertMarkdown(markdown: string): void;
   replaceSelection(markdown: string): void;
+  rememberSelection(): RememberedSelection;
+  replaceRememberedSelection(mark: RememberedSelection, markdown: string): void;
   replacePendingUpload(token: string, markdown: string): boolean;
   focus(): void;
   onChange(callback: (markdown: string) => void): void;
@@ -23,8 +25,13 @@ type FallbackAdapter = {
 };
 
 type ReferenceState = {
-  trigger: '@' | '#';
+  trigger: '@' | '#' | ':';
   query: string;
+  start: number;
+  end: number;
+};
+
+type RememberedSelection = {
   start: number;
   end: number;
 };
@@ -312,6 +319,27 @@ class MilkdownComposerAdapter {
     this.toggle.disabled = disabled;
   }
 
+  rememberSelection(): RememberedSelection {
+    if (!this.richMode || this.failed || this.destroyed) {
+      return this.fallback.rememberSelection();
+    }
+    const view = this.currentView();
+    if (!view) {
+      return this.fallback.rememberSelection();
+    }
+    return { start: view.state.selection.from, end: view.state.selection.to };
+  }
+
+  replaceRememberedSelection(mark: RememberedSelection, markdown: string): void {
+    if (!this.richMode || this.failed || this.destroyed) {
+      this.textarea.selectionStart = mark.start;
+      this.textarea.selectionEnd = mark.end;
+      this.fallback.replaceRememberedSelection(mark, markdown);
+      return;
+    }
+    this.replaceEditorRangeWithMarkdown({ from: mark.start, to: mark.end }, markdown, true);
+  }
+
   enterShouldSubmit(): boolean {
     if (this.isSourceMode()) {
       return this.fallback.enterShouldSubmit();
@@ -422,18 +450,19 @@ class MilkdownComposerAdapter {
     const pos = selection.from;
     const from = Math.max(0, pos - 90);
     const before = view.state.doc.textBetween(from, pos, '\n', '\n');
-    const match = before.match(/(^|[\s(])([@#])([A-Za-z0-9_-]{1,80})$/);
+    const match = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{1,80})$/);
     if (!match) {
       return null;
     }
-    const trigger = match[2] as '@' | '#';
+    const trigger = match[2] as '@' | '#' | ':';
     const query = match[3];
     const line = before.slice(before.lastIndexOf('\n') + 1);
     if (trigger === '#' && /^\s*#{1,3}\s?$/.test(line)) {
       return null;
     }
     const parent = selection.$from.parent;
-    if (parent.type.spec.code) {
+    const marks = view.state.storedMarks || selection.$from.marks();
+    if (parent.type.spec.code || marks.some((mark) => mark.type.name === 'inlineCode' || mark.type.name === 'code')) {
       return null;
     }
     return {
@@ -599,17 +628,21 @@ class MilkdownComposerAdapter {
     }
     const pos = this.textarea.selectionStart || 0;
     const before = this.textarea.value.slice(0, pos);
-    const match = before.match(/(^|[\s(])([@#])([A-Za-z0-9_-]{1,80})$/);
+    const match = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{1,80})$/);
     if (!match) {
       return null;
     }
-    const trigger = match[2] as '@' | '#';
+    const trigger = match[2] as '@' | '#' | ':';
     const query = match[3];
     const line = before.slice(before.lastIndexOf('\n') + 1);
     if (trigger === '#' && /^\s*#{1,3}\s?$/.test(line)) {
       return null;
     }
     if (((before.match(/^```/gm) || []).length % 2) === 1) {
+      return null;
+    }
+    const lineBefore = before.slice(before.lastIndexOf('\n') + 1).replace(/\\./g, '');
+    if (!/^\s*```/.test(lineBefore) && ((lineBefore.match(/`/g) || []).length % 2) === 1) {
       return null;
     }
     return {

@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 const repoRoot = path.resolve(__dirname, '..', '..');
+const EVIDENCE_DIR = path.join(repoRoot, 'docs/evidence/browser');
 const TEST_EMAIL = 'alice@retro.test';
 
 function runPhp(code: string): string {
@@ -56,6 +57,16 @@ $db->run('UPDATE users SET display_name = ? WHERE email = ?', [base64_decode('${
 `);
 }
 
+function seedComposerCustomEmoji(): void {
+  runPhp(`
+$db->run(
+    "INSERT INTO custom_emoji (shortcode, name, image_path, mime, is_enabled, allow_reactions, created_at)
+     VALUES ('party_blob', 'Party Blob', '/emoji/party-blob.webp', 'image/webp', 1, 0, UTC_TIMESTAMP())
+     ON DUPLICATE KEY UPDATE name = VALUES(name), image_path = VALUES(image_path), is_enabled = 1"
+);
+`);
+}
+
 function resetComposerOverrides(): void {
   const email64 = Buffer.from(TEST_EMAIL, 'utf8').toString('base64');
   runPhp(`
@@ -76,6 +87,7 @@ if ($user) {
     ]);
     $db->run('DELETE FROM server_drafts WHERE user_id = ?', [(int) $user['id']]);
 }
+$db->run("DELETE FROM custom_emoji WHERE shortcode = 'party_blob'");
 `);
 }
 
@@ -189,7 +201,8 @@ test('contained anatomy uses the format row and named action slots', async ({ pa
   expect((await bold.textContent())!.trim()).toBe('');
   await expect(form.locator('[data-composer-actions-start-slot]').getByRole('button', { name: 'Formatting' })).toBeVisible();
   await expect(form.locator('[data-composer-actions-end-slot]').getByRole('button', { name: 'Preview' })).toBeVisible();
-  await expect(form.getByRole('button', { name: /Attach images|Emoji/ })).toHaveCount(0);
+  await expect(form.getByRole('button', { name: 'Emoji', exact: true })).toBeVisible();
+  await expect(form.getByRole('button', { name: 'Attach images', exact: true })).toHaveCount(0);
   await expect(form.locator('.composer-send')).toBeDisabled();
   await expect(form.locator('.composer-count')).toBeHidden();
 
@@ -516,6 +529,129 @@ test('slash and reference popovers do not reflow the composer box', async ({ pag
   });
   expect(referenceDelta).toBeLessThanOrEqual(1);
   await expect(reference).toHaveCSS('position', info.project.name === 'mobile' ? 'fixed' : 'absolute');
+});
+
+test('textarea colon autocomplete respects boundaries and inserts unicode and custom emoji', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'source autocomplete behavior is verified once');
+  setWysiwygComposer(false);
+  seedComposerCustomEmoji();
+  await login(page);
+  const form = await openBoardComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  const menu = form.locator('.composer-reference-menu');
+
+  await textarea.fill('10:30');
+  await expect(menu).toBeHidden();
+  await textarea.fill(':p');
+  await page.waitForTimeout(300);
+  await expect(menu).toBeHidden();
+  await textarea.fill('`code :sm');
+  await expect(menu).toBeHidden();
+  await textarea.fill('```\n:sm');
+  await expect(menu).toBeHidden();
+
+  await textarea.fill(':sm');
+  await expect(menu).toBeVisible();
+  await expectNoSeriousA11yViolations(page, `[data-composer-instance="${await form.getAttribute('data-composer-instance')}"]`);
+  await menu.getByRole('option', { name: /Smiling face with open mouth/i }).click();
+  await expect(textarea).toHaveValue('😄');
+
+  await textarea.fill(':+1');
+  await expect(menu).toBeVisible();
+  await textarea.press('Enter');
+  await expect(textarea).toHaveValue('👍');
+
+  await textarea.fill(':party_blob');
+  await expect(menu).toBeVisible();
+  await menu.getByRole('option', { name: /Party Blob/i }).click();
+  await expect(textarea).toHaveValue(':party_blob:');
+});
+
+test('emoji dialog traps focus, remembers the caret, persists capped recents, and captures evidence', async ({ page }, info) => {
+  setWysiwygComposer(false);
+  await login(page);
+  const form = await openBoardComposer(page);
+  const textarea = form.locator('textarea.composer-input');
+  await textarea.fill('before after');
+  await textarea.evaluate((element: HTMLTextAreaElement) => {
+    element.selectionStart = element.selectionEnd = 7;
+    element.focus();
+  });
+
+  const trigger = form.getByRole('button', { name: 'Emoji', exact: true });
+  await trigger.click();
+  const dialog = form.getByRole('dialog', { name: 'Emoji' });
+  const search = dialog.getByRole('searchbox', { name: 'Search emoji' });
+  await expect(dialog).toBeVisible();
+  await expect(search).toBeFocused();
+  await expect(dialog.getByRole('grid', { name: 'Smileys & emotion' })).toBeVisible();
+  await expect(dialog.getByRole('grid')).toHaveCount(9);
+  const placement = await dialog.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      className: element.className,
+      top: Math.round(rect.top),
+      bottom: Math.round(rect.bottom),
+      viewportHeight: window.innerHeight,
+      fullyVisible: rect.top >= 8 && rect.bottom <= window.innerHeight - 8,
+    };
+  });
+  expect(placement.fullyVisible, JSON.stringify(placement)).toBe(true);
+  await search.fill('tada');
+  await expect(dialog.getByRole('gridcell', { name: 'Party popper' })).toBeVisible();
+  await search.fill('');
+  await expect(dialog.getByRole('grid')).toHaveCount(9);
+  await expectNoSeriousA11yViolations(page, '.composer-emoji-dialog');
+  await page.screenshot({
+    path: path.join(EVIDENCE_DIR, info.project.name, '82-composer-emoji.png'),
+    fullPage: true,
+  });
+
+  const smileys = dialog.getByRole('grid', { name: 'Smileys & emotion' });
+  const cells = smileys.getByRole('gridcell');
+  await cells.first().focus();
+  await cells.first().press('ArrowRight');
+  await expect(cells.nth(1)).toBeFocused();
+  await cells.nth(1).press('ArrowDown');
+  expect(await cells.evaluateAll((items) => items.findIndex((item) => item === document.activeElement))).toBeGreaterThan(1);
+
+  await search.focus();
+  await search.press('Shift+Tab');
+  expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  await dialog.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await page.evaluate(() => {
+    const rows = Array.from({ length: 25 }, (_, index) => ({
+      type: 'emoji',
+      label: `Recent ${index}`,
+      token: `:recent_${index}:`,
+      markdown: String.fromCodePoint(0x2460 + (index % 20)),
+      url: '',
+      group: 'Recent',
+    }));
+    localStorage.setItem('rb-composer:emoji-recents', JSON.stringify(rows));
+  });
+  await textarea.evaluate((element: HTMLTextAreaElement) => {
+    element.selectionStart = element.selectionEnd = 7;
+    element.focus();
+  });
+  await trigger.click();
+  await expect(dialog.getByRole('grid', { name: 'Recent' })).toBeVisible();
+  const smile = dialog.getByRole('gridcell', { name: 'Smiling face with open mouth' });
+  await smile.focus();
+  await smile.press('Space');
+  await expect(dialog).toBeHidden();
+  await expect(textarea).toHaveValue('before 😄after');
+  const recents = await page.evaluate(() => JSON.parse(localStorage.getItem('rb-composer:emoji-recents') || '[]'));
+  expect(recents).toHaveLength(24);
+  expect(recents[0].token).toBe(':smile:');
+
+  await trigger.click();
+  await expect(dialog.getByRole('grid', { name: 'Recent' }).getByRole('gridcell', { name: 'Smiling face with open mouth' })).toBeVisible();
+  await dialog.press('Escape');
+  await expect(trigger).toBeFocused();
 });
 
 test('mobile compact dock expands to a contained formatting overflow and anonymous disclosure', async ({ page }, info) => {

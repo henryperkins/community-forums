@@ -69,6 +69,14 @@
         ta.focus();
         ta.dispatchEvent(new Event('input', { bubbles: true }));
     };
+    TextareaComposerAdapter.prototype.rememberSelection = function () {
+        return { start: this.ta.selectionStart || 0, end: this.ta.selectionEnd || 0 };
+    };
+    TextareaComposerAdapter.prototype.replaceRememberedSelection = function (mark, markdown) {
+        this.ta.selectionStart = mark.start;
+        this.ta.selectionEnd = mark.end;
+        this.replaceSelection(markdown);
+    };
     TextareaComposerAdapter.prototype.replacePendingUpload = function (token, markdown) {
         return replaceOnce(this.ta, token, markdown);
     };
@@ -1560,13 +1568,14 @@
         if (ta.selectionStart !== ta.selectionEnd) { return null; }
         var pos = ta.selectionStart || 0;
         var before = ta.value.slice(0, pos);
-        var m = before.match(/(^|[\s(])([@#])([A-Za-z0-9_-]{1,80})$/);
+        var m = before.match(/(^|[\s(])([@#:])([A-Za-z0-9_+\-]{1,80})$/);
         if (!m) { return null; }
         var trigger = m[2];
         var query = m[3];
         var line = before.slice(before.lastIndexOf('\n') + 1);
         if (trigger === '#' && /^\s*#{1,3}\s?$/.test(line)) { return null; }
         if (inFence(ta)) { return null; }
+        if (textareaInlineCodeOpen(ta)) { return null; }
         return {
             trigger: trigger,
             query: query,
@@ -1706,6 +1715,10 @@
                 var b = document.createElement('button');
                 b.type = 'button';
                 b.className = 'composer-reference-option';
+                if (item.type === 'emoji' || item.type === 'custom_emoji') {
+                    b.classList.add('is-emoji');
+                    b.setAttribute('aria-label', item.label || item.token || 'Emoji');
+                }
                 b.setAttribute('role', 'option');
                 b.setAttribute('tabindex', '-1');
                 b.setAttribute('aria-selected', 'false');
@@ -1713,7 +1726,17 @@
 
                 var badge = document.createElement('span');
                 badge.className = 'badge';
-                badge.textContent = item.type || state.trigger;
+                if (item.type === 'emoji') {
+                    badge.textContent = item.markdown || item.token || '😊';
+                } else if (item.type === 'custom_emoji' && emojiImagePath(item.url)) {
+                    var emojiImage = document.createElement('img');
+                    emojiImage.src = emojiImagePath(item.url);
+                    emojiImage.alt = '';
+                    emojiImage.setAttribute('aria-hidden', 'true');
+                    badge.appendChild(emojiImage);
+                } else {
+                    badge.textContent = item.type || state.trigger;
+                }
                 var label = document.createElement('span');
                 label.textContent = item.label || item.token || item.url || 'Suggestion';
                 var meta = document.createElement('span');
@@ -1737,6 +1760,7 @@
         function render() {
             var state = currentReferenceState(adapter, ta);
             if (!state) { hide(); return; }
+            if (state.trigger === ':' && state.query.length < 2) { hide(); return; }
             var key = state.trigger + '|' + state.query + '|'
                 + (form.getAttribute('data-composer-context') || '') + '|'
                 + (form.getAttribute('data-composer-target-id') || '0');
@@ -1798,6 +1822,346 @@
                 if (e.target === targets[i] || (targets[i].contains && targets[i].contains(e.target))) { return; }
             }
             hide();
+        });
+    }
+
+    // ---- Server-backed emoji picker --------------------------------------
+    var emojiPickerSeq = 0;
+    var EMOJI_RECENTS_KEY = 'rb-composer:emoji-recents';
+
+    function emojiImagePath(value) {
+        try {
+            var url = new URL(String(value || ''), window.location.origin);
+            if (url.origin !== window.location.origin) { return ''; }
+            var path = url.pathname;
+            return /^\/emoji\/[A-Za-z0-9_.-]+\.(?:png|webp)$/.test(path) || /^\/media\/\d+$/.test(path)
+                ? path : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function normalizeEmojiItem(item) {
+        if (!item || (item.type !== 'emoji' && item.type !== 'custom_emoji')) { return null; }
+        var token = String(item.token || '');
+        var label = String(item.label || '').trim();
+        var markdown = String(item.markdown || '');
+        if (!/^:[a-z0-9_+\-]{2,40}:$/.test(token) || label === '' || markdown === '') { return null; }
+        var url = item.type === 'custom_emoji' ? emojiImagePath(item.url) : '';
+        if (item.type === 'custom_emoji' && url === '') { return null; }
+        return {
+            type: item.type,
+            label: label,
+            token: token,
+            markdown: markdown,
+            url: url,
+            group: String(item.group || (item.type === 'custom_emoji' ? 'Custom' : 'Emoji'))
+        };
+    }
+
+    function readEmojiRecents() {
+        var raw = storageRead(EMOJI_RECENTS_KEY);
+        if (!raw) { return []; }
+        try {
+            var parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) { return []; }
+            var out = [];
+            var seen = {};
+            parsed.forEach(function (item) {
+                var normalized = normalizeEmojiItem(item);
+                if (!normalized || out.length >= 24) { return; }
+                var key = normalized.type + ':' + normalized.token;
+                if (seen[key]) { return; }
+                seen[key] = true;
+                out.push(normalized);
+            });
+            return out;
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function rememberEmoji(item) {
+        var normalized = normalizeEmojiItem(item);
+        if (!normalized) { return; }
+        var key = normalized.type + ':' + normalized.token;
+        var recents = readEmojiRecents().filter(function (recent) {
+            return recent.type + ':' + recent.token !== key;
+        });
+        recents.unshift(normalized);
+        storageWrite(EMOJI_RECENTS_KEY, JSON.stringify(recents.slice(0, 24)));
+    }
+
+    function buildEmojiPicker(form, adapter) {
+        var actionSlot = shellPart(form, '[data-composer-actions-start-slot]');
+        var box = shellPart(form, '.composer-box');
+        if (!actionSlot || !box) { return; }
+
+        var id = ++emojiPickerSeq;
+        var trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'composer-emoji-toggle';
+        trigger.textContent = '😊';
+        trigger.setAttribute('aria-label', 'Emoji');
+        trigger.setAttribute('aria-haspopup', 'dialog');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        var dialog = document.createElement('div');
+        dialog.className = 'composer-emoji-dialog';
+        dialog.id = 'composer-emoji-dialog-' + id;
+        dialog.hidden = true;
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', dialog.id + '-title');
+        trigger.setAttribute('aria-controls', dialog.id);
+
+        var header = document.createElement('div');
+        header.className = 'composer-emoji-header';
+        var title = document.createElement('h2');
+        title.className = 'composer-emoji-title';
+        title.id = dialog.id + '-title';
+        title.textContent = 'Emoji';
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'composer-emoji-close';
+        close.setAttribute('aria-label', 'Close emoji');
+        close.textContent = '×';
+        header.appendChild(title);
+        header.appendChild(close);
+
+        var searchLabel = document.createElement('label');
+        searchLabel.className = 'sr-only';
+        searchLabel.setAttribute('for', dialog.id + '-search');
+        searchLabel.textContent = 'Search emoji';
+        var search = document.createElement('input');
+        search.type = 'search';
+        search.id = dialog.id + '-search';
+        search.className = 'composer-emoji-search';
+        search.placeholder = 'Search emoji';
+
+        var status = document.createElement('p');
+        status.className = 'composer-emoji-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        var groups = document.createElement('div');
+        groups.className = 'composer-emoji-groups';
+
+        dialog.appendChild(header);
+        dialog.appendChild(searchLabel);
+        dialog.appendChild(search);
+        dialog.appendChild(status);
+        dialog.appendChild(groups);
+        box.appendChild(dialog);
+        actionSlot.appendChild(trigger);
+
+        var rememberedSelection = null;
+        var fullCatalog = null;
+        var requestSeq = 0;
+        var searchTimer = null;
+
+        function activeAdapter() { return form._rbComposerAdapter || adapter; }
+        function clearGroups() {
+            while (groups.firstChild) { groups.removeChild(groups.firstChild); }
+        }
+        function closeDialog(destination) {
+            if (searchTimer !== null) {
+                window.clearTimeout(searchTimer);
+                searchTimer = null;
+            }
+            requestSeq++;
+            dialog.hidden = true;
+            trigger.setAttribute('aria-expanded', 'false');
+            if (destination === 'trigger') {
+                trigger.focus();
+            } else if (destination === 'editor') {
+                var active = activeAdapter();
+                if (active && typeof active.focus === 'function') { active.focus(); }
+            }
+        }
+        function focusableDialogItems() {
+            return Array.prototype.slice.call(dialog.querySelectorAll(
+                'button:not([disabled]):not([tabindex="-1"]), input:not([disabled]):not([tabindex="-1"])'
+            )).filter(function (element) { return element.offsetParent !== null; });
+        }
+        function activate(item) {
+            var normalized = normalizeEmojiItem(item);
+            if (!normalized || !rememberedSelection) { closeDialog('editor'); return; }
+            var active = activeAdapter();
+            if (active && typeof active.replaceRememberedSelection === 'function') {
+                active.replaceRememberedSelection(rememberedSelection, normalized.markdown);
+            } else if (active && typeof active.insertMarkdown === 'function') {
+                active.insertMarkdown(normalized.markdown);
+            }
+            rememberEmoji(normalized);
+            closeDialog('editor');
+        }
+        function moveCell(cell, key) {
+            var grid = cell.closest('[role="grid"]');
+            if (!grid) { return; }
+            var cells = Array.prototype.slice.call(grid.querySelectorAll('[role="gridcell"]'));
+            var index = cells.indexOf(cell);
+            if (index < 0) { return; }
+            var row = cell.parentElement;
+            var columns = 1;
+            if (row) {
+                var template = window.getComputedStyle(row).gridTemplateColumns.trim();
+                if (template) { columns = Math.max(1, template.split(/\s+/).length); }
+            }
+            var next = index;
+            if (key === 'ArrowLeft') { next = Math.max(0, index - 1); }
+            if (key === 'ArrowRight') { next = Math.min(cells.length - 1, index + 1); }
+            if (key === 'ArrowUp') { next = Math.max(0, index - columns); }
+            if (key === 'ArrowDown') { next = Math.min(cells.length - 1, index + columns); }
+            if (next === index) { return; }
+            cells.forEach(function (candidate) { candidate.setAttribute('tabindex', '-1'); });
+            cells[next].setAttribute('tabindex', '0');
+            cells[next].focus();
+        }
+        function appendGroup(name, items) {
+            if (!items.length) { return; }
+            var section = document.createElement('section');
+            section.className = 'composer-emoji-group';
+            var heading = document.createElement('h3');
+            heading.className = 'composer-emoji-group-title';
+            heading.id = dialog.id + '-group-' + groups.children.length;
+            heading.textContent = name;
+            var grid = document.createElement('div');
+            grid.className = 'composer-emoji-grid';
+            grid.setAttribute('role', 'grid');
+            grid.setAttribute('aria-labelledby', heading.id);
+            var row = document.createElement('div');
+            row.className = 'composer-emoji-grid-cells';
+            row.setAttribute('role', 'row');
+            items.forEach(function (item, index) {
+                var cell = document.createElement('button');
+                cell.type = 'button';
+                cell.className = 'composer-emoji-cell';
+                cell.setAttribute('role', 'gridcell');
+                cell.setAttribute('aria-label', item.label);
+                cell.setAttribute('title', item.label + ' ' + item.token);
+                cell.setAttribute('tabindex', index === 0 ? '0' : '-1');
+                if (item.type === 'custom_emoji') {
+                    var image = document.createElement('img');
+                    image.src = item.url;
+                    image.alt = '';
+                    image.setAttribute('aria-hidden', 'true');
+                    cell.appendChild(image);
+                } else {
+                    cell.textContent = item.markdown;
+                }
+                cell.addEventListener('click', function () { activate(item); });
+                cell.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        activate(item);
+                        return;
+                    }
+                    if (/^Arrow(?:Left|Right|Up|Down)$/.test(event.key)) {
+                        event.preventDefault();
+                        moveCell(cell, event.key);
+                    }
+                });
+                row.appendChild(cell);
+            });
+            grid.appendChild(row);
+            section.appendChild(heading);
+            section.appendChild(grid);
+            groups.appendChild(section);
+        }
+        function renderItems(rawItems, includeRecents) {
+            clearGroups();
+            var items = [];
+            (rawItems || []).forEach(function (item) {
+                var normalized = normalizeEmojiItem(item);
+                if (normalized) { items.push(normalized); }
+            });
+            if (includeRecents) { appendGroup('Recent', readEmojiRecents()); }
+            var names = [];
+            var grouped = {};
+            items.forEach(function (item) {
+                var name = item.group || 'Emoji';
+                if (!Object.prototype.hasOwnProperty.call(grouped, name)) {
+                    grouped[name] = [];
+                    names.push(name);
+                }
+                grouped[name].push(item);
+            });
+            names.forEach(function (name) { appendGroup(name, grouped[name]); });
+            status.textContent = groups.children.length ? '' : 'No emoji found.';
+        }
+        function requestItems(query) {
+            if (query === '' && fullCatalog !== null) {
+                renderItems(fullCatalog, true);
+                return;
+            }
+            var seq = ++requestSeq;
+            status.textContent = 'Loading emoji…';
+            clearGroups();
+            fetch(suggestionUrl(form, { trigger: ':', query: query }), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            }).then(function (response) {
+                return response.ok ? response.json() : null;
+            }).then(function (json) {
+                if (seq !== requestSeq || dialog.hidden) { return; }
+                if (!json || !json.ok || !Array.isArray(json.items)) {
+                    closeDialog('trigger');
+                    return;
+                }
+                if (query === '') { fullCatalog = json.items; }
+                renderItems(json.items, query === '');
+            }).catch(function () {
+                if (seq === requestSeq) { closeDialog('trigger'); }
+            });
+        }
+        function openDialog() {
+            var active = activeAdapter();
+            rememberedSelection = active && typeof active.rememberSelection === 'function'
+                ? active.rememberSelection() : { start: adapter.ta.selectionStart || 0, end: adapter.ta.selectionEnd || 0 };
+            var boxRect = box.getBoundingClientRect();
+            dialog.classList.toggle('is-below', window.innerWidth > 640
+                && (window.innerHeight - boxRect.bottom) > boxRect.top);
+            dialog.hidden = false;
+            trigger.setAttribute('aria-expanded', 'true');
+            search.value = '';
+            requestItems('');
+            search.focus();
+        }
+
+        trigger.addEventListener('click', function () {
+            if (dialog.hidden) { openDialog(); }
+            else { closeDialog('trigger'); }
+        });
+        close.addEventListener('click', function () { closeDialog('trigger'); });
+        search.addEventListener('input', function () {
+            if (searchTimer !== null) { window.clearTimeout(searchTimer); }
+            searchTimer = window.setTimeout(function () {
+                searchTimer = null;
+                requestItems(search.value.trim());
+            }, 200);
+        });
+        dialog.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                closeDialog('trigger');
+                return;
+            }
+            if (event.key !== 'Tab') { return; }
+            var focusable = focusableDialogItems();
+            if (!focusable.length) { event.preventDefault(); return; }
+            var index = focusable.indexOf(document.activeElement);
+            var next = event.shiftKey ? index - 1 : index + 1;
+            if (index < 0) { next = event.shiftKey ? focusable.length - 1 : 0; }
+            if (next < 0) { next = focusable.length - 1; }
+            if (next >= focusable.length) { next = 0; }
+            event.preventDefault();
+            focusable[next].focus();
+        });
+        document.addEventListener('mousedown', function (event) {
+            if (dialog.hidden || dialog.contains(event.target) || trigger.contains(event.target)) { return; }
+            closeDialog('trigger');
         });
     }
 
@@ -2001,6 +2365,7 @@
         // stopImmediatePropagation) before enter-to-send / list-continuation see it.
         wireSlashMenu(form, adapter);
         wireReferencePickers(form, adapter);
+        buildEmojiPicker(form, adapter);
         wireKeys(form, adapter, prefs);
         wireSubmitState(form, ta, adapter);
         stampIdempotency(form);

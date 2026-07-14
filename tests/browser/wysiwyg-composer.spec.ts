@@ -366,6 +366,46 @@ test('wysiwyg Enter sends from a plain rich paragraph on desktop', async ({ page
   await expect(page.locator('.post-op .post-body')).toContainText('Submitted by Enter from rich mode');
 });
 
+test('wysiwyg colon autocomplete and emoji dialog insert at the rich remembered caret', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'rich emoji contract is verified once');
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const menu = form.locator('.composer-reference-menu');
+
+  await editor.fill('10:30');
+  await expect(menu).toBeHidden();
+  await editor.fill(':p');
+  await page.waitForTimeout(300);
+  await expect(menu).toBeHidden();
+  await editor.fill(':sm');
+  await expect(menu).toBeVisible();
+  await menu.getByRole('option', { name: /Smiling face with open mouth/i }).click();
+  await expect(editor).toContainText('😄');
+
+  await editor.fill(':+1');
+  await expect(menu).toBeVisible();
+  await editor.press('Enter');
+  await expect(editor).toContainText('👍');
+
+  await editor.fill('before after');
+  await editor.press('End');
+  for (let index = 0; index < 5; index++) await editor.press('ArrowLeft');
+  await form.getByRole('button', { name: 'Emoji', exact: true }).click();
+  const dialog = form.getByRole('dialog', { name: 'Emoji' });
+  await expect(dialog.getByRole('searchbox', { name: 'Search emoji' })).toBeFocused();
+  await dialog.getByRole('gridcell', { name: 'Smiling face with open mouth' }).click();
+  await expect(editor).toContainText('before 😄after');
+
+  await form.getByRole('button', { name: 'Source' }).click();
+  const textarea = form.locator('textarea.composer-input');
+  await textarea.fill('`code :sm');
+  await expect(menu).toBeHidden();
+  await textarea.fill('```\n:sm');
+  await expect(menu).toBeHidden();
+});
+
 test('wysiwyg Enter preserves list authoring blockquote and code editing before sending', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'desktop rich Enter contract');
   setWysiwygComposer(true);
