@@ -142,7 +142,7 @@ final class AppComposerTest extends TestCase
         self::assertStringContainsString('class="thread thread-conversation thread-study"', $threadPage->body());
         self::assertStringContainsString('class="thread-scroll"', $threadPage->body());
         self::assertStringContainsString('class="thread-dock"', $threadPage->body());
-        self::assertStringContainsString('class="composer reply-composer thread-composer-card"', $threadPage->body());
+        self::assertStringContainsString('class="composer composer-shell reply-composer thread-composer-card"', $threadPage->body());
         self::assertStringContainsString('data-thread-composer', $threadPage->body());
 
         $newDm = $this->get('/messages/new');
@@ -166,7 +166,7 @@ final class AppComposerTest extends TestCase
 
         $page = $this->get('/t/' . (int) $thread['thread_id'] . '-' . $thread['slug']);
         $this->assertStatus(200, $page);
-        self::assertStringContainsString('<textarea name="body"', $page->body());
+        self::assertMatchesRegularExpression('/<textarea\b[^>]*class="composer-input"[^>]*name="body"/', $page->body());
         self::assertStringNotContainsString('/assets/composer.js', $page->body());
 
         $reply = $this->post('/t/' . (int) $thread['thread_id'] . '/reply', ['body' => 'Textarea fallback reply.']);
@@ -290,7 +290,7 @@ final class AppComposerTest extends TestCase
         $this->assertStatus(422, $response);
         self::assertStringContainsString('Your post is too long.', $response->body());
         self::assertStringContainsString($tooLong, $response->body(), 'the rejected reply body remains in the composer');
-        self::assertStringContainsString('class="composer reply-composer thread-composer-card is-expanded"', $response->body());
+        self::assertStringContainsString('class="composer composer-shell reply-composer thread-composer-card is-expanded"', $response->body());
         self::assertStringContainsString('data-thread-composer', $response->body());
     }
 

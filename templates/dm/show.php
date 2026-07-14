@@ -185,19 +185,28 @@ $this->section('title', $title);
 
         <?php if (!empty($can_reply)): ?>
             <?php
-            // The composer keeps class="composer", so composer.js still decorates it
-            // (toolbar, drafts, suggestion menus) and the user's own enter_to_send
-            // preference is left untouched — we do NOT force Enter-to-send. Only the
-            // presentation changes: the field is restyled to the calm river "pill"
-            // and Send becomes a round icon button. The pill is the form itself, so
-            // any toolbar / counter composer.js injects stacks cleanly around it.
+            $dmConversationId = (int) $conversation_id;
+            $dmConversationRecipient = $other !== null && (string) ($other['username'] ?? '') !== ''
+                ? (string) $other['username']
+                : 'recipient';
             ?>
-            <form class="dm-composer composer" method="post" action="/messages/<?= (int) $conversation_id ?>" data-composer-context="dm" data-composer-target-id="<?= (int) $conversation_id ?>">
-                <?= $this->csrfField() ?>
-                <?php if (!empty($errors['body'])): ?><p class="field-error"><?= $e($errors['body']) ?></p><?php endif; ?>
-                <textarea name="body" rows="3" class="composer-input" maxlength="5000" placeholder="Write a message…" required><?= $e($body ?? '') ?></textarea>
-                <button class="btn dm-send" type="submit" aria-label="Send message"><?= $this->partial('partials/icon', ['name' => 'arrow-up']) ?></button>
-            </form>
+            <?= $this->partial('partials/composer_shell', [
+                'action' => '/messages/' . $dmConversationId,
+                'context' => 'dm',
+                'target_id' => $dmConversationId,
+                'instance_id' => 'dm-conversation-' . $dmConversationId,
+                'placeholder' => 'Message @' . $dmConversationRecipient . '…',
+                'maxlength' => 5000,
+                'body_value' => (string) ($body ?? ''),
+                'submit_label' => 'Send',
+                'form_class' => 'dm-composer',
+                'body_error' => (string) ($errors['body'] ?? ''),
+                'identity' => [
+                    'display_name' => $current_user->displayName(),
+                    'username' => $current_user->username(),
+                    'show_avatar' => $show_avatars ?? true,
+                ],
+            ]) ?>
         <?php else: ?>
             <div class="joinbar">You are no longer an active participant in this conversation.</div>
         <?php endif; ?>

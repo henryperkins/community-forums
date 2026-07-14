@@ -79,12 +79,18 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
         <details class="post-native-disclosure post-edit" id="post-edit-<?= (int) $p['id'] ?>"<?= $editingThis ? ' open' : '' ?>>
             <summary class="linkbtn">Edit</summary>
             <button type="button" class="post-disclosure-close linkbtn muted" data-post-disclosure-close hidden aria-label="Close edit form">Close</button>
-            <?php if ($editingThis && ($edit_error ?? '') !== ''): ?><p class="field-error"><?= $e($edit_error) ?></p><?php endif; ?>
-            <form method="post" action="/posts/<?= (int) $p['id'] ?>/edit" class="composer" data-composer-context="edit" data-composer-target-id="<?= (int) $p['id'] ?>" data-no-draft>
-                <?= $this->csrfField() ?>
-                <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($editingThis ? (string) ($edit_old ?? '') : $p['body']) ?></textarea>
-                <button class="btn btn-small" type="submit">Save changes</button>
-            </form>
+            <?= $this->partial('partials/composer_shell', [
+                'action' => '/posts/' . (int) $p['id'] . '/edit',
+                'context' => 'edit',
+                'target_id' => (int) $p['id'],
+                'instance_id' => 'edit-post-' . (int) $p['id'],
+                'placeholder' => 'Edit your post…',
+                'maxlength' => 20000,
+                'body_value' => $editingThis ? (string) ($edit_old ?? '') : (string) $p['body'],
+                'submit_label' => 'Save changes',
+                'body_error' => $editingThis ? (string) ($edit_error ?? '') : '',
+                'no_draft' => true,
+            ]) ?>
         </details>
     </div>
 <?php endif; ?>
@@ -107,12 +113,23 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
     <div class="post-actions">
         <details class="post-edit">
             <summary class="linkbtn">Edit wiki</summary>
-            <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/edit" class="composer" data-composer-context="edit" data-composer-target-id="<?= (int) $p['id'] ?>" data-no-draft>
-                <?= $this->csrfField() ?>
-                <textarea name="body" rows="4" class="composer-input" maxlength="20000" required><?= $e($p['body']) ?></textarea>
-                <input type="text" name="reason" class="input" maxlength="255" placeholder="Reason">
-                <button class="btn btn-small" type="submit">Save wiki edit</button>
-            </form>
+            <?php
+            $wikiReasonSlot = function (): void {
+                ?><input type="text" name="reason" class="input" maxlength="255" placeholder="Reason"><?php
+            };
+            ?>
+            <?= $this->partial('partials/composer_shell', [
+                'action' => '/posts/' . (int) $p['id'] . '/wiki/edit',
+                'context' => 'edit',
+                'target_id' => (int) $p['id'],
+                'instance_id' => 'wiki-post-' . (int) $p['id'],
+                'placeholder' => 'Edit wiki content…',
+                'maxlength' => 20000,
+                'body_value' => (string) $p['body'],
+                'submit_label' => 'Save wiki edit',
+                'no_draft' => true,
+                'below_input_slot' => $wikiReasonSlot,
+            ]) ?>
         </details>
         <?php if (!empty($wiki_revisions)): ?>
             <form method="post" action="/posts/<?= (int) $p['id'] ?>/wiki/revert" class="inline-form">

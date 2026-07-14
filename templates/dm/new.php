@@ -1,5 +1,21 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'New message'); ?>
+<?php
+$this->layout('layout');
+$this->section('title', 'New message');
+$dmNewInstance = 'dm-new-page';
+$dmNewFirstRecipient = trim(explode(',', (string) $to, 2)[0]);
+$dmNewRecipientLabel = ltrim($dmNewFirstRecipient, '@');
+$dmNewPlaceholder = 'Message @' . ($dmNewRecipientLabel !== '' ? $dmNewRecipientLabel : 'recipient') . '…';
+$dmNewWrapper = function () use ($to, $title, $errors, $allowGroups, $dmNewInstance): void {
+    echo $this->partial('partials/dm_compose_fields', [
+        'to' => $to,
+        'title' => $title ?? '',
+        'errors' => $errors,
+        'allow_groups' => $allowGroups ?? false,
+        'instance_id' => $dmNewInstance,
+    ]);
+};
+?>
 <div class="dm-shell reading">
     <aside class="dm-listpane dm-return-pane" aria-label="Messages">
         <header class="dm-listpane-head">
@@ -23,17 +39,24 @@
                 <span class="eyebrow">Private counsel</span>
                 <h1>New message</h1>
 
-                <form class="dm-form composer" method="post" action="/messages" data-composer-context="dm" data-composer-target-id="0">
-                    <?= $this->csrfField() ?>
-                    <?= $this->partial('partials/dm_compose_fields', [
-                        'to' => $to,
-                        'title' => $title ?? '',
-                        'body' => $body,
-                        'errors' => $errors,
-                        'allow_groups' => $allowGroups ?? false,
-                    ]) ?>
-                    <div class="form-actions"><button class="btn" type="submit">Send message</button></div>
-                </form>
+                <?= $this->partial('partials/composer_shell', [
+                    'action' => '/messages',
+                    'context' => 'dm',
+                    'target_id' => 0,
+                    'instance_id' => $dmNewInstance,
+                    'placeholder' => $dmNewPlaceholder,
+                    'maxlength' => 5000,
+                    'body_value' => (string) $body,
+                    'submit_label' => 'Send',
+                    'form_class' => 'dm-form',
+                    'body_error' => (string) ($errors['body'] ?? ''),
+                    'identity' => [
+                        'display_name' => $current_user->displayName(),
+                        'username' => $current_user->username(),
+                        'show_avatar' => $show_avatars ?? true,
+                    ],
+                    'wrapper_slot' => $dmNewWrapper,
+                ]) ?>
             </div>
         </div>
     </section>

@@ -13,6 +13,7 @@ $dmFilter = ($filter ?? 'all') === 'unread' ? 'unread' : 'all';
 $dmActiveId = (int) ($active_id ?? 0);
 $dmConversations = $conversations ?? [];
 $dmQ = trim((string) ($q ?? ''));
+$dmAllowGroups = !empty($allow_groups);
 // The pills keep an applied search; with no search they stay byte-identical
 // to the long-pinned hrefs.
 $dmAllHref = '/messages' . ($dmQ !== '' ? '?q=' . urlencode($dmQ) : '');
@@ -33,22 +34,41 @@ $dmUnreadHref = '/messages?filter=unread' . ($dmQ !== '' ? '&q=' . urlencode($dm
                         <button type="button" class="dm-dialog-close" data-close-compose aria-label="Close"><?= $this->partial('partials/icon', ['name' => 'x']) ?></button>
                     </div>
                     <?php
-                    // Same classes + composer hooks as the /messages/new page form, so
-                    // composer.js gives the dialog the identical toolbar, drafts, and
-                    // suggestion menus (shared draft key: it IS the same task). Only the
-                    // rich-text mount is opted out — a hidden closed <details> is no
-                    // place to measure an editor.
+                    $dmDialogInstance = 'dm-new-dialog';
+                    $dmDialogWrapper = function () use ($dmAllowGroups, $dmDialogInstance): void {
+                        ?><div class="dm-dialog-body"><?php
+                        echo $this->partial('partials/dm_compose_fields', [
+                            'to' => '',
+                            'title' => '',
+                            'errors' => [],
+                            'allow_groups' => $dmAllowGroups,
+                            'instance_id' => $dmDialogInstance,
+                        ]);
+                        ?></div><?php
+                    };
+                    $dmDialogBeforeSubmit = function (): void {
+                        ?><button class="btn btn-ghost" type="button" data-close-compose>Cancel</button><?php
+                    };
                     ?>
-                    <form class="dm-form composer" method="post" action="/messages" data-composer-context="dm" data-composer-target-id="0" data-no-wysiwyg>
-                        <?= $this->csrfField() ?>
-                        <div class="dm-dialog-body">
-                            <?= $this->partial('partials/dm_compose_fields', ['to' => '', 'title' => '', 'body' => '', 'errors' => [], 'allow_groups' => !empty($allow_groups)]) ?>
-                        </div>
-                        <div class="dm-dialog-foot">
-                            <button class="btn" type="submit">Send message</button>
-                            <button class="btn btn-ghost" type="button" data-close-compose>Cancel</button>
-                        </div>
-                    </form>
+                    <?= $this->partial('partials/composer_shell', [
+                        'action' => '/messages',
+                        'context' => 'dm',
+                        'target_id' => 0,
+                        'instance_id' => $dmDialogInstance,
+                        'placeholder' => 'Message @recipient…',
+                        'maxlength' => 5000,
+                        'body_value' => '',
+                        'submit_label' => 'Send',
+                        'form_class' => 'dm-form',
+                        'identity' => [
+                            'display_name' => $current_user->displayName(),
+                            'username' => $current_user->username(),
+                            'show_avatar' => $show_avatars ?? true,
+                        ],
+                        'no_wysiwyg' => true,
+                        'wrapper_slot' => $dmDialogWrapper,
+                        'before_submit_slot' => $dmDialogBeforeSubmit,
+                    ]) ?>
                 </div>
             </details>
         </div>
