@@ -200,14 +200,17 @@ test('canonical mobile composer keeps formatting and anonymous controls containe
     return { flexWrap: style.flexWrap, overflowX: style.overflowX, right: element.getBoundingClientRect().right };
   });
   expect(toolbarLayout.flexWrap).toBe('nowrap');
-  expect(['auto', 'scroll']).toContain(toolbarLayout.overflowX);
+  expect(toolbarLayout.overflowX).toBe('hidden');
+  await expect(toolbar.getByRole('button', { name: 'More formatting' })).toBeVisible();
 
-  const anonymous = composer.locator('.checkline');
+  const anonymous = composer.locator('.composer-anonymous-chip');
+  const disclosure = composer.locator('.composer-anonymous-disclosure');
   await expect(anonymous).toBeVisible();
+  await expect(disclosure).toBeVisible();
   const containment = await composer.evaluate((element) => {
     const composerRect = element.getBoundingClientRect();
     const toolbarRect = element.querySelector('.composer-toolbar')!.getBoundingClientRect();
-    const anonymousRect = element.querySelector('.checkline')!.getBoundingClientRect();
+    const anonymousRect = element.querySelector('.composer-anonymous-chip')!.getBoundingClientRect();
     return {
       toolbarContained: toolbarRect.right <= composerRect.right + 1,
       anonymousContained: anonymousRect.right <= composerRect.right + 1,

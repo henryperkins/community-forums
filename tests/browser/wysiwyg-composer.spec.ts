@@ -242,7 +242,7 @@ test('wysiwyg toolbar actions update the rich editor canonical markdown', async 
 
   await editor.fill('toolbar text');
   await editor.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
-  await form.getByRole('button', { name: 'Insert Bold' }).click();
+  await form.getByRole('button', { name: 'Bold (Ctrl+B)', exact: true }).click();
 
   await form.getByRole('button', { name: 'Source' }).click();
   await expect(form.locator('textarea.composer-input')).toHaveValue('**toolbar text**');
@@ -421,6 +421,7 @@ test('server preview matches final rendered post for supported syntax', async ({
   ].join('\n\n');
 
   await form.getByRole('button', { name: 'Source' }).click();
+  await form.getByRole('button', { name: 'Preview', exact: true }).click();
   await form.locator('textarea.composer-input').fill(markdown);
   const preview = form.locator('.composer-preview');
   await expect(preview.locator('h2')).toContainText('Preview Heading', { timeout: 5000 });

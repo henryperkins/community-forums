@@ -6,10 +6,8 @@
     'use strict';
     if (!window.fetch) { return; }
 
-    var BODY_MAX = 20000;
-
     // Composing preferences (P3-01) are stamped on <body> by the layout for
-    // signed-in users. Defaults match the schema: enter-to-send off, preview on,
+    // signed-in users. Defaults match the schema: enter-to-send, preview, and
     // smart lists on.
     function composingPrefs() {
         var b = document.body;
@@ -31,6 +29,18 @@
     function tokenField(form) {
         var t = form.querySelector('input[name="_token"]');
         return t ? t.value : '';
+    }
+
+    function shellPart(form, selector) {
+        return form.querySelector(selector);
+    }
+
+    function storageRead(key) {
+        try { return window.localStorage.getItem(key); } catch (e) { return null; }
+    }
+
+    function storageWrite(key, value) {
+        try { window.localStorage.setItem(key, value); } catch (e) {}
     }
 
     function TextareaComposerAdapter(form, ta) {
@@ -68,13 +78,27 @@
     TextareaComposerAdapter.prototype.destroy = function () {};
 
     var wysiwygFactory = null;
-    window.RetroBoardsComposer = {
-        registerWysiwygAdapter: function (factory) {
-            wysiwygFactory = factory;
-            document.querySelectorAll('form.composer').forEach(function (form) {
-                if (form._rbComposerEnhance) { form._rbComposerEnhance(); }
-            });
+
+    function registerWysiwygAdapter(factory) {
+        wysiwygFactory = factory;
+        document.querySelectorAll('form.composer').forEach(function (form) {
+            if (form._rbComposerEnhance) { form._rbComposerEnhance(); }
+        });
+    }
+
+    function enhanceWithin(root) {
+        var forms = [];
+        if (root && root.matches && root.matches('form.composer')) { forms.push(root); }
+        if (root && root.querySelectorAll) {
+            root.querySelectorAll('form.composer').forEach(function (form) { forms.push(form); });
         }
+        var prefs = composingPrefs();
+        forms.forEach(function (form) { enhance(form, prefs); });
+    }
+
+    window.RetroBoardsComposer = {
+        registerWysiwygAdapter: registerWysiwygAdapter,
+        enhanceWithin: enhanceWithin
     };
 
     function shouldUseWysiwyg(form) {
@@ -93,6 +117,8 @@
             if (rich) {
                 form._rbWysiwygAdapter = rich;
                 form._rbComposerAdapter = rich;
+                if (form._rbPreviewController) { form._rbPreviewController.reconcile(rich); }
+                if (form._rbSubmitController) { form._rbSubmitController.attach(rich); }
                 return rich;
             }
         } catch (e) {}
@@ -110,24 +136,38 @@
         ta.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    // Sentence-case labels render in the Marcellus toolbar (handoff §5.2). The
-    // accessible label stays "Insert {label}" so existing role queries still match.
+    var ACTION_ORDER = [
+        'bold', 'italic', 'strike', 'code', 'quote', 'h2',
+        'list', 'orderedList', 'codeblock', 'spoiler', 'link'
+    ];
     var ACTIONS = {
         bold: { label: 'Bold', before: '**', after: '**', shortcut: 'b', active: 'inline' },
         italic: { label: 'Italic', before: '*', after: '*', shortcut: 'i', active: 'inline' },
         strike: { label: 'Strike', before: '~~', after: '~~', active: 'inline' },
-        code: { label: 'Code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
-        spoiler: { label: 'Spoiler', before: '||', after: '||', active: 'inline' },
+        code: { label: 'Inline code', before: '`', after: '`', shortcut: 'e', active: 'inline' },
         quote: { label: 'Quote', before: '\n> ', after: '', prefix: '> ', active: 'line' },
         h2: { label: 'Heading', before: '\n## ', after: '', prefix: '## ', active: 'line' },
-        list: { label: 'List', before: '\n- ', after: '', prefix: '- ', active: 'line' },
+        list: { label: 'Bullet list', before: '\n- ', after: '', prefix: '- ', active: 'line' },
+        orderedList: { label: 'Numbered list', before: '\n1. ', after: '', prefix: '1. ', active: 'ordered-line' },
         codeblock: { label: 'Code block', before: '\n```\n', after: '\n```\n', active: 'fence' },
-        link: { label: 'Link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' },
-        emoji: { label: 'Emoji', before: ':smile:', after: '' }
+        spoiler: { label: 'Spoiler', before: '||', after: '||', active: 'inline' },
+        link: { label: 'Link', before: '[', after: '](https://)', shortcut: 'k', active: 'inline' }
     };
-    // A hairline separator follows these keys, grouping the bar as
-    // emphasis | block | insert (handoff §5.2).
-    var GROUP_BREAKS = { spoiler: true, codeblock: true };
+    var GROUP_BREAKS = { code: true, spoiler: true };
+    var ESSENTIAL_ACTIONS = { bold: true, italic: true, list: true, link: true };
+    var ICON_PATHS = {
+        bold: ['M8 5h5a3 3 0 0 1 0 6H8z', 'M8 11h6a4 4 0 0 1 0 8H8z'],
+        italic: ['M10 5h7', 'M7 19h7', 'M14 5 10 19'],
+        strike: ['M6 7h10', 'M5 12h14', 'M8 17h8'],
+        code: ['m9 8-4 4 4 4', 'm15 8 4 4-4 4'],
+        quote: ['M6 7h5v5H7v5', 'M14 7h5v5h-4v5'],
+        h2: ['M5 6v12', 'M13 6v12', 'M5 12h8', 'M16 10c0-2 4-2 4 0 0 2-4 3-4 6h5'],
+        list: ['M9 7h10', 'M9 12h10', 'M9 17h10', 'M5 7h.01', 'M5 12h.01', 'M5 17h.01'],
+        orderedList: ['M5 6h1v3', 'M5 13c2-1 2 2 0 3h2', 'M10 7h9', 'M10 12h9', 'M10 17h9'],
+        codeblock: ['M5 6h14v12H5z', 'm9 10-2 2 2 2', 'm6-4 2 2-2 2'],
+        spoiler: ['M3 12s3-5 9-5 9 5 9 5-3 5-9 5-9-5-9-5', 'M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4'],
+        link: ['M10 14 8.5 15.5a3 3 0 0 1-4-4L7 9a3 3 0 0 1 4 0', 'm14 10 1.5-1.5a3 3 0 0 1 4 4L17 15a3 3 0 0 1-4 0', 'm9 15 6-6']
+    };
 
     function applyAction(ta, key) {
         var action = ACTIONS[key];
@@ -189,27 +229,60 @@
         if (action.active === 'line') {
             return currentLine(ta).indexOf(action.prefix || '') === 0;
         }
+        if (action.active === 'ordered-line') {
+            return /^\s*\d+[.)]\s/.test(currentLine(ta));
+        }
         if (action.active === 'fence') {
             return inFence(ta);
         }
         return false;
     }
 
+    function actionIcon(key) {
+        var ns = 'http://www.w3.org/2000/svg';
+        var svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        (ICON_PATHS[key] || []).forEach(function (pathData) {
+            var path = document.createElementNS(ns, 'path');
+            path.setAttribute('d', pathData);
+            svg.appendChild(path);
+        });
+        return svg;
+    }
+
+    var toolbarSeq = 0;
     function buildToolbar(form, ta) {
+        var slot = shellPart(form, '[data-composer-format-slot]');
+        if (!slot) { return; }
         var bar = document.createElement('div');
         bar.className = 'composer-toolbar';
+        bar.id = 'composer-toolbar-' + (++toolbarSeq);
+        bar.setAttribute('aria-label', 'Formatting');
         var buttons = [];
         function updateState() {
             buttons.forEach(function (item) {
                 item.button.setAttribute('aria-pressed', actionActive(ta, item.action) ? 'true' : 'false');
             });
         }
-        Object.keys(ACTIONS).forEach(function (key) {
+
+        function makeActionButton(key, overflow) {
             var action = ACTIONS[key];
             var b = document.createElement('button');
             b.type = 'button';
-            b.textContent = action.label;
-            b.setAttribute('aria-label', 'Insert ' + action.label);
+            b.className = overflow ? 'composer-overflow-action' : 'composer-toolbar-action';
+            if (!overflow && ESSENTIAL_ACTIONS[key]) { b.classList.add('is-essential'); }
+            var shortcut = action.shortcut ? 'Ctrl+' + action.shortcut.toUpperCase() : '';
+            b.setAttribute('aria-label', action.label + (shortcut ? ' (' + shortcut + ')' : ''));
+            if (overflow) {
+                b.textContent = action.label;
+                b.setAttribute('data-composer-overflow-action', key);
+            } else {
+                b.appendChild(actionIcon(key));
+                b.setAttribute('data-composer-action', key);
+                b.setAttribute('data-tip', action.label + (shortcut ? ' · ' + shortcut : ''));
+            }
             if (action.shortcut) {
                 b.setAttribute('aria-keyshortcuts', 'Control+' + action.shortcut.toUpperCase() + ' Meta+' + action.shortcut.toUpperCase());
             }
@@ -219,6 +292,11 @@
                 updateState();
             });
             buttons.push({ button: b, action: action });
+            return b;
+        }
+
+        ACTION_ORDER.forEach(function (key) {
+            var b = makeActionButton(key, false);
             bar.appendChild(b);
             if (GROUP_BREAKS[key]) {
                 var sep = document.createElement('span');
@@ -227,48 +305,188 @@
                 bar.appendChild(sep);
             }
         });
+
+        var moreWrap = document.createElement('span');
+        moreWrap.className = 'composer-more-wrap';
+        var more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'composer-more-toggle';
+        more.textContent = '＋';
+        more.setAttribute('aria-label', 'More formatting');
+        more.setAttribute('aria-expanded', 'false');
+        var overflow = document.createElement('div');
+        overflow.className = 'composer-format-overflow';
+        overflow.id = bar.id + '-overflow';
+        overflow.hidden = true;
+        overflow.setAttribute('role', 'group');
+        overflow.setAttribute('aria-label', 'More formatting');
+        more.setAttribute('aria-controls', overflow.id);
+        ['strike', 'code', 'quote', 'h2', 'orderedList', 'codeblock', 'spoiler'].forEach(function (key) {
+            var b = makeActionButton(key, true);
+            b.addEventListener('click', function () {
+                overflow.hidden = true;
+                more.setAttribute('aria-expanded', 'false');
+            });
+            overflow.appendChild(b);
+        });
+        more.addEventListener('click', function () {
+            var open = overflow.hidden;
+            overflow.hidden = !open;
+            more.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        moreWrap.appendChild(more);
+        bar.appendChild(moreWrap);
+
         ['input', 'keyup', 'mouseup', 'select'].forEach(function (evt) {
             ta.addEventListener(evt, updateState);
         });
-        ta.parentNode.insertBefore(bar, ta);
+        slot.appendChild(bar);
+        slot.appendChild(overflow);
+
+        var actionSlot = shellPart(form, '[data-composer-actions-start-slot]');
+        if (actionSlot) {
+            var formatToggle = document.createElement('button');
+            formatToggle.type = 'button';
+            formatToggle.className = 'composer-format-toggle';
+            formatToggle.textContent = 'Aa';
+            formatToggle.setAttribute('aria-label', 'Formatting');
+            formatToggle.setAttribute('aria-controls', bar.id);
+            var stored = storageRead('rb-composer:format-row');
+            var open = stored !== 'closed';
+            bar.hidden = !open;
+            formatToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            formatToggle.addEventListener('click', function () {
+                var nextOpen = bar.hidden;
+                bar.hidden = !nextOpen;
+                formatToggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+                storageWrite('rb-composer:format-row', nextOpen ? 'open' : 'closed');
+            });
+            actionSlot.appendChild(formatToggle);
+        }
+
+        document.addEventListener('click', function (event) {
+            if (moreWrap.contains(event.target) || overflow.contains(event.target)) { return; }
+            overflow.hidden = true;
+            more.setAttribute('aria-expanded', 'false');
+        });
+        overflow.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') { return; }
+            overflow.hidden = true;
+            more.setAttribute('aria-expanded', 'false');
+            more.focus();
+        });
         updateState();
     }
 
     // ---- Character counter ------------------------------------------------
-    function buildCounter(ta) {
+    function buildCounter(form, adapter) {
+        var ta = adapter.ta;
+        var slot = shellPart(form, '[data-composer-counter-slot]');
+        if (!slot) { return; }
+        var bodyMax = ta.getAttribute('data-body-max') || form.getAttribute('data-body-max') || '';
+        var limit = ta.maxLength > 0 ? ta.maxLength : parseInt(bodyMax, 10);
+        if (!(limit > 0)) { return; }
         var c = document.createElement('div');
         c.className = 'composer-count';
+        c.setAttribute('aria-live', 'polite');
         function update() {
-            var n = ta.value.length;
-            c.textContent = n + ' / ' + BODY_MAX;
-            c.classList.toggle('over', n > BODY_MAX);
+            var active = form._rbComposerAdapter || adapter;
+            var markdown = active && typeof active.getMarkdown === 'function' ? active.getMarkdown() : ta.value;
+            var n = markdown.length;
+            c.textContent = n + ' / ' + limit;
+            c.hidden = n < Math.ceil(limit * 0.9);
+            c.classList.toggle('over', n > limit);
         }
         ta.addEventListener('input', update);
         update();
-        ta.parentNode.appendChild(c);
+        slot.appendChild(c);
     }
 
     // ---- Live preview (same server pipeline) ------------------------------
-    function buildPreview(form, adapter) {
-        var ta = adapter.ta;
+    var previewSeq = 0;
+    function adapterIsSourceMode(adapter, fallback) {
+        if (adapter && typeof adapter.isSourceMode === 'function') {
+            try { return !!adapter.isSourceMode(); } catch (e) {}
+        }
+        return adapter === fallback;
+    }
+    function buildPreview(form, prefs, adapter, fallback) {
+        var actionSlot = shellPart(form, '[data-composer-actions-end-slot]');
+        var afterBox = shellPart(form, '[data-composer-after-box]');
+        if (!actionSlot || !afterBox) { return; }
+
+        var toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'composer-preview-toggle';
+        toggle.textContent = 'Preview';
+        toggle.setAttribute('aria-label', 'Preview');
         var pane = document.createElement('div');
         pane.className = 'composer-preview';
+        pane.id = 'composer-preview-' + (++previewSeq);
         pane.setAttribute('aria-live', 'polite');
-        ta.parentNode.appendChild(pane);
+        toggle.setAttribute('aria-controls', pane.id);
+        actionSlot.appendChild(toggle);
+        afterBox.appendChild(pane);
 
         var timer = null;
-        adapter.onChange(function () {
+        var requestSeq = 0;
+        var touched = false;
+        var attached = [];
+        var stored = storageRead('rb-composer:preview');
+        if (stored !== 'open' && stored !== 'closed') { stored = null; }
+        var open = stored === 'open' || (stored === null && prefs.showPreview && adapterIsSourceMode(adapter, fallback));
+
+        function activeAdapter() { return form._rbComposerAdapter || adapter; }
+        function renderNow() {
+            if (!open) { return; }
+            var active = activeAdapter();
+            if (!active || typeof active.getMarkdown !== 'function') { return; }
+            var seq = ++requestSeq;
+            var data = new FormData();
+            data.append('_token', tokenField(form));
+            data.append('body', active.getMarkdown());
+            fetch('/composer/preview', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (j) {
+                    if (seq === requestSeq && open && j && j.ok) { pane.innerHTML = j.html; }
+                })
+                .catch(function () {});
+        }
+        function scheduleRender() {
+            if (!open) { return; }
             if (timer) { clearTimeout(timer); }
-            timer = setTimeout(function () {
-                var data = new FormData();
-                data.append('_token', tokenField(form));
-                data.append('body', adapter.getMarkdown());
-                fetch('/composer/preview', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(function (r) { return r.ok ? r.json() : null; })
-                    .then(function (j) { if (j && j.ok) { pane.innerHTML = j.html; } })
-                    .catch(function () {});
-            }, 350);
+            timer = setTimeout(renderNow, 350);
+        }
+        function setOpen(nextOpen, persist, fetchOnOpen) {
+            open = !!nextOpen;
+            pane.hidden = !open;
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (!open) {
+                requestSeq++;
+                if (timer) { clearTimeout(timer); timer = null; }
+            } else if (fetchOnOpen) {
+                renderNow();
+            }
+            if (persist) { storageWrite('rb-composer:preview', open ? 'open' : 'closed'); }
+        }
+        function attach(nextAdapter) {
+            if (!nextAdapter || typeof nextAdapter.onChange !== 'function' || attached.indexOf(nextAdapter) !== -1) { return; }
+            attached.push(nextAdapter);
+            nextAdapter.onChange(scheduleRender);
+        }
+        function reconcile(nextAdapter) {
+            attach(nextAdapter);
+            if (stored !== null || touched) { return; }
+            setOpen(prefs.showPreview && adapterIsSourceMode(nextAdapter, fallback), false, false);
+        }
+
+        toggle.addEventListener('click', function () {
+            touched = true;
+            setOpen(!open, true, !open);
         });
+        attach(adapter);
+        setOpen(open, false, false);
+        form._rbPreviewController = { reconcile: reconcile };
     }
 
     // ---- Idempotency: stamp a fresh token per composer instance -----------
@@ -312,25 +530,28 @@
             input.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
-    function buildDraftSyncPanel(ta) {
+    function buildDraftSyncPanel(form) {
+        var afterBox = shellPart(form, '[data-composer-after-box]');
+        if (!afterBox) { return null; }
         var panel = document.createElement('div');
         panel.className = 'composer-draft-sync';
         panel.hidden = true;
         panel.setAttribute('role', 'status');
         panel.setAttribute('aria-live', 'polite');
-        ta.parentNode.appendChild(panel);
+        afterBox.appendChild(panel);
         return panel;
     }
     function wireServerDrafts(form, adapter, localKey, context, updateDiscard) {
         var ta = adapter.ta;
         var apiKey = serverDraftKey(context);
-        var panel = buildDraftSyncPanel(ta);
+        var panel = buildDraftSyncPanel(form);
         var timer = null;
         var revision = 0;
         var paused = false;
         var applying = false;
 
         function showStatus(text) {
+            if (!panel) { return; }
             panel.classList.remove('is-conflict');
             panel.setAttribute('role', 'status');
             panel.textContent = text;
@@ -403,6 +624,10 @@
                 return;
             }
             revision = parseInt(server.revision, 10) || revision;
+            if (!panel) {
+                paused = true;
+                return;
+            }
             panel.hidden = false;
             panel.classList.add('is-conflict');
             panel.setAttribute('role', 'alert');
@@ -574,15 +799,19 @@
         } catch (e) {}
     }
     function buildDiscard(form, adapter, key, discardRemote) {
-        var ta = adapter.ta;
+        var slot = shellPart(form, '[data-composer-draft-slot]');
+        if (!slot) { return function () {}; }
+        slot.appendChild(document.createTextNode('Draft saved · '));
         var b = document.createElement('button');
         b.type = 'button';
-        b.className = 'btn btn-secondary btn-small composer-discard';
-        b.textContent = 'Discard draft';
+        b.className = 'linkbtn composer-discard';
+        b.textContent = 'Discard';
+        b.setAttribute('aria-label', 'Discard draft');
+        slot.appendChild(b);
         function update() {
             var hasSaved = false;
             try { hasSaved = !!localStorage.getItem(key); } catch (e) {}
-            b.hidden = !hasSaved && !adapter.getMarkdown();
+            slot.hidden = !hasSaved && !adapter.getMarkdown();
         }
         b.addEventListener('click', function () {
             try { localStorage.removeItem(key); } catch (e) {}
@@ -590,7 +819,6 @@
             if (typeof discardRemote === 'function') { discardRemote(); }
             update();
         });
-        ta.parentNode.appendChild(b);
         update();
         return update;
     }
@@ -767,14 +995,8 @@
         var action = form.getAttribute('action') || '';
         return action.indexOf('/messages') === 0 ? 'dm' : 'post';
     }
-    function uploadTray(form, ta) {
-        var tray = form.querySelector('.composer-upload-tray');
-        if (tray) { return tray; }
-        tray = document.createElement('div');
-        tray.className = 'composer-upload-tray';
-        tray.setAttribute('aria-live', 'polite');
-        ta.parentNode.appendChild(tray);
-        return tray;
+    function uploadTray(form) {
+        return shellPart(form, '[data-composer-upload-tray]');
     }
     function moveSnippetBefore(ta, moving, anchor) {
         if (!moving || !anchor || moving === anchor) { return false; }
@@ -802,7 +1024,7 @@
     }
     function uploadCard(form, adapter, file, placeholder) {
         var ta = adapter.ta;
-        var tray = uploadTray(form, ta);
+        var tray = uploadTray(form);
         var card = document.createElement('div');
         card.className = 'composer-upload-card is-uploading';
         var preview = document.createElement('img');
@@ -928,6 +1150,7 @@
         xhr.send(data);
     }
     function wireUploads(form, adapter) {
+        if (!uploadTray(form)) { return; }
         var ta = adapter.ta;
         var targets = adapterEventTargets(adapter, ta, 'uploadTargets');
         function onPaste(e) {
@@ -1092,14 +1315,16 @@
     // filtering), and Arrow/Home/End/Enter/Escape drive it from the keyboard.
     function wireSlashMenu(form, adapter) {
         var ta = adapter.ta;
+        var box = shellPart(form, '.composer-box');
+        if (!box) { return; }
         var targets = adapterEventTargets(adapter, ta, 'slashTargets');
         var menu = document.createElement('div');
         var menuId = 'composer-slash-menu-' + (++slashMenuSeq);
         var optionSeq = 0;
         menu.id = menuId;
-        menu.className = 'composer-slash-menu';
+        menu.className = 'composer-slash-menu composer-suggestion-popover';
         menu.hidden = true;
-        ta.parentNode.insertBefore(menu, ta.nextSibling);
+        box.appendChild(menu);
 
         var config = null;
         var ready = false;
@@ -1397,6 +1622,8 @@
 
     function wireReferencePickers(form, adapter) {
         var ta = adapter.ta;
+        var box = shellPart(form, '.composer-box');
+        if (!box) { return; }
         var targets = referenceTargets(adapter, ta);
         var menu = document.createElement('div');
         var menuId = 'composer-reference-menu-' + (++referenceMenuSeq);
@@ -1408,11 +1635,11 @@
         var requestSeq = 0;
 
         menu.id = menuId;
-        menu.className = 'composer-reference-menu';
+        menu.className = 'composer-reference-menu composer-suggestion-popover';
         menu.hidden = true;
         menu.setAttribute('role', 'listbox');
         menu.setAttribute('aria-label', 'Composer references');
-        ta.parentNode.insertBefore(menu, ta.nextSibling);
+        box.appendChild(menu);
 
         ensureAccessibleName(ta);
         ta.setAttribute('role', 'combobox');
@@ -1601,6 +1828,7 @@
         var ta = adapter.ta;
         var targets = adapterEventTargets(adapter, ta, 'keyTargets');
         function onKeyDown(e, target) {
+            if (form._rbSubmitting) { return; }
             if ((e.ctrlKey || e.metaKey) && !e.altKey) {
                 var key = e.key.toLowerCase();
                 var action = key === 'b' ? 'bold'
@@ -1630,6 +1858,56 @@
         });
     }
 
+    function wireSubmitState(form, ta, adapter) {
+        var send = shellPart(form, '.composer-send');
+        if (!send) { return; }
+        var status = shellPart(form, '[data-composer-submit-status]');
+        var attached = [];
+
+        function activeAdapter() { return form._rbComposerAdapter || adapter; }
+        function markdown() {
+            var active = activeAdapter();
+            return active && typeof active.getMarkdown === 'function' ? active.getMarkdown() : ta.value;
+        }
+        function update() {
+            send.disabled = !!form._rbSubmitting || markdown().trim() === '';
+        }
+        function attach(nextAdapter) {
+            if (!nextAdapter || typeof nextAdapter.onChange !== 'function' || attached.indexOf(nextAdapter) !== -1) {
+                update();
+                return;
+            }
+            attached.push(nextAdapter);
+            nextAdapter.onChange(update);
+            update();
+        }
+
+        form.addEventListener('submit', function (event) {
+            if (form._rbSubmitting) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+            }
+            var active = activeAdapter();
+            if (active && typeof active.getMarkdown === 'function') { ta.value = active.getMarkdown(); }
+            if (ta.value.trim() === '') {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                update();
+                if (active && typeof active.focus === 'function') { active.focus(); }
+                return;
+            }
+            form._rbSubmitting = true;
+            send.disabled = true;
+            form.setAttribute('aria-busy', 'true');
+            form.classList.add('is-submitting');
+            if (status) { status.textContent = 'Sending…'; }
+        });
+
+        attach(adapter);
+        form._rbSubmitController = { attach: attach };
+    }
+
     function enhance(form, prefs) {
         var ta = form.querySelector('.composer-input');
         if (!ta) { return; }
@@ -1645,24 +1923,16 @@
         form._rbComposerFallbackAdapter = adapter;
         form._rbComposerAdapter = adapter;
         buildToolbar(form, ta);
-        buildCounter(ta);
+        buildCounter(form, adapter);
         adapter = maybeUpgradeWysiwyg(form, ta, adapter);
-        if (prefs.showPreview) { buildPreview(form, adapter); }
+        buildPreview(form, prefs, adapter, form._rbComposerFallbackAdapter);
         // Wire the slash combobox before wireKeys so its keydown listener runs
         // first: when the menu is open it consumes Enter/Escape (via
         // stopImmediatePropagation) before enter-to-send / list-continuation see it.
         wireSlashMenu(form, adapter);
         wireReferencePickers(form, adapter);
         wireKeys(form, adapter, prefs);
-        if (!form._rbComposerSubmitSync) {
-            form._rbComposerSubmitSync = true;
-            form.addEventListener('submit', function () {
-                var active = form._rbComposerAdapter;
-                if (active && typeof active.getMarkdown === 'function') {
-                    ta.value = active.getMarkdown();
-                }
-            });
-        }
+        wireSubmitState(form, ta, adapter);
         stampIdempotency(form);
         // A form may opt out of local draft autosave (data-no-draft). The inline
         // post-edit form does: its textarea is server-pre-filled with the current
@@ -1674,10 +1944,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        var prefs = composingPrefs();
         clearCompletedDraftSubmits();
-        var forms = document.querySelectorAll('form.composer');
-        for (var i = 0; i < forms.length; i++) { enhance(forms[i], prefs); }
+        enhanceWithin(document);
         renderDraftsPage();
     });
 })();
