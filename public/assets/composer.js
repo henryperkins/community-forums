@@ -2291,6 +2291,7 @@
                 }
             }
             if (e.key === 'Escape') {
+                if (form.closest('.post-native-disclosure[open]')) { return; }
                 e.preventDefault();
                 e.stopPropagation();
                 var focused = document.activeElement;
