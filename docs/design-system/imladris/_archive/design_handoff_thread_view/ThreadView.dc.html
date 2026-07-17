@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Thread view" description="A council topic in the Study register: a quiet reading surface — star + Topic tools only — with status, watch, tags, brief curation, and wardens' tools in a slide-in drawer" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes rbRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes rbFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rbSlideIn { from { transform: translateX(104%); } to { transform: translateX(0); } }
+</style>
+</helmet>
+
+<sc-if value="{{ anyPop }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeAll }}" style="position: fixed; inset: 0; z-index: 50;"></div>
+</sc-if>
+
+<div data-screen-label="Thread view" style="min-height: 100vh; font-family: var(--font-body);">
+
+  <div style="height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 24px; background: color-mix(in srgb, var(--parchment-50) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--green-700)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--green-900); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <span style="flex: 0 1 340px; margin-left: 20px; display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: 999px; box-sizing: border-box;">
+      <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-faint); white-space: nowrap;">Search the council…</span>
+      <span style="margin-left: auto; font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint);">⌘K</span>
+    </span>
+    <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 10px;">
+      <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+        <span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--green-700); color: var(--parchment-50); font-family: var(--font-label); font-size: .7rem;">{{ viewerInitials }}</span>
+        <span style="font-family: var(--font-label); font-size: .78rem; color: var(--text-body);">{{ viewerName }}</span>
+      </sc-if>
+      <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
+        <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; padding: 7px 16px; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast);">Log in</span>
+      </sc-if>
+    </span>
+  </div>
+
+  <div style="max-width: 860px; margin: 0 auto; padding: 24px 28px 0;">
+
+    <!-- ── Thread head — deliberately quiet ── -->
+    <p style="display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted);">
+      <a href="#" style="display: inline-flex; align-items: center; gap: 3px; color: var(--text-muted);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Home</a>
+      <span style="color: var(--text-faint);">/</span>
+      <a href="#" style="color: var(--accent);"><span style="color: var(--gold-600);">#</span>the-archive</a>
+    </p>
+
+    <h1 style="margin: 12px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.15rem; line-height: 1.14; letter-spacing: -0.01em; color: var(--text-strong); text-wrap: balance; max-width: 28ch;">
+      <sc-if value="{{ pinned }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; vertical-align: 7px; margin-right: 8px; padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Pinned</span></sc-if>
+      <sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; vertical-align: 7px; margin-right: 8px; padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Locked</span></sc-if>
+      <sc-if value="{{ stIsOpen }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; vertical-align: 7px; margin-right: 10px; padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-pending); color: var(--on-pending); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Open</span></sc-if>
+      <sc-if value="{{ stIsNeeds }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; vertical-align: 7px; margin-right: 10px; padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Needs answer</span></sc-if>
+      <sc-if value="{{ stIsSolved }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; vertical-align: 7px; margin-right: 10px; padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">✓ Solved</span></sc-if>
+      <sc-if value="{{ stIsDecision }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; vertical-align: 7px; margin-right: 10px; padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Decision made</span></sc-if>
+      <sc-if value="{{ stIsArchived }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; vertical-align: 7px; margin-right: 10px; padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Archived</span></sc-if>
+      Where should ratified decisions live once the council has spoken?
+    </h1>
+
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--border-hair);">
+      <p style="margin: 0; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted);">Opened by <a href="#" style="color: var(--accent);">Erestor</a><sc-if value="{{ ready }}" hint-placeholder-val="{{ false }}"><span>{{ bylineTail }}</span></sc-if></p>
+      <sc-for list="{{ tags }}" as="t" hint-placeholder-count="2">
+        <span style="display: inline-flex; align-items: center; height: 22px; padding: 0 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-faint); font-family: var(--font-label); font-size: .66rem; letter-spacing: .04em;">{{ t.name }}</span>
+      </sc-for>
+      <span style="flex: 1;"></span>
+      <span style="display: inline-flex; align-items: center; padding-left: 7px;">
+        <span title="Erestor" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; margin-left: -7px; font-family: var(--font-label); font-size: .6rem; background: var(--gold-100); color: var(--gold-700); box-shadow: 0 0 0 2px var(--surface-page);">ER</span>
+        <span title="Glorfindel" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; margin-left: -7px; font-family: var(--font-label); font-size: .6rem; background: var(--gold-100); color: var(--gold-700); box-shadow: 0 0 0 2px var(--surface-page);">GL</span>
+        <span title="Arwen" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; margin-left: -7px; font-family: var(--font-label); font-size: .6rem; background: var(--river-100); color: var(--river-700); box-shadow: 0 0 0 2px var(--surface-page);">AR</span>
+        <span title="Elladan" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; margin-left: -7px; font-family: var(--font-label); font-size: .6rem; background: var(--river-100); color: var(--river-700); box-shadow: 0 0 0 2px var(--surface-page);">EL</span>
+        <span title="Lindir" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; margin-left: -7px; font-family: var(--font-label); font-size: .6rem; background: var(--gold-100); color: var(--gold-700); box-shadow: 0 0 0 2px var(--surface-page);">LI</span>
+        <span style="margin-left: 8px; font-family: var(--font-label); font-size: .7rem; color: var(--text-muted);">+2</span>
+      </span>
+      <sc-if value="{{ starred }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleStar }}" aria-pressed="true" style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 13px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;"><span style="font-size: .88rem; color: var(--gold-600);">★</span>Starred</button>
+      </sc-if>
+      <sc-if value="{{ starOff }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleStar }}" aria-pressed="false" style="display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 13px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-raised); color: var(--text-body); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="background: var(--surface-sunken);"><span style="font-size: .88rem; color: var(--text-muted);">☆</span>Star</button>
+      </sc-if>
+      <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ openDrawer }}" style="display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface-raised); color: var(--text-body); font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);"><svg width="12" height="12" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z" fill="var(--gold-600)"></path></svg>Topic tools</button>
+      </sc-if>
+    </div>
+
+    <!-- ── Living brief (a reading aid, so it stays on the page) ── -->
+    <sc-if value="{{ briefOn }}" hint-placeholder-val="{{ false }}">
+      <section style="margin-top: 16px; padding: 13px 18px 13px 19px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rule-gold); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); animation: rbFade 200ms;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: var(--star); font-size: .85rem;">✦</span>
+          <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Living brief</span>
+          <span style="flex: 1;"></span>
+          <span style="font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint);">{{ briefRefreshed }}</span>
+        </div>
+        <p style="margin: 8px 0 5px; max-width: 72ch; font-size: .97rem; line-height: 1.6; color: var(--text-body);">{{ briefText }}</p>
+        <p style="margin: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-muted);">Drawn from <a href="#p102" style="color: var(--artifact-link);">the guard’s precedent</a> and <a href="#p106" style="color: var(--artifact-link);">the accepted answer</a>. <sc-if value="{{ isStaff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ openBriefSection }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Curate in Topic tools →</button></sc-if></p>
+      </section>
+    </sc-if>
+
+    <!-- ── Poll ── -->
+    <sc-if value="{{ pollOn }}" hint-placeholder-val="{{ false }}">
+      <section style="margin-top: 14px; padding: 15px 18px 13px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="color: var(--star); font-size: .9rem;">✦</span>
+          <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-muted);">Poll · choose one</span>
+          <span style="flex: 1;"></span>
+          <sc-if value="{{ pollOpenChip }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 2px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">Open</span></sc-if>
+          <sc-if value="{{ pollClosed }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 2px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">Closed</span></sc-if>
+        </div>
+        <h2 style="margin: 8px 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Where should ratified decisions live?</h2>
+        <sc-if value="{{ pollChoosing }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 7px;">
+            <sc-for list="{{ pollOptions }}" as="o" hint-placeholder-count="3">
+              <button onClick="{{ o.vote }}" style="display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 13px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--parchment-50); cursor: pointer; text-align: left; font-family: var(--font-body); font-size: .97rem; color: var(--text-body);" style-hover="background: var(--brand-subtle); border-color: var(--green-200);"><span style="width: 14px; height: 14px; border: 1.5px solid var(--border-strong); border-radius: 50%; flex: 0 0 auto; box-sizing: border-box;"></span>{{ o.body }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ pollResults }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <sc-for list="{{ pollOptions }}" as="o" hint-placeholder-count="3">
+              <div style="margin: 0;">
+                <div style="display: flex; align-items: baseline; gap: 8px;">
+                  <span style="font-size: .95rem; color: var(--text-body); font-weight: 400;">{{ o.body }}</span>
+                  <sc-if value="{{ o.mine }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase;">Your voice</span></sc-if>
+                  <span style="margin-left: auto; font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint);">{{ o.n }}</span>
+                </div>
+                <meter min="0" max="{{ pollMax }}" value="{{ o.n }}" style="display: block; width: 100%; height: 12px; margin-top: 4px;">{{ o.n }}</meter>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 11px;">
+          <span style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-faint);">{{ pollFoot }}</span>
+          <span style="flex: 1;"></span>
+          <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-body); font-size: .84rem; font-style: italic; color: var(--text-muted);">Log in to cast a voice.</span></sc-if>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ── Post stream ── -->
+    <div style="padding-bottom: 8px;">
+      <sc-for list="{{ posts }}" as="p" hint-placeholder-count="4">
+        <div style="margin: 0;">
+          <sc-if value="{{ p.day }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 14px; margin: 26px 0 12px;">
+              <span style="flex: 1; height: 1px; background: var(--border-hair);"></span>
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint); white-space: nowrap;">{{ p.day }}</span>
+              <span style="flex: 1; height: 1px; background: var(--border-hair);"></span>
+            </div>
+          </sc-if>
+          <div id="p{{ p.id }}" onMouseEnter="{{ p.enter }}" onMouseLeave="{{ p.leave }}" style="position: relative; z-index: 0; display: flex; gap: 16px; padding: 10px 14px; margin: 6px 0; border-radius: var(--radius-lg);">
+            <sc-if value="{{ p.accepted }}" hint-placeholder-val="{{ false }}">
+              <span style="position: absolute; inset: 0; z-index: -1; background: var(--surface-done); border: 1px solid var(--green-200); border-radius: var(--radius-lg); animation: rbFade 250ms var(--ease-calm);"></span>
+            </sc-if>
+            <sc-if value="{{ p.grouped }}" hint-placeholder-val="{{ false }}"><span style="width: 48px; flex: 0 0 auto;"></span></sc-if>
+            <sc-if value="{{ p.notGrouped }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 7px; width: 48px; flex: 0 0 auto;">
+                <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ p.monoName }}" username="{{ p.monoSeed }}" size="lg" gilt="{{ p.gilt }}" hint-size="44px,44px"></x-import>
+                <sc-if value="{{ p.showRep }}" hint-placeholder-val="{{ true }}">
+                  <span style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                    <span style="font-family: var(--font-display); font-weight: 600; font-size: 1rem; color: var(--text-strong); font-variant-numeric: tabular-nums; line-height: 1;"><span style="color: var(--star); font-size: .78rem;">✦ </span>{{ p.rep }}</span>
+                    <span style="font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: .5rem; color: var(--text-faint);">Commends</span>
+                  </span>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <div style="flex: 1; min-width: 0;">
+              <sc-if value="{{ p.accepted }}" hint-placeholder-val="{{ false }}">
+                <p style="display: flex; align-items: center; gap: 7px; margin: 0 0 7px; font-family: var(--font-label); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--on-done);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Marked as the answer<span style="color: var(--star);">✦</span></p>
+              </sc-if>
+              <sc-if value="{{ p.notGrouped }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 3px;">
+                  <sc-if value="{{ p.anonMasked }}" hint-placeholder-val="{{ false }}"><span style="font-weight: 600; font-size: 1.02rem; color: var(--text-muted); font-style: italic;">{{ p.displayAuthor }}</span></sc-if>
+                  <sc-if value="{{ p.named }}" hint-placeholder-val="{{ true }}"><span style="font-weight: 600; font-size: 1.02rem; color: var(--text-strong);">{{ p.displayAuthor }}</span></sc-if>
+                  <sc-if value="{{ p.tierLegend }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Legend</span></sc-if>
+                  <sc-if value="{{ p.tierLoremaster }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Loremaster</span></sc-if>
+                  <sc-if value="{{ p.tierVeteran }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--river-200); background: var(--river-100); color: var(--river-700); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Veteran</span></sc-if>
+                  <sc-if value="{{ p.tierMember }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Member</span></sc-if>
+                  <sc-if value="{{ p.op }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">OP</span></sc-if>
+                  <sc-if value="{{ p.staff }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; background: var(--green-700); color: var(--parchment-50); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Staff</span></sc-if>
+                  <sc-if value="{{ p.wiki }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--river-200); background: var(--river-100); color: var(--river-700); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Wiki</span></sc-if>
+                  <sc-if value="{{ p.anonMasked }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-faint); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Anonymous</span></sc-if>
+                  <sc-if value="{{ p.revealed }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 8px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">Revealed · logged</span></sc-if>
+                  <span style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-faint); white-space: nowrap;">{{ p.time }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ p.grouped }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-bottom: 2px;"><span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .04em; color: var(--text-faint); white-space: nowrap;">{{ p.time }}</span></div>
+              </sc-if>
+
+              <sc-if value="{{ p.editing }}" hint-placeholder-val="{{ false }}">
+                <div style="margin: 6px 0;">
+                  <textarea value="{{ editDraft }}" onInput="{{ setEditDraft }}" style="display: block; width: 100%; box-sizing: border-box; min-height: 96px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface-raised); font-family: var(--font-body); font-size: .97rem; line-height: 1.55; color: var(--text-body); resize: vertical; outline: none;"></textarea>
+                  <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button onClick="{{ saveEdit }}" style="padding: 6px 14px; border: none; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; cursor: pointer;" style-hover="background: var(--brand-hover);">Save changes</button>
+                    <button onClick="{{ cancelEdit }}" style="padding: 6px 12px; border: none; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Cancel</button>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ p.notEditing }}" hint-placeholder-val="{{ true }}">
+                <div style="max-width: 66ch; font-size: 1.02rem; line-height: 1.62; color: var(--text-body);">
+                  <sc-if value="{{ p.quoteText }}" hint-placeholder-val="{{ false }}">
+                    <blockquote style="margin: 4px 0 10px; padding: 2px 14px; border-left: 2px solid var(--rule-gold); color: var(--text-strong); font-style: italic;">{{ p.quoteText }}</blockquote>
+                  </sc-if>
+                  <sc-for list="{{ p.paras }}" as="para" hint-placeholder-count="1">
+                    <p style="margin: 0 0 9px;">{{ para }}</p>
+                  </sc-for>
+                  <sc-if value="{{ p.hasList }}" hint-placeholder-val="{{ false }}">
+                    <ul style="margin: 0 0 9px; padding-left: 22px;">
+                      <sc-for list="{{ p.list }}" as="li" hint-placeholder-count="2">
+                        <li style="margin: 0 0 5px;">{{ li }}</li>
+                      </sc-for>
+                    </ul>
+                  </sc-if>
+                  <sc-if value="{{ p.after }}" hint-placeholder-val="{{ false }}">
+                    <p style="margin: 0 0 9px;">{{ p.after }}</p>
+                  </sc-if>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ p.hasReactions }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+                  <sc-for list="{{ p.reactionsArr }}" as="r" hint-placeholder-count="2">
+                    <span style="display: inline-flex;">
+                      <sc-if value="{{ r.on }}" hint-placeholder-val="{{ false }}">
+                        <button onClick="{{ r.toggle }}" title="{{ r.title }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .7rem; letter-spacing: .03em; cursor: pointer;"><span style="color: var(--star); font-size: .78rem;">{{ r.glyph }}</span>{{ r.label }} · {{ r.n }}</button>
+                      </sc-if>
+                      <sc-if value="{{ r.off }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ r.toggle }}" title="{{ r.title }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-raised); color: var(--text-muted); font-family: var(--font-label); font-size: .7rem; letter-spacing: .03em; cursor: pointer;" style-hover="border-color: var(--gold-200); color: var(--gold-ink);"><span style="color: var(--star); font-size: .78rem;">{{ r.glyph }}</span>{{ r.label }} · {{ r.n }}</button>
+                      </sc-if>
+                    </span>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ p.hover }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; top: -13px; right: 12px; display: flex; align-items: center; gap: 1px; padding: 3px; background: var(--surface-raised); border: 1px solid var(--border-soft); border-radius: 999px; box-shadow: var(--shadow-md); z-index: 30; animation: rbFade 120ms var(--ease-calm);">
+                  <button onClick="{{ p.quickCommend }}" title="Commend" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 999px; background: transparent; color: var(--gold-600); font-size: .9rem; cursor: pointer;" style-hover="background: var(--gold-soft);">✦</button>
+                  <span style="position: relative; display: inline-flex;">
+                    <button onClick="{{ p.openReact }}" title="React…" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 999px; background: transparent; color: var(--text-muted); font-size: .85rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">＋</button>
+                    <sc-if value="{{ p.reactOpen }}" hint-placeholder-val="{{ false }}">
+                      <div style="position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; min-width: 168px; padding: 5px; background: var(--surface-raised); border: 1px solid var(--border-soft); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); animation: rbRise 140ms var(--ease-calm);">
+                        <sc-for list="{{ p.pickable }}" as="rp" hint-placeholder-count="3">
+                          <button onClick="{{ rp.pick }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);"><span style="color: var(--star);">{{ rp.glyph }}</span>{{ rp.label }}<span style="margin-left: auto; color: var(--on-done); font-size: .8rem;">{{ rp.check }}</span></button>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </span>
+                  <button onClick="{{ p.quote }}" title="Quote in your reply" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 999px; background: transparent; color: var(--text-muted); font-size: .85rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">❝</button>
+                  <sc-if value="{{ p.canAccept }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ p.accept }}" title="Accept as the answer" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 999px; background: transparent; color: var(--success); font-size: .9rem; cursor: pointer;" style-hover="background: var(--surface-done);">✓</button>
+                  </sc-if>
+                  <span style="position: relative; display: inline-flex;">
+                    <button onClick="{{ p.toggleMenu }}" title="More" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 999px; background: transparent; color: var(--text-muted); font-size: .85rem; letter-spacing: .05em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">···</button>
+                    <sc-if value="{{ p.menuOpen }}" hint-placeholder-val="{{ false }}">
+                      <div style="position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; min-width: 188px; padding: 5px; background: var(--surface-raised); border: 1px solid var(--border-soft); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); animation: rbRise 140ms var(--ease-calm);">
+                        <button onClick="{{ p.copyLink }}" style="display: block; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">Copy link</button>
+                        <sc-if value="{{ p.own }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ p.edit }}" style="display: block; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">Edit</button>
+                          <button onClick="{{ p.del }}" style="display: block; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--rust);" style-hover="background: var(--surface-sunken);">Delete</button>
+                        </sc-if>
+                        <sc-if value="{{ p.staffTools }}" hint-placeholder-val="{{ false }}">
+                          <div style="height: 1px; background: var(--border-hair); margin: 4px 4px;"></div>
+                          <button onClick="{{ p.makeWiki }}" style="display: block; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">{{ p.wikiLabel }}</button>
+                          <sc-if value="{{ p.canReveal }}" hint-placeholder-val="{{ false }}">
+                            <button onClick="{{ p.reveal }}" style="display: block; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">Reveal author — logged</button>
+                          </sc-if>
+                          <sc-if value="{{ p.canRemove }}" hint-placeholder-val="{{ false }}">
+                            <button onClick="{{ p.del }}" style="display: block; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--rust);" style-hover="background: var(--surface-sunken);">Remove (warden)</button>
+                          </sc-if>
+                        </sc-if>
+                        <sc-if value="{{ p.canReport }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ p.report }}" style="display: block; width: 100%; padding: 7px 10px; border: none; border-radius: var(--radius-sm); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .76rem; color: var(--text-faint);" style-hover="background: var(--surface-sunken);">Report</button>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+                  </span>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ── Composer dock ── -->
+    <div style="position: sticky; bottom: 0; z-index: 45; padding: 14px 0 18px; background: linear-gradient(to top, var(--surface-page) 72%, transparent);">
+      <sc-if value="{{ composerOn }}" hint-placeholder-val="{{ false }}">
+        <div style="background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 10px 14px 11px;">
+          <div style="display: flex; align-items: center; gap: 9px; padding-bottom: 8px; border-bottom: 1px solid var(--border-hair);">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--green-700); color: var(--parchment-50); font-family: var(--font-label); font-size: .58rem;">{{ viewerInitials }}</span>
+            <span style="font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; color: var(--text-muted);">Posting as {{ viewerName }}</span>
+            <span style="flex: 1;"></span>
+            <sc-if value="{{ draftSaved }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint); animation: rbFade 300ms;">Draft saved</span></sc-if>
+          </div>
+          <textarea placeholder="Add your counsel…" value="{{ draft }}" onInput="{{ setDraft }}" style="display: block; width: 100%; box-sizing: border-box; min-height: 56px; padding: 9px 2px 4px; border: none; outline: none; background: transparent; resize: vertical; font-family: var(--font-body); font-size: 1.02rem; line-height: 1.55; color: var(--text-body);"></textarea>
+          <div style="display: flex; align-items: center; gap: 2px;">
+            <button onClick="{{ markBold }}" title="Bold" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 24px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); font-family: var(--font-body); font-weight: 700; font-size: .84rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">B</button>
+            <button onClick="{{ markItalic }}" title="Italic" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 24px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); font-family: var(--font-body); font-style: italic; font-size: .84rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">I</button>
+            <button onClick="{{ markStrike }}" title="Strike" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 24px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); font-family: var(--font-body); text-decoration: line-through; font-size: .84rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">S</button>
+            <span style="width: 1px; height: 15px; background: var(--border-hair); margin: 0 6px;"></span>
+            <button onClick="{{ markQuote }}" title="Quote" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 24px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); font-size: .84rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">❝</button>
+            <button onClick="{{ markCode }}" title="Code" style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 24px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); font-family: var(--font-mono); font-size: .66rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">&lt;/&gt;</button>
+            <span style="flex: 1;"></span>
+            <span style="font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint);">{{ draftCount }}</span>
+            <sc-if value="{{ sendOn }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ send }}" style="margin-left: 10px; padding: 8px 20px; border: none; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; cursor: pointer;" style-hover="background: var(--brand-hover);">Reply</button>
+            </sc-if>
+            <sc-if value="{{ sendOff }}" hint-placeholder-val="{{ true }}">
+              <button disabled="true" style="margin-left: 10px; padding: 8px 20px; border: none; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; opacity: .45; cursor: default;">Reply</button>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ guestBar }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; align-items: center; gap: 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); padding: 12px 16px;">
+          <span style="font-family: var(--font-body); font-size: .95rem; color: var(--text-body);">You are browsing as a guest — <em>log in to add your counsel.</em></span>
+          <span style="flex: 1;"></span>
+          <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; padding: 8px 18px; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); cursor: pointer;">Log in</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ lockedBar }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); padding: 12px 16px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span style="font-family: var(--font-body); font-size: .95rem; font-style: italic; color: var(--text-muted);">This topic is locked and is not accepting replies.</span>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- ═══ The Study — tools drawer ═══ -->
+  <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeDrawer }}" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 70; background: rgba(22,29,36,.42); backdrop-filter: blur(2px); animation: rbFade 240ms var(--ease-calm);"></div>
+  <aside role="dialog" aria-label="Topic tools" style="position: fixed; top: 0; right: 0; bottom: 0; z-index: 80; width: min(392px, 92vw); display: flex; flex-direction: column; background: var(--parchment-50); border-left: 1px solid var(--border-hair); box-shadow: var(--shadow-xl); animation: rbSlideIn 260ms var(--ease-calm);">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 16px 18px 14px; border-bottom: 1px solid var(--border-hair);">
+      <svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z" fill="var(--gold-600)"></path></svg>
+      <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Topic tools</h2>
+      <span style="flex: 1;"></span>
+      <button onClick="{{ closeDrawer }}" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 999px; background: transparent; color: var(--text-faint); font-size: 1.05rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">×</button>
+    </div>
+    <div style="flex: 1; overflow: auto; padding: 10px 14px 20px;">
+
+      <!-- Your watch -->
+      <div style="border-bottom: 1px solid var(--border-hair);">
+        <button onClick="{{ secWatch }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 13px 4px; border: none; background: transparent; cursor: pointer; text-align: left;">
+          <span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; color: var(--text-strong);">Your watch</span>
+          <span style="font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint);">{{ watchSummary }}</span>
+          <span style="margin-left: auto; color: var(--text-faint);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span>
+        </button>
+        <sc-if value="{{ openWatchSec }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 2px 4px 14px; animation: rbFade 150ms;">
+            <div style="display: flex; border: 1px solid var(--border-hair); border-radius: var(--radius-md); overflow: hidden;">
+              <sc-if value="{{ watchIsInstant }}" hint-placeholder-val="{{ false }}"><button title="Every reply, as it lands" style="flex: 1; padding: 7px 0; border: none; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; cursor: pointer;">Instant</button></sc-if>
+              <sc-if value="{{ watchNotInstant }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setWatchInstant }}" title="Every reply, as it lands" style="flex: 1; padding: 7px 0; border: none; background: var(--surface-raised); color: var(--text-muted); font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Instant</button></sc-if>
+              <sc-if value="{{ watchIsDaily }}" hint-placeholder-val="{{ false }}"><button title="One evening summary" style="flex: 1; padding: 7px 0; border: none; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; cursor: pointer;">Daily</button></sc-if>
+              <sc-if value="{{ watchNotDaily }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setWatchDaily }}" title="One evening summary" style="flex: 1; padding: 7px 0; border: none; background: var(--surface-raised); color: var(--text-muted); font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Daily</button></sc-if>
+              <sc-if value="{{ watchIsOff }}" hint-placeholder-val="{{ false }}"><button title="Only when named" style="flex: 1; padding: 7px 0; border: none; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; cursor: pointer;">Off</button></sc-if>
+              <sc-if value="{{ watchNotOff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setWatchOff }}" title="Only when named" style="flex: 1; padding: 7px 0; border: none; background: var(--surface-raised); color: var(--text-muted); font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Off</button></sc-if>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-top: 11px; flex-wrap: wrap;">
+              <span style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-muted); margin-right: 2px;">Quiet until</span>
+              <sc-if value="{{ snzToday }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setSnzToday }}" style="padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; cursor: pointer;">Today</button></sc-if>
+              <sc-if value="{{ snzNotToday }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setSnzToday }}" style="padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; cursor: pointer;" style-hover="border-color: var(--gold-200); color: var(--gold-ink);">Today</button></sc-if>
+              <sc-if value="{{ snzTomorrow }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setSnzTomorrow }}" style="padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; cursor: pointer;">Tomorrow</button></sc-if>
+              <sc-if value="{{ snzNotTomorrow }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setSnzTomorrow }}" style="padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; cursor: pointer;" style-hover="border-color: var(--gold-200); color: var(--gold-ink);">Tomorrow</button></sc-if>
+              <sc-if value="{{ snzWeek }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setSnzWeek }}" style="padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; cursor: pointer;">Next week</button></sc-if>
+              <sc-if value="{{ snzNotWeek }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setSnzWeek }}" style="padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; cursor: pointer;" style-hover="border-color: var(--gold-200); color: var(--gold-ink);">Next week</button></sc-if>
+            </div>
+            <p style="margin: 9px 0 0; font-family: var(--font-mono); font-size: .62rem; color: var(--text-faint);">Watching and snooze are yours alone.</p>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- Standing -->
+      <div style="border-bottom: 1px solid var(--border-hair);">
+        <button onClick="{{ secStanding }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 13px 4px; border: none; background: transparent; cursor: pointer; text-align: left;">
+          <span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; color: var(--text-strong);">Standing</span>
+          <sc-if value="{{ stIsOpen }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 9px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-pending); color: var(--on-pending); font-family: var(--font-label); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase;">Open</span></sc-if>
+          <sc-if value="{{ stIsNeeds }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 9px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase;">Needs answer</span></sc-if>
+          <sc-if value="{{ stIsSolved }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 9px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase;">✓ Solved</span></sc-if>
+          <sc-if value="{{ stIsDecision }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 9px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--green-200); background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase;">Decision made</span></sc-if>
+          <sc-if value="{{ stIsArchived }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 1px 9px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .56rem; letter-spacing: .12em; text-transform: uppercase;">Archived</span></sc-if>
+          <span style="margin-left: auto; color: var(--text-faint);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span>
+        </button>
+        <sc-if value="{{ openStandingSec }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 2px 4px 14px; animation: rbFade 150ms;">
+            <sc-if value="{{ isStaff }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <button onClick="{{ setStOpen }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);"><span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--text-body);">Open</span><span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ stIsOpen }}" hint-placeholder-val="{{ false }}">✓</sc-if></span></button>
+                <button onClick="{{ setStNeeds }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);"><span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--text-body);">Needs answer</span><span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ stIsNeeds }}" hint-placeholder-val="{{ false }}">✓</sc-if></span></button>
+                <button onClick="{{ setStSolved }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);"><span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--text-body);">Solved</span><span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ stIsSolved }}" hint-placeholder-val="{{ false }}">✓</sc-if></span></button>
+                <button onClick="{{ setStDecision }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);"><span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--text-body);">Decision made</span><span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ stIsDecision }}" hint-placeholder-val="{{ false }}">✓</sc-if></span></button>
+                <button onClick="{{ setStArchived }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);"><span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; color: var(--text-body);">Archived</span><span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ stIsArchived }}" hint-placeholder-val="{{ false }}">✓</sc-if></span></button>
+              </div>
+              <input placeholder="Reason — recorded in the ledger" value="{{ statusReason }}" onInput="{{ setStatusReason }}" style="display: block; width: 100%; box-sizing: border-box; margin-top: 8px; height: 30px; padding: 0 10px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-sunken); font-family: var(--font-body); font-size: .84rem; color: var(--text-body); outline: none;">
+            </sc-if>
+            <p style="margin: 12px 0 6px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Status ledger</p>
+            <sc-for list="{{ history }}" as="h" hint-placeholder-count="2">
+              <p style="margin: 0 0 8px; font-family: var(--font-body); font-size: .82rem; line-height: 1.4; color: var(--text-muted);"><span style="color: var(--text-strong); font-weight: 600;">{{ h.to }}</span> ← {{ h.from }}<span style="display: block; font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint);">{{ h.actor }} · {{ h.at }}</span><sc-if value="{{ h.reason }}" hint-placeholder-val="{{ false }}"><span style="display: block; font-style: italic; color: var(--text-faint);">“{{ h.reason }}”</span></sc-if></p>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- Tags -->
+      <div style="border-bottom: 1px solid var(--border-hair);">
+        <button onClick="{{ secTags }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 13px 4px; border: none; background: transparent; cursor: pointer; text-align: left;">
+          <span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; color: var(--text-strong);">Tags</span>
+          <span style="font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint);">{{ tagSummary }}</span>
+          <span style="margin-left: auto; color: var(--text-faint);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span>
+        </button>
+        <sc-if value="{{ openTagsSec }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 2px 4px 14px; animation: rbFade 150ms;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <sc-for list="{{ tags }}" as="t" hint-placeholder-count="2">
+                <button onClick="{{ t.remove }}" title="{{ t.title }}" style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; cursor: pointer;" style-hover="border-color: var(--border-strong); color: var(--text-body);">{{ t.name }}<sc-if value="{{ t.removable }}" hint-placeholder-val="{{ false }}"><span style="font-size: .8rem; line-height: 1; color: var(--text-faint);">×</span></sc-if></button>
+              </sc-for>
+            </div>
+            <sc-if value="{{ isStaff }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px;">
+                <sc-for list="{{ addableTags }}" as="at" hint-placeholder-count="3">
+                  <button onClick="{{ at.add }}" style="padding: 3px 10px; white-space: nowrap; border-radius: 999px; border: 1px dashed var(--border-hair); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .68rem; cursor: pointer;" style-hover="background: var(--brand-subtle); color: var(--green-800); border-color: var(--green-200);">＋ {{ at.name }}</button>
+                </sc-for>
+                <sc-if value="{{ noAddableTags }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-body); font-size: .8rem; font-style: italic; color: var(--text-faint);">Every tag is already placed.</span></sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- Living brief (curation) -->
+      <sc-if value="{{ isStaff }}" hint-placeholder-val="{{ false }}">
+        <div style="border-bottom: 1px solid var(--border-hair);">
+          <button onClick="{{ secBrief }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 13px 4px; border: none; background: transparent; cursor: pointer; text-align: left;">
+            <span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; color: var(--text-strong);">Living brief</span>
+            <span style="color: var(--star); font-size: .75rem;">✦</span>
+            <span style="margin-left: auto; color: var(--text-faint);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <sc-if value="{{ openBriefSec }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 2px 4px 14px; animation: rbFade 150ms;">
+              <sc-if value="{{ briefEditing }}" hint-placeholder-val="{{ false }}">
+                <textarea value="{{ briefDraft }}" onInput="{{ setBriefDraft }}" style="display: block; width: 100%; box-sizing: border-box; min-height: 110px; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface-raised); font-family: var(--font-body); font-size: .87rem; line-height: 1.5; color: var(--text-body); resize: vertical; outline: none;"></textarea>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                  <button onClick="{{ saveBrief }}" style="padding: 5px 12px; border: none; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .7rem; letter-spacing: .05em; cursor: pointer;" style-hover="background: var(--brand-hover);">Save</button>
+                  <button onClick="{{ cancelBrief }}" style="padding: 5px 10px; border: none; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .7rem; letter-spacing: .05em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Cancel</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ briefStatic }}" hint-placeholder-val="{{ true }}">
+                <p style="margin: 0 0 6px; font-size: .87rem; line-height: 1.5; color: var(--text-body);">{{ briefText }}</p>
+                <p style="margin: 0 0 10px; font-family: var(--font-mono); font-size: .62rem; color: var(--text-faint);">{{ briefRefreshed }}</p>
+                <div style="display: flex; gap: 12px;">
+                  <button onClick="{{ refreshBrief }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">{{ refreshLabel }}</button>
+                  <button onClick="{{ editBrief }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Edit summary</button>
+                  <button onClick="{{ toggleBrief }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-muted); cursor: pointer;" style-hover="text-decoration: underline;">{{ briefMenuLabel }}</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- Wardens' tools -->
+      <sc-if value="{{ isStaff }}" hint-placeholder-val="{{ false }}">
+        <div style="border-bottom: 1px solid var(--border-hair);">
+          <button onClick="{{ secWardens }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 13px 4px; border: none; background: transparent; cursor: pointer; text-align: left;">
+            <span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; color: var(--text-strong);">Wardens’ tools</span>
+            <span style="font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint);">{{ wardenSummary }}</span>
+            <span style="margin-left: auto; color: var(--text-faint);"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <sc-if value="{{ openWardensSec }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 2px 4px 14px; animation: rbFade 150ms;">
+              <p style="margin: 0 0 6px; font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-muted);">Tended by</p>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <button onClick="{{ assignElrond }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 5px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-family: var(--font-label); font-size: .56rem; background: var(--green-200); color: var(--green-900);">EL</span>
+                  <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-body);">Elrond — me</span>
+                  <span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ assignIsElrond }}" hint-placeholder-val="{{ false }}">✓</sc-if></span>
+                </button>
+                <button onClick="{{ assignGlorfindel }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 5px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-family: var(--font-label); font-size: .56rem; background: var(--gold-100); color: var(--gold-700);">GL</span>
+                  <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-body);">Glorfindel</span>
+                  <span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ assignIsGlorfindel }}" hint-placeholder-val="{{ false }}">✓</sc-if></span>
+                </button>
+                <button onClick="{{ assignArwen }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 5px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-family: var(--font-label); font-size: .56rem; background: var(--river-100); color: var(--river-700);">AR</span>
+                  <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-body);">Arwen</span>
+                  <span style="margin-left: auto; color: var(--on-done); font-size: .8rem;"><sc-if value="{{ assignIsArwen }}" hint-placeholder-val="{{ false }}">✓</sc-if></span>
+                </button>
+                <button onClick="{{ unassign }}" style="display: block; width: 100%; padding: 5px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .72rem; color: var(--text-faint);" style-hover="background: var(--surface-sunken); color: var(--text-muted);">Unassign</button>
+              </div>
+              <div style="height: 1px; background: var(--border-hair); margin: 10px 0;"></div>
+              <button onClick="{{ togglePin }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);">
+                <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-body);">Pinned above the board</span>
+                <sc-if value="{{ pinned }}" hint-placeholder-val="{{ false }}"><span style="margin-left: auto; display: inline-flex; width: 30px; height: 18px; padding: 2px; border-radius: 999px; background: var(--gold-500); box-sizing: border-box;"><span style="width: 14px; height: 14px; border-radius: 50%; background: var(--parchment-50); box-shadow: var(--shadow-xs); transform: translateX(12px); transition: transform 150ms var(--ease-calm);"></span></span></sc-if>
+                <sc-if value="{{ pinOff }}" hint-placeholder-val="{{ true }}"><span style="margin-left: auto; display: inline-flex; width: 30px; height: 18px; padding: 2px; border-radius: 999px; background: var(--border-strong); box-sizing: border-box;"><span style="width: 14px; height: 14px; border-radius: 50%; background: var(--parchment-50); box-shadow: var(--shadow-xs); transform: translateX(0); transition: transform 150ms var(--ease-calm);"></span></span></sc-if>
+              </button>
+              <button onClick="{{ toggleLock }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left;" style-hover="background: var(--surface-sunken);">
+                <span style="font-family: var(--font-label); font-size: .76rem; color: var(--text-body);">Locked to replies</span>
+                <sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}"><span style="margin-left: auto; display: inline-flex; width: 30px; height: 18px; padding: 2px; border-radius: 999px; background: var(--rust); box-sizing: border-box;"><span style="width: 14px; height: 14px; border-radius: 50%; background: var(--parchment-50); box-shadow: var(--shadow-xs); transform: translateX(12px); transition: transform 150ms var(--ease-calm);"></span></span></sc-if>
+                <sc-if value="{{ lockOff }}" hint-placeholder-val="{{ true }}"><span style="margin-left: auto; display: inline-flex; width: 30px; height: 18px; padding: 2px; border-radius: 999px; background: var(--border-strong); box-sizing: border-box;"><span style="width: 14px; height: 14px; border-radius: 50%; background: var(--parchment-50); box-shadow: var(--shadow-xs); transform: translateX(0); transition: transform 150ms var(--ease-calm);"></span></span></sc-if>
+              </button>
+              <div style="height: 1px; background: var(--border-hair); margin: 10px 0;"></div>
+              <sc-if value="{{ hasAccepted }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ clearAccepted }}" style="display: block; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .74rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">Clear accepted answer</button>
+              </sc-if>
+              <button onClick="{{ closePoll }}" style="display: block; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .74rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">{{ pollCloseLabel }}</button>
+              <button onClick="{{ togglePoll }}" style="display: block; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .74rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">{{ pollMenuLabel }}</button>
+              <button onClick="{{ openSplit }}" style="display: block; width: 100%; padding: 6px 8px; border: none; border-radius: var(--radius-md); background: transparent; cursor: pointer; text-align: left; font-family: var(--font-label); font-size: .74rem; color: var(--text-body);" style-hover="background: var(--surface-sunken);">Split or merge…</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <p style="margin: 14px 4px 0; font-family: var(--font-mono); font-size: .62rem; color: var(--text-faint);">Esc closes. Warden acts are recorded in the ledger.</p>
+    </div>
+  </aside>
+  </sc-if>
+
+  <!-- ── Split / merge modal ── -->
+  <sc-if value="{{ splitOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSplit }}" style="position: fixed; inset: 0; z-index: 100; background: rgba(22,29,36,.42); backdrop-filter: blur(3px); animation: rbFade 160ms;"></div>
+    <div role="dialog" aria-label="Split or merge topic" style="position: fixed; top: 8vh; left: 0; right: 0; margin: 0 auto; z-index: 110; width: min(600px, 92vw); max-height: 80vh; overflow: auto; background: var(--parchment-50); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); padding: 22px 26px 24px; box-sizing: border-box; animation: rbRise 200ms var(--ease-calm);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.45rem; color: var(--text-strong);">Split or merge this topic</h2>
+        <span style="flex: 1;"></span>
+        <button onClick="{{ closeSplit }}" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 999px; background: transparent; color: var(--text-faint); font-size: 1.05rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">×</button>
+      </div>
+      <p style="margin: 6px 0 16px; font-family: var(--font-body); font-size: .9rem; color: var(--text-muted); max-width: 60ch;">Selected replies move into a new topic; merging redirects this topic into the chosen target. Both are logged and reversible.</p>
+      <p style="margin: 0 0 8px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Split replies out</p>
+      <div style="display: flex; flex-direction: column; gap: 6px; max-height: 210px; overflow: auto; padding: 2px;">
+        <sc-for list="{{ splitList }}" as="sp" hint-placeholder-count="3">
+          <button onClick="{{ sp.toggle }}" style="display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 1px solid var(--border-hair); background: var(--surface-raised); border-radius: var(--radius-md); cursor: pointer; text-align: left;" style-hover="border-color: var(--green-200);">
+            <sc-if value="{{ sp.on }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; margin-top: 2px; border: 1.5px solid var(--accent); border-radius: 4px; background: var(--accent); color: var(--parchment-50); font-size: .62rem; flex: 0 0 auto; box-sizing: border-box;">✓</span></sc-if>
+            <sc-if value="{{ sp.offMark }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; width: 15px; height: 15px; margin-top: 2px; border: 1.5px solid var(--border-strong); border-radius: 4px; background: transparent; flex: 0 0 auto; box-sizing: border-box;"></span></sc-if>
+            <span style="min-width: 0;">
+              <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .04em; color: var(--text-muted);">{{ sp.author }} · #{{ sp.id }}</span>
+              <span style="display: block; font-family: var(--font-body); font-size: .87rem; color: var(--text-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 470px;">{{ sp.excerpt }}</span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 10px;">
+        <input placeholder="New topic title…" value="{{ splitTitle }}" onInput="{{ setSplitTitle }}" style="flex: 1; height: 34px; padding: 0 12px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); font-family: var(--font-body); font-size: .9rem; color: var(--text-body); outline: none;">
+        <button onClick="{{ doSplit }}" style="padding: 0 16px; border: none; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; cursor: pointer;" style-hover="background: var(--brand-hover);">{{ splitBtnLabel }}</button>
+      </div>
+      <div style="height: 1px; background: var(--border-hair); margin: 18px 0 14px;"></div>
+      <p style="margin: 0 0 8px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Merge into another topic</p>
+      <div style="display: flex; gap: 8px;">
+        <input placeholder="Target topic — id or title…" value="{{ mergeTarget }}" onInput="{{ setMergeTarget }}" style="flex: 1; height: 34px; padding: 0 12px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); font-family: var(--font-body); font-size: .9rem; color: var(--text-body); outline: none;">
+        <button onClick="{{ doMerge }}" style="padding: 0 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--text-body); font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Merge topics</button>
+      </div>
+      <p style="margin: 8px 0 0; font-family: var(--font-body); font-size: .82rem; font-style: italic; color: var(--text-faint);">All posts would move into the chosen topic; a signpost remains here.</p>
+    </div>
+  </sc-if>
+
+  <!-- ── Toast ── -->
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; bottom: 22px; left: 0; right: 0; margin: 0 auto; width: fit-content; max-width: 560px; z-index: 120; display: flex; align-items: center; gap: 16px; padding: 11px 18px; background: var(--twilight-800); color: var(--parchment-100); border-radius: var(--radius-md); box-shadow: var(--shadow-xl); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; animation: rbRise 180ms var(--ease-calm);">
+      <span>{{ toastMsg }}</span>
+      <sc-if value="{{ toastHasAction }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toastFn }}" style="border: none; background: transparent; color: var(--gold-400); font-family: var(--font-label); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; padding: 0;">{{ toastActionLabel }}</button>
+      </sc-if>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;staff&quot;,&quot;member&quot;,&quot;guest&quot;],&quot;default&quot;:&quot;staff&quot;,&quot;tsType&quot;:&quot;'staff' | 'member' | 'guest'&quot;,&quot;section&quot;:&quot;Viewer&quot;},&quot;showPoll&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Feature flags&quot;},&quot;showBrief&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Feature flags&quot;}}">
+class Component extends DCLogic {
+  state = { data: false, roleOverride: null, toast: null, drawerOpen: false, section: 'watch' };
+
+  componentDidMount() {
+    import(new URL('./thread-data.js', window.location.href).href).then((m) => {
+      this.D = m;
+      this.setState(this.seedState(m));
+    }).catch((err) => console.error('thread-data import failed', err));
+    this._esc = (e) => { if (e.key === 'Escape') this.setState({ postMenu: null, reactMenu: null, splitOpen: false, drawerOpen: false }); };
+    window.addEventListener('keydown', this._esc);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this._esc); clearTimeout(this._tt); }
+
+  seedState(m) {
+    return {
+      data: true, starred: false, watch: 'instant',
+      status: 'solved', history: m.HISTORY.slice(), statusReason: '',
+      assignee: 'Erestor', snooze: null,
+      tags: m.TAGS.slice(), pinned: false, locked: false,
+      pollShown: null, pollClosed: false, pollVoted: null,
+      pollVotes: Object.fromEntries(m.POLL.options.map(o => [o.id, o.votes])),
+      acceptedId: 106, briefShown: null, briefText: m.BRIEF.summary, briefEditing: false, briefDraft: '', refreshing: false,
+      drawerOpen: false, section: 'watch',
+      hoverId: null, postMenu: null, reactMenu: null,
+      posts: m.POSTS.map(p => ({ ...p, counts: { ...(p.reactions || {}) }, mine: (p.mine || []).slice(), wiki: false, revealed: false })),
+      editingId: null, editDraft: '', draft: '',
+      splitOpen: false, splitSel: {}, splitTitle: '', mergeTarget: '',
+      toast: null, roleOverride: this.state.roleOverride,
+    };
+  }
+
+  role() { return this.state.roleOverride ?? (this.props.role ?? 'staff'); }
+  showToast(msg, action) { clearTimeout(this._tt); this.setState({ toast: { msg, action } }); this._tt = setTimeout(() => this.setState({ toast: null }), 3600); }
+
+  applyStatus(value) {
+    if (value === this.state.status) return;
+    const D = this.D;
+    const def = D.STATUSES.find(x => x.value === value);
+    const prev = D.STATUSES.find(x => x.value === this.state.status);
+    const entry = { to: def.label, from: prev ? prev.label : this.state.status, actor: 'Elrond', at: 'Just now', reason: this.state.statusReason.trim() };
+    this.setState({ status: value, history: [entry, ...this.state.history], statusReason: '' });
+    this.showToast('Status set to “' + def.label + '” — recorded in the ledger.');
+  }
+
+  assignTo(name) { this.setState({ assignee: name }); this.showToast('Tended by ' + name + '.'); }
+
+  setSnooze(v) {
+    const next = this.state.snooze === v ? null : v;
+    this.setState({ snooze: next });
+    this.showToast(next ? 'Quiet until ' + next + ' — for you alone.' : 'Snooze cleared.');
+  }
+
+  setWatch(k) {
+    this.setState({ watch: k });
+    this.showToast(k === 'off' ? 'You will only be notified when named.' : 'Watching — ' + k + ' word of new replies.');
+  }
+
+  react(id, key) {
+    if (this.role() === 'guest') return;
+    this.setState({
+      reactMenu: null,
+      posts: this.state.posts.map(p => {
+        if (p.id !== id) return p;
+        const on = p.mine.includes(key);
+        const n = (p.counts[key] || 0) + (on ? -1 : 1);
+        const counts = { ...p.counts, [key]: n };
+        if (n <= 0) delete counts[key];
+        return { ...p, counts, mine: on ? p.mine.filter(k => k !== key) : [...p.mine, key] };
+      }),
+    });
+  }
+
+  accept(p) {
+    const st = this.state;
+    const entries = [];
+    if (st.status !== 'solved') {
+      const prev = this.D.STATUSES.find(x => x.value === st.status);
+      entries.push({ to: 'Solved', from: prev ? prev.label : st.status, actor: 'Elrond', at: 'Just now', reason: 'Answer accepted' });
+    }
+    this.setState({ acceptedId: p.id, status: 'solved', history: [...entries, ...st.history], postMenu: null, hoverId: null });
+    this.showToast('Marked as the answer — the council is directed there.');
+  }
+
+  removePost(p, msg) {
+    const posts = this.state.posts;
+    const idx = posts.findIndex(x => x.id === p.id);
+    if (idx < 0) return;
+    const removed = posts[idx];
+    this.setState({ posts: posts.filter(x => x.id !== p.id), postMenu: null, hoverId: null });
+    this.showToast(msg, { label: 'Undo', fn: () => {
+      const arr = this.state.posts.slice();
+      arr.splice(Math.min(idx, arr.length), 0, removed);
+      this.setState({ posts: arr, toast: null });
+    }});
+  }
+
+  send() {
+    const body = this.state.draft.trim();
+    if (!body || this.state.locked) return;
+    const v = this.D.VIEWERS[this.role()];
+    const p = { id: (this._nextId = (this._nextId || 200) + 1), author: v.name, seed: v.seed, tier: this.role() === 'staff' ? 'Loremaster' : 'Member', staff: this.role() === 'staff', time: 'Just now', paras: body.split(/\n{2,}/), counts: {}, mine: [] };
+    this.setState({ posts: [...this.state.posts, p], draft: '' });
+    this.showToast('Your counsel is added to the record.');
+  }
+
+  renderVals() {
+    const s = this.state;
+    const D = this.D;
+    const ready = !!s.data && !!D;
+    const role = this.role();
+    const isGuest = role === 'guest', isStaff = role === 'staff';
+    const signedIn = !isGuest;
+    const viewer = ready ? D.VIEWERS[role] : { name: '', seed: '' };
+    const closeAll = () => this.setState({ postMenu: null, reactMenu: null });
+    const sec = (k) => () => this.setState({ section: this.state.section === k ? null : k });
+
+    const roles = ['guest', 'member', 'staff'].map(r => ({
+      key: r, label: r[0].toUpperCase() + r.slice(1),
+      title: r === 'guest' ? 'Signed out' : r === 'member' ? 'Elladan — a member who owns two replies' : 'Elrond — warden with every control',
+      on: ready && r === role, off: !ready || r !== role,
+      set: () => this.setState({ roleOverride: r, postMenu: null, reactMenu: null, editingId: null, drawerOpen: r === 'guest' ? false : this.state.drawerOpen }),
+    }));
+
+    const tags = (s.tags || []).map(t => ({ name: t, removable: isStaff, title: isStaff ? 'Remove tag' : 'Tag', remove: () => { if (!isStaff) return; this.setState({ tags: this.state.tags.filter(x => x !== t) }); this.showToast('Tag “' + t + '” removed.'); } }));
+    const addableTags = ready ? D.TAGS_ALL.filter(t => !s.tags.includes(t)).map(t => ({ name: t, add: () => { this.setState({ tags: [...this.state.tags, t] }); this.showToast('Tagged “' + t + '”.'); } })) : [];
+
+    const pollShownEff = s.pollShown ?? (this.props.showPoll ?? true);
+    const pollTotal = ready ? Object.values(s.pollVotes).reduce((a, b) => a + b, 0) : 0;
+    const pollOptions = ready ? D.POLL.options.map(o => {
+      const n = s.pollVotes[o.id] || 0;
+      const mine = s.pollVoted === o.id;
+      return { ...o, n, mine, vote: () => { if (this.state.pollVoted || this.state.pollClosed || this.role() === 'guest') return; this.setState({ pollVoted: o.id, pollVotes: { ...this.state.pollVotes, [o.id]: n + 1 } }); this.showToast('Your voice is cast.'); } };
+    }) : [];
+    const pollChoosing = ready && signedIn && !s.pollVoted && !s.pollClosed;
+
+    const briefShownEff = s.briefShown ?? (this.props.showBrief ?? true);
+
+    let prevSeed = null;
+    const posts = ready ? s.posts.map(raw => {
+      const grouped = !!raw.grouped && prevSeed === raw.seed && !raw.anon;
+      prevSeed = raw.anon ? null : raw.seed;
+      const anonMasked = raw.anon && !raw.revealed;
+      const own = signedIn && !raw.anon && raw.seed === viewer.seed;
+      const accepted = s.acceptedId === raw.id;
+      const reactionsArr = Object.entries(raw.counts).filter(([, n]) => n > 0).map(([k, n]) => {
+        const def = D.REACTIONS[k];
+        const on = signedIn && raw.mine.includes(k);
+        return { key: k, glyph: def.glyph, label: def.label, n, on, off: !on, title: isGuest ? def.label : on ? 'Withdraw your ' + def.label.toLowerCase() : def.label, toggle: () => this.react(raw.id, k) };
+      });
+      const pickable = Object.keys(D.REACTIONS).map(k => ({ key: k, glyph: D.REACTIONS[k].glyph, label: D.REACTIONS[k].label, check: raw.mine.includes(k) ? '✓' : '', pick: () => this.react(raw.id, k) }));
+      const menuOpen = s.postMenu === raw.id;
+      const reactOpen = s.reactMenu === raw.id;
+      const editing = s.editingId === raw.id;
+      return {
+        ...raw, grouped, notGrouped: !grouped, accepted, own, editing, notEditing: !editing,
+        displayAuthor: raw.anon ? (raw.revealed ? raw.realAuthor + ' (was anonymous)' : 'A quiet voice') : raw.author,
+        monoName: anonMasked ? '?' : (raw.anon ? raw.realAuthor : raw.author),
+        monoSeed: anonMasked ? 'g' : (raw.anon ? raw.realSeed : raw.seed),
+        gilt: !!(raw.op || accepted),
+        anonMasked, named: !anonMasked,
+        tierLegend: !anonMasked && raw.tier === 'Legend',
+        tierLoremaster: !anonMasked && raw.tier === 'Loremaster',
+        tierVeteran: !anonMasked && raw.tier === 'Veteran',
+        tierMember: !anonMasked && raw.tier === 'Member',
+        showRep: !anonMasked && raw.rep != null,
+        quoteText: raw.quote, hasList: !!(raw.list && raw.list.length), list: raw.list || [], paras: raw.paras || [],
+        hasReactions: reactionsArr.length > 0,
+        reactionsArr, pickable, menuOpen, reactOpen,
+        hover: signedIn && (s.hoverId === raw.id || menuOpen || reactOpen),
+        enter: () => { if (this.state.hoverId !== raw.id) this.setState({ hoverId: raw.id }); },
+        leave: () => { if (this.state.hoverId === raw.id) this.setState({ hoverId: null }); },
+        openReact: () => this.setState({ reactMenu: reactOpen ? null : raw.id, postMenu: null }),
+        toggleMenu: () => this.setState({ postMenu: menuOpen ? null : raw.id, reactMenu: null }),
+        quickCommend: () => this.react(raw.id, 'commend'),
+        canAccept: isStaff && !raw.op && !accepted,
+        accept: () => this.accept(raw),
+        quote: () => { const first = (raw.paras && raw.paras[0]) || ''; this.setState({ draft: (this.state.draft ? this.state.draft + '\n\n' : '') + '> ' + first.slice(0, 120) + (first.length > 120 ? '…' : '') + '\n\n' }); this.showToast('Quoted into your reply.'); },
+        copyLink: () => { this.setState({ postMenu: null }); this.showToast('Link copied — /t/214-ratified-decisions#p' + raw.id); },
+        edit: () => this.setState({ editingId: raw.id, editDraft: (raw.paras || []).join('\n\n'), postMenu: null }),
+        del: () => this.removePost(raw, own ? 'Your reply is withdrawn.' : 'Removed by a warden — the act is logged.'),
+        makeWiki: () => { this.setState({ posts: this.state.posts.map(x => x.id === raw.id ? { ...x, wiki: !x.wiki } : x), postMenu: null }); this.showToast(raw.wiki ? 'Wiki flag removed.' : 'Made a wiki post — the council may tend it.'); },
+        wikiLabel: raw.wiki ? 'Remove wiki flag' : 'Make wiki',
+        canReveal: isStaff && raw.anon && !raw.revealed,
+        reveal: () => { this.setState({ posts: this.state.posts.map(x => x.id === raw.id ? { ...x, revealed: true } : x), postMenu: null }); this.showToast('Author revealed to wardens — the act is logged.'); },
+        staffTools: isStaff,
+        canRemove: isStaff && !own && !raw.op,
+        canReport: signedIn && !own,
+        report: () => { this.setState({ postMenu: null }); this.showToast('Report filed — the wardens will review.'); },
+      };
+    }) : [];
+
+    const splitList = posts.filter(p => !p.op).map(p => {
+      const on = !!(s.splitSel && s.splitSel[p.id]);
+      return { id: p.id, author: p.displayAuthor, excerpt: ((p.paras && p.paras[0]) || '').slice(0, 96) + '…', on, offMark: !on, toggle: () => this.setState({ splitSel: { ...this.state.splitSel, [p.id]: !this.state.splitSel[p.id] } }) };
+    });
+    const splitCount = Object.values(s.splitSel || {}).filter(Boolean).length;
+
+    const facts = [];
+    if (ready) {
+      facts.push(' · 5 replies');
+      if (s.assignee) facts.push(' · Tended by @' + s.assignee.toLowerCase());
+      if (s.snooze) facts.push(' · Quiet until ' + s.snooze);
+    }
+    const watchSummaryMap = { instant: 'Instant', daily: 'Daily', off: 'Off' };
+
+    return {
+      ready, signedIn, isGuest, isStaff,
+      viewerName: viewer.name, viewerInitials: ready ? D.initials(viewer.name) : '',
+      roles, resetAll: () => { if (this.D) this.setState({ ...this.seedState(this.D), roleOverride: null }); },
+      anyPop: !!(s.postMenu || s.reactMenu), closeAll,
+
+      pinned: ready && !!s.pinned, pinOff: ready && !s.pinned,
+      locked: ready && !!s.locked, lockOff: ready && !s.locked,
+      stIsOpen: ready && s.status === 'open', stIsNeeds: ready && s.status === 'needs_answer',
+      stIsSolved: ready && s.status === 'solved', stIsDecision: ready && s.status === 'decision',
+      stIsArchived: ready && s.status === 'archived',
+      setStOpen: () => this.applyStatus('open'), setStNeeds: () => this.applyStatus('needs_answer'),
+      setStSolved: () => this.applyStatus('solved'), setStDecision: () => this.applyStatus('decision'),
+      setStArchived: () => this.applyStatus('archived'),
+      bylineTail: facts.join(''),
+
+      starred: ready && !!s.starred, starOff: ready && !s.starred,
+      toggleStar: () => { const on = !this.state.starred; this.setState({ starred: on }); this.showToast(on ? 'Starred — kept in your ledger.' : 'Star removed.'); },
+
+      drawerOpen: !!s.drawerOpen,
+      openDrawer: () => this.setState({ drawerOpen: true }),
+      closeDrawer: () => this.setState({ drawerOpen: false }),
+      openBriefSection: () => this.setState({ drawerOpen: true, section: 'brief' }),
+
+      secWatch: sec('watch'), secStanding: sec('standing'), secTags: sec('tags'), secBrief: sec('brief'), secWardens: sec('wardens'),
+      openWatchSec: s.section === 'watch', openStandingSec: s.section === 'standing', openTagsSec: s.section === 'tags', openBriefSec: s.section === 'brief', openWardensSec: s.section === 'wardens',
+      watchSummary: (watchSummaryMap[s.watch] || '') + (s.snooze ? ' · quiet ' + s.snooze : ''),
+      tagSummary: (s.tags || []).join(' · '),
+      wardenSummary: s.assignee ? '@' + s.assignee.toLowerCase() : 'unassigned',
+
+      statusReason: s.statusReason || '', setStatusReason: (e) => this.setState({ statusReason: e.target.value }),
+      history: s.history || [],
+
+      watchIsInstant: ready && s.watch === 'instant', watchNotInstant: ready && s.watch !== 'instant',
+      watchIsDaily: ready && s.watch === 'daily', watchNotDaily: ready && s.watch !== 'daily',
+      watchIsOff: ready && s.watch === 'off', watchNotOff: ready && s.watch !== 'off',
+      setWatchInstant: () => this.setWatch('instant'), setWatchDaily: () => this.setWatch('daily'), setWatchOff: () => this.setWatch('off'),
+
+      snzToday: ready && s.snooze === 'later today', snzNotToday: ready && s.snooze !== 'later today',
+      snzTomorrow: ready && s.snooze === 'tomorrow', snzNotTomorrow: ready && s.snooze !== 'tomorrow',
+      snzWeek: ready && s.snooze === 'next week', snzNotWeek: ready && s.snooze !== 'next week',
+      setSnzToday: () => this.setSnooze('later today'), setSnzTomorrow: () => this.setSnooze('tomorrow'), setSnzWeek: () => this.setSnooze('next week'),
+
+      assignIsElrond: s.assignee === 'Elrond', assignIsGlorfindel: s.assignee === 'Glorfindel', assignIsArwen: s.assignee === 'Arwen',
+      assignElrond: () => this.assignTo('Elrond'), assignGlorfindel: () => this.assignTo('Glorfindel'), assignArwen: () => this.assignTo('Arwen'),
+      unassign: () => { this.setState({ assignee: null }); this.showToast('Unassigned.'); },
+
+      tags, addableTags, noAddableTags: addableTags.length === 0,
+
+      togglePin: () => { const on = !this.state.pinned; this.setState({ pinned: on }); this.showToast(on ? 'Pinned above the board.' : 'Unpinned.'); },
+      toggleLock: () => { const on = !this.state.locked; this.setState({ locked: on }); this.showToast(on ? 'Locked — replies are closed.' : 'Unlocked — the council may speak.'); },
+      hasAccepted: s.acceptedId != null,
+      clearAccepted: () => { this.setState({ acceptedId: null }); this.showToast('Accepted answer cleared.'); },
+      pollMenuLabel: pollShownEff ? 'Remove the poll' : 'Restore the poll',
+      togglePoll: () => { this.setState({ pollShown: !pollShownEff }); this.showToast(pollShownEff ? 'Poll removed.' : 'Poll restored to the topic.'); },
+      openSplit: () => this.setState({ splitOpen: true, drawerOpen: false }),
+
+      briefOn: ready && briefShownEff,
+      briefStatic: !s.briefEditing, briefEditing: !!s.briefEditing,
+      briefText: s.briefText || '', briefRefreshed: ready ? D.BRIEF.refreshed : '',
+      briefDraft: s.briefDraft || '', setBriefDraft: (e) => this.setState({ briefDraft: e.target.value }),
+      editBrief: () => this.setState({ briefEditing: true, briefDraft: this.state.briefText }),
+      saveBrief: () => { this.setState({ briefEditing: false, briefText: this.state.briefDraft }); this.showToast('Summary amended — curation is logged.'); },
+      cancelBrief: () => this.setState({ briefEditing: false }),
+      refreshLabel: s.refreshing ? 'Weighing the record…' : 'Refresh',
+      refreshBrief: () => { if (this.state.refreshing) return; this.setState({ refreshing: true }); setTimeout(() => { this.setState({ refreshing: false }); this.showToast('Not enough eligible posts for an automatic refresh — 6 weighed, 8 required.'); }, 1100); },
+      briefMenuLabel: briefShownEff ? 'Hide from page' : 'Show on page',
+      toggleBrief: () => { this.setState({ briefShown: !briefShownEff }); },
+
+      pollOn: ready && pollShownEff, pollChoosing, pollResults: ready && !pollChoosing, pollOptions,
+      pollMax: Math.max(1, pollTotal),
+      pollOpenChip: ready && !s.pollClosed, pollClosed: ready && !!s.pollClosed,
+      pollFoot: pollTotal + ' voices of the council',
+      pollCloseLabel: s.pollClosed ? 'Reopen poll' : 'Close poll',
+      closePoll: () => { const c = !this.state.pollClosed; this.setState({ pollClosed: c }); this.showToast(c ? 'Poll closed — the count stands.' : 'Poll reopened.'); },
+
+      posts,
+      editDraft: s.editDraft || '', setEditDraft: (e) => this.setState({ editDraft: e.target.value }),
+      saveEdit: () => { const id = this.state.editingId; const body = this.state.editDraft.trim(); this.setState({ posts: this.state.posts.map(x => x.id === id ? { ...x, paras: body.split(/\n{2,}/), list: null, after: null, quote: null, edited: true } : x), editingId: null }); this.showToast('Reply amended.'); },
+      cancelEdit: () => this.setState({ editingId: null }),
+
+      composerOn: ready && signedIn && !s.locked, guestBar: ready && isGuest, lockedBar: ready && signedIn && !!s.locked,
+      draft: s.draft || '', setDraft: (e) => this.setState({ draft: e.target.value }),
+      draftSaved: (s.draft || '').length > 0,
+      draftCount: (s.draft || '').length + ' / 20000',
+      sendOn: !!(s.draft || '').trim(), sendOff: !(s.draft || '').trim(),
+      send: () => this.send(),
+      markBold: () => this.setState({ draft: (this.state.draft || '') + '**bold**' }),
+      markItalic: () => this.setState({ draft: (this.state.draft || '') + '*italic*' }),
+      markStrike: () => this.setState({ draft: (this.state.draft || '') + '~~struck~~' }),
+      markQuote: () => this.setState({ draft: (this.state.draft || '') + '\n> quote\n' }),
+      markCode: () => this.setState({ draft: (this.state.draft || '') + '`code`' }),
+
+      splitOpen: !!s.splitOpen, closeSplit: () => this.setState({ splitOpen: false }),
+      splitList, splitTitle: s.splitTitle || '', setSplitTitle: (e) => this.setState({ splitTitle: e.target.value }),
+      splitBtnLabel: splitCount > 0 ? 'Split ' + splitCount + ' out' : 'Split replies out',
+      doSplit: () => {
+        const sel = this.state.splitSel; const title = this.state.splitTitle.trim();
+        const ids = Object.keys(sel).filter(k => sel[k]).map(Number);
+        if (!ids.length) { this.showToast('Choose at least one reply to split out.'); return; }
+        if (!title) { this.showToast('Give the new topic a title.'); return; }
+        const before = this.state.posts;
+        this.setState({ posts: before.filter(p => !ids.includes(p.id)), splitOpen: false, splitSel: {}, splitTitle: '' });
+        this.showToast(ids.length + (ids.length === 1 ? ' reply' : ' replies') + ' split into “' + title + '”.', { label: 'Undo', fn: () => this.setState({ posts: before, toast: null }) });
+      },
+      mergeTarget: s.mergeTarget || '', setMergeTarget: (e) => this.setState({ mergeTarget: e.target.value }),
+      doMerge: () => { const t = this.state.mergeTarget.trim() || 'the chosen topic'; this.setState({ splitOpen: false, mergeTarget: '' }); this.showToast('Merged into ' + t + ' — a signpost remains here.'); },
+
+      toastOn: !!s.toast, toastMsg: s.toast ? s.toast.msg : '',
+      toastHasAction: !!(s.toast && s.toast.action), toastActionLabel: s.toast && s.toast.action ? s.toast.action.label : '',
+      toastFn: () => { const a = this.state.toast && this.state.toast.action; if (a) a.fn(); },
+    };
+  }
+}
+
+</script>
+</body>
+</html>

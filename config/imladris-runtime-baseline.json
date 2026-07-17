@@ -1,0 +1,26 @@
+{
+  "reconciled_through_commit": "6d81da590a12bd09bb8d0e282c042aa03d755a94",
+  "composer_contract": "COMPOSER.md v0.8",
+  "application_surface": {
+    "roots": [
+      "templates",
+      "public/assets"
+    ],
+    "files": [
+      "USER.md",
+      "ADMIN.md",
+      "COMMUNITY.md",
+      "COMPOSER.md",
+      "src/Core/FeatureFlags.php"
+    ],
+    "extensions": [
+      "php",
+      "css",
+      "js"
+    ],
+    "excluded": [
+      "public/assets/imladris.css"
+    ],
+    "sha256": "ddba9c08ec8a6d50d0b5dbe80b9c4b784d1fe7bc360855e0bc18082ddd30dcf6"
+  }
+}

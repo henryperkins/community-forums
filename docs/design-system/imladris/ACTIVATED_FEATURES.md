@@ -19,6 +19,17 @@ maps the active flags back to the design-system source surfaces.
 
 Operational notes:
 
+- Production consumes only the allowlisted token, font, and reusable-component
+  sources through generated `/assets/imladris.css`. Preview React/JavaScript,
+  documentation styles, UI kits, uploads, and archived application snapshots
+  never enter the runtime asset graph.
+- Imladris rules live in low-priority cascade layers. The unlayered application
+  stylesheet retains shell layout, feature states, and compatibility behavior;
+  WYSIWYG, theme-package, and operator-branding styles continue to load after it.
+- `config/imladris-runtime-baseline.json` pins the reviewed production
+  presentation surface. A later member/admin/community/composer spec, template,
+  client asset, or feature-flag change makes `composer verify:imladris` fail
+  until design parity is reviewed and the baseline is deliberately refreshed.
 - All listed flags default on after graduation and remain reversible via the
   `features` setting override.
 - `tags` remains the prerequisite for tag pages and tag writes; hiding or

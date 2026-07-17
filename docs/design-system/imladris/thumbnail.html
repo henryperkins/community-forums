@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="styles.css">
+<style>
+  html, body { margin: 0; width: 1280px; height: 854px; overflow: hidden; }
+  .tile { display: grid; grid-template-columns: 1fr 320px; width: 1280px; height: 854px; }
+  .main { display: flex; align-items: center; justify-content: center; background: var(--green-700); }
+  .name { font-family: var(--font-display); font-weight: 500; font-size: 148px; letter-spacing: -0.01em; color: var(--parchment-50); white-space: nowrap; line-height: 1; }
+  .strip { display: grid; grid-template-rows: 1fr 1fr 1fr 1fr; height: 854px; }
+  .strip div { margin: 0; border: 0; }
+</style>
+</head>
+<body>
+<div class="tile">
+  <div class="main"><span class="name">Imladris</span></div>
+  <div class="strip">
+    <div style="background: #F4EBCF;"></div>
+    <div style="background: #C29A44;"></div>
+    <div style="background: #3F6E89;"></div>
+    <div style="background: #24402F;"></div>
+  </div>
+</div>
+</body>
+</html>

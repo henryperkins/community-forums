@@ -68,6 +68,20 @@ body { margin: 0; }
 .auth-emblem { display: flex; justify-content: center; margin-bottom: 6px; color: var(--success); }
 .auth-emblem svg { width: 46px; height: 46px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .auth-emblem.warn { color: var(--rust); }
+.auth-emblem.ward { color: var(--gold-500); }
+
+/* Passkeys — sign-in enhancement + step-up ceremony (passkeys.js) */
+.passkey-signin { margin: 15px 0 4px; display: flex; flex-direction: column; gap: 9px; }
+.passkey-btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; width: 100%; white-space: nowrap; }
+.passkey-glyph { display: inline-flex; flex: 0 0 auto; }
+.passkey-glyph svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.passkey-status { text-align: center; color: var(--text-muted); font-size: .86rem; margin: 0; }
+.passkey-status a { color: var(--brand); }
+
+/* Invitation acceptance notice + bound-invite context chip */
+.notice { background: var(--surface-review); color: var(--on-review); border-radius: var(--radius-md); box-shadow: inset 0 0 0 1.5px var(--gold-200); padding: 11px 14px; margin: 0 0 16px; font-size: .92rem; text-align: center; }
+.invite-chip { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: baseline; justify-content: center; font-size: .86rem; color: var(--text-muted); margin: 0 0 18px; }
+.invite-chip-label { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .08em; font-size: .58rem; color: var(--gold-ink); background: var(--gold-100); border: 1px solid var(--gold-200); border-radius: var(--radius-pill); padding: 3px 9px; }
 
 /* The colophon under the gate */
 .auth-colophon { font-family: var(--font-display); font-style: italic; font-size: .95rem; color: var(--gold-400); opacity: .75; text-align: center; margin: 0; }

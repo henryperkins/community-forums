@@ -1,0 +1,60 @@
+/* ===========================================================================
+   Imladris — Typography tokens
+   ---------------------------------------------------------------------------
+   A serif-led voice. Cormorant Garamond for display (high-contrast, lyrical),
+   Marcellus for roman-capital labels & eyebrows (lapidary, inscriptional),
+   EB Garamond for reading text, JetBrains Mono for code & data.
+   ========================================================================= */
+
+:root {
+  /* --- Families ------------------------------------------------------- */
+  --font-display: 'Cormorant Garamond', 'Hoefler Text', Georgia, serif;
+  --font-label:   'Marcellus', 'Optima', 'Palatino Linotype', serif;
+  --font-body:    'EB Garamond', 'Iowan Old Style', Georgia, serif;
+  --font-mono:    'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace;
+
+  /* --- Weights -------------------------------------------------------- */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* --- Type scale (rem · 1rem = 16px) --------------------------------
+     A modular ~1.28 ratio. Display sizes run large; reading text sits
+     at 1.1875rem (19px) for the long-form, book-like blog body.        */
+  --text-2xs:  0.75rem;    /* 12px — micro labels, captions */
+  --text-xs:   0.8125rem;  /* 13px — eyebrows, meta */
+  --text-sm:   0.9375rem;  /* 15px — UI, secondary */
+  --text-base: 1.0625rem;  /* 17px — dense UI body */
+  --text-md:   1.1875rem;  /* 19px — long-form reading body */
+  --text-lg:   1.375rem;   /* 22px — lead / standfirst */
+  --text-xl:   1.75rem;    /* 28px — h4 / card titles */
+  --text-2xl:  2.25rem;    /* 36px — h3 */
+  --text-3xl:  3rem;       /* 48px — h2 */
+  --text-4xl:  4rem;       /* 64px — h1 */
+  --text-5xl:  5.5rem;     /* 88px — hero display */
+
+  /* --- Line heights --------------------------------------------------- */
+  --leading-tight:   1.08;   /* display headlines */
+  --leading-snug:    1.22;   /* sub-heads */
+  --leading-normal:  1.5;    /* UI */
+  --leading-relaxed: 1.7;    /* reading body */
+
+  /* --- Letter spacing ------------------------------------------------- */
+  --tracking-tight:  -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-caps:   0.18em;   /* Marcellus eyebrows / small-caps labels */
+
+  /* --- Semantic roles ------------------------------------------------- */
+  --type-hero:    var(--weight-medium) var(--text-5xl)/var(--leading-tight) var(--font-display);
+  --type-h1:      var(--weight-medium) var(--text-4xl)/var(--leading-tight) var(--font-display);
+  --type-h2:      var(--weight-medium) var(--text-3xl)/var(--leading-snug) var(--font-display);
+  --type-h3:      var(--weight-medium) var(--text-2xl)/var(--leading-snug) var(--font-display);
+  --type-h4:      var(--weight-semibold) var(--text-xl)/var(--leading-snug) var(--font-display);
+  --type-lead:    var(--weight-regular) var(--text-lg)/var(--leading-relaxed) var(--font-body);
+  --type-body:    var(--weight-regular) var(--text-md)/var(--leading-relaxed) var(--font-body);
+  --type-ui:      var(--weight-regular) var(--text-base)/var(--leading-normal) var(--font-body);
+  --type-meta:    var(--weight-regular) var(--text-xs)/var(--leading-normal) var(--font-label);
+  --type-mono:    var(--weight-regular) var(--text-sm)/var(--leading-normal) var(--font-mono);
+}

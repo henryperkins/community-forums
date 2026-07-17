@@ -1,0 +1,96 @@
+/* ===========================================================================
+   Imladris — Base element styles
+   ---------------------------------------------------------------------------
+   Sensible document defaults built on the tokens. Reset + typographic
+   baseline + a `.prose` long-form reading rhythm for the blog.
+   ========================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-body);
+  font: var(--type-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  margin: 0 0 var(--space-4);
+  color: var(--text-strong);
+  font-family: var(--font-display);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+h1 { font-size: var(--text-4xl); line-height: var(--leading-tight); }
+h2 { font-size: var(--text-3xl); line-height: var(--leading-snug); }
+h3 { font-size: var(--text-2xl); line-height: var(--leading-snug); }
+h4 { font-size: var(--text-xl);  line-height: var(--leading-snug); }
+
+p { margin: 0 0 var(--space-4); }
+
+a {
+  color: var(--text-link);
+  text-decoration-color: color-mix(in srgb, var(--gold-500) 60%, transparent);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  transition: color var(--dur-fast) var(--ease-calm);
+}
+a:hover { color: var(--accent-press); }
+
+code, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+hr {
+  border: 0;
+  border-top: var(--border-thin) solid var(--border-hair);
+  margin: var(--space-7) 0;
+}
+
+::selection { background: var(--gold-200); color: var(--ink-900); }
+
+:where(button, [type="button"], [type="submit"]):focus-visible,
+:where(a, input, select, textarea):focus-visible {
+  outline: var(--focus-width) solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* --- Eyebrow / lapidary label ---------------------------------------- */
+.eyebrow {
+  font-family: var(--font-label);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+
+/* --- Long-form reading rhythm ---------------------------------------- */
+.prose {
+  font: var(--type-body);
+  color: var(--text-body);
+  max-width: var(--measure-prose);
+}
+.prose > * + * { margin-top: var(--space-5); }
+.prose h2 { margin-top: var(--space-8); }
+.prose h3 { margin-top: var(--space-7); }
+.prose p { line-height: var(--leading-relaxed); }
+.prose .lead {
+  font-size: var(--text-lg);
+  color: var(--text-strong);
+  line-height: var(--leading-relaxed);
+}
+.prose blockquote {
+  margin: var(--space-6) 0;
+  padding-left: var(--space-5);
+  border-left: var(--border-thick) solid var(--rule-gold);
+  font-style: italic;
+  color: var(--text-strong);
+}
+.prose a { font-style: normal; }

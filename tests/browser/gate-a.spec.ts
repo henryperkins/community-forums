@@ -226,6 +226,42 @@ test('public pages render and capture', async ({ page }, info) => {
   await shot(page, info, '06-register');
 });
 
+test('quiet thread rows stay stationary on hover in comfortable and compact density', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop pointer-hover regression');
+
+  const consoleProblems: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') consoleProblems.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleProblems.push(error.message));
+
+  await visit(page, '/c/general');
+  expect(new URL(page.url()).pathname).toBe('/c/general');
+  await expect(page).toHaveTitle(/general/i);
+  await expect(page.locator('main')).not.toBeEmpty();
+  await expect(page.locator('vite-error-overlay, nextjs-portal')).toHaveCount(0);
+  const row = page.locator('.thread-row').first();
+  await expect(row).toBeVisible();
+
+  for (const density of ['comfortable', 'compact']) {
+    await page.locator('html').evaluate((element, value) => {
+      element.dataset.density = value;
+    }, density);
+    await page.mouse.move(0, 0);
+
+    const before = await row.evaluate((element) => element.getBoundingClientRect().top);
+    await row.hover();
+    await page.evaluate(() => new Promise(requestAnimationFrame));
+    const after = await row.evaluate((element) => element.getBoundingClientRect().top);
+
+    expect(await row.evaluate((element) => getComputedStyle(element).transform)).toBe('none');
+    expect(after).toBe(before);
+  }
+
+  await page.screenshot({ path: info.outputPath('quiet-thread-rows-hover.png') });
+  expect(consoleProblems).toEqual([]);
+});
+
 test('admin + member pages render and capture', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 

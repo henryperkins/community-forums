@@ -1,13 +1,26 @@
 /* Admin Console kit — app shell. Topbar + admin-head + horizontal subnav +
-   section routing (Users drills into a user record). */
+   section routing. Sections come from RBAdminSections (core) + RBAdminParity
+   (the eight P5/runtime consoles). Users drills into a user record; the
+   parity sections manage their own drill-ins. The reserved "Extensions" entry
+   renders in its production disabled state (server_extensions is a Gate-B
+   reserved-dark flag; the nav shows it disabled with a note). */
 (function () {
   function App() {
     const DS = window.ImladrisDesignSystem_c3e027;
     const { EightPointStar, Monogram, Pill } = DS;
-    const SECT = window.RBAdminSections;
+    const SECT = Object.assign({}, window.RBAdminSections, window.RBAdminParity);
     const UserRecord = window.RBAdminUserRecord;
     const a = window.RBAdmin.admin;
-    const keys = Object.keys(SECT);
+
+    /* Production nav order (templates/admin/_nav.php). */
+    const ORDER = [
+      'dashboard', 'features', 'threadIntelligence', 'structure', 'users',
+      'branding', 'tags', 'badgeRules', 'email', 'announcements',
+      'apiTokens', 'webhooks', 'packages', 'registries', 'themes', 'roles',
+      'providers', 'invitations',
+    ];
+    const DISABLED = [{ key: 'extensions', label: 'Extensions', note: 'Disabled until the feature flag is enabled' }];
+
     const [active, setActive] = React.useState('dashboard');
     const [userId, setUserId] = React.useState(null);
 
@@ -36,9 +49,15 @@
           </div>
 
           <nav className="admin-subnav" aria-label="Admin sections">
-            {keys.map((k) => (
+            {ORDER.map((k) => (
               <button key={k} className={k === active ? 'active' : ''} aria-current={k === active ? 'page' : undefined}
                 onClick={() => { setActive(k); setUserId(null); }}>{SECT[k].label}</button>
+            ))}
+            {DISABLED.map((d) => (
+              <span key={d.key} className="subnav-item is-disabled" aria-disabled="true" title={d.note}>
+                <span className="subnav-item-label">{d.label}</span>
+                <span className="subnav-item-note">{d.note}</span>
+              </span>
             ))}
           </nav>
 

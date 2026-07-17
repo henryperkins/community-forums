@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 
 final class ThemeBaselineFidelityTest extends TestCase
 {
-    public function test_policy_baselines_match_app_css(): void
+    public function test_policy_baselines_match_the_generated_imladris_runtime(): void
     {
-        $css = (string) file_get_contents(__DIR__ . '/../../../public/assets/app.css');
+        $css = (string) file_get_contents(__DIR__ . '/../../../public/assets/imladris.css');
         foreach (['light' => ':root', 'dark' => '[data-theme="dark"]'] as $variant => $selector) {
             $block = $this->block($css, $selector);
             foreach (ThemeTokenPolicy::baseline($variant) as $token => $value) {
@@ -23,7 +23,8 @@ final class ThemeBaselineFidelityTest extends TestCase
                 }
             }
         }
-        self::assertStringContainsString('background-image: var(--surface-texture, none)', $css);
+        $application = (string) file_get_contents(__DIR__ . '/../../../public/assets/app.css');
+        self::assertStringContainsString('background-image: var(--surface-texture, none)', $application);
     }
 
     private function block(string $css, string $selector): string

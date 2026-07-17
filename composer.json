@@ -40,6 +40,12 @@
         }
     },
     "scripts": {
+        "build:imladris": "php bin/build-imladris-assets.php",
+        "check:imladris": "php bin/build-imladris-assets.php --check",
+        "verify:imladris": [
+            "@check:imladris",
+            "phpunit tests/Unit/Core/ImladrisRuntimeAssetTest.php tests/Integration/Core/AppImladrisRuntimeTest.php"
+        ],
         "test": "phpunit",
         "migrate": "php bin/console migrate",
         "fresh": "php bin/console migrate:fresh"

@@ -150,13 +150,98 @@
     );
   }
 
+  /* Passkey key glyph (bow + blade + teeth — simple shapes only). */
+  function PasskeyGlyph() {
+    return <span className="passkey-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="4" /><path d="M13 12h7" /><path d="M17 12v3" /><path d="M20 12v2" /></svg></span>;
+  }
+
+  /* Passkey sign-in — the login gate with passkeys.js enhancement revealed
+     (login.php `.passkey-signin`, shown when the browser supports WebAuthn). */
+  function PasskeySignin({ go }) {
+    const { Input, Button } = window.ImladrisDesignSystem_c3e027;
+    const [waiting, setWaiting] = React.useState(false);
+    return (
+      <div className="auth-card">
+        <span className="auth-eyebrow">Welcome back to the council</span>
+        <h1>Log in</h1>
+        <form className="auth-form" onSubmit={(e) => { e.preventDefault(); go('mfa'); }}>
+          <label className="field"><span>Email</span><Input className="input-engraved" type="email" autoComplete="username" defaultValue="erestor@imladris.council" /></label>
+          <label className="field"><span>Password</span><Input className="input-engraved" type="password" autoComplete="current-password" /></label>
+          <Button type="submit">Log in</Button>
+        </form>
+        <div className="passkey-signin" data-waiting={waiting ? '1' : undefined}>
+          <button type="button" className="btn btn-secondary passkey-btn" aria-busy={waiting || undefined} onClick={() => setWaiting((v) => !v)}>
+            <PasskeyGlyph />{waiting ? 'Waiting for your passkey…' : 'Sign in with a passkey'}
+          </button>
+          {waiting ? <p className="passkey-status" role="status">Use your device screen lock or security key to continue. <a href="#" onClick={(e) => { e.preventDefault(); setWaiting(false); }}>Cancel</a></p> : null}
+        </div>
+        <OAuth />
+        <div className="auth-links">
+          <p><a href="#" onClick={(e) => { e.preventDefault(); go('forgot'); }}>Forgot your password?</a></p>
+          <p>New here? <a href="#" onClick={(e) => { e.preventDefault(); go('register'); }}>Create an account</a>.</p>
+        </div>
+      </div>
+    );
+  }
+
+  /* Passkey step-up — a fresh-check re-authentication ceremony for a sensitive
+     action (security.php `data-passkey-stepup-btn`, used when there is no
+     password). Confirms with a passkey, then returns to the action. */
+  function StepUp({ go }) {
+    const [done, setDone] = React.useState(false);
+    return (
+      <div className="auth-card">
+        <div className="auth-emblem ward"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="16" rx="2" /><circle cx="12" cy="10" r="3" /><path d="M12 13v4" /></svg></div>
+        <span className="auth-eyebrow">One more ward</span>
+        <h1>Confirm it's you</h1>
+        {done ? (
+          <>
+            <p className="auth-lede" style={{ color: 'var(--success)' }}>Confirmed with your passkey. You can finish the change now.</p>
+            <div className="auth-links"><p><a href="#" onClick={(e) => { e.preventDefault(); go('verified'); }}>Continue →</a></p></div>
+          </>
+        ) : (
+          <>
+            <p className="auth-lede">This sensitive change needs a fresh check. Confirm with the passkey on this device to continue.</p>
+            <button type="button" className="btn passkey-btn" onClick={() => setDone(true)}><PasskeyGlyph />Confirm with a passkey</button>
+            <div className="auth-links"><p><a href="#" onClick={(e) => { e.preventDefault(); go('login'); }}>Use your password instead</a></p></div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  /* Invited registration — the sign-up gate reached from an invitation link
+     (register.php with a valid invite: the acceptance notice, the bound
+     invitation context, and the "Accept invitation" submit label). */
+  function Invited({ go }) {
+    const { Input, Button } = window.ImladrisDesignSystem_c3e027;
+    return (
+      <div className="auth-card wide">
+        <span className="auth-eyebrow">Take a seat at the table</span>
+        <h1>Create your account</h1>
+        <p className="notice" role="status">You've been invited to join this community. Complete the form to accept your invitation.</p>
+        <p className="invite-chip"><span className="invite-chip-label">Invitation</span> bound to <strong>nimrodel@example.com</strong> · from <strong>@elrond</strong></p>
+        <form className="auth-form" onSubmit={(e) => { e.preventDefault(); go('verified'); }}>
+          <label className="field"><span>Username</span><Input className="input-engraved" maxLength={32} autoFocus /></label>
+          <label className="field"><span>Display name <span className="muted">(optional)</span></span><Input className="input-engraved" maxLength={64} /></label>
+          <label className="field"><span>Email</span><Input className="input-engraved" type="email" autoComplete="username" defaultValue="nimrodel@example.com" /></label>
+          <label className="field"><span>Password</span><Input className="input-engraved" type="password" autoComplete="new-password" /></label>
+          <label className="field"><span>Confirm password</span><Input className="input-engraved" type="password" autoComplete="new-password" /></label>
+          <Button type="submit">Accept invitation</Button>
+        </form>
+        <div className="auth-links"><p>Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); go('login'); }}>Log in</a>.</p></div>
+      </div>
+    );
+  }
+
   const VIEWS = {
     login: Login, register: Register, forgot: Forgot, reset: Reset,
     mfa: Mfa, verifyPending: VerifyPending, verified: Verified,
+    passkey: PasskeySignin, stepUp: StepUp, invited: Invited,
   };
   const SWITCH = [
-    ['login', 'Log in'], ['register', 'Sign up'], ['forgot', 'Forgot'],
-    ['reset', 'Reset'], ['mfa', 'MFA'], ['verifyPending', 'Verify'], ['verified', 'Verified'],
+    ['login', 'Log in'], ['passkey', 'Passkey'], ['stepUp', 'Step-up'], ['register', 'Sign up'], ['invited', 'Invited'],
+    ['forgot', 'Forgot'], ['reset', 'Reset'], ['mfa', 'MFA'], ['verifyPending', 'Verify'], ['verified', 'Verified'],
   ];
 
   function App() {

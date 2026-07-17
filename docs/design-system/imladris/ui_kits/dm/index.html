@@ -1,4 +1,4 @@
-<!-- @dsCard group="Messages" viewport="1280x760" name="Private counsel" subtitle="Interactive direct & group messages — the two-pane reading room, members panel, reference cards, report & compose" -->
+<!-- @dsCard group="Messages" viewport="1320x820" name="Private counsel" subtitle="Reimagined direct & group messages — one reading room (list · conversation · collapsible details rail), grouped letters, tucked-away controls, new-message dialog" -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +10,7 @@
 </head>
 <body>
 <div id="root"></div>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#2E4A3A"/><path d="M28 36h44a5 5 0 0 1 5 5v20a5 5 0 0 1-5 5H46l-12 9v-9h-6a5 5 0 0 1-5-5V41a5 5 0 0 1 5-5z" fill="#F4EBCF"/><circle cx="42" cy="51" r="3.4" fill="#2E4A3A"/><circle cx="54" cy="51" r="3.4" fill="#2E4A3A"/><circle cx="66" cy="51" r="3.4" fill="#C29A44"/></svg></template>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
@@ -23,9 +24,11 @@
 
 <!-- Kit screens (JSX, transpiled in order; App is last) -->
 <script type="text/babel" src="DMTopbar.jsx"></script>
+<script type="text/babel" src="Overlays.jsx"></script>
+<script type="text/babel" src="NavRail.jsx"></script>
 <script type="text/babel" src="ConvoList.jsx"></script>
 <script type="text/babel" src="Thread.jsx"></script>
-<script type="text/babel" src="Compose.jsx"></script>
+<script type="text/babel" src="InfoRail.jsx"></script>
 <script type="text/babel" src="DMApp.jsx"></script>
 <script type="text/babel" data-presets="react">
   ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(window.DMApp));

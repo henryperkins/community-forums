@@ -20,8 +20,8 @@ If the user invokes this skill without any other guidance, ask them what they wa
 
 ## The short version
 - **Parchment** surfaces, **evergreen** brand, **one** mallorn-**gold** accent, **river**-blue for info, **twilight** for dark. Ink, never black.
-- **All serif:** Cormorant Garamond (display), Marcellus (lapidary caps — labels/buttons/eyebrows), EB Garamond (body), JetBrains Mono (data). Real Google Fonts.
-- **Sentence case** copy; **you / the council** voice; the **lexicon** (counsel, commend, regard, marks of esteem). **No emoji.** Icons are **Lucide** + the two brand stars.
+- **All serif:** Cormorant Garamond (display), Marcellus (lapidary caps — labels/buttons/eyebrows), EB Garamond (body), JetBrains Mono (data). Self-hosted WOFF2 in `assets/fonts/` (OFL licenses alongside); no CDN.
+- **Sentence case** copy; **you / the council** voice; the **lexicon** (counsel, commend, regard, marks of esteem). **No emoji in UI chrome** (authored posts + the composer’s emoji tools are supported features). Icons are **Lucide** + the two brand stars.
 - Restrained radii, warm soft shadows, 1px hairlines, status-coloured left-rules, the gold **gilt** ring for precious avatars, faint star watermarks. Calm short motion; nothing bounces.
 - Colour from **semantic tokens** (`--surface-raised`, `--brand`, `--accent-2`, `--on-done`) so the twilight register flips for free.
 

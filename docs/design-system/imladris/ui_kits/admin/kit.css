@@ -152,3 +152,76 @@ select.input { appearance: none; -webkit-appearance: none; background-image: url
     .audit { font-size: .8rem; }
     .audit th, .audit td { padding: 7px 6px; }
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Production-parity sections: features, Thread Intelligence, packages,
+   registry trust, themes, roles, providers, invitations.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Reserved / flag-off subnav entry (server_extensions is Gate-B reserved-dark;
+   templates/admin/_nav.php renders it as a disabled two-line span with a note). */
+.admin-subnav .subnav-item { display: inline-flex; flex-direction: column; gap: 1px; padding: 8px 13px; border-bottom: 2px solid transparent; margin-bottom: -1px; max-width: 230px; }
+.admin-subnav .subnav-item.is-disabled { cursor: default; }
+.admin-subnav .subnav-item-label { font-family: var(--font-label); letter-spacing: .03em; font-size: .82rem; color: var(--text-faint); line-height: 1.2; white-space: nowrap; }
+.admin-subnav .subnav-item-note { font-family: var(--font-body); font-size: .62rem; color: var(--text-faint); line-height: 1.15; opacity: .82; }
+
+/* Kit affordance banner (not part of the product — a hook for kit-only states). */
+.kit-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 13px; background: var(--surface-sunken); border-radius: var(--radius-md); font-size: .84rem; color: var(--text-muted); }
+.kit-note > span { font-family: var(--font-label); letter-spacing: .02em; }
+
+/* Dashboard stat grid (features + Thread Intelligence summaries) */
+.admin-dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.admin-pane .queue-card { display: flex; flex-direction: column; gap: 3px; padding: 15px 16px; }
+.queue-card-head { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .62rem; color: var(--text-muted); }
+.queue-card-count { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.9rem; line-height: 1.1; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.queue-card-detail { color: var(--text-muted); line-height: 1.4; font-size: .82rem; }
+
+/* Horizontally scrollable wide tables */
+.table-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
+.table-scroll > .audit { min-width: 720px; }
+.table-scroll.table-scroll-wide > .audit { min-width: 920px; }
+
+/* Key/value tables use tbody row-header cells */
+.audit tbody th { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border-hair); font-family: var(--font-label); text-transform: none; letter-spacing: .01em; font-size: .8rem; color: var(--text-muted); font-weight: var(--weight-medium); white-space: nowrap; vertical-align: top; }
+.audit .nowrap, .audit .action-cell { white-space: nowrap; overflow-wrap: normal; }
+.audit .action-cell { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.audit .form-cell { min-width: 300px; }
+.audit .pill + .pill { margin-left: 5px; }
+.admin-pane h2 .pill { margin-left: 6px; vertical-align: middle; }
+.admin-pane h3 + .audit, .admin-pane h3 + p { margin-top: 6px; }
+
+/* Multi-action install form grid (package detail) */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; align-items: start; margin: 8px 0; }
+.form-grid form { margin: 0; }
+
+/* Progress bars (Thread Intelligence budget) */
+.admin-pane progress { -webkit-appearance: none; appearance: none; height: 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
+.admin-pane progress::-webkit-progress-bar { background: var(--surface-sunken); }
+.admin-pane progress::-webkit-progress-value { background: var(--brand); border-radius: var(--radius-pill); }
+.admin-pane progress::-moz-progress-bar { background: var(--brand); }
+
+/* Collapsible operator forms (registry key pinning, generation evidence) */
+.admin-details, .ti-evidence { border-top: 1px solid var(--border-hair); padding: 9px 0 3px; }
+.admin-details > summary, .ti-evidence > summary { cursor: pointer; font-family: var(--font-label); letter-spacing: .02em; font-size: .84rem; color: var(--brand); padding: 3px 0; }
+.plain-list { margin: 6px 0 0; padding-left: 20px; color: var(--text-body); }
+.plain-list li { margin-bottom: 4px; }
+
+/* Thread Intelligence console */
+.thread-intelligence-admin { display: flex; flex-direction: column; gap: 18px; }
+.thread-intelligence-admin .ti-attention { background: var(--surface-review); box-shadow: inset 0 0 0 1.5px var(--gold-200); }
+.thread-intelligence-admin .ti-attention h2 { color: var(--gold-700); }
+.thread-intelligence-admin .ti-attention ul { margin: 6px 0 0; padding-left: 20px; }
+.thread-intelligence-admin .ti-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.thread-intelligence-admin .ti-controls h2, .thread-intelligence-admin .ti-controls .muted { flex-basis: 100%; margin: 0; }
+.thread-intelligence-admin .ti-budget { display: grid; gap: 11px; }
+.thread-intelligence-admin .ti-budget label { display: grid; gap: 5px; font-size: .88rem; color: var(--text-body); }
+.thread-intelligence-admin .ti-budget progress { width: min(100%, 44rem); }
+.thread-intelligence-admin .ti-metadata { display: flex; flex-wrap: wrap; gap: 16px 26px; margin: 0; }
+.thread-intelligence-admin .ti-metadata div { min-width: 11rem; }
+.thread-intelligence-admin .ti-metadata dt { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .62rem; color: var(--text-muted); }
+.thread-intelligence-admin .ti-metadata dd { margin: 3px 0 0; color: var(--text-strong); }
+.thread-intelligence-admin .ti-evidence { min-width: 12rem; max-width: 34rem; border: 0; padding: 0; overflow-wrap: anywhere; }
+.thread-intelligence-admin .ti-evidence p { margin: 6px 0 0; font-size: .84rem; }
+.thread-intelligence-admin .ti-actions { min-width: 8rem; white-space: normal; }
+.thread-intelligence-admin .ti-actions .linkbtn { display: block; margin-bottom: 2px; }

@@ -11,7 +11,7 @@ namespace App\Security\Packages;
  * match per-type grammars that structurally cannot express selectors,
  * additional declarations, url()/@import, or script-like constructs
  * (TM-TH-01/TM-TH-02). Also owns the WCAG pairs the build gate enforces
- * (TM-TH-04) and the app.css baseline values used to compute effective
+ * (TM-TH-04) and the generated Imladris baseline values used to compute effective
  * contrast for partial token sets. Mirrors ApiScopes/CapabilityCatalog:
  * static data, not a service.
  */
@@ -44,8 +44,8 @@ final class ThemeTokenPolicy
     private const GENERIC_FONTS = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy',
         'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded'];
 
-    // Transcribed from public/assets/app.css (:root / [data-theme="dark"]) — keep in
-    // lock-step; ThemeBaselineFidelityTest (Task 5) pins these against the real file.
+    // Transcribed from public/assets/imladris.css (:root / [data-theme="dark"])
+    // and kept in lock-step by ThemeBaselineFidelityTest.
     private const BASELINE_LIGHT = [
         '--surface' => '#faf6ec',
         '--surface-2' => '#f5efe1',

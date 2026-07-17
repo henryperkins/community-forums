@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":3,"namespace":"ImladrisDesignSystem_c3e027","components":[{"name":"CommendStar","sourcePath":"components/brand/CommendStar.jsx"},{"name":"EightPointStar","sourcePath":"components/brand/EightPointStar.jsx"},{"name":"Badge","sourcePath":"components/core/Badge.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"Pill","sourcePath":"components/core/Pill.jsx"},{"name":"Tag","sourcePath":"components/core/Tag.jsx"},{"name":"Callout","sourcePath":"components/doc/Callout.jsx"},{"name":"DocCover","sourcePath":"components/doc/DocCover.jsx"},{"name":"Figure","sourcePath":"components/doc/Figure.jsx"},{"name":"SectionHeader","sourcePath":"components/doc/SectionHeader.jsx"},{"name":"SpecTable","sourcePath":"components/doc/SpecTable.jsx"},{"name":"ChoiceCard","sourcePath":"components/forms/ChoiceCard.jsx"},{"name":"Input","sourcePath":"components/forms/Input.jsx"},{"name":"Switch","sourcePath":"components/forms/Switch.jsx"},{"name":"Textarea","sourcePath":"components/forms/Textarea.jsx"},{"name":"Composer","sourcePath":"components/forum/Composer.jsx"},{"name":"JoinBar","sourcePath":"components/forum/JoinBar.jsx"},{"name":"ParticipantStack","sourcePath":"components/forum/ParticipantStack.jsx"},{"name":"Post","sourcePath":"components/forum/Post.jsx"},{"name":"Tabs","sourcePath":"components/forum/Tabs.jsx"},{"name":"ThreadRow","sourcePath":"components/forum/ThreadRow.jsx"},{"name":"Monogram","sourcePath":"components/identity/Monogram.jsx"},{"name":"Reaction","sourcePath":"components/identity/Reaction.jsx"},{"name":"StarButton","sourcePath":"components/identity/StarButton.jsx"}],"sourceHashes":{"components/brand/CommendStar.jsx":"2fdec638ecb6","components/brand/EightPointStar.jsx":"78e9e4f44d92","components/core/Badge.jsx":"dceb5116fea3","components/core/Button.jsx":"6d2696ea6302","components/core/Card.jsx":"36db3a574747","components/core/Chip.jsx":"506fbf1d2fe5","components/core/Pill.jsx":"c1f2c9ae1c51","components/core/Tag.jsx":"cf0c0c19f406","components/doc/Callout.jsx":"d81172950bf7","components/doc/DocCover.jsx":"18a6819b7965","components/doc/Figure.jsx":"0b0e23dd7055","components/doc/SectionHeader.jsx":"bace9f8cd863","components/doc/SpecTable.jsx":"ee0a3c3d869b","components/forms/ChoiceCard.jsx":"996f6b5363ed","components/forms/Input.jsx":"f678e1e24152","components/forms/Switch.jsx":"124d55994abc","components/forms/Textarea.jsx":"8a89777423e7","components/forum/Composer.jsx":"df4b5c20ac44","components/forum/JoinBar.jsx":"fe58e0c52b0c","components/forum/ParticipantStack.jsx":"206956583bdc","components/forum/Post.jsx":"8c5b7492401e","components/forum/Tabs.jsx":"a082051bec4a","components/forum/ThreadRow.jsx":"9e69f32282fa","components/identity/Monogram.jsx":"f31129a7e7ae","components/identity/Reaction.jsx":"456807636487","components/identity/StarButton.jsx":"3b65ec629ed5","feature-ui/organize/organize.jsx":"5afce4767810","feature-ui/shared/chrome.jsx":"36ebda32d49a","public/assets/app.js":"69deeb418ac8","public/assets/composer.js":"c2c3b354c9b7","public/assets/tour.js":"f21cd59416f6","ui_kits/admin/AdminApp.jsx":"931f69eb0239","ui_kits/admin/AdminSections.jsx":"956bd620ee9f","ui_kits/admin/data.js":"e51c0287f01d","ui_kits/auth/AuthApp.jsx":"d9a2d51a808e","ui_kits/dm/Compose.jsx":"61b561ca2cd7","ui_kits/dm/ConvoList.jsx":"4849fb82bc48","ui_kits/dm/DMApp.jsx":"89bbc189ec17","ui_kits/dm/DMTopbar.jsx":"42c439534c97","ui_kits/dm/Thread.jsx":"a2f01b4b3157","ui_kits/dm/data.js":"5c575b21e08a","ui_kits/mod/ModApp.jsx":"0989542838fc","ui_kits/mod/ModSections.jsx":"6f5ed1730587","ui_kits/mod/data.js":"e4dd249c62cf","ui_kits/reading/ReadingApp.jsx":"72d25dbaf619","ui_kits/reading/ReadingChrome.jsx":"5f89513e1b17","ui_kits/reading/ReadingExtras.jsx":"9d7ab8a18cf4","ui_kits/reading/ReadingSurfaces.jsx":"1dfe54c4faf5","ui_kits/reading/reading-data.js":"9e93b326c2c3","ui_kits/retroboards/App.jsx":"90a6ffa3d85c","ui_kits/retroboards/Conversation.jsx":"ab9e90384a1e","ui_kits/retroboards/Inbox.jsx":"8aece8676535","ui_kits/retroboards/Leaderboard.jsx":"019dde493247","ui_kits/retroboards/Profile.jsx":"39d2b38848d3","ui_kits/retroboards/Rail.jsx":"824ffa2bf89b","ui_kits/retroboards/Topbar.jsx":"70d697989cc1","ui_kits/retroboards/data.js":"3d5e91a4fabd","ui_kits/settings/Chrome.jsx":"1ac72a03b412","ui_kits/settings/SettingsApp.jsx":"916eb090d2f3","ui_kits/settings/SettingsSections.jsx":"eaac085bdeb3","ui_kits/settings/data.js":"8af210b00f80"},"inlinedExternals":[],"unexposedExports":[]} */
+/* @ds-bundle: {"format":4,"namespace":"ImladrisDesignSystem_c3e027","components":[{"name":"CommendStar","sourcePath":"components/brand/CommendStar.jsx"},{"name":"EightPointStar","sourcePath":"components/brand/EightPointStar.jsx"},{"name":"Badge","sourcePath":"components/core/Badge.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"Pill","sourcePath":"components/core/Pill.jsx"},{"name":"Tag","sourcePath":"components/core/Tag.jsx"},{"name":"Callout","sourcePath":"components/doc/Callout.jsx"},{"name":"DocCover","sourcePath":"components/doc/DocCover.jsx"},{"name":"Figure","sourcePath":"components/doc/Figure.jsx"},{"name":"SectionHeader","sourcePath":"components/doc/SectionHeader.jsx"},{"name":"SpecTable","sourcePath":"components/doc/SpecTable.jsx"},{"name":"ChoiceCard","sourcePath":"components/forms/ChoiceCard.jsx"},{"name":"Input","sourcePath":"components/forms/Input.jsx"},{"name":"Switch","sourcePath":"components/forms/Switch.jsx"},{"name":"Textarea","sourcePath":"components/forms/Textarea.jsx"},{"name":"Composer","sourcePath":"components/forum/Composer.jsx"},{"name":"JoinBar","sourcePath":"components/forum/JoinBar.jsx"},{"name":"ParticipantStack","sourcePath":"components/forum/ParticipantStack.jsx"},{"name":"Post","sourcePath":"components/forum/Post.jsx"},{"name":"Tabs","sourcePath":"components/forum/Tabs.jsx"},{"name":"ThreadRow","sourcePath":"components/forum/ThreadRow.jsx"},{"name":"Monogram","sourcePath":"components/identity/Monogram.jsx"},{"name":"Reaction","sourcePath":"components/identity/Reaction.jsx"},{"name":"StarButton","sourcePath":"components/identity/StarButton.jsx"}],"sourceHashes":{"components/brand/CommendStar.jsx":"2fdec638ecb6","components/brand/EightPointStar.jsx":"78e9e4f44d92","components/core/Badge.jsx":"dceb5116fea3","components/core/Button.jsx":"6d2696ea6302","components/core/Card.jsx":"36db3a574747","components/core/Chip.jsx":"506fbf1d2fe5","components/core/Pill.jsx":"c1f2c9ae1c51","components/core/Tag.jsx":"cf0c0c19f406","components/doc/Callout.jsx":"d81172950bf7","components/doc/DocCover.jsx":"18a6819b7965","components/doc/Figure.jsx":"0b0e23dd7055","components/doc/SectionHeader.jsx":"bace9f8cd863","components/doc/SpecTable.jsx":"ee0a3c3d869b","components/forms/ChoiceCard.jsx":"996f6b5363ed","components/forms/Input.jsx":"f678e1e24152","components/forms/Switch.jsx":"124d55994abc","components/forms/Textarea.jsx":"8a89777423e7","components/forum/Composer.jsx":"bc31ffb3e4fb","components/forum/JoinBar.jsx":"fe58e0c52b0c","components/forum/ParticipantStack.jsx":"206956583bdc","components/forum/Post.jsx":"8c5b7492401e","components/forum/Tabs.jsx":"a082051bec4a","components/forum/ThreadRow.jsx":"9e69f32282fa","components/identity/Monogram.jsx":"f31129a7e7ae","components/identity/Reaction.jsx":"456807636487","components/identity/StarButton.jsx":"3b65ec629ed5","feature-ui/organize/organize.jsx":"5afce4767810","feature-ui/shared/chrome.jsx":"36ebda32d49a","ui_kits/admin/AdminApp.jsx":"38668c355b54","ui_kits/admin/AdminPackages.jsx":"a7b229de2a6d","ui_kits/admin/AdminParity.jsx":"b1a8a1fff814","ui_kits/admin/AdminSections.jsx":"ca73c216e4ac","ui_kits/admin/data.js":"e51c0287f01d","ui_kits/admin/parity-data.js":"3e624e7a13a5","ui_kits/auth/AuthApp.jsx":"4ef9912af995","ui_kits/dm/ConvoList.jsx":"eae136b0652c","ui_kits/dm/DMApp.jsx":"6007249dc356","ui_kits/dm/DMTopbar.jsx":"cc73ecef8318","ui_kits/dm/InfoRail.jsx":"d39b137272d5","ui_kits/dm/NavRail.jsx":"a46eaccc6b17","ui_kits/dm/Overlays.jsx":"c009805a98f2","ui_kits/dm/Thread.jsx":"b5d1aa9b95e7","ui_kits/dm/data.js":"fbd6f737b3df","ui_kits/mod/ModApp.jsx":"0989542838fc","ui_kits/mod/ModSections.jsx":"6f5ed1730587","ui_kits/mod/data.js":"e4dd249c62cf","ui_kits/reading/ReadingApp.jsx":"72d25dbaf619","ui_kits/reading/ReadingChrome.jsx":"5f89513e1b17","ui_kits/reading/ReadingExtras.jsx":"9d7ab8a18cf4","ui_kits/reading/ReadingSurfaces.jsx":"1dfe54c4faf5","ui_kits/reading/reading-data.js":"9e93b326c2c3","ui_kits/retroboards/App.jsx":"90a6ffa3d85c","ui_kits/retroboards/Conversation.jsx":"ebf0d840fb16","ui_kits/retroboards/Inbox.jsx":"8aece8676535","ui_kits/retroboards/Leaderboard.jsx":"019dde493247","ui_kits/retroboards/Profile.jsx":"39d2b38848d3","ui_kits/retroboards/Rail.jsx":"824ffa2bf89b","ui_kits/retroboards/Topbar.jsx":"70d697989cc1","ui_kits/retroboards/data.js":"3d5e91a4fabd","ui_kits/settings/Chrome.jsx":"1ac72a03b412","ui_kits/settings/SettingsApp.jsx":"916eb090d2f3","ui_kits/settings/SettingsSections.jsx":"eaac085bdeb3","ui_kits/settings/data.js":"8af210b00f80","ui_kits/system/SystemApp.jsx":"e316b1690a4d"},"inlinedExternals":[],"unexposedExports":[]} */
 
 (() => {
 
@@ -756,92 +756,347 @@ Object.assign(__ds_scope, { Textarea });
 // components/forum/Composer.jsx
 try { (() => {
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+function monoClass(seed) {
+  const s = String(seed || '');
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h + s.charCodeAt(i)) % 10;
+  return `mono-${h}`;
+}
+function initials(label) {
+  const p = String(label || '').trim().split(/\s+/).filter(Boolean);
+  if (!p.length) return '?';
+  return (p.length === 1 ? p[0].slice(0, 2) : p[0][0] + p[1][0]).toUpperCase();
+}
+
+/* The production toolbar contract (composer.js at the inspected commit):
+   order, labels, shortcuts, group breaks, narrow-screen essentials, and the
+   exact Lucide-register icon paths. Do not reorder or redraw. */
+const TOOLBAR_ORDER = ['bold', 'italic', 'strike', 'code', 'quote', 'h2', 'list', 'orderedList', 'codeblock', 'spoiler', 'link'];
+const TOOLBAR_ACTIONS = {
+  bold: {
+    label: 'Bold',
+    shortcut: 'B'
+  },
+  italic: {
+    label: 'Italic',
+    shortcut: 'I'
+  },
+  strike: {
+    label: 'Strike'
+  },
+  code: {
+    label: 'Inline code',
+    shortcut: 'E'
+  },
+  quote: {
+    label: 'Quote'
+  },
+  h2: {
+    label: 'Heading'
+  },
+  list: {
+    label: 'Bullet list'
+  },
+  orderedList: {
+    label: 'Numbered list'
+  },
+  codeblock: {
+    label: 'Code block'
+  },
+  spoiler: {
+    label: 'Spoiler'
+  },
+  link: {
+    label: 'Link',
+    shortcut: 'K'
+  }
+};
+const GROUP_BREAKS = {
+  code: true,
+  spoiler: true
+};
+const ESSENTIAL = {
+  bold: true,
+  italic: true,
+  list: true,
+  link: true
+};
+const OVERFLOW_ORDER = ['strike', 'code', 'quote', 'h2', 'orderedList', 'codeblock', 'spoiler'];
+const ICON_PATHS = {
+  bold: ['M8 5h5a3 3 0 0 1 0 6H8z', 'M8 11h6a4 4 0 0 1 0 8H8z'],
+  italic: ['M10 5h7', 'M7 19h7', 'M14 5 10 19'],
+  strike: ['M6 7h10', 'M5 12h14', 'M8 17h8'],
+  code: ['m9 8-4 4 4 4', 'm15 8 4 4-4 4'],
+  quote: ['M6 7h5v5H7v5', 'M14 7h5v5h-4v5'],
+  h2: ['M5 6v12', 'M13 6v12', 'M5 12h8', 'M16 10c0-2 4-2 4 0 0 2-4 3-4 6h5'],
+  list: ['M9 7h10', 'M9 12h10', 'M9 17h10', 'M5 7h.01', 'M5 12h.01', 'M5 17h.01'],
+  orderedList: ['M5 6h1v3', 'M5 13c2-1 2 2 0 3h2', 'M10 7h9', 'M10 12h9', 'M10 17h9'],
+  codeblock: ['M5 6h14v12H5z', 'm9 10-2 2 2 2', 'm6-4 2 2-2 2'],
+  spoiler: ['M3 12s3-5 9-5 9 5 9 5-3 5-9 5-9-5-9-5', 'M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4'],
+  link: ['M10 14 8.5 15.5a3 3 0 0 1-4-4L7 9a3 3 0 0 1 4 0', 'm14 10 1.5-1.5a3 3 0 0 1 4 4L17 15a3 3 0 0 1-4 0', 'm9 15 6-6']
+};
+function ActionIcon({
+  k
+}) {
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    "aria-hidden": "true",
+    focusable: "false"
+  }, (ICON_PATHS[k] || []).map((d, i) => /*#__PURE__*/React.createElement("path", {
+    key: i,
+    d: d
+  })));
+}
+
 /**
- * Composer — the reply / new-topic card. A "Posting as …" identity strip, an
- * optional Markdown toolbar, the serif Textarea, and an actions row with the
- * green send button (and a char counter). Pass `toolbar` to show the format
- * controls, or compose your own children.
+ * Composer — the shared composer shell (COMPOSER.md v0.8; composer_shell.php).
+ * One contained box serving all four mounts — `context` reply / new_thread /
+ * dm / edit — with the identical feature surface: the engraved icon formatting
+ * row (toggled by Aa, persisted in the product), attach ＋ / emoji 😊, the
+ * identity line ("as **Name**"), the Anonymous chip where a board allows it,
+ * the Preview toggle, and the circular quill send. Below the box: draft state,
+ * anonymous disclosure, and the near-limit counter. Wrapper differences (a
+ * Title + board picker for new_thread, recipients for dm) mount via `header`.
+ *
+ * This is the presentational design reference: in production the textarea is
+ * canonical Markdown (WYSIWYG mounts over it when `rich_composer` +
+ * `wysiwyg_composer` are enabled, and everything works with no JS), every form
+ * carries a CSRF token + a fresh idempotency key, and send performs a full
+ * navigation (optimistic send remains deferred — ADR 0020).
  */
 function Composer({
-  postingAs,
-  placeholder = 'Add to the discussion…',
-  toolbar = true,
-  sendLabel = 'Reply',
+  context = 'reply',
+  placeholder = 'Add your counsel…',
+  maxLength = 20000,
   value,
   defaultValue,
   onChange,
+  submitLabel = 'Reply',
+  identity,
+  // display name for the "as …" line; omit to hide
+  identitySeed,
+  // monogram hash seed (defaults to identity)
+  showAvatar = true,
+  // honors the user's show_avatars preference
+  allowAnonymous = false,
+  anonymousChecked = false,
+  anonymousDisclosure = 'Your name is hidden from other members; moderators can still see it.',
+  toolbarOpen = true,
+  // the Aa row state (production default: open)
+  activeFormats,
+  // e.g. ['bold'] — aria-pressed specimens
+  error,
+  // field error shown inside the box, above the input
+  uploads,
+  // [{ name, thumb, status, progress, failed, alt }]
+  draftSaved = false,
   count,
-  // optional "n / max" string for the counter
+  // "18,204 / 20,000" — shown near the limit
+  countOver = false,
+  previewOpen = false,
+  previewContent,
+  // rendered server-preview HTML (same pipeline as posts)
+  submitting = false,
+  disabled = false,
+  disabledNotice,
+  // e.g. "This topic was locked while you were writing. Your draft is kept."
+  header,
+  // wrapper slot above the box (Title field, recipients…)
+  actionsStart,
+  actionsEnd,
   className = '',
+  onSubmit,
   ...rest
 }) {
+  const [fmtOpen, setFmtOpen] = React.useState(!!toolbarOpen);
+  const [moreOpen, setMoreOpen] = React.useState(false);
+  const [anon, setAnon] = React.useState(!!anonymousChecked);
+  const [showPreview, setShowPreview] = React.useState(!!previewOpen);
+  const active = new Set(activeFormats || []);
+  const cls = ['composer', 'composer-shell', submitting ? 'is-submitting' : '', className].filter(Boolean).join(' ');
+  const seed = identitySeed || identity;
   return /*#__PURE__*/React.createElement("form", _extends({
-    className: ['composer', className].filter(Boolean).join(' ')
-  }, rest), postingAs ? /*#__PURE__*/React.createElement("div", {
-    className: "composer-id"
-  }, "Posting as ", /*#__PURE__*/React.createElement("strong", {
-    style: {
-      color: 'var(--text-strong)',
-      fontWeight: 'var(--weight-semibold)'
-    }
-  }, postingAs)) : null, toolbar ? /*#__PURE__*/React.createElement("div", {
+    className: cls,
+    "data-composer-context": context,
+    "aria-busy": submitting || undefined,
+    onSubmit: onSubmit
+  }, rest), header, /*#__PURE__*/React.createElement("div", {
+    className: "composer-box"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "composer-format-slot"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "composer-toolbar",
     role: "toolbar",
-    "aria-label": "Formatting"
+    "aria-label": "Formatting",
+    hidden: !fmtOpen
+  }, TOOLBAR_ORDER.map(k => {
+    const a = TOOLBAR_ACTIONS[k];
+    const sc = a.shortcut ? ' (Ctrl+' + a.shortcut + ')' : '';
+    return /*#__PURE__*/React.createElement(React.Fragment, {
+      key: k
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: 'composer-toolbar-action' + (ESSENTIAL[k] ? ' is-essential' : ''),
+      "aria-label": a.label + sc,
+      "data-tip": a.label + (a.shortcut ? ' · Ctrl+' + a.shortcut : ''),
+      "aria-keyshortcuts": a.shortcut ? 'Control+' + a.shortcut + ' Meta+' + a.shortcut : undefined,
+      "aria-pressed": active.has(k),
+      disabled: disabled
+    }, /*#__PURE__*/React.createElement(ActionIcon, {
+      k: k
+    })), GROUP_BREAKS[k] ? /*#__PURE__*/React.createElement("span", {
+      className: "composer-toolbar-sep",
+      "aria-hidden": "true"
+    }) : null);
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "composer-more-wrap"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    "aria-label": "Bold",
-    style: {
-      fontWeight: 700
-    }
-  }, "B"), /*#__PURE__*/React.createElement("button", {
+    className: "composer-more-toggle",
+    "aria-label": "More formatting",
+    "aria-expanded": moreOpen,
+    onClick: () => setMoreOpen(!moreOpen),
+    disabled: disabled
+  }, "\uFF0B"))), moreOpen ? /*#__PURE__*/React.createElement("div", {
+    className: "composer-format-overflow",
+    role: "group",
+    "aria-label": "More formatting"
+  }, OVERFLOW_ORDER.map(k => /*#__PURE__*/React.createElement("button", {
     type: "button",
-    "aria-label": "Italic",
-    style: {
-      fontStyle: 'italic'
-    }
-  }, "I"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "Strikethrough",
-    style: {
-      textDecoration: 'line-through'
-    }
-  }, "S"), /*#__PURE__*/React.createElement("span", {
-    className: "composer-toolbar-sep",
-    "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "List"
-  }, "List"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "Quote"
-  }, "Quote"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "Code"
-  }, "Code"), /*#__PURE__*/React.createElement("span", {
-    className: "composer-toolbar-sep",
-    "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "Link"
-  }, "Link"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "Mention"
-  }, "@")) : null, /*#__PURE__*/React.createElement("textarea", {
-    className: "textarea",
+    key: k,
+    className: "composer-overflow-action",
+    "aria-pressed": active.has(k),
+    onClick: () => setMoreOpen(false)
+  }, TOOLBAR_ACTIONS[k].label))) : null), error ? /*#__PURE__*/React.createElement("p", {
+    className: "field-error"
+  }, error) : null, /*#__PURE__*/React.createElement("textarea", {
+    className: "composer-input",
     rows: 4,
+    maxLength: maxLength,
     placeholder: placeholder,
     value: value,
     defaultValue: defaultValue,
-    onChange: onChange
+    onChange: onChange,
+    disabled: disabled,
+    required: true
   }), /*#__PURE__*/React.createElement("div", {
-    className: "composer-actions"
+    className: "composer-upload-tray",
+    "aria-live": "polite"
+  }, (uploads || []).map((u, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: 'composer-upload-card' + (u.failed ? ' is-failed' : '')
+  }, u.thumb ? /*#__PURE__*/React.createElement("img", {
+    className: "composer-upload-thumb",
+    src: u.thumb,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "composer-upload-thumb",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "composer-upload-meta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "composer-upload-name"
+  }, u.name), /*#__PURE__*/React.createElement("span", {
+    className: "composer-upload-status"
+  }, u.status)), u.progress != null ? /*#__PURE__*/React.createElement("progress", {
+    max: 100,
+    value: u.progress
+  }) : null, u.alt != null ? /*#__PURE__*/React.createElement("input", {
+    className: "input",
+    defaultValue: u.alt,
+    placeholder: "Describe this image (alt text)",
+    "aria-label": "Alt text"
+  }) : null, /*#__PURE__*/React.createElement("div", {
+    className: "composer-upload-actions"
   }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn btn-secondary btn-small"
+  }, "Up"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn btn-secondary btn-small"
+  }, "Down"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "btn btn-secondary btn-small"
+  }, "Remove"))))), /*#__PURE__*/React.createElement("div", {
+    className: "composer-actions-bar"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "composer-actions-start"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "composer-format-toggle",
+    "aria-label": "Formatting",
+    "aria-expanded": fmtOpen,
+    onClick: () => setFmtOpen(!fmtOpen),
+    disabled: disabled
+  }, "Aa"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "composer-attach-toggle",
+    "aria-label": "Attach images",
+    title: "Attach images",
+    disabled: disabled
+  }, "\uFF0B"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "composer-emoji-toggle",
+    "aria-label": "Emoji",
+    "aria-haspopup": "dialog",
+    disabled: disabled
+  }, "\uD83D\uDE0A"), actionsStart, identity ? /*#__PURE__*/React.createElement("span", {
+    className: "composer-identity",
+    dir: "auto"
+  }, showAvatar ? /*#__PURE__*/React.createElement("span", {
+    className: 'monogram ' + monoClass(seed),
+    "aria-hidden": "true"
+  }, initials(identity)) : null, /*#__PURE__*/React.createElement("span", {
+    className: "composer-identity-copy"
+  }, "as ", /*#__PURE__*/React.createElement("strong", null, identity))) : null, allowAnonymous ? /*#__PURE__*/React.createElement("span", {
+    className: "composer-anonymous-chip"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    id: "composer-anon",
+    checked: anon,
+    onChange: e => setAnon(e.target.checked),
+    disabled: disabled
+  }), /*#__PURE__*/React.createElement("label", {
+    htmlFor: "composer-anon"
+  }, "Anonymous")) : null), /*#__PURE__*/React.createElement("div", {
+    className: "composer-actions-end"
+  }, actionsEnd, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "composer-preview-toggle",
+    "aria-label": "Preview",
+    "aria-expanded": showPreview,
+    onClick: () => setShowPreview(!showPreview),
+    disabled: disabled
+  }, "Preview"), /*#__PURE__*/React.createElement("button", {
     type: "submit",
-    className: "btn"
-  }, sendLabel), count != null ? /*#__PURE__*/React.createElement("span", {
-    className: "composer-count"
-  }, count) : null));
+    className: "btn composer-send",
+    "aria-label": submitLabel,
+    disabled: disabled || submitting
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, "\u2712"))))), /*#__PURE__*/React.createElement("div", {
+    className: "composer-meta-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "composer-meta-draft"
+  }, draftSaved ? /*#__PURE__*/React.createElement(React.Fragment, null, "Draft saved \xB7 ", /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "linkbtn composer-discard",
+    "aria-label": "Discard draft"
+  }, "Discard")) : null), allowAnonymous ? /*#__PURE__*/React.createElement("span", {
+    className: "composer-anonymous-disclosure"
+  }, anonymousDisclosure) : /*#__PURE__*/React.createElement("span", null), count != null ? /*#__PURE__*/React.createElement("span", {
+    className: 'composer-count' + (countOver ? ' over' : '')
+  }, count) : null), showPreview ? /*#__PURE__*/React.createElement("div", {
+    className: "composer-preview formatted-content",
+    "aria-live": "polite"
+  }, previewContent) : null, disabledNotice ? /*#__PURE__*/React.createElement("p", {
+    className: "composer-meta-row",
+    role: "status"
+  }, disabledNotice) : null, /*#__PURE__*/React.createElement("span", {
+    className: "sr-only",
+    role: "status",
+    "aria-live": "polite"
+  }, submitting ? 'Sending…' : ''));
 }
 Object.assign(__ds_scope, { Composer });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forum/Composer.jsx", error: String((e && e.message) || e) }); }
@@ -2306,1769 +2561,14 @@ try { (() => {
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "feature-ui/shared/chrome.jsx", error: String((e && e.message) || e) }); }
 
-// public/assets/app.js
-try { (() => {
-// RetroBoards — progressive enhancement only. Every flow works without this
-// file; it just adds small conveniences on top of the server-rendered HTML.
-(function () {
-  'use strict';
-
-  // Signal that JS is active so CSS can enable JS-only affordances (e.g. the
-  // off-canvas nav drawer) without ever trapping no-JS users behind them.
-  document.documentElement.classList.add('has-js');
-
-  // Auto-grow composer textareas as you type.
-  function autosize(el) {
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-  }
-  document.addEventListener('input', function (e) {
-    var t = e.target;
-    if (t && t.classList && t.classList.contains('composer-input')) {
-      autosize(t);
-    }
-  });
-
-  // Reactions: toggle an EXISTING reaction chip over fetch and update it in
-  // place. The "add a reaction" menu uses a normal POST (full reload) so a
-  // brand-new chip is server-rendered with a valid CSRF token. Either way the
-  // no-JavaScript path is unchanged.
-  document.addEventListener('submit', function (e) {
-    var form = e.target;
-    if (!form.classList || !form.classList.contains('reaction-form')) {
-      return;
-    }
-    if (form.closest('.reaction-add')) {
-      return;
-    } // adding a new emoji → normal submit
-    if (!window.fetch || !window.FormData) {
-      return;
-    }
-    var btn = form.querySelector('button');
-    e.preventDefault();
-    var body = new FormData(form);
-    body.append('format', 'json');
-    fetch(form.action, {
-      method: 'POST',
-      body: body,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'same-origin'
-    }).then(function (r) {
-      return r.json();
-    }).then(function (data) {
-      if (!data || !data.ok) {
-        form.submit();
-        return;
-      }
-      var emoji = (form.querySelector('input[name=emoji]') || {}).value;
-      var n = data.counts && data.counts[emoji] || 0;
-      if (n === 0) {
-        form.remove();
-        return;
-      }
-      var on = data.state === 'added';
-      btn.classList.toggle('reaction-on', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      var ncell = btn.querySelector('.reaction-n');
-      if (ncell) {
-        ncell.textContent = n;
-      }
-    }).catch(function () {
-      form.submit();
-    });
-  });
-
-  // Notification bell: short-poll the unread count (DECISIONS §2: short-polling,
-  // no WebSockets). The bell is a plain link without JS, so this only decorates.
-  var bell = document.querySelector('[data-bell]');
-  if (bell && window.fetch) {
-    var countEl = bell.querySelector('[data-bell-count]');
-    var poll = function () {
-      fetch('/notifications/bell?format=json', {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'same-origin'
-      }).then(function (r) {
-        return r.ok ? r.json() : null;
-      }).then(function (data) {
-        if (!data || !countEl) {
-          return;
-        }
-        if (data.unread > 0) {
-          countEl.textContent = data.unread > 99 ? '99+' : data.unread;
-          countEl.hidden = false;
-        } else {
-          countEl.hidden = true;
-        }
-      }).catch(function () {});
-    };
-    poll();
-    setInterval(poll, 60000); // once a minute is plenty for a forum bell
-  }
-
-  // Presence roster: short-poll who's online (P2-11). The server already
-  // excludes hidden users, the viewer, and blocked members — the client just
-  // renders. The widget stays hidden (no-JS) until there's someone to show.
-  var presence = document.querySelector('[data-presence]');
-  if (presence && window.fetch) {
-    var pList = presence.querySelector('[data-presence-list]');
-    var pCount = presence.querySelector('[data-presence-count]');
-    var pollPresence = function () {
-      fetch('/presence?format=json', {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'same-origin'
-      }).then(function (r) {
-        return r.ok ? r.json() : null;
-      }).then(function (data) {
-        if (!data || !pList) {
-          return;
-        }
-        if (pCount) {
-          pCount.textContent = data.count;
-        }
-        pList.innerHTML = '';
-        (data.online || []).slice(0, 20).forEach(function (u) {
-          var li = document.createElement('li');
-          var a = document.createElement('a');
-          a.href = '/u/' + encodeURIComponent(u.username);
-          var dot = document.createElement('span');
-          dot.className = 'dot';
-          a.appendChild(dot);
-          a.appendChild(document.createTextNode(u.display_name || u.username));
-          li.appendChild(a);
-          pList.appendChild(li);
-        });
-        presence.hidden = (data.count || 0) === 0;
-      }).catch(function () {});
-    };
-    pollPresence();
-    setInterval(pollPresence, 45000);
-  }
-
-  // Operator branding preview (P3-07). The saved /brand.css remains the source
-  // of truth; this only previews unsaved form values inside the admin card.
-  var brandForm = document.querySelector('[data-brand-form]');
-  var brandPreview = document.querySelector('[data-brand-preview]');
-  if (brandForm && brandPreview) {
-    var brandName = brandForm.querySelector('[data-brand-name]');
-    var brandPrimary = brandForm.querySelector('[data-brand-primary]');
-    var brandAccent = brandForm.querySelector('[data-brand-accent]');
-    var brandTheme = brandForm.querySelector('[data-brand-theme]');
-    var previewName = brandPreview.querySelector('[data-brand-preview-name]');
-    var previewTheme = brandPreview.querySelector('[data-brand-preview-theme]');
-    var hex = function (v) {
-      return /^#[0-9a-fA-F]{6}$/.test((v || '').trim());
-    };
-    var rgb = function (v) {
-      v = v.replace('#', '');
-      return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
-    };
-    var lum = function (v) {
-      return rgb(v).map(function (n) {
-        n = n / 255;
-        return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
-      }).reduce(function (sum, n, i) {
-        return sum + n * [0.2126, 0.7152, 0.0722][i];
-      }, 0);
-    };
-    var contrast = function (a, b) {
-      var l1 = lum(a),
-        l2 = lum(b),
-        hi = Math.max(l1, l2),
-        lo = Math.min(l1, l2);
-      return (hi + 0.05) / (lo + 0.05);
-    };
-    var contrastToken = function (v) {
-      return contrast(v, '#ffffff') >= contrast(v, '#0f1218') ? '#ffffff' : '#0f1218';
-    };
-    var updateBrandPreview = function () {
-      var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value : '#2f6feb';
-      var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value : primary;
-      brandPreview.style.setProperty('--preview-accent', primary);
-      brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
-      brandPreview.style.setProperty('--preview-accent-2', accent);
-      if (previewName && brandName) {
-        previewName.textContent = brandName.value || 'Community';
-      }
-      if (previewTheme && brandTheme) {
-        previewTheme.textContent = brandTheme.value.charAt(0).toUpperCase() + brandTheme.value.slice(1);
-      }
-    };
-    brandForm.addEventListener('input', updateBrandPreview);
-    brandForm.addEventListener('change', updateBrandPreview);
-    updateBrandPreview();
-  }
-
-  // Site announcement banner (ADMIN §7.4): a dismissible operator notice. With
-  // JS off the server-rendered banner simply stays visible; this only remembers
-  // a per-version dismissal in localStorage and hides the bar on later loads.
-  var announcement = document.querySelector('[data-announcement]');
-  if (announcement && announcement.getAttribute('data-dismissible') === '1') {
-    var annVersion = announcement.getAttribute('data-announcement-version') || '0';
-    var annKey = 'rb-announcement-dismissed';
-    var annDismissed = null;
-    try {
-      annDismissed = window.localStorage.getItem(annKey);
-    } catch (e) {
-      annDismissed = null;
-    }
-    if (annDismissed === annVersion) {
-      announcement.hidden = true;
-    } else {
-      var annBtn = announcement.querySelector('[data-announcement-dismiss]');
-      if (annBtn) {
-        annBtn.addEventListener('click', function () {
-          announcement.hidden = true;
-          try {
-            window.localStorage.setItem(annKey, annVersion);
-          } catch (e) {/* ignore */}
-        });
-      }
-    }
-  }
-
-  // Community Inbox — load a topic into the reading pane (enhancement only; with
-  // JS off, the thread-title links open each topic as its own page). Short-fetch
-  // the thread HTML, lift its #main content into the reading pane, and keep the
-  // URL shareable via ?t=<id> + history. Reactions/edit forms inside keep working
-  // because their handlers are delegated on document.
-  var inbox = document.querySelector('[data-inbox]');
-  if (inbox && window.fetch && window.history && window.DOMParser) {
-    var reading = inbox.querySelector('[data-inbox-reading]');
-    var inboxList = inbox.querySelector('[data-inbox-list]');
-    var emptyHtml = reading.innerHTML; // the server-rendered placeholder
-    try {
-      history.replaceState({}, '', window.location.href);
-    } catch (e) {/* ignore */}
-    var idOf = function (href) {
-      var m = href && href.match(/\/t\/(\d+)/);
-      return m ? m[1] : null;
-    };
-    var markActive = function (href) {
-      var rows = inboxList.querySelectorAll('.thread-row');
-      for (var i = 0; i < rows.length; i++) {
-        var a = rows[i].querySelector('a.thread-title');
-        rows[i].classList.toggle('is-active', !!a && a.getAttribute('href') === href);
-      }
-    };
-    var showEmpty = function () {
-      reading.innerHTML = emptyHtml;
-      reading.scrollTop = 0;
-      markActive('');
-    };
-    var loadThread = function (href, push, focus) {
-      reading.setAttribute('aria-busy', 'true');
-      fetch(href, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'same-origin'
-      }).then(function (r) {
-        if (r.redirected) {
-          window.location.href = r.url;
-          return null;
-        } // e.g. session expired → /login
-        return r.ok ? r.text() : null;
-      }).then(function (html) {
-        if (html === null) {
-          return;
-        }
-        var doc = new DOMParser().parseFromString(html, 'text/html');
-        var main = doc.querySelector('#main');
-        if (!main || !main.querySelector('.thread-view, .post-stream, .thread-head')) {
-          window.location.href = href;
-          return; // not a topic page → real navigation
-        }
-        reading.innerHTML = main.innerHTML;
-        reading.removeAttribute('aria-busy');
-        reading.scrollTop = 0;
-        markActive(href);
-        if (push) {
-          var id = idOf(href);
-          var url = new URL(window.location.href);
-          if (id) {
-            url.searchParams.set('t', id);
-          }
-          history.pushState({
-            href: href
-          }, '', url.toString());
-        }
-        if (focus) {
-          // move focus, don't announce the whole thread
-          var h = reading.querySelector('h1, h2, .thread-head');
-          if (h) {
-            h.setAttribute('tabindex', '-1');
-            h.focus();
-          } else {
-            reading.focus();
-          }
-        }
-      }).catch(function () {
-        window.location.href = href;
-      });
-    };
-    var rowSelector = function (id) {
-      return 'a.thread-title[href^="/t/' + id + '-"], a.thread-title[href="/t/' + id + '"]';
-    };
-    inboxList.addEventListener('click', function (e) {
-      var a = e.target.closest ? e.target.closest('a.thread-title') : null;
-      if (!a || !inboxList.contains(a)) {
-        return;
-      }
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
-        return;
-      }
-      e.preventDefault();
-      loadThread(a.getAttribute('href'), true, true);
-    });
-    window.addEventListener('popstate', function () {
-      var id = new URL(window.location.href).searchParams.get('t');
-      if (!id) {
-        showEmpty();
-        return;
-      } // Back to the bare /inbox restores the placeholder
-      var a = inboxList.querySelector(rowSelector(id));
-      if (a) {
-        loadThread(a.getAttribute('href'), false, false);
-      } else {
-        showEmpty();
-      }
-    });
-    var initId = new URL(window.location.href).searchParams.get('t');
-    if (initId) {
-      var initA = inboxList.querySelector(rowSelector(initId));
-      if (initA) {
-        loadThread(initA.getAttribute('href'), false, false);
-      }
-    }
-  }
-
-  // Mobile navigation drawer (Phase 4): the sidebar rail slides in over a scrim
-  // on small screens. Without JS the rail simply stacks above the content (the
-  // server-rendered nav stays reachable); this only adds the off-canvas toggle.
-  var navToggle = document.querySelector('[data-nav-toggle]');
-  var navScrim = document.querySelector('[data-nav-scrim]');
-  if (navToggle) {
-    var setNav = function (open) {
-      document.body.classList.toggle('nav-open', open);
-      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      navToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
-      if (navScrim) {
-        navScrim.hidden = !open;
-      }
-    };
-    navToggle.addEventListener('click', function () {
-      setNav(!document.body.classList.contains('nav-open'));
-    });
-    if (navScrim) {
-      navScrim.addEventListener('click', function () {
-        setNav(false);
-      });
-    }
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && document.body.classList.contains('nav-open')) {
-        setNav(false);
-      }
-    });
-    // Closing the drawer after following a rail link keeps the next page clean.
-    var sidebar = document.querySelector('[data-sidebar]');
-    if (sidebar) {
-      sidebar.addEventListener('click', function (e) {
-        if (e.target.closest && e.target.closest('a')) {
-          setNav(false);
-        }
-      });
-    }
-  }
-
-  // New-Topic composer becomes a centred modal once JS is present (handoff §5.2).
-  // The overlay itself is CSS, gated on .has-js; here we add Esc, scrim-click, and
-  // a Cancel button to dismiss it, and focus the title on open. Without JS the
-  // native <details> stays an inline expand, so creating a topic never needs script.
-  var newTopic = document.querySelector('details.composer-details');
-  if (newTopic) {
-    var trigger = newTopic.querySelector('summary');
-    var closeTopic = function () {
-      if (!newTopic.open) {
-        return;
-      }
-      newTopic.open = false;
-      if (trigger) {
-        trigger.focus();
-      } // restore focus to the trigger, not hidden content
-    };
-    newTopic.addEventListener('toggle', function () {
-      if (newTopic.open) {
-        var title = newTopic.querySelector('input[name="title"]');
-        if (title) {
-          title.focus();
-        }
-      }
-    });
-    // A click on the backdrop (the open details' ::before fills the viewport and
-    // hit-tests to the details element itself) dismisses the modal.
-    newTopic.addEventListener('click', function (e) {
-      if (e.target === newTopic) {
-        closeTopic();
-      }
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && newTopic.open) {
-        closeTopic();
-      }
-    });
-    var cancel = newTopic.querySelector('[data-close-composer]');
-    if (cancel) {
-      cancel.addEventListener('click', closeTopic);
-    }
-  }
-})();
-})(); } catch (e) { __ds_ns.__errors.push({ path: "public/assets/app.js", error: String((e && e.message) || e) }); }
-
-// public/assets/composer.js
-try { (() => {
-// RetroBoards shared composer — progressive enhancement (P3-02/P3-03/P3-04).
-// Everything here is optional: the server-rendered <textarea> posts fine without
-// it. When present it adds a Markdown toolbar, a live server-rendered preview,
-// a character counter, image paste/drag-drop upload, and local draft autosave.
-(function () {
-  'use strict';
-
-  if (!window.fetch) {
-    return;
-  }
-  var BODY_MAX = 20000;
-
-  // Composing preferences (P3-01) are stamped on <body> by the layout for
-  // signed-in users. Defaults match the schema: enter-to-send off, preview on,
-  // smart lists on.
-  function composingPrefs() {
-    var b = document.body;
-    return {
-      enterToSend: b.getAttribute('data-enter-to-send') === '1',
-      showPreview: b.getAttribute('data-show-preview') !== '0',
-      smartLists: b.getAttribute('data-smart-lists') !== '0'
-    };
-  }
-  function draftsEnabled() {
-    return document.body.getAttribute('data-drafts') !== '0';
-  }
-  function tokenField(form) {
-    var t = form.querySelector('input[name="_token"]');
-    return t ? t.value : '';
-  }
-
-  // ---- Markdown toolbar -------------------------------------------------
-  function wrapSelection(ta, before, after) {
-    var s = ta.selectionStart,
-      e = ta.selectionEnd;
-    var sel = ta.value.slice(s, e) || '';
-    ta.value = ta.value.slice(0, s) + before + sel + after + ta.value.slice(e);
-    ta.focus();
-    ta.selectionStart = s + before.length;
-    ta.selectionEnd = s + before.length + sel.length;
-    ta.dispatchEvent(new Event('input', {
-      bubbles: true
-    }));
-  }
-
-  // Sentence-case labels render in the Marcellus toolbar (handoff §5.2). The
-  // accessible label stays "Insert {label}" so existing role queries still match.
-  var ACTIONS = {
-    bold: {
-      label: 'Bold',
-      before: '**',
-      after: '**',
-      shortcut: 'b',
-      active: 'inline'
-    },
-    italic: {
-      label: 'Italic',
-      before: '*',
-      after: '*',
-      shortcut: 'i',
-      active: 'inline'
-    },
-    strike: {
-      label: 'Strike',
-      before: '~~',
-      after: '~~',
-      active: 'inline'
-    },
-    code: {
-      label: 'Code',
-      before: '`',
-      after: '`',
-      shortcut: 'e',
-      active: 'inline'
-    },
-    spoiler: {
-      label: 'Spoiler',
-      before: '||',
-      after: '||',
-      active: 'inline'
-    },
-    quote: {
-      label: 'Quote',
-      before: '\n> ',
-      after: '',
-      prefix: '> ',
-      active: 'line'
-    },
-    h2: {
-      label: 'Heading',
-      before: '\n## ',
-      after: '',
-      prefix: '## ',
-      active: 'line'
-    },
-    list: {
-      label: 'List',
-      before: '\n- ',
-      after: '',
-      prefix: '- ',
-      active: 'line'
-    },
-    codeblock: {
-      label: 'Code block',
-      before: '\n```\n',
-      after: '\n```\n',
-      active: 'fence'
-    },
-    link: {
-      label: 'Link',
-      before: '[',
-      after: '](https://)',
-      shortcut: 'k',
-      active: 'inline'
-    },
-    emoji: {
-      label: 'Emoji',
-      before: ':smile:',
-      after: ''
-    }
-  };
-  // A hairline separator follows these keys, grouping the bar as
-  // emphasis | block | insert (handoff §5.2).
-  var GROUP_BREAKS = {
-    spoiler: true,
-    codeblock: true
-  };
-  function applyAction(ta, key) {
-    var action = ACTIONS[key];
-    if (!action) {
-      return false;
-    }
-    wrapSelection(ta, action.before, action.after);
-    return true;
-  }
-  function currentLine(ta) {
-    var v = ta.value,
-      pos = ta.selectionStart;
-    var lineStart = v.lastIndexOf('\n', pos - 1) + 1;
-    var lineEnd = v.indexOf('\n', pos);
-    if (lineEnd < 0) {
-      lineEnd = v.length;
-    }
-    return v.slice(lineStart, lineEnd);
-  }
-  function inFence(ta) {
-    var before = ta.value.slice(0, ta.selectionStart);
-    return (before.match(/^```/gm) || []).length % 2 === 1;
-  }
-  function actionActive(ta, action) {
-    if (!action.active) {
-      return false;
-    }
-    var s = ta.selectionStart,
-      e = ta.selectionEnd,
-      v = ta.value;
-    if (action.active === 'inline') {
-      return s >= action.before.length && v.slice(s - action.before.length, s) === action.before && v.slice(e, e + action.after.length) === action.after;
-    }
-    if (action.active === 'line') {
-      return currentLine(ta).indexOf(action.prefix || '') === 0;
-    }
-    if (action.active === 'fence') {
-      return inFence(ta);
-    }
-    return false;
-  }
-  function buildToolbar(ta) {
-    var bar = document.createElement('div');
-    bar.className = 'composer-toolbar';
-    var buttons = [];
-    function updateState() {
-      buttons.forEach(function (item) {
-        item.button.setAttribute('aria-pressed', actionActive(ta, item.action) ? 'true' : 'false');
-      });
-    }
-    Object.keys(ACTIONS).forEach(function (key) {
-      var action = ACTIONS[key];
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = action.label;
-      b.setAttribute('aria-label', 'Insert ' + action.label);
-      if (action.shortcut) {
-        b.setAttribute('aria-keyshortcuts', 'Control+' + action.shortcut.toUpperCase() + ' Meta+' + action.shortcut.toUpperCase());
-      }
-      b.setAttribute('aria-pressed', 'false');
-      b.addEventListener('click', function () {
-        applyAction(ta, key);
-        updateState();
-      });
-      buttons.push({
-        button: b,
-        action: action
-      });
-      bar.appendChild(b);
-      if (GROUP_BREAKS[key]) {
-        var sep = document.createElement('span');
-        sep.className = 'composer-toolbar-sep';
-        sep.setAttribute('aria-hidden', 'true');
-        bar.appendChild(sep);
-      }
-    });
-    ['input', 'keyup', 'mouseup', 'select'].forEach(function (evt) {
-      ta.addEventListener(evt, updateState);
-    });
-    ta.parentNode.insertBefore(bar, ta);
-    updateState();
-  }
-
-  // ---- Character counter ------------------------------------------------
-  function buildCounter(ta) {
-    var c = document.createElement('div');
-    c.className = 'composer-count';
-    function update() {
-      var n = ta.value.length;
-      c.textContent = n + ' / ' + BODY_MAX;
-      c.classList.toggle('over', n > BODY_MAX);
-    }
-    ta.addEventListener('input', update);
-    update();
-    ta.parentNode.appendChild(c);
-  }
-
-  // ---- Live preview (same server pipeline) ------------------------------
-  function buildPreview(form, ta) {
-    var pane = document.createElement('div');
-    pane.className = 'composer-preview';
-    pane.setAttribute('aria-live', 'polite');
-    ta.parentNode.appendChild(pane);
-    var timer = null;
-    ta.addEventListener('input', function () {
-      if (timer) {
-        clearTimeout(timer);
-      }
-      timer = setTimeout(function () {
-        var data = new FormData();
-        data.append('_token', tokenField(form));
-        data.append('body', ta.value);
-        fetch('/composer/preview', {
-          method: 'POST',
-          body: data,
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        }).then(function (r) {
-          return r.ok ? r.json() : null;
-        }).then(function (j) {
-          if (j && j.ok) {
-            pane.innerHTML = j.html;
-          }
-        }).catch(function () {});
-      }, 350);
-    });
-  }
-
-  // ---- Idempotency: stamp a fresh token per composer instance -----------
-  function stampIdempotency(form) {
-    if (form.querySelector('input[name="idempotency_key"]')) {
-      return;
-    }
-    var input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = 'idempotency_key';
-    input.value = 'c-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-    form.appendChild(input);
-  }
-
-  // ---- Local draft autosave (per user+context, P3-03) -------------------
-  function draftUser() {
-    return document.body.getAttribute('data-user') || 'anon';
-  }
-  function draftContext(form) {
-    return form.getAttribute('action') || location.pathname;
-  }
-  function draftKeyFor(who, context) {
-    return 'rb-draft:' + who + ':' + context;
-  }
-  var pendingDraftSubmitKey = 'rb-draft:pending-submits';
-  function pendingDraftSubmits() {
-    try {
-      var raw = sessionStorage.getItem(pendingDraftSubmitKey);
-      var parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  }
-  function writePendingDraftSubmits(items) {
-    try {
-      if (items.length) {
-        sessionStorage.setItem(pendingDraftSubmitKey, JSON.stringify(items));
-      } else {
-        sessionStorage.removeItem(pendingDraftSubmitKey);
-      }
-    } catch (e) {}
-  }
-  function rememberPendingDraftSubmit(key, context) {
-    var items = pendingDraftSubmits().filter(function (item) {
-      return item && item.key !== key;
-    });
-    items.push({
-      key: key,
-      context: context,
-      at: Date.now()
-    });
-    writePendingDraftSubmits(items.slice(-20));
-  }
-  function clearCompletedDraftSubmits() {
-    var pending = pendingDraftSubmits();
-    if (!pending.length) {
-      return;
-    }
-    var keep = [];
-    var forms = document.querySelectorAll('form.composer');
-    pending.forEach(function (item) {
-      if (!item || !item.key || !item.context) {
-        return;
-      }
-      var samePostUrlWithBody = false;
-      for (var i = 0; i < forms.length; i++) {
-        var form = forms[i];
-        if (form.getAttribute('action') !== item.context) {
-          continue;
-        }
-        var ta = form.querySelector('.composer-input');
-        if (location.pathname === item.context && ta && ta.value) {
-          samePostUrlWithBody = true;
-          break;
-        }
-      }
-      if (samePostUrlWithBody) {
-        keep.push(item);
-        return;
-      }
-      try {
-        localStorage.removeItem(item.key);
-      } catch (e) {}
-    });
-    writePendingDraftSubmits(keep);
-  }
-  function migrateAnonDrafts(who) {
-    if (who === 'anon') {
-      return;
-    }
-    try {
-      var anonPrefix = 'rb-draft:anon:';
-      for (var i = localStorage.length - 1; i >= 0; i--) {
-        var key = localStorage.key(i);
-        if (!key || key.indexOf(anonPrefix) !== 0) {
-          continue;
-        }
-        var context = key.slice(anonPrefix.length);
-        var target = draftKeyFor(who, context);
-        if (!localStorage.getItem(target)) {
-          localStorage.setItem(target, localStorage.getItem(key) || '');
-        }
-        localStorage.removeItem(key);
-      }
-    } catch (e) {}
-  }
-  function buildDiscard(form, ta, key) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'btn btn-secondary btn-small composer-discard';
-    b.textContent = 'Discard draft';
-    function update() {
-      var hasSaved = false;
-      try {
-        hasSaved = !!localStorage.getItem(key);
-      } catch (e) {}
-      b.hidden = !hasSaved && !ta.value;
-    }
-    b.addEventListener('click', function () {
-      try {
-        localStorage.removeItem(key);
-      } catch (e) {}
-      ta.value = '';
-      ta.dispatchEvent(new Event('input', {
-        bubbles: true
-      }));
-      update();
-    });
-    ta.parentNode.appendChild(b);
-    update();
-    return update;
-  }
-  function wireDrafts(form, ta) {
-    var who = draftUser();
-    var context = draftContext(form);
-    migrateAnonDrafts(who);
-    var key = draftKeyFor(who, context);
-    try {
-      var saved = localStorage.getItem(key);
-      if (saved && !ta.value) {
-        ta.value = saved;
-        ta.dispatchEvent(new Event('input', {
-          bubbles: true
-        }));
-      }
-    } catch (e) {}
-    var updateDiscard = buildDiscard(form, ta, key);
-    ta.addEventListener('input', function () {
-      try {
-        ta.value ? localStorage.setItem(key, ta.value) : localStorage.removeItem(key);
-      } catch (e) {}
-      updateDiscard();
-    });
-    form.addEventListener('submit', function () {
-      // Do not clear immediately: a dropped connection can leave the user on
-      // the same page. The next successfully loaded page clears this context
-      // before an empty composer can repopulate from localStorage.
-      rememberPendingDraftSubmit(key, context);
-      updateDiscard();
-    });
-  }
-  function draftResumeHref(context) {
-    var m = context.match(/^\/t\/(\d+)\/reply$/);
-    if (m) {
-      return '/t/' + m[1];
-    }
-    m = context.match(/^\/messages\/(\d+)$/);
-    if (m) {
-      return context;
-    }
-    if (context === '/messages') {
-      return '/messages/new';
-    }
-    if (context === '/threads') {
-      return '/';
-    }
-    return '';
-  }
-  function draftLabel(context) {
-    if (context === '/threads') {
-      return 'New topic';
-    }
-    if (context === '/messages') {
-      return 'New direct message';
-    }
-    if (/^\/messages\/\d+$/.test(context)) {
-      return 'Direct-message reply';
-    }
-    if (/^\/t\/\d+\/reply$/.test(context)) {
-      return 'Thread reply';
-    }
-    if (/^\/posts\/\d+\/edit$/.test(context)) {
-      return 'Post edit';
-    }
-    return context;
-  }
-  function renderDraftsPage() {
-    var host = document.querySelector('[data-drafts-list]');
-    if (!host || !draftsEnabled()) {
-      return;
-    }
-    var who = draftUser();
-    migrateAnonDrafts(who);
-    var prefix = 'rb-draft:' + who + ':';
-    var drafts = [];
-    try {
-      for (var i = 0; i < localStorage.length; i++) {
-        var key = localStorage.key(i);
-        if (!key || key.indexOf(prefix) !== 0) {
-          continue;
-        }
-        var body = localStorage.getItem(key) || '';
-        if (!body) {
-          continue;
-        }
-        drafts.push({
-          key: key,
-          context: key.slice(prefix.length),
-          body: body
-        });
-      }
-    } catch (e) {}
-    drafts.sort(function (a, b) {
-      return a.context.localeCompare(b.context);
-    });
-    host.innerHTML = '';
-    if (!drafts.length) {
-      var empty = document.createElement('p');
-      empty.className = 'muted empty';
-      empty.textContent = 'No saved drafts in this browser.';
-      host.appendChild(empty);
-      return;
-    }
-    drafts.forEach(function (d) {
-      var card = document.createElement('article');
-      card.className = 'card';
-      var h = document.createElement('h2');
-      h.textContent = draftLabel(d.context);
-      var p = document.createElement('p');
-      p.className = 'muted';
-      p.textContent = d.context;
-      var pre = document.createElement('pre');
-      pre.className = 'draft-preview';
-      pre.textContent = d.body.length > 500 ? d.body.slice(0, 500) + '...' : d.body;
-      var actions = document.createElement('p');
-      actions.className = 'form-actions';
-      var href = draftResumeHref(d.context);
-      if (href) {
-        var resume = document.createElement('a');
-        resume.className = 'btn btn-small';
-        resume.href = href;
-        resume.textContent = 'Resume';
-        actions.appendChild(resume);
-      }
-      var discard = document.createElement('button');
-      discard.type = 'button';
-      discard.className = 'btn btn-secondary btn-small';
-      discard.textContent = 'Discard';
-      discard.addEventListener('click', function () {
-        try {
-          localStorage.removeItem(d.key);
-        } catch (e) {}
-        card.remove();
-        if (!host.querySelector('article')) {
-          renderDraftsPage();
-        }
-      });
-      actions.appendChild(discard);
-      card.appendChild(h);
-      card.appendChild(p);
-      card.appendChild(pre);
-      card.appendChild(actions);
-      host.appendChild(card);
-    });
-  }
-
-  // ---- Image paste / drag-drop upload (P3-04) ---------------------------
-  function insertAtCursor(ta, text) {
-    var s = ta.selectionStart;
-    ta.value = ta.value.slice(0, s) + text + ta.value.slice(ta.selectionEnd);
-    ta.selectionStart = ta.selectionEnd = s + text.length;
-    ta.dispatchEvent(new Event('input', {
-      bubbles: true
-    }));
-  }
-  function replaceRange(ta, start, end, text) {
-    ta.value = ta.value.slice(0, start) + text + ta.value.slice(end);
-    ta.selectionStart = ta.selectionEnd = start + text.length;
-    ta.focus();
-    ta.dispatchEvent(new Event('input', {
-      bubbles: true
-    }));
-  }
-  function replaceOnce(ta, from, to) {
-    var idx = ta.value.indexOf(from);
-    if (idx < 0) {
-      return false;
-    }
-    ta.value = ta.value.slice(0, idx) + to + ta.value.slice(idx + from.length);
-    ta.dispatchEvent(new Event('input', {
-      bubbles: true
-    }));
-    return true;
-  }
-  function markdownAlt(alt) {
-    // Escape backslash and both brackets in one pass (so inserted escapes
-    // are not re-processed) to keep the ![alt](url) image syntax intact.
-    return (alt || '').replace(/[\r\n]+/g, ' ').replace(/[\\\[\]]/g, '\\$&');
-  }
-  function imageMarkdown(url, alt) {
-    return '![' + markdownAlt(alt) + '](' + url + ')';
-  }
-  function uploadPurpose(form) {
-    var action = form.getAttribute('action') || '';
-    return action.indexOf('/messages') === 0 ? 'dm' : 'post';
-  }
-  function uploadTray(form, ta) {
-    var tray = form.querySelector('.composer-upload-tray');
-    if (tray) {
-      return tray;
-    }
-    tray = document.createElement('div');
-    tray.className = 'composer-upload-tray';
-    tray.setAttribute('aria-live', 'polite');
-    ta.parentNode.appendChild(tray);
-    return tray;
-  }
-  function moveSnippetBefore(ta, moving, anchor) {
-    if (!moving || !anchor || moving === anchor) {
-      return false;
-    }
-    var v = ta.value;
-    var mi = v.indexOf(moving);
-    if (mi < 0 || v.indexOf(anchor) < 0) {
-      return false;
-    }
-    v = v.slice(0, mi) + v.slice(mi + moving.length);
-    var ai = v.indexOf(anchor);
-    if (ai < 0) {
-      return false;
-    }
-    ta.value = v.slice(0, ai) + moving + v.slice(ai);
-    ta.dispatchEvent(new Event('input', {
-      bubbles: true
-    }));
-    return true;
-  }
-  function moveSnippetAfter(ta, moving, anchor) {
-    if (!moving || !anchor || moving === anchor) {
-      return false;
-    }
-    var v = ta.value;
-    var mi = v.indexOf(moving);
-    if (mi < 0 || v.indexOf(anchor) < 0) {
-      return false;
-    }
-    v = v.slice(0, mi) + v.slice(mi + moving.length);
-    var ai = v.indexOf(anchor);
-    if (ai < 0) {
-      return false;
-    }
-    ta.value = v.slice(0, ai + anchor.length) + moving + v.slice(ai + anchor.length);
-    ta.dispatchEvent(new Event('input', {
-      bubbles: true
-    }));
-    return true;
-  }
-  function uploadCard(form, ta, file, placeholder) {
-    var tray = uploadTray(form, ta);
-    var card = document.createElement('div');
-    card.className = 'composer-upload-card is-uploading';
-    var preview = document.createElement('img');
-    preview.className = 'composer-upload-thumb';
-    preview.alt = '';
-    preview.hidden = true;
-    var meta = document.createElement('div');
-    meta.className = 'composer-upload-meta';
-    var status = document.createElement('div');
-    status.className = 'composer-upload-status';
-    status.textContent = 'Uploading ' + (file && file.name ? file.name : 'image') + '...';
-    var progress = document.createElement('progress');
-    progress.max = 100;
-    progress.value = 0;
-    var alt = document.createElement('input');
-    alt.type = 'text';
-    alt.className = 'input input-small';
-    alt.placeholder = 'Alt text';
-    alt.setAttribute('aria-label', 'Image alt text');
-    alt.disabled = true;
-    var actions = document.createElement('div');
-    actions.className = 'composer-upload-actions';
-    var up = document.createElement('button');
-    up.type = 'button';
-    up.className = 'btn btn-secondary btn-small';
-    up.textContent = 'Up';
-    var down = document.createElement('button');
-    down.type = 'button';
-    down.className = 'btn btn-secondary btn-small';
-    down.textContent = 'Down';
-    var remove = document.createElement('button');
-    remove.type = 'button';
-    remove.className = 'btn btn-secondary btn-small';
-    remove.textContent = 'Remove';
-    actions.appendChild(up);
-    actions.appendChild(down);
-    actions.appendChild(remove);
-    meta.appendChild(status);
-    meta.appendChild(progress);
-    meta.appendChild(alt);
-    meta.appendChild(actions);
-    card.appendChild(preview);
-    card.appendChild(meta);
-    tray.appendChild(card);
-    card._rbMarkdown = '';
-    remove.addEventListener('click', function () {
-      replaceOnce(ta, card._rbMarkdown || placeholder, '');
-      card.remove();
-    });
-    up.addEventListener('click', function () {
-      var prev = card.previousElementSibling;
-      if (prev && moveSnippetBefore(ta, card._rbMarkdown, prev._rbMarkdown || '')) {
-        card.parentNode.insertBefore(card, prev);
-      }
-    });
-    down.addEventListener('click', function () {
-      var next = card.nextElementSibling;
-      if (next && moveSnippetAfter(ta, card._rbMarkdown, next._rbMarkdown || '')) {
-        card.parentNode.insertBefore(next, card);
-      }
-    });
-    alt.addEventListener('input', function () {
-      if (!card._rbUrl || !card._rbMarkdown) {
-        return;
-      }
-      var next = imageMarkdown(card._rbUrl, alt.value);
-      if (replaceOnce(ta, card._rbMarkdown, next)) {
-        card._rbMarkdown = next;
-        preview.alt = alt.value;
-      }
-    });
-    return {
-      progress: function (pct) {
-        progress.value = Math.max(0, Math.min(100, pct));
-      },
-      complete: function (json) {
-        var markdown = imageMarkdown(json.url, '');
-        replaceOnce(ta, placeholder, markdown);
-        card._rbUrl = json.url;
-        card._rbMarkdown = markdown;
-        preview.src = json.url;
-        preview.alt = '';
-        preview.hidden = false;
-        alt.disabled = false;
-        progress.value = 100;
-        status.textContent = 'Uploaded image ' + json.width + 'x' + json.height + '.';
-        card.classList.remove('is-uploading');
-        card.classList.add('is-complete');
-      },
-      fail: function (message) {
-        replaceOnce(ta, placeholder, '');
-        progress.remove();
-        alt.disabled = true;
-        status.textContent = message || 'Upload failed.';
-        card.classList.remove('is-uploading');
-        card.classList.add('is-failed');
-      }
-    };
-  }
-  function uploadImage(form, ta, file) {
-    var data = new FormData();
-    data.append('_token', tokenField(form));
-    data.append('image', file);
-    data.append('purpose', uploadPurpose(form));
-    // Unique per upload so several images pasted/dropped at once each resolve
-    // into their OWN marker — String.replace(str) only swaps the first match.
-    var token = 'rbup-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
-    var placeholder = '![uploading…](' + token + ')';
-    insertAtCursor(ta, placeholder);
-    var card = uploadCard(form, ta, file, placeholder);
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/upload');
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    xhr.upload.onprogress = function (e) {
-      if (e.lengthComputable) {
-        card.progress(e.loaded / e.total * 95);
-      }
-    };
-    xhr.onload = function () {
-      var j = null;
-      try {
-        j = JSON.parse(xhr.responseText || '{}');
-      } catch (e) {}
-      if (xhr.status >= 200 && xhr.status < 300 && j && j.ok) {
-        card.complete(j);
-      } else {
-        card.fail(j && j.error || 'Upload failed.');
-      }
-    };
-    xhr.onerror = function () {
-      card.fail('Upload failed. Check your connection and try again.');
-    };
-    xhr.send(data);
-  }
-  function wireUploads(form, ta) {
-    ta.addEventListener('paste', function (e) {
-      var items = (e.clipboardData || {}).items || [];
-      for (var i = 0; i < items.length; i++) {
-        if (items[i].type && items[i].type.indexOf('image/') === 0) {
-          uploadImage(form, ta, items[i].getAsFile());
-        }
-      }
-    });
-    ta.addEventListener('dragover', function (e) {
-      e.preventDefault();
-    });
-    ta.addEventListener('drop', function (e) {
-      var files = (e.dataTransfer || {}).files || [];
-      if (!files.length) {
-        return;
-      }
-      e.preventDefault();
-      for (var i = 0; i < files.length; i++) {
-        if (files[i].type && files[i].type.indexOf('image/') === 0) {
-          uploadImage(form, ta, files[i]);
-        }
-      }
-    });
-  }
-
-  // ---- Slash inserts + GIPHY picker (Phase 4 carryover) ----------------
-  var slashConfigPromise = null;
-  function loadSlashConfig() {
-    if (slashConfigPromise !== null) {
-      return slashConfigPromise;
-    }
-    slashConfigPromise = fetch('/composer/giphy-config', {
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'same-origin'
-    }).then(function (r) {
-      return r.ok ? r.json() : null;
-    }).then(function (j) {
-      return j && j.ok && j.enabled ? j : null;
-    }).catch(function () {
-      return null;
-    });
-    return slashConfigPromise;
-  }
-  function allowedInsert(config, key) {
-    return config && Array.isArray(config.allowed_inserts) && config.allowed_inserts.indexOf(key) !== -1;
-  }
-  var SLASH_SNIPPETS = {
-    table: {
-      label: 'table',
-      terms: ['table'],
-      body: '| Heading | Heading |\n|---|---|\n| Cell | Cell |'
-    },
-    task_list: {
-      label: 'task list',
-      terms: ['task', 'tasks', 'todo'],
-      body: '- [ ] Task'
-    },
-    poll: {
-      label: 'poll outline',
-      terms: ['poll', 'vote'],
-      body: 'Poll: Question?\n- Option A\n- Option B'
-    },
-    custom_emoji: {
-      label: 'custom emoji shortcode',
-      terms: ['emoji', 'custom emoji'],
-      body: ':shortcode:'
-    }
-  };
-  function slashState(ta) {
-    if (ta.selectionStart !== ta.selectionEnd) {
-      return null;
-    }
-    var pos = ta.selectionStart;
-    var lineStart = ta.value.lastIndexOf('\n', pos - 1) + 1;
-    var prefix = ta.value.slice(lineStart, pos);
-    var match = prefix.match(/(^|\s)\/([A-Za-z0-9_ -]*)$/);
-    if (!match) {
-      return null;
-    }
-    var query = (match[2] || '').toLowerCase().trim();
-    return {
-      start: pos - (match[2] || '').length - 1,
-      end: pos,
-      query: query
-    };
-  }
-  function slashQueryMatches(query, command) {
-    if (query === '') {
-      return true;
-    }
-    for (var i = 0; i < command.terms.length; i++) {
-      if (command.terms[i].indexOf(query) === 0 || query.indexOf(command.terms[i] + ' ') === 0) {
-        return true;
-      }
-    }
-    return command.label.indexOf(query) !== -1;
-  }
-  function slashCommands(config, query) {
-    var commands = [];
-    Object.keys(SLASH_SNIPPETS).forEach(function (key) {
-      if (!allowedInsert(config, key)) {
-        return;
-      }
-      var snippet = SLASH_SNIPPETS[key];
-      var command = {
-        key: key,
-        type: 'snippet',
-        label: snippet.label,
-        terms: snippet.terms,
-        body: snippet.body
-      };
-      if (slashQueryMatches(query, command)) {
-        commands.push(command);
-      }
-    });
-    if (allowedInsert(config, 'giphy') && config.public_key) {
-      var giphy = {
-        key: 'giphy',
-        type: 'giphy',
-        label: 'GIPHY',
-        terms: ['gif', 'giphy']
-      };
-      if (slashQueryMatches(query, giphy)) {
-        commands.push(giphy);
-      }
-    }
-    return commands;
-  }
-  function giphySearchTerm(query) {
-    return query.replace(/^(gif|giphy)\s*/i, '').trim();
-  }
-  function giphyResultUrl(item) {
-    return item && item.images && item.images.original && item.images.original.url ? item.images.original.url : '';
-  }
-  function wireSlashMenu(form, ta) {
-    var menu = document.createElement('div');
-    menu.className = 'composer-slash-menu';
-    menu.setAttribute('aria-label', 'Composer insert commands');
-    menu.hidden = true;
-    ta.parentNode.insertBefore(menu, ta.nextSibling);
-    var config = null;
-    var ready = false;
-    var activeState = null;
-    function hide() {
-      activeState = null;
-      menu.hidden = true;
-      menu.innerHTML = '';
-    }
-    function renderButtons(commands) {
-      menu.innerHTML = '';
-      commands.forEach(function (command) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'composer-slash-command';
-        b.textContent = command.type === 'giphy' ? 'Search GIPHY' : 'Insert ' + command.label;
-        b.addEventListener('mousedown', function (e) {
-          e.preventDefault();
-        });
-        b.addEventListener('click', function (e) {
-          e.stopPropagation();
-          var state = activeState || slashState(ta);
-          if (!state) {
-            hide();
-            return;
-          }
-          if (command.type === 'giphy') {
-            searchGiphy(state, giphySearchTerm(state.query));
-            return;
-          }
-          replaceRange(ta, state.start, state.end, command.body);
-          hide();
-        });
-        menu.appendChild(b);
-      });
-      menu.hidden = false;
-    }
-    function render() {
-      if (!ready || config === null) {
-        return;
-      }
-      var state = slashState(ta);
-      if (!state) {
-        hide();
-        return;
-      }
-      activeState = state;
-      var commands = slashCommands(config, state.query);
-      if (commands.length === 0) {
-        hide();
-        return;
-      }
-      renderButtons(commands);
-    }
-    function searchGiphy(state, term) {
-      if (!term) {
-        menu.innerHTML = '<p class="muted">Type a search after /gif.</p>';
-        menu.hidden = false;
-        return;
-      }
-      menu.innerHTML = '<p class="muted">Searching GIPHY...</p>';
-      menu.hidden = false;
-      var url = 'https://api.giphy.com/v1/gifs/search' + '?api_key=' + encodeURIComponent(config.public_key) + '&q=' + encodeURIComponent(term) + '&rating=' + encodeURIComponent(config.rating || 'pg') + '&limit=6';
-      fetch(url).then(function (r) {
-        return r.ok ? r.json() : null;
-      }).then(function (j) {
-        var items = j && Array.isArray(j.data) ? j.data : [];
-        menu.innerHTML = '';
-        if (items.length === 0) {
-          menu.innerHTML = '<p class="muted">No GIFs found.</p>';
-          return;
-        }
-        items.forEach(function (item) {
-          var mediaUrl = giphyResultUrl(item);
-          if (!mediaUrl) {
-            return;
-          }
-          var title = (item.title || 'GIF').trim() || 'GIF';
-          var b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'composer-slash-gif';
-          b.setAttribute('aria-label', 'Insert GIF ' + title);
-          var imgUrl = item.images && item.images.fixed_height_small && item.images.fixed_height_small.url ? item.images.fixed_height_small.url : mediaUrl;
-          var img = document.createElement('img');
-          img.src = imgUrl;
-          img.alt = '';
-          var span = document.createElement('span');
-          span.textContent = title;
-          b.appendChild(img);
-          b.appendChild(span);
-          b.addEventListener('mousedown', function (e) {
-            e.preventDefault();
-          });
-          b.addEventListener('click', function (e) {
-            e.stopPropagation();
-            replaceRange(ta, state.start, state.end, imageMarkdown(mediaUrl, title));
-            hide();
-          });
-          menu.appendChild(b);
-        });
-        if (!menu.childNodes.length) {
-          menu.innerHTML = '<p class="muted">No GIFs found.</p>';
-        }
-      }).catch(function () {
-        menu.innerHTML = '<p class="muted">GIPHY search is unavailable.</p>';
-      });
-    }
-    loadSlashConfig().then(function (j) {
-      config = j;
-      ready = true;
-      render();
-    });
-    ta.addEventListener('input', render);
-    ta.addEventListener('keyup', render);
-    ta.addEventListener('click', render);
-    ta.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !menu.hidden) {
-        e.preventDefault();
-        hide();
-      }
-    });
-    document.addEventListener('click', function (e) {
-      if (e.target === ta || menu.contains(e.target)) {
-        return;
-      }
-      hide();
-    });
-  }
-
-  // ---- Enter-to-send + smart list continuation (P3-01) ------------------
-  // Continue or end a Markdown list when Enter is pressed inside one. Returns
-  // true when it handled the key (so the caller suppresses the default newline).
-  function continueList(ta) {
-    if (ta.selectionStart !== ta.selectionEnd) {
-      return false;
-    }
-    var v = ta.value,
-      pos = ta.selectionStart;
-    var lineStart = v.lastIndexOf('\n', pos - 1) + 1;
-    var line = v.slice(lineStart, pos);
-    var um = line.match(/^(\s*)([-*+])\s+(\S.*)?$/); // - item / * item
-    var om = line.match(/^(\s*)(\d+)([.)])\s+(\S.*)?$/); // 1. item / 1) item
-    if (!um && !om) {
-      return false;
-    }
-    var empty = um ? !um[3] : !om[4];
-    if (empty) {
-      // Enter on a bare marker ends the list: drop the marker, blank line.
-      ta.value = v.slice(0, lineStart) + v.slice(pos);
-      ta.selectionStart = ta.selectionEnd = lineStart;
-    } else {
-      var next = um ? um[1] + um[2] + ' ' : om[1] + (parseInt(om[2], 10) + 1) + om[3] + ' ';
-      ta.value = v.slice(0, pos) + '\n' + next + v.slice(pos);
-      ta.selectionStart = ta.selectionEnd = pos + 1 + next.length;
-    }
-    ta.dispatchEvent(new Event('input', {
-      bubbles: true
-    }));
-    return true;
-  }
-  function wireKeys(form, ta, prefs) {
-    ta.addEventListener('keydown', function (e) {
-      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
-        var key = e.key.toLowerCase();
-        var action = key === 'b' ? 'bold' : key === 'i' ? 'italic' : key === 'k' ? 'link' : key === 'e' ? 'code' : null;
-        if (action !== null) {
-          e.preventDefault();
-          applyAction(ta, action);
-          return;
-        }
-      }
-      if (e.key !== 'Enter' || e.isComposing) {
-        return;
-      }
-      // Shift/modifier+Enter always inserts a newline (default behaviour).
-      if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) {
-        return;
-      }
-      if (prefs.enterToSend) {
-        e.preventDefault();
-        if (typeof form.requestSubmit === 'function') {
-          form.requestSubmit();
-        } else {
-          form.submit();
-        }
-        return;
-      }
-      if (prefs.smartLists && continueList(ta)) {
-        e.preventDefault();
-      }
-    });
-  }
-  function enhance(form, prefs) {
-    var ta = form.querySelector('.composer-input');
-    if (!ta || ta.getAttribute('data-rb-enhanced')) {
-      return;
-    }
-    ta.setAttribute('data-rb-enhanced', '1');
-    buildToolbar(ta);
-    buildCounter(ta);
-    if (prefs.showPreview) {
-      buildPreview(form, ta);
-    }
-    wireKeys(form, ta, prefs);
-    stampIdempotency(form);
-    // A form may opt out of local draft autosave (data-no-draft). The inline
-    // post-edit form does: its textarea is server-pre-filled with the current
-    // body, so a saved draft is never restored into it (the !ta.value guard
-    // fails) and there is no Drafts-page resume target — autosaving would only
-    // leave a misleading, unrecoverable draft that the next load discards.
-    if (draftsEnabled() && !form.hasAttribute('data-no-draft')) {
-      wireDrafts(form, ta);
-    }
-    wireUploads(form, ta);
-    wireSlashMenu(form, ta);
-  }
-  document.addEventListener('DOMContentLoaded', function () {
-    var prefs = composingPrefs();
-    clearCompletedDraftSubmits();
-    var forms = document.querySelectorAll('form.composer');
-    for (var i = 0; i < forms.length; i++) {
-      enhance(forms[i], prefs);
-    }
-    renderDraftsPage();
-  });
-})();
-})(); } catch (e) { __ds_ns.__errors.push({ path: "public/assets/composer.js", error: String((e && e.message) || e) }); }
-
-// public/assets/tour.js
-try { (() => {
-// RetroBoards onboarding tour — progressive enhancement only (P3-11).
-// The forum is fully usable without this script; if a target is missing the
-// step is skipped, and completion is recorded server-side so it persists across
-// devices. No inline styles (the popover is positioned by CSS class).
-(function () {
-  'use strict';
-
-  if (!window.fetch) {
-    return;
-  }
-  function token() {
-    var el = document.querySelector('input[name="_token"]');
-    return el ? el.value : '';
-  }
-  function record(path) {
-    var data = new FormData();
-    data.append('_token', token());
-    return fetch(path, {
-      method: 'POST',
-      body: data,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    }).catch(function () {});
-  }
-
-  // Steps target final Gate-A DOM nodes; any missing target is skipped.
-  var STEPS = [{
-    sel: '.brand',
-    title: 'Welcome',
-    text: 'This is your community home. Click the name any time to come back here.'
-  }, {
-    sel: '.topbar-search',
-    title: 'Search',
-    text: 'Find topics and people from the search box up top.'
-  }, {
-    sel: '[data-bell]',
-    title: 'Notifications',
-    text: 'Replies, mentions, and reactions show up under the bell.'
-  }, {
-    sel: '.sidebar, .app-shell',
-    title: 'Boards',
-    text: 'Browse boards in the sidebar and jump into any conversation.'
-  }, {
-    sel: 'form.composer, .composer-details',
-    title: 'Compose',
-    text: 'Write in Markdown — bold, lists, code, spoilers, and image uploads all work in the same editor.'
-  }, {
-    sel: '.topbar-user',
-    title: 'Your account',
-    text: 'Tune appearance, reading, and composing under Settings whenever you like.'
-  }];
-  function run() {
-    // Re-entry guard: a tour is already on screen (e.g. the auto-start tour
-    // for a first-run user) and the Replay button was clicked. Each run()
-    // appends its own popover and binds a private document keydown listener
-    // that only its own finish() can remove, so a second concurrent run()
-    // would stack a duplicate dialog and leak a listener. One tour at a time.
-    if (document.querySelector('.tour-popover')) {
-      return;
-    }
-    var steps = STEPS.filter(function (s) {
-      return document.querySelector(s.sel);
-    });
-    if (!steps.length) {
-      return;
-    }
-    var i = 0;
-    var previousFocus = document.activeElement;
-    var pop = document.createElement('div');
-    pop.className = 'tour-popover';
-    pop.setAttribute('role', 'dialog');
-    pop.setAttribute('aria-modal', 'true');
-    pop.setAttribute('aria-live', 'polite');
-    pop.setAttribute('tabindex', '-1');
-    document.body.appendChild(pop);
-    var highlighted = null;
-    function clearHighlight() {
-      if (highlighted) {
-        highlighted.classList.remove('tour-highlight');
-        highlighted = null;
-      }
-    }
-    function focusables() {
-      return Array.prototype.slice.call(pop.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(function (el) {
-        return !el.disabled && el.offsetParent !== null;
-      });
-    }
-    function finish(replay) {
-      clearHighlight();
-      document.removeEventListener('keydown', onKeydown);
-      if (pop.parentNode) {
-        pop.parentNode.removeChild(pop);
-      }
-      document.body.removeAttribute('data-tour');
-      if (previousFocus && previousFocus.focus) {
-        previousFocus.focus();
-      }
-      if (!replay) {
-        record('/onboarding/complete');
-      }
-    }
-    function onKeydown(e) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        finish(false);
-        return;
-      }
-      if (e.key !== 'Tab') {
-        return;
-      }
-      var nodes = focusables();
-      if (!nodes.length) {
-        return;
-      }
-      var first = nodes[0];
-      var last = nodes[nodes.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-    function show() {
-      clearHighlight();
-      var step = steps[i];
-      var target = document.querySelector(step.sel);
-      if (target) {
-        target.classList.add('tour-highlight');
-        highlighted = target;
-        if (target.scrollIntoView) {
-          target.scrollIntoView({
-            block: 'center'
-          });
-        }
-      }
-      var last = i === steps.length - 1;
-      pop.innerHTML = '';
-      var h = document.createElement('h3');
-      h.id = 'tour-title';
-      h.textContent = step.title;
-      pop.appendChild(h);
-      var p = document.createElement('p');
-      p.id = 'tour-desc';
-      p.textContent = step.text;
-      pop.appendChild(p);
-      pop.setAttribute('aria-labelledby', h.id);
-      pop.setAttribute('aria-describedby', p.id);
-      var actions = document.createElement('div');
-      actions.className = 'tour-actions';
-      var prog = document.createElement('span');
-      prog.className = 'tour-progress';
-      prog.textContent = i + 1 + ' of ' + steps.length;
-      actions.appendChild(prog);
-      var skip = document.createElement('button');
-      skip.type = 'button';
-      skip.className = 'btn btn-secondary';
-      skip.textContent = 'Skip';
-      skip.addEventListener('click', function () {
-        finish(false);
-      });
-      actions.appendChild(skip);
-      var next = document.createElement('button');
-      next.type = 'button';
-      next.className = 'btn';
-      next.textContent = last ? 'Done' : 'Next';
-      next.addEventListener('click', function () {
-        if (last) {
-          finish(false);
-        } else {
-          i++;
-          show();
-        }
-      });
-      actions.appendChild(next);
-      pop.appendChild(actions);
-      next.focus();
-    }
-    document.addEventListener('keydown', onKeydown);
-    show();
-  }
-
-  // Replay links anywhere: <a data-tour-replay> resets + restarts.
-  document.addEventListener('click', function (e) {
-    var t = e.target.closest ? e.target.closest('[data-tour-replay]') : null;
-    if (!t) {
-      return;
-    }
-    e.preventDefault();
-    record('/onboarding/replay').then(function () {
-      document.body.setAttribute('data-tour', '1');
-      run();
-    });
-  });
-  document.addEventListener('DOMContentLoaded', function () {
-    if (document.body.getAttribute('data-tour') === '1') {
-      run();
-    }
-  });
-})();
-})(); } catch (e) { __ds_ns.__errors.push({ path: "public/assets/tour.js", error: String((e && e.message) || e) }); }
-
 // ui_kits/admin/AdminApp.jsx
 try { (() => {
 /* Admin Console kit — app shell. Topbar + admin-head + horizontal subnav +
-   section routing (Users drills into a user record). */
+   section routing. Sections come from RBAdminSections (core) + RBAdminParity
+   (the eight P5/runtime consoles). Users drills into a user record; the
+   parity sections manage their own drill-ins. The reserved "Extensions" entry
+   renders in its production disabled state (server_extensions is a Gate-B
+   reserved-dark flag; the nav shows it disabled with a note). */
 (function () {
   function App() {
     const DS = window.ImladrisDesignSystem_c3e027;
@@ -4077,10 +2577,17 @@ try { (() => {
       Monogram,
       Pill
     } = DS;
-    const SECT = window.RBAdminSections;
+    const SECT = Object.assign({}, window.RBAdminSections, window.RBAdminParity);
     const UserRecord = window.RBAdminUserRecord;
     const a = window.RBAdmin.admin;
-    const keys = Object.keys(SECT);
+
+    /* Production nav order (templates/admin/_nav.php). */
+    const ORDER = ['dashboard', 'features', 'threadIntelligence', 'structure', 'users', 'branding', 'tags', 'badgeRules', 'email', 'announcements', 'apiTokens', 'webhooks', 'packages', 'registries', 'themes', 'roles', 'providers', 'invitations'];
+    const DISABLED = [{
+      key: 'extensions',
+      label: 'Extensions',
+      note: 'Disabled until the feature flag is enabled'
+    }];
     const [active, setActive] = React.useState('dashboard');
     const [userId, setUserId] = React.useState(null);
     const showingUser = active === 'users' && userId != null;
@@ -4128,7 +2635,7 @@ try { (() => {
     }, "Admin mode")), /*#__PURE__*/React.createElement("nav", {
       className: "admin-subnav",
       "aria-label": "Admin sections"
-    }, keys.map(k => /*#__PURE__*/React.createElement("button", {
+    }, ORDER.map(k => /*#__PURE__*/React.createElement("button", {
       key: k,
       className: k === active ? 'active' : '',
       "aria-current": k === active ? 'page' : undefined,
@@ -4136,7 +2643,16 @@ try { (() => {
         setActive(k);
         setUserId(null);
       }
-    }, SECT[k].label))), /*#__PURE__*/React.createElement("div", {
+    }, SECT[k].label)), DISABLED.map(d => /*#__PURE__*/React.createElement("span", {
+      key: d.key,
+      className: "subnav-item is-disabled",
+      "aria-disabled": "true",
+      title: d.note
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "subnav-item-label"
+    }, d.label), /*#__PURE__*/React.createElement("span", {
+      className: "subnav-item-note"
+    }, d.note)))), /*#__PURE__*/React.createElement("div", {
       className: "admin-pane",
       key: active + (userId || '')
     }, showingUser ? /*#__PURE__*/React.createElement(UserRecord, {
@@ -4149,6 +2665,1479 @@ try { (() => {
   window.RBAdminApp = App;
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/admin/AdminApp.jsx", error: String((e && e.message) || e) }); }
+
+// ui_kits/admin/AdminPackages.jsx
+try { (() => {
+/* Admin Console kit — production-parity Packages pane (admin/packages.php,
+   package_detail.php, package_plan.php, package_consent.php,
+   package_security.php, package_publisher.php). Self-contained drill-in via
+   local state. Registers onto window.RBAdminParity. */
+(function () {
+  const A = () => window.RBAdmin;
+  const DS = () => window.ImladrisDesignSystem_c3e027;
+  function Packages() {
+    const {
+      Input,
+      Textarea,
+      Button
+    } = DS();
+    const P = A().packages;
+    const [view, setView] = React.useState('catalogue');
+    const [pkgId, setPkgId] = React.useState(null);
+    const [pubId, setPubId] = React.useState(null);
+    const go = (v, id) => {
+      if (id != null) setPkgId(id);
+      setView(v);
+    };
+    const det = pkgId != null ? P.detail[pkgId] : null;
+
+    /* ── Catalogue ─────────────────────────────────────────────────────── */
+    if (view === 'catalogue') {
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+        className: "kit-note"
+      }, /*#__PURE__*/React.createElement("span", null, "Security & publishers:"), /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => setView('security')
+      }, "Package security response \u2192")), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "Staff browse of signed registry metadata. A signature proves byte provenance under a pinned key; install and enable still require review, consent, and local policy checks."), P.registrySnapshots.filter(r => !r.fresh).map(r => /*#__PURE__*/React.createElement("p", {
+        className: "field-error",
+        key: r.sourceId
+      }, "Stale snapshot: ", /*#__PURE__*/React.createElement("strong", null, r.sourceId), " has no verified snapshot inside its freshness window (", r.expires ? 'expired ' + r.expires + ' UTC' : 'never fetched', "). Cached metadata below remains viewable. Run ", /*#__PURE__*/React.createElement("code", null, "php bin/console worker:registry-refresh"), ".")), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Packages"), /*#__PURE__*/React.createElement("div", {
+        className: "table-scroll table-scroll-wide",
+        tabIndex: 0,
+        role: "region",
+        "aria-label": "Package catalogue"
+      }, /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Package"), /*#__PURE__*/React.createElement("th", null, "Type"), /*#__PURE__*/React.createElement("th", null, "Install"), /*#__PURE__*/React.createElement("th", null, "Trust class"), /*#__PURE__*/React.createElement("th", null, "Latest"), /*#__PURE__*/React.createElement("th", null, "Compatibility"), /*#__PURE__*/React.createElement("th", null, "Advisory"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, P.list.map(p => /*#__PURE__*/React.createElement("tr", {
+        key: p.id
+      }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("strong", null, p.name), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, p.uid), " ", /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "via ", p.registry, " \xB7 ", p.publisher)), /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, p.type), /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, p.installState ? /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, p.installState.charAt(0).toUpperCase() + p.installState.slice(1)) : /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "-")), /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, /*#__PURE__*/React.createElement("code", null, p.trustClass)), /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, p.latest || /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "none stable")), /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, p.compatible == null ? /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "n/a") : p.compatible ? /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "compatible") : /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "incompatible with this core")), /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, p.blocked ? /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "locally blocked") : null, p.advisoryStatus !== 'none' ? /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, p.advisoryStatus) : !p.blocked ? /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "none") : null), /*#__PURE__*/React.createElement("td", {
+        className: "action-cell"
+      }, P.detail[p.id] ? /*#__PURE__*/React.createElement("a", {
+        href: "#",
+        onClick: e => {
+          e.preventDefault();
+          go('detail', p.id);
+        }
+      }, "Details") : /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "Details")))))))));
+    }
+
+    /* ── Security response ─────────────────────────────────────────────── */
+    if (view === 'security') {
+      const S = P.security;
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => setView('catalogue'),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 Package catalogue"), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "The emergency brake applies regardless of the package flag. Advisory ingest, acknowledgement, and the local blocklist live on the ", /*#__PURE__*/React.createElement("a", {
+        href: "#",
+        onClick: e => e.preventDefault()
+      }, "registry trust console"), "."), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Emergency execution brake ", S.executionDisabled ? /*#__PURE__*/React.createElement("span", {
+        className: "pill pill-admin"
+      }, "disabled") : /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "live")), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, S.executionDisabled ? 'Package execution is halted: ' + S.affectedInstalls + ' integration install(s) paused. Operators can still view, revoke, export, and uninstall.' : 'Package-owned webhooks and credentials are live for ' + S.affectedInstalls + ' integration install(s).'), /*#__PURE__*/React.createElement("form", {
+        className: "inline-form",
+        onSubmit: e => e.preventDefault()
+      }, /*#__PURE__*/React.createElement(Input, {
+        placeholder: "Reason (optional)",
+        style: {
+          maxWidth: 220
+        }
+      }), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        placeholder: "Your password",
+        autoComplete: "current-password",
+        style: {
+          maxWidth: 150
+        }
+      }), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, S.executionDisabled ? 'Resume package execution' : 'Emergency-disable all packages'))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Publishers"), /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Publisher"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Verified"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, S.publishers.map(pub => /*#__PURE__*/React.createElement("tr", {
+        key: pub.id
+      }, /*#__PURE__*/React.createElement("td", null, pub.displayName, " ", /*#__PURE__*/React.createElement("code", null, pub.uid)), /*#__PURE__*/React.createElement("td", null, pub.status), /*#__PURE__*/React.createElement("td", null, pub.verifiedAt ? pub.verifiedAt + ' UTC' : 'unverified'), /*#__PURE__*/React.createElement("td", null, P.publisherDetail[pub.id] ? /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => {
+          setPubId(pub.id);
+          setView('publisher');
+        }
+      }, "Manage") : /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "Manage"))))))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Advisories & blocklist"), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, S.advisoriesCount, " advisory record(s), ", S.blocklistCount, " local block(s). Ingest, acknowledge, and block on the registry trust console.")), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Transparency log"), /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "When"), /*#__PURE__*/React.createElement("th", null, "Event"), /*#__PURE__*/React.createElement("th", null, "Detail"))), /*#__PURE__*/React.createElement("tbody", null, S.transparency.map((r, i) => /*#__PURE__*/React.createElement("tr", {
+        key: i
+      }, /*#__PURE__*/React.createElement("td", {
+        className: "nowrap mono"
+      }, r.when), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.event)), /*#__PURE__*/React.createElement("td", null, r.detail)))))));
+    }
+
+    /* ── Publisher trust ───────────────────────────────────────────────── */
+    if (view === 'publisher') {
+      const pub = P.publisherDetail[pubId];
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => setView('security'),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 Package security"), /*#__PURE__*/React.createElement("h2", {
+        style: {
+          margin: 0
+        }
+      }, pub.displayName, " ", /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, pub.status), pub.verifiedAt ? /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "verified") : null), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, /*#__PURE__*/React.createElement("code", null, pub.uid), ". Trust changes require your password. Suspension force-disables every install of this publisher's packages; reinstatement never silently re-enables them."), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Status"), /*#__PURE__*/React.createElement("div", {
+        className: "form-cell"
+      }, /*#__PURE__*/React.createElement("form", {
+        className: "inline-form",
+        onSubmit: e => e.preventDefault()
+      }, /*#__PURE__*/React.createElement(Input, {
+        placeholder: "Suspension reason",
+        maxLength: 255,
+        style: {
+          maxWidth: 200
+        }
+      }), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        placeholder: "Your password",
+        autoComplete: "current-password",
+        style: {
+          maxWidth: 150
+        }
+      }), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Suspend publisher")))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Signing keys"), /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Key id"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Window"), /*#__PURE__*/React.createElement("th", null, "Fingerprint"))), /*#__PURE__*/React.createElement("tbody", null, pub.keys.map(k => /*#__PURE__*/React.createElement("tr", {
+        key: k.id
+      }, /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, /*#__PURE__*/React.createElement("code", null, k.keyId)), /*#__PURE__*/React.createElement("td", null, k.status), /*#__PURE__*/React.createElement("td", null, k.validFrom, " to ", k.validUntil), /*#__PURE__*/React.createElement("td", {
+        className: "nowrap"
+      }, /*#__PURE__*/React.createElement("code", null, k.fingerprint))))))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Packages & review decisions"), pub.packages.map(pk => /*#__PURE__*/React.createElement("div", {
+        key: pk.uid
+      }, /*#__PURE__*/React.createElement("h3", null, /*#__PURE__*/React.createElement("code", null, pk.uid), " ", /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, pk.advisoryStatus)), /*#__PURE__*/React.createElement("ul", {
+        className: "plain-list"
+      }, pk.decisions.map((d, i) => /*#__PURE__*/React.createElement("li", {
+        key: i
+      }, d.decision, " \u2014 ", /*#__PURE__*/React.createElement("code", null, d.digest), " (", d.source, ")")))))));
+    }
+
+    /* ── Install plan ──────────────────────────────────────────────────── */
+    if (view === 'plan') {
+      const rel = det.releases[0];
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => go('detail', pkgId),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 ", det.name), /*#__PURE__*/React.createElement("h2", {
+        style: {
+          margin: 0
+        }
+      }, "Install plan \u2014 ", det.name, " ", rel.version), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Install plan"), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "Installing records provenance and permissions; nothing executes until you consent and enable."), /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Package"), /*#__PURE__*/React.createElement("td", null, det.name, " ", /*#__PURE__*/React.createElement("code", null, det.uid))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Version"), /*#__PURE__*/React.createElement("td", null, rel.version)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Digest"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, rel.digest))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Registry"), /*#__PURE__*/React.createElement("td", null, det.registry ? det.registry.sourceId : 'local')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Review"), /*#__PURE__*/React.createElement("td", null, rel.review)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Compatibility"), /*#__PURE__*/React.createElement("td", null, rel.compatible ? /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "compatible") : /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "incompatible")))))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Permission preview"), det.permissions.length === 0 ? /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "No permissions declared.") : /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Permission"), /*#__PURE__*/React.createElement("th", null, "Risk"))), /*#__PURE__*/React.createElement("tbody", null, det.permissions.map((p, i) => /*#__PURE__*/React.createElement("tr", {
+        key: i
+      }, /*#__PURE__*/React.createElement("td", null, p.label, /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, p.kind, ":", p.key)), /*#__PURE__*/React.createElement("td", null, p.risk)))))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Install"), /*#__PURE__*/React.createElement("div", {
+        className: "stacked"
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Current password"), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        autoComplete: "current-password"
+      })), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Install (disabled until consent)"))));
+    }
+
+    /* ── Consent ───────────────────────────────────────────────────────── */
+    if (view === 'consent') {
+      const pending = det.permissions.filter(p => !p.granted);
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => go('detail', pkgId),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 ", det.name), /*#__PURE__*/React.createElement("h2", {
+        style: {
+          margin: 0
+        }
+      }, "Consent to permissions"), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Pending grants"), pending.length === 0 ? /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "No pending grants.") : /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Permission"), /*#__PURE__*/React.createElement("th", null, "Risk"))), /*#__PURE__*/React.createElement("tbody", null, pending.map((p, i) => /*#__PURE__*/React.createElement("tr", {
+        key: i
+      }, /*#__PURE__*/React.createElement("td", null, p.label, /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, p.kind, ":", p.key)), /*#__PURE__*/React.createElement("td", null, p.risk)))))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Grant"), /*#__PURE__*/React.createElement("div", {
+        className: "stacked"
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Current password"), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        autoComplete: "current-password"
+      })), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Grant and continue"))));
+    }
+
+    /* ── Package detail ────────────────────────────────────────────────── */
+    const inst = det.installed;
+    const pendingCount = det.permissions.filter(p => !p.granted).length;
+    const notInstalled = !inst || inst.state === 'uninstalled';
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button",
+      onClick: () => setView('catalogue'),
+      style: {
+        alignSelf: 'flex-start'
+      }
+    }, "\u2190 Package catalogue"), /*#__PURE__*/React.createElement("h2", {
+      style: {
+        margin: 0
+      }
+    }, det.name), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Provenance"), /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Package identity"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, det.uid))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Pinned source"), /*#__PURE__*/React.createElement("td", null, det.registry ? det.registry.sourceId + ' (' + det.registry.baseUrl + ')' : 'local')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Type"), /*#__PURE__*/React.createElement("td", null, det.type)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Trust class"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, det.trustClass), "; trust is never implied by being listed")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Advisory status"), /*#__PURE__*/React.createElement("td", null, det.advisoryStatus, det.blocked ? ' · locally blocked' : ''))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Releases ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(immutable: any changed byte is a new release)")), /*#__PURE__*/React.createElement("div", {
+      className: "table-scroll table-scroll-wide",
+      tabIndex: 0,
+      role: "region",
+      "aria-label": "Package releases"
+    }, /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Version"), /*#__PURE__*/React.createElement("th", null, "Channel"), /*#__PURE__*/React.createElement("th", null, "Digest"), /*#__PURE__*/React.createElement("th", null, "Signed by"), /*#__PURE__*/React.createElement("th", null, "Review"), /*#__PURE__*/React.createElement("th", null, "Core range"), /*#__PURE__*/React.createElement("th", null, "Local review"))), /*#__PURE__*/React.createElement("tbody", null, det.releases.map(r => /*#__PURE__*/React.createElement("tr", {
+      key: r.id
+    }, /*#__PURE__*/React.createElement("td", null, r.version), /*#__PURE__*/React.createElement("td", null, r.channel), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.digest.slice(0, 16), "\u2026"), r.blocked ? /*#__PURE__*/React.createElement("span", {
+      className: "pill"
+    }, "blocked") : null), /*#__PURE__*/React.createElement("td", null, r.signedKey ? /*#__PURE__*/React.createElement("code", null, r.signedKey) : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "snapshot-listed")), /*#__PURE__*/React.createElement("td", null, r.review), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.coreMin, " - ", r.coreMax), " ", r.compatible ? /*#__PURE__*/React.createElement("span", {
+      className: "pill"
+    }, "compatible") : /*#__PURE__*/React.createElement("span", {
+      className: "pill"
+    }, "incompatible")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
+      className: "input input-small",
+      defaultValue: "approved"
+    }, /*#__PURE__*/React.createElement("option", null, "approved"), /*#__PURE__*/React.createElement("option", null, "rejected"), /*#__PURE__*/React.createElement("option", null, "revoked"))))))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Installation"), notInstalled ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Create an install plan before any local state is written. Enabling happens only after install and permission consent."), /*#__PURE__*/React.createElement("div", {
+      className: "form-actions"
+    }, /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      onClick: () => setView('plan')
+    }, "Install plan"))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "State"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
+      className: "pill"
+    }, inst.state.charAt(0).toUpperCase() + inst.state.slice(1)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Health"), /*#__PURE__*/React.createElement("td", null, inst.health)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Version"), /*#__PURE__*/React.createElement("td", null, inst.version)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Digest"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, inst.digest.slice(0, 24), "\u2026"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Pinned"), /*#__PURE__*/React.createElement("td", null, inst.pinned ? 'yes' : 'no')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Update policy"), /*#__PURE__*/React.createElement("td", null, inst.updatePolicy)))), pendingCount > 0 ? /*#__PURE__*/React.createElement("p", {
+      className: "field-error"
+    }, pendingCount, " permissions await consent. ", /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        setView('consent');
+      }
+    }, "Review consent"), ".") : null, /*#__PURE__*/React.createElement("div", {
+      className: "form-grid"
+    }, inst.state === 'installed' || inst.state === 'disabled' ? /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Current password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Enable")) : null, inst.state === 'enabled' ? /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary"
+    }, "Disable")) : null, /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary"
+    }, inst.pinned ? 'Unpin' : 'Pin')), /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Update policy"), /*#__PURE__*/React.createElement("select", {
+      className: "input",
+      defaultValue: inst.updatePolicy
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "manual"
+    }, "manual"), /*#__PURE__*/React.createElement("option", {
+      value: "notify"
+    }, "notify"))), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary"
+    }, "Save policy")), /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "ghost"
+    }, "Export")), /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Current password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "ghost"
+    }, "Uninstall"))), /*#__PURE__*/React.createElement("h3", null, "Permissions"), /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Permission"), /*#__PURE__*/React.createElement("th", null, "Risk"), /*#__PURE__*/React.createElement("th", null, "Granted"))), /*#__PURE__*/React.createElement("tbody", null, det.permissions.map((p, i) => /*#__PURE__*/React.createElement("tr", {
+      key: i
+    }, /*#__PURE__*/React.createElement("td", null, p.label, /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, p.kind, ":", p.key)), /*#__PURE__*/React.createElement("td", null, p.risk), /*#__PURE__*/React.createElement("td", null, p.granted ? 'yes' : 'pending'))))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "History"), det.history.length === 0 ? /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "No lifecycle history recorded for this package.") : /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Event"), /*#__PURE__*/React.createElement("th", null, "Versions"), /*#__PURE__*/React.createElement("th", null, "Digest"), /*#__PURE__*/React.createElement("th", null, "Detail"), /*#__PURE__*/React.createElement("th", null, "When"))), /*#__PURE__*/React.createElement("tbody", null, det.history.map((h, i) => /*#__PURE__*/React.createElement("tr", {
+      key: i
+    }, /*#__PURE__*/React.createElement("td", null, h.event), /*#__PURE__*/React.createElement("td", null, h.versions), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, h.digest, "\u2026")), /*#__PURE__*/React.createElement("td", null, h.detail || /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "\u2014")), /*#__PURE__*/React.createElement("td", {
+      className: "mono"
+    }, h.when, " UTC")))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Advisories"), det.advisories.length === 0 ? /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "No advisories recorded for this package.") : /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Advisory"), /*#__PURE__*/React.createElement("th", null, "Severity"), /*#__PURE__*/React.createElement("th", null, "Action"))), /*#__PURE__*/React.createElement("tbody", null, det.advisories.map((a, i) => /*#__PURE__*/React.createElement("tr", {
+      key: i
+    }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, a.uid)), /*#__PURE__*/React.createElement("td", null, a.severity), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, a.action))))))));
+  }
+  window.RBAdminParity = Object.assign(window.RBAdminParity || {}, {
+    packages: {
+      label: 'Packages',
+      render: Packages
+    }
+  });
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/admin/AdminPackages.jsx", error: String((e && e.message) || e) }); }
+
+// ui_kits/admin/AdminParity.jsx
+try { (() => {
+/* Admin Console kit — production-parity section panes (part 1):
+   Feature flags, Thread Intelligence, Registry trust, Themes, Roles &
+   capabilities, Sign-in providers, Invitations. Faithful recreations of the
+   admin/*.php templates at RetroBoards @ 6d81da5. Packages live in
+   AdminPackages.jsx. All register onto window.RBAdminParity. */
+(function () {
+  const A = () => window.RBAdmin;
+  const DS = () => window.ImladrisDesignSystem_c3e027;
+  function QueueCard({
+    head,
+    count,
+    detail
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "card queue-card is-static"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "queue-card-head"
+    }, head), /*#__PURE__*/React.createElement("strong", {
+      className: "queue-card-count"
+    }, count), /*#__PURE__*/React.createElement("span", {
+      className: "queue-card-detail"
+    }, detail));
+  }
+
+  /* ── Feature flags (admin/features.php) ───────────────────────────────── */
+  function Features() {
+    const s = A().featureStats;
+    const [corrupt, setCorrupt] = React.useState(false);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "pane-intro"
+    }, "Read-only view of the declared feature flags from ", /*#__PURE__*/React.createElement("code", null, "src/Core/FeatureFlags.php"), ", their configured overrides in ", /*#__PURE__*/React.createElement("code", null, "settings.features"), ", and the effective runtime state. The readiness column distinguishes rows that are not simply shipped \u2014 ", /*#__PURE__*/React.createElement("strong", null, "Ready for acceptance"), ", ", /*#__PURE__*/React.createElement("strong", null, "Missing user UI"), ", ", /*#__PURE__*/React.createElement("strong", null, "Missing admin operations"), ", ", /*#__PURE__*/React.createElement("strong", null, "Safety-blocked"), ", ", /*#__PURE__*/React.createElement("strong", null, "Operational configuration required"), ", and ", /*#__PURE__*/React.createElement("strong", null, "Reserved (ADR 0018)"), ". Enablement stays a deliberate ", /*#__PURE__*/React.createElement("code", null, "settings.features"), " write; there are intentionally no toggles here."), /*#__PURE__*/React.createElement("div", {
+      className: "kit-note"
+    }, /*#__PURE__*/React.createElement("span", null, "Kit demo \u2014 reveal the corrupt-overrides state:"), /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button",
+      onClick: () => setCorrupt(v => !v)
+    }, corrupt ? 'Restore valid overrides' : 'Simulate corrupt settings.features')), corrupt ? /*#__PURE__*/React.createElement("p", {
+      className: "field-error"
+    }, "The ", /*#__PURE__*/React.createElement("code", null, "settings.features"), " value is not a JSON object, so all stored feature overrides are being ignored and code defaults are in effect. Rewrite it as a JSON object (see ", /*#__PURE__*/React.createElement("code", null, "docs/runbooks/operations.md"), " \xA72) to restore your overrides.") : null, /*#__PURE__*/React.createElement("section", {
+      className: "admin-dashboard-grid",
+      "aria-label": "Feature flag summary"
+    }, /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Declared",
+      count: s.declared,
+      detail: s.declared + ' declared flags'
+    }), /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Defaults",
+      count: s.default_on,
+      detail: s.default_on + ' default-on · ' + s.default_off + ' default-dark'
+    }), /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Effective",
+      count: s.effective_on,
+      detail: s.effective_on + ' on · ' + s.effective_off + ' off'
+    }), /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Overrides",
+      count: s.overrides,
+      detail: s.unknown_overrides + ' unknown override' + (s.unknown_overrides === 1 ? '' : 's')
+    })), A().featureGroups.map(g => /*#__PURE__*/React.createElement("section", {
+      className: "card",
+      key: g.group
+    }, /*#__PURE__*/React.createElement("h2", null, g.group), /*#__PURE__*/React.createElement("div", {
+      className: "table-scroll",
+      tabIndex: 0,
+      role: "region",
+      "aria-label": g.group + ' feature flags'
+    }, /*#__PURE__*/React.createElement("table", {
+      className: "audit audit-flags"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Flag"), /*#__PURE__*/React.createElement("th", null, "Effective"), /*#__PURE__*/React.createElement("th", null, "Default"), /*#__PURE__*/React.createElement("th", null, "Override"), /*#__PURE__*/React.createElement("th", null, "Rollback / enablement note"), /*#__PURE__*/React.createElement("th", null, "Readiness / next step"))), /*#__PURE__*/React.createElement("tbody", null, g.rows.map(r => /*#__PURE__*/React.createElement("tr", {
+      key: r.flag
+    }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.flag)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
+      className: 'state ' + (r.effective ? 'state-active' : 'state-paused')
+    }, r.effective ? 'on' : 'off')), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
+      className: 'state ' + (r.default ? 'state-active' : 'state-paused')
+    }, r.default ? 'default-on' : 'default-off')), /*#__PURE__*/React.createElement("td", null, r.override ? /*#__PURE__*/React.createElement("span", {
+      className: 'state ' + r.override.cls
+    }, r.override.text) : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "none")), /*#__PURE__*/React.createElement("td", null, r.rollback), /*#__PURE__*/React.createElement("td", null, r.readiness ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      className: 'state ' + r.readiness.cls
+    }, r.readiness.status), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, r.readiness.note, r.readiness.href ? /*#__PURE__*/React.createElement(React.Fragment, null, " ", /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => e.preventDefault()
+    }, r.readiness.link)) : null)) : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "\u2014"))))))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Unknown overrides"), A().unknownOverrides.length === 0 ? /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "No undeclared keys are present in ", /*#__PURE__*/React.createElement("code", null, "settings.features"), ".") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "These keys are present in ", /*#__PURE__*/React.createElement("code", null, "settings.features"), " but are not declared in ", /*#__PURE__*/React.createElement("code", null, "FeatureFlags::DEFAULTS"), ". Remove them unless they are part of an in-progress local patch."), /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Key"), /*#__PURE__*/React.createElement("th", null, "Cast value"), /*#__PURE__*/React.createElement("th", null, "Raw value"))), /*#__PURE__*/React.createElement("tbody", null, A().unknownOverrides.map(r => /*#__PURE__*/React.createElement("tr", {
+      key: r.flag
+    }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.flag)), /*#__PURE__*/React.createElement("td", null, r.valueText), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.rawValue)))))))));
+  }
+
+  /* ── Thread Intelligence (admin/thread_intelligence.php) ──────────────── */
+  function ThreadIntelligence() {
+    const d = A().ti;
+    const usedCalls = d.budget.usedCalls + d.budget.reservedCalls;
+    const usedTokens = d.budget.usedTokens + d.budget.reservedTokens;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "thread-intelligence-admin"
+    }, d.warnings.length ? /*#__PURE__*/React.createElement("section", {
+      className: "card ti-attention",
+      "aria-label": "Needs attention"
+    }, /*#__PURE__*/React.createElement("h2", null, "Needs attention"), /*#__PURE__*/React.createElement("ul", null, d.warnings.map((w, i) => /*#__PURE__*/React.createElement("li", {
+      key: i
+    }, w)))) : null, /*#__PURE__*/React.createElement("section", {
+      className: "admin-dashboard-grid",
+      "aria-label": "Thread Intelligence status"
+    }, /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Product flags",
+      count: (d.flags.community_memory ? 1 : 0) + (d.flags.automated_context ? 1 : 0),
+      detail: 'community memory ' + (d.flags.community_memory ? 'on' : 'off') + ' · automated context ' + (d.flags.automated_context ? 'on' : 'off')
+    }), /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Provider",
+      count: d.credentialReady ? 'Ready' : 'Not ready',
+      detail: d.providerLabel + ' · ' + (d.providerBlocked ? 'latched' : 'available')
+    }), /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Worker",
+      count: d.heartbeat.classification,
+      detail: d.heartbeat.status
+    }), /*#__PURE__*/React.createElement(QueueCard, {
+      head: "Generation",
+      count: d.paused ? 'Paused' : 'Running',
+      detail: "Global provider egress brake"
+    })), /*#__PURE__*/React.createElement("section", {
+      className: "card ti-controls",
+      "aria-label": "Recovery controls"
+    }, /*#__PURE__*/React.createElement("h2", null, "Recovery controls"), /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-small",
+      type: "button"
+    }, d.paused ? 'Resume generation' : 'Pause generation'), /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-small",
+      type: "button"
+    }, "Retry provider configuration"), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Provider retry clears only the current health latch. Configure credentials outside this page.")), /*#__PURE__*/React.createElement("section", {
+      className: "card ti-budget",
+      "aria-label": "Daily budget"
+    }, /*#__PURE__*/React.createElement("h2", null, "Daily budget"), /*#__PURE__*/React.createElement("label", null, "Calls ", usedCalls, " of ", d.budget.callLimit, /*#__PURE__*/React.createElement("progress", {
+      max: d.budget.callLimit,
+      value: usedCalls
+    }, usedCalls)), /*#__PURE__*/React.createElement("label", null, "Input tokens ", usedTokens.toLocaleString(), " of ", d.budget.tokenLimit.toLocaleString(), /*#__PURE__*/React.createElement("progress", {
+      max: d.budget.tokenLimit,
+      value: usedTokens
+    }, usedTokens)), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Resets ", d.budget.nextReset, " UTC")), /*#__PURE__*/React.createElement("section", {
+      className: "admin-dashboard-grid",
+      "aria-label": "Queue states"
+    }, Object.keys(d.queue).map(k => /*#__PURE__*/React.createElement(QueueCard, {
+      key: k,
+      head: k.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase()),
+      count: d.queue[k],
+      detail: 'thread' + (d.queue[k] === 1 ? '' : 's')
+    }))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Generation contract"), /*#__PURE__*/React.createElement("dl", {
+      className: "ti-metadata"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Model"), /*#__PURE__*/React.createElement("dd", null, /*#__PURE__*/React.createElement("code", null, d.model))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Reasoning effort"), /*#__PURE__*/React.createElement("dd", null, d.reasoningEffort)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Prompt version"), /*#__PURE__*/React.createElement("dd", null, /*#__PURE__*/React.createElement("code", null, d.promptVersion))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Recent generation evidence"), /*#__PURE__*/React.createElement("div", {
+      className: "table-scroll",
+      tabIndex: 0,
+      role: "region",
+      "aria-label": "Recent redacted generation attempts"
+    }, /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "ID"), /*#__PURE__*/React.createElement("th", null, "Thread"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Requested"), /*#__PURE__*/React.createElement("th", null, "Contract"), /*#__PURE__*/React.createElement("th", null, "Evidence"), /*#__PURE__*/React.createElement("th", null, "Actions"))), /*#__PURE__*/React.createElement("tbody", null, d.recent.map(g => /*#__PURE__*/React.createElement("tr", {
+      key: g.id
+    }, /*#__PURE__*/React.createElement("td", null, "#", g.id), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => e.preventDefault()
+    }, g.thread)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
+      className: 'state state-' + (g.status === 'published' ? 'active' : g.status === 'failed' ? 'failed' : 'pending')
+    }, g.status)), /*#__PURE__*/React.createElement("td", {
+      className: "mono"
+    }, g.requested, " UTC"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, g.model), /*#__PURE__*/React.createElement("br", null), g.effort, " \xB7 ", /*#__PURE__*/React.createElement("code", null, g.prompt)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("details", {
+      className: "ti-evidence"
+    }, /*#__PURE__*/React.createElement("summary", null, "Redacted details"), /*#__PURE__*/React.createElement("p", null, "Trigger ", /*#__PURE__*/React.createElement("code", null, g.trigger), " \xB7 retry ", g.retry, " \xB7 window ", g.window), g.failure ? /*#__PURE__*/React.createElement("p", null, "Failure ", /*#__PURE__*/React.createElement("code", null, g.failure.code), " \xB7 ", g.failure.message) : null, g.sources.length ? /*#__PURE__*/React.createElement("p", null, "Sources: ", g.sources.map(id => /*#__PURE__*/React.createElement("a", {
+      key: id,
+      href: "#",
+      onClick: e => e.preventDefault()
+    }, "Post #", id, " "))) : null, g.candidates.length ? /*#__PURE__*/React.createElement("p", null, "Candidates: ", g.candidates.map(id => /*#__PURE__*/React.createElement("a", {
+      key: id,
+      href: "#",
+      onClick: e => e.preventDefault()
+    }, "Thread #", id, " "))) : null, /*#__PURE__*/React.createElement("p", null, "Usage: input ", g.usage.input, " \xB7 output ", g.usage.output, " \xB7 reasoning ", g.usage.reasoning, " \xB7 cached ", g.usage.cached))), /*#__PURE__*/React.createElement("td", {
+      className: "ti-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button"
+    }, "Retry"), /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button"
+    }, "Reconcile"), /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button"
+    }, "Pause")))))))));
+  }
+
+  /* ── Registry trust (admin/registries.php) ────────────────────────────── */
+  function Registries() {
+    const {
+      Input,
+      Textarea,
+      Button
+    } = DS();
+    const r = A().registries;
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "The private signing root lives offline with the operator; this console pins, rotates, and revokes public keys only. Trust changes require your password. The local blocklist works regardless of registry state."), r.list.map(reg => /*#__PURE__*/React.createElement("section", {
+      className: "card",
+      key: reg.id
+    }, /*#__PURE__*/React.createElement("h2", null, reg.displayName, " ", /*#__PURE__*/React.createElement("code", null, reg.sourceId), " ", /*#__PURE__*/React.createElement("span", {
+      className: "pill"
+    }, reg.enabled ? 'enabled' : 'disabled')), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, reg.baseUrl, ". ", reg.snapshot ? 'Last verified snapshot ' + reg.snapshot.generated + ' UTC; expires ' + reg.snapshot.expires + ' UTC.' : 'No verified snapshot yet.'), /*#__PURE__*/React.createElement("div", {
+      className: "table-scroll table-scroll-wide",
+      tabIndex: 0,
+      role: "region",
+      "aria-label": 'Signing keys for ' + reg.displayName
+    }, /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Key id"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Window"), /*#__PURE__*/React.createElement("th", null, "Fingerprint"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, reg.keys.map(k => /*#__PURE__*/React.createElement("tr", {
+      key: k.id
+    }, /*#__PURE__*/React.createElement("td", {
+      className: "nowrap"
+    }, /*#__PURE__*/React.createElement("code", null, k.keyId)), /*#__PURE__*/React.createElement("td", null, k.status, k.revokedReason ? ' — ' + k.revokedReason : ''), /*#__PURE__*/React.createElement("td", {
+      className: "nowrap"
+    }, k.validFrom, " to ", k.validUntil), /*#__PURE__*/React.createElement("td", {
+      className: "nowrap"
+    }, /*#__PURE__*/React.createElement("code", null, k.fingerprint)), /*#__PURE__*/React.createElement("td", {
+      className: "form-cell"
+    }, k.status !== 'revoked' ? /*#__PURE__*/React.createElement("form", {
+      className: "inline-form",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement(Input, {
+      placeholder: "Revocation reason",
+      required: true,
+      style: {
+        maxWidth: 180
+      }
+    }), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      placeholder: "Your password",
+      autoComplete: "current-password",
+      required: true,
+      style: {
+        maxWidth: 150
+      }
+    }), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary"
+    }, "Revoke")) : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "\u2014"))))))), /*#__PURE__*/React.createElement("details", {
+      className: "admin-details"
+    }, /*#__PURE__*/React.createElement("summary", null, "Pin a new public key"), /*#__PURE__*/React.createElement("div", {
+      className: "stacked",
+      style: {
+        marginTop: 12
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Key id"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 190
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Public key ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(base64, 32 bytes)")), /*#__PURE__*/React.createElement(Input, null)), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Confirm your password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Pin key"))), /*#__PURE__*/React.createElement("details", {
+      className: "admin-details"
+    }, /*#__PURE__*/React.createElement("summary", null, "Apply a signed key rotation"), /*#__PURE__*/React.createElement("div", {
+      className: "stacked",
+      style: {
+        marginTop: 12
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Rotation envelope JSON"), /*#__PURE__*/React.createElement(Textarea, {
+      rows: 3
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Confirm your password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Apply rotation"))), /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault(),
+      style: {
+        marginTop: 6
+      }
+    }, reg.enabled ? /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary"
+    }, "Disable registry (no password)") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Confirm your password to enable"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Enable registry"))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Add a registry source"), /*#__PURE__*/React.createElement("div", {
+      className: "stacked"
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Source id"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 190
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Display name"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 190
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Base URL"), /*#__PURE__*/React.createElement(Input, {
+      type: "url"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Confirm your password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Add registry (starts disabled)"))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Local blocklist ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(registry-independent)")), /*#__PURE__*/React.createElement("div", {
+      className: "table-scroll table-scroll-wide",
+      tabIndex: 0,
+      role: "region",
+      "aria-label": "Local blocklist entries"
+    }, /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Digest"), /*#__PURE__*/React.createElement("th", null, "Package uid"), /*#__PURE__*/React.createElement("th", null, "Reason"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, r.blocks.map(b => /*#__PURE__*/React.createElement("tr", {
+      key: b.id
+    }, /*#__PURE__*/React.createElement("td", null, b.digest ? /*#__PURE__*/React.createElement("code", null, b.digest.slice(0, 16), "\u2026") : '—'), /*#__PURE__*/React.createElement("td", null, b.uid ? /*#__PURE__*/React.createElement("code", null, b.uid) : '—'), /*#__PURE__*/React.createElement("td", null, b.reason), /*#__PURE__*/React.createElement("td", {
+      className: "form-cell"
+    }, /*#__PURE__*/React.createElement("form", {
+      className: "inline-form",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      placeholder: "Your password",
+      autoComplete: "current-password",
+      style: {
+        maxWidth: 150
+      }
+    }), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary"
+    }, "Remove (re-enables)"))))))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Advisories"), r.advisories.length === 0 ? /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "None ingested.") : /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Advisory"), /*#__PURE__*/React.createElement("th", null, "Package"), /*#__PURE__*/React.createElement("th", null, "Severity"), /*#__PURE__*/React.createElement("th", null, "Action"), /*#__PURE__*/React.createElement("th", null, "Acknowledged"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, r.advisories.map(a => /*#__PURE__*/React.createElement("tr", {
+      key: a.id
+    }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, a.uid)), /*#__PURE__*/React.createElement("td", null, a.pkgUid ? /*#__PURE__*/React.createElement("code", null, a.pkgUid) : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "unresolved")), /*#__PURE__*/React.createElement("td", null, a.severity), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, a.action)), /*#__PURE__*/React.createElement("td", null, a.ack ? a.ack + ' UTC' : 'not yet'), /*#__PURE__*/React.createElement("td", null, a.ack ? null : /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button"
+    }, "Acknowledge"))))))));
+  }
+
+  /* ── Themes (admin/themes.php + theme_safe_mode.php) ──────────────────── */
+  function Themes() {
+    const {
+      Input,
+      Button
+    } = DS();
+    const t = A().themes;
+    const [safe, setSafe] = React.useState(false);
+    if (safe) {
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => setSafe(false),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 Back to Themes"), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Theme safe mode ", /*#__PURE__*/React.createElement("span", {
+        className: "pill pill-admin"
+      }, "Recovery")), t.safeMode ? /*#__PURE__*/React.createElement("p", {
+        className: "field-error"
+      }, "Safe mode is on. The built-in system theme is being served.") : /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "Safe mode is off.")), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Enter safe mode"), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Enter safe mode")), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Exit safe mode"), /*#__PURE__*/React.createElement("div", {
+        className: "stacked"
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Current password"), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        autoComplete: "current-password"
+      })), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Exit safe mode"))));
+    }
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Safe mode"), t.safeMode ? /*#__PURE__*/React.createElement("p", {
+      className: "field-error"
+    }, "Theme safe mode is on. The built-in system theme is being served.") : /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Safe mode is off. Active package themes are eligible to serve."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        setSafe(true);
+      }
+    }, "Open recovery page"))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Active theme"), t.active ? /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Package"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("strong", null, t.active.packageName), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, t.active.uid))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Version"), /*#__PURE__*/React.createElement("td", null, t.active.version)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "CSS digest"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, t.active.cssDigest))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Install state"), /*#__PURE__*/React.createElement("td", null, t.active.installState)), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Activated"), /*#__PURE__*/React.createElement("td", null, t.active.activatedAt, " UTC")))) : /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "No package theme is active."), t.lkg ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Last-known-good: ", /*#__PURE__*/React.createElement("code", null, t.lkg.cssDigest), " from ", t.lkg.uid, " ", t.lkg.version, "."), /*#__PURE__*/React.createElement("div", {
+      className: "stacked"
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Current password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary"
+    }, "Roll back"))) : null), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Installed theme packages"), /*#__PURE__*/React.createElement("div", {
+      className: "table-scroll",
+      tabIndex: 0,
+      role: "region",
+      "aria-label": "Installed theme packages"
+    }, /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Package"), /*#__PURE__*/React.createElement("th", null, "Version"), /*#__PURE__*/React.createElement("th", null, "State"), /*#__PURE__*/React.createElement("th", null, "Latest build"), /*#__PURE__*/React.createElement("th", null, "Actions"))), /*#__PURE__*/React.createElement("tbody", null, t.installs.map(i => /*#__PURE__*/React.createElement("tr", {
+      key: i.id
+    }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("strong", null, i.packageName), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, i.uid)), /*#__PURE__*/React.createElement("td", null, i.version), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
+      className: "pill"
+    }, i.state.charAt(0).toUpperCase() + i.state.slice(1))), /*#__PURE__*/React.createElement("td", null, i.latestBuild ? /*#__PURE__*/React.createElement("code", null, i.latestBuild) : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "not built")), /*#__PURE__*/React.createElement("td", {
+      className: "action-cell"
+    }, i.state === 'enabled' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button"
+    }, "Preview"), " ", /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button"
+    }, "Activate")) : /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => e.preventDefault()
+    }, "Enable it from Packages first")))))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Preview"), t.preview ? /*#__PURE__*/React.createElement("p", null, "Previewing ", /*#__PURE__*/React.createElement("strong", null, t.preview.packageName), " in this admin session only.") : /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "No session preview is active.")));
+  }
+
+  /* ── Roles & capabilities (admin/roles.php + role_edit/simulator) ─────── */
+  function Roles() {
+    const {
+      Input,
+      Textarea,
+      Button
+    } = DS();
+    const R = A().roles;
+    const [view, setView] = React.useState('list');
+    const [roleId, setRoleId] = React.useState(null);
+    if (view === 'sim') {
+      const sim = R.simulator;
+      const res = sim.result;
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => setView('list'),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 Roles"), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "Runs ", /*#__PURE__*/React.createElement("code", null, "can(actor, capability, target, time)"), " on the ", /*#__PURE__*/React.createElement("strong", null, "real resolver"), ". While ", /*#__PURE__*/React.createElement("code", null, "capabilities"), " is in shadow, answers predict the post-cutover decision; live requests still use legacy authority."), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Simulate"), /*#__PURE__*/React.createElement("div", {
+        className: "stacked"
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Actor ", /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "(username, id, or guest)")), /*#__PURE__*/React.createElement(Input, {
+        defaultValue: sim.actor
+      })), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Capability"), /*#__PURE__*/React.createElement("select", {
+        className: "input",
+        defaultValue: sim.capability
+      }, Object.keys(R.catalogue).map(k => /*#__PURE__*/React.createElement("option", {
+        key: k
+      }, k)))), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Board id ", /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "(optional target)")), /*#__PURE__*/React.createElement(Input, {
+        type: "number",
+        defaultValue: sim.boardId,
+        className: "input-small"
+      })), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "At ", /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "(optional, UTC)")), /*#__PURE__*/React.createElement(Input, {
+        placeholder: "2026-07-15 12:00"
+      })), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Simulate"))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Result"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, res.allowed ? 'Allowed' : 'Denied'), " \u2014 ", /*#__PURE__*/React.createElement("code", null, res.capability), " for ", res.actorLabel, res.targetLabel ? ' on ' + res.targetLabel : ''), /*#__PURE__*/React.createElement("ul", {
+        className: "plain-list"
+      }, /*#__PURE__*/React.createElement("li", null, "Decisive rule: ", /*#__PURE__*/React.createElement("code", null, res.source)), /*#__PURE__*/React.createElement("li", null, "Reason: ", res.reason), res.roleKey ? /*#__PURE__*/React.createElement("li", null, "Via role: ", /*#__PURE__*/React.createElement("code", null, res.roleKey), " at ", res.scopeType, " #", res.scopeId) : null)));
+    }
+    if (view === 'edit') {
+      const det = R.detail[roleId];
+      const isSystem = det.role.kind === 'system';
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => setView('list'),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 Roles"), /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, /*#__PURE__*/React.createElement("code", null, det.role.roleKey), " \u2014 ", isSystem ? 'Protected system anchor (decision #18), read-only.' : 'Custom role.', " Active assignments affected by changes: ", /*#__PURE__*/React.createElement("strong", null, det.impact), "."), isSystem ? /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Capabilities held"), /*#__PURE__*/React.createElement("ul", {
+        className: "plain-list"
+      }, det.currentKeys.map(k => /*#__PURE__*/React.createElement("li", {
+        key: k
+      }, /*#__PURE__*/React.createElement("code", null, k))))) : /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Edit definition"), /*#__PURE__*/React.createElement("div", {
+        className: "stacked"
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Name"), /*#__PURE__*/React.createElement(Input, {
+        defaultValue: det.role.name,
+        maxLength: 190
+      })), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Description ", /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "(optional)")), /*#__PURE__*/React.createElement(Input, {
+        defaultValue: det.role.description,
+        maxLength: 255
+      })), /*#__PURE__*/React.createElement("fieldset", {
+        className: "events"
+      }, /*#__PURE__*/React.createElement("legend", null, "Capabilities"), Object.entries(R.catalogue).map(([k, m]) => /*#__PURE__*/React.createElement("label", {
+        className: "checkline",
+        key: k
+      }, /*#__PURE__*/React.createElement("input", {
+        type: "checkbox",
+        defaultChecked: det.currentKeys.includes(k),
+        disabled: !m.enforced
+      }), " ", /*#__PURE__*/React.createElement("code", null, k), " \u2014 ", m.consent, m.risk === 'high' ? /*#__PURE__*/React.createElement("span", {
+        className: "pill"
+      }, "high risk") : null, !m.enforced ? /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, " (not yet enforceable)") : null))), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Confirm your password"), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        autoComplete: "current-password"
+      })), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Save (bumps version)"))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Clone into a new custom role"), /*#__PURE__*/React.createElement("div", {
+        className: "stacked"
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "New role name"), /*#__PURE__*/React.createElement(Input, {
+        maxLength: 190
+      })), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Confirm your password"), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        autoComplete: "current-password"
+      })), /*#__PURE__*/React.createElement(Button, {
+        size: "sm",
+        variant: "secondary"
+      }, "Clone"))), !isSystem ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Assignments"), det.assignments.length === 0 ? /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "No one has been assigned this role yet.") : /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Member"), /*#__PURE__*/React.createElement("th", null, "Scope"), /*#__PURE__*/React.createElement("th", null, "Window"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, det.assignments.map(a => /*#__PURE__*/React.createElement("tr", {
+        key: a.id
+      }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("a", {
+        href: "#",
+        onClick: e => e.preventDefault()
+      }, "@", a.username)), /*#__PURE__*/React.createElement("td", null, a.scopeType, a.scopeName ? ' — ' + a.scopeName : ''), /*#__PURE__*/React.createElement("td", null, a.starts, " \u2192 ", a.ends), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
+        className: 'state state-' + a.status
+      }, a.status)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn danger",
+        type: "button"
+      }, "Revoke"))))))), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Assign this role"), /*#__PURE__*/React.createElement("div", {
+        className: "stacked"
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Member username"), /*#__PURE__*/React.createElement(Input, {
+        maxLength: 32
+      })), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Scope"), /*#__PURE__*/React.createElement("select", {
+        className: "input"
+      }, /*#__PURE__*/React.createElement("option", null, "Site-wide"), /*#__PURE__*/React.createElement("option", null, "A single board"), /*#__PURE__*/React.createElement("option", null, "A single category"))), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Ends ", /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "(UTC, optional \u2014 blank never expires)")), /*#__PURE__*/React.createElement(Input, {
+        placeholder: "YYYY-MM-DD HH:MM"
+      })), /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Confirm your password"), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        autoComplete: "current-password"
+      })), /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Assign role")))) : null);
+    }
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Resolver posture: ", /*#__PURE__*/React.createElement("strong", null, R.mode), " (", /*#__PURE__*/React.createElement("code", null, "CAPABILITIES_MODE"), "). Under ", /*#__PURE__*/React.createElement("code", null, "shadow"), " the legacy rules decide and the resolver only shadow-compares; under ", /*#__PURE__*/React.createElement("code", null, "enforce"), " the resolver decides and fails closed. System roles are protected compatibility anchors and cannot be edited; clone one to adapt it."), /*#__PURE__*/React.createElement("div", {
+      className: "kit-note"
+    }, /*#__PURE__*/React.createElement("span", null, "Operator tools:"), /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn",
+      type: "button",
+      onClick: () => setView('sim')
+    }, "Open permission simulator \u2192")), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Roles"), /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Name"), /*#__PURE__*/React.createElement("th", null, "Key"), /*#__PURE__*/React.createElement("th", null, "Kind"), /*#__PURE__*/React.createElement("th", null, "Version"), /*#__PURE__*/React.createElement("th", null, "Capabilities"), /*#__PURE__*/React.createElement("th", null, "Active assignments"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, R.rows.map(r => /*#__PURE__*/React.createElement("tr", {
+      key: r.id
+    }, /*#__PURE__*/React.createElement("td", null, r.name), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.roleKey)), /*#__PURE__*/React.createElement("td", null, r.kind === 'system' ? 'Protected anchor' : 'Custom'), /*#__PURE__*/React.createElement("td", null, "v", r.version), /*#__PURE__*/React.createElement("td", {
+      className: "tnum"
+    }, r.capabilityCount), /*#__PURE__*/React.createElement("td", {
+      className: "tnum"
+    }, r.impact), /*#__PURE__*/React.createElement("td", null, R.detail[r.id] ? /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        setRoleId(r.id);
+        setView('edit');
+      }
+    }, r.kind === 'system' ? 'View / clone' : 'Edit') : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, r.kind === 'system' ? 'View / clone' : 'Edit'))))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Create a custom role"), /*#__PURE__*/React.createElement("div", {
+      className: "stacked"
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Name"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 190
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Description ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(optional)")), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 255
+    })), /*#__PURE__*/React.createElement("fieldset", {
+      className: "events"
+    }, /*#__PURE__*/React.createElement("legend", null, "Capabilities ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(delegable only; protected authority is never offered)")), Object.entries(R.catalogue).map(([k, m]) => /*#__PURE__*/React.createElement("label", {
+      className: "checkline",
+      key: k
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      disabled: !m.enforced
+    }), " ", /*#__PURE__*/React.createElement("code", null, k), " \u2014 ", m.consent, m.risk === 'high' ? /*#__PURE__*/React.createElement("span", {
+      className: "pill"
+    }, "high risk") : null, !m.enforced ? /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, " (not yet enforceable)") : null))), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Confirm your password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Create role"))));
+  }
+
+  /* ── Sign-in providers (admin/providers.php + provider_disable.php) ────── */
+  function Providers() {
+    const {
+      Input,
+      Textarea,
+      Button
+    } = DS();
+    const P = A().providers;
+    const [disableId, setDisableId] = React.useState(null);
+    if (disableId != null) {
+      const tgt = P.disableTarget[disableId];
+      return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button",
+        onClick: () => setDisableId(null),
+        style: {
+          alignSelf: 'flex-start'
+        }
+      }, "\u2190 Sign-in providers"), /*#__PURE__*/React.createElement("section", {
+        className: "card"
+      }, /*#__PURE__*/React.createElement("h2", null, "Before you disable ", tgt.displayName), /*#__PURE__*/React.createElement("p", null, "Disabling removes ", /*#__PURE__*/React.createElement("strong", null, tgt.displayName), " from sign-in and blocks its ", /*#__PURE__*/React.createElement("code", null, "/auth/", tgt.providerKey, "/\u2026"), " flow. Linked identities are ", /*#__PURE__*/React.createElement("strong", null, "retained"), " \u2014 re-enabling restores sign-in unchanged."), tgt.soleAccounts.length === 0 ? /*#__PURE__*/React.createElement("p", {
+        className: "muted"
+      }, "No accounts rely on this provider as their only sign-in method.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+        className: "field-error",
+        role: "alert"
+      }, tgt.soleAccounts.length, " account", tgt.soleAccounts.length === 1 ? '' : 's', " can sign in ", /*#__PURE__*/React.createElement("strong", null, "only"), " through this provider (no password, no passkey, no other provider). They will be locked out until they use password reset on their listed email, or you re-enable the provider. Contact them first."), /*#__PURE__*/React.createElement("table", {
+        className: "audit"
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Account"), /*#__PURE__*/React.createElement("th", null, "Email"))), /*#__PURE__*/React.createElement("tbody", null, tgt.soleAccounts.map(a => /*#__PURE__*/React.createElement("tr", {
+        key: a.username
+      }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("a", {
+        href: "#",
+        onClick: e => e.preventDefault()
+      }, a.username)), /*#__PURE__*/React.createElement("td", {
+        className: "mono"
+      }, a.email)))))), /*#__PURE__*/React.createElement("div", {
+        className: "stacked",
+        style: {
+          marginTop: 12
+        }
+      }, /*#__PURE__*/React.createElement("label", {
+        className: "field"
+      }, /*#__PURE__*/React.createElement("span", null, "Your password ", /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "(re-authentication)")), /*#__PURE__*/React.createElement(Input, {
+        type: "password",
+        autoComplete: "current-password"
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "form-actions"
+      }, /*#__PURE__*/React.createElement(Button, {
+        size: "sm"
+      }, "Disable ", tgt.displayName), /*#__PURE__*/React.createElement(Button, {
+        size: "sm",
+        variant: "secondary",
+        onClick: () => setDisableId(null)
+      }, "Cancel")))));
+    }
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Generic OIDC providers are configuration, not code: a pinned HTTPS issuer, a client id, and a client secret stored only in the encrypted vault. New providers land ", /*#__PURE__*/React.createElement("strong", null, "disabled"), " \u2014 run \"Test connection\", then enable. Builtin providers (Google, Apple, GitHub) are configured through environment variables and only shown here for visibility. Disabling never deletes linked identities."), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Providers"), /*#__PURE__*/React.createElement("div", {
+      className: "table-scroll table-scroll-wide",
+      tabIndex: 0,
+      role: "region",
+      "aria-label": "Sign-in providers"
+    }, /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Provider"), /*#__PURE__*/React.createElement("th", null, "Key"), /*#__PURE__*/React.createElement("th", null, "Type"), /*#__PURE__*/React.createElement("th", null, "Issuer"), /*#__PURE__*/React.createElement("th", null, "Health"), /*#__PURE__*/React.createElement("th", null, "Sole-method"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null, "Actions"))), /*#__PURE__*/React.createElement("tbody", null, P.rows.map(r => {
+      const builtin = r.type !== 'generic_oidc';
+      return /*#__PURE__*/React.createElement("tr", {
+        key: r.id
+      }, /*#__PURE__*/React.createElement("td", null, r.displayName), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, r.providerKey)), /*#__PURE__*/React.createElement("td", null, builtin ? 'Builtin (env config)' : 'Generic OIDC'), /*#__PURE__*/React.createElement("td", {
+        className: "mono"
+      }, r.issuer || '—'), /*#__PURE__*/React.createElement("td", null, r.health, r.healthCheckedAt ? /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, " ", r.healthCheckedAt) : null), /*#__PURE__*/React.createElement("td", {
+        className: "tnum"
+      }, r.soleMethodCount), /*#__PURE__*/React.createElement("td", null, builtin ? r.envConfigured ? 'Configured' : 'Not configured' : r.isEnabled ? 'Enabled' : 'Disabled'), /*#__PURE__*/React.createElement("td", {
+        className: "action-cell"
+      }, builtin ? /*#__PURE__*/React.createElement("span", {
+        className: "muted"
+      }, "Set ", /*#__PURE__*/React.createElement("code", null, "OAUTH_", r.providerKey.toUpperCase(), "_*"), " env vars") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button"
+      }, "Test connection"), r.isEnabled ? /*#__PURE__*/React.createElement(React.Fragment, null, " ", /*#__PURE__*/React.createElement("a", {
+        href: "#",
+        onClick: e => {
+          e.preventDefault();
+          if (P.disableTarget[r.id]) setDisableId(r.id);
+        }
+      }, "Disable\u2026")) : /*#__PURE__*/React.createElement(React.Fragment, null, " ", /*#__PURE__*/React.createElement("button", {
+        className: "linkbtn",
+        type: "button"
+      }, "Enable")))));
+    }))))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Add an OIDC provider"), /*#__PURE__*/React.createElement("div", {
+      className: "stacked"
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Provider key"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 32,
+      pattern: "[a-z0-9][a-z0-9_-]{1,31}"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "field-error",
+      style: {
+        color: 'var(--text-faint)'
+      }
+    }, "Stable slug used in ", /*#__PURE__*/React.createElement("code", null, "/auth/", '{key}', "/\u2026"), " URLs \u2014 it cannot be changed later.")), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Display name"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 190
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Issuer ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(pinned)")), /*#__PURE__*/React.createElement(Input, {
+      type: "url",
+      placeholder: "https://gitlab.com"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "field-error",
+      style: {
+        color: 'var(--text-faint)'
+      }
+    }, "Discovery resolves from ", /*#__PURE__*/React.createElement("code", null, '{issuer}', "/.well-known/openid-configuration"), "; a trailing slash is significant.")), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Client ID"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 255
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Client secret"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "off"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "field-error",
+      style: {
+        color: 'var(--text-faint)'
+      }
+    }, "Stored write-only in the encrypted vault (", /*#__PURE__*/React.createElement("code", null, "service_secrets"), " must be enabled first).")), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Claim map ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(optional JSON)")), /*#__PURE__*/React.createElement(Textarea, {
+      rows: 2,
+      placeholder: "{\"email\":\"upn\"}"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Your password ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(re-authentication)")), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Add provider"))));
+  }
+
+  /* ── Invitations (admin/invitations.php) ──────────────────────────────── */
+  function Invitations() {
+    const {
+      Input,
+      Button
+    } = DS();
+    const I = A().invitations;
+    const [issued, setIssued] = React.useState(false);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, issued ? /*#__PURE__*/React.createElement("div", {
+      className: "flash flash-secret",
+      role: "status"
+    }, /*#__PURE__*/React.createElement("strong", null, "Copy this invitation link now \u2014 it will not be shown again:"), " ", /*#__PURE__*/React.createElement("code", null, "https://imladris.example/join/inv_7f3k9d2a77qd")) : null, /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Issue an invitation"), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Invitations admit one member per use, expire automatically, and never grant staff or custom roles. Bind to an email address or a domain to restrict who can redeem."), /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => {
+        e.preventDefault();
+        setIssued(true);
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Bind to email ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(optional)")), /*#__PURE__*/React.createElement(Input, {
+      type: "email",
+      maxLength: 255,
+      placeholder: "person@example.com"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Bind to domain ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(optional)")), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 190,
+      placeholder: "example.com"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Max uses ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(1\u2013", I.limits.maxUses, ", default 1)")), /*#__PURE__*/React.createElement(Input, {
+      type: "number",
+      min: 1,
+      max: I.limits.maxUses,
+      className: "input-small"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Expires in days ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(1\u2013", I.limits.maxExpiryDays, ", default ", I.limits.defaultExpiryDays, ")")), /*#__PURE__*/React.createElement(Input, {
+      type: "number",
+      min: 1,
+      max: I.limits.maxExpiryDays,
+      className: "input-small"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Grant board membership ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(optional)")), /*#__PURE__*/React.createElement("select", {
+      className: "input"
+    }, /*#__PURE__*/React.createElement("option", null, "No board grant"), I.boards.map(b => /*#__PURE__*/React.createElement("option", {
+      key: b.id
+    }, b.name)))), /*#__PURE__*/React.createElement(Button, {
+      size: "sm"
+    }, "Issue invitation"))), /*#__PURE__*/React.createElement("section", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("h2", null, "Issued invitations"), I.rows.length === 0 ? /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "No invitations have been issued yet.") : /*#__PURE__*/React.createElement("table", {
+      className: "audit"
+    }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Created"), /*#__PURE__*/React.createElement("th", null, "By"), /*#__PURE__*/React.createElement("th", null, "Binding"), /*#__PURE__*/React.createElement("th", null, "Uses"), /*#__PURE__*/React.createElement("th", null, "Expires"), /*#__PURE__*/React.createElement("th", null, "Status"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, I.rows.map(r => /*#__PURE__*/React.createElement("tr", {
+      key: r.id
+    }, /*#__PURE__*/React.createElement("td", {
+      className: "mono"
+    }, r.created), /*#__PURE__*/React.createElement("td", null, r.creator), /*#__PURE__*/React.createElement("td", null, r.email ? r.email : r.domain ? '@' + r.domain : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "any email")), /*#__PURE__*/React.createElement("td", {
+      className: "tnum"
+    }, r.usedCount, "/", r.maxUses), /*#__PURE__*/React.createElement("td", null, r.expires), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("span", {
+      className: 'state state-' + (r.status === 'active' ? 'active' : r.status === 'revoked' ? 'revoked' : 'sent')
+    }, r.status)), /*#__PURE__*/React.createElement("td", null, r.status === 'active' ? /*#__PURE__*/React.createElement("button", {
+      className: "linkbtn danger",
+      type: "button"
+    }, "Revoke") : /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "\u2014"))))))));
+  }
+  window.RBAdminParity = Object.assign(window.RBAdminParity || {}, {
+    features: {
+      label: 'Feature flags',
+      render: Features
+    },
+    threadIntelligence: {
+      label: 'Thread Intelligence',
+      render: ThreadIntelligence
+    },
+    registries: {
+      label: 'Registry trust',
+      render: Registries
+    },
+    themes: {
+      label: 'Themes',
+      render: Themes
+    },
+    roles: {
+      label: 'Roles',
+      render: Roles
+    },
+    providers: {
+      label: 'Sign-in providers',
+      render: Providers
+    },
+    invitations: {
+      label: 'Invitations',
+      render: Invitations
+    }
+  });
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/admin/AdminParity.jsx", error: String((e && e.message) || e) }); }
 
 // ui_kits/admin/AdminSections.jsx
 try { (() => {
@@ -5016,10 +5005,6 @@ try { (() => {
       label: 'Announcements',
       render: Announcements
     },
-    extensions: {
-      label: 'Extensions',
-      render: Extensions
-    },
     branding: {
       label: 'Branding',
       render: Branding
@@ -5331,6 +5316,1026 @@ try { (() => {
   };
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/admin/data.js", error: String((e && e.message) || e) }); }
+
+// ui_kits/admin/parity-data.js
+try { (() => {
+/* Admin Console kit — seed data for the eight production-parity sections
+   (feature flags, Thread Intelligence, packages, registry trust, themes,
+   roles, sign-in providers, invitations). Faithful to the admin/*.php
+   templates at RetroBoards @ 6d81da5. Merged onto window.RBAdmin. */
+(function () {
+  Object.assign(window.RBAdmin, {
+    /* ── Feature flags (admin/features.php) ──────────────────────────────── */
+    featureStats: {
+      declared: 57,
+      default_on: 49,
+      default_off: 8,
+      effective_on: 49,
+      effective_off: 8,
+      overrides: 2,
+      unknown_overrides: 1
+    },
+    featureGroups: [{
+      group: 'Engagement & delivery',
+      rows: [{
+        flag: 'engagement',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to hide reactions and regard; content unaffected.',
+        readiness: null
+      }, {
+        flag: 'notifications',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to stop in-app notices; existing rows retained.',
+        readiness: null
+      }, {
+        flag: 'email',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to drain the mail worker to a no-op.',
+        readiness: {
+          status: 'Operational configuration required',
+          cls: 'state-pending',
+          note: 'Sending domain SPF/DKIM must pass before broadcast.',
+          href: '#',
+          link: 'Email console'
+        }
+      }, {
+        flag: 'search',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to fall back to unindexed board listing.',
+        readiness: null
+      }, {
+        flag: 'dms',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to hide the messages room; threads retained.',
+        readiness: null
+      }, {
+        flag: 'presence',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to stop presence beacons.',
+        readiness: null
+      }]
+    }, {
+      group: 'Content & composer',
+      rows: [{
+        flag: 'rich_composer',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to serve the plain Markdown textarea.',
+        readiness: null
+      }, {
+        flag: 'wysiwyg_composer',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-02. Set false to keep the source-mode textarea canonical.',
+        readiness: null
+      }, {
+        flag: 'server_drafts',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-02 (ADR 0010). Set false to keep drafts client-only.',
+        readiness: null
+      }, {
+        flag: 'custom_emoji',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Set false to hide the custom set from the picker.',
+        readiness: null
+      }, {
+        flag: 'slash_giphy',
+        effective: true,
+        default: true,
+        override: {
+          cls: 'state-active',
+          text: 'on'
+        },
+        rollback: 'GA 2026-07-02; inert until a GIPHY key is configured.',
+        readiness: {
+          status: 'Operational configuration required',
+          cls: 'state-pending',
+          note: 'giphy_public_key is unset — the /giphy picker stays hidden.'
+        }
+      }, {
+        flag: 'community_memory',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'Thread Intelligence GA 2026-07-12. Pause generation from Operations.',
+        readiness: {
+          status: 'Ready for acceptance',
+          cls: 'state-active',
+          note: 'Provider credential ready; worker healthy.',
+          href: '#',
+          link: 'Thread Intelligence'
+        }
+      }, {
+        flag: 'automated_context',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-12. Companion to community_memory.',
+        readiness: {
+          status: 'Ready for acceptance',
+          cls: 'state-active',
+          note: 'Runs the automated related-context pass.',
+          href: '#',
+          link: 'Thread Intelligence'
+        }
+      }]
+    }, {
+      group: 'Platform · P5 Gate A (ADR 0018)',
+      rows: [{
+        flag: 'package_registry',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-09. Set false to freeze catalogue reads.',
+        readiness: {
+          status: 'Ready for acceptance',
+          cls: 'state-active',
+          note: 'Trust keys pinned; refresh worker current.',
+          href: '#',
+          link: 'Packages'
+        }
+      }, {
+        flag: 'package_themes',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-09. Falls back to the built-in system theme.',
+        readiness: {
+          status: 'Ready for acceptance',
+          cls: 'state-active',
+          note: 'One theme active; last-known-good recorded.',
+          href: '#',
+          link: 'Themes'
+        }
+      }, {
+        flag: 'capabilities',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-09. Resolver posture is CAPABILITIES_MODE.',
+        readiness: {
+          status: 'Operational configuration required',
+          cls: 'state-pending',
+          note: 'Resolver in shadow — legacy rules still decide.',
+          href: '#',
+          link: 'Roles'
+        }
+      }, {
+        flag: 'passkeys',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-09. Set false to hide passkey sign-in and enrolment.',
+        readiness: null
+      }, {
+        flag: 'provider_registry',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-09. Generic OIDC providers are configuration, not code.',
+        readiness: {
+          status: 'Ready for acceptance',
+          cls: 'state-active',
+          note: 'Builtins visible; OIDC providers land disabled.',
+          href: '#',
+          link: 'Sign-in providers'
+        }
+      }, {
+        flag: 'invitations',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-09. Set false to disable invite redemption.',
+        readiness: null
+      }, {
+        flag: 'service_secrets',
+        effective: true,
+        default: true,
+        override: null,
+        rollback: 'GA 2026-07-09. Encrypted vault for provider/integration secrets.',
+        readiness: null
+      }]
+    }, {
+      group: 'Implemented, default-dark',
+      rows: [{
+        flag: 'custom_css',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'ADR 0009. Real UI exists behind the flag; enable to allow site CSS.',
+        readiness: {
+          status: 'Safety-blocked',
+          cls: 'state-failed',
+          note: 'Theme safe mode does not suppress /brand.css custom CSS, so the documented recovery path leaves broken CSS active.',
+          href: '#',
+          link: 'Custom CSS editor'
+        }
+      }, {
+        flag: 'group_dms',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'Enable to allow multi-party direct messages.',
+        readiness: {
+          status: 'Ready for acceptance',
+          cls: 'state-active',
+          note: 'Member journey verified end-to-end on desktop and mobile; committed browser/no-JS/a11y evidence and the moderation runbook remain before enablement.',
+          href: '#',
+          link: 'Report queue'
+        }
+      }, {
+        flag: 'link_previews',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'Enable to unfurl links in posts (fetch egress).',
+        readiness: {
+          status: 'Missing admin operations',
+          cls: 'state-paused',
+          note: 'The admin list surface, per-board opt-in, and author removal controls are absent.'
+        }
+      }, {
+        flag: 'expanded_files',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'Enable to allow non-image attachments.',
+        readiness: {
+          status: 'Missing user UI',
+          cls: 'state-paused',
+          note: 'No member file chooser, no-JS upload form, quarantine states, or scanner outage workflow render yet.'
+        }
+      }]
+    }, {
+      group: 'Reserved · Gate B (no UI)',
+      rows: [{
+        flag: 'server_extensions',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'Reserved. Enabling only unlocks the read-only Extensions probe.',
+        readiness: {
+          status: 'Reserved (ADR 0018)',
+          cls: 'state-paused',
+          note: 'No operator UI is shipped for this flag.'
+        }
+      }, {
+        flag: 'governance',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'Reserved anchor; no behaviour.',
+        readiness: {
+          status: 'Reserved (ADR 0018)',
+          cls: 'state-paused',
+          note: 'Placeholder for a future policy engine.'
+        }
+      }, {
+        flag: 'service_principals',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'Reserved anchor; no behaviour.',
+        readiness: {
+          status: 'Reserved (ADR 0018)',
+          cls: 'state-paused',
+          note: 'Placeholder for machine identities.'
+        }
+      }, {
+        flag: 'verified_links',
+        effective: false,
+        default: false,
+        override: null,
+        rollback: 'Reserved anchor; no behaviour.',
+        readiness: {
+          status: 'Reserved (ADR 0018)',
+          cls: 'state-paused',
+          note: 'Placeholder for domain verification.'
+        }
+      }]
+    }],
+    unknownOverrides: [{
+      flag: 'legacy_beta_banner',
+      valueText: 'true',
+      rawValue: 'true'
+    }],
+    /* ── Thread Intelligence (admin/thread_intelligence.php) ─────────────── */
+    ti: {
+      warnings: [],
+      flags: {
+        community_memory: true,
+        automated_context: true
+      },
+      credentialReady: true,
+      providerLabel: 'OpenAI · responses',
+      providerBlocked: false,
+      heartbeat: {
+        classification: 'Healthy',
+        status: 'last beat 40s ago'
+      },
+      paused: false,
+      budget: {
+        usedCalls: 312,
+        reservedCalls: 6,
+        callLimit: 2000,
+        usedTokens: 486230,
+        reservedTokens: 4200,
+        tokenLimit: 3000000,
+        nextReset: '2026-07-15 00:00'
+      },
+      queue: {
+        pending: 4,
+        in_progress: 1,
+        published: 118,
+        failed: 2
+      },
+      model: 'gpt-5',
+      reasoningEffort: 'medium',
+      promptVersion: 'ti-brief@2026-07-12',
+      recent: [{
+        id: 8841,
+        thread: 'Interpreting attention head #7',
+        threadId: 1042,
+        status: 'published',
+        requested: '2026-07-14 08:12',
+        model: 'gpt-5',
+        effort: 'medium',
+        prompt: 'ti-brief@2026-07-12',
+        trigger: 'reply_burst',
+        retry: 0,
+        window: 3,
+        failure: null,
+        usage: {
+          input: 12840,
+          output: 940,
+          reasoning: 610,
+          cached: 8200
+        },
+        sources: [7731, 7742],
+        candidates: []
+      }, {
+        id: 8840,
+        thread: 'Eval harness flakiness',
+        threadId: 1039,
+        status: 'failed',
+        requested: '2026-07-14 06:03',
+        model: 'gpt-5',
+        effort: 'medium',
+        prompt: 'ti-brief@2026-07-12',
+        trigger: 'schedule',
+        retry: 1,
+        window: 2,
+        failure: {
+          code: 'provider_timeout',
+          message: 'upstream 30s deadline'
+        },
+        usage: {
+          input: 9120,
+          output: 0,
+          reasoning: 0,
+          cached: 0
+        },
+        sources: [],
+        candidates: [1044]
+      }]
+    },
+    /* ── Packages (admin/packages.php + package_*.php) ───────────────────── */
+    packages: {
+      registrySnapshots: [{
+        sourceId: 'imladris-registry',
+        fresh: true,
+        expires: '2026-07-16 00:00'
+      }, {
+        sourceId: 'community-mirror',
+        fresh: false,
+        expires: null
+      }],
+      list: [{
+        id: 1,
+        name: 'Aurora',
+        uid: 'imladris/aurora-theme',
+        type: 'theme',
+        installState: 'enabled',
+        trustClass: 'community',
+        latest: '1.4.2',
+        compatible: true,
+        blocked: false,
+        advisoryStatus: 'none',
+        registry: 'imladris-registry',
+        publisher: 'Rivendell Atelier'
+      }, {
+        id: 2,
+        name: 'Anti-abuse scanner',
+        uid: 'imladris/anti-abuse',
+        type: 'integration',
+        installState: 'installed',
+        trustClass: 'first-party',
+        latest: '3.1.0',
+        compatible: true,
+        blocked: false,
+        advisoryStatus: 'none',
+        registry: 'imladris-registry',
+        publisher: 'Imladris Core'
+      }, {
+        id: 3,
+        name: 'Digest mailer',
+        uid: 'imladris/digest',
+        type: 'integration',
+        installState: null,
+        trustClass: 'community',
+        latest: '0.9.0',
+        compatible: true,
+        blocked: false,
+        advisoryStatus: 'advisory',
+        registry: 'imladris-registry',
+        publisher: 'Lindir Works'
+      }, {
+        id: 4,
+        name: 'Palantír embed',
+        uid: 'thirdparty/palantir',
+        type: 'integration',
+        installState: null,
+        trustClass: 'unverified',
+        latest: '2.0.0',
+        compatible: false,
+        blocked: true,
+        advisoryStatus: 'blocked',
+        registry: 'community-mirror',
+        publisher: 'unknown publisher'
+      }],
+      detail: {
+        1: {
+          name: 'Aurora',
+          uid: 'imladris/aurora-theme',
+          type: 'theme',
+          trustClass: 'community',
+          advisoryStatus: 'none',
+          blocked: false,
+          registry: {
+            sourceId: 'imladris-registry',
+            baseUrl: 'https://registry.imladris.example'
+          },
+          releases: [{
+            id: 14,
+            version: '1.4.2',
+            channel: 'stable',
+            digest: 'a19f7c2e5b0d4411aa77',
+            signedKey: 'atelier-2026',
+            review: 'approved',
+            coreMin: '1.0',
+            coreMax: '*',
+            compatible: true,
+            advisory: 'none',
+            blocked: false
+          }, {
+            id: 12,
+            version: '1.3.0',
+            channel: 'stable',
+            digest: '77c0d9be21aa0043fe18',
+            signedKey: 'atelier-2026',
+            review: 'approved',
+            coreMin: '1.0',
+            coreMax: '*',
+            compatible: true,
+            advisory: 'none',
+            blocked: false
+          }],
+          installed: {
+            state: 'enabled',
+            health: 'ok',
+            version: '1.4.2',
+            digest: 'a19f7c2e5b0d4411aa77c0',
+            pinned: true,
+            updatePolicy: 'notify'
+          },
+          permissions: [{
+            label: 'Serve theme CSS',
+            kind: 'render',
+            key: 'theme.css',
+            risk: 'low',
+            granted: true
+          }, {
+            label: 'Read branding tokens',
+            kind: 'read',
+            key: 'branding.tokens',
+            risk: 'low',
+            granted: true
+          }],
+          history: [{
+            event: 'enable',
+            versions: '1.3.0 -> 1.4.2',
+            digest: 'a19f7c2e5b0d',
+            stage: '',
+            detail: 'Consent re-granted',
+            when: '2026-07-13 19:40'
+          }, {
+            event: 'install',
+            versions: '-> 1.3.0',
+            digest: '77c0d9be21aa',
+            stage: '',
+            detail: '',
+            when: '2026-07-01 09:10'
+          }],
+          advisories: []
+        },
+        2: {
+          name: 'Anti-abuse scanner',
+          uid: 'imladris/anti-abuse',
+          type: 'integration',
+          trustClass: 'first-party',
+          advisoryStatus: 'none',
+          blocked: false,
+          registry: {
+            sourceId: 'imladris-registry',
+            baseUrl: 'https://registry.imladris.example'
+          },
+          releases: [{
+            id: 31,
+            version: '3.1.0',
+            channel: 'stable',
+            digest: 'be44aa019f7c2e5b0d44',
+            signedKey: 'imladris-core',
+            review: 'approved',
+            coreMin: '1.0',
+            coreMax: '*',
+            compatible: true,
+            advisory: 'none',
+            blocked: false
+          }],
+          installed: {
+            state: 'installed',
+            health: 'ok',
+            version: '3.1.0',
+            digest: 'be44aa019f7c2e5b0d4400',
+            pinned: false,
+            updatePolicy: 'manual'
+          },
+          permissions: [{
+            label: 'Scan post content on create',
+            kind: 'hook',
+            key: 'post.create',
+            risk: 'medium',
+            granted: false
+          }, {
+            label: 'Write moderation holds',
+            kind: 'write',
+            key: 'moderation.hold',
+            risk: 'high',
+            granted: false
+          }],
+          history: [{
+            event: 'install',
+            versions: '-> 3.1.0',
+            digest: 'be44aa019f7c',
+            stage: '',
+            detail: 'Awaiting consent',
+            when: '2026-07-14 07:55'
+          }],
+          advisories: []
+        }
+      },
+      security: {
+        executionDisabled: false,
+        affectedInstalls: 2,
+        publishers: [{
+          id: 1,
+          displayName: 'Imladris Core',
+          uid: 'pub/imladris-core',
+          status: 'active',
+          verifiedAt: '2026-06-20 00:00'
+        }, {
+          id: 2,
+          displayName: 'Rivendell Atelier',
+          uid: 'pub/rivendell-atelier',
+          status: 'active',
+          verifiedAt: '2026-07-02 00:00'
+        }, {
+          id: 3,
+          displayName: 'Lindir Works',
+          uid: 'pub/lindir-works',
+          status: 'active',
+          verifiedAt: null
+        }],
+        transparency: [{
+          when: '2026-07-13 19:40',
+          event: 'package.enable',
+          detail: 'imladris/aurora-theme 1.4.2'
+        }, {
+          when: '2026-07-10 11:02',
+          event: 'registry.key.pin',
+          detail: 'atelier-2026'
+        }],
+        advisoriesCount: 1,
+        blocklistCount: 1
+      },
+      publisherDetail: {
+        2: {
+          displayName: 'Rivendell Atelier',
+          uid: 'pub/rivendell-atelier',
+          status: 'active',
+          verifiedAt: '2026-07-02 00:00',
+          keys: [{
+            id: 5,
+            keyId: 'atelier-2026',
+            status: 'active',
+            validFrom: '2026-01-01',
+            validUntil: 'inf',
+            fingerprint: 'c41d9a77e0b3f218'
+          }],
+          packages: [{
+            uid: 'imladris/aurora-theme',
+            advisoryStatus: 'none',
+            decisions: [{
+              decision: 'approved',
+              digest: 'a19f7c2e5b0d',
+              source: 'local-review'
+            }]
+          }]
+        }
+      }
+    },
+    /* ── Registry trust (admin/registries.php) ───────────────────────────── */
+    registries: {
+      list: [{
+        id: 1,
+        sourceId: 'imladris-registry',
+        displayName: 'Imladris registry',
+        baseUrl: 'https://registry.imladris.example',
+        enabled: true,
+        snapshot: {
+          generated: '2026-07-14 00:00',
+          expires: '2026-07-16 00:00'
+        },
+        keys: [{
+          id: 1,
+          keyId: 'imladris-2026',
+          status: 'active',
+          validFrom: '2026-01-01',
+          validUntil: 'inf',
+          fingerprint: '9f2a7c41d0b3e881',
+          revokedReason: null
+        }, {
+          id: 2,
+          keyId: 'imladris-2025',
+          status: 'revoked',
+          validFrom: '2025-01-01',
+          validUntil: '2026-01-01',
+          fingerprint: '11a0be77c2d94430',
+          revokedReason: 'scheduled rotation'
+        }]
+      }, {
+        id: 2,
+        sourceId: 'community-mirror',
+        displayName: 'Community mirror',
+        baseUrl: 'https://mirror.example',
+        enabled: false,
+        snapshot: null,
+        keys: [{
+          id: 3,
+          keyId: 'mirror-2026',
+          status: 'active',
+          validFrom: '2026-03-01',
+          validUntil: 'inf',
+          fingerprint: '77e0b3f218c41d9a',
+          revokedReason: null
+        }]
+      }],
+      blocks: [{
+        id: 1,
+        digest: 'deadbeef00c0ffee1122',
+        uid: 'thirdparty/palantir',
+        reason: 'incompatible + unverified publisher'
+      }],
+      advisories: [{
+        id: 1,
+        uid: 'ADV-2026-014',
+        pkgUid: 'imladris/digest',
+        severity: 'moderate',
+        action: 'upgrade',
+        ack: null
+      }]
+    },
+    /* ── Themes (admin/themes.php + theme_safe_mode.php) ─────────────────── */
+    themes: {
+      safeMode: false,
+      forcedSafeMode: false,
+      active: {
+        packageName: 'Aurora',
+        uid: 'imladris/aurora-theme',
+        version: '1.4.2',
+        cssDigest: 'a19f7c2e5b0d4411',
+        installState: 'enabled',
+        activatedAt: '2026-07-13 19:40'
+      },
+      lkg: {
+        cssDigest: '77c0d9be21aa0043',
+        uid: 'imladris/aurora-theme',
+        version: '1.3.0'
+      },
+      installs: [{
+        id: 1,
+        packageName: 'Aurora',
+        uid: 'imladris/aurora-theme',
+        version: '1.4.2',
+        state: 'enabled',
+        latestBuild: 'a19f7c2e5b0d4411',
+        packageId: 1
+      }, {
+        id: 2,
+        packageName: 'Mithril',
+        uid: 'imladris/mithril-theme',
+        version: '0.8.0',
+        state: 'installed',
+        latestBuild: null,
+        packageId: 5
+      }],
+      preview: null
+    },
+    /* ── Roles & capabilities (admin/roles.php + role_edit/simulator) ────── */
+    roles: {
+      mode: 'shadow',
+      rows: [{
+        id: 1,
+        name: 'Administrator',
+        roleKey: 'admin',
+        kind: 'system',
+        version: 1,
+        capabilityCount: 42,
+        impact: 2
+      }, {
+        id: 2,
+        name: 'Moderator',
+        roleKey: 'moderator',
+        kind: 'system',
+        version: 1,
+        capabilityCount: 18,
+        impact: 3
+      }, {
+        id: 3,
+        name: 'Member',
+        roleKey: 'member',
+        kind: 'system',
+        version: 1,
+        capabilityCount: 7,
+        impact: 1240
+      }, {
+        id: 4,
+        name: 'Board steward',
+        roleKey: 'board_steward',
+        kind: 'custom',
+        version: 3,
+        capabilityCount: 5,
+        impact: 4
+      }],
+      catalogue: {
+        'thread.lock': {
+          consent: 'Lock and unlock threads',
+          risk: 'normal',
+          enforced: true
+        },
+        'post.hide': {
+          consent: 'Hide posts pending review',
+          risk: 'normal',
+          enforced: true
+        },
+        'user.role_change': {
+          consent: 'Change member roles',
+          risk: 'high',
+          enforced: true
+        },
+        'board.manage': {
+          consent: 'Create, edit, and archive boards',
+          risk: 'high',
+          enforced: true
+        },
+        'badge.grant': {
+          consent: 'Grant manual badges',
+          risk: 'normal',
+          enforced: false
+        },
+        'announcement.publish': {
+          consent: 'Publish site banners',
+          risk: 'normal',
+          enforced: false
+        }
+      },
+      detail: {
+        4: {
+          role: {
+            id: 4,
+            name: 'Board steward',
+            roleKey: 'board_steward',
+            kind: 'custom',
+            version: 3,
+            description: 'Keeps a single board tidy.'
+          },
+          currentKeys: ['thread.lock', 'post.hide'],
+          impact: 4,
+          assignments: [{
+            id: 1,
+            username: 'glorfindel',
+            scopeType: 'board',
+            scopeId: 21,
+            scopeName: 'interpretability',
+            starts: 'now',
+            ends: 'no expiry',
+            status: 'active'
+          }, {
+            id: 2,
+            username: 'arwen',
+            scopeType: 'board',
+            scopeId: 22,
+            scopeName: 'evaluations',
+            starts: '2026-07-01',
+            ends: '2026-12-31',
+            status: 'active'
+          }]
+        },
+        1: {
+          role: {
+            id: 1,
+            name: 'Administrator',
+            roleKey: 'admin',
+            kind: 'system',
+            version: 1,
+            description: 'Protected system anchor.'
+          },
+          currentKeys: ['thread.lock', 'post.hide', 'user.role_change', 'board.manage'],
+          impact: 2,
+          assignments: []
+        }
+      },
+      boards: [{
+        id: 21,
+        name: 'interpretability'
+      }, {
+        id: 22,
+        name: 'evaluations'
+      }, {
+        id: 13,
+        name: 'the-valley'
+      }],
+      simulator: {
+        actor: 'glorfindel',
+        capability: 'thread.lock',
+        boardId: '21',
+        at: '',
+        result: {
+          allowed: true,
+          capability: 'thread.lock',
+          actorLabel: '@glorfindel',
+          targetLabel: 'board #21 (interpretability)',
+          source: 'role_assignment',
+          reason: 'Role board_steward grants thread.lock at board #21',
+          roleKey: 'board_steward',
+          scopeType: 'board',
+          scopeId: 21
+        }
+      }
+    },
+    /* ── Sign-in providers (admin/providers.php + provider_disable.php) ───── */
+    providers: {
+      rows: [{
+        id: 1,
+        displayName: 'Google',
+        providerKey: 'google',
+        type: 'builtin',
+        issuer: null,
+        health: 'not checked',
+        healthCheckedAt: null,
+        soleMethodCount: 0,
+        isEnabled: true,
+        envConfigured: true
+      }, {
+        id: 2,
+        displayName: 'GitHub',
+        providerKey: 'github',
+        type: 'builtin',
+        issuer: null,
+        health: 'not checked',
+        healthCheckedAt: null,
+        soleMethodCount: 0,
+        isEnabled: true,
+        envConfigured: false
+      }, {
+        id: 3,
+        displayName: 'Council GitLab',
+        providerKey: 'gitlab',
+        type: 'generic_oidc',
+        issuer: 'https://gitlab.com',
+        health: 'ok',
+        healthCheckedAt: '2h ago',
+        soleMethodCount: 3,
+        isEnabled: true,
+        envConfigured: false
+      }, {
+        id: 4,
+        displayName: 'Numenor SSO',
+        providerKey: 'numenor',
+        type: 'generic_oidc',
+        issuer: 'https://id.numenor.example',
+        health: 'never',
+        healthCheckedAt: null,
+        soleMethodCount: 0,
+        isEnabled: false,
+        envConfigured: false
+      }],
+      disableTarget: {
+        3: {
+          id: 3,
+          displayName: 'Council GitLab',
+          providerKey: 'gitlab',
+          soleAccounts: [{
+            username: 'lindir',
+            email: 'lindir@imladris.council'
+          }, {
+            username: 'gildor',
+            email: 'gildor@imladris.council'
+          }, {
+            username: 'melian',
+            email: 'melian@imladris.council'
+          }]
+        }
+      }
+    },
+    /* ── Invitations (admin/invitations.php) ─────────────────────────────── */
+    invitations: {
+      limits: {
+        maxUses: 100,
+        maxExpiryDays: 365,
+        defaultExpiryDays: 14
+      },
+      boards: [{
+        id: 12,
+        name: 'introductions'
+      }, {
+        id: 13,
+        name: 'the-valley'
+      }],
+      newInvitation: null,
+      rows: [{
+        id: 1,
+        created: '2h ago',
+        creator: 'elrond',
+        email: 'nimrodel@example.com',
+        domain: null,
+        usedCount: 0,
+        maxUses: 1,
+        expires: 'in 14 days',
+        status: 'active'
+      }, {
+        id: 2,
+        created: 'yesterday',
+        creator: 'elrond',
+        email: null,
+        domain: 'lorien.example',
+        usedCount: 3,
+        maxUses: 25,
+        expires: 'in 10 days',
+        status: 'active'
+      }, {
+        id: 3,
+        created: '3 days ago',
+        creator: 'galadriel',
+        email: null,
+        domain: null,
+        usedCount: 1,
+        maxUses: 1,
+        expires: '—',
+        status: 'redeemed'
+      }, {
+        id: 4,
+        created: 'last week',
+        creator: 'elrond',
+        email: 'saruman@isengard.example',
+        domain: null,
+        usedCount: 0,
+        maxUses: 1,
+        expires: 'expired',
+        status: 'revoked'
+      }]
+    }
+  });
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/admin/parity-data.js", error: String((e && e.message) || e) }); }
 
 // ui_kits/auth/AuthApp.jsx
 try { (() => {
@@ -5674,6 +6679,225 @@ try { (() => {
       href: "../retroboards/index.html"
     }, "Go to the community \u2192"))));
   }
+
+  /* Passkey key glyph (bow + blade + teeth — simple shapes only). */
+  function PasskeyGlyph() {
+    return /*#__PURE__*/React.createElement("span", {
+      className: "passkey-glyph",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: "9",
+      cy: "12",
+      r: "4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M13 12h7"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M17 12v3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M20 12v2"
+    })));
+  }
+
+  /* Passkey sign-in — the login gate with passkeys.js enhancement revealed
+     (login.php `.passkey-signin`, shown when the browser supports WebAuthn). */
+  function PasskeySignin({
+    go
+  }) {
+    const {
+      Input,
+      Button
+    } = window.ImladrisDesignSystem_c3e027;
+    const [waiting, setWaiting] = React.useState(false);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "auth-card"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "auth-eyebrow"
+    }, "Welcome back to the council"), /*#__PURE__*/React.createElement("h1", null, "Log in"), /*#__PURE__*/React.createElement("form", {
+      className: "auth-form",
+      onSubmit: e => {
+        e.preventDefault();
+        go('mfa');
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Email"), /*#__PURE__*/React.createElement(Input, {
+      className: "input-engraved",
+      type: "email",
+      autoComplete: "username",
+      defaultValue: "erestor@imladris.council"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Password"), /*#__PURE__*/React.createElement(Input, {
+      className: "input-engraved",
+      type: "password",
+      autoComplete: "current-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      type: "submit"
+    }, "Log in")), /*#__PURE__*/React.createElement("div", {
+      className: "passkey-signin",
+      "data-waiting": waiting ? '1' : undefined
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn btn-secondary passkey-btn",
+      "aria-busy": waiting || undefined,
+      onClick: () => setWaiting(v => !v)
+    }, /*#__PURE__*/React.createElement(PasskeyGlyph, null), waiting ? 'Waiting for your passkey…' : 'Sign in with a passkey'), waiting ? /*#__PURE__*/React.createElement("p", {
+      className: "passkey-status",
+      role: "status"
+    }, "Use your device screen lock or security key to continue. ", /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        setWaiting(false);
+      }
+    }, "Cancel")) : null), /*#__PURE__*/React.createElement(OAuth, null), /*#__PURE__*/React.createElement("div", {
+      className: "auth-links"
+    }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        go('forgot');
+      }
+    }, "Forgot your password?")), /*#__PURE__*/React.createElement("p", null, "New here? ", /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        go('register');
+      }
+    }, "Create an account"), ".")));
+  }
+
+  /* Passkey step-up — a fresh-check re-authentication ceremony for a sensitive
+     action (security.php `data-passkey-stepup-btn`, used when there is no
+     password). Confirms with a passkey, then returns to the action. */
+  function StepUp({
+    go
+  }) {
+    const [done, setDone] = React.useState(false);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "auth-card"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "auth-emblem ward"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: "5",
+      y: "4",
+      width: "14",
+      height: "16",
+      rx: "2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "10",
+      r: "3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M12 13v4"
+    }))), /*#__PURE__*/React.createElement("span", {
+      className: "auth-eyebrow"
+    }, "One more ward"), /*#__PURE__*/React.createElement("h1", null, "Confirm it's you"), done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "auth-lede",
+      style: {
+        color: 'var(--success)'
+      }
+    }, "Confirmed with your passkey. You can finish the change now."), /*#__PURE__*/React.createElement("div", {
+      className: "auth-links"
+    }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        go('verified');
+      }
+    }, "Continue \u2192")))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      className: "auth-lede"
+    }, "This sensitive change needs a fresh check. Confirm with the passkey on this device to continue."), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "btn passkey-btn",
+      onClick: () => setDone(true)
+    }, /*#__PURE__*/React.createElement(PasskeyGlyph, null), "Confirm with a passkey"), /*#__PURE__*/React.createElement("div", {
+      className: "auth-links"
+    }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        go('login');
+      }
+    }, "Use your password instead")))));
+  }
+
+  /* Invited registration — the sign-up gate reached from an invitation link
+     (register.php with a valid invite: the acceptance notice, the bound
+     invitation context, and the "Accept invitation" submit label). */
+  function Invited({
+    go
+  }) {
+    const {
+      Input,
+      Button
+    } = window.ImladrisDesignSystem_c3e027;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "auth-card wide"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "auth-eyebrow"
+    }, "Take a seat at the table"), /*#__PURE__*/React.createElement("h1", null, "Create your account"), /*#__PURE__*/React.createElement("p", {
+      className: "notice",
+      role: "status"
+    }, "You've been invited to join this community. Complete the form to accept your invitation."), /*#__PURE__*/React.createElement("p", {
+      className: "invite-chip"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "invite-chip-label"
+    }, "Invitation"), " bound to ", /*#__PURE__*/React.createElement("strong", null, "nimrodel@example.com"), " \xB7 from ", /*#__PURE__*/React.createElement("strong", null, "@elrond")), /*#__PURE__*/React.createElement("form", {
+      className: "auth-form",
+      onSubmit: e => {
+        e.preventDefault();
+        go('verified');
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Username"), /*#__PURE__*/React.createElement(Input, {
+      className: "input-engraved",
+      maxLength: 32,
+      autoFocus: true
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Display name ", /*#__PURE__*/React.createElement("span", {
+      className: "muted"
+    }, "(optional)")), /*#__PURE__*/React.createElement(Input, {
+      className: "input-engraved",
+      maxLength: 64
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Email"), /*#__PURE__*/React.createElement(Input, {
+      className: "input-engraved",
+      type: "email",
+      autoComplete: "username",
+      defaultValue: "nimrodel@example.com"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Password"), /*#__PURE__*/React.createElement(Input, {
+      className: "input-engraved",
+      type: "password",
+      autoComplete: "new-password"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Confirm password"), /*#__PURE__*/React.createElement(Input, {
+      className: "input-engraved",
+      type: "password",
+      autoComplete: "new-password"
+    })), /*#__PURE__*/React.createElement(Button, {
+      type: "submit"
+    }, "Accept invitation")), /*#__PURE__*/React.createElement("div", {
+      className: "auth-links"
+    }, /*#__PURE__*/React.createElement("p", null, "Already have an account? ", /*#__PURE__*/React.createElement("a", {
+      href: "#",
+      onClick: e => {
+        e.preventDefault();
+        go('login');
+      }
+    }, "Log in"), ".")));
+  }
   const VIEWS = {
     login: Login,
     register: Register,
@@ -5681,9 +6905,12 @@ try { (() => {
     reset: Reset,
     mfa: Mfa,
     verifyPending: VerifyPending,
-    verified: Verified
+    verified: Verified,
+    passkey: PasskeySignin,
+    stepUp: StepUp,
+    invited: Invited
   };
-  const SWITCH = [['login', 'Log in'], ['register', 'Sign up'], ['forgot', 'Forgot'], ['reset', 'Reset'], ['mfa', 'MFA'], ['verifyPending', 'Verify'], ['verified', 'Verified']];
+  const SWITCH = [['login', 'Log in'], ['passkey', 'Passkey'], ['stepUp', 'Step-up'], ['register', 'Sign up'], ['invited', 'Invited'], ['forgot', 'Forgot'], ['reset', 'Reset'], ['mfa', 'MFA'], ['verifyPending', 'Verify'], ['verified', 'Verified']];
   function App() {
     const {
       EightPointStar
@@ -5720,107 +6947,41 @@ try { (() => {
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/auth/AuthApp.jsx", error: String((e && e.message) || e) }); }
 
-// ui_kits/dm/Compose.jsx
-try { (() => {
-/* Messages kit — the new-message composer (right pane). Mirrors dm/new.php:
-   recipients, an optional group title, and the body. */
-(function () {
-  const chev = /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 24 24",
-    width: "13",
-    height: "13",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M15 18l-6-6 6-6"
-  }));
-  function Compose({
-    onBack,
-    onSend
-  }) {
-    const DS = window.ImladrisDesignSystem_c3e027;
-    const {
-      Input,
-      Textarea,
-      Button
-    } = DS;
-    const [to, setTo] = React.useState('');
-    const [title, setTitle] = React.useState('');
-    const [body, setBody] = React.useState('');
-    const isGroup = to.includes(',');
-    return /*#__PURE__*/React.createElement("section", {
-      className: "dm-compose"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "dm-compose-wrap"
-    }, /*#__PURE__*/React.createElement("button", {
-      className: "breadcrumb",
-      onClick: onBack
-    }, chev, " Messages"), /*#__PURE__*/React.createElement("h1", null, "New message"), /*#__PURE__*/React.createElement("form", {
-      className: "dm-form",
-      onSubmit: e => {
-        e.preventDefault();
-        onSend();
-      }
-    }, /*#__PURE__*/React.createElement(Input, {
-      label: "To",
-      value: to,
-      onChange: e => setTo(e.target.value),
-      placeholder: "username, username",
-      maxLength: 255
-    }), /*#__PURE__*/React.createElement("p", {
-      className: "field-hint"
-    }, "Separate multiple usernames with commas to start a group."), isGroup ? /*#__PURE__*/React.createElement(Input, {
-      label: "Group title",
-      value: title,
-      onChange: e => setTitle(e.target.value),
-      placeholder: "Optional",
-      maxLength: 120
-    }) : null, /*#__PURE__*/React.createElement(Textarea, {
-      label: "Message",
-      rows: 6,
-      value: body,
-      onChange: e => setBody(e.target.value),
-      placeholder: "Write your counsel\u2026",
-      maxLength: 5000
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "form-actions"
-    }, /*#__PURE__*/React.createElement(Button, {
-      type: "submit",
-      disabled: !to.trim() || !body.trim()
-    }, "Send message"), /*#__PURE__*/React.createElement(Button, {
-      type: "button",
-      variant: "ghost",
-      onClick: onBack
-    }, "Cancel")))));
-  }
-  window.DMCompose = Compose;
-})();
-})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/dm/Compose.jsx", error: String((e && e.message) || e) }); }
-
 // ui_kits/dm/ConvoList.jsx
 try { (() => {
-/* Messages kit — conversation list (left pane). Direct + group rows with
-   monogram, last-message preview, unread marker, and a "New message" action. */
+/* Messages kit — conversation list (left pane). One tidy header (title + the
+   single round "new message" invitation), a quiet search, an All / Unread
+   filter, then the rows: monogram, name, one-line preview, a lone gold unread
+   dot. No stacked sub-headers, no per-row boxes. */
 (function () {
+  const Icons = window.DMIcons;
   function ConvoList({
     conversations,
     activeId,
     onOpen,
     onNew,
     filter,
-    onFilter
+    onFilter,
+    query,
+    onQuery
   }) {
     const DS = window.ImladrisDesignSystem_c3e027;
     const {
-      Button,
-      Tabs,
       Monogram
     } = DS;
     const RBDM = window.RBDM;
-    const shown = conversations.filter(c => filter === 'Unread' ? c.unread : true);
+    const U = n => RBDM.users[n] || {
+      name: n,
+      presence: undefined
+    };
+    const q = query.trim().toLowerCase();
+    const shown = conversations.filter(c => {
+      if (filter === 'Unread' && !c.unread) return false;
+      if (!q) return true;
+      const name = c.kind === 'group' ? c.title : U(c.other).name;
+      return (name + ' ' + c.preview).toLowerCase().includes(q);
+    });
+    const unreadCount = conversations.filter(c => c.unread).length;
     return /*#__PURE__*/React.createElement("aside", {
       className: "dm-listpane"
     }, /*#__PURE__*/React.createElement("div", {
@@ -5829,38 +6990,44 @@ try { (() => {
       className: "dm-listpane-top"
     }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
       className: "eyebrow"
-    }, "Private counsel"), /*#__PURE__*/React.createElement("h1", null, "Messages")), /*#__PURE__*/React.createElement(Button, {
-      size: "sm",
+    }, Icons.Lock(), "Private counsel"), /*#__PURE__*/React.createElement("h1", null, "Messages")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-new-btn",
       onClick: onNew,
-      icon: /*#__PURE__*/React.createElement("svg", {
-        viewBox: "0 0 24 24",
-        width: "14",
-        height: "14",
-        fill: "none",
-        stroke: "currentColor",
-        strokeWidth: "2",
-        strokeLinecap: "round",
-        strokeLinejoin: "round"
-      }, /*#__PURE__*/React.createElement("path", {
-        d: "M12 5v14M5 12h14"
-      }))
-    }, "New message")), /*#__PURE__*/React.createElement("div", {
-      className: "dm-listpane-filters"
-    }, /*#__PURE__*/React.createElement(Tabs, {
-      variant: "segment",
-      items: ['All', 'Unread'],
-      value: filter,
-      onChange: onFilter
-    }))), shown.length === 0 ? /*#__PURE__*/React.createElement("p", {
+      title: "New message",
+      "aria-label": "New message"
+    }, Icons.Plus())), /*#__PURE__*/React.createElement("div", {
+      className: "dm-search"
+    }, Icons.Search(), /*#__PURE__*/React.createElement("input", {
+      type: "search",
+      value: query,
+      onChange: e => onQuery(e.target.value),
+      placeholder: "Search messages\u2026",
+      "aria-label": "Search messages"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "dm-filter"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-chips",
+      role: "tablist",
+      "aria-label": "Filter conversations"
+    }, ['All', 'Unread'].map(f => /*#__PURE__*/React.createElement("button", {
+      key: f,
+      type: "button",
+      role: "tab",
+      "aria-selected": filter === f,
+      className: 'dm-chip' + (filter === f ? ' is-active' : ''),
+      onClick: () => onFilter(f)
+    }, f))), /*#__PURE__*/React.createElement("span", {
+      className: "dm-count"
+    }, unreadCount ? unreadCount + ' unread' : 'All read'))), shown.length === 0 ? /*#__PURE__*/React.createElement("p", {
       className: "dm-list-empty"
-    }, "No conversations here yet.") : /*#__PURE__*/React.createElement("ul", {
+    }, q ? 'No letters match your search.' : 'No conversations here yet.') : /*#__PURE__*/React.createElement("ul", {
       className: "dm-list"
     }, shown.map(c => {
       const isGroup = c.kind === 'group';
-      const other = isGroup ? c.title : RBDM.users[c.other].name;
+      const other = isGroup ? c.title : U(c.other).name;
       const seed = isGroup ? 'group-' + c.id : c.other;
-      const presence = isGroup ? undefined : RBDM.users[c.other].presence;
-      const groupMeta = isGroup ? c.members.filter(m => !m.left).map(m => RBDM.users[m.username].name).join(', ') : null;
+      const presence = isGroup ? undefined : U(c.other).presence;
       return /*#__PURE__*/React.createElement("li", {
         key: c.id
       }, /*#__PURE__*/React.createElement("button", {
@@ -5875,18 +7042,16 @@ try { (() => {
         gilt: isGroup
       }), /*#__PURE__*/React.createElement("span", {
         className: "dm-row-top"
-      }, c.unread ? /*#__PURE__*/React.createElement("span", {
-        className: "unread-dot",
-        "aria-label": "Unread"
-      }) : null, /*#__PURE__*/React.createElement("span", {
+      }, /*#__PURE__*/React.createElement("span", {
         className: "dm-other"
       }, other)), /*#__PURE__*/React.createElement("span", {
         className: "dm-time"
       }, c.time), /*#__PURE__*/React.createElement("span", {
         className: "dm-preview"
-      }, c.preview), groupMeta ? /*#__PURE__*/React.createElement("span", {
-        className: "dm-group-meta"
-      }, groupMeta) : null));
+      }, c.preview), c.unread ? /*#__PURE__*/React.createElement("span", {
+        className: "dm-unread-dot",
+        "aria-label": "Unread"
+      }) : null));
     })));
   }
   window.DMConvoList = ConvoList;
@@ -5895,15 +7060,22 @@ try { (() => {
 
 // ui_kits/dm/DMApp.jsx
 try { (() => {
-/* Messages kit — app shell. Two-pane reading room: the conversation list beside
-   the open letter (or the new-message composer). Holds open/read/reply state. */
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/* Messages kit — app shell. ONE reading room: the conversation list, the open
+   conversation, and a collapsible details rail. New message is a dialog OVER
+   the room (never a co-equal screen); confirms (leave / block / report) reuse
+   the same dialog; a small toast acknowledges quiet actions. Holds all state. */
 (function () {
   function clone(x) {
     return JSON.parse(JSON.stringify(x));
   }
-  function Empty() {
+  const isMobile = () => !!(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
+  function Empty({
+    onNew
+  }) {
     const {
-      EightPointStar
+      EightPointStar,
+      Button
     } = window.ImladrisDesignSystem_c3e027;
     return /*#__PURE__*/React.createElement("section", {
       className: "dm-threadpane"
@@ -5915,20 +7087,31 @@ try { (() => {
       className: "star"
     }, /*#__PURE__*/React.createElement(EightPointStar, {
       size: 54
-    })), /*#__PURE__*/React.createElement("h2", null, "Choose a letter to read"), /*#__PURE__*/React.createElement("p", null, "Your private counsel opens here, beside the list. Pick a conversation, or begin a new message."))));
+    })), /*#__PURE__*/React.createElement("h2", null, "Choose a letter to read"), /*#__PURE__*/React.createElement("p", null, "Your private counsel opens here, beside the list. Pick a conversation, or begin a new one."), /*#__PURE__*/React.createElement(Button, {
+      onClick: onNew
+    }, "New message"))));
   }
   function DMApp() {
     const Topbar = window.DMTopbar;
+    const NavRail = window.DMNavRail;
     const ConvoList = window.DMConvoList;
     const Thread = window.DMThread;
-    const Compose = window.DMCompose;
+    const InfoRail = window.DMInfoRail;
+    const Modal = window.DMModal;
+    const ComposeForm = window.DMComposeForm;
+    const ConfirmBody = window.DMConfirmBody;
     const RBDM = window.RBDM;
     const [convos, setConvos] = React.useState(() => RBDM.conversations.map(clone));
     const [activeId, setActiveId] = React.useState(RBDM.conversations[0].id);
-    const [mode, setMode] = React.useState('thread'); // thread | compose
     const [filter, setFilter] = React.useState('All');
+    const [query, setQuery] = React.useState('');
     const [reply, setReply] = React.useState('');
+    const [railOpen, setRailOpen] = React.useState(false); // details rail — opens on demand (nav rail now grounds the view)
+    const [railMobile, setRailMobile] = React.useState(false); // mobile overlay
     const [reading, setReading] = React.useState(false); // mobile single-pane
+    const [overlay, setOverlay] = React.useState(null);
+    const [toast, setToast] = React.useState(null);
+    const toastTimer = React.useRef(null);
 
     // Mark the first conversation read on first paint.
     React.useEffect(() => {
@@ -5938,11 +7121,16 @@ try { (() => {
       } : c));
     }, []);
     const active = convos.find(c => c.id === activeId) || null;
+    function showToast(msg) {
+      setToast(msg);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      toastTimer.current = setTimeout(() => setToast(null), 2600);
+    }
     function open(id) {
       setActiveId(id);
-      setMode('thread');
       setReply('');
       setReading(true);
+      setRailMobile(false);
       setConvos(prev => prev.map(c => c.id === id ? {
         ...c,
         unread: false
@@ -5960,36 +7148,201 @@ try { (() => {
       setConvos(prev => prev.map(c => c.id === active.id ? {
         ...c,
         messages: [...c.messages, msg],
-        preview: body
+        preview: body,
+        read: false,
+        time: 'just now'
       } : c));
       setReply('');
     }
-    let right;
-    if (mode === 'compose') right = /*#__PURE__*/React.createElement(Compose, {
-      onBack: () => setMode('thread'),
-      onSend: () => setMode('thread')
-    });else if (active) right = /*#__PURE__*/React.createElement(Thread, {
-      convo: active,
-      onBack: () => setReading(false),
-      replyValue: reply,
-      onReplyChange: setReply,
-      onSend: send
-    });else right = /*#__PURE__*/React.createElement(Empty, null);
+    function updateActive(fn) {
+      setConvos(prev => prev.map(c => c.id === activeId ? fn(c) : c));
+    }
+    function leaveConvo(id) {
+      setConvos(prev => {
+        const rest = prev.filter(c => c.id !== id);
+        if (id === activeId) {
+          setActiveId(rest[0] ? rest[0].id : null);
+          setReading(false);
+        }
+        return rest;
+      });
+      setRailMobile(false);
+      showToast('You left the conversation.');
+    }
+    function toggleRail() {
+      if (isMobile()) setRailMobile(v => !v);else setRailOpen(v => !v);
+    }
+    function openRail() {
+      if (isMobile()) setRailMobile(true);else setRailOpen(true);
+    }
+    function closeRail() {
+      setRailMobile(false);
+      if (!isMobile()) setRailOpen(false);
+    }
+    const confirm = spec => setOverlay({
+      type: 'confirm',
+      ...spec
+    });
+    function startConversation({
+      to,
+      title,
+      body
+    }) {
+      const names = to.split(',').map(s => s.trim().replace(/^@/, '')).filter(Boolean);
+      const id = Date.now();
+      const first = {
+        id: id + 1,
+        from: RBDM.me,
+        time: 'just now',
+        body: body.trim()
+      };
+      let convo;
+      if (names.length > 1) {
+        convo = {
+          id,
+          kind: 'group',
+          title: (title || '').trim() || names.join(', '),
+          unread: false,
+          time: 'just now',
+          read: false,
+          members: [{
+            username: RBDM.me,
+            role: 'owner'
+          }, ...names.map(n => ({
+            username: n,
+            role: 'member'
+          }))],
+          preview: body.trim(),
+          messages: [first]
+        };
+      } else {
+        convo = {
+          id,
+          kind: 'direct',
+          other: names[0] || 'someone',
+          unread: false,
+          time: 'just now',
+          read: false,
+          preview: body.trim(),
+          messages: [first]
+        };
+      }
+      setConvos(prev => [convo, ...prev]);
+      setActiveId(id);
+      setReading(true);
+      setRailMobile(false);
+      setOverlay(null);
+      showToast('Your counsel has been sent.');
+    }
+    const railShown = !!active && (railOpen || railMobile);
+    const shellClass = 'dm-shell' + (railOpen && active ? ' has-rail' : '') + (railMobile && active ? ' rail-open' : '') + (reading ? ' reading' : '');
     return /*#__PURE__*/React.createElement("div", {
       className: "app-root"
     }, /*#__PURE__*/React.createElement(Topbar, null), /*#__PURE__*/React.createElement("div", {
-      className: 'dm-shell' + (reading ? ' reading' : '')
-    }, /*#__PURE__*/React.createElement(ConvoList, {
+      className: shellClass
+    }, /*#__PURE__*/React.createElement(NavRail, {
+      onNewMessage: () => setOverlay({
+        type: 'compose'
+      })
+    }), /*#__PURE__*/React.createElement(ConvoList, {
       conversations: convos,
-      activeId: mode === 'thread' ? activeId : null,
+      activeId: activeId,
       onOpen: open,
-      onNew: () => {
-        setMode('compose');
-        setReading(true);
-      },
+      onNew: () => setOverlay({
+        type: 'compose'
+      }),
       filter: filter,
-      onFilter: setFilter
-    }), right));
+      onFilter: setFilter,
+      query: query,
+      onQuery: setQuery
+    }), active ? /*#__PURE__*/React.createElement(Thread, {
+      convo: active,
+      onBack: () => setReading(false),
+      railOpen: railOpen || railMobile,
+      onToggleRail: toggleRail,
+      onOpenRail: openRail,
+      onUpdateConvo: updateActive,
+      onConfirm: confirm,
+      onLeaveConvo: leaveConvo,
+      onToast: showToast,
+      replyValue: reply,
+      onReplyChange: setReply,
+      onSend: send
+    }) : /*#__PURE__*/React.createElement(Empty, {
+      onNew: () => setOverlay({
+        type: 'compose'
+      })
+    }), railShown ? /*#__PURE__*/React.createElement(InfoRail, {
+      convo: active,
+      onClose: closeRail,
+      onUpdateConvo: updateActive,
+      onConfirm: confirm,
+      onLeaveConvo: leaveConvo,
+      onToast: showToast
+    }) : null), overlay && overlay.type === 'compose' ? /*#__PURE__*/React.createElement(Modal, {
+      onClose: () => setOverlay(null)
+    }, /*#__PURE__*/React.createElement(ComposeForm, {
+      onClose: () => setOverlay(null),
+      onSend: startConversation
+    })) : null, overlay && overlay.type === 'confirm' ? /*#__PURE__*/React.createElement(Modal, {
+      onClose: () => setOverlay(null)
+    }, /*#__PURE__*/React.createElement(ConfirmBody, _extends({}, overlay, {
+      onClose: () => setOverlay(null)
+    }))) : null, toast ? /*#__PURE__*/React.createElement("div", {
+      className: "dm-toast",
+      role: "status"
+    }, toast) : null, !reading ? /*#__PURE__*/React.createElement("nav", {
+      className: "dm-tabbar",
+      "aria-label": "Primary"
+    }, /*#__PURE__*/React.createElement("a", {
+      className: "dm-tab",
+      href: "../retroboards/index.html"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M3 11.5 12 4l9 7.5"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"
+    })), "Home"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-tab"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M22 12h-6l-2 3h-4l-2-3H2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M5.5 5.5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.4-6.5A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.5z"
+    })), "Inbox"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-tab dm-tab-fab",
+      onClick: () => setOverlay({
+        type: 'compose'
+      }),
+      "aria-label": "New message"
+    }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M12 5v14M5 12h14"
+    })))), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-tab is-active",
+      "aria-current": "page"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+    })), "Messages"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-tab"
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24"
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "8",
+      r: "4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M4 21v-1a6 6 0 0 1 12 0v1"
+    })), "You")) : null);
   }
   window.DMApp = DMApp;
 })();
@@ -6042,9 +7395,9 @@ try { (() => {
     }), /*#__PURE__*/React.createElement("path", {
       d: "M10.3 21a1.94 1.94 0 0 0 3.4 0"
     })), /*#__PURE__*/React.createElement("span", {
-      className: "bell-dot",
+      className: "bell-badge",
       "aria-hidden": "true"
-    })), /*#__PURE__*/React.createElement("span", {
+    }, "3")), /*#__PURE__*/React.createElement("span", {
       className: "topbar-user"
     }, /*#__PURE__*/React.createElement(Monogram, {
       name: me.name,
@@ -6073,42 +7426,802 @@ try { (() => {
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/dm/DMTopbar.jsx", error: String((e && e.message) || e) }); }
 
-// ui_kits/dm/Thread.jsx
+// ui_kits/dm/InfoRail.jsx
 try { (() => {
-/* Messages kit — the open conversation (right pane). Header (direct / group),
-   the group-members panel with owner tools, the message stream with reference
-   cards + report affordance, and the pinned composer. */
+/* Messages kit — details rail (right pane, collapsible). Everything that used
+   to be scattered across the thread (the inline members card, mute / leave,
+   owner tools, block / report) is re-homed here into one calm, titled column.
+   Direct: the person (gilt monogram, tier, joined, presence) + quiet actions.
+   Group: the members list with roles + owner tools, mute, leave. */
 (function () {
-  const chev = /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 24 24",
-    width: "13",
-    height: "13",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round"
-  }, /*#__PURE__*/React.createElement("path", {
-    d: "M15 18l-6-6 6-6"
-  }));
-  const label = code => code.charAt(0).toUpperCase() + code.slice(1).replace(/_/g, ' ');
-  function Thread({
+  const {
+    useState
+  } = React;
+  const Icons = window.DMIcons;
+  function InfoRail({
     convo,
-    onBack,
-    replyValue,
-    onReplyChange,
-    onSend
+    onClose,
+    onUpdateConvo,
+    onConfirm,
+    onLeaveConvo,
+    onToast
   }) {
     const DS = window.ImladrisDesignSystem_c3e027;
     const {
-      Composer,
       Monogram,
+      Switch,
       Input,
       Button
     } = DS;
     const RBDM = window.RBDM;
-    const scrollRef = React.useRef(null);
-    React.useEffect(() => {
+    const isGroup = convo.kind === 'group';
+    const muted = !!convo.muted;
+    const u = name => RBDM.users[name] || {
+      username: name,
+      name: name,
+      presence: 'offline',
+      joined: '—',
+      tier: 'Member'
+    };
+    const isOwner = isGroup && (convo.members.find(m => m.role === 'owner') || {}).username === RBDM.me;
+    const [newMember, setNewMember] = useState('');
+    const [rename, setRename] = useState(convo.title || '');
+    const toggleMute = () => onUpdateConvo(c => ({
+      ...c,
+      muted: !c.muted
+    }));
+    function addMember(e) {
+      e.preventDefault();
+      const name = newMember.trim().replace(/^@/, '');
+      if (!name) return;
+      if (convo.members.some(m => m.username === name && !m.left)) {
+        onToast('@' + name + ' is already in counsel.');
+        setNewMember('');
+        return;
+      }
+      onUpdateConvo(c => ({
+        ...c,
+        members: [...c.members.filter(m => m.username !== name), {
+          username: name,
+          role: 'member'
+        }]
+      }));
+      onToast('Added @' + name + ' to the counsel.');
+      setNewMember('');
+    }
+    function doRename(e) {
+      e.preventDefault();
+      const t = rename.trim();
+      if (!t) return;
+      onUpdateConvo(c => ({
+        ...c,
+        title: t
+      }));
+      onToast('Group renamed.');
+    }
+    const removeMember = name => onUpdateConvo(c => ({
+      ...c,
+      members: c.members.map(m => m.username === name ? {
+        ...m,
+        left: true
+      } : m)
+    }));
+    const makeOwner = name => onUpdateConvo(c => ({
+      ...c,
+      members: c.members.map(m => m.username === name ? {
+        ...m,
+        role: 'owner'
+      } : m.role === 'owner' ? {
+        ...m,
+        role: 'member'
+      } : m)
+    }));
+    const other = isGroup ? null : u(convo.other);
+    return /*#__PURE__*/React.createElement("aside", {
+      className: "dm-inforail"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-head"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "eyebrow"
+    }, isGroup ? 'Members & details' : 'Details'), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-iconbtn",
+      onClick: onClose,
+      "aria-label": "Close details"
+    }, Icons.Close())), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-body"
+    }, isGroup ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-id"
+    }, /*#__PURE__*/React.createElement(Monogram, {
+      name: convo.title,
+      username: 'group-' + convo.id,
+      size: "xl",
+      gilt: true
+    }), /*#__PURE__*/React.createElement("h2", {
+      className: "dm-rail-name"
+    }, convo.title), /*#__PURE__*/React.createElement("span", {
+      className: "dm-rail-handle"
+    }, convo.members.filter(m => !m.left).length, " in counsel")), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-sec"
+    }, /*#__PURE__*/React.createElement("h3", null, "Members"), /*#__PURE__*/React.createElement("ul", {
+      className: "dm-members"
+    }, convo.members.map(m => {
+      const usr = u(m.username);
+      const meRow = m.username === RBDM.me;
+      const canManage = isOwner && !m.left && !meRow && m.role !== 'owner';
+      return /*#__PURE__*/React.createElement("li", {
+        key: m.username,
+        className: 'dm-member' + (m.left ? ' is-left' : '')
+      }, /*#__PURE__*/React.createElement(Monogram, {
+        name: usr.name,
+        username: m.username,
+        size: "sm",
+        presence: m.left ? undefined : usr.presence
+      }), /*#__PURE__*/React.createElement("span", {
+        className: "m-id"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "m-name"
+      }, usr.name, meRow ? ' (you)' : ''), /*#__PURE__*/React.createElement("span", {
+        className: "m-handle"
+      }, "@", m.username)), m.role === 'owner' ? /*#__PURE__*/React.createElement("span", {
+        className: "m-role"
+      }, "Owner") : m.left ? /*#__PURE__*/React.createElement("span", {
+        className: "m-role left"
+      }, "Left") : null, canManage ? /*#__PURE__*/React.createElement("span", {
+        className: "dm-member-tools"
+      }, /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: "dm-linkbtn",
+        onClick: () => makeOwner(m.username)
+      }, "Make owner"), /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: "dm-linkbtn danger",
+        onClick: () => removeMember(m.username)
+      }, "Remove")) : null);
+    }))), isOwner ? /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-sec"
+    }, /*#__PURE__*/React.createElement("h3", null, "Owner tools"), /*#__PURE__*/React.createElement("form", {
+      className: "dm-owner-tool",
+      onSubmit: addMember
+    }, /*#__PURE__*/React.createElement(Input, {
+      value: newMember,
+      onChange: e => setNewMember(e.target.value),
+      placeholder: "username",
+      maxLength: 32,
+      "aria-label": "Add member"
+    }), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary",
+      type: "submit"
+    }, "Add")), /*#__PURE__*/React.createElement("form", {
+      className: "dm-owner-tool",
+      onSubmit: doRename
+    }, /*#__PURE__*/React.createElement(Input, {
+      value: rename,
+      onChange: e => setRename(e.target.value),
+      maxLength: 120,
+      "aria-label": "Rename group"
+    }), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      variant: "secondary",
+      type: "submit"
+    }, "Rename"))) : null, /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-sec"
+    }, /*#__PURE__*/React.createElement("h3", null, "This conversation"), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-toggle"
+    }, /*#__PURE__*/React.createElement(Switch, {
+      label: muted ? 'Muted' : 'Mute conversation',
+      checked: muted,
+      onChange: toggleMute
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-rail-btn danger",
+      onClick: () => onConfirm({
+        title: 'Leave ' + convo.title + '?',
+        body: 'You will stop receiving this counsel. An owner can add you again later.',
+        confirmLabel: 'Leave group',
+        danger: true,
+        onConfirm: () => onLeaveConvo(convo.id)
+      })
+    }, Icons.Leave(), " Leave group")))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-id"
+    }, /*#__PURE__*/React.createElement(Monogram, {
+      name: other.name,
+      username: other.username,
+      size: "xl",
+      gilt: true,
+      presence: other.presence
+    }), /*#__PURE__*/React.createElement("h2", {
+      className: "dm-rail-name"
+    }, other.name), /*#__PURE__*/React.createElement("span", {
+      className: "dm-rail-handle"
+    }, "@", other.username), /*#__PURE__*/React.createElement("span", {
+      className: "dm-tier-pill"
+    }, other.tier)), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-sec"
+    }, /*#__PURE__*/React.createElement("h3", null, "About"), /*#__PURE__*/React.createElement("ul", {
+      className: "dm-rail-meta"
+    }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", {
+      className: "k"
+    }, "Presence"), /*#__PURE__*/React.createElement("span", {
+      className: "v"
+    }, other.presence)), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", {
+      className: "k"
+    }, "Joined"), /*#__PURE__*/React.createElement("span", {
+      className: "v"
+    }, other.joined)))), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-sec"
+    }, /*#__PURE__*/React.createElement("h3", null, "This conversation"), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-toggle"
+    }, /*#__PURE__*/React.createElement(Switch, {
+      label: muted ? 'Muted' : 'Mute conversation',
+      checked: muted,
+      onChange: toggleMute
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "dm-rail-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-rail-btn danger",
+      onClick: () => onConfirm({
+        title: 'Block ' + other.name + '?',
+        body: other.name + ' will no longer be able to send you private counsel. You can undo this from settings.',
+        confirmLabel: 'Block',
+        danger: true,
+        onConfirm: () => onToast(other.name + ' is blocked.')
+      })
+    }, Icons.Block(), " Block ", other.name), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-rail-btn danger",
+      onClick: () => onConfirm({
+        title: 'Report this conversation?',
+        body: 'The wardens will review the recent messages in this counsel.',
+        confirmLabel: 'Report',
+        danger: true,
+        onConfirm: () => onToast('Reported to the wardens.')
+      })
+    }, Icons.Flag(), " Report conversation"))))));
+  }
+  window.DMInfoRail = InfoRail;
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/dm/InfoRail.jsx", error: String((e && e.message) || e) }); }
+
+// ui_kits/dm/NavRail.jsx
+try { (() => {
+/* Messages kit — product nav rail (left-most column). Grounds Messages INSIDE
+   the forum chrome, mirroring the flagship inbox: Home / Inbox / Messages
+   (active) / Following / Drafts, then a quiet "Direct" section. This is the
+   consolidation move — DMs read as one place in the product, not a floating
+   island. Static chrome; the active item is Messages. */
+(function () {
+  const item = (icon, label, opts) => ({
+    icon,
+    label,
+    ...(opts || {})
+  });
+  function NavRail({
+    onNewMessage
+  }) {
+    // Lucide-register glyphs, matching the forum inbox nav exactly.
+    const I = {
+      home: /*#__PURE__*/React.createElement("svg", {
+        viewBox: "0 0 24 24"
+      }, /*#__PURE__*/React.createElement("path", {
+        d: "M3 11.5 12 4l9 7.5"
+      }), /*#__PURE__*/React.createElement("path", {
+        d: "M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"
+      })),
+      inbox: /*#__PURE__*/React.createElement("svg", {
+        viewBox: "0 0 24 24"
+      }, /*#__PURE__*/React.createElement("path", {
+        d: "M22 12h-6l-2 3h-4l-2-3H2"
+      }), /*#__PURE__*/React.createElement("path", {
+        d: "M5.5 5.5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.4-6.5A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.5z"
+      })),
+      messages: /*#__PURE__*/React.createElement("svg", {
+        viewBox: "0 0 24 24"
+      }, /*#__PURE__*/React.createElement("path", {
+        d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+      })),
+      following: /*#__PURE__*/React.createElement("svg", {
+        viewBox: "0 0 24 24"
+      }, /*#__PURE__*/React.createElement("path", {
+        d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+      }), /*#__PURE__*/React.createElement("circle", {
+        cx: "9",
+        cy: "7",
+        r: "4"
+      }), /*#__PURE__*/React.createElement("path", {
+        d: "M22 21v-2a4 4 0 0 0-3-3.87"
+      }), /*#__PURE__*/React.createElement("path", {
+        d: "M16 3.13a4 4 0 0 1 0 7.75"
+      })),
+      drafts: /*#__PURE__*/React.createElement("svg", {
+        viewBox: "0 0 24 24"
+      }, /*#__PURE__*/React.createElement("path", {
+        d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+      }), /*#__PURE__*/React.createElement("path", {
+        d: "M14 2v6h6"
+      }))
+    };
+    return /*#__PURE__*/React.createElement("nav", {
+      className: "dm-navrail",
+      "aria-label": "Primary"
+    }, /*#__PURE__*/React.createElement("a", {
+      className: "dm-nav-item",
+      href: "../retroboards/index.html"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dm-nav-ic"
+    }, I.home), /*#__PURE__*/React.createElement("span", null, "Home")), /*#__PURE__*/React.createElement("a", {
+      className: "dm-nav-item",
+      href: "#inbox",
+      onClick: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dm-nav-ic"
+    }, I.inbox), /*#__PURE__*/React.createElement("span", null, "Inbox"), /*#__PURE__*/React.createElement("span", {
+      className: "dm-nav-count"
+    }, "7")), /*#__PURE__*/React.createElement("a", {
+      className: "dm-nav-item is-active",
+      href: "#messages",
+      "aria-current": "page",
+      onClick: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dm-nav-ic"
+    }, I.messages), /*#__PURE__*/React.createElement("span", null, "Messages"), /*#__PURE__*/React.createElement("span", {
+      className: "dm-nav-dot",
+      "aria-hidden": "true"
+    })), /*#__PURE__*/React.createElement("a", {
+      className: "dm-nav-item",
+      href: "#following",
+      onClick: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dm-nav-ic"
+    }, I.following), /*#__PURE__*/React.createElement("span", null, "Following")), /*#__PURE__*/React.createElement("a", {
+      className: "dm-nav-item",
+      href: "#drafts",
+      onClick: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dm-nav-ic"
+    }, I.drafts), /*#__PURE__*/React.createElement("span", null, "Drafts")), /*#__PURE__*/React.createElement("div", {
+      className: "dm-nav-sec"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-nav-sec-head"
+    }, "Direct"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-nav-compose",
+      onClick: onNewMessage
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("path", {
+      d: "M12 5v14M5 12h14"
+    })), "New message")));
+  }
+  window.DMNavRail = NavRail;
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/dm/NavRail.jsx", error: String((e && e.message) || e) }); }
+
+// ui_kits/dm/Overlays.jsx
+try { (() => {
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/* Messages kit — shared overlay bits: the popover menu (header ··· and the
+   per-message hover ···), the modal shell + its two bodies (new-message and a
+   generic confirm), and a small Lucide-style icon set. Exposed on window. */
+(function () {
+  const {
+    useState,
+    useEffect,
+    useRef
+  } = React;
+  const DS = window.ImladrisDesignSystem_c3e027;
+
+  /* ── Icons (Lucide register, stroke ~1.8) ─────────────────────────────── */
+  const svg = (children, extra) => /*#__PURE__*/React.createElement("svg", _extends({
+    viewBox: "0 0 24 24",
+    width: "16",
+    height: "16",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.8",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, extra), children);
+  const Icons = {
+    Plus: () => svg(/*#__PURE__*/React.createElement("path", {
+      d: "M12 5v14M5 12h14"
+    })),
+    Search: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "11",
+      cy: "11",
+      r: "7"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M21 21l-4.3-4.3"
+    }))),
+    Chevron: () => svg(/*#__PURE__*/React.createElement("path", {
+      d: "M15 18l-6-6 6-6"
+    })),
+    More: () => /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 24 24",
+      width: "16",
+      height: "16",
+      style: {
+        fill: 'currentColor',
+        stroke: 'none'
+      }
+    }, /*#__PURE__*/React.createElement("circle", {
+      cx: "5",
+      cy: "12",
+      r: "1.7"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "1.7"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "19",
+      cy: "12",
+      r: "1.7"
+    })),
+    Panel: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "3",
+      y: "4",
+      width: "18",
+      height: "16",
+      rx: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M15 4v16"
+    }))),
+    Mute: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M11 5 6 9H2v6h4l5 4z"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M22 9l-6 6M16 9l6 6"
+    }))),
+    Bell: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M10.3 21a1.94 1.94 0 0 0 3.4 0"
+    }))),
+    User: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "7",
+      r: "4"
+    }))),
+    Users: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "9",
+      cy: "7",
+      r: "4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M22 21v-2a4 4 0 0 0-3-3.87"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M16 3.13a4 4 0 0 1 0 7.75"
+    }))),
+    Rename: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M12 20h9"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"
+    }))),
+    AddUser: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+    }), /*#__PURE__*/React.createElement("circle", {
+      cx: "9",
+      cy: "7",
+      r: "4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M19 8v6M22 11h-6"
+    }))),
+    Leave: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M16 17l5-5-5-5"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M21 12H9"
+    }))),
+    Block: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+      cx: "12",
+      cy: "12",
+      r: "9"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M5.6 5.6l12.8 12.8"
+    }))),
+    Flag: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
+    }), /*#__PURE__*/React.createElement("line", {
+      x1: "4",
+      y1: "22",
+      x2: "4",
+      y2: "15"
+    }))),
+    Copy: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "9",
+      y: "9",
+      width: "12",
+      height: "12",
+      rx: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+    }))),
+    Close: () => svg(/*#__PURE__*/React.createElement("path", {
+      d: "M18 6 6 18M6 6l12 12"
+    })),
+    Check: () => svg(/*#__PURE__*/React.createElement("path", {
+      d: "M20 6 9 17l-5-5"
+    })),
+    Lock: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
+      x: "4.5",
+      y: "10.5",
+      width: "15",
+      height: "10",
+      rx: "2"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M8 10.5V7a4 4 0 0 1 8 0v3.5"
+    }))),
+    Send: () => svg(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
+      d: "M12 19V5"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M5 12l7-7 7 7"
+    })))
+  };
+
+  /* ── Popover menu ─────────────────────────────────────────────────────── */
+  /* `button` is a render-prop: ({ open, toggle }) => node.
+     `items`: [{ label, icon, onClick, danger } | { sep:true }] */
+  function Menu({
+    button,
+    items,
+    align
+  }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+    useEffect(() => {
+      if (!open) return;
+      const onDoc = e => {
+        if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      };
+      const onKey = e => {
+        if (e.key === 'Escape') setOpen(false);
+      };
+      document.addEventListener('mousedown', onDoc);
+      document.addEventListener('keydown', onKey);
+      return () => {
+        document.removeEventListener('mousedown', onDoc);
+        document.removeEventListener('keydown', onKey);
+      };
+    }, [open]);
+    return /*#__PURE__*/React.createElement("span", {
+      className: "dm-menu-wrap",
+      ref: ref
+    }, button({
+      open,
+      toggle: () => setOpen(o => !o)
+    }), open ? /*#__PURE__*/React.createElement("div", {
+      className: 'dm-menu-pop ' + (align === 'left' ? 'to-left' : 'to-right'),
+      role: "menu"
+    }, items.filter(Boolean).map((it, i) => it.sep ? /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "dm-menu-sep"
+    }) : /*#__PURE__*/React.createElement("button", {
+      key: i,
+      type: "button",
+      role: "menuitem",
+      className: 'dm-menu-item' + (it.danger ? ' danger' : ''),
+      onClick: () => {
+        setOpen(false);
+        it.onClick && it.onClick();
+      }
+    }, it.icon, it.label))) : null);
+  }
+
+  /* ── Modal shell ──────────────────────────────────────────────────────── */
+  function Modal({
+    onClose,
+    children
+  }) {
+    useEffect(() => {
+      const onKey = e => {
+        if (e.key === 'Escape') onClose();
+      };
+      document.addEventListener('keydown', onKey);
+      return () => document.removeEventListener('keydown', onKey);
+    }, [onClose]);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "dm-scrim",
+      onMouseDown: e => {
+        if (e.target === e.currentTarget) onClose();
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-dialog",
+      role: "dialog",
+      "aria-modal": "true"
+    }, children));
+  }
+
+  /* New-message body (mirrors dm/new.php: recipients → group, title, body) */
+  function ComposeForm({
+    onClose,
+    onSend
+  }) {
+    const {
+      Input,
+      Textarea,
+      Button
+    } = DS;
+    const [to, setTo] = useState('');
+    const [title, setTitle] = useState('');
+    const [body, setBody] = useState('');
+    const isGroup = to.includes(',');
+    return /*#__PURE__*/React.createElement("form", {
+      onSubmit: e => {
+        e.preventDefault();
+        onSend && onSend({
+          to,
+          title,
+          body
+        });
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-dialog-head"
+    }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+      className: "eyebrow"
+    }, "Private counsel"), /*#__PURE__*/React.createElement("h2", null, "New message")), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-dialog-close",
+      onClick: onClose,
+      "aria-label": "Close"
+    }, Icons.Close())), /*#__PURE__*/React.createElement("div", {
+      className: "dm-dialog-body"
+    }, /*#__PURE__*/React.createElement(Input, {
+      label: "To",
+      value: to,
+      onChange: e => setTo(e.target.value),
+      placeholder: "username, username",
+      maxLength: 255,
+      autoFocus: true
+    }), /*#__PURE__*/React.createElement("p", {
+      className: "field-hint"
+    }, "Separate usernames with commas to open a group counsel."), isGroup ? /*#__PURE__*/React.createElement(Input, {
+      label: "Group title",
+      value: title,
+      onChange: e => setTitle(e.target.value),
+      placeholder: "Optional",
+      maxLength: 120
+    }) : null, /*#__PURE__*/React.createElement(Textarea, {
+      label: "Message",
+      rows: 5,
+      value: body,
+      onChange: e => setBody(e.target.value),
+      placeholder: "Write your counsel\u2026",
+      maxLength: 5000
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "dm-dialog-foot"
+    }, /*#__PURE__*/React.createElement(Button, {
+      type: "submit",
+      disabled: !to.trim() || !body.trim()
+    }, "Send message"), /*#__PURE__*/React.createElement(Button, {
+      type: "button",
+      variant: "ghost",
+      onClick: onClose
+    }, "Cancel")));
+  }
+
+  /* Generic confirm (leave / block / report conversation) */
+  function ConfirmBody({
+    title,
+    body,
+    confirmLabel,
+    danger,
+    onConfirm,
+    onClose
+  }) {
+    const {
+      Button
+    } = DS;
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "dm-dialog-head"
+    }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("h2", null, title)), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-dialog-close",
+      onClick: onClose,
+      "aria-label": "Close"
+    }, Icons.Close())), /*#__PURE__*/React.createElement("div", {
+      className: "dm-dialog-body"
+    }, /*#__PURE__*/React.createElement("p", null, body)), /*#__PURE__*/React.createElement("div", {
+      className: "dm-dialog-foot"
+    }, /*#__PURE__*/React.createElement(Button, {
+      variant: danger ? 'danger' : 'primary',
+      onClick: () => {
+        onClose();
+        onConfirm && onConfirm();
+      }
+    }, confirmLabel || 'Confirm'), /*#__PURE__*/React.createElement(Button, {
+      variant: "ghost",
+      onClick: onClose
+    }, "Cancel")));
+  }
+  window.DMIcons = Icons;
+  window.DMMenu = Menu;
+  window.DMModal = Modal;
+  window.DMComposeForm = ComposeForm;
+  window.DMConfirmBody = ConfirmBody;
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/dm/Overlays.jsx", error: String((e && e.message) || e) }); }
+
+// ui_kits/dm/Thread.jsx
+try { (() => {
+/* Messages kit — the open conversation (centre pane). One header (identity +
+   a details toggle + a single ··· overflow), the message stream as grouped
+   "letters" (consecutive messages share an author line; theirs read plain,
+   mine wear the one gold plate), a per-message hover ··· (copy / report), an
+   inline report form, reference cards, a read receipt, and a calm composer.
+   All secondary controls live in menus or the details rail — nothing shouts. */
+(function () {
+  const {
+    useState,
+    useRef,
+    useEffect
+  } = React;
+  const Icons = window.DMIcons;
+  const Menu = window.DMMenu;
+  function groupRuns(messages) {
+    const out = [];
+    let cur = null;
+    messages.forEach(m => {
+      if (cur && cur.from === m.from) cur.items.push(m);else {
+        cur = {
+          from: m.from,
+          items: [m]
+        };
+        out.push(cur);
+      }
+    });
+    return out;
+  }
+  const label = code => code.charAt(0).toUpperCase() + code.slice(1).replace(/_/g, ' ');
+  function Thread(props) {
+    const {
+      convo,
+      onBack,
+      railOpen,
+      onToggleRail,
+      onOpenRail,
+      onUpdateConvo,
+      onConfirm,
+      onLeaveConvo,
+      onToast,
+      replyValue,
+      onReplyChange,
+      onSend
+    } = props;
+    const DS = window.ImladrisDesignSystem_c3e027;
+    const {
+      Monogram
+    } = DS;
+    const RBDM = window.RBDM;
+    const me = RBDM.users[RBDM.me];
+    const [reportingId, setReportingId] = useState(null);
+    const scrollRef = useRef(null);
+    const taRef = useRef(null);
+    const U = n => RBDM.users[n] || {
+      username: n,
+      name: n,
+      presence: 'offline'
+    };
+    const isGroup = convo.kind === 'group';
+    const other = isGroup ? null : U(convo.other);
+    const title = isGroup ? convo.title : other.name;
+    const seed = isGroup ? 'group-' + convo.id : convo.other;
+    const active = isGroup ? convo.members.filter(m => !m.left) : [];
+    const isOwner = isGroup && (convo.members.find(m => m.role === 'owner') || {}).username === RBDM.me;
+    const muted = !!convo.muted;
+    useEffect(() => {
+      setReportingId(null);
+    }, [convo.id]);
+
+    // Pin to the newest letter.
+    useEffect(() => {
       const el = scrollRef.current;
       if (!el) return;
       const pin = () => {
@@ -6120,115 +8233,201 @@ try { (() => {
       const t = setTimeout(pin, 250);
       return () => clearTimeout(t);
     }, [convo.id, convo.messages.length]);
-    const isGroup = convo.kind === 'group';
-    const active = isGroup ? convo.members.filter(m => !m.left) : [];
-    const isOwner = isGroup && (convo.members.find(m => m.role === 'owner') || {}).username === RBDM.me;
-    const other = isGroup ? null : RBDM.users[convo.other];
-    const title = isGroup ? convo.title : other.name;
-    const seed = isGroup ? 'group-' + convo.id : convo.other;
+
+    // Auto-grow the composer.
+    useEffect(() => {
+      const el = taRef.current;
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 148) + 'px';
+    }, [replyValue]);
+    function copy(text) {
+      try {
+        navigator.clipboard && navigator.clipboard.writeText(text);
+      } catch (e) {/* sandbox */}
+      onToast('Copied to clipboard.');
+    }
+    const toggleMute = () => onUpdateConvo(c => ({
+      ...c,
+      muted: !c.muted
+    }));
+    const menuItems = isGroup ? [{
+      label: muted ? 'Unmute conversation' : 'Mute conversation',
+      icon: Icons.Mute(),
+      onClick: toggleMute
+    }, isOwner ? {
+      sep: true
+    } : null, isOwner ? {
+      label: 'Rename group',
+      icon: Icons.Rename(),
+      onClick: onOpenRail
+    } : null, isOwner ? {
+      label: 'Add member',
+      icon: Icons.AddUser(),
+      onClick: onOpenRail
+    } : null, {
+      sep: true
+    }, {
+      label: 'Leave group',
+      icon: Icons.Leave(),
+      danger: true,
+      onClick: () => onConfirm({
+        title: 'Leave ' + convo.title + '?',
+        body: 'You will stop receiving this counsel. An owner can add you again later.',
+        confirmLabel: 'Leave group',
+        danger: true,
+        onConfirm: () => onLeaveConvo(convo.id)
+      })
+    }] : [{
+      label: muted ? 'Unmute conversation' : 'Mute conversation',
+      icon: Icons.Mute(),
+      onClick: toggleMute
+    }, {
+      sep: true
+    }, {
+      label: 'View profile',
+      icon: Icons.User(),
+      onClick: onOpenRail
+    }, {
+      label: 'Block ' + other.name,
+      icon: Icons.Block(),
+      danger: true,
+      onClick: () => onConfirm({
+        title: 'Block ' + other.name + '?',
+        body: other.name + ' will no longer be able to send you private counsel. You can undo this from settings.',
+        confirmLabel: 'Block',
+        danger: true,
+        onConfirm: () => onToast(other.name + ' is blocked.')
+      })
+    }, {
+      label: 'Report conversation',
+      icon: Icons.Flag(),
+      danger: true,
+      onClick: () => onConfirm({
+        title: 'Report this conversation?',
+        body: 'The wardens will review the recent messages in this counsel.',
+        confirmLabel: 'Report',
+        danger: true,
+        onConfirm: () => onToast('Reported to the wardens.')
+      })
+    }];
+    const groups = groupRuns(convo.messages);
+    const last = convo.messages[convo.messages.length - 1];
+    const lastMine = last && last.from === RBDM.me;
+    const receipt = lastMine ? last.time === 'just now' ? 'Sent' : convo.read ? 'Read' : 'Delivered' : null;
     return /*#__PURE__*/React.createElement("section", {
       className: "dm-threadpane"
     }, /*#__PURE__*/React.createElement("header", {
       className: "dm-thread-head"
     }, /*#__PURE__*/React.createElement("button", {
-      className: "breadcrumb",
-      onClick: onBack
-    }, chev, " Messages"), /*#__PURE__*/React.createElement("div", {
-      className: "dm-thread-title-row"
-    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-back",
+      onClick: onBack,
+      "aria-label": "Back to messages"
+    }, Icons.Chevron()), /*#__PURE__*/React.createElement("div", {
       className: "dm-thread-id"
     }, /*#__PURE__*/React.createElement(Monogram, {
       name: title,
       username: seed,
-      size: "lg",
+      size: "md",
       gilt: true,
       presence: other ? other.presence : undefined
-    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
+    }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "dm-thread-eyebrow"
+    }, Icons.Lock(), isGroup ? 'Private group' : 'Private counsel'), /*#__PURE__*/React.createElement("h1", {
       className: "dm-thread-title"
-    }, isGroup ? title : /*#__PURE__*/React.createElement("a", {
-      href: "#",
-      onClick: e => e.preventDefault()
-    }, title)), /*#__PURE__*/React.createElement("p", {
+    }, title), /*#__PURE__*/React.createElement("p", {
       className: "dm-thread-sub"
-    }, isGroup ? active.length + ' active members' : '@' + other.username + ' · ' + other.presence))), isGroup ? /*#__PURE__*/React.createElement("div", {
+    }, isGroup ? /*#__PURE__*/React.createElement(React.Fragment, null, active.length, " in counsel", muted ? ' · muted' : '') : /*#__PURE__*/React.createElement(React.Fragment, null, "@", other.username, " \xB7 ", other.presence, muted ? ' · muted' : '')))), /*#__PURE__*/React.createElement("div", {
       className: "dm-thread-actions"
     }, /*#__PURE__*/React.createElement("button", {
-      className: "dm-head-btn",
-      type: "button"
-    }, /*#__PURE__*/React.createElement("svg", {
-      viewBox: "0 0 24 24"
-    }, /*#__PURE__*/React.createElement("path", {
-      d: "M11 5 6 9H2v6h4l5 4z"
-    }), /*#__PURE__*/React.createElement("path", {
-      d: "M22 9l-6 6M16 9l6 6"
-    })), " Mute"), /*#__PURE__*/React.createElement("button", {
-      className: "dm-head-btn danger",
-      type: "button"
-    }, "Leave")) : null)), isGroup ? /*#__PURE__*/React.createElement("section", {
-      className: "dm-group-panel"
-    }, /*#__PURE__*/React.createElement("h2", null, "Members"), /*#__PURE__*/React.createElement("ul", {
-      className: "dm-members"
-    }, convo.members.map(m => /*#__PURE__*/React.createElement("li", {
-      key: m.username,
-      className: 'dm-member' + (m.left ? ' is-left' : '')
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "handle"
-    }, "@", m.username), m.role === 'owner' ? /*#__PURE__*/React.createElement("span", {
-      className: "role"
-    }, "Owner") : null, m.left ? /*#__PURE__*/React.createElement("span", {
-      className: "role"
-    }, "left") : null, isOwner && !m.left && m.role !== 'owner' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-      className: "linkbtn danger",
-      type: "button"
-    }, "Remove"), /*#__PURE__*/React.createElement("button", {
-      className: "linkbtn",
-      type: "button"
-    }, "Make owner")) : null))), isOwner ? /*#__PURE__*/React.createElement("div", {
-      className: "dm-owner-tools"
-    }, /*#__PURE__*/React.createElement("form", {
-      className: "dm-owner-tools",
-      onSubmit: e => e.preventDefault()
-    }, /*#__PURE__*/React.createElement(Input, {
-      placeholder: "username",
-      maxLength: 32,
-      style: {
-        maxWidth: 150
-      }
-    }), /*#__PURE__*/React.createElement(Button, {
-      size: "sm",
-      variant: "secondary"
-    }, "Add member")), /*#__PURE__*/React.createElement("form", {
-      className: "dm-owner-tools",
-      onSubmit: e => e.preventDefault()
-    }, /*#__PURE__*/React.createElement(Input, {
-      defaultValue: convo.title,
-      maxLength: 120,
-      style: {
-        maxWidth: 180
-      }
-    }), /*#__PURE__*/React.createElement(Button, {
-      size: "sm",
-      variant: "secondary"
-    }, "Rename"))) : null) : null, /*#__PURE__*/React.createElement("div", {
+      type: "button",
+      className: 'dm-iconbtn' + (railOpen ? ' is-active' : ''),
+      onClick: onToggleRail,
+      title: isGroup ? 'Members & details' : 'Details',
+      "aria-label": isGroup ? 'Members and details' : 'Details',
+      "aria-pressed": railOpen
+    }, isGroup ? Icons.Users() : Icons.Panel()), /*#__PURE__*/React.createElement(Menu, {
+      align: "right",
+      button: ({
+        toggle,
+        open
+      }) => /*#__PURE__*/React.createElement("button", {
+        type: "button",
+        className: 'dm-iconbtn' + (open ? ' is-active' : ''),
+        onClick: toggle,
+        "aria-label": "More actions"
+      }, Icons.More()),
+      items: menuItems
+    }))), /*#__PURE__*/React.createElement("div", {
       className: "dm-scroll",
       ref: scrollRef
-    }, /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-scroll-inner"
+    }, /*#__PURE__*/React.createElement("div", {
       className: "dm-day"
-    }, "Beginning of your counsel"), convo.messages.map(m => {
-      const mine = m.from === RBDM.me;
-      const from = RBDM.users[m.from];
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dm-day-label"
+    }, Icons.Lock(), " Private \u2014 only those named here can read")), groups.map((g, gi) => {
+      const mine = g.from === RBDM.me;
+      const from = U(g.from);
       return /*#__PURE__*/React.createElement("div", {
-        key: m.id,
-        className: 'dm-message' + (mine ? ' dm-mine' : '')
+        key: gi,
+        className: 'dm-group' + (mine ? ' mine' : '')
+      }, !mine ? /*#__PURE__*/React.createElement("span", {
+        className: "dm-mono-col"
+      }, /*#__PURE__*/React.createElement(Monogram, {
+        name: from.name,
+        username: from.username,
+        size: "sm"
+      })) : null, /*#__PURE__*/React.createElement("div", {
+        className: "dm-msgs"
       }, /*#__PURE__*/React.createElement("div", {
-        className: "dm-message-head"
+        className: "dm-ghead"
       }, /*#__PURE__*/React.createElement("span", {
-        className: "dm-author"
-      }, mine ? 'You' : from.name), /*#__PURE__*/React.createElement("span", {
-        className: "post-time"
-      }, m.time)), /*#__PURE__*/React.createElement("div", {
-        className: "dm-bubble"
-      }, /*#__PURE__*/React.createElement("p", null, m.body)), m.refs ? /*#__PURE__*/React.createElement("div", {
+        className: "dm-name"
+      }, mine ? 'You' : from.name), isGroup && !mine && from.tier ? /*#__PURE__*/React.createElement("span", {
+        className: "dm-rank"
+      }, from.tier) : null, /*#__PURE__*/React.createElement("span", {
+        className: "dm-gtime"
+      }, g.items[0].time)), g.items.map(m => /*#__PURE__*/React.createElement(React.Fragment, {
+        key: m.id
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "dm-line"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "dm-body"
+      }, m.quote ? /*#__PURE__*/React.createElement("blockquote", {
+        className: "dm-quote"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "dm-quote-who"
+      }, (RBDM.users[m.quote.from] || {}).name || m.quote.from), m.quote.text) : null, /*#__PURE__*/React.createElement("p", null, m.body)), /*#__PURE__*/React.createElement("span", {
+        className: "dm-line-menu"
+      }, /*#__PURE__*/React.createElement(Menu, {
+        align: mine ? 'left' : 'right',
+        button: ({
+          toggle
+        }) => /*#__PURE__*/React.createElement("button", {
+          type: "button",
+          className: "dm-dotbtn",
+          onClick: toggle,
+          "aria-label": "Message actions"
+        }, Icons.More()),
+        items: mine ? [{
+          label: 'Copy text',
+          icon: Icons.Copy(),
+          onClick: () => copy(m.body)
+        }] : [{
+          label: 'Copy text',
+          icon: Icons.Copy(),
+          onClick: () => copy(m.body)
+        }, {
+          sep: true
+        }, {
+          label: 'Report message',
+          icon: Icons.Flag(),
+          danger: true,
+          onClick: () => setReportingId(m.id)
+        }]
+      }))), m.refs ? /*#__PURE__*/React.createElement("div", {
         className: "reference-cards",
         "aria-label": "Referenced content"
       }, m.refs.map((r, i) => /*#__PURE__*/React.createElement("a", {
@@ -6237,45 +8436,83 @@ try { (() => {
         href: r.url,
         onClick: e => e.preventDefault()
       }, /*#__PURE__*/React.createElement("span", {
-        className: "badge badge-muted"
+        className: "ref-type"
       }, r.type), /*#__PURE__*/React.createElement("strong", null, r.title), r.meta ? /*#__PURE__*/React.createElement("span", {
-        className: "muted"
-      }, r.meta) : null))) : null, !mine ? /*#__PURE__*/React.createElement("details", {
-        className: "dm-report"
-      }, /*#__PURE__*/React.createElement("summary", null, "Report"), /*#__PURE__*/React.createElement("form", {
+        className: "ref-meta"
+      }, r.meta) : null))) : null, reportingId === m.id ? /*#__PURE__*/React.createElement("form", {
         className: "dm-report-form",
-        onSubmit: e => e.preventDefault()
+        onSubmit: e => {
+          e.preventDefault();
+          setReportingId(null);
+          onToast('Message reported to the wardens.');
+        }
       }, /*#__PURE__*/React.createElement("select", {
-        className: "input input-small",
+        className: "input-small",
         "aria-label": "Reason"
       }, RBDM.reportReasons.map(rc => /*#__PURE__*/React.createElement("option", {
         key: rc,
         value: rc
-      }, label(rc)))), /*#__PURE__*/React.createElement(Input, {
-        placeholder: "Details (optional)",
-        maxLength: 255,
+      }, label(rc)))), /*#__PURE__*/React.createElement("input", {
+        className: "input-small",
         style: {
           flex: 1,
           minWidth: 120
-        }
-      }), /*#__PURE__*/React.createElement(Button, {
+        },
+        placeholder: "Details (optional)",
+        maxLength: 255
+      }), /*#__PURE__*/React.createElement(DS.Button, {
         size: "sm",
-        variant: "danger"
-      }, "Report message"))) : null);
-    })), /*#__PURE__*/React.createElement("div", {
+        variant: "danger",
+        type: "submit"
+      }, "Report"), /*#__PURE__*/React.createElement(DS.Button, {
+        size: "sm",
+        variant: "ghost",
+        type: "button",
+        onClick: () => setReportingId(null)
+      }, "Cancel")) : null))));
+    }), receipt ? /*#__PURE__*/React.createElement("span", {
+      className: "dm-receipt"
+    }, receipt === 'Read' ? Icons.Check() : null, receipt) : null)), /*#__PURE__*/React.createElement("div", {
       className: "dm-composer"
-    }, /*#__PURE__*/React.createElement(Composer, {
-      toolbar: false,
-      sendLabel: "Send",
-      placeholder: "Write a message\u2026",
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-composer-inner"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-composer-row"
+    }, /*#__PURE__*/React.createElement(Monogram, {
+      name: me.name,
+      username: me.username,
+      size: "sm"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "dm-composer-main"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "dm-composer-field"
+    }, /*#__PURE__*/React.createElement("textarea", {
+      ref: taRef,
+      rows: 1,
       value: replyValue,
+      maxLength: 5000,
       onChange: e => onReplyChange(e.target.value),
-      count: (replyValue ? replyValue.length : 0) + ' / 5000',
-      onSubmit: e => {
-        e.preventDefault();
-        onSend();
-      }
-    })));
+      onKeyDown: e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          onSend();
+        }
+      },
+      placeholder: "Write your counsel\u2026",
+      "aria-label": "Write a message"
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "dm-send",
+      disabled: !replyValue.trim(),
+      onClick: onSend,
+      "aria-label": "Send"
+    }, Icons.Send())), /*#__PURE__*/React.createElement("div", {
+      className: "dm-composer-meta"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dm-composer-hint"
+    }, "Enter to send \xB7 Shift + Enter for a new line"), /*#__PURE__*/React.createElement("span", {
+      className: "dm-composer-count"
+    }, replyValue ? replyValue.length : 0, " / 5000")))))));
   }
   window.DMThread = Thread;
 })();
@@ -6284,38 +8521,53 @@ try { (() => {
 // ui_kits/dm/data.js
 try { (() => {
 /* Messages kit — seed data for private counsel (direct + group conversations).
-   Same Imladris roster register as RetroBoards. Shared via window.RBDM. */
+   Same Imladris roster register as RetroBoards. Shared via window.RBDM.
+   v2 (reimagine): users carry joined/tier for the details rail; a couple of
+   threads carry same-author runs + a trailing message from me, so grouping and
+   the read receipt read true. */
 (function () {
   const users = {
     erestor: {
       username: 'erestor',
       name: 'Erestor',
-      presence: 'online'
+      presence: 'online',
+      joined: 'Third Age, 2018',
+      tier: 'Loremaster'
     },
     galadriel: {
       username: 'galadriel',
       name: 'Galadriel',
-      presence: 'online'
+      presence: 'online',
+      joined: 'Third Age, 2012',
+      tier: 'Legend'
     },
     elrond: {
       username: 'elrond',
       name: 'Elrond',
-      presence: 'online'
+      presence: 'online',
+      joined: 'Third Age, 2009',
+      tier: 'Legend'
     },
     glorfindel: {
       username: 'glorfindel',
       name: 'Glorfindel',
-      presence: 'away'
+      presence: 'away',
+      joined: 'Third Age, 2015',
+      tier: 'Veteran'
     },
     arwen: {
       username: 'arwen',
       name: 'Arwen',
-      presence: 'online'
+      presence: 'online',
+      joined: 'Third Age, 2016',
+      tier: 'Veteran'
     },
     lindir: {
       username: 'lindir',
       name: 'Lindir',
-      presence: 'offline'
+      presence: 'offline',
+      joined: 'Third Age, 2019',
+      tier: 'Member'
     }
   };
   const me = 'erestor';
@@ -6347,6 +8599,15 @@ try { (() => {
       }]
     }, {
       id: 13,
+      from: 'erestor',
+      time: 'Yesterday 19:04',
+      body: 'The rollback drill is drafted as well. I will attach it once Glorfindel names the day.',
+      quote: {
+        from: 'galadriel',
+        text: 'The three questions are the right ones.'
+      }
+    }, {
+      id: 14,
       from: 'galadriel',
       time: '9m',
       body: 'Do that. And send me the rollback drill — Glorfindel will want it for the wardens.'
@@ -6384,20 +8645,31 @@ try { (() => {
       id: 22,
       from: 'arwen',
       time: '2h',
-      body: 'Understood. I have the eval verdicts ready to read; they resolve cleanly into artifacts now.'
+      body: 'Understood. I have the eval verdicts ready to read; they resolve cleanly into artifacts now.',
+      refs: [{
+        type: 'Topic',
+        title: 'Eval verdicts — the eight that resolved this cycle',
+        meta: '#evals · 12 replies',
+        url: '#'
+      }]
     }, {
       id: 23,
       from: 'glorfindel',
       time: '1h',
-      body: 'The rollback drill is set for Tuesday. Bring the audit trail — I want precedence recorded this time.'
+      body: 'The rollback drill is set for Tuesday. Bring the audit trail — I want precedence recorded this time.',
+      quote: {
+        from: 'arwen',
+        text: 'They resolve cleanly into artifacts now.'
+      }
     }]
   }, {
     id: 3,
     kind: 'direct',
     other: 'elrond',
     unread: false,
-    time: '3h',
-    preview: 'Recorded. I will amend the charter to say so plainly.',
+    time: '2h',
+    read: true,
+    preview: 'Thank you. Send me the wording before it is entered into the charter.',
     messages: [{
       id: 31,
       from: 'erestor',
@@ -6408,6 +8680,11 @@ try { (() => {
       from: 'elrond',
       time: '3h',
       body: 'Recorded. I will amend the charter to say so plainly.'
+    }, {
+      id: 33,
+      from: 'erestor',
+      time: '2h',
+      body: 'Thank you. Send me the wording before it is entered into the charter.'
     }]
   }, {
     id: 4,
@@ -8590,8 +10867,8 @@ try { (() => {
         }
       }, p.body));
     })), user ? /*#__PURE__*/React.createElement(Composer, {
-      postingAs: user.name,
-      sendLabel: "Reply",
+      identity: user.name,
+      submitLabel: "Reply",
       value: replyValue,
       onChange: e => onReplyChange(e.target.value),
       count: (replyValue ? replyValue.length : 0) + ' / 20000',
@@ -10885,6 +13162,189 @@ try { (() => {
   };
 })();
 })(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/settings/data.js", error: String((e && e.message) || e) }); }
+
+// ui_kits/system/SystemApp.jsx
+try { (() => {
+/* System surfaces kit — the chrome-less product pages: setup wizard, error
+   pages (incl. database-down), privacy content page, unsubscribe confirm, and
+   the gated-profile stub. Faithful to templates/{setup/wizard, errors/error,
+   privacy, unsubscribe, profile/gated}.php. A top-right switcher (kit
+   affordance, not part of the product) jumps between them. */
+(function () {
+  const DS = () => window.ImladrisDesignSystem_c3e027;
+  function Brand() {
+    const {
+      EightPointStar
+    } = DS();
+    return /*#__PURE__*/React.createElement("span", {
+      className: "sys-brand"
+    }, /*#__PURE__*/React.createElement(EightPointStar, {
+      size: 26
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "sys-brand-name"
+    }, "RetroBoards"));
+  }
+
+  /* ── Setup wizard (setup/wizard.php) ──────────────────────────────────── */
+  function Setup() {
+    const {
+      Input,
+      Button
+    } = DS();
+    return /*#__PURE__*/React.createElement("div", {
+      className: "sys-card setup"
+    }, /*#__PURE__*/React.createElement("h1", null, "Welcome \u2014 let's set up your community"), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Create the first administrator account and name your community. You can change everything later."), /*#__PURE__*/React.createElement("form", {
+      className: "stacked",
+      onSubmit: e => e.preventDefault()
+    }, /*#__PURE__*/React.createElement("fieldset", {
+      className: "field-group"
+    }, /*#__PURE__*/React.createElement("legend", null, "Community"), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Community name"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 80,
+      autoFocus: true
+    }))), /*#__PURE__*/React.createElement("fieldset", {
+      className: "field-group"
+    }, /*#__PURE__*/React.createElement("legend", null, "Administrator account"), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Username"), /*#__PURE__*/React.createElement(Input, {
+      maxLength: 32
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Email"), /*#__PURE__*/React.createElement(Input, {
+      type: "email"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "new-password"
+    })), /*#__PURE__*/React.createElement("label", {
+      className: "field"
+    }, /*#__PURE__*/React.createElement("span", null, "Confirm password"), /*#__PURE__*/React.createElement(Input, {
+      type: "password",
+      autoComplete: "new-password"
+    }))), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "A starter set of categories and boards will be created automatically."), /*#__PURE__*/React.createElement(Button, {
+      type: "submit"
+    }, "Create my community")));
+  }
+
+  /* ── Error pages (errors/error.php) ───────────────────────────────────── */
+  const ERRORS = {
+    '404': {
+      code: 404,
+      msg: "We couldn't find that page. It may have moved, or never existed."
+    },
+    '403': {
+      code: 403,
+      msg: "You don't have permission to view this page.",
+      mod: true
+    },
+    '500': {
+      code: 500,
+      msg: 'Something went wrong on our end. The council has been notified.'
+    },
+    '503': {
+      code: 503,
+      msg: 'The community is temporarily unavailable while the database is unreachable. Please try again in a few moments.',
+      db: true
+    }
+  };
+  function ErrorPage() {
+    const [s, setS] = React.useState('404');
+    const e = ERRORS[s];
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "kit-note"
+    }, /*#__PURE__*/React.createElement("span", null, "Status:"), Object.keys(ERRORS).map(k => /*#__PURE__*/React.createElement("button", {
+      key: k,
+      type: "button",
+      className: 'linkbtn' + (k === s ? ' is-active' : ''),
+      onClick: () => setS(k)
+    }, k, ERRORS[k].db ? ' · database-down' : ''))), /*#__PURE__*/React.createElement("div", {
+      className: "sys-card error-card"
+    }, /*#__PURE__*/React.createElement("h1", null, e.code), /*#__PURE__*/React.createElement("p", null, e.msg), e.mod ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("a", {
+      className: "btn btn-secondary",
+      href: "#",
+      onClick: ev => ev.preventDefault()
+    }, "Moderation queue ", /*#__PURE__*/React.createElement("span", {
+      className: "mod-count"
+    }, "3"))) : null, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("a", {
+      className: "btn",
+      href: e.db ? '#' : '../retroboards/index.html',
+      onClick: e.db ? ev => ev.preventDefault() : undefined
+    }, e.db ? 'Try again' : 'Back to home'))));
+  }
+
+  /* ── Privacy content page (privacy.php) ───────────────────────────────── */
+  function Privacy() {
+    return /*#__PURE__*/React.createElement("article", {
+      className: "content-page"
+    }, /*#__PURE__*/React.createElement("h1", null, "Privacy"), /*#__PURE__*/React.createElement("section", {
+      "aria-labelledby": "ti-h"
+    }, /*#__PURE__*/React.createElement("h2", {
+      id: "ti-h"
+    }, "Thread intelligence"), /*#__PURE__*/React.createElement("p", null, "Eligible public post text may be processed by OpenAI to prepare living summaries and explanations for related public discussions."), /*#__PURE__*/React.createElement("p", null, "Private and hidden content is excluded, and account metadata is not included in these requests."), /*#__PURE__*/React.createElement("p", null, "Provider storage is disabled by the application request. Member-facing pages show the resulting brief and its current sources, but do not expose model or runtime evidence.")));
+  }
+
+  /* ── Unsubscribe (unsubscribe.php) ────────────────────────────────────── */
+  function Unsubscribe() {
+    const {
+      Button
+    } = DS();
+    const [state, setState] = React.useState('confirm');
+    const email = 'arwen@imladris.council';
+    return /*#__PURE__*/React.createElement("div", {
+      className: "sys-card"
+    }, /*#__PURE__*/React.createElement("h1", null, "Email preferences"), state === 'confirm' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, "Unsubscribe ", /*#__PURE__*/React.createElement("strong", null, email), " from RetroBoards notification emails?"), /*#__PURE__*/React.createElement(Button, {
+      onClick: () => setState('done')
+    }, "Unsubscribe")) : state === 'done' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, "Done \u2014 ", /*#__PURE__*/React.createElement("strong", null, email), " will no longer receive notification emails."), /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "Changed your mind?"), /*#__PURE__*/React.createElement(Button, {
+      variant: "secondary",
+      onClick: () => setState('resub')
+    }, "Re-subscribe")) : /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, email), " has been re-subscribed to notification emails."));
+  }
+
+  /* ── Gated profile (profile/gated.php) ────────────────────────────────── */
+  function ProfileGated() {
+    const {
+      Button
+    } = DS();
+    return /*#__PURE__*/React.createElement("div", {
+      className: "sys-gated"
+    }, /*#__PURE__*/React.createElement("h1", null, "@saruman"), /*#__PURE__*/React.createElement("p", null, "This member limits their profile to signed-in members."), /*#__PURE__*/React.createElement(Button, {
+      size: "sm",
+      href: "../auth/index.html"
+    }, "Log in to view"));
+  }
+  const VIEWS = {
+    setup: Setup,
+    error: ErrorPage,
+    privacy: Privacy,
+    unsubscribe: Unsubscribe,
+    gated: ProfileGated
+  };
+  const SWITCH = [['setup', 'Setup wizard'], ['error', 'Error'], ['privacy', 'Privacy'], ['unsubscribe', 'Unsubscribe'], ['gated', 'Profile gated']];
+  function App() {
+    const [v, setV] = React.useState('setup');
+    const View = VIEWS[v];
+    return /*#__PURE__*/React.createElement("div", {
+      className: "sys-stage"
+    }, /*#__PURE__*/React.createElement("nav", {
+      className: "sys-switch",
+      "aria-label": "System pages (kit demo)"
+    }, SWITCH.map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+      key: k,
+      className: v === k ? 'active' : '',
+      onClick: () => setV(k)
+    }, l))), /*#__PURE__*/React.createElement(Brand, null), /*#__PURE__*/React.createElement(View, null));
+  }
+  window.RBSystemApp = App;
+})();
+})(); } catch (e) { __ds_ns.__errors.push({ path: "ui_kits/system/SystemApp.jsx", error: String((e && e.message) || e) }); }
 
 __ds_ns.CommendStar = __ds_scope.CommendStar;
 

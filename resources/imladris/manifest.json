@@ -1,0 +1,59 @@
+{
+    "source": "docs/design-system/imladris",
+    "inspected_commit": "4efe4e33db6475ce9c59190ba82c72cbd7d4b868",
+    "application_baseline": {
+        "reconciled_through_commit": "6d81da590a12bd09bb8d0e282c042aa03d755a94",
+        "composer_contract": "COMPOSER.md v0.8",
+        "surface_sha256": "ddba9c08ec8a6d50d0b5dbe80b9c4b784d1fe7bc360855e0bc18082ddd30dcf6"
+    },
+    "design_contract": {
+        "source": "docs/design-system/imladris/production-contract.json",
+        "sha256": "c099fe053994f39b074455d32c4dc282fc419f53bd45fe49568c05d4048f9c87"
+    },
+    "css_sources": [
+        "tokens/fonts.css",
+        "tokens/colors.css",
+        "tokens/typography.css",
+        "tokens/spacing.css",
+        "components.css"
+    ],
+    "source_sha256": {
+        "tokens/fonts.css": "1a9b0bd7b42ce67116f8a0e8af68a8aad5fda87be40037ec428fe1ca3458183f",
+        "tokens/colors.css": "a6a6212edfcf9849bc4019876f2829f4ce0652afd5ab12c9ff58fd3ba54e6524",
+        "tokens/typography.css": "68ab2f7135f5f980e0ca5201147524eb98a52281e8ab5ee0c21405e533bbd4ac",
+        "tokens/spacing.css": "f54a93af0359eb1d0561740a98cfb40eade5ebd1bdd558be6bfc5fbc0cf630bd",
+        "components.css": "972260b0bfb4cccfeb24cf33924713ad69d798388494b1724400df4dbe9b5610"
+    },
+    "font_files": [
+        "LICENSES/OFL-cormorant-garamond.txt",
+        "LICENSES/OFL-eb-garamond.txt",
+        "LICENSES/OFL-jetbrains-mono.txt",
+        "LICENSES/OFL-marcellus.txt",
+        "cormorant-garamond-latin-400-italic.woff2",
+        "cormorant-garamond-latin-400-normal.woff2",
+        "cormorant-garamond-latin-500-italic.woff2",
+        "cormorant-garamond-latin-500-normal.woff2",
+        "cormorant-garamond-latin-600-normal.woff2",
+        "cormorant-garamond-latin-700-normal.woff2",
+        "eb-garamond-latin-400-italic.woff2",
+        "eb-garamond-latin-400-normal.woff2",
+        "eb-garamond-latin-500-italic.woff2",
+        "eb-garamond-latin-500-normal.woff2",
+        "eb-garamond-latin-600-normal.woff2",
+        "jetbrains-mono-latin-400-normal.woff2",
+        "jetbrains-mono-latin-500-normal.woff2",
+        "jetbrains-mono-latin-600-normal.woff2",
+        "marcellus-latin-400-normal.woff2"
+    ],
+    "excluded": [
+        "_archive",
+        "_ds_bundle.js",
+        "components/doc.css",
+        "feature-ui",
+        "templates",
+        "ui_kits"
+    ],
+    "runtime_filters": {
+        "tokens/spacing.css": "Reduced-motion timing declarations remain application-owned."
+    }
+}
