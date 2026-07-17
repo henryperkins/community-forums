@@ -1,16 +1,55 @@
 /* ──────────────────────────────────────────────────────────────────────────
-   Messages UI kit — private counsel
-   The Imladris shell chrome (top bar) + a two-pane reading room: a conversation
-   list beside the open letter. Direct and group conversations, mine/theirs
-   message plates, the group-members panel, reference cards, and the report
-   affordance. Reuses the design-system primitives (styles.css + _ds_bundle.js);
-   this file is only the product layout that composes them. Translated from
-   templates/dm/{index,new,show}.php into the Imladris register.
+   Messages UI kit — private counsel  ·  v2, reimagined
+   ----------------------------------------------------------------------------
+   The brief: the old DM UI felt "everywhere" — several near-identical screens
+   (inbox / empty / thread / a full-pane composer) that all led to the same
+   place, controls (mute · leave · report · members) shouting all at once, and
+   *every* element boxed in its own bordered card.
+
+   The fix keeps the full ceremonial Imladris register (Cormorant / Marcellus /
+   EB Garamond / JetBrains Mono, parchment + evergreen + a single mallorn gold,
+   gilt monograms, the eight-point star) but re-homes everything into ONE
+   reading room:
+
+     ┌──────────┬───────────────────────────┬──────────────┐
+     │  list    │       the conversation     │  details rail │  ← collapsible
+     └──────────┴───────────────────────────┴──────────────┘
+
+   • One surface, not four. New message is a *dialog over* the room, never a
+     co-equal screen. The right pane is always "the conversation".
+   • Controls are tucked away: a single ··· overflow in the header, a ···
+     revealed on hover per message. Nothing secondary is visible at rest.
+   • De-boxed letters, not bubbles-as-cards. Consecutive messages group under
+     one author line; theirs read as plain counsel on parchment, mine wear the
+     one ceremonial gold plate. Members / owner tools / person info all move
+     OUT of the message flow and INTO the details rail.
+
+   Reuses the design-system primitives (styles.css + _ds_bundle.js); this file
+   is only the product layout that composes them.
    ────────────────────────────────────────────────────────────────────────── */
 
 html, body { height: 100%; }
 body { margin: 0; background: var(--surface-page); }
-.app-root { min-height: 100vh; display: flex; flex-direction: column; }
+.app-root {
+    min-height: 100vh; display: flex; flex-direction: column;
+    /* Private-counsel register — aligned to the canonical Imladris hall: warm
+       parchment surfaces and the single mallorn-gold accent (active · unread ·
+       focus · esteem), exactly like the forum and every other kit. Messages is
+       still told apart from a public thread — but by a WORD, not a colour: the
+       lock + "Private counsel" eyebrow and the "only those named here can read"
+       divider (status is a word + colour, never colour alone). No cool
+       counter-register here \u2014 river is reserved for its canonical use elsewhere
+       (info flashes, the privacy gem, artifact links), never as a room tint. */
+    --dm-ground:      var(--surface-page);
+    --dm-raised:      var(--surface-raised);
+    --dm-sunken:      var(--surface-sunken);
+    --dm-accent:      var(--accent-2);        /* mallorn gold — the one accent  */
+    --dm-accent-soft: var(--gold-soft);
+    --dm-accent-line: var(--gold-200);
+    --dm-accent-ink:  var(--gold-ink);
+    --dm-active-wash: var(--brand-subtle);    /* green-050 wash + inset gold rule */
+}
+*, *::before, *::after { box-sizing: border-box; }
 
 /* ── Top bar — parchment ~90% + candlelit blur (shared chrome) ──────────── */
 .topbar {
@@ -18,7 +57,7 @@ body { margin: 0; background: var(--surface-page); }
     background: color-mix(in srgb, var(--surface-raised) 90%, transparent);
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-hair);
-    position: sticky; top: 0; z-index: 20;
+    position: sticky; top: 0; z-index: 30;
 }
 .topbar-inner { max-width: var(--maxw); margin: 0 auto; min-height: var(--topbar-h); padding: 0 18px; display: flex; align-items: center; gap: 18px; }
 .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--brand); text-decoration: none; cursor: pointer; }
@@ -30,137 +69,367 @@ body { margin: 0; background: var(--surface-page); }
 .bell:hover { color: var(--brand); }
 .bell-ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
 .bell-dot { position: absolute; top: -3px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 0 2px var(--surface-raised); }
+.bell-badge { position: absolute; top: -6px; right: -8px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: var(--accent-2); color: var(--ink-900); font-family: var(--font-mono); font-size: 10px; line-height: 15px; text-align: center; font-weight: 700; box-shadow: 0 0 0 2px var(--surface-raised); }
 .topbar-user { display: inline-flex; align-items: center; gap: 9px; color: var(--text-strong); cursor: pointer; }
 .topbar-user .topbar-name { font-family: var(--font-body); font-weight: var(--weight-medium); font-size: .95rem; }
 .topbar-ic { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; color: var(--text-muted); cursor: pointer; }
 .topbar-logout { font-family: var(--font-label); letter-spacing: .03em; font-size: .85rem; color: var(--text-muted); background: none; border: 0; cursor: pointer; }
 .topbar-logout:hover { color: var(--brand); }
 
-/* ── Two-pane reading room ──────────────────────────────────────────────── */
+/* ── The reading room — list · conversation · (collapsible) details rail ── */
 .dm-shell {
-    max-width: var(--maxw); margin: 0 auto; width: 100%;
-    display: grid; grid-template-columns: minmax(300px, 360px) 1fr;
-    height: calc(100vh - var(--topbar-h)); min-height: 0; flex: 1;
+    width: 100%; display: grid; flex: 1; min-height: 0;
+    grid-template-columns: 212px minmax(288px, 336px) minmax(0, 1fr);
+    height: calc(100vh - var(--topbar-h));
+    transition: grid-template-columns var(--dur-2, 240ms) var(--ease-calm);
 }
+.dm-shell.has-rail { grid-template-columns: 212px minmax(288px, 320px) minmax(0, 1fr) minmax(280px, 320px); }
 
-/* List pane (left) */
-.dm-listpane { border-right: 1px solid var(--border-hair); background: var(--surface-page); display: flex; flex-direction: column; min-height: 0; }
-.dm-listpane-head { padding: 18px 18px 12px; border-bottom: 1px solid var(--border-hair); }
-.dm-listpane-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+/* ── Product nav rail (left-most) — grounds Messages inside the forum ───── */
+/* Adopted from the flagship inbox: DMs read as one place in the product, not a
+   floating island. Quiet sunken column; the active item wears the gold rule. */
+.dm-navrail { border-right: 1px solid var(--border-hair); background: var(--surface-sunken); padding: 14px 11px; display: flex; flex-direction: column; gap: 1px; min-height: 0; overflow-y: auto; }
+.dm-nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border-radius: var(--radius-sm); color: var(--text-body); font-family: var(--font-body); font-size: .95rem; text-decoration: none; cursor: pointer; }
+.dm-nav-item:hover { background: var(--surface-raised); }
+.dm-nav-item .dm-nav-ic { display: inline-flex; flex: 0 0 auto; }
+.dm-nav-item .dm-nav-ic svg { width: 16px; height: 16px; fill: none; stroke: var(--text-faint); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.dm-nav-item > span:nth-child(2) { flex: 1; }
+.dm-nav-item.is-active { background: var(--green-050); box-shadow: inset 3px 0 0 var(--gold-500); color: var(--on-brand-subtle); font-weight: var(--weight-semibold); }
+.dm-nav-item.is-active .dm-nav-ic svg { stroke: var(--brand); }
+.dm-nav-count { font-family: var(--font-mono); font-size: .7rem; background: var(--brand); color: var(--accent-contrast); border-radius: 8px; padding: 0 6px; line-height: 16px; }
+.dm-nav-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); flex: 0 0 auto; }
+.dm-nav-sec { margin-top: 16px; }
+.dm-nav-sec-head { font-family: var(--font-label); font-size: .7rem; text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--gold-ink); padding: 0 11px 8px; }
+.dm-nav-compose { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 11px; border-radius: var(--radius-md); border: 1px solid var(--green-200); background: var(--surface-raised); color: var(--brand); font-family: var(--font-label); letter-spacing: .05em; text-transform: uppercase; font-size: .72rem; cursor: pointer; box-shadow: var(--shadow-xs); }
+.dm-nav-compose:hover { background: var(--brand-subtle); }
+.dm-nav-compose svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── List pane (left) ───────────────────────────────────────────────────── */
+.dm-listpane { border-right: 1px solid var(--border-hair); background: var(--dm-ground); display: flex; flex-direction: column; min-height: 0; }
+.dm-listpane-head { padding: 16px 16px 12px; border-bottom: 1px solid var(--border-hair); display: flex; flex-direction: column; gap: 12px; }
+.dm-listpane-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .dm-listpane-top > span:first-child { min-width: 0; }
-.dm-listpane-head .eyebrow { margin: 0 0 3px; display: block; white-space: nowrap; }
-.dm-listpane-head h1 { font-size: 1.55rem; margin: 0; line-height: 1.1; }
-.dm-listpane-top .btn { flex: 0 0 auto; }
-.dm-listpane-filters { margin-top: 12px; }
-.dm-list { list-style: none; margin: 0; padding: 8px 8px 24px; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 2px; }
-.dm-row {
-    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 11px; align-items: start;
-    width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
-    padding: 11px 12px; border-radius: var(--radius-md); font: inherit;
+.dm-listpane-head .eyebrow { margin: 0 0 2px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--dm-accent-ink); }
+.dm-listpane-head h1 { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.5rem; margin: 0; line-height: 1.05; color: var(--text-strong); }
+/* Round "new message" action — quiet gold, the one invitation in the header */
+.dm-new-btn {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface-raised); border: 1px solid var(--border-hair);
+    color: var(--brand); cursor: pointer; box-shadow: var(--shadow-xs);
+    transition: background var(--dur-1, 140ms) var(--ease-calm), border-color var(--dur-1, 140ms) var(--ease-calm), transform var(--dur-1, 140ms) var(--ease-calm);
 }
-.dm-row:hover { background: var(--surface-sunken); }
-.dm-row.active { background: var(--brand-subtle); box-shadow: inset 3px 0 0 var(--accent-2); }
+.dm-new-btn:hover { background: var(--brand-subtle); border-color: var(--green-200); transform: translateY(-1px); }
+.dm-new-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Conversation search — findability, kept quiet */
+.dm-search { position: relative; display: flex; align-items: center; }
+.dm-search svg { position: absolute; left: 12px; width: 15px; height: 15px; fill: none; stroke: var(--text-faint); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.dm-search input {
+    width: 100%; font: inherit; font-family: var(--font-body); font-size: .92rem; color: var(--text-body);
+    padding: 8px 12px 8px 34px; background: var(--dm-sunken);
+    border: 1px solid transparent; border-radius: var(--radius-pill); outline: none;
+}
+.dm-search input::placeholder { color: var(--text-faint); }
+.dm-search input:focus { background: var(--dm-raised); border-color: var(--dm-accent-line); box-shadow: 0 0 0 3px var(--focus-ring); }
+
+.dm-filter { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dm-count { font-family: var(--font-mono); font-size: .68rem; color: var(--text-faint); white-space: nowrap; }
+/* Filter chips — small-caps Marcellus pills (from the flagship inbox) */
+.dm-chips { display: flex; gap: 5px; }
+.dm-chip { font-family: var(--font-label); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); background: none; border: 1px solid transparent; border-radius: var(--radius-pill); padding: 4px 12px; cursor: pointer; transition: color var(--dur-1,140ms) var(--ease-calm), background var(--dur-1,140ms) var(--ease-calm); }
+.dm-chip:hover { color: var(--on-brand-subtle); }
+.dm-chip.is-active { color: var(--dm-accent-ink); background: var(--dm-accent-soft); border-color: var(--dm-accent-line); }
+
+.dm-list { list-style: none; margin: 0; padding: 7px 8px 24px; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: 1px; }
+.dm-row {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 3px 11px; align-items: center;
+    width: 100%; text-align: left; background: none; border: 0; cursor: pointer;
+    padding: 10px 12px; border-radius: var(--radius-md); font: inherit; position: relative;
+    transition: background var(--dur-1, 140ms) var(--ease-calm);
+}
+.dm-row:hover { background: var(--dm-sunken); }
+.dm-row.active { background: var(--dm-active-wash); box-shadow: inset 3px 0 0 var(--dm-accent); }
 .dm-row .monogram { grid-row: 1 / span 2; }
-.dm-row-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
-.dm-other { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.05rem; color: var(--text-strong); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-row-top { display: flex; align-items: baseline; gap: 7px; min-width: 0; grid-column: 2; grid-row: 1; }
+.dm-other { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.06rem; color: var(--text-strong); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dm-row.is-unread .dm-other { font-weight: var(--weight-semibold); }
-.unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); flex: 0 0 auto; }
-.dm-time { grid-column: 3; grid-row: 1; font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint); white-space: nowrap; }
-.dm-preview { grid-column: 2; grid-row: 2; font-family: var(--font-body); font-size: .9rem; color: var(--text-muted); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.dm-group-meta { grid-column: 2 / span 2; grid-row: 3; font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint); margin-top: 1px; }
-.dm-list-empty { padding: 40px 22px; color: var(--text-muted); text-align: center; }
+.dm-time { grid-column: 3; grid-row: 1; font-family: var(--font-mono); font-size: .68rem; color: var(--text-faint); white-space: nowrap; align-self: baseline; }
+.dm-row.is-unread .dm-time { color: var(--dm-accent-ink); }
+.dm-preview { grid-column: 2 / span 2; grid-row: 2; font-family: var(--font-body); font-size: .9rem; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.dm-row.is-unread .dm-preview { color: var(--text-body); }
+/* Read rows recede — dimmer title + preview (from the flagship inbox hierarchy) */
+.dm-row:not(.is-unread) .dm-other { color: var(--text-body); }
+.dm-row:not(.is-unread) .dm-preview { color: var(--text-faint); }
+/* Unread marker — a single gold dot at the far right, nothing more */
+.dm-unread-dot { grid-column: 3; grid-row: 2; justify-self: end; width: 7px; height: 7px; border-radius: 50%; background: var(--dm-accent); align-self: center; }
+.dm-list-empty { padding: 40px 22px; color: var(--text-muted); text-align: center; font-family: var(--font-body); }
 
-/* Thread pane (right) */
-.dm-threadpane { background: var(--surface-raised); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.dm-thread-head { padding: 18px 28px 14px; border-bottom: 1px solid var(--border-hair); position: relative; flex: 0 0 auto; }
-.dm-thread-head .breadcrumb { font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint); margin: 0 0 8px; display: none; align-items: center; gap: 5px; background: none; border: 0; cursor: pointer; }
-.dm-thread-head .breadcrumb:hover { color: var(--brand); }
-.dm-thread-title-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
-.dm-thread-id { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto; }
+/* ── Conversation pane (centre) ─────────────────────────────────────────── */
+.dm-threadpane { background: var(--dm-raised); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.dm-thread-head { padding: 13px 22px; border-bottom: 1px solid var(--border-hair); display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+.dm-back { display: none; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius-md); background: none; border: 0; color: var(--text-muted); cursor: pointer; flex: 0 0 auto; }
+.dm-back:hover { background: var(--surface-sunken); color: var(--brand); }
+.dm-back svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dm-thread-id { display: flex; align-items: center; gap: 11px; min-width: 0; flex: 1 1 auto; cursor: default; }
 .dm-thread-id > div { min-width: 0; }
-.dm-thread-title { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.5rem; line-height: 1.1; margin: 0; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dm-thread-title a { color: inherit; text-decoration: none; }
-.dm-thread-title a:hover { color: var(--brand); }
-.dm-thread-sub { font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); margin: 3px 0 0; white-space: nowrap; }
-.dm-thread-actions { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
-.dm-head-btn { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label); letter-spacing: .03em; font-size: .78rem; color: var(--text-muted); background: none; border: 0; cursor: pointer; }
-.dm-head-btn:hover { color: var(--brand); }
-.dm-head-btn.danger:hover { color: var(--danger); }
-.dm-head-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-
-/* Group members panel */
-.dm-group-panel { margin: 16px 28px 0; padding: 14px 16px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); }
-.dm-group-panel h2 { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .68rem; color: var(--gold-ink); margin: 0 0 10px; }
-.dm-members { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 12px; }
-.dm-member { display: inline-flex; align-items: center; gap: 8px; padding: 4px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-md); background: var(--surface-raised); font-family: var(--font-mono); font-size: .8rem; color: var(--text-body); }
-.dm-member .role { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .08em; font-size: .56rem; color: var(--gold-700); }
-.dm-member .linkbtn { white-space: nowrap; font-size: .76rem; }
-.dm-member.is-left { border-style: dashed; color: var(--text-faint); }
-.dm-member.is-left .handle { text-decoration: line-through; }
-.dm-owner-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.dm-thread-title { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.28rem; line-height: 1.12; margin: 0; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-thread-sub { font-family: var(--font-mono); font-size: .72rem; color: var(--text-muted); margin: 2px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 7px; }
+.dm-presence-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.dm-presence-dot.online { background: var(--presence); }
+.dm-presence-dot.away { background: var(--amber); }
+.dm-presence-dot.offline { background: var(--ink-300, #94A095); }
+.dm-thread-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+/* Icon-only header controls — details toggle + the single overflow */
+.dm-iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius-md); background: none; border: 1px solid transparent; color: var(--text-muted); cursor: pointer; transition: background var(--dur-1,140ms) var(--ease-calm), color var(--dur-1,140ms) var(--ease-calm); }
+.dm-iconbtn:hover { background: var(--surface-sunken); color: var(--brand); }
+.dm-iconbtn.is-active { background: var(--brand-subtle); color: var(--brand); border-color: var(--green-200); }
+.dm-iconbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Message stream */
-.dm-scroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 22px 28px; display: flex; flex-direction: column; gap: 16px; }
-.dm-day { align-self: center; white-space: nowrap; font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .64rem; color: var(--text-faint); padding: 2px 12px; background: var(--surface-sunken); border-radius: var(--radius-pill); }
-.dm-message { display: flex; flex-direction: column; gap: 5px; max-width: 76%; align-self: flex-start; }
-.dm-message.dm-mine { align-self: flex-end; align-items: flex-end; }
-.dm-message-head { display: flex; align-items: baseline; gap: 9px; padding: 0 4px; }
-.dm-mine .dm-message-head { flex-direction: row-reverse; }
-.dm-author { font-family: var(--font-label); letter-spacing: .03em; font-size: .74rem; color: var(--text-strong); }
-.dm-message-head .post-time { font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint); }
-.dm-bubble {
-    background: var(--surface-page); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);
-    padding: 11px 15px; box-shadow: var(--shadow-xs);
-}
-.dm-bubble p { margin: 0; font-family: var(--font-body); font-size: 1.02rem; line-height: 1.6; color: var(--text-body); }
-.dm-bubble p + p { margin-top: .7em; }
-.dm-mine .dm-bubble { background: var(--gold-soft); border-color: var(--gold-200); }
+.dm-scroll { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding: 20px 26px 22px; display: flex; flex-direction: column; gap: 3px; }
+.dm-scroll-inner { max-width: 720px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 3px; }
+/* Day / section divider — a hairline with a small-caps label, no pill box */
+.dm-day { display: flex; align-items: center; gap: 14px; margin: 14px 2px 10px; color: var(--text-faint); font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .6rem; }
+.dm-day::before, .dm-day::after { content: ""; height: 1px; flex: 1; background: var(--border-hair); }
+.dm-day-label { display: inline-flex; align-items: center; gap: 5px; }
+.dm-day svg { width: 11px; height: 11px; fill: none; stroke: var(--dm-accent-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+/* Privacy signature — the lock + "Private counsel" cue that tells this apart from
+   a public forum thread at a glance. */
+.dm-thread-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .6rem; color: var(--dm-accent-ink); margin: 0 0 3px; }
+.dm-thread-eyebrow svg { width: 11px; height: 11px; fill: none; stroke: var(--dm-accent); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.dm-listpane-head .eyebrow svg { width: 11px; height: 11px; fill: none; stroke: var(--dm-accent); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 
-/* Reference cards (linked topics/posts inside a message) */
-.reference-cards { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; max-width: 100%; }
-.reference-card {
-    display: flex; flex-direction: column; gap: 3px; text-decoration: none;
-    border: 1px solid var(--border-hair); border-left: 3px solid var(--accent-2);
-    border-radius: var(--radius-md); padding: 9px 13px; background: var(--surface-raised);
-}
-.reference-card:hover { border-color: var(--green-200); box-shadow: var(--shadow-xs); }
-.reference-card strong { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1rem; color: var(--text-strong); }
-.reference-card .muted { font-family: var(--font-mono); font-size: .72rem; }
+/* Grouped "letter" — one author line, then a run of messages */
+.dm-group { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 12px; max-width: 82%; margin-top: 13px; }
+.dm-group .dm-mono-col { grid-row: 1 / span 2; align-self: start; }
+.dm-ghead { display: flex; align-items: baseline; gap: 9px; margin: 1px 0 5px; }
+.dm-name { font-family: var(--font-label); letter-spacing: .04em; font-size: .72rem; text-transform: uppercase; color: var(--on-brand-subtle); }
+.dm-ghead .dm-gtime { font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint); }
+.dm-msgs { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dm-line { display: flex; align-items: flex-start; gap: 6px; position: relative; }
+.dm-body { font-family: var(--font-body); font-size: 1.04rem; line-height: 1.6; color: var(--text-body); }
+.dm-body p { margin: 0; }
+/* Quoted reply — the ceremonial blockquote, a gold left-rule (from the forum) */
+.dm-quote { margin: 0 0 7px; padding: 4px 0 4px 14px; border-left: 2px solid var(--rule-gold); color: var(--text-muted); font-style: italic; font-family: var(--font-body); font-size: .96rem; line-height: 1.45; }
+.dm-quote .dm-quote-who { display: block; font-style: normal; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .58rem; color: var(--gold-ink); margin-bottom: 2px; }
+.dm-group.mine .dm-quote { border-left-color: var(--gold-400); }
+/* Rank pill beside the author in group counsel (like the forum's “Steward”) */
+.dm-rank { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .07em; font-size: .56rem; color: var(--gold-ink); border: 1px solid var(--gold-200); background: var(--gold-100); border-radius: var(--radius-pill); padding: 1px 7px; }
 
-/* Report affordance */
-.dm-report { margin-top: 2px; }
-.dm-report summary { font-family: var(--font-label); letter-spacing: .03em; font-size: .7rem; color: var(--text-faint); cursor: pointer; list-style: none; }
-.dm-report summary::-webkit-details-marker { display: none; }
-.dm-report summary:hover { color: var(--danger); }
-.dm-report-form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; padding: 11px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-md); }
+/* Mine — right-aligned, wearing the one ceremonial gold plate */
+.dm-group.mine { grid-template-columns: minmax(0, 1fr); margin-left: auto; justify-items: end; }
+.dm-group.mine .dm-ghead { flex-direction: row-reverse; }
+.dm-group.mine .dm-line { flex-direction: row-reverse; }
+.dm-group.mine .dm-body {
+    background: var(--gold-soft); border: 1px solid var(--gold-200);
+    border-radius: var(--radius-lg); padding: 8px 14px; color: var(--text-body);
+}
+/* Theirs — plain counsel on parchment, a faint left tick at the run's start */
+.dm-group:not(.mine) .dm-body { padding: 1px 0; }
+
+/* Per-message hover ··· (copy / report) — nothing until you reach for it */
+.dm-line-menu { flex: 0 0 auto; opacity: 0; margin-top: 1px; transition: opacity var(--dur-1,140ms) var(--ease-calm); }
+.dm-line:hover .dm-line-menu, .dm-line-menu.forced { opacity: 1; }
+.dm-dotbtn { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: var(--radius-sm); background: var(--surface-raised); border: 1px solid var(--border-hair); color: var(--text-muted); cursor: pointer; }
+.dm-dotbtn:hover { color: var(--brand); border-color: var(--green-200); }
+.dm-dotbtn svg { width: 15px; height: 15px; fill: currentColor; }
+
+/* Inline report form (opened from a message's ··· → Report) */
+.dm-report-form { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 2px; padding: 11px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-md); max-width: 460px; }
 .dm-report-form .input { font-size: .85rem; }
+.dm-report-form select.input-small, .dm-report-form .input-small { font-family: var(--font-body); font-size: .85rem; padding: 6px 9px; border: 1px solid var(--border-hair); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-body); }
 
-/* Composer (pinned) */
-.dm-composer { flex: 0 0 auto; border-top: 1px solid var(--border-hair); padding: 14px 28px 18px; background: var(--surface-raised); }
-.dm-composer .textarea { height: 62px; min-height: 62px; }
+/* Reference cards (linked topics/posts inside a message) — lighter */
+.reference-cards { display: flex; flex-direction: column; gap: 6px; margin-top: 7px; max-width: 100%; }
+.reference-card {
+    display: flex; flex-direction: column; gap: 2px; text-decoration: none;
+    border: 1px solid var(--border-hair); border-left: 3px solid var(--artifact-link);
+    border-radius: var(--radius-sm); padding: 8px 12px; background: var(--surface-raised);
+    transition: border-color var(--dur-1,140ms) var(--ease-calm), box-shadow var(--dur-1,140ms) var(--ease-calm);
+}
+.dm-group.mine .reference-card { background: var(--surface-raised); }
+.reference-card:hover { border-color: var(--green-200); box-shadow: var(--shadow-xs); }
+.reference-card .ref-type { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .08em; font-size: .56rem; color: var(--dm-accent-ink); }
+.reference-card strong { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: .98rem; color: var(--text-strong); line-height: 1.2; }
+.reference-card .ref-meta { font-family: var(--font-mono); font-size: .68rem; color: var(--text-muted); }
 
-/* Empty / new-message states */
-.dm-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 24px; }
+/* Read receipt — a quiet line under my last letter */
+.dm-receipt { align-self: flex-end; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .08em; font-size: .58rem; color: var(--text-faint); margin: 5px 2px 2px; display: inline-flex; align-items: center; gap: 5px; }
+.dm-receipt svg { width: 12px; height: 12px; fill: none; stroke: var(--dm-accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Composer (pinned) — one clean well, not a heavy card */
+.dm-composer { flex: 0 0 auto; border-top: 1px solid var(--border-hair); padding: 12px 26px 16px; background: var(--dm-raised); }
+.dm-composer-inner { max-width: 720px; margin: 0 auto; }
+.dm-composer-row { display: flex; align-items: flex-start; gap: 11px; }
+.dm-composer-row .monogram { margin-top: 5px; flex: 0 0 auto; }
+.dm-composer-main { flex: 1; min-width: 0; }
+.dm-composer-field { display: flex; align-items: flex-end; gap: 10px; background: var(--dm-ground); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); padding: 8px 8px 8px 14px; transition: border-color var(--dur-1,140ms) var(--ease-calm), box-shadow var(--dur-1,140ms) var(--ease-calm); }
+.dm-composer-field:focus-within { border-color: var(--dm-accent-line); box-shadow: 0 0 0 3px var(--focus-ring); }
+.dm-composer-field textarea {
+    flex: 1; resize: none; border: 0; outline: none; background: none; font: inherit;
+    font-family: var(--font-body); font-size: 1.02rem; line-height: 1.55; color: var(--text-body);
+    max-height: 148px; min-height: 24px; padding: 4px 0;
+}
+.dm-composer-field textarea::placeholder { color: var(--text-faint); }
+.dm-send { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--brand); border: 0; color: var(--accent-contrast); cursor: pointer; transition: background var(--dur-1,140ms) var(--ease-calm), transform var(--dur-1,140ms) var(--ease-calm); }
+.dm-send:hover { background: var(--brand-hover); }
+.dm-send:active { transform: scale(.96); }
+.dm-send:disabled { background: var(--surface-sunken); color: var(--text-faint); cursor: default; }
+.dm-send svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dm-composer-meta { display: flex; align-items: center; justify-content: space-between; margin: 6px 4px 0; }
+.dm-composer-hint { font-family: var(--font-body); font-size: .78rem; color: var(--text-faint); }
+.dm-composer-count { font-family: var(--font-mono); font-size: .68rem; color: var(--text-faint); }
+
+/* ── Details rail (right, collapsible) ──────────────────────────────────── */
+.dm-inforail { background: var(--dm-ground); border-left: 1px solid var(--border-hair); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.dm-rail-head { padding: 13px 18px; border-bottom: 1px solid var(--border-hair); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: 0 0 auto; }
+.dm-rail-head .eyebrow { margin: 0; }
+.dm-rail-body { overflow-y: auto; min-height: 0; padding: 22px 18px 28px; display: flex; flex-direction: column; gap: 20px; }
+
+/* Direct-convo identity block */
+.dm-rail-id { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.dm-rail-id .monogram { margin-bottom: 6px; }
+.dm-rail-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.4rem; color: var(--text-strong); line-height: 1.1; margin: 0; }
+.dm-rail-handle { font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted); }
+.dm-tier-pill { margin-top: 4px; display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: var(--radius-pill); background: var(--gold-soft); border: 1px solid var(--gold-200); font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .62rem; color: var(--gold-ink); }
+
+/* Small titled sections in the rail */
+.dm-rail-sec { display: flex; flex-direction: column; gap: 9px; }
+.dm-rail-sec > h3 { font-family: var(--font-label); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: .64rem; color: var(--gold-ink); margin: 0; }
+.dm-rail-meta { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.dm-rail-meta li { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-family: var(--font-body); font-size: .9rem; color: var(--text-body); }
+.dm-rail-meta li .k { color: var(--text-muted); }
+.dm-rail-meta li .v { font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong); text-align: right; }
+
+/* Rail row actions (toggle / link / danger), all quiet */
+.dm-rail-actions { display: flex; flex-direction: column; gap: 2px; }
+.dm-rail-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 9px 10px; border-radius: var(--radius-md); background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: .95rem; color: var(--text-body); }
+.dm-rail-btn:hover { background: var(--surface-sunken); }
+.dm-rail-btn.danger { color: var(--danger); }
+.dm-rail-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+.dm-rail-btn .switch { margin-left: auto; }
+.dm-rail-toggle { display: flex; align-items: center; gap: 10px; padding: 5px 10px; }
+.dm-rail-toggle .label { font-family: var(--font-body); font-size: .95rem; color: var(--text-body); }
+.dm-rail-toggle .switch { margin-left: auto; }
+
+/* Group members list in the rail */
+.dm-members { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.dm-member { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--radius-md); position: relative; }
+.dm-member:hover { background: var(--surface-sunken); }
+.dm-member .m-id { min-width: 0; display: flex; flex-direction: column; }
+.dm-member .m-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1rem; color: var(--text-strong); line-height: 1.15; }
+.dm-member .m-handle { font-family: var(--font-mono); font-size: .68rem; color: var(--text-muted); }
+.dm-member .m-role { margin-left: auto; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .06em; font-size: .56rem; color: var(--gold-ink); flex: 0 0 auto; }
+.dm-member.is-left { opacity: .55; }
+.dm-member.is-left .m-name { text-decoration: line-through; }
+.dm-member .m-role.left { color: var(--text-faint); }
+/* owner tools reveal on member hover */
+.dm-member-tools { margin-left: auto; display: flex; gap: 6px; opacity: 0; transition: opacity var(--dur-1,140ms) var(--ease-calm); }
+.dm-member:hover .dm-member-tools { opacity: 1; }
+.dm-linkbtn { background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-label); letter-spacing: .03em; text-transform: uppercase; font-size: .58rem; color: var(--text-muted); white-space: nowrap; }
+.dm-linkbtn:hover { color: var(--brand); }
+.dm-linkbtn.danger:hover { color: var(--danger); }
+
+/* Owner tools (add member / rename) */
+.dm-owner-tool { display: flex; gap: 8px; align-items: center; }
+.dm-owner-tool .input { flex: 1; min-width: 0; }
+
+/* ── Empty state (nothing selected) ─────────────────────────────────────── */
+.dm-empty { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 24px; background: var(--dm-raised); }
 .dm-empty-inner { text-align: center; max-width: 42ch; color: var(--text-muted); }
-.dm-empty-inner .star { color: var(--green-400); opacity: .6; }
+.dm-empty-inner .star { color: var(--green-400); opacity: .55; }
 .dm-empty-inner h2 { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.5rem; color: var(--text-strong); margin: 14px 0 6px; }
-.dm-empty-inner p { margin: 0; line-height: 1.55; }
+.dm-empty-inner p { margin: 0 0 18px; line-height: 1.55; font-family: var(--font-body); }
 
-.dm-compose { flex: 1; overflow-y: auto; min-height: 0; padding: 26px 32px 40px; }
-.dm-compose-wrap { max-width: 560px; }
-.dm-compose .breadcrumb { font-family: var(--font-mono); font-size: .8rem; color: var(--text-faint); margin: 0 0 12px; display: inline-flex; align-items: center; gap: 5px; background: none; border: 0; cursor: pointer; }
-.dm-compose .breadcrumb:hover { color: var(--brand); }
-.dm-compose h1 { font-size: 1.7rem; margin: 0 0 18px; }
-.dm-form { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
-.dm-form .field-hint { font-family: var(--font-body); font-size: .85rem; color: var(--text-faint); margin: -8px 0 0; }
-.dm-form .form-actions { margin-top: 4px; }
+/* ── Shared popover menu (header ··· + message ···) ──────────────────────── */
+.dm-menu-wrap { position: relative; display: inline-flex; }
+.dm-menu-pop {
+    position: absolute; z-index: 50; min-width: 210px; padding: 6px;
+    background: var(--surface-raised); border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+    display: flex; flex-direction: column; animation: dm-pop 140ms var(--ease-calm) both;
+}
+.dm-menu-pop.to-right { right: 0; top: calc(100% + 6px); }
+.dm-menu-pop.to-left { left: 0; top: calc(100% + 6px); }
+@keyframes dm-pop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.dm-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 10px; border-radius: var(--radius-sm); background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: .92rem; color: var(--text-body); }
+.dm-menu-item:hover { background: var(--surface-sunken); }
+.dm-menu-item.danger { color: var(--danger); }
+.dm-menu-item svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; color: var(--text-muted); }
+.dm-menu-item.danger svg { color: var(--danger); }
+.dm-menu-sep { height: 1px; background: var(--border-hair); margin: 5px 4px; }
 
-/* ── Responsive — collapse to one pane ──────────────────────────────────── */
-@media (max-width: 860px) {
-    .dm-shell { grid-template-columns: 1fr; }
-    .dm-threadpane { display: none; }
+/* ── Overlay dialogs (new message / confirm) ────────────────────────────── */
+.dm-scrim { position: fixed; inset: 0; z-index: 60; background: rgba(22,29,36,.42); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); display: flex; align-items: flex-start; justify-content: center; padding: 8vh 20px 20px; animation: dm-fade 140ms var(--ease-calm) both; }
+@keyframes dm-fade { from { opacity: 0; } to { opacity: 1; } }
+.dm-dialog { width: 100%; max-width: 540px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); animation: dm-rise 240ms var(--ease-calm) both; overflow: hidden; }
+@keyframes dm-rise { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: none; } }
+.dm-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px 12px; }
+.dm-dialog-head h2 { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.4rem; color: var(--text-strong); margin: 0; }
+.dm-dialog-head .eyebrow { margin: 0 0 2px; display: block; }
+.dm-dialog-close { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-md); background: none; border: 0; color: var(--text-muted); cursor: pointer; }
+.dm-dialog-close:hover { background: var(--surface-sunken); color: var(--brand); }
+.dm-dialog-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dm-dialog-body { padding: 6px 22px 8px; display: flex; flex-direction: column; gap: 14px; }
+.dm-dialog-body .field-hint { font-family: var(--font-body); font-size: .85rem; color: var(--text-faint); margin: -8px 0 0; }
+.dm-dialog-body p { font-family: var(--font-body); font-size: 1rem; line-height: 1.55; color: var(--text-body); margin: 0; }
+.dm-dialog-foot { display: flex; align-items: center; gap: 10px; padding: 12px 22px 20px; }
+.dm-dialog-foot .grow { flex: 1; }
+
+/* ── Mobile bottom tab bar (hidden on desktop) ──────────────────────────── */
+.dm-tabbar { display: none; }
+.dm-tab { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-faint); background: none; border: 0; cursor: pointer; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .04em; font-size: .6rem; text-decoration: none; padding: 0; }
+.dm-tab.is-active { color: var(--brand); }
+.dm-tab svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dm-tab-fab span { width: 44px; height: 44px; border-radius: 50%; background: var(--brand); color: var(--accent-contrast); display: flex; align-items: center; justify-content: center; margin-top: -12px; box-shadow: var(--shadow-lg); }
+.dm-tab-fab span svg { stroke-width: 2; }
+
+/* ── Responsive — nav + list + conversation, collapsing to a single pane ── */
+/* Medium widths: keep the conversation readable — float the details rail as a
+   drawer over the right edge instead of squeezing a fourth grid column. */
+@media (max-width: 1320px) and (min-width: 901px) {
+    .dm-shell.has-rail { grid-template-columns: 212px minmax(288px, 336px) minmax(0, 1fr); }
+    .dm-shell.has-rail .dm-inforail {
+        position: fixed; top: var(--topbar-h); right: 0; bottom: 0; width: 320px; z-index: 40;
+        box-shadow: var(--shadow-xl);
+    }
+}
+@media (max-width: 900px) {
+    .dm-shell, .dm-shell.has-rail { grid-template-columns: 1fr; }
+    .dm-navrail, .dm-threadpane, .dm-inforail { display: none; }
     .dm-shell.reading .dm-listpane { display: none; }
     .dm-shell.reading .dm-threadpane { display: flex; }
-    .dm-thread-head .breadcrumb { display: inline-flex; }
+    .dm-back { display: inline-flex; }
     .topbar-search { display: none; }
+    .dm-group { max-width: 90%; }
+    .dm-list { padding-bottom: 78px; }
+    /* details rail becomes a full-screen overlay */
+    .dm-shell.rail-open .dm-inforail {
+        display: flex; position: fixed; inset: var(--topbar-h) 0 0 0; z-index: 40;
+        border-left: 0; box-shadow: var(--shadow-xl);
+    }
+    /* the mobile product nav */
+    .dm-tabbar {
+        display: flex; align-items: center; justify-content: space-around;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; height: 60px; padding-bottom: 4px;
+        background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        border-top: 1px solid var(--border-hair);
+    }
+}
+@media (max-width: 560px) {
+    .dm-scroll { padding: 16px 16px 18px; }
+    .dm-thread-head { padding: 11px 14px; }
+    .dm-composer { padding: 10px 14px 14px; }
+    .dm-group { max-width: 96%; }
+}
+
+/* ── Toast — a quiet acknowledgement of tucked-away actions ──────────────── */
+.dm-toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 80;
+    background: var(--surface-inverse); color: var(--parchment-50);
+    font-family: var(--font-body); font-size: .92rem; padding: 10px 18px;
+    border-radius: var(--radius-pill); box-shadow: var(--shadow-lg);
+    animation: dm-fade 160ms var(--ease-calm) both; max-width: 90vw; text-align: center;
 }

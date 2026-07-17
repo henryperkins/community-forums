@@ -1,4 +1,4 @@
-<!-- @dsCard group="Feature activation" viewport="980x900" name="Activation index" subtitle="The fourteen done-but-no-UI flags, their designed surfaces, and honest tier status" -->
+<!-- @dsCard group="Feature activation" viewport="980x900" name="Activation index" subtitle="Fourteen flagged surfaces with their current production status — GA default-on at commit 4efe4e33, link_previews still dark" -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,10 +12,8 @@
   .idx-legend-item { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body), serif; font-size: 13.5px; color: var(--text-body); white-space: nowrap; }
   .idx-legend-item b { font-weight: 600; color: var(--text-strong); }
   .st-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-  .st-dot.ready { background: var(--success); box-shadow: 0 0 0 3px var(--surface-done); }
-  .st-dot.near { background: var(--accent-2); box-shadow: 0 0 0 3px var(--gold-soft); }
-  .st-dot.blocked { background: var(--warning); box-shadow: 0 0 0 3px var(--surface-review); }
-  .st-dot.ahead { background: var(--pending); box-shadow: 0 0 0 3px var(--surface-sunken); }
+  .st-dot.ga { background: var(--success); box-shadow: 0 0 0 3px var(--surface-done); }
+  .st-dot.dark { background: var(--pending); box-shadow: 0 0 0 3px var(--surface-sunken); }
 
   .area-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 30px; }
   @media (max-width: 720px) { .area-grid { grid-template-columns: 1fr; } }
@@ -55,26 +53,26 @@ const DS = window.ImladrisDesignSystem_c3e027;
 const { Icons, EightStar, useTheme, Topbar, Lede } = window.FA;
 const I = (name, s) => Icons[name](s);
 
-const TAG = { ready: 'Flip now', near: 'Capture away', blocked: 'Blocked · review', ahead: 'Build incomplete' };
+const TAG = { ga: 'GA · default-on', dark: 'Dark · default-off' };
 const AREAS = [
-  { num: '01', href: 'polls/', title: 'Polls', summary: 'flip', summaryLabel: 'Flip-ready',
+  { num: '01', href: 'polls/', title: 'Polls', summary: 'flip', summaryLabel: 'GA · default-on',
     desc: 'A votable poll in a topic and the builder that replaces the raw text outline.',
-    flags: [['polls', 'ready']] },
-  { num: '02', href: 'tags/', title: 'Tags', summary: 'flip', summaryLabel: 'Flipping now',
+    flags: [['polls', 'ga']] },
+  { num: '02', href: 'tags/', title: 'Tags', summary: 'flip', summaryLabel: 'GA · default-on',
     desc: 'How a tag reads on a topic, the composer tag input, and browsing the hall by tag.',
-    flags: [['tags', 'ready']] },
-  { num: '03', href: 'rail/', title: 'Organizing the rail',
+    flags: [['tags', 'ga']] },
+  { num: '03', href: 'rail/', title: 'Organizing the rail', summary: 'flip', summaryLabel: 'GA · default-on',
     desc: 'Boards in folders, filters saved as feeds, a feed read expanded, and folders for your bookmarks.',
-    flags: [['expanded_feeds', 'ready'], ['bookmark_folders', 'near'], ['board_folders', 'ahead'], ['saved_feeds', 'ahead']] },
+    flags: [['expanded_feeds', 'ga'], ['bookmark_folders', 'ga'], ['board_folders', 'ga'], ['saved_feeds', 'ga']] },
   { num: '04', href: 'conversation/', title: 'In the conversation',
     desc: 'Catch-up memory, inline topic references, and links that unfurl into cards.',
-    flags: [['community_memory', 'near'], ['content_references', 'near'], ['link_previews', 'blocked']] },
-  { num: '05', href: 'moderation/', title: "The moderator's tools",
+    flags: [['community_memory', 'ga'], ['content_references', 'ga'], ['link_previews', 'dark']] },
+  { num: '05', href: 'moderation/', title: "The moderator's tools", summary: 'flip', summaryLabel: 'GA · default-on',
     desc: 'A workflow bar to assign, snooze and escalate; tools to split and merge topics.',
-    flags: [['topic_workflow', 'near'], ['split_merge', 'ahead']] },
-  { num: '06', href: 'account/', title: 'Account & identity',
+    flags: [['topic_workflow', 'ga'], ['split_merge', 'ga']] },
+  { num: '06', href: 'account/', title: 'Account & identity', summary: 'flip', summaryLabel: 'GA · default-on',
     desc: 'Steward-defined profile fields, a ledger of earned commends, and drafts on your account.',
-    flags: [['custom_profile_fields', 'near'], ['reputation_ledger', 'ready'], ['server_drafts', 'blocked']] },
+    flags: [['custom_profile_fields', 'ga'], ['reputation_ledger', 'ga'], ['server_drafts', 'ga']] },
 ];
 
 function Card({ a }) {
@@ -110,15 +108,13 @@ function Page() {
     <div>
       <Topbar eyebrow="Feature activation" flags={[]} theme={theme} setTheme={setTheme} />
       <div className="fa-doc">
-        <Lede eyebrow="Designed surfaces · 14 flags" title="The UI that was missing">
-          Fourteen features are built behind the scenes but dark — not for want of code, but for want of a place to touch them. These are the designed surfaces, native to Imladris and live. Each flag is marked with its honest status from the audit, so the design never outruns the truth of the build.
+        <Lede eyebrow="Designed surfaces · 14 flags" title="The UI, now live">
+          These surfaces were designed for fourteen dark flags — and the flags have since flipped. At the inspected commit (4efe4e33) every one is GA and default-on except link_previews, which stays implemented-dark. Each flag carries its current production status, so the design never outruns the truth of the build.
         </Lede>
 
         <div className="idx-legend">
-          <span className="idx-legend-item"><span className="st-dot ready" /><b>Flip now</b> — evidence on disk</span>
-          <span className="idx-legend-item"><span className="st-dot near" /><b>Capture away</b> — a browser/a11y pass</span>
-          <span className="idx-legend-item"><span className="st-dot blocked" /><b>Blocked</b> — a dependency / review</span>
-          <span className="idx-legend-item"><span className="st-dot ahead" /><b>Design-ahead</b> — build reported incomplete</span>
+          <span className="idx-legend-item"><span className="st-dot ga" /><b>GA</b> — shipped, default-on at commit 4efe4e33</span>
+          <span className="idx-legend-item"><span className="st-dot dark" /><b>Dark</b> — implemented behind a default-off flag; nothing invented beyond what exists</span>
         </div>
 
         <div className="area-grid">

@@ -77,7 +77,7 @@
           </div>
 
           {user ? (
-            <Composer postingAs={user.name} sendLabel="Reply"
+            <Composer identity={user.name} submitLabel="Reply"
               value={replyValue} onChange={(e) => onReplyChange(e.target.value)}
               count={(replyValue ? replyValue.length : 0) + ' / 20000'}
               onSubmit={(e) => { e.preventDefault(); onSend(); }} />

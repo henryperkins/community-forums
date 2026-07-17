@@ -504,7 +504,6 @@
     webhooks: { label: 'Webhooks', render: Webhooks },
     apiTokens: { label: 'API tokens', render: ApiTokens },
     announcements: { label: 'Announcements', render: Announcements },
-    extensions: { label: 'Extensions', render: Extensions },
     branding: { label: 'Branding', render: Branding },
   };
   window.RBAdminUserRecord = UserRecord;

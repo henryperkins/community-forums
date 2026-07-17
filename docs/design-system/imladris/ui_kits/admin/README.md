@@ -10,7 +10,7 @@ A horizontal **subnav** (the product's `.subnav`, gold active underline) over 11
 - **Boards & categories** — category cards with rename + reorder, board rows (visibility tags, archive/delete), add-category and add-board forms.
 - **Users** — search + an `.audit` table (role/state/regard/joined), pager; click a user → **user record** (identity, cosmetic title, badge grant/revoke).
 - **Badge rules** — create-rule form + the rules link-list (enable/disable/backfill/revoke).
-- **Tags · Announcements** — catalogue + banner publish. Tags is the operator reference for the default-on `tags` flag and the live `/admin/tags` catalogue.
+- **Tags · Announcements** — catalogue + banner publish.
 - **Email** — sending-domain status, queue **stat-cards**, delivery log, requeue.
 - **Webhooks · API tokens** — register/create forms (events / scopes fieldsets, the one-time **secret flash**) + endpoint/token tables.
 - **Extensions** — sandbox probe, handlers + run-history tables.

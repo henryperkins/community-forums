@@ -1,0 +1,72 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   System surfaces UI kit — the chrome-less pages
+   The setup wizard, error pages (incl. database-down), the privacy content
+   page, the unsubscribe confirm, and the gated-profile stub render on the
+   product's "plain" / minimal layouts — a centered parchment card on the page
+   ground, no rail or topbar. Faithful to templates/{setup/wizard, errors/error,
+   privacy, unsubscribe, profile/gated}.php. Primitives from styles.css +
+   _ds_bundle.js; a top-right switcher is a kit affordance, not the product.
+   ────────────────────────────────────────────────────────────────────────── */
+
+html, body { height: 100%; }
+body { margin: 0; background: var(--surface-page); }
+
+.sys-stage { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 22px; padding: 68px 20px 48px; }
+
+/* Wordmark */
+.sys-brand { display: inline-flex; align-items: center; gap: 11px; color: var(--brand); }
+.sys-brand-name { font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1.5rem; color: var(--text-strong); line-height: 1; }
+
+/* The plain card (app.css .auth-card on the plain layout) — parchment surface,
+   simple rule, not the ceremonial twilight seal. */
+.sys-card { width: 100%; max-width: 432px; background: var(--surface-raised); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); padding: 30px 30px 26px; box-shadow: var(--shadow-sm); }
+.sys-card.setup { max-width: 540px; }
+.sys-card h1 { font-size: 1.7rem; margin: 0 0 6px; }
+.sys-card > .muted { margin: 0 0 18px; }
+
+/* Error card — centered, oversized status number */
+.error-card { text-align: center; }
+.error-card h1 { font-size: 3.2rem; margin: 0 0 8px; font-family: var(--font-display); color: var(--text-strong); }
+.error-card p { color: var(--text-muted); margin: 0 0 16px; }
+.error-card .btn { margin: 4px 4px 0; white-space: nowrap; }
+.mod-count { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: var(--radius-pill); background: var(--gold-100); color: var(--gold-700); font-family: var(--font-mono); font-size: .72rem; }
+
+/* Forms */
+.stacked { display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
+.field { display: block; }
+.field > span:first-child { display: block; font-family: var(--font-label); letter-spacing: .02em; font-size: .8rem; color: var(--text-muted); margin-bottom: 5px; }
+.field .muted { color: var(--text-faint); text-transform: none; letter-spacing: 0; }
+.field-group { border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 14px 16px 16px; margin: 0; display: flex; flex-direction: column; gap: 13px; }
+.field-group legend { font-family: var(--font-label); text-transform: uppercase; letter-spacing: .08em; font-size: .66rem; color: var(--gold-ink); padding: 0 6px; }
+.sys-card .btn { width: 100%; }
+.sys-card .btn + .btn { margin-top: 0; }
+
+/* Unsubscribe / notice copy */
+.sys-card p { color: var(--text-body); }
+.sys-card p strong { color: var(--text-strong); }
+
+/* Privacy content page (templates/privacy.php → .content-page article) */
+.content-page { width: 100%; max-width: 660px; background: var(--surface-raised); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); padding: 34px 38px 30px; box-shadow: var(--shadow-sm); }
+.content-page h1 { font-size: 2rem; margin: 0 0 6px; }
+.content-page h2 { font-size: 1.25rem; margin: 20px 0 8px; }
+.content-page p { color: var(--text-body); margin: 0 0 12px; max-width: 62ch; }
+.content-page p:first-letter { text-transform: capitalize; }
+
+/* Gated profile stub (templates/profile/gated.php) */
+.sys-gated { width: 100%; max-width: 432px; text-align: center; }
+.sys-gated h1 { font-family: var(--font-mono); font-size: 1.6rem; color: var(--text-strong); margin: 0 0 8px; }
+.sys-gated p { color: var(--text-muted); margin: 0 0 16px; }
+.sys-gated .btn { white-space: nowrap; }
+
+/* Kit affordance: error-status switcher */
+.kit-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 13px; background: var(--surface-sunken); border-radius: var(--radius-md); font-size: .84rem; color: var(--text-muted); width: 100%; max-width: 432px; box-sizing: border-box; justify-content: center; }
+.kit-note > span { font-family: var(--font-label); letter-spacing: .02em; }
+.kit-note .linkbtn.is-active { color: var(--brand); font-weight: var(--weight-semibold); }
+
+/* View switcher (kit affordance — not part of the product) */
+.sys-switch { position: fixed; top: 16px; right: 16px; display: flex; flex-wrap: wrap; gap: 5px; z-index: 30; background: color-mix(in srgb, var(--surface-raised) 88%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); padding: 7px; border-radius: var(--radius-pill); border: 1px solid var(--border-hair); box-shadow: var(--shadow-sm); }
+.sys-switch button { font-family: var(--font-label); letter-spacing: .03em; font-size: .72rem; color: var(--text-muted); background: none; border: 0; border-radius: var(--radius-pill); padding: 5px 11px; cursor: pointer; }
+.sys-switch button:hover { color: var(--text-strong); }
+.sys-switch button.active { background: var(--brand); color: var(--parchment-50); }
+
+@media (max-width: 560px) { .sys-switch { display: none; } .sys-stage { padding-top: 32px; } }

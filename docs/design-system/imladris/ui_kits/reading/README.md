@@ -9,10 +9,10 @@ The shared Imladris shell (topbar + sidebar, loaded from `../retroboards/kit.css
 ## Surfaces
 
 - **Home** (`home`) — the board index: categories → board rows with descriptions and thread/post counts.
-- **Feed** (`feed`) — Following / Latest tabs; activity items (author, started/replied, board, excerpt). This is the design-system reference for the default-on `expanded_feeds` flag.
+- **Feed** (`feed`) — Following / Latest tabs; activity items (author, started/replied, board, excerpt).
 - **Search** (`search`) — the search form + results (thread/post, board, highlighted snippet) and empty state.
-- **Tags** (`tags/index`) — the public tag directory as discovery cards. This is the design-system reference for the default-on `tags` flag.
-- **Tag** (`tags/show`) — a single tag: header, follow control, and its topic list (reuses the thread row). Board rows from Home land here too, as a board listing. The follow control is part of the default-on `expanded_feeds` flag.
+- **Tags** (`tags/index`) — the public tag directory as discovery cards.
+- **Tag** (`tags/show`) — a single tag: header, follow control, and its topic list (reuses the thread row). Board rows from Home land here too, as a board listing.
 - **Notifications** (`notifications`) — the full list with the product's verb map, per-type icons, unread state, and mark-all / clear (the topbar bell count stays in sync).
 - **Compose** (`compose`) — the full-page new-topic form: board, title, body, anonymous option, Markdown hint.
 - **Connections** (`profile/connections`) — followers / following with rep and a remove action.

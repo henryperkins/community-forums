@@ -22,7 +22,7 @@
 // Tabs + composer / join-bar
 <Tabs variant="segment" items={['Hall','Watch']} value="Hall" onChange={…} />
 <Tabs variant="pill" items={['All','Unread','Starred','Mine']} value="All" onChange={…} />
-<Composer postingAs="Erestor" sendLabel="Reply" count="0 / 20000" />
+<Composer identity="Erestor" submitLabel="Reply" draftSaved />
 <JoinBar />   {/* guest state */}
 ```
 

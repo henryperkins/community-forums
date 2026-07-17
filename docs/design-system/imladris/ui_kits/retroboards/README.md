@@ -14,7 +14,7 @@ The **Council Inbox** — the product's three-pane shell:
 
 Plus two more product screens, reachable from the rail / identity:
 - **Profile** — the twilight identity cover (gilt avatar, tier pill, regard, Follow / Message), **Marks of esteem** (including a locked one), and tabbed activity.
-- **Top contributors** — the leaderboard (roman-numeral top-3 cards, then compact rows) with the italic footnote. This is the design-system reference for the default-on `reputation_ledger` flag's week/month/all-time and board-scoped leaderboard modes.
+- **Top contributors** — the leaderboard (roman-numeral top-3 cards, then compact rows) with the italic footnote.
 
 ## What's interactive (faked)
 

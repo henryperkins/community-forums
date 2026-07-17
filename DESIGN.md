@@ -1,6 +1,6 @@
 # RetroBoards — Product & Technical Design Document
 
-**Status:** v0.14 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-14
+**Status:** v0.15 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-14
 **Stack:** PHP + MySQL (server-rendered) with progressive-enhancement JavaScript
 **This document is the source of truth.** When a decision changes, update it here first. Code, tickets, and mockups defer to this file.
 
@@ -323,6 +323,8 @@ This is a cornerstone and the most recently designed area. **Two unmistakable si
 
 **Design system: a custom tokenised productivity UI.** Inspired by Fluent/Outlook density, Slack-style conversational affordances, and the *behaviour* of accessible primitives (dialogs, menus, popovers, comboboxes, command menus) — we adopt the **ideas** (tokens, density, accessible interaction patterns), **not** any React UI kit. Everything renders from CSS variables on our server-rendered, progressively-enhanced stack. Visual language: compact density, soft neutral surfaces, 1px dividers, clear unread/mention/status states, strong hover/focus, restrained rounded cards, sticky command bars, status chips, subtle motion — beauty from clarity and rhythm, not gradients or toy-like social UI.
 
+**Imladris runtime ownership.** The imported authoring bundle lives at `docs/design-system/imladris/`, but production consumes only its allowlisted tokens, self-hosted fonts, and reusable component CSS through generated `/assets/imladris.css`. Those rules are wrapped in low-priority cascade layers. The unlayered `/assets/app.css` remains the compatibility and feature layer, followed by WYSIWYG, theme-package, and operator-branding styles; design-system preview JavaScript, UI kits, documentation CSS, uploads, archived app snapshots, and cross-cutting reduced-motion timing declarations never ship. The latter remain application-owned because layered `!important` declarations reverse normal layer precedence and could defeat feature-specific motion shutdowns. This boundary lets the design system own foundations without replacing PHP templates or progressive-enhancement behavior. `composer verify:imladris` checks generated-asset drift, feature-flag parity, the current composer anatomy, and a reviewed digest of the member/admin/community/composer surface specs plus all templates and browser CSS/JavaScript so a newer production surface cannot silently outrun its design contract.
+
 Beyond the base palette, the token system carries **forum-state families** so unread, mention, solved, moderation, and decision states read clearly without noise:
 
 ```txt
@@ -338,7 +340,7 @@ presence.{online, away, offline}
 
 | Feature | Priority | Status | Notes |
 |---|---|---|---|
-| Single tokenised theme (CSS variables) | P0 | Planned | Whole look re-skins from `:root`. |
+| Single tokenised theme (CSS variables) | P0 | Live | Imladris foundations generate `/assets/imladris.css`; application compatibility rules and later theme/branding overrides retain behavior. |
 | Retro 2002 theme as optional skin | P2 | Planned | The preserved `styles.css` look as a toggle. |
 | Admin branding (name, colors, logo) | P1 | Planned | Make "RetroBoards" → operator's brand. |
 | Plugin / theme system | P2 | Planned | Avoid decisions that preclude it. |
@@ -967,6 +969,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.15 | 2026-07-14 | Adopted the imported Imladris system as a generated, allowlisted runtime foundation beneath the application compatibility layer; documented preview/runtime exclusions, cascade ownership, self-hosted fonts, and the production-baseline drift gate that prevents newer forum/composer surfaces from silently outrunning design parity. |
 | v0.14 | 2026-07-14 | Unified post, DM, preview, revision, and living-brief rendering around canonical Markdown plus a shared responsive presentation contract; documented safe semantic attributes, read-time fallback for missing derived HTML, and the idempotent render-cache repair path. Corrected spoiler syntax to the shipped `||spoiler||` form. |
 | v0.13 | 2026-07-12 | Added §6.19 for the Thread Intelligence member, curator, processor, provenance, retention, failure, and operator contracts; later reconciled the completed evidence package and joint default-on graduation of `community_memory` and `automated_context`, with independent rollback pins. |
 | v0.12 | 2026-06-26 | **Cross-doc review fixes.** §8.2/§8.3 added `'announcement'` to the `notifications` enum (admin broadcast/system — SCHEMA §7 #13); §8.2 rewrote the session-handling note — the `sessions` table **ships in Phase 1** (canonical DDL in SCHEMA §1), not an optional "add if needed"; §1 + §9.3 stopped describing the mockup files as already existing (they are Phase 0 artifacts, not yet created — matching §6/§13); §13.1 clarified composer phasing — Phase 1 ships the no-JS Markdown box, Phase 2 adds @mentions/DM, the unified rich composer is Phase 3 (COMPOSER §17.1 / PHASE_3_PLAN). |

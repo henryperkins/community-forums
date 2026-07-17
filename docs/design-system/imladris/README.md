@@ -14,7 +14,7 @@ This project is the **source-of-truth design system**: the tokens consumers link
 
 This system was built by reading the product's own code and design artifacts. If you have access, explore them to design with higher fidelity:
 
-- **`henryperkins/community-forums`** — the RetroBoards codebase (vanilla PHP + MySQL, server-rendered). The authoritative material lived here:
+- **`henryperkins/community-forums`** — the RetroBoards codebase (vanilla PHP + MySQL, server-rendered), inspected at commit **`4efe4e33`** (main, 2026-07-14; recorded in `manifest.json`). A snapshot of its frontend assets sits under `_archive/app-snapshots/2026-07-14-4efe4e33/` — **archives are reference-only, never imported or presented as canonical**. The authoritative material lived here:
   - `DESIGN.md` — product & technical design (the "Community Inbox" thesis, IA, feature catalog, the tokenised-theme §6.14).
   - `public/assets/app.css` — the **authoritative Imladris token + component CSS**, transcribed into this system's `tokens/` and `components.css` (values unchanged).
   - `templates/partials/*.php` — the real markup (topbar, sidebar, thread_row, post, monogram) the React primitives recreate.
@@ -46,7 +46,7 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
   | join date | **"Joined Third Age, 2021"** |
   | search field | *"Search the council…"* |
   - Reaction set: **Commend** (star), **Kindled** (flame), **Seconded** (check), **Illuminating** (sparkle).
-- **Emoji.** **Not used.** The only "emoji-like" glyphs are the brand stars (✦ commend, the eight-point house mark) and **Lucide** line icons. Status is always carried by **a word + colour**, never an emoji.
+- **Emoji.** **Not in UI chrome** — decorative/status emoji stay prohibited; status is a word + colour. **Authored content is different:** members use emoji in posts, and the composer ships emoji tooling as product features — `:` autocomplete, the 😊 picker dialog, custom emoji, GIPHY via slash where configured. The only "emoji-like" glyphs are the brand stars (✦ commend, the eight-point house mark) and **Lucide** line icons. Status is always carried by **a word + colour**, never an emoji.
 - **Vibe.** Illuminated-manuscript meets a quiet productivity tool. Closing flourishes are allowed in ceremonial spots (a colophon, a leaderboard footnote) — e.g. the Quenya line *"Et Eärello Endorenna utúlien."* — but never in functional UI.
 
 ---
@@ -61,7 +61,7 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 - **Status ledger** carries colour *and a word*: Solved (leaf/green-050), Needs answer (amber/gold-100), Decision (green/brand-subtle), Locked/Pinned (neutral), Archived (dashed + faded), Danger (rust).
 - **Twilight** is the night register (`[data-theme="dark"]`): dark surfaces, parchment becomes the ink, **gold becomes the actionable colour**, evergreen the quiet brand.
 
-**Type.** All serif, four families (real Google Fonts; fallback stacks keep the register before they load):
+**Type.** All serif, four families (self-hosted WOFF2 under `assets/fonts/`, OFL licenses alongside; fallback stacks keep the register before they load):
 - **Cormorant Garamond** — display (headings, wordmark, thread titles, profile names). Set **medium (500)**, tight tracking, balanced.
 - **Marcellus** — lapidary roman caps for eyebrows, **button labels**, chips, meta lines. Generous letterspacing, UPPERCASE.
 - **EB Garamond** — body prose / posts at **17px / 1.62**, measure ≈ 64ch.
@@ -94,7 +94,7 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 
 - **Line icons: Lucide.** The product's SVGs are Lucide (stroke ~1.75–2, round caps/joins) — bell, gear, inbox, at-sign, eye, file, users, trophy, menu, check, lock, archive, flame, sparkles. Reuse Lucide (CDN or inline paths) for any new icon; match the stroke weight. Status glyphs map to Lucide names: Solved→`circle-check`, Needs answer→`circle-help`, Decision→`megaphone`, Pinned→`pin`, Staff→`shield`, Locked→`lock`, Archived→`archive`, Hot→`flame`.
 - **Brand marks (custom, in `assets/` + as components).** The **eight-pointed elven star** is the house mark (`EightPointStar` / `assets/elven-star.svg`) — solid for the wordmark, thin + faint for watermarks. The **four-point commend star** is the esteem mark (`CommendStar` / `assets/commend-star.svg`, ✦) used for commends, the star button, reputation, and the accepted-answer flag. These are the brand's own defined paths — do **not** redraw them; use the components/assets.
-- **No emoji**, ever, in UI. The only Unicode glyph used standalone is **✦** for the commend star where an inline SVG is impractical.
+- **No decorative/status emoji in UI chrome.** Authored-content emoji and the composer’s emoji tools (`:` autocomplete, picker dialog, custom emoji, GIPHY slash) are supported product features. The only Unicode glyph used standalone is **✦** for the commend star where an inline SVG is impractical.
 - **Avatars** are monogram initials on a tinted ground (`Monogram`), colour hashed deterministically from the username; real images replace them when present.
 
 ---
@@ -121,15 +121,10 @@ The voice is **elevated, plain, and council-minded** — Tolkien-adjacent withou
 - `ui_kits/settings/` — the **account settings console**: a sticky left-rail subnav over 13 sections (Profile, Security with a 2FA enrolment flow, Privacy, Appearance, Reading, Composing, Drafts, Notifications, Connections, Sessions, Blocks, Boards, Account lifecycle). The natural home of the **lapidary forms register** (engraved scribe-panels, set-gem toggles, jewel checks).
 - `ui_kits/auth/` — the **gate**: login, register, forgot, reset, two-factor (MFA), and email-verify, framed in the ceremonial twilight register with OAuth and a colophon.
 - `ui_kits/admin/` — the **admin console** (operator's desk): dashboard (site name · trust & safety · audit log), boards & categories, users + a user-record drill-in, badge rules, tags, email delivery (queue + log + suppressions), webhooks, API tokens, announcements, extensions, and a live-preview branding editor. Utilitarian register — dense `.audit` tables, stat-cards, and config cards.
-- `ui_kits/dm/` — **private counsel** (direct & group messages): a two-pane reading room (conversation list · open letter), mine/theirs message plates, the group-members panel with owner tools, in-message reference cards, the report affordance, and the new-message composer. Recreates `templates/dm/{index,new,show}.php`.
+- `ui_kits/dm/` — **private counsel** (direct & group messages): one reading room grounded in the app chrome (nav rail · conversation list · open conversation · a collapsible details rail), set in the **cool Bruinen register** with a lock signature so it reads as private at a glance — distinct from the warm public forum. Grouped "letters" (mine wear the one gold plate), tucked-away controls (a header ··· overflow + per-message hover ···), the new-message **dialog**, and read receipts. Recreates `templates/dm/{index,new,show}.php`.
 - `ui_kits/mod/` — **the warden's table** (moderation triage, distinct from admin config): the reports queue (post + DM targets, claim/resolve/dismiss), the approval hold (topics + replies), appeals review (outcome + resolution note), and the member's own appeal view — with live queue counts in the subnav. Recreates `templates/mod/{reports,approvals,appeals}.php` + `templates/appeals/index.php`.
 - `ui_kits/reading/` — **the reading rooms** (public & member reading surfaces): home (board index), the Following/Latest feed, search, the tag directory + a single tag, notifications, full-page compose, and profile connections. Shares the topbar + sidebar chrome with RetroBoards and cross-links to the other kits. Recreates `templates/{home,feed,search,notifications,compose}.php`, `tags/{index,show}.php`, and `profile/connections.php`.
 - Each kit has its own `README.md`.
-
-**Runtime activation map**
-- `ACTIVATED_FEATURES.md` records the RetroBoards feature flags that now consume
-  these Imladris surfaces by default: `tags`, `expanded_feeds`, and
-  `reputation_ledger`.
 
 **Templates** (`templates/<slug>/` — starting folders a consumer copies; each is a `.dc.html` entry that loads the system via `ds-base.js`)
 - `templates/council-topic/` — a single council topic (a thread with its counsel).
@@ -151,5 +146,5 @@ Link the one stylesheet and read components off the namespace:
 
 Colour from the **semantic** tokens (`--surface-raised`, `--brand`, `--accent-2`, `--on-done`), not raw primitives, so the twilight register flips for free.
 
-### Caveat — fonts
-The Imladris families load from **Google Fonts** (`tokens/fonts.css`, via `@import`); the live product self-hosts none (its strict CSP forbids the CDN) and falls back to a system-serif stack. To ship offline, swap the `@import` for local `@font-face` rules under `assets/fonts/` — the family names and fallbacks don't change.
+### Fonts — self-hosted
+All four families are bundled as **WOFF2** in `assets/fonts/` with their **OFL licenses**; `tokens/fonts.css` declares plain `@font-face` — no CDN, no `@import`, matching the app’s CSP constraint class (`style-src 'self'`). The app itself ships no webfonts and falls back to a system-serif stack; these files exist so design artifacts render the true register.

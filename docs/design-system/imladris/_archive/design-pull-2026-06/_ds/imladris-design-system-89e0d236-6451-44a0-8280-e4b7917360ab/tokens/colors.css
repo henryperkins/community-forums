@@ -1,0 +1,139 @@
+/* ===========================================================================
+   Imladris — Color tokens
+   ---------------------------------------------------------------------------
+   A palette drawn from the Last Homely House: parchment & mist, the deep
+   evergreens of the valley, the river Bruinen at twilight, and mallorn-gold.
+   Warm neutrals, cool depths, a single autumnal-gold accent.
+   ========================================================================= */
+
+:root {
+  /* --- Base neutrals · parchment & mist ------------------------------- */
+  --parchment-50:  #FAF6EC;   /* lightest page wash */
+  --parchment-100: #F5EFE1;   /* default page background */
+  --parchment-200: #ECE4D2;   /* sunken surfaces, wells */
+  --parchment-300: #DED2B8;   /* hairline borders on parchment */
+  --mist-100:      #EEF1ED;   /* cool surface tint */
+  --mist-200:      #DCE3DD;   /* cool border */
+
+  /* --- Ink · text greens-blacks --------------------------------------- */
+  --ink-900: #1B231D;   /* primary text — near-black evergreen */
+  --ink-700: #313B33;   /* strong text on parchment */
+  --ink-500: #515C52;   /* secondary text */
+  --ink-400: #6E7A6E;   /* muted / captions */
+  --ink-300: #94A095;   /* disabled, faint */
+
+  /* --- Evergreen · Imladris foliage (primary brand hue) --------------- */
+  --green-900: #1C2E24;
+  --green-800: #24402F;
+  --green-700: #2E4A3A;   /* primary brand green */
+  --green-600: #3A5C49;
+  --green-500: #4E7459;
+  --green-400: #6E9479;
+  --green-200: #BCD0BF;
+  --green-100: #DCE8DD;
+  --green-050: #EDF3ED;
+
+  /* --- Bruinen · river blues (secondary) ------------------------------ */
+  --river-900: #1E3040;
+  --river-700: #2C4D63;
+  --river-500: #3F6E89;   /* secondary brand blue */
+  --river-400: #5E8CA6;
+  --river-200: #BAD2DF;
+  --river-100: #DCE9F0;
+
+  /* --- Mallorn · elven gold (single accent) --------------------------- */
+  --gold-700: #9A7530;
+  --gold-600: #B08A3A;
+  --gold-500: #C29A44;   /* accent — gilding, links, marks */
+  --gold-400: #D2B062;
+  --gold-200: #EAD9A8;
+  --gold-100: #F4EBCF;
+
+  /* --- Twilight · deep cool for night surfaces ------------------------ */
+  --twilight-900: #161D24;
+  --twilight-800: #1E2730;
+  --twilight-700: #283440;
+
+  /* --- Semantic raw hues ---------------------------------------------- */
+  --leaf:   #4E7459;   /* success — new growth */
+  --amber:  #B7842F;   /* warning — turning leaf */
+  --rust:   #9C4A33;   /* danger — autumn ember */
+  --slate:  #3F6E89;   /* info — river */
+
+  /* ===================================================================
+     SEMANTIC ALIASES — reference these in components, not the raw scale.
+     =================================================================== */
+
+  /* Surfaces */
+  --surface-page:     var(--parchment-100);
+  --surface-raised:   var(--parchment-50);
+  --surface-card:     var(--parchment-50);
+  --surface-sunken:   var(--parchment-200);
+  --surface-cool:     var(--mist-100);
+  --surface-inverse:  var(--twilight-800);
+  --surface-brand:    var(--green-700);
+
+  /* Text */
+  --text-strong:    var(--ink-900);
+  --text-body:      var(--ink-700);
+  --text-muted:     var(--ink-500);
+  --text-faint:     var(--ink-400);
+  --text-disabled:  var(--ink-300);
+  --text-inverse:   var(--parchment-50);
+  --text-link:      var(--green-700);
+  --text-accent:    var(--gold-700);
+
+  /* Borders & lines */
+  --border-hair:    var(--parchment-300);
+  --border-soft:    var(--mist-200);
+  --border-strong:  var(--ink-300);
+  --border-brand:   var(--green-600);
+  --rule-gold:      var(--gold-500);
+
+  /* Interactive — brand (green) */
+  --brand:          var(--green-700);
+  --brand-hover:    var(--green-800);
+  --brand-press:    var(--green-900);
+  --brand-subtle:   var(--green-050);
+
+  /* Accent — gold */
+  --accent:         var(--gold-500);
+  --accent-hover:   var(--gold-600);
+  --accent-press:   var(--gold-700);
+  --accent-subtle:  var(--gold-100);
+
+  /* Feedback */
+  --success: var(--leaf);
+  --warning: var(--amber);
+  --danger:  var(--rust);
+  --info:    var(--slate);
+
+  /* ---------------------------------------------------------------------
+     STATUS LEDGER — verified state, in the build vocabulary.
+     The journal's evidence layer borrows the engineer's plain words:
+     a claim is shown by its state, not asserted. Three states only,
+     each a left-rule colour AND a redundant word (never colour alone):
+       done    — merged · shipped · released · tagged · fixed
+       review  — in review · proposal · open · awaiting sign-off
+       pending — scheduled · queued · planned · reserved
+     Hues are drawn from the autumnal semantic set so the ledger sits
+     quietly inside parchment surfaces.
+     ------------------------------------------------------------------- */
+  --status-done:     var(--leaf);    /* evergreen — landed */
+  --status-review:   var(--amber);   /* turning leaf — in flight */
+  --status-pending:  var(--ink-400); /* muted — not yet begun */
+
+  --surface-done:    var(--green-050);
+  --surface-review:  var(--gold-100);
+  --surface-pending: var(--parchment-200);
+
+  --on-done:    var(--green-800);
+  --on-review:  var(--gold-700);
+  --on-pending: var(--ink-500);
+
+  /* Artifact-cell accents — what a proof links to */
+  --artifact-link: var(--river-500);  /* live / source / diff references */
+
+  /* Focus ring */
+  --focus-ring: color-mix(in srgb, var(--gold-500) 70%, transparent);
+}

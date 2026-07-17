@@ -1,0 +1,86 @@
+/* ===========================================================================
+   Imladris — Webfonts
+   ---------------------------------------------------------------------------
+   @font-face declarations (NOT a render-blocking @import). With
+   `font-display: swap` the browser paints the fallback stack immediately and
+   swaps the webface in when it arrives, so first paint never waits on the
+   font CDN — the fix for the old `@import` stall.
+
+   Sources are woff2 from the Fontsource CDN (jsDelivr). For a fully self-hosted
+   / offline build, upload the four families and repoint each `src` at a local
+   woff2; keep the `font-family` names exactly as below so the typography
+   tokens (--font-display / --font-label / --font-body / --font-mono) resolve.
+   ========================================================================= */
+
+/* --- Cormorant Garamond · display ----------------------------------- */
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal; font-weight: 600; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal; font-weight: 700; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic; font-weight: 400; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic; font-weight: 500; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/cormorant-garamond@latest/latin-500-italic.woff2') format('woff2');
+}
+
+/* --- Marcellus · lapidary labels ------------------------------------ */
+@font-face {
+  font-family: 'Marcellus';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/marcellus@latest/latin-400-normal.woff2') format('woff2');
+}
+
+/* --- EB Garamond · reading body ------------------------------------- */
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/eb-garamond@latest/latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/eb-garamond@latest/latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: normal; font-weight: 600; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/eb-garamond@latest/latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'EB Garamond';
+  font-style: italic; font-weight: 400; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/eb-garamond@latest/latin-400-italic.woff2') format('woff2');
+}
+
+/* --- JetBrains Mono · code & data ----------------------------------- */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal; font-weight: 400; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal; font-weight: 500; font-display: swap;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-500-normal.woff2') format('woff2');
+}

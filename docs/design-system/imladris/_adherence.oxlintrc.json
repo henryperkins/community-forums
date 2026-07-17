@@ -24,14 +24,14 @@
               "components/identity/**",
               "feature-ui/organize/**",
               "feature-ui/shared/**",
-              "public/assets/**",
               "ui_kits/admin/**",
               "ui_kits/auth/**",
               "ui_kits/dm/**",
               "ui_kits/mod/**",
               "ui_kits/reading/**",
               "ui_kits/retroboards/**",
-              "ui_kits/settings/**"
+              "ui_kits/settings/**",
+              "ui_kits/system/**"
             ],
             "message": "Import design-system components from 'index.js', not component internals."
           }
@@ -105,8 +105,8 @@
         "message": "<CommendStar> doesn't accept that prop. Declared props: size, title, className."
       },
       {
-        "selector": "JSXOpeningElement[name.name='Composer'] > JSXAttribute > JSXIdentifier[name!=/^(?:postingAs|placeholder|toolbar|sendLabel|count|value|defaultValue|onChange|key|ref|className|style|children)$/]",
-        "message": "<Composer> doesn't accept that prop. Declared props: postingAs, placeholder, toolbar, sendLabel, count, value, defaultValue, onChange."
+        "selector": "JSXOpeningElement[name.name='ComposerUpload'] > JSXAttribute > JSXIdentifier[name!=/^(?:name|thumb|status|progress|failed|alt|key|ref|className|style|children)$/]",
+        "message": "<ComposerUpload> doesn't accept that prop. Declared props: name, thumb, status, progress, failed, alt."
       },
       {
         "selector": "JSXOpeningElement[name.name='DocMetaItem'] > JSXAttribute > JSXIdentifier[name!=/^(?:label|value|key|ref|className|style|children)$/]",
@@ -247,7 +247,7 @@
       "CommendStar": {
         "replaces": []
       },
-      "Composer": {
+      "ComposerUpload": {
         "replaces": []
       },
       "DocMetaItem": {
@@ -435,6 +435,7 @@
       "--text-inverse",
       "--text-meta",
       "--text-muted",
+      "--text-size-body",
       "--text-sm",
       "--text-strong",
       "--text-thread",
@@ -555,6 +556,7 @@
       "--text-display-sm": "font",
       "--text-title": "font",
       "--text-thread": "font",
+      "--text-size-body": "font",
       "--text-sm": "font",
       "--text-meta": "font",
       "--text-eyebrow": "font",

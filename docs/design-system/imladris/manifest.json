@@ -1,50 +1,13 @@
 {
-  "pulledAt": "2026-06-29T10:17:44Z",
-  "tool": "DesignSync (claude.ai/design read interface)",
-  "classification": "authored-in-browser (PROJECT_TYPE_PROJECT, not a /design-sync design system)",
-  "note": "Both projects embed the same compiled design system _ds/imladris-design-system-89e0d236 (React IIFE -> window.ImladrisDesignSystem_89e0d2). The canvases are real, copyable HTML mockups; the component bundle is compiled React (not consumable by the vanilla-PHP / strict-CSP target) and is NOT vendored. Implementation is a translation of the canvas DESIGN into RetroBoards' existing server-rendered templates + theming system, not a copy.",
-  "designSystem": {
-    "name": "Imladris",
-    "id": "imladris-design-system-89e0d236-6451-44a0-8280-e4b7917360ab",
-    "register": "Rivendell-inspired: parchment-and-evergreen surfaces, single mallorn-gold accent, eight-pointed elven star mark; lyrical serif typography (Cormorant Garamond display, Marcellus labels, EB Garamond body, JetBrains Mono data)",
-    "fontsRemote": "Google Fonts CDN (Cormorant Garamond / Marcellus / EB Garamond / JetBrains Mono) — self-host for the strict-CSP target",
-    "tokenSourceOfTruth": "_ds_manifest.json `tokens` array (all values captured)"
-  },
-  "projects": [
-    {
-      "projectId": "c3769b9c-bed3-4b22-a091-8fab1747ea53",
-      "name": "Forum software implementation",
-      "owner": "Henry Perkins",
-      "url": "https://claude.ai/design/p/c3769b9c-bed3-4b22-a091-8fab1747ea53",
-      "implementTarget": "Hall of Fire.dc.html",
-      "purpose": "Desktop three-pane 'Community Inbox' forum shell (general-purpose boards), Imladris-skinned",
-      "files": [
-        "Hall of Fire.dc.html",
-        "support.js",
-        "_ds/imladris-design-system-89e0d236-.../{readme.md,styles.css,_ds_bundle.js,_ds_manifest.json,tokens/*.css}"
-      ]
-    },
-    {
-      "projectId": "9ad17546-d2a4-44b4-9ad4-1f062c2b2ece",
-      "name": "Imladris Council Forum Design",
-      "owner": "Henry Perkins",
-      "url": "https://claude.ai/design/p/9ad17546-d2a4-44b4-9ad4-1f062c2b2ece",
-      "implementTarget": "RetroBoards Mobile.dc.html",
-      "purpose": "Mobile counterpart: 6 iOS frames — Council Inbox, Navigation drawer, Thread & reply, New topic, Guest read-only, Top contributors",
-      "siblingCanvases": ["RetroBoards.dc.html (desktop)", "Imladris Council.dc.html"],
-      "assets": [
-        "assets/emblem.svg", "assets/wordmark.svg",
-        "assets/wapuu-color.webp", "assets/wapuu-emblem-green.webp", "assets/wapuu-emblem-gold.webp",
-        "assets/wapuu-{vilya,narya,nenya}.webp", "assets/ring-badge-{vilya,narya,nenya}.webp",
-        "doc-figures/0{1..6}-desktop-{a,b,c}.png", "ios-frame.jsx"
-      ]
-    }
-  ],
-  "layers": {
-    "tokens": "captured (colors/typography/spacing/effects) — see _ds_manifest tokens",
-    "css": "styles.css + tokens/*.css available remotely; values known",
-    "components": "compiled React bundle — NOT vendored (incompatible target)",
-    "canvases": "staged under .cache/ as design source-of-truth"
-  },
-  "cache": ".design-pull/.cache/ (gitignored): Hall of Fire.dc.html, RetroBoards.dc.html, RetroBoards Mobile.dc.html"
+  "name": "Imladris Design System",
+  "kind": "inspection-manifest",
+  "inspected_repo": "henryperkins/community-forums",
+  "inspected_branch": "main",
+  "inspected_commit": "4efe4e33db6475ce9c59190ba82c72cbd7d4b868",
+  "inspected_at": "2026-07-14",
+  "contract": "production-contract.json",
+  "parity": "PRODUCTION_PARITY.md",
+  "runtime_contract": "RUNTIME_CONTRACT.md",
+  "changelog": "CHANGELOG.md",
+  "unresolved_gaps": []
 }

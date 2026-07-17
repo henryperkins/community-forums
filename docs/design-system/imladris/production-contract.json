@@ -1,0 +1,21 @@
+{
+  "inspected_repo": "henryperkins/community-forums",
+  "inspected_branch": "main",
+  "inspected_commit": "4efe4e33db6475ce9c59190ba82c72cbd7d4b868",
+  "reconciled_through_commit": "6d81da590a12bd09bb8d0e282c042aa03d755a94",
+  "inspected_at": "2026-07-14",
+  "authority_order": ["DECISIONS.md", "product/surface specifications", "accepted ADRs + phase status", "application contracts and tests", "Imladris design-system references"],
+  "csp": "default-src 'self'; base-uri 'self'; form-action 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:",
+  "flags": {
+    "unflagged_core": ["shell", "boards", "threads", "posts", "auth", "profiles", "account_settings", "setup", "errors", "privacy", "unsubscribe", "health", "seo", "monogram_avatars", "sessions"],
+    "default_on": ["engagement", "notifications", "email", "mentions", "search", "dms", "moderation_queue", "community", "oauth", "presence", "announcements", "rich_composer", "wysiwyg_composer", "drafts", "server_drafts", "uploads", "anti_abuse", "appeals", "branding", "seo", "product_tour", "topic_workflow", "tags", "expanded_feeds", "reputation_ledger", "badge_rules", "community_memory", "content_references", "polls", "custom_emoji", "slash_giphy", "split_merge", "profile_media", "board_folders", "bookmark_folders", "saved_feeds", "custom_profile_fields", "account_lifecycle", "automated_context", "package_registry", "package_themes", "capabilities", "passkeys", "provider_registry", "invitations", "service_secrets", "api_tokens", "webhooks", "first_party_hooks"],
+    "implemented_dark": ["custom_css", "group_dms", "link_previews", "expanded_files"],
+    "reserved_dark": ["server_extensions", "governance", "service_principals", "verified_links"],
+    "emergency": ["PACKAGE_EXECUTION_DISABLED"]
+  },
+  "composer": { "spec": "COMPOSER.md v0.8", "mounts": ["reply", "new_thread", "dm", "edit"], "canonical": "markdown", "adr": ["0013", "0020"], "superseded_anatomy_present": false },
+  "surface_specs": ["USER.md", "ADMIN.md", "COMMUNITY.md", "COMPOSER.md"],
+  "surfaces_doc": "PRODUCTION_PARITY.md",
+  "contract_doc": "RUNTIME_CONTRACT.md",
+  "unresolved_gaps": []
+}

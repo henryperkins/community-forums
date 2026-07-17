@@ -57,9 +57,14 @@ Brand mark uses the full star (in topbar.php). Faint watermark = same at `opacit
   OP post (avatar 38–52, OP badge, body 16–17.5px EB measure 64ch, gold blockquote rule, reactions);
   **accepted answer** = `--surface-done` bg + `--green-200` border + radius-lg + gilt-ring avatar +
   "Marked as the answer" (check, `--on-done`) + reputation star.  [Phase 2]
-- **Composer**: card `--surface-raised`/`--border-strong`/inset shadow; "Posting as …" strip;
-  serif textarea; markdown toolbar (Hall of Fire: B/I/S | list/quote/code | link/img/@ + Preview +
-  char counter + "Draft saved"); green Reply/Send (`--font-label`).  [Phase 2/3]
+- **Composer** (the shared shell — one contained box for reply / new-topic / DM / edit,
+  COMPOSER.md v0.8): box `--surface-raised`/`--border-strong`/radius-lg/inset shadow,
+  focus-within gold-400 + halo. Engraved ICON toolbar row (28px buttons, 17px stroke-1.8 SVGs:
+  bold/italic/strike/code | quote/H2/bullet/numbered/codeblock/spoiler | link; `＋` overflow on
+  narrow) toggled by the `Aa` action-bar button. Borderless serif textarea in-box (canonical
+  Markdown; WYSIWYG mounts over it); upload tray; action bar = Aa · `＋` attach · 😊 emoji ·
+  "as **Name**" identity · Anonymous chip | Preview · circular ✒ send. Meta row below:
+  "Draft saved · Discard" · disclosure · mono counter (near-limit only).  [Live]
 - **Leaderboard** (`leaderboard.php`): top-3 cards (roman numerals gold-600, gilt avatars, badge chips,
   big rep), then compact rows; footnote card (green-050, gold left-rule, italic).  [Phase 5]
 - **Profile** (`profile/show.php`): twilight cover + faint gold star watermark; overhanging gilt avatar

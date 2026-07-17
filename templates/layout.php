@@ -37,6 +37,7 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
     <?php if (!empty($brand['favicon_path'])): ?>
         <link rel="icon" href="<?= $e($brand['favicon_path']) ?>">
     <?php endif; ?>
+    <link rel="stylesheet" href="/assets/imladris.css">
     <link rel="stylesheet" href="/assets/app.css">
     <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="/assets/wysiwyg-composer.css"><?php endif; ?>
     <?php if (!empty($themePackage['preview_css_digest'])): ?><link rel="stylesheet" href="/theme/preview.css?v=<?= $e($themePackage['preview_css_digest']) ?>"><?php elseif (!empty($themePackage['active_css_digest'])): ?><link rel="stylesheet" href="/theme/<?= $e($themePackage['active_css_digest']) ?>.css"><?php endif; ?>
