@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Core;
 
 use App\Core\FeatureFlags;
+use App\Support\ImladrisAssetBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class ImladrisRuntimeAssetTest extends TestCase
@@ -111,6 +112,17 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertStringContainsString('background-image: var(--surface-texture, none)', $css);
     }
 
+    public function test_application_quiet_thread_rows_reset_design_system_hover_motion(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        self::assertSame(
+            1,
+            preg_match('/\.thread-row:hover\s*\{(?<declarations>[^}]*)\}/', $css, $matches),
+            'The application quiet-row hover rule is missing.',
+        );
+        self::assertMatchesRegularExpression('/\btransform\s*:\s*none\s*;?/', $matches['declarations']);
+    }
+
     public function test_every_required_runtime_variable_has_a_definition(): void
     {
         $css = (string) file_get_contents(self::ROOT . '/public/assets/imladris.css')
@@ -129,5 +141,190 @@ final class ImladrisRuntimeAssetTest extends TestCase
         }
 
         self::assertSame([], array_keys($missing));
+    }
+
+    public function test_asset_builder_filters_spacing_contract_from_a_crlf_checkout(): void
+    {
+        $root = $this->makeAssetBuilderFixture(useCrlfTextSources: true);
+
+        try {
+            $class = 'Tests\\Unit\\Core\\CrlfFixture\\ImladrisAssetBuilder';
+            if (!class_exists($class, false)) {
+                $source = (string) file_get_contents(self::ROOT . '/src/Support/ImladrisAssetBuilder.php');
+                $source = (string) preg_replace('/^<\?php\s*/', '', $source, 1);
+                $source = str_replace(
+                    'namespace App\\Support;',
+                    'namespace Tests\\Unit\\Core\\CrlfFixture;',
+                    $source,
+                );
+                $source = str_replace(["\r\n", "\r"], "\n", $source);
+                eval(str_replace("\n", "\r\n", $source));
+            }
+
+            try {
+                /** @var object{build:callable():list<string>} $builder */
+                $builder = new $class($root);
+                $files = $builder->build();
+                $error = null;
+            } catch (\RuntimeException $exception) {
+                $files = [];
+                $error = $exception->getMessage();
+            }
+
+            self::assertNull($error, (string) $error);
+            self::assertContains('public/assets/imladris.css', $files);
+            self::assertStringNotContainsString(
+                'animation-duration: 0.001ms',
+                (string) file_get_contents($root . '/public/assets/imladris.css'),
+            );
+            self::assertSame(
+                "line one\nline two\n",
+                file_get_contents($root . '/public/assets/fonts/imladris/LICENSES/test.txt'),
+            );
+            self::assertSame(
+                "\x00\x01\r\n\x02\xff",
+                file_get_contents($root . '/public/assets/fonts/imladris/test.woff2'),
+            );
+        } finally {
+            $this->removeFixtureDirectory($root);
+        }
+    }
+
+    public function test_asset_check_normalizes_text_outputs_but_keeps_fonts_byte_exact(): void
+    {
+        $root = $this->makeAssetBuilderFixture();
+
+        try {
+            $builder = new ImladrisAssetBuilder($root);
+            $files = $builder->build();
+
+            foreach ($files as $relative) {
+                if (!in_array(strtolower(pathinfo($relative, PATHINFO_EXTENSION)), ['css', 'json', 'txt'], true)) {
+                    continue;
+                }
+                $path = $root . '/' . $relative;
+                $content = str_replace(["\r\n", "\r"], "\n", (string) file_get_contents($path));
+                file_put_contents($path, str_replace("\n", "\r\n", $content));
+            }
+
+            self::assertSame([], $builder->check());
+
+            $font = $root . '/public/assets/fonts/imladris/test.woff2';
+            file_put_contents($font, (string) file_get_contents($font) . "\x03");
+            self::assertContains(
+                'Generated file is stale: public/assets/fonts/imladris/test.woff2',
+                $builder->check(),
+            );
+        } finally {
+            $this->removeFixtureDirectory($root);
+        }
+    }
+
+    public function test_design_tool_uploads_do_not_publish_browser_captures(): void
+    {
+        $uploadRoot = 'docs/design-system/imladris/uploads';
+        $allowed = [
+            $uploadRoot . '/359C3D62-2E24-4AEC-B0AB-BF886AFBC174.png',
+            $uploadRoot . '/577F8AEF-DE44-4290-BBFE-C5F94AF207C2.png',
+            $uploadRoot . '/5EF4ED15-812F-4EC1-B78A-0DA477B2AF75.png',
+            $uploadRoot . '/621F9E9A-DC24-4EDE-A9D9-C7039CF04EA4.png',
+            $uploadRoot . '/IMG_0209.png',
+        ];
+        $command = 'git -C ' . escapeshellarg(self::ROOT)
+            . ' ls-files -- ' . escapeshellarg($uploadRoot);
+        exec($command, $tracked, $status);
+        self::assertSame(0, $status, 'Unable to inspect tracked design-tool uploads.');
+
+        $unexpected = array_values(array_filter(
+            array_diff($tracked, $allowed),
+            static fn (string $relative): bool => is_file(self::ROOT . '/' . $relative),
+        ));
+        sort($unexpected);
+        self::assertSame([], $unexpected, 'Only explicitly reviewed upload assets may be tracked.');
+
+        $gitignore = (string) file_get_contents(self::ROOT . '/.gitignore');
+        self::assertStringContainsString(
+            '/docs/design-system/imladris/uploads/',
+            $gitignore,
+            'Design-tool uploads must be ignored by default; add reviewed assets explicitly with git add -f.',
+        );
+    }
+
+    private function makeAssetBuilderFixture(bool $useCrlfTextSources = false): string
+    {
+        $root = sys_get_temp_dir() . '/rb-imladris-eol-' . bin2hex(random_bytes(6));
+        $files = [
+            'docs/design-system/imladris/manifest.json' => json_encode([
+                'unresolved_gaps' => [],
+                'inspected_commit' => 'fixture',
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",
+            'docs/design-system/imladris/production-contract.json' => json_encode([
+                'unresolved_gaps' => [],
+                'reconciled_through_commit' => 'fixture',
+                'composer' => ['spec' => 'fixture'],
+                'surface_specs' => [],
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",
+            'config/imladris-runtime-baseline.json' => json_encode([
+                'reconciled_through_commit' => 'fixture',
+                'composer_contract' => 'fixture',
+                'application_surface' => [
+                    'roots' => [],
+                    'files' => [],
+                    'extensions' => [],
+                    'excluded' => [],
+                    'sha256' => hash('sha256', "\n"),
+                ],
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",
+            'docs/design-system/imladris/tokens/fonts.css' => "@font-face { src: url('../assets/fonts/test.woff2'); }\n",
+            'docs/design-system/imladris/tokens/colors.css' => ":root { --ink-700: #222; }\n",
+            'docs/design-system/imladris/tokens/typography.css' => ":root { --text-size-body: 1.0625rem; }\n",
+            'docs/design-system/imladris/tokens/spacing.css' => <<<'CSS'
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+CSS,
+            'docs/design-system/imladris/components.css' => ".thread-row { display: flex; }\n",
+            'docs/design-system/imladris/assets/fonts/LICENSES/test.txt' => "line one\nline two\n",
+            'docs/design-system/imladris/assets/fonts/test.woff2' => "\x00\x01\r\n\x02\xff",
+        ];
+
+        foreach ($files as $relative => $content) {
+            $path = $root . '/' . $relative;
+            if (!is_dir(dirname($path))) {
+                mkdir(dirname($path), 0777, true);
+            }
+            if ($useCrlfTextSources
+                && in_array(strtolower(pathinfo($relative, PATHINFO_EXTENSION)), ['css', 'json', 'txt'], true)) {
+                $content = str_replace(["\r\n", "\r"], "\n", $content);
+                $content = str_replace("\n", "\r\n", $content);
+            }
+            file_put_contents($path, $content);
+        }
+
+        return $root;
+    }
+
+    private function removeFixtureDirectory(string $root): void
+    {
+        if (!is_dir($root)) {
+            return;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST,
+        );
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
+                rmdir($item->getPathname());
+            } else {
+                unlink($item->getPathname());
+            }
+        }
+        rmdir($root);
     }
 }

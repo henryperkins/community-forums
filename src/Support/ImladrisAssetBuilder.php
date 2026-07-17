@@ -69,7 +69,12 @@ final class ImladrisAssetBuilder
                 $errors[] = 'Missing generated file: ' . $relative;
                 continue;
             }
-            if (file_get_contents($path) !== $content) {
+            $actual = file_get_contents($path);
+            if ($actual !== false && $this->isTextOutput($relative)) {
+                $actual = $this->normalizeLineEndings($actual);
+                $content = $this->normalizeLineEndings($content);
+            }
+            if ($actual !== $content) {
                 $errors[] = 'Generated file is stale: ' . $relative;
             }
         }
@@ -178,6 +183,9 @@ final class ImladrisAssetBuilder
             $absolute = str_replace('\\', '/', $file->getPathname());
             $relative = ltrim(substr($absolute, strlen(str_replace('\\', '/', $fontRoot))), '/');
             $content = (string) file_get_contents($file->getPathname());
+            if ($extension === 'txt') {
+                $content = $this->normalizeLineEndings($content);
+            }
             $fontFiles[] = $relative;
             $expected['resources/imladris/assets/fonts/' . $relative] = $content;
             $expected['public/assets/fonts/imladris/' . $relative] = $content;
@@ -241,12 +249,14 @@ final class ImladrisAssetBuilder
 
     private function runtimeCss(string $relative, string $content): string
     {
+        $content = $this->normalizeLineEndings($content);
+
         if ($relative === 'tokens/fonts.css') {
             $content = str_replace('../assets/fonts/', 'fonts/imladris/', $content);
         }
 
         if ($relative === 'tokens/spacing.css') {
-            $reducedMotion = <<<'CSS'
+            $reducedMotion = $this->normalizeLineEndings(<<<'CSS'
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.001ms !important;
@@ -254,7 +264,7 @@ final class ImladrisAssetBuilder
         scroll-behavior: auto !important;
     }
 }
-CSS;
+CSS);
             $replacement = '/* Reduced-motion behavior remains application-owned at runtime. */';
             $content = str_replace($reducedMotion, $replacement, $content, $count);
             if ($count !== 1) {
@@ -288,7 +298,17 @@ CSS;
         if ($content === false) {
             throw new RuntimeException('Unable to read Imladris source: ' . $path);
         }
+        return $this->normalizeLineEndings($content);
+    }
+
+    private function normalizeLineEndings(string $content): string
+    {
         return str_replace(["\r\n", "\r"], "\n", $content);
+    }
+
+    private function isTextOutput(string $relative): bool
+    {
+        return in_array(strtolower(pathinfo($relative, PATHINFO_EXTENSION)), ['css', 'json', 'txt'], true);
     }
 
     /** @param array<string,mixed> $scope */

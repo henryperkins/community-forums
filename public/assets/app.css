@@ -1524,7 +1524,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .thread-row::before {
     content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent;
 }
-.thread-row:hover { background: var(--surface-sunken); }
+.thread-row:hover { background: var(--surface-sunken); transform: none; }
 .thread-pinned::before              { background: var(--gold-400); }
 .thread-status-solved::before       { background: var(--leaf); }
 .thread-status-needs_answer::before { background: var(--amber); }
