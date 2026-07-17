@@ -6,6 +6,49 @@ $this->section('title', $display . ' (@' . $profile['username'] . ')');
 $profileUrl = '/u/' . $profile['username'];
 ?>
 <div class="profile">
+    <?php if (!empty($mod_error_context)): ?>
+        <?php
+        // Failed staff action (POST /mod/u/*): surface the error and hand the
+        // typed input back in a retry form so nothing is lost — the same
+        // anti-draft-loss contract as the admin record screen. This block only
+        // renders in the direct 422 response to the acting staff member.
+        $modOld = $mod_old ?? [];
+        ?>
+        <section class="card mod-action-retry">
+            <h2>Moderation action failed</h2>
+            <?php foreach (($mod_errors ?? []) as $message): ?>
+                <p class="field-error"><?= $e($message) ?></p>
+            <?php endforeach; ?>
+            <?php if (in_array($mod_error_context, ['warn', 'note', 'suspend', 'ban'], true)): ?>
+                <form method="post" action="<?= $e('/mod/u/' . (int) $profile['id'] . '/' . $mod_error_context) ?>" class="stacked">
+                    <?= $this->csrfField() ?>
+                    <?php if ($mod_error_context === 'note'): ?>
+                        <label class="field">
+                            <span>Note (visible to staff only)</span>
+                            <textarea name="body" class="input" rows="3"><?= $e((string) ($modOld['body'] ?? '')) ?></textarea>
+                        </label>
+                    <?php else: ?>
+                        <label class="field">
+                            <span>Reason</span>
+                            <input type="text" name="reason" class="input" maxlength="255" value="<?= $e((string) ($modOld['reason'] ?? '')) ?>" required>
+                        </label>
+                        <?php if ($mod_error_context === 'suspend'): ?>
+                            <label class="field">
+                                <span>Until (UTC, optional — leave blank for indefinite)</span>
+                                <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e((string) ($modOld['until'] ?? '')) ?>">
+                            </label>
+                        <?php endif; ?>
+                        <?php if ($mod_error_context === 'warn' && ($modOld['board_id'] ?? '') !== ''): ?>
+                            <input type="hidden" name="board_id" value="<?= (int) $modOld['board_id'] ?>">
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    <div class="form-actions">
+                        <button class="btn<?= in_array($mod_error_context, ['suspend', 'ban'], true) ? ' danger' : '' ?>" type="submit">Try again</button>
+                    </div>
+                </form>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
     <header class="profile-cover">
         <svg class="profile-cover-star" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
         <span class="profile-avatar">

@@ -16,8 +16,10 @@ use Tests\Support\TestCase;
  * Inc 6 follow-up: queue discovery for custom deputies. /mod/approvals and
  * /mod/reports row-scoped (and doored) purely via legacy board_moderators,
  * so a custom role holding the queue's action key could never reach its
- * rows under enforce. Legacy/shadow door + row behavior must stay
- * byte-identical; under enforce the actor's grants decide.
+ * rows under enforce. Under enforce the actor's grants decide. The 2026-07-17
+ * audit (N1) then opened the legacy/shadow approvals door to assigned board
+ * moderators — scoped, matching the reports queue — while the admin /
+ * global-moderator / plain-member personas keep their pre-cutover behavior.
  */
 final class AppModQueueDiscoveryTest extends TestCase
 {
@@ -54,7 +56,7 @@ final class AppModQueueDiscoveryTest extends TestCase
         $this->db->run('UPDATE threads SET is_pending = 1 WHERE id = ?', [$threadId]);
     }
 
-    public function test_legacy_queue_doors_and_rows_are_unchanged(): void
+    public function test_legacy_queue_doors_and_rows_per_persona(): void
     {
         $admin = $this->makeAdmin();
         $globalMod = $this->makeUser(['role' => 'moderator']);
@@ -73,10 +75,12 @@ final class AppModQueueDiscoveryTest extends TestCase
         $this->assertDontSeeText($page, 'LegacyPendingProbe');
         $this->assertStatus(404, $this->get('/mod/reports'));
 
-        // Assigned board moderator (role=user): the approvals door stays the
-        // bare role probe (403), the reports queue opens scoped.
+        // Assigned board moderator (role=user): both queues open, scoped to
+        // their boards (approvals parity per the 2026-07-17 audit, N1).
         $this->actingAs($deputy);
-        $this->assertStatus(403, $this->get('/mod/approvals'));
+        $page = $this->get('/mod/approvals');
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'LegacyPendingProbe');
         $this->assertStatus(200, $this->get('/mod/reports'));
 
         // Plain member: both closed.
@@ -90,6 +94,44 @@ final class AppModQueueDiscoveryTest extends TestCase
         $this->assertStatus(200, $page);
         $this->assertSeeText($page, 'LegacyPendingProbe');
         $this->assertStatus(200, $this->get('/mod/reports'));
+    }
+
+    /**
+     * Audit 2026-07-17 N1: an assigned board moderator (users.role='user') must
+     * reach the approvals queue under the default legacy/shadow door — scoped
+     * to their boards, exactly like the reports queue — instead of 403ing at a
+     * bare site-role probe while the moderation subnav advertises the tab
+     * (ADMIN §3.2, §9.1–9.2).
+     */
+    public function test_shadow_assigned_board_moderator_reaches_scoped_approvals(): void
+    {
+        $admin = $this->makeAdmin();
+        $deputy = $this->makeUser(['username' => 'shadowdeputy']);
+        $cat = $this->makeCategory();
+        $scoped = $this->makeBoard($cat);
+        $foreign = $this->makeBoard($cat);
+        (new BoardModeratorRepository($this->db))->assign((int) $scoped['id'], (int) $deputy['id']);
+
+        $inScope = $this->makeThread($scoped, $admin, 'ShadowScopedPending');
+        $outScope = $this->makeThread($foreign, $admin, 'ShadowForeignPending');
+        $this->markPending((int) $inScope['thread_id']);
+        $this->markPending((int) $outScope['thread_id']);
+
+        $this->actingAs($deputy);
+        $page = $this->get('/mod/approvals');
+        $this->assertStatus(200, $page);
+        $this->assertSeeText($page, 'ShadowScopedPending');
+        $this->assertDontSeeText($page, 'ShadowForeignPending');
+
+        // Releasing an in-scope hold works end-to-end for the scoped moderator.
+        $this->assertRedirectContains(
+            $this->post('/mod/approvals/thread/' . (int) $inScope['thread_id'] . '/approve'),
+            '/mod/approvals',
+        );
+        self::assertSame(0, (int) $this->db->fetchValue(
+            'SELECT is_pending FROM threads WHERE id = ?',
+            [(int) $inScope['thread_id']],
+        ));
     }
 
     public function test_enforce_deputy_sees_and_acts_on_scoped_approvals(): void

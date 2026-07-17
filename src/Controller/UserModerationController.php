@@ -15,7 +15,9 @@ use App\Service\UserModerationService;
  * Staff user-moderation actions (P2-08): warn / note (staff) and
  * suspend / ban / lift (admin). Authorization is enforced in
  * UserModerationService; the controller requires a logged-in user and routes
- * the result back to the subject's profile.
+ * the result back to the subject's profile. A validation failure re-renders
+ * that profile at 422 with the error and the typed input preserved
+ * (anti-draft-loss, 2026-07-17 audit N3) instead of redirecting.
  */
 final class UserModerationController extends Controller
 {
@@ -23,14 +25,18 @@ final class UserModerationController extends Controller
     public function warn(Request $request, array $params): Response
     {
         return $this->run($params, fn ($svc, $actor, $id) =>
-            $svc->warn($actor, $id, $request->str('reason'), $request->int('board_id', 0) ?: null), 'Warning recorded.');
+            $svc->warn($actor, $id, $request->str('reason'), $request->int('board_id', 0) ?: null),
+            'Warning recorded.', 'warn',
+            ['reason' => $request->str('reason'), 'board_id' => $request->str('board_id')]);
     }
 
     /** @param array<string,string> $params */
     public function note(Request $request, array $params): Response
     {
         return $this->run($params, fn ($svc, $actor, $id) =>
-            $svc->addNote($actor, $id, $request->str('body')), 'Note added.');
+            $svc->addNote($actor, $id, $request->str('body')),
+            'Note added.', 'note',
+            ['body' => $request->str('body')]);
     }
 
     /** @param array<string,string> $params */
@@ -38,25 +44,35 @@ final class UserModerationController extends Controller
     {
         $until = $request->str('until');
         return $this->run($params, fn ($svc, $actor, $id) =>
-            $svc->suspend($actor, $id, $until !== '' ? $until : null, $request->str('reason')), 'User suspended.');
+            $svc->suspend($actor, $id, $until !== '' ? $until : null, $request->str('reason')),
+            'User suspended.', 'suspend',
+            ['reason' => $request->str('reason'), 'until' => $until]);
     }
 
     /** @param array<string,string> $params */
     public function ban(Request $request, array $params): Response
     {
         return $this->run($params, fn ($svc, $actor, $id) =>
-            $svc->ban($actor, $id, $request->str('reason')), 'User banned.');
+            $svc->ban($actor, $id, $request->str('reason')),
+            'User banned.', 'ban',
+            ['reason' => $request->str('reason')]);
     }
 
     /** @param array<string,string> $params */
     public function lift(Request $request, array $params): Response
     {
         return $this->run($params, fn ($svc, $actor, $id) =>
-            $svc->lift($actor, $id), 'Account restriction lifted.');
+            $svc->lift($actor, $id), 'Account restriction lifted.', 'lift');
     }
 
-    /** @param array<string,string> $params */
-    private function run(array $params, callable $action, string $okMessage): Response
+    /**
+     * @param array<string,string> $params
+     * @param array<string,string> $old typed input to re-render on failure;
+     *        taken from the request (like the admin record screen) because
+     *        service guards such as requireReason() throw without capturing
+     *        the submitted values.
+     */
+    private function run(array $params, callable $action, string $okMessage, string $context, array $old = []): Response
     {
         $actor = $this->requireUser();
         $subjectId = (int) ($params['id'] ?? 0);
@@ -69,7 +85,16 @@ final class UserModerationController extends Controller
         try {
             $action($this->container->get(UserModerationService::class), $actor, $subjectId);
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash($back, $e->first());
+            // Re-render the subject's profile with the failure inline and a
+            // retry form carrying the typed input — never a flash redirect
+            // that drops a long justification (mirrors /admin/users/{id} and
+            // the thread reply re-render).
+            return (new ProfileController($this->container))
+                ->renderProfile($this->request(), $subject, [
+                    'mod_error_context' => $context,
+                    'mod_errors' => $e->errors,
+                    'mod_old' => $old !== [] ? $old : $e->old,
+                ])->withStatus(422);
         }
         return $this->redirectWithFlash($back, $okMessage);
     }

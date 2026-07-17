@@ -36,6 +36,20 @@ final class ProfileController extends Controller
             return $profile;
         }
 
+        return $this->renderProfile($request, $profile);
+    }
+
+    /**
+     * Render the profile page for an already-resolved member row. Public so a
+     * failed staff action (UserModerationController) can re-render this page at
+     * 422 with the error + typed input preserved instead of redirecting and
+     * dropping it — symmetric with ThreadController::renderThread + reply_old.
+     *
+     * @param array<string,mixed> $profile
+     * @param array<string,mixed> $extra mod_error_context / mod_errors / mod_old
+     */
+    public function renderProfile(Request $request, array $profile, array $extra = []): Response
+    {
         $viewer = $this->currentUser();
         $profileId = (int) $profile['id'];
         $isSelf = $viewer !== null && $viewer->id() === $profileId;
@@ -79,7 +93,7 @@ final class ProfileController extends Controller
             $tab = 'overview';
         }
 
-        return $this->view('profile/show', [
+        return $this->view('profile/show', array_merge([
             'profile' => $profile,
             'tab' => $tab,
             'bio_html' => $bioHtml,
@@ -102,7 +116,7 @@ final class ProfileController extends Controller
             'viewer_blocks_profile' => $viewerBlocksProfile,
             'blocked_either' => $blockedEither,
             'presence_online' => $this->presenceOnline($profile, $isSelf),
-        ]);
+        ], $extra));
     }
 
     /** Followers / following lists (COMMUNITY §8), subject to visibility + blocks. */

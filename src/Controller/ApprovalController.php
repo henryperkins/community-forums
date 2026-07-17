@@ -40,11 +40,13 @@ final class ApprovalController extends Controller
             [], // site probe: no board target — board-scoped grants correctly do not qualify
             'ApprovalController::index',
         );
-        // Door: the legacy site probe verbatim, plus — under enforce only — a
-        // deputy whose grants surfaced at least one board's rows. Custom
-        // deputies exist only once the resolver decides; the legacy/shadow
-        // door stays byte-identical to pre-cutover behavior.
-        if (!$sitePass && !($gate->mode() === AuthorityGate::MODE_ENFORCE && $scope !== [])) {
+        // Door: the site probe (kept for the role-moderator personas it admits,
+        // including the shadow-mode suspended-staff quirk pinned in
+        // AppEnforcementCutoverTest), OR — in every mode — an actor whose scope
+        // surfaced at least one board's rows. The scope arm is what lets an
+        // assigned board moderator through in legacy/shadow, matching the
+        // reports queue this page sits beside (ADMIN §3.2; 2026-07-17 audit N1).
+        if (!$sitePass && $scope === []) {
             throw new ForbiddenException('Moderator access required.'); // keep the existing message verbatim
         }
 
