@@ -17,12 +17,14 @@ use App\Repository\SettingRepository;
 use App\Repository\ThreadIntelligenceJobRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
+use App\Security\BoardAuthority;
 use App\Security\BoardPolicy;
 use App\Security\WriteGate;
 use App\Service\AdminService;
 use App\Service\CommunityMemoryService;
 use App\Service\ModerationService;
 use App\Service\PostingService;
+use App\Service\ThreadReadService;
 use App\Service\ThreadIntelligence\ThreadIntelligenceBoardSweep;
 use App\Service\ThreadIntelligence\ThreadIntelligenceBudget;
 use App\Service\ThreadIntelligence\ThreadIntelligenceConfig;
@@ -229,6 +231,7 @@ final class ThreadIntelligenceEnqueueIntegrationTest extends TestCase
             posts: new PostRepository($this->db),
             moderation: $moderation,
             logs: new ModerationLogRepository($this->db),
+            readService: $this->readService(),
             threadIntelligence: $queue,
         );
         $actor = $this->userEntity($this->makeAdmin());
@@ -381,7 +384,24 @@ final class ThreadIntelligenceEnqueueIntegrationTest extends TestCase
             boardMods: new BoardModeratorRepository($this->db),
             boards: new BoardRepository($this->db),
             users: new UserRepository($this->db),
+            boardAuthority: $this->boardAuthority(),
+            readService: $this->readService(),
             threadIntelligence: $queue,
+        );
+    }
+
+    private function boardAuthority(): BoardAuthority
+    {
+        return new BoardAuthority(new WriteGate(), new BoardModeratorRepository($this->db), new BoardRepository($this->db));
+    }
+
+    private function readService(): ThreadReadService
+    {
+        return new ThreadReadService(
+            new ThreadRepository($this->db),
+            new BoardPolicy(),
+            new BoardMemberRepository($this->db),
+            $this->boardAuthority(),
         );
     }
 

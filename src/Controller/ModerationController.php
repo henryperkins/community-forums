@@ -9,8 +9,8 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
-use App\Repository\ThreadRepository;
 use App\Service\ModerationService;
+use App\Service\ThreadReadService;
 use App\Service\ThreadSplitMergeService;
 
 /**
@@ -137,15 +137,14 @@ final class ModerationController extends Controller
     /**
      * Re-render the thread view at 422 with moderation-form context preserved
      * (same mechanism as PostController's reply/edit failure re-renders).
+     * Loads through the shared read gate: the 422 must never show an actor a
+     * thread the equivalent GET would 404 (spec §1).
      *
      * @param array<string,mixed> $extra
      */
     private function rerenderThread(Request $request, int $threadId, array $extra): Response
     {
-        $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
-        if ($thread === null || (int) ($thread['is_deleted'] ?? 0) === 1) {
-            throw new NotFoundException('Thread not found.');
-        }
+        $thread = $this->container->get(ThreadReadService::class)->loadForUser($this->currentUser(), $threadId);
         return (new ThreadController($this->container))
             ->renderThread($request, $thread, $extra)
             ->withStatus(422);

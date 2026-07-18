@@ -150,6 +150,7 @@ use App\Repository\WebAuthnCredentialRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\AuthorityGate;
+use App\Security\BoardAuthority;
 use App\Security\BoardPolicy;
 use App\Security\ClientIdentifier;
 use App\Security\CapabilityResolver;
@@ -253,6 +254,7 @@ use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
 use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
+use App\Service\ThreadReadService;
 use App\Service\ThreadSplitMergeService;
 use App\Service\ThreadWorkflowService;
 use App\Service\ThreadIntelligence\CurlOpenAiTransport;
@@ -1371,6 +1373,7 @@ final class App
             $c->get(PostRepository::class),
             $c->get(ModerationService::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(ThreadReadService::class),
             $c->get(ThreadIntelligenceQueue::class),
         ));
         $c->bind(CommunityMemoryService::class, fn (Container $c) => new CommunityMemoryService(
@@ -1888,6 +1891,18 @@ final class App
             $c->get(AuthorityGate::class),
             $c->get(ThreadIntelligenceQueue::class),
         ));
+        $c->bind(BoardAuthority::class, fn (Container $c) => new BoardAuthority(
+            $c->get(WriteGate::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(AuthorityGate::class),
+        ));
+        $c->bind(ThreadReadService::class, fn (Container $c) => new ThreadReadService(
+            $c->get(ThreadRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardAuthority::class),
+        ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
             $c->get(ThreadRepository::class),
@@ -1898,8 +1913,9 @@ final class App
             $c->get(BoardModeratorRepository::class),
             $c->get(BoardRepository::class),
             $c->get(UserRepository::class),
+            $c->get(BoardAuthority::class),
+            $c->get(ThreadReadService::class),
             $c->get(FirstPartyHookRegistry::class),
-            $c->get(AuthorityGate::class),
             $c->get(ThreadIntelligenceQueue::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(

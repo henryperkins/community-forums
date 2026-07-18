@@ -12,9 +12,11 @@ use App\Repository\ProtectedOwnerRepository;
 use App\Repository\RoleAssignmentRepository;
 use App\Repository\RoleCapabilityRepository;
 use App\Repository\SettingRepository;
+use App\Security\BoardAuthority;
 use App\Security\BoardPolicy;
 use App\Security\CapabilityResolver;
 use App\Security\WriteGate;
+use App\Service\ThreadReadService;
 use App\Service\LegacyAuthorityProjection;
 use App\Service\ModerationService;
 use App\Service\Phase5FixtureSeeder;
@@ -80,6 +82,7 @@ final class ResolverParityTest extends TestCase
         $modRow = $this->makeUser();
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modRow['id']);
 
+        $boardAuthority = new BoardAuthority(new WriteGate(), new BoardModeratorRepository($this->db), $this->boards());
         $modService = new ModerationService(
             $this->db,
             $this->threads(),
@@ -90,6 +93,8 @@ final class ResolverParityTest extends TestCase
             new BoardModeratorRepository($this->db),
             $this->boards(),
             $this->users(),
+            $boardAuthority,
+            new ThreadReadService($this->threads(), new BoardPolicy(), new BoardMemberRepository($this->db), $boardAuthority),
         );
 
         $cases = [

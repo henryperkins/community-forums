@@ -24,6 +24,7 @@ final class ThreadSplitMergeService
         private PostRepository $posts,
         private ModerationService $moderation,
         private ModerationLogRepository $logs,
+        private ThreadReadService $readService,
         private ?ThreadIntelligenceQueue $threadIntelligence = null,
     ) {
     }
@@ -31,10 +32,8 @@ final class ThreadSplitMergeService
     /** @param list<int> $postIds @return array<string,mixed> new thread row */
     public function split(User $actor, int $sourceThreadId, array $postIds, string $title): array
     {
-        $source = $this->threads->find($sourceThreadId);
-        if ($source === null || (int) $source['is_deleted'] === 1) {
-            throw new NotFoundException('Thread not found.');
-        }
+        // Read (404) → authority (403) → validation (422) — spec §1.
+        $source = $this->readService->loadForUser($actor, $sourceThreadId);
         if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
             throw new ForbiddenException('You do not moderate this board.');
         }
@@ -114,16 +113,21 @@ final class ThreadSplitMergeService
     /** @return array<string,mixed> target thread row */
     public function merge(User $actor, int $sourceThreadId, int $targetThreadId): array
     {
+        // Read (404) → source authority (403) → validation (422) — spec §1.
+        $source = $this->readService->loadForUser($actor, $sourceThreadId);
+        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
+            throw new ForbiddenException('You do not moderate the source board.');
+        }
         if ($sourceThreadId === $targetThreadId) {
             throw new ValidationException(['target_thread_id' => 'Choose a different target thread.']);
         }
-        $source = $this->threads->find($sourceThreadId);
-        $target = $this->threads->find($targetThreadId);
-        if ($source === null || $target === null || (int) $source['is_deleted'] === 1 || (int) $target['is_deleted'] === 1) {
-            throw new NotFoundException('Thread not found.');
-        }
-        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
-            throw new ForbiddenException('You do not moderate the source board.');
+        // The target resolves from the ACTOR's perspective: a target that does
+        // not exist and one the actor cannot read produce the same 422 — the
+        // picker never doubles as an existence oracle for private threads.
+        try {
+            $target = $this->readService->loadForUser($actor, $targetThreadId);
+        } catch (NotFoundException) {
+            throw new ValidationException(['target_thread_id' => 'Choose a valid target thread.']);
         }
         if (!$this->moderation->canModerate($actor, (int) $target['board_id'], Cap::THREAD_SPLIT_MERGE)) {
             throw new ForbiddenException('You do not moderate the target board.');
