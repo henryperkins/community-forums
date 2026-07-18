@@ -22,6 +22,8 @@ use App\Service\Registry\RegistryCatalogService;
 /**
  * Server-rendered package lifecycle surface. {id} is always packages.id; local
  * install rows are resolved server-side so operators cannot target another row.
+ * Every successful mutation lands back on the package with a flash saying what
+ * happened — a silent redirect reads as "nothing happened" on a page this dense.
  */
 final class AdminPackageLifecycleController extends Controller
 {
@@ -54,7 +56,10 @@ final class AdminPackageLifecycleController extends Controller
 
         try {
             $this->lifecycle()->install($admin, (string) $request->post('current_password', ''), $packageId, $releaseId);
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId . '/consent'));
+            return $this->noindex($this->redirectWithFlash(
+                '/admin/packages/' . $packageId . '/consent',
+                'Install recorded — review and grant the permissions below.',
+            ));
         } catch (ValidationException $e) {
             return $this->planView($admin, $packageId, $releaseId, $e->errors);
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -91,10 +96,16 @@ final class AdminPackageLifecycleController extends Controller
                     ], 422);
                 }
                 $this->updates()->applyStaged($admin, (string) $request->post('current_password', ''), (int) $install['id']);
-            } else {
-                $this->lifecycle()->consent($admin, (string) $request->post('current_password', ''), (int) $install['id']);
+                return $this->noindex($this->redirectWithFlash(
+                    '/admin/packages/' . $packageId,
+                    'Update approved and applied.',
+                ));
             }
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+            $this->lifecycle()->consent($admin, (string) $request->post('current_password', ''), (int) $install['id']);
+            return $this->noindex($this->redirectWithFlash(
+                '/admin/packages/' . $packageId,
+                'Permissions granted. Enable the package when you are ready.',
+            ));
         } catch (ValidationException $e) {
             return $this->consentView($admin, $packageId, $e->errors, 422);
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -111,6 +122,7 @@ final class AdminPackageLifecycleController extends Controller
             'enable',
             fn (User $admin, array $install, string $password): mixed =>
                 $this->lifecycle()->enable($admin, $password, (int) $install['id']),
+            'Package enabled.',
         );
     }
 
@@ -123,6 +135,7 @@ final class AdminPackageLifecycleController extends Controller
             'disable',
             fn (User $admin, array $install): mixed =>
                 $this->lifecycle()->disable($admin, (int) $install['id']),
+            'Package disabled.',
         );
     }
 
@@ -137,6 +150,7 @@ final class AdminPackageLifecycleController extends Controller
             'pin',
             fn (User $admin, array $install): mixed =>
                 $this->lifecycle()->setPinned($admin, (int) $install['id'], $pinned),
+            $pinned ? 'Version pinned — updates will not be staged.' : 'Version unpinned.',
         );
     }
 
@@ -151,6 +165,7 @@ final class AdminPackageLifecycleController extends Controller
             'update_policy',
             fn (User $admin, array $install): mixed =>
                 $this->lifecycle()->setUpdatePolicy($admin, (int) $install['id'], $policy),
+            'Update policy saved.',
         );
     }
 
@@ -169,11 +184,13 @@ final class AdminPackageLifecycleController extends Controller
                 (int) $install['id'],
                 $this->releaseId($request),
             );
-            $target = $result['status'] === 'staged'
-                ? '/admin/packages/' . $packageId . '/consent'
-                : '/admin/packages/' . $packageId;
-
-            return $this->noindex($this->redirect($target));
+            if ($result['status'] === 'staged') {
+                return $this->noindex($this->redirectWithFlash(
+                    '/admin/packages/' . $packageId . '/consent',
+                    'Update staged — approve the permission changes below.',
+                ));
+            }
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, 'Package updated.'));
         } catch (ValidationException $e) {
             return $this->detailView($packageId, $e->errors, 422, $this->releaseId($request));
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -190,6 +207,7 @@ final class AdminPackageLifecycleController extends Controller
             'update_cancel',
             fn (User $admin, array $install): mixed =>
                 $this->updates()->cancelStaged($admin, (int) $install['id']),
+            'Staged update discarded.',
         );
     }
 
@@ -208,11 +226,13 @@ final class AdminPackageLifecycleController extends Controller
                 (int) $install['id'],
                 (int) $request->str('release_id'),
             );
-            $target = $result['status'] === 'staged'
-                ? '/admin/packages/' . $packageId . '/consent'
-                : '/admin/packages/' . $packageId;
-
-            return $this->noindex($this->redirect($target));
+            if ($result['status'] === 'staged') {
+                return $this->noindex($this->redirectWithFlash(
+                    '/admin/packages/' . $packageId . '/consent',
+                    'Rollback staged — approve the permission changes below.',
+                ));
+            }
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, 'Rollback applied.'));
         } catch (ValidationException $e) {
             return $this->detailView($packageId, $e->errors, 422, (int) $request->str('release_id'));
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -229,6 +249,7 @@ final class AdminPackageLifecycleController extends Controller
             'uninstall',
             fn (User $admin, array $install, string $password): mixed =>
                 $this->lifecycle()->uninstall($admin, $password, (int) $install['id']),
+            'Package uninstalled.',
         );
     }
 
@@ -265,7 +286,7 @@ final class AdminPackageLifecycleController extends Controller
                     'reverify' => 'Re-verification failed: the installed bytes still do not match the reviewed digest.',
                 ], 422);
             }
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, 'Digest re-verified — the installed bytes match the review.'));
         } catch (PackagePolicyException | RegistryVerificationException $e) {
             return $this->detailView($packageId, ['reverify' => $this->policyMessage($e)], 422);
         }
@@ -314,7 +335,7 @@ final class AdminPackageLifecycleController extends Controller
      * @param array<string,string> $params
      * @param callable(User,array<string,mixed>,string):mixed $call
      */
-    private function passwordAction(Request $request, array $params, string $errorKey, callable $call): Response
+    private function passwordAction(Request $request, array $params, string $errorKey, callable $call, string $successFlash): Response
     {
         $admin = $this->requireAdmin();
         $this->gate();
@@ -323,7 +344,7 @@ final class AdminPackageLifecycleController extends Controller
 
         try {
             $call($admin, $install, (string) $request->post('current_password', ''));
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, $successFlash));
         } catch (ValidationException $e) {
             return $this->detailView($packageId, $e->errors, 422);
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -335,7 +356,7 @@ final class AdminPackageLifecycleController extends Controller
      * @param array<string,string> $params
      * @param callable(User,array<string,mixed>):mixed $call
      */
-    private function simpleAction(Request $request, array $params, string $errorKey, callable $call): Response
+    private function simpleAction(Request $request, array $params, string $errorKey, callable $call, string $successFlash): Response
     {
         $admin = $this->requireAdmin();
         $this->gate();
@@ -344,7 +365,7 @@ final class AdminPackageLifecycleController extends Controller
 
         try {
             $call($admin, $install);
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, $successFlash));
         } catch (ValidationException $e) {
             return $this->detailView($packageId, $e->errors, 422);
         } catch (PackagePolicyException | RegistryVerificationException $e) {

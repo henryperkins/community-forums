@@ -700,7 +700,15 @@
             if (e.target === newTopic) { closeTopic(); }
         });
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && newTopic.open) { closeTopic(); }
+            if (e.key !== 'Escape' || !newTopic.open) { return; }
+            // Escape peels overlays outermost-first (same contract as the DM
+            // rail): an open composer popover — slash/reference menu, emoji or
+            // GIF dialog — owns this keypress, and the compose modal closes
+            // only when it is the topmost thing open. (With focus inside the
+            // composer the popover handler also stops propagation; this guard
+            // covers keypresses that reach the document directly.)
+            if (newTopic.querySelector('.composer-slash-menu:not([hidden]), .composer-reference-menu:not([hidden]), [role="dialog"]:not([hidden])')) { return; }
+            closeTopic();
         });
         var cancel = newTopic.querySelector('[data-close-composer]');
         if (cancel) { cancel.addEventListener('click', closeTopic); }
@@ -927,4 +935,21 @@
             })(dmCopyButtons[cpi]);
         }
     }
+})();
+
+// --- Admin console remediation (2026-07-18): bulk-select toggle -------------
+// Users directory: the header checkbox toggles every row checkbox on the page
+// (ADMIN §5.1 bulk-select). Selection works without JS — this only saves
+// fifty clicks. Self-contained IIFE so it appends safely after the main one.
+(function () {
+    'use strict';
+    document.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t || !t.matches || !t.matches('[data-bulk-toggle]')) { return; }
+        var form = t.closest('form');
+        if (!form) { return; }
+        Array.prototype.forEach.call(form.querySelectorAll('input[name="selected[]"]'), function (box) {
+            box.checked = t.checked;
+        });
+    });
 })();

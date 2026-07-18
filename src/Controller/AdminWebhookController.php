@@ -83,16 +83,14 @@ final class AdminWebhookController extends Controller
         $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
-        $webhook = $this->service()->get($id);
-        if ($webhook === null) {
+        $model = $this->service()->detailModel($id);
+        if ($model === null) {
             throw new NotFoundException();
         }
-        return $this->view('admin/webhook_detail', [
-            'webhook' => $webhook,
-            'deliveries' => $this->service()->deliveriesFor($id),
-            'events_catalogue' => WebhookEvents::all(),
+        return $this->view('admin/webhook_detail', $model + [
             'errors' => [],
             'old' => [],
+            'error_context' => null,
             'new_secret' => $newSecret,
         ], $status);
     }
@@ -107,20 +105,18 @@ final class AdminWebhookController extends Controller
             $this->service()->update($admin, $id, $request->str('name'), $request->str('url'), (array) $request->post('events', []));
             return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Webhook updated.');
         } catch (ValidationException $e) {
-            $webhook = $this->service()->get($id);
-            if ($webhook === null) {
+            $model = $this->service()->detailModel($id);
+            if ($model === null) {
                 throw new NotFoundException();
             }
-            return $this->view('admin/webhook_detail', [
-                'webhook' => $webhook,
-                'deliveries' => $this->service()->deliveriesFor($id),
-                'events_catalogue' => WebhookEvents::all(),
+            return $this->view('admin/webhook_detail', $model + [
                 'errors' => $e->errors,
                 'old' => $e->old + [
                     'name' => $request->str('name'),
                     'url' => $request->str('url'),
                     'events' => (array) $request->post('events', []),
                 ],
+                'error_context' => 'update',
                 'new_secret' => null,
             ], 422);
         }
@@ -132,8 +128,12 @@ final class AdminWebhookController extends Controller
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
-        $this->service()->setActive($admin, $id, (string) $request->post('active', '0') === '1');
-        return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Webhook updated.');
+        $active = (string) $request->post('active', '0') === '1';
+        $this->service()->setActive($admin, $id, $active);
+        return $this->redirectWithFlash(
+            '/admin/webhooks/' . $id,
+            $active ? 'Webhook resumed — deliveries will flow on the next worker run.' : 'Webhook paused — no deliveries will be attempted.',
+        );
     }
 
     /** @param array<string,string> $params */
@@ -146,16 +146,14 @@ final class AdminWebhookController extends Controller
             $secret = $this->service()->rotateSecret($admin, (string) $request->post('current_password', ''), $id);
             return $this->show($request, $params, $secret);
         } catch (ValidationException $e) {
-            $webhook = $this->service()->get($id);
-            if ($webhook === null) {
+            $model = $this->service()->detailModel($id);
+            if ($model === null) {
                 throw new NotFoundException();
             }
-            return $this->view('admin/webhook_detail', [
-                'webhook' => $webhook,
-                'deliveries' => $this->service()->deliveriesFor($id),
-                'events_catalogue' => WebhookEvents::all(),
+            return $this->view('admin/webhook_detail', $model + [
                 'errors' => $e->errors,
                 'old' => [],
+                'error_context' => 'rotate',
                 'new_secret' => null,
             ], 422);
         }
@@ -181,7 +179,15 @@ final class AdminWebhookController extends Controller
     {
         $admin = $this->requireAdmin();
         $this->gate();
-        $this->service()->delete($admin, (int) ($params['id'] ?? 0));
+        $id = (int) ($params['id'] ?? 0);
+        $outcome = $this->service()->deleteConsole(
+            $admin,
+            (string) $request->post('current_password', ''),
+            $id,
+        );
+        if (!$outcome['deleted']) {
+            return $this->view('admin/webhook_detail', (array) $outcome['model'], $outcome['status']);
+        }
         return $this->redirectWithFlash('/admin/webhooks', 'Webhook deleted.');
     }
 

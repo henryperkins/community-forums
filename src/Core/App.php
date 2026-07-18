@@ -150,6 +150,7 @@ use App\Repository\WebAuthnCredentialRepository;
 use App\Repository\WebhookDeliveryRepository;
 use App\Repository\WebhookRepository;
 use App\Security\AuthorityGate;
+use App\Security\BoardAuthority;
 use App\Security\BoardPolicy;
 use App\Security\ClientIdentifier;
 use App\Security\CapabilityResolver;
@@ -193,7 +194,9 @@ use App\Service\Extension\ExtensionSandbox;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeRuleService;
+use App\Service\AuditQueryService;
 use App\Service\BadgeService;
+use App\Service\BoardRecountService;
 use App\Service\CommunityMemoryService;
 use App\Service\ComposerSuggestionService;
 use App\Service\DirectMessageService;
@@ -253,6 +256,8 @@ use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
 use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
+use App\Service\TagService;
+use App\Service\ThreadReadService;
 use App\Service\ThreadSplitMergeService;
 use App\Service\ThreadWorkflowService;
 use App\Service\ThreadIntelligence\CurlOpenAiTransport;
@@ -870,6 +875,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(PackageCredentialAuthGuard::class),
             $c->get(UserRepository::class),
+            $c->get(IdempotencyRepository::class),
         ));
         $c->bind(ServiceSecretRepository::class, fn (Container $c) => new ServiceSecretRepository($c->get(Database::class)));
         $c->bind(SecretVault::class, fn (Container $c) => new SecretVault(
@@ -920,6 +926,10 @@ final class App
         $c->bind(ThreadAssignmentRepository::class, fn (Container $c) => new ThreadAssignmentRepository($c->get(Database::class)));
         $c->bind(FollowRepository::class, fn (Container $c) => new FollowRepository($c->get(Database::class)));
         $c->bind(TagRepository::class, fn (Container $c) => new TagRepository($c->get(Database::class)));
+        $c->bind(TagService::class, fn (Container $c) => new TagService(
+            $c->get(Database::class),
+            $c->get(TagRepository::class),
+        ));
         $c->bind(BadgeRepository::class, fn (Container $c) => new BadgeRepository($c->get(Database::class)));
         $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
@@ -1222,6 +1232,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(Mailer::class),
             $c->get(EmailDomainVerifier::class),
+            $config,
         ));
         $c->bind(AnnouncementService::class, fn (Container $c) => new AnnouncementService(
             $c->get(Database::class),
@@ -1230,6 +1241,7 @@ final class App
             $c->get(NotificationRepository::class),
             $c->get(EmailDeliveryRepository::class),
             $c->get(WriteGate::class),
+            $c->get(RateLimitService::class),
         ));
         $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(
             $c->get(Database::class),
@@ -1245,6 +1257,9 @@ final class App
             $c->get(SessionRepository::class),
             $c->get(ReauthGate::class),
             $c->get(CapabilityResolver::class),
+            $c->get(BoardRepository::class),
+            $c->get(IdempotencyRepository::class),
+            $c->get(BoardAuthority::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
             $c->get(Database::class),
@@ -1268,6 +1283,8 @@ final class App
             $c->get(WriteGate::class),
             $c->get(FirstPartyHookRegistry::class),
             $c->get(AuthorityGate::class),
+            $c->get(BoardAuthority::class),
+            $c->get(BoardRepository::class),
         ));
         $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
             $c->get(Database::class),
@@ -1371,6 +1388,8 @@ final class App
             $c->get(PostRepository::class),
             $c->get(ModerationService::class),
             $c->get(ModerationLogRepository::class),
+            $c->get(ThreadReadService::class),
+            $c->get(BoardRepository::class),
             $c->get(ThreadIntelligenceQueue::class),
         ));
         $c->bind(CommunityMemoryService::class, fn (Container $c) => new CommunityMemoryService(
@@ -1887,6 +1906,19 @@ final class App
             $c->get(FeatureFlags::class)->enabled('link_previews') ? $c->get(LinkPreviewService::class) : null,
             $c->get(AuthorityGate::class),
             $c->get(ThreadIntelligenceQueue::class),
+            $c->get(BoardAuthority::class),
+        ));
+        $c->bind(BoardAuthority::class, fn (Container $c) => new BoardAuthority(
+            $c->get(WriteGate::class),
+            $c->get(BoardModeratorRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(AuthorityGate::class),
+        ));
+        $c->bind(ThreadReadService::class, fn (Container $c) => new ThreadReadService(
+            $c->get(ThreadRepository::class),
+            $c->get(BoardPolicy::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(BoardAuthority::class),
         ));
         $c->bind(ModerationService::class, fn (Container $c) => new ModerationService(
             $c->get(Database::class),
@@ -1898,9 +1930,18 @@ final class App
             $c->get(BoardModeratorRepository::class),
             $c->get(BoardRepository::class),
             $c->get(UserRepository::class),
+            $c->get(BoardAuthority::class),
+            $c->get(ThreadReadService::class),
             $c->get(FirstPartyHookRegistry::class),
-            $c->get(AuthorityGate::class),
             $c->get(ThreadIntelligenceQueue::class),
+        ));
+        $c->bind(BoardRecountService::class, fn (Container $c) => new BoardRecountService(
+            $c->get(Database::class),
+            $c->get(BoardRepository::class),
+        ));
+        $c->bind(AuditQueryService::class, fn (Container $c) => new AuditQueryService(
+            $c->get(ModerationLogRepository::class),
+            $c->get(UserRepository::class),
         ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
@@ -1915,6 +1956,7 @@ final class App
             $c->get(AuthorityGate::class),
             $c->get(CapabilityResolver::class),
             $c->get(ThreadIntelligenceBoardSweep::class),
+            $c->get(BoardRecountService::class),
         ));
         $c->bind(AdminDashboardService::class, fn (Container $c) => new AdminDashboardService(
             $c->get(Database::class),
@@ -1924,6 +1966,9 @@ final class App
             $c->get(Mailer::class),
             $c->get(EmailDomainVerifier::class),
             $c->get(ThreadIntelligenceAdminService::class),
+            $c->get(SettingRepository::class),
+            $c->get(CustomEmojiService::class),
+            $c->get(AuditQueryService::class),
         ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),
@@ -2104,6 +2149,7 @@ final class App
         $r->post('/admin/tags', [TagController::class, 'create']);
         $r->post('/admin/tags/{id}', [TagController::class, 'update']);
         $r->post('/admin/tags/{id}/merge', [TagController::class, 'merge']);
+        $r->get('/admin/tags/{id}/merge', [TagController::class, 'mergeConfirm']);
 
         $r->post('/threads', [PostController::class, 'createThread']);
         $r->post('/t/{id}/reply', [PostController::class, 'reply']);
@@ -2150,6 +2196,7 @@ final class App
         $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
+        $r->get('/admin/audit', [AdminController::class, 'audit']);
         $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
         $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
         $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
@@ -2302,7 +2349,10 @@ final class App
         // Per-user admin record (ADMIN §5.1/§5.2): directory + record screen,
         // manual badges + cosmetic title. Static before generic.
         $r->get('/admin/users', [AdminUserController::class, 'index']);
+        $r->post('/admin/users/bulk', [AdminUserController::class, 'bulkConfirm']);
+        $r->post('/admin/users/bulk/apply', [AdminUserController::class, 'bulkApply']);
         $r->get('/admin/users/{id}', [AdminUserController::class, 'show']);
+        $r->post('/admin/users/{id}/pii', [AdminUserController::class, 'revealPii']);
         $r->post('/admin/users/{id}/title', [AdminUserController::class, 'setTitle']);
         $r->post('/admin/users/{id}/avatar/remove', [AdminUserController::class, 'removeAvatar']);
         $r->post('/admin/users/{id}/signature/remove', [AdminUserController::class, 'removeSignature']);
@@ -2342,6 +2392,7 @@ final class App
         $r->post('/mod/appeals/{id}/resolve', [AppealController::class, 'resolve']);
 
         // User moderation (P2-08).
+        $r->get('/mod/u/{id}', [UserModerationController::class, 'show']);
         $r->post('/mod/u/{id}/warn', [UserModerationController::class, 'warn']);
         $r->post('/mod/u/{id}/note', [UserModerationController::class, 'note']);
         $r->post('/mod/u/{id}/suspend', [UserModerationController::class, 'suspend']);

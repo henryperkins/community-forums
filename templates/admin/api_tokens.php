@@ -12,6 +12,11 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
     <?= $this->partial('admin/_nav', ['active' => 'api_tokens', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
+    <?php if (!empty($conflict)): ?>
+        <div class="flash flash-error" role="alert">
+            That token request was already processed. No new token was minted — the original was shown once. Start again if you still need one.
+        </div>
+    <?php endif; ?>
     <?php if (!empty($new_token)): ?>
         <div class="flash" role="status">
             <strong>Copy this token now — it will not be shown again:</strong>
@@ -23,6 +28,8 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
         <h2>Create a token</h2>
         <form method="post" action="/admin/api-tokens" class="stacked">
             <?= $this->csrfField() ?>
+            <?php $mintKey = (string) ($old['idempotency_key'] ?? '') !== '' ? (string) $old['idempotency_key'] : bin2hex(random_bytes(16)); ?>
+            <input type="hidden" name="idempotency_key" value="<?= $e($mintKey) ?>">
             <label>Name
                 <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? '') ?>" required>
             </label>
@@ -52,8 +59,9 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
 
     <section class="card">
         <h2>Tokens</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="API tokens">
         <table class="audit">
-            <thead><tr><th>Name</th><th>Scopes</th><th>Created</th><th>Last used</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Name</th><th scope="col">Scopes</th><th scope="col">Created</th><th scope="col">Last used</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($tokens as $t): ?>
                 <tr>
@@ -66,14 +74,18 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
                         <?php if (!$t['revoked_at']): ?>
                         <form method="post" action="/admin/api-tokens/<?= (int) $t['id'] ?>/revoke" class="inline">
                             <?= $this->csrfField() ?>
-                            <button class="linkbtn danger" type="submit">Revoke</button>
+                            <button class="linkbtn danger" type="submit" aria-label="Revoke the <?= $e($t['name']) ?> token">Revoke</button>
                         </form>
                         <?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
+            <?php if (empty($tokens)): ?>
+                <tr><td colspan="6" class="muted">No tokens yet. Tokens are shown once at creation and stored only as hashes.</td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
     </div>
 </div>

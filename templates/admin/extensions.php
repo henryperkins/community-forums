@@ -24,8 +24,9 @@
 
     <section class="card">
         <h2>Handlers</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Server extension handlers">
         <table class="audit">
-            <thead><tr><th>Package</th><th>Handler</th><th>Status</th><th>Entrypoint</th></tr></thead>
+            <thead><tr><th scope="col">Package</th><th scope="col">Handler</th><th scope="col">Status</th><th scope="col">Entrypoint</th></tr></thead>
             <tbody>
             <?php foreach ($handlers as $h): ?>
                 <tr>
@@ -38,12 +39,14 @@
             <?php if (empty($handlers)): ?><tr><td colspan="4" class="muted">No server extension handlers installed.</td></tr><?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
 
     <section class="card">
         <h2>Run history</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Extension run history">
         <table class="audit">
-            <thead><tr><th>When</th><th>Handler</th><th>Status</th><th>Detail</th></tr></thead>
+            <thead><tr><th scope="col">When</th><th scope="col">Handler</th><th scope="col">Status</th><th scope="col">Detail</th></tr></thead>
             <tbody>
             <?php foreach ($runs as $run): ?>
                 <tr>
@@ -56,6 +59,7 @@
             <?php if (empty($runs)): ?><tr><td colspan="4" class="muted">No extension runs yet.</td></tr><?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
     </div>
 </div>

@@ -103,6 +103,50 @@ final class AppModeratorScopeTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'move_thread'"));
     }
 
+    public function testMoveShiftsOnlyApprovedPostsWhenAReplyIsHeld(): void
+    {
+        // Board counters exclude held content (RepairService semantics:
+        // is_deleted = 0 AND is_pending = 0), so moving a visible thread with a
+        // held reply must shift exactly the approved posts — never inflate the
+        // destination with the held one.
+        $t = $this->makeThread($this->boardA, $this->member, 'Partly held', 'x'); // OP
+        $this->posting()->reply($this->userEntity($this->member), $t['thread_id'], ['body' => 'approved reply']); // 2 approved
+        $this->db->insert(
+            'INSERT INTO posts (thread_id, user_id, body, body_html, is_op, is_anonymous, is_deleted, is_pending, created_at)
+             VALUES (?, ?, ?, ?, 0, 0, 0, 1, UTC_TIMESTAMP())',
+            [(int) $t['thread_id'], (int) $this->member['id'], 'held reply', '<p>held</p>'],
+        );
+
+        $this->actingAs($this->admin);
+        $this->post('/mod/t/' . $t['thread_id'] . '/move', ['board_id' => (int) $this->boardB['id']]);
+
+        self::assertSame(1, (int) $this->boards()->find((int) $this->boardB['id'])['thread_count']);
+        self::assertSame(2, (int) $this->boards()->find((int) $this->boardB['id'])['post_count'], 'held reply must not count');
+        self::assertSame(0, (int) $this->boards()->find((int) $this->boardA['id'])['thread_count']);
+        self::assertSame(0, (int) $this->boards()->find((int) $this->boardA['id'])['post_count']);
+    }
+
+    public function testMovingAHeldThreadShiftsNoCounters(): void
+    {
+        // A held thread counts toward neither board's thread_count/post_count;
+        // moving it relocates the row but must leave both boards' counters
+        // untouched (and the thread still held).
+        $this->db->run('UPDATE boards SET require_approval = 1 WHERE id = ?', [(int) $this->boardA['id']]);
+        $t = $this->makeThread($this->boardA, $this->member, 'Held topic', 'x');
+        self::assertSame(1, (int) $this->threads()->find($t['thread_id'])['is_pending'], 'fixture: thread is held');
+        self::assertSame(0, (int) $this->boards()->find((int) $this->boardA['id'])['thread_count'], 'fixture: held thread uncounted');
+
+        $this->actingAs($this->admin);
+        $this->post('/mod/t/' . $t['thread_id'] . '/move', ['board_id' => (int) $this->boardB['id']]);
+
+        self::assertSame((int) $this->boardB['id'], (int) $this->threads()->find($t['thread_id'])['board_id'], 'the move itself happened');
+        self::assertSame(1, (int) $this->threads()->find($t['thread_id'])['is_pending'], 'still held after the move');
+        self::assertSame(0, (int) $this->boards()->find((int) $this->boardB['id'])['thread_count']);
+        self::assertSame(0, (int) $this->boards()->find((int) $this->boardB['id'])['post_count']);
+        self::assertSame(0, (int) $this->boards()->find((int) $this->boardA['id'])['thread_count']);
+        self::assertSame(0, (int) $this->boards()->find((int) $this->boardA['id'])['post_count']);
+    }
+
     public function testModeratorCannotMoveIntoABoardTheyDoNotModerate(): void
     {
         $t = $this->makeThread($this->boardA, $this->member, 'Movable', 'x');

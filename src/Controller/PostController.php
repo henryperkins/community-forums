@@ -20,6 +20,7 @@ use App\Service\BadgeService;
 use App\Service\ModerationService;
 use App\Service\PostingService;
 use App\Service\PreferenceService;
+use App\Service\ThreadReadService;
 
 /**
  * Thread/post writes: create thread, reply, edit own, soft-delete (owner self
@@ -73,10 +74,10 @@ final class PostController extends Controller
         try {
             $postId = $posting->reply($user, $threadId, $input);
         } catch (ValidationException $e) {
-            $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
-            if ($thread === null) {
-                throw new NotFoundException('Thread not found.');
-            }
+            // Re-render through the shared read gate: a validation failure must
+            // not show (or confirm) a thread this user's GET would 404 — e.g. a
+            // held thread's title to a non-author (spec §1).
+            $thread = $this->container->get(ThreadReadService::class)->loadForUser($user, $threadId);
             return (new ThreadController($this->container))->renderThread($request, $thread, [
                 'reply_errors' => $e->errors,
                 'reply_old' => $e->old,
@@ -118,14 +119,12 @@ final class PostController extends Controller
             if ($post === null) {
                 throw new NotFoundException('Post not found.');
             }
-            $thread = $this->container->get(ThreadRepository::class)->findWithBoard((int) $post['thread_id']);
-            if ($thread === null) {
-                throw new NotFoundException('Thread not found.');
-            }
             // Re-render the thread (on the page containing the post) with this
             // post's edit form re-opened and the rejected text + error preserved,
             // instead of redirecting to the thread and dropping the typed edit —
             // symmetric with the reply re-render (renderThread + reply_old).
+            // Loaded through the shared read gate (spec §1).
+            $thread = $this->container->get(ThreadReadService::class)->loadForUser($user, (int) $post['thread_id']);
             return (new ThreadController($this->container))->renderThread($request, $thread, [
                 'edit_post_id' => $postId,
                 'edit_old' => (string) $request->post('body', ''),

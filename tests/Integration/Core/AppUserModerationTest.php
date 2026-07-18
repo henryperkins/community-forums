@@ -58,7 +58,7 @@ final class AppUserModerationTest extends TestCase
     public function testCannotSuspendSelfOrAnotherAdmin(): void
     {
         $this->actingAs($this->admin);
-        // Self → validation error: the profile re-renders at 422 with the
+        // Self → validation error: the staff panel re-renders at 422 with the
         // message inline (no draft-dropping redirect), no status change.
         $self = $this->post('/mod/u/' . $this->admin['id'] . '/suspend', ['reason' => 'x']);
         $this->assertStatus(422, $self);
@@ -73,12 +73,16 @@ final class AppUserModerationTest extends TestCase
 
     public function testBoardModeratorCanWarnButNotSuspend(): void
     {
+        // Scoped-behavior update (PR #44, spec §2): a moderator warn requires
+        // the subject to have participated in the mod's board, and a board_id
+        // attribution inside that overlap.
         $board = $this->makeBoard($this->makeCategory());
         $modA = $this->makeUser(['username' => 'moda']);
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modA['id']);
+        $this->makeThread($board, $this->bad, 'Warned topic', 'Warned body.');
 
         $this->actingAs($modA);
-        $this->post('/mod/u/' . $this->bad['id'] . '/warn', ['reason' => 'mind the rules']);
+        $this->post('/mod/u/' . $this->bad['id'] . '/warn', ['reason' => 'mind the rules', 'board_id' => (string) (int) $board['id']]);
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [(int) $this->bad['id']]));
 
         // Suspend is admin-only.
@@ -88,21 +92,25 @@ final class AppUserModerationTest extends TestCase
 
     /**
      * Audit 2026-07-17 N3 (prior #41): a ValidationException on /mod/u/* must
-     * re-render the subject's profile at 422 with the error inline and the
-     * typed input preserved — the anti-draft-loss pattern the /admin/users/{id}
-     * record already follows — never a flash redirect that drops the input.
+     * re-render the staff panel (/mod/u/{id}) at 422 with the error inline and
+     * the typed input preserved — the anti-draft-loss pattern the
+     * /admin/users/{id} record already follows — never a flash redirect that
+     * drops the input.
      */
-    public function testWarnValidationRerendersProfileNotRedirect(): void
+    public function testWarnValidationRerendersPanelNotRedirect(): void
     {
         $board = $this->makeBoard($this->makeCategory());
         $modA = $this->makeUser(['username' => 'moda']);
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modA['id']);
+        // Scoped panel admission (PR #44, spec §2): the 422 re-render is the
+        // scoped panel, so the subject must participate in the mod's board.
+        $this->makeThread($board, $this->bad, 'Rerender topic', 'Rerender body.');
 
         $this->actingAs($modA);
         $r = $this->post('/mod/u/' . $this->bad['id'] . '/warn', ['reason' => '   ']);
         $this->assertStatus(422, $r);
         $this->assertSeeText($r, 'A reason is required.');
-        // The 422 body is the subject's profile, carrying a retry form back to
+        // The 422 body is the staff panel, carrying a retry form back to
         // the same action so the flow recovers without retyping.
         $this->assertSeeText($r, '@baduser');
         $this->assertSeeText($r, '/mod/u/' . $this->bad['id'] . '/warn');

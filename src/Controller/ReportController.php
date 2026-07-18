@@ -10,9 +10,6 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Domain\User;
 use App\Repository\PostRepository;
-use App\Repository\ReportRepository;
-use App\Security\Cap;
-use App\Service\ModerationService;
 use App\Service\ReportService;
 
 /**
@@ -22,7 +19,7 @@ use App\Service\ReportService;
  */
 final class ReportController extends Controller
 {
-    private const REASONS = ['spam', 'harassment', 'off_topic', 'nsfw', 'illegal', 'other'];
+    private const PER_PAGE = 50;
 
     /** @param array<string,string> $params post id */
     public function report(Request $request, array $params): Response
@@ -30,7 +27,6 @@ final class ReportController extends Controller
         $user = $this->requireModeration();
         $postId = (int) ($params['id'] ?? 0);
         $reasonCode = (string) $request->post('reason_code', '');
-        $reasonCode = in_array($reasonCode, self::REASONS, true) ? $reasonCode : null;
         $notify = $request->post('notify_reporter') !== null;
 
         $this->container->get(ReportService::class)
@@ -44,15 +40,15 @@ final class ReportController extends Controller
     public function queue(Request $request): Response
     {
         $user = $this->requireModeration();
-        // Queue discovery through the gate (core.report.handle — the queue's
-        // action key): legacy/shadow reproduce admin-or-assigned exactly;
-        // under enforce a custom deputy's grant surfaces their boards.
-        $scope = $this->container->get(ModerationService::class)->moderableBoardIds($user, Cap::REPORT_HANDLE);
-        if ($scope === []) {
-            throw new NotFoundException('Not found.'); // not a handler of anything
-        }
-        $reports = $this->container->get(ReportRepository::class)->queue($scope === null, $scope ?? [], 100);
-        return $this->view('mod/reports', ['reports' => $reports, 'reasons' => self::REASONS]);
+        // Scope resolution, filter allowlisting, rows + real total, and the
+        // boards select all live in ReportService::queueModel (spec §4).
+        $model = $this->container->get(ReportService::class)->queueModel($user, [
+            'status' => $request->str('status'),
+            'reason_code' => $request->str('reason_code'),
+            'board_id' => $request->int('board_id', 0),
+        ], max(0, $request->int('page', 0)), self::PER_PAGE);
+
+        return $this->view('mod/reports', $model);
     }
 
     /** @param array<string,string> $params report id */

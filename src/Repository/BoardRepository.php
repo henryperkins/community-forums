@@ -72,13 +72,13 @@ final class BoardRepository
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,edit_window_seconds?:int} $data
      */
     public function create(array $data): int
     {
         return $this->db->insert(
-            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, assignment_mode, tags_enabled, wiki_enabled, created_at)
-             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, :assignment_mode, :tags_enabled, :wiki_enabled, UTC_TIMESTAMP())',
+            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, assignment_mode, tags_enabled, wiki_enabled, edit_window_seconds, created_at)
+             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, :assignment_mode, :tags_enabled, :wiki_enabled, :edit_window_seconds, UTC_TIMESTAMP())',
             [
                 'category_id' => $data['category_id'],
                 'slug' => $data['slug'],
@@ -92,12 +92,13 @@ final class BoardRepository
                 'assignment_mode' => $data['assignment_mode'] ?? 'off',
                 'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
                 'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
+                'edit_window_seconds' => max(0, (int) ($data['edit_window_seconds'] ?? 0)),
             ],
         );
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,position?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,edit_window_seconds?:int,position?:int} $data
      */
     public function update(int $id, array $data): void
     {
@@ -118,6 +119,10 @@ final class BoardRepository
             'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
             'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
         ];
+        if (array_key_exists('edit_window_seconds', $data)) {
+            $sql .= ', edit_window_seconds = :edit_window_seconds';
+            $params['edit_window_seconds'] = max(0, (int) $data['edit_window_seconds']);
+        }
         if (array_key_exists('position', $data)) {
             $sql .= ', position = :position';
             $params['position'] = (int) $data['position'];
@@ -143,6 +148,29 @@ final class BoardRepository
     public function hasThreads(int $id): bool
     {
         return $this->db->fetchValue('SELECT 1 FROM threads WHERE board_id = ? LIMIT 1', [$id]) !== false;
+    }
+
+    /** @return array<string,mixed>|null the row under an exclusive lock (X) */
+    public function findForUpdate(int $id): ?array
+    {
+        return $this->db->fetch('SELECT * FROM boards WHERE id = ? FOR UPDATE', [$id]);
+    }
+
+    /**
+     * Authoritative thread-row count — deliberately unfiltered: held and
+     * soft-deleted threads move with a board delete too, so the preview and
+     * the move must count every row. $forUpdate locks the counted rows for
+     * the delete transaction: with the rows locked no competing write can
+     * commit between count and move, which also keeps the transaction free
+     * of consistent reads before its writes (the MariaDB snapshot-isolation
+     * 1020 trap — see ThreadIntelligenceQueue::lockCurrentVisibilityOrFail).
+     */
+    public function countThreads(int $id, bool $forUpdate = false): int
+    {
+        return (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM threads WHERE board_id = ?' . ($forUpdate ? ' FOR UPDATE' : ''),
+            [$id],
+        );
     }
 
     public function nextPosition(int $categoryId): int

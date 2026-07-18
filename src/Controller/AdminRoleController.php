@@ -150,8 +150,12 @@ final class AdminRoleController extends Controller
             );
             return $this->noindex($this->redirectWithFlash('/admin/roles', 'Role cloned as an editable custom role.'));
         } catch (ValidationException $e) {
-            $this->flash()->add('Clone failed: ' . implode(' ', array_map('strval', $e->errors)));
-            return $this->noindex($this->redirect('/admin/roles/' . $roleId));
+            // 422 re-render with the typed name preserved (anti-draft-loss) —
+            // the clone form lives on the role page, so land the error there,
+            // scoped via the 'clone' context like renew/assign scope theirs.
+            return $this->roleEditView($roleId, $e->errors, [
+                'clone' => ['name' => $request->str('name')],
+            ], 422);
         }
     }
 

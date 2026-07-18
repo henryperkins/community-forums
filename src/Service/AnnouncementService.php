@@ -6,6 +6,8 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Core\ForbiddenException;
+use App\Core\HttpException;
+use App\Core\Request;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\EmailDeliveryRepository;
@@ -21,6 +23,8 @@ use App\Security\WriteGate;
  * opt-in in-app broadcast. NO email channel and NO `announcements` table: the
  * broadcast reuses notifications.type='announcement'. The version increments on
  * every publish so a member's per-version dismissal never hides a newer banner.
+ * Publish history is derived from the audit trail (set_announcement rows), not
+ * a table of its own.
  */
 final class AnnouncementService
 {
@@ -33,6 +37,7 @@ final class AnnouncementService
         private NotificationRepository $notifications,
         private EmailDeliveryRepository $deliveries,
         private WriteGate $writeGate,
+        private ?RateLimitService $rateLimits = null,
     ) {
     }
 
@@ -69,13 +74,15 @@ final class AnnouncementService
                     'announcement:' . $version . ':',
                 );
             }
+            // The message is part of the audit payload so the console can show
+            // a publish history (ADMIN §7.4 "audited") without a new table.
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'set_announcement',
                 'target_type' => 'setting',
                 'target_id' => 0,
                 'reason' => 'site_announcement',
-                'after' => ['active' => true, 'version' => $version, 'broadcast' => $inAppBroadcast, 'email_broadcast' => $emailBroadcast, 'email_count' => $emailCount],
+                'after' => ['active' => true, 'version' => $version, 'message' => $message, 'broadcast' => $inAppBroadcast, 'email_broadcast' => $emailBroadcast, 'email_count' => $emailCount],
             ]);
         });
     }
@@ -97,6 +104,105 @@ final class AnnouncementService
                 'after' => ['active' => false],
             ]);
         });
+    }
+
+    /** @return array<string,mixed> */
+    public function consoleModel(array $errors = [], array $old = []): array
+    {
+        $current = $this->settings->get('site_announcement', []);
+        return [
+            'announcement' => is_array($current) ? $current : [],
+            'history' => $this->recentHistory(10),
+            'errors' => $errors,
+            'old' => $old,
+        ];
+    }
+
+    /**
+     * Complete POST outcome for the admin console: either a redirect message or
+     * a fully populated 422/429 model. The controller calls this once.
+     *
+     * @return array{model:?array<string,mixed>,status:int,message:?string}
+     */
+    public function saveConsole(User $admin, Request $request): array
+    {
+        if ($request->str('action') === 'clear') {
+            $this->clearBanner($admin);
+            return ['model' => null, 'status' => 303, 'message' => 'Announcement cleared.'];
+        }
+
+        $old = [
+            'message' => $request->str('message'),
+            'dismissible' => $request->post('dismissible') !== null,
+            'broadcast' => $request->post('broadcast') !== null,
+            'broadcast_email' => $request->post('broadcast_email') !== null,
+        ];
+        try {
+            $this->rateLimits?->enforce('announce', $request, $admin);
+        } catch (HttpException $e) {
+            if ($e->statusCode() !== 429) {
+                throw $e;
+            }
+            return [
+                'model' => $this->consoleModel(['message' => $e->getMessage()], $old),
+                'status' => 429,
+                'message' => null,
+            ];
+        }
+
+        try {
+            $this->setBanner(
+                $admin,
+                $request->str('message'),
+                $request->post('dismissible') !== null,
+                $request->post('broadcast') !== null,
+                $request->post('broadcast_email') !== null,
+            );
+        } catch (ValidationException $e) {
+            return [
+                'model' => $this->consoleModel($e->errors, $e->old + $old),
+                'status' => 422,
+                'message' => null,
+            ];
+        }
+
+        return ['model' => null, 'status' => 303, 'message' => 'Announcement published.'];
+    }
+
+    /**
+     * Recent publish/clear history for the console, straight from the audit
+     * trail. Older set_announcement rows predate the message-in-payload change
+     * and render without a message.
+     *
+     * @return array<int,array{when:string,actor:?string,action:string,version:?int,message:?string,broadcast:bool,email_broadcast:bool}>
+     */
+    public function recentHistory(int $limit = 10): array
+    {
+        $limit = max(1, min(50, $limit));
+        $rows = $this->db->fetchAll(
+            "SELECT m.action, m.after_json, m.created_at, u.username AS actor_username
+             FROM moderation_log m
+             LEFT JOIN users u ON u.id = m.actor_id
+             WHERE m.action IN ('set_announcement', 'clear_announcement')
+             ORDER BY m.id DESC
+             LIMIT " . $limit,
+        );
+
+        $history = [];
+        foreach ($rows as $row) {
+            $after = json_decode((string) ($row['after_json'] ?? ''), true);
+            $after = is_array($after) ? $after : [];
+            $history[] = [
+                'when' => (string) $row['created_at'],
+                'actor' => isset($row['actor_username']) ? (string) $row['actor_username'] : null,
+                'action' => (string) $row['action'],
+                'version' => isset($after['version']) && is_numeric($after['version']) ? (int) $after['version'] : null,
+                'message' => isset($after['message']) && is_string($after['message']) ? $after['message'] : null,
+                'broadcast' => !empty($after['broadcast']),
+                'email_broadcast' => !empty($after['email_broadcast']),
+            ];
+        }
+        return $history;
     }
 
     private function currentVersion(): int

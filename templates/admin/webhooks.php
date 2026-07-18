@@ -58,8 +58,9 @@ $this->section('title', 'Webhooks');
 
     <section class="card">
         <h2>Endpoints</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Webhook endpoints">
         <table class="audit">
-            <thead><tr><th>Name</th><th>URL</th><th>Status</th><th>Last status</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Name</th><th scope="col">URL</th><th scope="col">Status</th><th scope="col">Last status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($webhooks as $w): ?>
                 <tr>
@@ -75,6 +76,7 @@ $this->section('title', 'Webhooks');
             <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
     </div>
 </div>

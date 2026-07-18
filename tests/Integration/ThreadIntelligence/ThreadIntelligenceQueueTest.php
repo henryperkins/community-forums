@@ -19,6 +19,7 @@ use DateTimeZone;
 use InvalidArgumentException;
 use PDO;
 use PDOException;
+use RuntimeException;
 use Tests\Support\TestCase;
 
 final class ThreadIntelligenceQueueTest extends TestCase
@@ -683,21 +684,25 @@ PHP;
         $this->db->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [$seed['board_id']]);
         $this->useCommittedFixtures();
 
-        // Establish a repeatable-read snapshot while the board is private. A
-        // completed admin flip and sweep must win over this stale snapshot when
-        // resume evaluates the content under its current-visibility lock.
-        $this->pdo->beginTransaction();
-        self::assertSame(
-            'private',
-            $this->db->fetchValue('SELECT visibility FROM boards WHERE id = ?', [$seed['board_id']]),
-        );
-
+        // A second connection commits the admin flip + sweep first; the resume
+        // transaction then begins and must observe the committed public state
+        // when it evaluates the content under its current-visibility lock.
+        // (The inverse interleaving — a resume whose read view predates the
+        // flip — cannot silently re-read on MariaDB snapshot isolation: the
+        // locking read hard-fails with errno 1020 instead, covered by
+        // test_a_nested_resume_with_a_stale_read_view_surfaces_the_transient_busy_error.)
         $adminDb = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
         $adminDb->transaction(function () use ($adminDb, $seed): void {
             $adminDb->run("UPDATE boards SET visibility = 'public' WHERE id = ?", [$seed['board_id']]);
             (new ThreadIntelligenceBoardSweep($adminDb))->markVisibilityChanged($seed['board_id']);
         });
         (new ThreadIntelligenceBoardSweep($adminDb))->runBatch(250, $this->now());
+
+        $this->pdo->beginTransaction();
+        self::assertSame(
+            'public',
+            $this->db->fetchValue('SELECT visibility FROM boards WHERE id = ?', [$seed['board_id']]),
+        );
 
         $bundle['queue']->resumeAndRequeue($seed['thread_id'], $seed['author_id'], $this->now()->modify('+2 minutes'));
         $this->pdo->commit();
@@ -707,6 +712,65 @@ PHP;
         self::assertSame('queued', $row['state']);
         self::assertSame('curator_refresh', $row['trigger_code']);
         self::assertSame('2026-07-10 12:02:00', $row['due_at']);
+    }
+
+    public function test_a_nested_resume_with_a_stale_read_view_surfaces_the_transient_busy_error(): void
+    {
+        // MariaDB-only semantics: with innodb_snapshot_isolation=ON a locking
+        // read on a record that committed-changed after the transaction's read
+        // view formed aborts the WHOLE transaction with errno 1020 (MySQL
+        // silently re-reads latest-committed instead, so the race below cannot
+        // be forced there).
+        $iso = $this->db->fetch("SHOW VARIABLES LIKE 'innodb_snapshot_isolation'");
+        if ($iso === null || strcasecmp((string) $iso['Value'], 'ON') !== 0) {
+            self::markTestSkipped('requires MariaDB innodb_snapshot_isolation=ON to force the stale-view locking-read abort');
+        }
+
+        $this->setFlags();
+        $seed = $this->seedThread();
+        $bundle = $this->services();
+        $bundle['queue']->markStale($seed['thread_id'], ThreadIntelligenceQueue::TRIGGER_POST_CREATED, null, $this->now());
+        $bundle['queue']->setAutomationPaused($seed['thread_id'], true, $seed['author_id'], $this->now()->modify('+1 minute'));
+        $this->useCommittedFixtures();
+
+        // Pin a read view that predates the competing commit — the shape of
+        // every production nesting (the posting transaction's markStale, or
+        // resume inside CommunityMemoryService::resumeAutomation): a wider
+        // transaction performs a consistent read first...
+        $this->pdo->beginTransaction();
+        self::assertSame(
+            'public',
+            $this->db->fetchValue('SELECT visibility FROM boards WHERE id = ?', [$seed['board_id']]),
+        );
+
+        // ...then a second connection commits a change to that board row...
+        $adminDb = new Database($GLOBALS['__RB_TEST_DBCONFIG']);
+        $adminDb->run("UPDATE boards SET visibility = 'private' WHERE id = ?", [$seed['board_id']]);
+
+        // ...and the nested current-visibility lock must surface the documented
+        // bounded-transient contract — never the raw driver error.
+        try {
+            $bundle['queue']->resumeAndRequeue($seed['thread_id'], $seed['author_id'], $this->now()->modify('+2 minutes'));
+            self::fail('a stale-read-view locking read must abort under MariaDB snapshot isolation');
+        } catch (RuntimeException $e) {
+            self::assertNotInstanceOf(PDOException::class, $e, 'the raw driver error must not escape');
+            self::assertStringContainsString('thread visibility is busy', $e->getMessage());
+            $cause = $e->getPrevious();
+            self::assertInstanceOf(PDOException::class, $cause);
+            self::assertSame(1020, $cause->errorInfo[1] ?? null);
+        }
+
+        // The server rolled the whole transaction back — nothing from the
+        // aborted resume persists. (Client-side PDO still reports an open
+        // transaction: the binary-protocol error response does not refresh its
+        // flag; the explicit rollback below clears it and the server no-ops.)
+        self::assertSame('0', (string) $this->db->fetchValue('SELECT @@in_transaction'), 'MariaDB aborts the entire transaction on 1020');
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+        $row = (new ThreadIntelligenceJobRepository($adminDb))->find($seed['thread_id']);
+        self::assertSame(1, (int) $row['automation_paused']);
+        self::assertSame('idle', $row['state']);
     }
 
     public function test_resume_does_not_wait_on_an_open_canonical_post_write_before_the_job_update(): void

@@ -17,6 +17,8 @@ use App\Security\ReauthGate;
 use App\Security\WriteGate;
 use App\Service\ApiTokenService;
 use PHPUnit\Framework\Attributes\DataProvider;
+use App\Core\DuplicateSubmissionException;
+use App\Repository\IdempotencyRepository;
 use Tests\Support\TestCase;
 
 final class ApiTokenServiceTest extends TestCase
@@ -32,6 +34,9 @@ final class ApiTokenServiceTest extends TestCase
             $this->config,
             new ReauthGate(new PasswordHasher()),
             new WriteGate(),
+            null,
+            null,
+            new IdempotencyRepository($this->db),
         );
     }
 
@@ -136,6 +141,27 @@ final class ApiTokenServiceTest extends TestCase
     {
         $this->expectException(ValidationException::class);
         $this->service()->mint($this->admin(), 'password123', $name, $scopes, $days);
+    }
+
+    public function test_duplicate_mint_key_throws_and_keeps_one_token(): void
+    {
+        // PR #44 spec §7: a duplicate key must never mint a second credential.
+        // Unlike the composer there is no replay — the plaintext is not
+        // stored — so the duplicate is refused outright.
+        $svc = $this->service();
+        $admin = $this->admin();
+        $key = bin2hex(random_bytes(16));
+
+        $first = $svc->mint($admin, 'password123', 'ci', ['read:boards'], null, $key);
+        self::assertStringStartsWith('rbt_', $first['token']);
+
+        try {
+            $svc->mint($admin, 'password123', 'ci-again', ['read:boards'], null, $key);
+            self::fail('a duplicate mint key must not mint a second credential');
+        } catch (DuplicateSubmissionException) {
+        }
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM api_tokens'));
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'api_token_minted'"));
     }
 
     public function test_mint_writes_audit_without_secret(): void

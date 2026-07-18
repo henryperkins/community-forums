@@ -116,6 +116,48 @@ final class UserRepository
         return $out;
     }
 
+    /**
+     * Ids whose username or display name contains $q (the audit screen's
+     * actor-substring resolution — keeps ModerationLogRepository single-table).
+     *
+     * @return list<int>
+     */
+    public function idsMatchingName(string $q, int $limit = 500): array
+    {
+        $q = trim($q);
+        if ($q === '') {
+            return [];
+        }
+        $limit = max(1, min(1000, $limit));
+        $rows = $this->db->fetchAll(
+            'SELECT id FROM users WHERE username LIKE :q1 OR display_name LIKE :q2 ORDER BY id ASC LIMIT ' . $limit,
+            ['q1' => '%' . $q . '%', 'q2' => '%' . $q . '%'],
+        );
+        return array_map(static fn (array $r): int => (int) $r['id'], $rows);
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return array<int,array{username:string,display_name:?string}> id => handles
+     */
+    public function handlesForIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($ids), '?'));
+        $rows = $this->db->fetchAll("SELECT id, username, display_name FROM users WHERE id IN ($place)", $ids);
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['id']] = [
+                'username' => (string) $r['username'],
+                'display_name' => $r['display_name'] !== null ? (string) $r['display_name'] : null,
+            ];
+        }
+        return $out;
+    }
+
     public function usernameExists(string $username): bool
     {
         return $this->db->fetchValue('SELECT 1 FROM users WHERE username = ? LIMIT 1', [$username]) !== false;
@@ -491,7 +533,8 @@ final class UserRepository
         $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
         $offset = max(0, (int) ($filters['offset'] ?? 0));
 
-        $sql = 'SELECT id, username, display_name, email, role, status, reputation, post_count, created_at, last_seen_at
+        $sql = 'SELECT id, username, display_name, email, role, status, reputation, post_count, created_at, last_seen_at,
+                (SELECT COUNT(*) FROM board_moderators bm WHERE bm.user_id = users.id) AS moderated_boards
                 FROM users';
         if ($where !== []) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -501,6 +544,23 @@ final class UserRepository
             . ' LIMIT ' . $limit . ' OFFSET ' . $offset;
 
         return $this->db->fetchAll($sql, $params);
+    }
+
+    /**
+     * Total rows the directory filters match — shares directoryFilters() with
+     * directory() (which is why the count lives here), so /admin/users can
+     * compute has_next from the real total (PR #44 spec §4).
+     *
+     * @param array<string,mixed> $filters
+     */
+    public function directoryCount(array $filters = []): int
+    {
+        [$where, $params] = $this->directoryFilters($filters);
+        $sql = 'SELECT COUNT(*) FROM users';
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        return (int) $this->db->fetchValue($sql, $params);
     }
 
     /**

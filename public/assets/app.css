@@ -2792,6 +2792,11 @@ body[data-route="thread"] .thread-conversation {
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* Containing block for absolutely-positioned descendants (.sr-only column
+       headers): without it their boxes resolve against the document, escape
+       this clip at the table's unscrolled x-offset, and stretch the page —
+       mobile Chrome then zooms the whole layout viewport out. */
+    position: relative;
 }
 .admin .table-scroll:focus-visible {
     outline: 2px solid var(--accent);
@@ -5435,3 +5440,11 @@ body.thread-restructure-open { overflow: hidden; }
     [data-thread-enhanced="1"] .thread-restructure[open] .thread-restructure-dialog,
     .post-toolbar { animation: none !important; transition: none !important; }
 }
+
+/* --- Admin console remediation (2026-07-18) ------------------------------- */
+/* Reports queue: age-based SLA cue for items waiting more than a day. */
+.report-row.is-stale { border-left: 3px solid var(--accent-2); }
+.tag-stale { color: var(--accent-2); }
+/* Audit log: keep the before/after JSON disclosure compact. */
+.audit-change summary { cursor: pointer; }
+.audit-change code { word-break: break-all; }

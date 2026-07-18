@@ -38,7 +38,7 @@ $active = is_array($ann) && !empty($ann['active']);
             <label>Message
                 <textarea name="message" rows="3" maxlength="500" required><?= $e((string) ($old['message'] ?? '')) ?></textarea>
             </label>
-            <?php if (!empty($errors['message'])): ?><p class="field-error"><?= $e($errors['message']) ?></p><?php endif; ?>
+            <?php if (!empty($errors['message'])): ?><p class="field-error" role="alert"><?= $e($errors['message']) ?></p><?php endif; ?>
 
             <label><input type="checkbox" name="dismissible" value="1" <?= !empty($old['dismissible']) ? 'checked' : '' ?>> Members can dismiss this banner</label>
             <label><input type="checkbox" name="broadcast" value="1" <?= !empty($old['broadcast']) ? 'checked' : '' ?>> Also send an in-app broadcast notification to all members</label>
@@ -46,6 +46,36 @@ $active = is_array($ann) && !empty($ann['active']);
 
             <div class="form-actions"><button class="btn" type="submit">Publish banner</button></div>
         </form>
+    </section>
+
+    <section class="card">
+        <h2>Recent history</h2>
+        <?php if (empty($history ?? [])): ?>
+            <p class="muted">No announcements have been published yet.</p>
+        <?php else: ?>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Announcement history">
+                <table class="audit">
+                    <thead><tr><th scope="col">When</th><th scope="col">By</th><th scope="col">Event</th><th scope="col">Message</th><th scope="col">Channels</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($history as $entry): ?>
+                        <tr>
+                            <td class="nowrap"><?= $e(human_datetime((string) $entry['when'])) ?></td>
+                            <td><?= $e($entry['actor'] ?? 'system') ?></td>
+                            <td><?= $entry['action'] === 'clear_announcement' ? 'Cleared' : 'Published v' . (int) ($entry['version'] ?? 0) ?></td>
+                            <td><?= $entry['message'] !== null ? $e($entry['message']) : '<span class="muted">—</span>' ?></td>
+                            <td>
+                                <?php if ($entry['action'] === 'set_announcement'): ?>
+                                    Banner<?= !empty($entry['broadcast']) ? ' · in-app' : '' ?><?= !empty($entry['email_broadcast']) ? ' · email' : '' ?>
+                                <?php else: ?>
+                                    <span class="muted">—</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
     </section>
     </div>
 </div>

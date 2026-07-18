@@ -32,6 +32,17 @@
                 <?php endif; ?>
                 <form method="post" action="<?= $e($action) ?>" class="stacked confirm-form">
                     <?= $this->csrfField() ?>
+                    <?php if (!empty($move_options ?? [])): ?>
+                        <label class="field">
+                            <span><?= $e($move_label ?? 'Move threads to') ?></span>
+                            <select name="move_to_board_id" class="input" required>
+                                <option value="">Choose a destination board…</option>
+                                <?php foreach ($move_options as $option): ?>
+                                    <option value="<?= (int) $option['id'] ?>"<?= (int) ($move_selected ?? 0) === (int) $option['id'] ? ' selected' : '' ?>><?= $e($option['label']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </label>
+                    <?php endif; ?>
                     <label class="field">
                         <span>Type the <?= $e($confirm_noun) ?> <code><?= $e($confirm_target) ?></code> to confirm</span>
                         <input type="text" name="confirm" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" required>

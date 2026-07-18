@@ -7,6 +7,7 @@ namespace App\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use App\Core\Database;
+use App\Core\DuplicateSubmissionException;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
@@ -14,11 +15,14 @@ use App\Domain\User;
 use App\Repository\AttachmentRepository;
 use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
+use App\Repository\IdempotencyRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\BoardAuthority;
 use App\Security\Cap;
 use App\Security\CapabilityResolver;
 use App\Security\LastOwnerGuard;
@@ -35,6 +39,8 @@ use App\Security\WriteGate;
  */
 final class UserModerationService
 {
+    private ?AuditQueryService $auditQueryService = null;
+
     public function __construct(
         private Database $db,
         private UserRepository $users,
@@ -49,6 +55,9 @@ final class UserModerationService
         private ?SessionRepository $sessions = null,
         private ?ReauthGate $reauth = null,
         private ?CapabilityResolver $resolver = null,
+        private ?BoardRepository $boards = null,
+        private ?IdempotencyRepository $idempotency = null,
+        private ?BoardAuthority $boardAuthority = null,
     ) {
     }
 
@@ -57,24 +66,74 @@ final class UserModerationService
         return $this->authority ?? AuthorityGate::legacy();
     }
 
-    public function warn(User $actor, int $subjectId, string $reason, ?int $boardId = null): void
+    public function warn(User $actor, int $subjectId, string $reason, ?int $boardId = null, ?string $idempotencyKey = null): void
     {
         $this->assertStaff($actor);
         $reason = $this->requireReason($reason);
         $subject = $this->requireSubject($subjectId);
+        if ((int) $subject['id'] === $actor->id()) {
+            throw new ValidationException(['reason' => 'You cannot warn your own account.']);
+        }
 
-        $this->db->transaction(function () use ($actor, $subject, $reason, $boardId): void {
-            $this->db->run(
+        if (!$actor->isAdmin()) {
+            $overlap = $this->moderatorOverlap($actor, $subjectId);
+            if ($overlap === []) {
+                // Byte-identical to the missing-subject 404 (spec §2): an
+                // out-of-scope subject does not exist for this actor.
+                throw new NotFoundException('User not found.');
+            }
+            // Board attribution is required and revalidated server-side —
+            // assigned to the actor AND participated-in by the subject (that
+            // conjunction IS overlap membership). One uniform message for
+            // every miss, so the field is not a board-existence oracle.
+            if ($boardId === null || !in_array($boardId, $overlap, true)) {
+                throw new ValidationException(
+                    ['board_id' => 'Choose a board you moderate where this member has participated.'],
+                );
+            }
+            $this->assertCanWarnBoard($actor, $boardId);
+        } elseif ($boardId !== null && $this->boards !== null && $this->boards->find($boardId) === null) {
+            throw new ValidationException(['board_id' => 'Choose a valid board.']);
+        }
+
+        // Idempotent submit (composer seam, P3-03): a duplicate replays the
+        // original outcome instead of stacking warnings.
+        $key = $this->idempotency?->hash($idempotencyKey);
+        if ($key !== null) {
+            $existing = $this->idempotency->findWithContext($actor->id(), $key);
+            if ($existing !== null && $existing['context'] === 'mod_warn') {
+                return; // the original warn already committed — nothing to do
+            }
+        }
+
+        $this->db->transaction(function () use ($actor, $subject, $reason, $boardId, $key): void {
+            $warningId = $this->db->insert(
                 'INSERT INTO warnings (user_id, issued_by, board_id, reason, created_at) VALUES (?, ?, ?, ?, UTC_TIMESTAMP())',
                 [(int) $subject['id'], $actor->id(), $boardId, $reason],
             );
-            $this->audit($actor, 'warn', (int) $subject['id'], $reason);
+            // Claim the key before the audit row so a concurrent duplicate
+            // rolls the whole write back and the caller replays.
+            if ($key !== null && !$this->idempotency->record($actor->id(), $key, 'mod_warn', 'warning', $warningId)) {
+                throw new DuplicateSubmissionException();
+            }
+            $this->log->log([
+                'actor_id' => $actor->id(),
+                'action' => 'warn',
+                'target_type' => 'user',
+                'target_id' => (int) $subject['id'],
+                'reason' => $reason,
+                'after' => ['board_id' => $boardId],
+            ]);
         });
     }
 
     public function addNote(User $actor, int $subjectId, string $body): void
     {
         $this->assertStaff($actor);
+        // Notes are admin-only (PR #44 review decision, recorded in ADR 0021):
+        // globally-scoped user_notes readable by any board moderator was
+        // strictly worse than narrowing ADMIN §3.4's "Add mod note" mapping.
+        $this->assertAdmin($actor);
         $body = trim($body);
         if ($body === '') {
             throw new ValidationException(['body' => 'A note cannot be empty.']);
@@ -83,6 +142,134 @@ final class UserModerationService
         $this->db->run(
             'INSERT INTO user_notes (subject_user_id, author_id, body, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP())',
             [(int) $subject['id'], $actor->id(), $body],
+        );
+    }
+
+    /**
+     * Actor-aware staff-panel model (spec §2). Admin → identity + the full
+     * history + site-wide warn options. Non-admin staff → a board-scoped
+     * model for subjects who participated in a board the actor moderates:
+     * whitelisted identity keys (no email), the overlap boards, warnings
+     * scoped to those boards, and nothing else — notes, bans, and the audit
+     * trail are not queried at all. An empty overlap throws the byte-identical
+     * missing-subject 404.
+     *
+     * @return array<string,mixed>
+     */
+    public function panelFor(User $actor, int $subjectId): array
+    {
+        $subject = $this->requireSubject($subjectId);
+
+        if ($actor->isAdmin()) {
+            $names = [];
+            $options = [];
+            foreach ($this->boards?->allOrdered() ?? [] as $board) {
+                $names[(int) $board['id']] = (string) $board['name'];
+                $options[] = ['id' => (int) $board['id'], 'name' => (string) $board['name']];
+            }
+            return [
+                'scope' => 'admin',
+                'subject' => $subject,
+                'history' => $this->history($subjectId),
+                'warn_board_options' => $options,
+                'board_names' => $names,
+            ];
+        }
+
+        $overlap = $this->moderatorOverlap($actor, $subjectId);
+        if ($overlap === []) {
+            throw new NotFoundException('User not found.');
+        }
+        $names = [];
+        $options = [];
+        foreach ($this->boards?->allOrdered() ?? [] as $board) {
+            if (!in_array((int) $board['id'], $overlap, true)) {
+                continue;
+            }
+            $names[(int) $board['id']] = (string) $board['name'];
+            $options[] = ['id' => (int) $board['id'], 'name' => (string) $board['name']];
+        }
+
+        return [
+            'scope' => 'moderator',
+            'subject' => [
+                'id' => (int) $subject['id'],
+                'username' => (string) $subject['username'],
+                'display_name' => $subject['display_name'],
+                'role' => (string) $subject['role'],
+                'status' => (string) $subject['status'],
+                'suspended_until' => $subject['suspended_until'] ?? null,
+                'created_at' => $subject['created_at'] ?? null,
+                'last_seen_at' => $subject['last_seen_at'] ?? null,
+                'post_count' => (int) ($subject['post_count'] ?? 0),
+                'reputation' => (int) ($subject['reputation'] ?? 0),
+            ],
+            'history' => ['warnings' => $this->scopedWarnings($subjectId, $overlap)],
+            'warn_board_options' => $options,
+            'board_names' => $names,
+        ];
+    }
+
+    /**
+     * Boards where the subject has authored a thread or post, restricted to
+     * $boardIds. Deliberately WITHOUT is_deleted/is_pending filters: the panel
+     * exists for accountability, and hidden, held, and deleted content is
+     * exactly what gets moderated. Anonymous authorship also counts — the
+     * anonymity mask is render-time attribution, not provenance; this reads
+     * the stored user_id like every other moderation surface (spec §2).
+     *
+     * @param list<int> $boardIds
+     * @return list<int>
+     */
+    private function participationBoards(int $subjectId, array $boardIds): array
+    {
+        if ($boardIds === []) {
+            return [];
+        }
+        $in = implode(',', array_map('intval', $boardIds));
+        $found = [];
+        foreach ($this->db->fetchAll(
+            "SELECT DISTINCT board_id FROM threads WHERE user_id = ? AND board_id IN ($in)",
+            [$subjectId],
+        ) as $row) {
+            $found[(int) $row['board_id']] = true;
+        }
+        foreach ($this->db->fetchAll(
+            "SELECT DISTINCT t.board_id FROM posts p JOIN threads t ON t.id = p.thread_id
+             WHERE p.user_id = ? AND t.board_id IN ($in)",
+            [$subjectId],
+        ) as $row) {
+            $found[(int) $row['board_id']] = true;
+        }
+        return array_keys($found);
+    }
+
+    /** @return list<int> the actor's moderated boards where the subject participated */
+    private function moderatorOverlap(User $actor, int $subjectId): array
+    {
+        return $this->participationBoards($subjectId, $this->boardMods->boardsFor($actor->id()));
+    }
+
+    /**
+     * @param list<int> $boardIds
+     * @return array<int,array<string,mixed>>
+     */
+    private function scopedWarnings(int $subjectId, array $boardIds, int $limit = 10): array
+    {
+        if ($boardIds === []) {
+            return [];
+        }
+        $in = implode(',', array_map('intval', $boardIds));
+        $limit = max(1, min(50, $limit));
+        return $this->db->fetchAll(
+            "SELECT w.id, w.reason, w.points, w.board_id, w.created_at,
+                    u.username AS issued_by_username
+             FROM warnings w
+             LEFT JOIN users u ON u.id = w.issued_by
+             WHERE w.user_id = ? AND w.board_id IN ($in)
+             ORDER BY w.id DESC
+             LIMIT " . $limit,
+            [$subjectId],
         );
     }
 
@@ -95,9 +282,12 @@ final class UserModerationService
 
         $this->db->transaction(function () use ($actor, $subject, $until, $reason): void {
             $this->users->setStatus((int) $subject['id'], 'suspended', $until);
+            // History row: type='post' (read-only) — a suspension keeps login +
+            // read access (ADMIN §1.2), unlike a full ban. Enforcement rides
+            // users.status; this row is the accountable record.
             $this->db->run(
                 "INSERT INTO bans (user_id, scope, type, reason, created_by, created_at, expires_at)
-                 VALUES (?, 'site', 'full', ?, ?, UTC_TIMESTAMP(), ?)",
+                 VALUES (?, 'site', 'post', ?, ?, UTC_TIMESTAMP(), ?)",
                 [(int) $subject['id'], $reason, $actor->id(), $until],
             );
             $this->audit($actor, 'suspend', (int) $subject['id'], $reason);
@@ -217,6 +407,59 @@ final class UserModerationService
             ]);
         });
         $this->resolver->invalidate();
+    }
+
+    /**
+     * Gated PII disclosure for the admin record (ADMIN §5.2/§5.5): returns the
+     * subject's email plus recently observed session/post IPs, and writes ONE
+     * view_pii audit row per disclosure — access is the audited event. The
+     * values are returned for a single render, never stored in the view state.
+     *
+     * @return array{email:string,session_ips:array<int,string>,post_ips:array<int,string>}
+     */
+    public function revealPii(User $admin, int $subjectId): array
+    {
+        $this->assertAdmin($admin);
+        $subject = $this->requireSubject($subjectId);
+
+        // Five distinct addresses each, most recently OBSERVED first —
+        // "recent" is activity time, never VARBINARY byte order (spec §6).
+        $sessionIps = [];
+        foreach ($this->db->fetchAll(
+            'SELECT ip FROM sessions WHERE user_id = ? AND ip IS NOT NULL
+             GROUP BY ip ORDER BY MAX(last_seen_at) DESC LIMIT 5',
+            [$subjectId],
+        ) as $row) {
+            $unpacked = @inet_ntop((string) $row['ip']);
+            if ($unpacked !== false) {
+                $sessionIps[] = $unpacked;
+            }
+        }
+        $postIps = [];
+        foreach ($this->db->fetchAll(
+            'SELECT ip FROM posts WHERE user_id = ? AND ip IS NOT NULL
+             GROUP BY ip ORDER BY MAX(created_at) DESC LIMIT 5',
+            [$subjectId],
+        ) as $row) {
+            $unpacked = @inet_ntop((string) $row['ip']);
+            if ($unpacked !== false) {
+                $postIps[] = $unpacked;
+            }
+        }
+
+        $this->log->log([
+            'actor_id' => $admin->id(),
+            'action' => 'view_pii',
+            'target_type' => 'user',
+            'target_id' => $subjectId,
+            'reason' => 'admin_record_reveal',
+        ]);
+
+        return [
+            'email' => (string) ($subject['email'] ?? ''),
+            'session_ips' => $sessionIps,
+            'post_ips' => $postIps,
+        ];
     }
 
     /**
@@ -350,8 +593,118 @@ final class UserModerationService
                  LIMIT ' . $limit,
                 [$subjectId],
             ),
-            'log' => $this->log->recentForTarget('user', $subjectId, $limit),
+            'log' => $this->auditQuery()->enrich($this->log->recentForTarget('user', $subjectId, $limit)),
         ];
+    }
+
+    /** Lazy enricher for the audit-trail leg (both ctor deps are in hand). */
+    private function auditQuery(): AuditQueryService
+    {
+        return $this->auditQueryService ??= new AuditQueryService($this->log, $this->users);
+    }
+
+    /**
+     * Directory read model for /admin/users (PR #44 spec §4): rows plus the
+     * real filtered total, so has_next is honest on exact page multiples.
+     *
+     * @param array<string,string> $filters allowlisted by the controller
+     * @return array<string,mixed>
+     */
+    public function directoryModel(array $filters, int $page, int $perPage = 50): array
+    {
+        $page = max(0, $page);
+        $perPage = max(1, min(200, $perPage));
+        $total = $this->users->directoryCount($filters);
+
+        return [
+            'users' => $this->users->directory($filters + ['limit' => $perPage, 'offset' => $page * $perPage]),
+            'filters' => $filters,
+            'q' => (string) ($filters['q'] ?? ''),
+            'page' => $page,
+            'total' => $total,
+            'has_next' => ($page + 1) * $perPage < $total,
+            'base_query' => array_filter($filters, static fn ($v): bool => $v !== '' && $v !== null),
+        ];
+    }
+
+    /**
+     * Step-1 subjects for the bulk confirmation (ADMIN §5.1/§3.2).
+     *
+     * @param list<int> $ids
+     * @return array<int,array<string,mixed>>
+     */
+    public function bulkPlan(string $action, array $ids): array
+    {
+        $ids = $this->normalizeBulkCommand($action, $ids);
+        $subjects = [];
+        foreach ($ids as $id) {
+            $row = $this->users->find((int) $id);
+            if ($row !== null) {
+                $subjects[] = $row;
+            }
+        }
+        if ($subjects === []) {
+            throw new NotFoundException('No matching members.');
+        }
+        return $subjects;
+    }
+
+    /**
+     * Step-2 bulk apply — one audited service call per member. Per-member
+     * refusals (an admin target, yourself) are skipped and reported; a
+     * shared-input failure (empty reason, malformed expiry) on the first
+     * member rethrows before anything is written (behavior-preserving move
+     * from AdminUserController::bulkApply — PR #44 spec §4 boundary).
+     *
+     * @param list<int> $ids
+     * @return array{done:int, skipped:list<string>}
+     */
+    public function bulkApply(User $admin, string $action, array $ids, string $reason, ?string $until): array
+    {
+        $ids = $this->normalizeBulkCommand($action, $ids);
+        $done = 0;
+        $skipped = [];
+        foreach ($ids as $id) {
+            try {
+                if ($action === 'suspend') {
+                    $this->suspend($admin, $id, $until, $reason);
+                } else {
+                    $this->warn($admin, $id, $reason);
+                }
+                $done++;
+            } catch (ValidationException $e) {
+                if ($done === 0 && (isset($e->errors['reason']) || isset($e->errors['until']))) {
+                    // Shared-input failure — nothing has been written yet.
+                    throw $e;
+                }
+                $skipped[] = $this->usernameOf($id) . ' (' . $e->first() . ')';
+            } catch (ForbiddenException $e) {
+                $skipped[] = $this->usernameOf($id) . ' (' . $e->getMessage() . ')';
+            }
+        }
+        return ['done' => $done, 'skipped' => $skipped];
+    }
+
+    /** @param list<int> $ids @return list<int> */
+    private function normalizeBulkCommand(string $action, array $ids): array
+    {
+        if (!in_array($action, ['warn', 'suspend'], true)) {
+            throw new ValidationException(['bulk_action' => 'Choose a valid bulk action.']);
+        }
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn (int $id): bool => $id > 0,
+        )));
+        if ($ids === []) {
+            throw new NotFoundException('No matching members.');
+        }
+        return $ids;
+    }
+
+    private function usernameOf(int $id): string
+    {
+        $row = $this->users->find($id);
+        return $row !== null ? '@' . (string) $row['username'] : '#' . $id;
     }
 
     // ---- guards -----------------------------------------------------------
@@ -366,6 +719,25 @@ final class UserModerationService
             [], // site probe: staff-any — admin OR moderates ≥1 board, site-wide
             'UserModerationService::assertStaff',
             'Staff access required.', // keep the existing message verbatim
+        );
+    }
+
+    private function assertCanWarnBoard(User $actor, int $boardId): void
+    {
+        if ($this->boardAuthority !== null) {
+            if (!$this->boardAuthority->canModerate($actor, $boardId, Cap::USER_WARN)) {
+                throw new ForbiddenException('You do not have permission to warn members for this board.');
+            }
+            return;
+        }
+
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin() || $this->boardMods->isModerator($boardId, $actor->id()),
+            $actor,
+            Cap::USER_WARN,
+            ['board_id' => $boardId],
+            'UserModerationService::warn',
+            'You do not have permission to warn members for this board.',
         );
     }
 

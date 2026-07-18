@@ -1,5 +1,10 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Admin'); ?>
+<?php
+$this->layout('layout');
+$this->section('title', 'Admin');
+$settingsErrors = $settings_errors ?? [];
+$settingsOld = $settings_old ?? [];
+?>
 <div class="admin">
     <header class="admin-head">
         <span>
@@ -49,9 +54,10 @@
         <form method="post" action="/admin/site" class="inline-form">
             <?= $this->csrfField() ?>
             <label class="sr-only" for="admin-site-name">Site name</label>
-            <input type="text" id="admin-site-name" name="site_name" class="input" maxlength="80" value="<?= $e($site_name) ?>" required>
+            <input type="text" id="admin-site-name" name="site_name" class="input" maxlength="80" value="<?= $e((string) ($settingsOld['site_name'] ?? $site_name)) ?>" required>
             <button class="btn btn-small" type="submit">Update</button>
         </form>
+        <?php if (!empty($settingsErrors['site_name'])): ?><p class="field-error"><?= $e($settingsErrors['site_name']) ?></p><?php endif; ?>
     </section>
 
     <section class="card">
@@ -60,29 +66,43 @@
             <?= $this->csrfField() ?>
             <label class="field">
                 <span>Registration</span>
+                <?php $regSelected = (string) ($settingsOld['registration_mode'] ?? ($registration_mode ?? 'open')); ?>
                 <select name="registration_mode" class="input">
                     <?php $regModeNotes = ['open' => '', 'invite' => ' (invitation required)', 'closed' => ' (no new sign-ups)']; ?>
                     <?php foreach (($registration_modes ?? \App\Security\RegistrationPolicy::MODES) as $m): ?>
-                        <option value="<?= $e($m) ?>"<?= ($registration_mode ?? 'open') === $m ? ' selected' : '' ?>><?= $e(ucfirst($m) . ($regModeNotes[$m] ?? '')) ?></option>
+                        <option value="<?= $e($m) ?>"<?= $regSelected === $m ? ' selected' : '' ?>><?= $e(ucfirst($m) . ($regModeNotes[$m] ?? '')) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <?php if (($registration_mode ?? 'open') === 'invite' && empty($invitations_flag_on)): ?>
+                <?php if ($regSelected === 'invite' && empty($invitations_flag_on)): ?>
                     <span class="field-error">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</span>
+                <?php endif; ?>
+                <?php if (!empty($settingsErrors['registration_mode'])): ?>
+                    <span class="field-error"><?= $e($settingsErrors['registration_mode']) ?></span>
                 <?php endif; ?>
             </label>
             <label class="field">
                 <span>Anti-abuse enforcement</span>
+                <?php $aaSelected = (string) ($settingsOld['antiabuse_mode'] ?? ($antiabuse_mode ?? 'observe')); ?>
                 <select name="antiabuse_mode" class="input">
                     <?php foreach (($antiabuse_modes ?? ['observe', 'flag', 'hold', 'block']) as $m): ?>
-                        <option value="<?= $e($m) ?>"<?= ($antiabuse_mode ?? 'observe') === $m ? ' selected' : '' ?>><?= $e(ucfirst($m)) ?></option>
+                        <option value="<?= $e($m) ?>"<?= $aaSelected === $m ? ' selected' : '' ?>><?= $e(ucfirst($m)) ?></option>
                     <?php endforeach; ?>
                 </select>
                 <span class="muted">observe = log only · flag · hold = queue for approval · block = reject</span>
+                <?php if (!empty($settingsErrors['antiabuse_mode'])): ?>
+                    <span class="field-error"><?= $e($settingsErrors['antiabuse_mode']) ?></span>
+                <?php endif; ?>
             </label>
             <label class="field">
                 <span>Blocked words</span>
-                <textarea name="antiabuse_blocked_words" class="input" rows="4" placeholder="One word or phrase per line (commas also separate entries)"><?= $e(implode("\n", $antiabuse_blocked_words ?? [])) ?></textarea>
+                <?php $wordsValue = isset($settingsOld['antiabuse_blocked_words']) && is_string($settingsOld['antiabuse_blocked_words'])
+                    ? $settingsOld['antiabuse_blocked_words']
+                    : implode("\n", $antiabuse_blocked_words ?? []); ?>
+                <textarea name="antiabuse_blocked_words" class="input" rows="4" placeholder="One word or phrase per line (commas also separate entries)"><?= $e($wordsValue) ?></textarea>
                 <span class="muted">One per line, or comma-separated. Case-insensitive; matched as substrings against new posts. Entries shorter than 3 characters are ignored.</span>
+                <?php if (!empty($settingsErrors['antiabuse_blocked_words'])): ?>
+                    <span class="field-error"><?= $e($settingsErrors['antiabuse_blocked_words']) ?></span>
+                <?php endif; ?>
             </label>
             <div class="form-actions"><button class="btn" type="submit">Save settings</button></div>
         </form>
@@ -126,7 +146,7 @@
         <?php else: ?>
             <div class="table-scroll" tabindex="0" role="region" aria-label="Custom emoji catalogue">
                 <table class="audit">
-                    <thead><tr><th>Emoji</th><th>Name</th><th>Asset</th><th>Reactions</th><th>Status</th><th>Action</th></tr></thead>
+                    <thead><tr><th scope="col">Emoji</th><th scope="col">Name</th><th scope="col">Asset</th><th scope="col">Reactions</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead>
                     <tbody>
                     <?php foreach ($custom_emoji as $emoji): ?>
                         <?php $shortcode = (string) $emoji['shortcode']; ?>
@@ -165,7 +185,7 @@
         <?php else: ?>
             <div class="table-scroll" tabindex="0" role="region" aria-label="Recent activity">
             <table class="audit">
-                <thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Reason</th></tr></thead>
+                <thead><tr><th scope="col">When</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Target</th><th scope="col">Reason</th></tr></thead>
                 <tbody>
                 <?php foreach ($audit as $row): ?>
                     <tr>
@@ -179,6 +199,7 @@
                 </tbody>
             </table>
             </div>
+            <p class="muted"><a href="/admin/audit">Search the full audit log</a></p>
         <?php endif; ?>
     </section>
     </div>

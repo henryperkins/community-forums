@@ -13,6 +13,7 @@ use App\Core\ValidationException;
 use App\Repository\BoardMemberRepository;
 use App\Repository\FollowRepository;
 use App\Repository\TagRepository;
+use App\Service\TagService;
 use App\Repository\ThreadRepository;
 use App\Security\AuthorityGate;
 use App\Security\BoardPolicy;
@@ -125,21 +126,38 @@ final class TagController extends Controller
         return $this->redirectWithFlash('/admin/tags', 'Tag updated.');
     }
 
+    /**
+     * Confirmation page for a tag merge (GET). Merging retags every thread and
+     * deletes the source tag — irreversible mass-retagging — so it shows the
+     * affected-thread count before the POST (ADMIN §9.4 "show impact").
+     *
+     * @param array<string,string> $params
+     */
+    public function mergeConfirm(Request $request, array $params): Response
+    {
+        $this->requireTags();
+        $this->requireAdmin();
+        try {
+            $model = $this->container->get(TagService::class)
+                ->mergeConfirmation((int) ($params['id'] ?? 0), (int) $request->int('target_id', 0));
+        } catch (ValidationException) {
+            return $this->redirectWithFlash('/admin/tags', 'Choose a different target tag to merge into.');
+        }
+
+        return $this->view('admin/tag_merge_confirm', $model);
+    }
+
     /** @param array<string,string> $params */
     public function merge(Request $request, array $params): Response
     {
         $this->requireTags();
         $this->requireAdmin();
-        $sourceId = (int) ($params['id'] ?? 0);
-        $targetId = (int) $request->post('target_id', 0);
-        if ($sourceId <= 0 || $targetId <= 0 || $sourceId === $targetId) {
+        try {
+            $this->container->get(TagService::class)
+                ->merge((int) ($params['id'] ?? 0), (int) $request->post('target_id', 0));
+        } catch (ValidationException) {
             return $this->redirectWithFlash('/admin/tags', 'Choose a different target tag.');
         }
-        $repo = $this->container->get(TagRepository::class);
-        if ($repo->find($sourceId) === null || $repo->find($targetId) === null) {
-            throw new NotFoundException('Tag not found.');
-        }
-        $repo->mergeInto($sourceId, $targetId);
         return $this->redirectWithFlash('/admin/tags', 'Tag merged.');
     }
 

@@ -29,27 +29,77 @@ final class AdminUserController extends Controller
     private const STATUSES = ['active', 'suspended', 'banned', 'deactivated'];
     private const SORTS = ['username', 'role', 'status', 'created_at', 'last_seen', 'post_count', 'reputation'];
     private const LAST_SEEN = ['', '1', '7', '30', '90', 'never'];
+    private const BULK_ACTIONS = ['warn', 'suspend'];
+    private const BULK_MAX = 50;
 
     /** @param array<string,string> $params */
     public function index(Request $request, array $params): Response
     {
         $this->requireAdmin();
-        $page = max(0, $request->int('page', 0));
-        $filters = $this->readFilters($request);
+        return $this->directoryView($request);
+    }
 
-        $rows = $this->container->get(UserRepository::class)->directory(
-            $filters + ['limit' => self::PER_PAGE, 'offset' => $page * self::PER_PAGE],
-        );
+    /**
+     * Step 1 of bulk moderation (ADMIN §5.1 bulk-selectable + §3.2 "each still
+     * audited individually"): validate the selection and show a confirmation
+     * page with the shared reason (and, for suspend, the shared expiry) before
+     * anything is written.
+     *
+     * @param array<string,string> $params
+     */
+    public function bulkConfirm(Request $request, array $params): Response
+    {
+        $this->requireAdmin();
 
-        return $this->view('admin/users', [
-            'users' => $rows,
-            'filters' => $filters,
-            'q' => $filters['q'],
-            'page' => $page,
-            'has_next' => count($rows) === self::PER_PAGE,
-            // Query string for the current filters (sort links + pager reuse it).
-            'base_query' => array_filter($filters, static fn ($v): bool => $v !== '' && $v !== null),
-        ]);
+        $action = (string) $request->post('bulk_action', '');
+        $ids = $this->selectedIds($request);
+        if (!in_array($action, self::BULK_ACTIONS, true)) {
+            return $this->directoryView($request, 'Choose a bulk action to apply.', 422);
+        }
+        if ($ids === []) {
+            return $this->directoryView($request, 'Select at least one member first.', 422);
+        }
+
+        return $this->bulkConfirmView($action, $ids);
+    }
+
+    /**
+     * Step 2 of bulk moderation: apply the action to every selected member,
+     * one audited service call each. Per-member refusals (an admin target,
+     * yourself) are skipped and reported; a shared-input validation failure
+     * (empty reason, malformed expiry) aborts before any member is written and
+     * re-renders the confirmation at 422 with the typed input preserved.
+     *
+     * @param array<string,string> $params
+     */
+    public function bulkApply(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+
+        $action = (string) $request->post('bulk_action', '');
+        $ids = $this->selectedIds($request);
+        if (!in_array($action, self::BULK_ACTIONS, true) || $ids === []) {
+            return $this->directoryView($request, 'The bulk selection is no longer valid — start again.', 422);
+        }
+
+        $reason = $request->str('reason');
+        $until = trim($request->str('until'));
+
+        try {
+            $result = $this->container->get(UserModerationService::class)
+                ->bulkApply($admin, $action, $ids, $reason, $until !== '' ? $until : null);
+        } catch (ValidationException $e) {
+            // Shared-input failure (reason/until) aborted before any member
+            // was written — re-render the confirmation with the typed input.
+            return $this->bulkConfirmView($action, $ids, $e->errors, ['reason' => $reason, 'until' => $until], 422);
+        }
+
+        $verb = $action === 'suspend' ? 'Suspended' : 'Warned';
+        $message = $verb . ' ' . $result['done'] . ' member' . ($result['done'] === 1 ? '' : 's') . '.';
+        if ($result['skipped'] !== []) {
+            $message .= ' Skipped: ' . implode('; ', $result['skipped']);
+        }
+        return $this->redirectWithFlash('/admin/users', $message);
     }
 
     /**
@@ -87,6 +137,22 @@ final class AdminUserController extends Controller
     {
         $this->requireAdmin();
         return $this->record((int) ($params['id'] ?? 0));
+    }
+
+    /**
+     * One-shot audited PII disclosure (ADMIN §5.5: "PII access is gated and
+     * logged" — the POST is the access event). The revealed values render on
+     * this response only and are never stored client-side.
+     *
+     * @param array<string,string> $params
+     */
+    public function revealPii(Request $request, array $params): Response
+    {
+        $admin = $this->requireAdmin();
+        $id = (int) ($params['id'] ?? 0);
+        $this->requireSubject($id);
+        $pii = $this->container->get(UserModerationService::class)->revealPii($admin, $id);
+        return $this->record($id, pii: $pii);
     }
 
     /** @param array<string,string> $params */
@@ -206,7 +272,15 @@ final class AdminUserController extends Controller
     {
         $admin = $this->requireAdmin();
         $id = (int) ($params['id'] ?? 0);
-        $this->requireSubject($id); // 404 before any write
+        $subject = $this->requireSubject($id); // 404 before any write
+        // Typed-username confirmation, enforced server-side (parity with the
+        // structure deletes): banning is the console's most consequential
+        // one-form action and must not be a single accidental click.
+        if (trim((string) $request->post('confirm_username', '')) !== (string) $subject['username']) {
+            return $this->record($id, new ValidationException(
+                ['confirm_username' => 'Type the member\'s username exactly to confirm the ban.'],
+            ), 422, 'ban', ['reason' => $request->str('reason')]);
+        }
         try {
             $this->container->get(UserModerationService::class)
                 ->ban($admin, $id, $request->str('reason'));
@@ -262,11 +336,65 @@ final class AdminUserController extends Controller
     }
 
     /**
+     * Render the directory (shared by GET and the bulk 422 re-renders).
+     */
+    private function directoryView(Request $request, ?string $bulkError = null, int $status = 200): Response
+    {
+        $model = $this->container->get(UserModerationService::class)->directoryModel(
+            $this->readFilters($request),
+            max(0, $request->int('page', 0)),
+            self::PER_PAGE,
+        );
+
+        return $this->view('admin/users', $model + ['bulk_error' => $bulkError], $status);
+    }
+
+    /**
+     * Render the bulk confirmation page.
+     *
+     * @param list<int> $ids
+     * @param array<string,string> $errors
+     * @param array<string,string> $old
+     */
+    private function bulkConfirmView(string $action, array $ids, array $errors = [], array $old = [], int $status = 200): Response
+    {
+        $subjects = $this->container->get(UserModerationService::class)->bulkPlan($action, $ids);
+
+        return $this->view('admin/users_bulk_confirm', [
+            'action' => $action,
+            'subjects' => $subjects,
+            'errors' => $errors,
+            'old' => $old,
+        ], $status);
+    }
+
+    /** @return list<int> up to BULK_MAX unique positive ids */
+    private function selectedIds(Request $request): array
+    {
+        $raw = $request->post('selected', []);
+        if (!is_array($raw)) {
+            return [];
+        }
+        $ids = [];
+        foreach ($raw as $value) {
+            $id = (int) $value;
+            if ($id > 0 && !in_array($id, $ids, true)) {
+                $ids[] = $id;
+            }
+            if (count($ids) >= self::BULK_MAX) {
+                break;
+            }
+        }
+        return $ids;
+    }
+
+    /**
      * Render the per-user admin record (ADMIN §5.2).
      *
      * @param array<string,string> $old typed input to re-render (anti-draft-loss);
      *        preferred over the exception payload since service guards such as
      *        requireReason() throw without capturing the submitted values.
+     * @param array{email:string,session_ips:array<int,string>,post_ips:array<int,string>}|null $pii
      */
     private function record(
         int $id,
@@ -274,6 +402,7 @@ final class AdminUserController extends Controller
         int $status = 200,
         ?string $errorContext = null,
         array $old = [],
+        ?array $pii = null,
     ): Response {
         $admin = $this->requireAdmin();
         $subject = $this->requireSubject($id);
@@ -301,6 +430,7 @@ final class AdminUserController extends Controller
             'error_context' => $errorContext,
             'errors' => $error?->errors ?? [],
             'old' => $old !== [] ? $old : ($error?->old ?? []),
+            'pii' => $pii,
             'profile_media' => $this->container->get(FeatureFlags::class)->enabled('profile_media'),
         ], $status);
     }

@@ -223,7 +223,7 @@ Escalating ladder, each recorded and visible on the user's admin record:
 | **Ban — board** | `mod.user.ban_board` | Board | Blocks posting (or reading) in one board. |
 | **Ban — site** | `user.ban_site` (Admin) | Site | Full or post-only site ban. |
 | **Reveal anon author** | `mod.anon.reveal` | Board/Site | Unmasks an Anonymous post's author; the reveal is itself audited. |
-| **Add mod note** | `mod.user.warn` | — | Private staff note on the account (not user-visible). |
+| **Add mod note** | `mod.user.warn` | — | Private staff note on the account (not user-visible). *2026-07-18: notes are **admin-only** in the shipped implementation — `user_notes` is globally scoped, so the any-board-moderator mapping over-disclosed; see ADR 0021 (post-review decisions).* |
 
 **Ban evasion** is flagged (not auto-enforced) using soft signals — matching email/IP/device on a new account linked to a banned one — surfaced to Admins with privacy caveats (§5.5). No automated collateral bans.
 
@@ -814,6 +814,7 @@ Mapped onto DESIGN.md §13 phases (whose strategic "Phase 3" and "Later (P2)" bu
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.15 | 2026-07-18 | PR #44 safety remediation deviations recorded (ADR 0021): §3.4 "Add mod note" is admin-only in the shipped implementation (globally-scoped `user_notes` under any-board-mod read over-disclosed); §4.4 board delete ships as hard-DELETE-with-forced-move inside one locking transaction (every thread row moves, slugs un-reserve via cascade) with soft-delete + reserved slugs still deferred as ADR 0021 item 10. |
 | v0.14 | 2026-07-12 | Added §3.10 for Thread Intelligence health, recovery, curator, provenance/retention, and data-preserving rollback workflows; linked the canonical runbook, recorded the selected live-eval contract, and reconciled the joint default-on graduation with independent rollback pins. |
 | v0.13 | 2026-06-28 | Reconciled outbound webhook storage with the B2 delivery implementation: `webhooks.secret` is replaced by `secret_ref` (`svcsec_*` SecretVault reference), added the durable `webhook_deliveries` ledger, and documented show-once signing secrets. |
 | v0.12 | 2026-06-26 | Consistency pass: aligned the §2.4 SUSPENDED resolver branch (`GUEST_READONLY_PLUS_SELF` → **`GUEST_READONLY`**) and the §2.5 worked example ("read-only+self" → "read-only") to the already-decided read-only (no self-write) behaviour in §11 + PHASE_1_PLAN; corrected §8.8 v1 scope to the internal hook system + email only, noting outbound webhooks, spam integration, and hook-system GA land in **Phase 3** (DECISIONS §4 #10; v1 = Phases 1–2); added `posts.ip VARBINARY(16) NULL` to the §10.2 additions (90-day retention, Admin-only audited; built Phase 2 — DECISIONS §4 #5, SCHEMA reconciliation #10). **Resolved (suspend scope) [Henry]:** set §3.4 Suspend scope to **Board/Site** to match §2.2 — Admins suspend site-wide (global `users.status`/`suspended_until`); a moderator suspends within their assigned board(s) as a time-limited board read-only state (`bans` `scope='board'`/`type='post'`/`expires_at`), enforced via the board-level gate, not the global account flag. |

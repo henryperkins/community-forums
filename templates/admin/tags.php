@@ -33,6 +33,10 @@ $createOld = $errorForm === 'create' ? $old : [];
         <?php if (empty($tags)): ?>
             <p class="muted empty">No tags yet.</p>
         <?php else: ?>
+            <?php // Merge destinations are enabled tags only, so the form gate
+                  // counts those — a lone enabled tag among disabled ones must
+                  // not render a Merge… form with an empty selector. ?>
+            <?php $enabledTagCount = count(array_filter($tags, static fn (array $t): bool => (int) ($t['is_enabled'] ?? 1) === 1)); ?>
             <ul class="admin-board-list">
                 <?php foreach ($tags as $tag): ?>
                     <?php
@@ -65,9 +69,8 @@ $createOld = $errorForm === 'create' ? $old : [];
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
-                        <?php if ((int) ($tag['is_enabled'] ?? 1) === 1 && count($tags) > 1): ?>
-                            <form method="post" action="/admin/tags/<?= (int) $tag['id'] ?>/merge" class="inline-form">
-                                <?= $this->csrfField() ?>
+                        <?php if ((int) ($tag['is_enabled'] ?? 1) === 1 && $enabledTagCount > 1): ?>
+                            <form method="get" action="/admin/tags/<?= (int) $tag['id'] ?>/merge" class="inline-form">
                                 <label class="sr-only" for="merge-tag-<?= (int) $tag['id'] ?>">Merge into</label>
                                 <select id="merge-tag-<?= (int) $tag['id'] ?>" class="input input-small" name="target_id">
                                     <?php foreach ($tags as $target): ?>
@@ -76,7 +79,7 @@ $createOld = $errorForm === 'create' ? $old : [];
                                         <?php endif; ?>
                                     <?php endforeach; ?>
                                 </select>
-                                <button class="linkbtn muted" type="submit">Merge</button>
+                                <button class="linkbtn danger" type="submit">Merge…</button>
                             </form>
                         <?php endif; ?>
                     </li>

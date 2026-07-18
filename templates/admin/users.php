@@ -15,9 +15,9 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
         array_merge($filters, ['sort' => $key, 'direction' => $next]),
         static fn ($v): bool => $v !== '' && $v !== null,
     );
-    $arrow = $active ? ($dir === 'asc' ? ' &#9650;' : ' &#9660;') : '';
+    $arrow = $active ? '<span aria-hidden="true">' . ($dir === 'asc' ? ' &#9650;' : ' &#9660;') . '</span>' : '';
     $ariaSort = $active ? ($dir === 'asc' ? 'ascending' : 'descending') : 'none';
-    return '<th aria-sort="' . $ariaSort . '"><a href="/admin/users?' . $e(http_build_query($qs)) . '">'
+    return '<th scope="col" aria-sort="' . $ariaSort . '"><a href="/admin/users?' . $e(http_build_query($qs)) . '">'
         . $e($label) . $arrow . '</a></th>';
 };
 ?>
@@ -91,13 +91,17 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
             </div>
         </form>
 
+        <?php if (!empty($bulk_error ?? null)): ?>
+            <p class="field-error" role="alert"><?= $e($bulk_error) ?></p>
+        <?php endif; ?>
+
         <form method="post" action="/admin/users/bulk" class="user-directory">
             <?= $this->csrfField() ?>
-            <div class="table-scroll">
+            <div class="table-scroll" tabindex="0" role="region" aria-label="User directory">
             <table class="audit">
                 <thead>
                     <tr>
-                        <th class="col-select"><input type="checkbox" data-bulk-toggle aria-label="Select all users on this page"></th>
+                        <th scope="col" class="col-select"><input type="checkbox" data-bulk-toggle aria-label="Select all users on this page"></th>
                         <?= $sortHeader('username', 'User') ?>
                         <?= $sortHeader('role', 'Role') ?>
                         <?= $sortHeader('status', 'State') ?>
@@ -117,7 +121,12 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
                             <a href="/admin/users/<?= (int) $u['id'] ?>" class="user-link"><?= $e($u['username']) ?></a>
                             <?php if (($u['display_name'] ?? '') !== ''): ?><span class="muted">(<?= $e($u['display_name']) ?>)</span><?php endif; ?>
                         </td>
-                        <td data-label="Role"><span class="role-pill role-<?= $e($u['role']) ?>"><?= $e($u['role']) ?></span></td>
+                        <td data-label="Role">
+                            <span class="role-pill role-<?= $e($u['role']) ?>"><?= $e($u['role']) ?></span>
+                            <?php if (($u['role'] ?? '') === 'user' && (int) ($u['moderated_boards'] ?? 0) > 0): ?>
+                                <span class="tag" title="Moderates <?= (int) $u['moderated_boards'] ?> board<?= (int) $u['moderated_boards'] === 1 ? '' : 's' ?>">board mod</span>
+                            <?php endif; ?>
+                        </td>
                         <td data-label="State"><span class="state state-<?= $e($u['status']) ?>"><?= $e($u['status']) ?></span></td>
                         <td data-label="Reputation"><?= (int) $u['reputation'] ?></td>
                         <td data-label="Posts"><?= (int) ($u['post_count'] ?? 0) ?></td>
@@ -132,18 +141,18 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
             </table>
             </div>
 
-            <fieldset class="bulk-bar" disabled>
+            <fieldset class="bulk-bar">
                 <legend>Bulk actions</legend>
                 <label class="field">
                     <span class="sr-only">Bulk action</span>
                     <select name="bulk_action" class="input">
                         <option value="">Choose an action…</option>
-                        <option value="suspend">Suspend selected</option>
                         <option value="warn">Warn selected</option>
+                        <option value="suspend">Suspend selected</option>
                     </select>
                 </label>
-                <button class="btn btn-small" type="submit">Apply to selected</button>
-                <p class="muted">Bulk moderation requires a separate confirmation step (coming soon).</p>
+                <button class="btn btn-small" type="submit">Review and apply…</button>
+                <p class="muted">You confirm the shared reason on the next screen; every member is actioned and audited individually.</p>
             </fieldset>
         </form>
 

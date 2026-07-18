@@ -59,15 +59,20 @@ $this->section('title', 'Badge rules');
         <?php else: ?>
             <ul class="link-list">
                 <?php foreach ($rules as $rule): ?>
+                    <?php $ruleEnabled = (int) $rule['is_enabled'] === 1; $ruleName = (string) $rule['badge_name']; ?>
                     <li>
-                        <strong><?= $e($rule['badge_name']) ?></strong>
+                        <strong><?= $e($ruleName) ?></strong>
                         <span class="muted"><?= $e($rule['rule_type']) ?> &ge; <?= (int) $rule['threshold'] ?><?= !empty($rule['board_name']) ? ' · ' . $e($rule['board_name']) : '' ?></span>
-                        <span class="badge<?= (int) $rule['is_enabled'] === 1 ? '' : ' badge-muted' ?>"><?= (int) $rule['is_enabled'] === 1 ? 'Enabled' : 'Disabled' ?></span>
+                        <span class="badge<?= $ruleEnabled ? '' : ' badge-muted' ?>"><?= $ruleEnabled ? 'Enabled' : 'Disabled' ?></span>
                         <a class="linkbtn" href="/admin/badge-rules/<?= (int) $rule['id'] ?>/preview">Preview</a>
-                        <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/enable"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Enable</button></form>
-                        <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/backfill"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Backfill</button></form>
-                        <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/disable"><?= $this->csrfField() ?><button class="linkbtn muted" type="submit">Disable</button></form>
-                        <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/revoke"><?= $this->csrfField() ?><button class="linkbtn danger" type="submit">Revoke awards</button></form>
+                        <?php if (!$ruleEnabled): ?>
+                            <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/enable"><?= $this->csrfField() ?><button class="linkbtn" type="submit" aria-label="Enable the <?= $e($ruleName) ?> rule">Enable</button></form>
+                        <?php endif; ?>
+                        <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/backfill"><?= $this->csrfField() ?><button class="linkbtn" type="submit" aria-label="Backfill the <?= $e($ruleName) ?> rule">Backfill</button></form>
+                        <?php if ($ruleEnabled): ?>
+                            <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/disable"><?= $this->csrfField() ?><button class="linkbtn muted" type="submit" aria-label="Disable the <?= $e($ruleName) ?> rule">Disable</button></form>
+                        <?php endif; ?>
+                        <form class="inline" method="post" action="/admin/badge-rules/<?= (int) $rule['id'] ?>/revoke"><?= $this->csrfField() ?><button class="linkbtn danger" type="submit" aria-label="Revoke all awards from the <?= $e($ruleName) ?> rule">Revoke awards</button></form>
                     </li>
                 <?php endforeach; ?>
             </ul>

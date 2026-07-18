@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
-use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardMemberRepository;
@@ -28,6 +27,7 @@ use App\Service\ModerationService;
 use App\Service\PollService;
 use App\Service\ReactionService;
 use App\Service\SinceLastReadContextService;
+use App\Service\ThreadReadService;
 use App\Service\TitleService;
 use App\Service\ThreadWorkflowService;
 use App\Service\ThreadIntelligence\ThreadIntelligenceViewService;
@@ -201,14 +201,17 @@ final class ThreadController extends Controller
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_PIN);
         $canLock = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_LOCK);
-        // core.thread.move has no thread-view control to gate yet — moving a
-        // thread to another board isn't reachable from templates/thread.php or
-        // templates/partials/post.php today (only /admin/boards/{id}/move exists,
-        // which is unrelated board-reordering, not this capability). Computed
-        // here and exposed as can_move so a future move-thread control can
-        // consume it without another controller change.
+        // Destinations for the Topic-tools "Move to board" control (ADMIN §3.3):
+        // an admin may target any unarchived board; a scoped moderator only the
+        // boards they moderate for core.thread.move. The service still enforces
+        // authority over BOTH ends of the move regardless of this list.
         $canMove = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_MOVE);
+        $moveBoards = [];
+        if ($canMove) {
+            $moveBoards = $this->container->get(ModerationService::class)
+                ->moveDestinations($user, (int) $thread['board_id']);
+        }
         $canSplitMerge = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_SPLIT_MERGE);
         $canDeletePosts = $user !== null
@@ -447,6 +450,12 @@ final class ThreadController extends Controller
             'polls_on' => $pollsOn,
             'poll' => $poll,
             'can_create_poll' => $canCreatePoll,
+            'move_boards' => $moveBoards,
+            'move_error' => '',
+            'move_selected' => 0,
+            'restructure_error' => '',
+            'restructure_context' => '',
+            'restructure_old' => [],
             'reply_errors' => [],
             'reply_old' => [],
             'edit_post_id' => 0,
@@ -455,36 +464,15 @@ final class ThreadController extends Controller
         ], $extra));
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Delegates to the shared ThreadReadService (spec §1) — the same gate the
+     * moderation and reply/edit failure re-renders use. Public behavior is
+     * identical except that board-moderator assignment now counts as readable.
+     *
+     * @return array<string,mixed>
+     */
     private function loadReadableThread(int $id): array
     {
-        $thread = $this->container->get(ThreadRepository::class)->findWithBoard($id);
-        if ($thread === null || (int) $thread['is_deleted'] === 1) {
-            throw new NotFoundException('Thread not found.');
-        }
-        $policy = $this->container->get(BoardPolicy::class);
-        $user = $this->currentUser();
-        $isMember = $user !== null
-            && $this->container->get(BoardMemberRepository::class)->isMember((int) $thread['board_id'], $user->id());
-        if (!$policy->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)) {
-            throw new NotFoundException('Thread not found.');
-        }
-        // A held (pending) thread is not public yet: only its author or a
-        // moderator of THIS board may load it (mirrors the held-media gate). P3-05.
-        // Board-scoped canModerate() (not the site-wide core.content.view_pending
-        // key): the legacy projection grants every global moderator a site-scoped
-        // view_pending to match the bare isModerator() site probes at /mod/approvals
-        // and the held-media view, and a site grant satisfies any board target — so
-        // keying this board-scoped view on it would let an unassigned global
-        // moderator open held threads they never could pre-cutover (review S1).
-        if ((int) ($thread['is_pending'] ?? 0) === 1) {
-            $isAuthor = $user !== null && $user->owns((int) $thread['user_id']);
-            $canMod = $user !== null
-                && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id']);
-            if (!$isAuthor && !$canMod) {
-                throw new NotFoundException('Thread not found.');
-            }
-        }
-        return $thread;
+        return $this->container->get(ThreadReadService::class)->loadForUser($this->currentUser(), $id);
     }
 }

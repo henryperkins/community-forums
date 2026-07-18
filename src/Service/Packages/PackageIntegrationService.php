@@ -370,7 +370,7 @@ final class PackageIntegrationService
                     return; // already revoked -> idempotent no-op (nothing to roll back)
                 }
                 if ($link['webhook_id'] !== null) {
-                    $this->webhooks->delete($admin, (int) $link['webhook_id']);
+                    $this->webhooks->deleteWithoutReauth($admin, (int) $link['webhook_id']);
                 }
                 if ($install !== null) {
                     $this->history->record([

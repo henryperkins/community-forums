@@ -21,8 +21,9 @@ $this->section('title', 'Sign-in providers');
 
     <section class="card">
         <h2>Providers</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Sign-in providers">
         <table class="audit">
-            <thead><tr><th>Provider</th><th>Key</th><th>Type</th><th>Issuer</th><th>Health</th><th>Sole-method accounts</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th scope="col">Provider</th><th scope="col">Key</th><th scope="col">Type</th><th scope="col">Issuer</th><th scope="col">Health</th><th scope="col">Sole-method accounts</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
             <tbody>
             <?php foreach ($rows as $r): ?>
                 <?php $builtin = ((string) $r['type']) !== 'generic_oidc'; $id = (int) $r['id']; ?>
@@ -73,6 +74,7 @@ $this->section('title', 'Sign-in providers');
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </section>
 
     <section class="card">

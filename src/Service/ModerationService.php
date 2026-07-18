@@ -16,7 +16,7 @@ use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
-use App\Security\AuthorityGate;
+use App\Security\BoardAuthority;
 use App\Security\Cap;
 use App\Security\WebhookEvents;
 use App\Security\WriteGate;
@@ -42,61 +42,59 @@ final class ModerationService
         private BoardModeratorRepository $boardMods,
         private BoardRepository $boards,
         private UserRepository $users,
+        private BoardAuthority $boardAuthority,
+        private ThreadReadService $readService,
         private ?FirstPartyHookRegistry $hooks = null,
-        private ?AuthorityGate $authority = null,
         private ?ThreadIntelligenceQueue $threadIntelligence = null,
     ) {
     }
 
-    private function gate(): AuthorityGate
-    {
-        return $this->authority ?? AuthorityGate::legacy();
-    }
-
-    /** Non-throwing capability check (admin anywhere, or assigned board moderator). */
+    /**
+     * Non-throwing capability check (admin anywhere, or assigned board
+     * moderator). Delegates to BoardAuthority (PR #44 extraction) — public
+     * signature unchanged for every existing caller.
+     */
     public function canModerate(User $user, int $boardId, string $capability = Cap::POST_DELETE_ANY): bool
     {
-        return $this->gate()->allows(
-            fn (): bool => $this->writeGate->canWrite($user)
-                && ($user->isAdmin() || $this->boardMods->isModerator($boardId, $user->id())),
-            $user,
-            $capability,
-            ['board_id' => $boardId],
-            'ModerationService::canModerate',
-        );
+        return $this->boardAuthority->canModerate($user, $boardId, $capability);
     }
 
     /**
-     * Queue discovery (Inc 6 follow-up): the boards on which $user holds
-     * $capability, asked through the gate per board so every mode answers
-     * consistently — legacy/shadow reproduce admin-or-assigned exactly,
-     * while enforce lets a custom deputy's board- or site-scoped grant
-     * surface its rows. Returns null for site-wide authority (no row
-     * filter), [] for none.
+     * Boards on which $user holds $capability — null for site-wide authority,
+     * [] for none. Delegates to BoardAuthority (see there for the gate
+     * semantics).
      *
      * @return ?list<int>
      */
     public function moderableBoardIds(User $user, string $capability): ?array
     {
-        if ($this->gate()->allows(
-            fn (): bool => $user->isAdmin(),
-            $user,
-            $capability,
-            [], // site probe: board-scoped grants deliberately do not qualify
-            'ModerationService::moderableBoardIds',
-        )) {
-            return null;
-        }
+        return $this->boardAuthority->moderableBoardIds($user, $capability);
+    }
 
-        $ids = [];
-        foreach ($this->boards->allOrdered() as $board) {
-            $boardId = (int) $board['id'];
-            if ($this->canModerate($user, $boardId, $capability)) {
-                $ids[] = $boardId;
+    /**
+     * Board rows the actor may use as a thread-move destination (every
+     * unarchived board within their core.thread.move authority), excluding the
+     * current board. The move itself still re-enforces authority over BOTH ends.
+     *
+     * @return list<array{id:int,label:string}>
+     */
+    public function moveDestinations(User $user, int $currentBoardId): array
+    {
+        $moderableIds = $this->moderableBoardIds($user, Cap::THREAD_MOVE);
+        $out = [];
+        foreach ($this->boards->allOrdered() as $candidate) {
+            if ((int) $candidate['id'] === $currentBoardId) {
+                continue;
             }
+            if ((int) ($candidate['is_archived'] ?? 0) === 1) {
+                continue;
+            }
+            if ($moderableIds !== null && !in_array((int) $candidate['id'], $moderableIds, true)) {
+                continue;
+            }
+            $out[] = ['id' => (int) $candidate['id'], 'label' => '#' . $candidate['name']];
         }
-
-        return $ids;
+        return $out;
     }
 
     /** @return array{thread:array<string,mixed>, pinned:bool} */
@@ -153,6 +151,9 @@ final class ModerationService
         if ($post === null || (int) $post['is_deleted'] === 1) {
             throw new NotFoundException('Post not found.');
         }
+        // Read gate on the containing thread before authority (spec §1):
+        // unreadable actors 404 uniformly instead of a 403 existence oracle.
+        $this->readService->loadForUser($mod, (int) $post['thread_id']);
         $this->assertCanModerate($mod, (int) $post['board_id'], Cap::POST_DELETE_ANY);
         $this->assertNotArchived((int) $post['board_id']);
 
@@ -216,6 +217,7 @@ final class ModerationService
         if ($post === null) {
             throw new NotFoundException('Post not found.');
         }
+        $this->readService->loadForUser($mod, (int) $post['thread_id']);
         $this->assertCanModerate($mod, (int) $post['board_id'], Cap::POST_RESTORE);
         $this->assertNotArchived((int) $post['board_id']);
         if ((int) $post['is_deleted'] === 0) {
@@ -254,41 +256,64 @@ final class ModerationService
      */
     public function moveThread(User $mod, int $threadId, int $destBoardId): array
     {
-        $thread = $this->threads->find($threadId);
-        if ($thread === null || (int) $thread['is_deleted'] === 1) {
-            throw new NotFoundException('Thread not found.');
-        }
-        $srcBoardId = (int) $thread['board_id'];
-        if ($srcBoardId === $destBoardId) {
-            return ['thread' => $thread, 'moved' => false];
-        }
-        $dest = $this->boards->find($destBoardId);
-        if ($dest === null) {
-            throw new ValidationException(['board_id' => 'Choose a destination board.']);
-        }
-        $this->assertCanModerate($mod, $srcBoardId, Cap::THREAD_MOVE);
-        $this->assertCanModerate($mod, $destBoardId, Cap::THREAD_MOVE);
-        // A move mutates BOTH boards (counters + last-post caches), so an archived
-        // board on either end is read-only: moving content out of a frozen source,
-        // or into a frozen destination, are both writes that stay closed.
-        $this->assertNotArchived($srcBoardId);
-        $this->assertNotArchived($destBoardId);
+        return $this->db->transaction(function () use ($mod, $threadId, $destBoardId): array {
+            // The thread lock comes first: its CURRENT board determines which
+            // two board rows must then be locked in deterministic ID order.
+            $thread = $this->threads->findForUpdate($threadId);
+            if ($thread === null) {
+                throw new NotFoundException('Thread not found.');
+            }
+            $srcBoardId = (int) $thread['board_id'];
+            $boardIds = array_values(array_unique([$srcBoardId, $destBoardId]));
+            sort($boardIds, SORT_NUMERIC);
+            $lockedBoards = [];
+            foreach ($boardIds as $boardId) {
+                $lockedBoards[$boardId] = $this->boards->findForUpdate($boardId);
+            }
+            $source = $lockedBoards[$srcBoardId] ?? null;
+            if ($source === null) {
+                throw new NotFoundException('Thread not found.');
+            }
 
-        $this->db->transaction(function () use ($mod, $threadId, $thread, $srcBoardId, $destBoardId): void {
-            $postCount = (int) $this->db->fetchValue(
-                'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0',
+            // Read (404) → authority (403) → validation (422), using only the
+            // locked current rows so a concurrent move cannot change the source
+            // board or counter population after authorization.
+            $this->readService->assertReadableRows($mod, $thread, $source);
+            $this->assertCanModerate($mod, $srcBoardId, Cap::THREAD_MOVE);
+            if ($srcBoardId === $destBoardId) {
+                return ['thread' => $thread, 'moved' => false];
+            }
+            $dest = $lockedBoards[$destBoardId] ?? null;
+            if ($dest === null) {
+                throw new ValidationException(['board_id' => 'Choose a destination board.']);
+            }
+            $this->assertCanModerate($mod, $destBoardId, Cap::THREAD_MOVE);
+            if ((int) ($source['is_archived'] ?? 0) === 1 || (int) ($dest['is_archived'] ?? 0) === 1) {
+                throw new ForbiddenException('This board is archived (read-only).');
+            }
+
+            // Board counters exclude held/deleted content (RepairService:
+            // is_deleted = 0 AND is_pending = 0, thread and post alike), so the
+            // shift must apply the same filters: a held thread contributes
+            // nothing to either board, and a visible thread moves only its
+            // approved posts — never a held reply.
+            $threadCounted = (int) ($thread['is_deleted'] ?? 0) === 0 && (int) ($thread['is_pending'] ?? 0) === 0;
+            $postCount = !$threadCounted ? 0 : (int) $this->db->fetchValue(
+                'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0',
                 [$threadId],
             );
             $this->threads->setBoard($threadId, $destBoardId);
-            $this->db->run(
-                'UPDATE boards SET thread_count = GREATEST(0, CAST(thread_count AS SIGNED) - 1),
-                    post_count = GREATEST(0, CAST(post_count AS SIGNED) - ?) WHERE id = ?',
-                [$postCount, $srcBoardId],
-            );
-            $this->db->run(
-                'UPDATE boards SET thread_count = thread_count + 1, post_count = post_count + ? WHERE id = ?',
-                [$postCount, $destBoardId],
-            );
+            if ($threadCounted) {
+                $this->db->run(
+                    'UPDATE boards SET thread_count = GREATEST(0, CAST(thread_count AS SIGNED) - 1),
+                        post_count = GREATEST(0, CAST(post_count AS SIGNED) - ?) WHERE id = ?',
+                    [$postCount, $srcBoardId],
+                );
+                $this->db->run(
+                    'UPDATE boards SET thread_count = thread_count + 1, post_count = post_count + ? WHERE id = ?',
+                    [$postCount, $destBoardId],
+                );
+            }
             $this->boards->recomputeLastPost($srcBoardId);
             $this->boards->recomputeLastPost($destBoardId);
             $this->log->log([
@@ -303,18 +328,16 @@ final class ModerationService
                 $threadId,
                 ThreadIntelligenceQueue::TRIGGER_THREAD_MOVED,
             );
+            return ['thread' => $thread, 'moved' => true];
         });
-
-        return ['thread' => $thread, 'moved' => true];
     }
 
     /** @return array<string,mixed> */
     private function requireModeratableThread(User $mod, int $threadId, string $capability): array
     {
-        $thread = $this->threads->find($threadId);
-        if ($thread === null || (int) $thread['is_deleted'] === 1) {
-            throw new NotFoundException('Thread not found.');
-        }
+        // Read gate before authority: an unreadable thread 404s uniformly
+        // instead of the old 403-vs-404 existence oracle (spec §1).
+        $thread = $this->readService->loadForUser($mod, $threadId);
         $this->assertCanModerate($mod, (int) $thread['board_id'], $capability);
         $this->assertNotArchived((int) $thread['board_id']);
         return $thread;
@@ -334,6 +357,7 @@ final class ModerationService
         if ($post === null) {
             throw new NotFoundException('Post not found.');
         }
+        $this->readService->loadForUser($mod, (int) $post['thread_id']);
         $this->assertCanModerate($mod, (int) $post['board_id'], Cap::POST_REVEAL_AUTHOR);
         if ((int) ($post['is_anonymous'] ?? 0) !== 1) {
             throw new ForbiddenException('That post was not posted anonymously.');

@@ -17,14 +17,14 @@
         <div class="flash flash-error"><?= $e($reorder_error) ?></div>
     <?php endif; ?>
 
-    <div class="admin-structure" data-reorder-categories>
+    <div class="admin-structure">
         <?php foreach ($categories as $category): ?>
             <?php $catFailed = (($update_category_id ?? null) === (int) $category['id']); ?>
-            <section class="card admin-cat" data-category-id="<?= (int) $category['id'] ?>">
+            <section class="card admin-cat">
                 <div class="admin-cat-head">
                     <form method="post" action="/admin/categories/<?= (int) $category['id'] ?>" class="inline-form">
                         <?= $this->csrfField() ?>
-                        <input type="text" name="name" class="input" value="<?= $e($catFailed ? ($update_category_old['name'] ?? $category['name']) : $category['name']) ?>" maxlength="64" required>
+                        <input type="text" name="name" class="input" value="<?= $e($catFailed ? ($update_category_old['name'] ?? $category['name']) : $category['name']) ?>" maxlength="64" aria-label="Rename category <?= $e($category['name']) ?>" required>
                         <button class="btn btn-small" type="submit">Save</button>
                     </form>
                     <span class="admin-cat-actions">
@@ -45,14 +45,14 @@
                     <p class="field-error"><?= $e($update_category_error) ?></p>
                 <?php endif; ?>
 
-                <ul class="admin-board-list" data-reorder-boards data-category-id="<?= (int) $category['id'] ?>">
+                <ul class="admin-board-list">
                     <?php foreach (($boards_by_category[(int) $category['id']] ?? []) as $board): ?>
-                        <li class="admin-board-row" data-board-id="<?= (int) $board['id'] ?>">
+                        <li class="admin-board-row">
                             <span><span class="hash">#</span><?= $e($board['name']) ?>
                                 <span class="muted">/c/<?= $e($board['slug']) ?></span>
                                 <?php if ($board['visibility'] !== 'public'): ?><span class="tag"><?= $e($board['visibility']) ?></span><?php endif; ?>
                                 <?php if ((int) ($board['is_archived'] ?? 0) === 1): ?><span class="tag tag-archived">Archived</span><?php endif; ?>
-                                <span class="muted">· <?= (int) $board['thread_count'] ?> threads</span>
+                                <span class="muted">· <?= (int) $board['thread_count'] ?> thread<?= (int) $board['thread_count'] === 1 ? '' : 's' ?></span>
                             </span>
                             <span class="admin-board-actions">
                                 <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>/move" class="inline">
@@ -87,7 +87,8 @@
         <?php endif; ?>
         <form method="post" action="/admin/categories" class="inline-form">
             <?= $this->csrfField() ?>
-            <input type="text" name="name" class="input" placeholder="Category name" maxlength="64" value="<?= $e($create_category_old['name'] ?? '') ?>" required>
+            <label class="sr-only" for="new-category-name">Category name</label>
+            <input type="text" id="new-category-name" name="name" class="input" placeholder="Category name" maxlength="64" value="<?= $e($create_category_old['name'] ?? '') ?>" required>
             <button class="btn btn-small" type="submit">Add category</button>
         </form>
     </section>
@@ -120,9 +121,22 @@
                     <select name="visibility" class="input">
                         <option value="public" <?= $bvis === 'public' ? 'selected' : '' ?>>Public</option>
                         <option value="hidden" <?= $bvis === 'hidden' ? 'selected' : '' ?>>Hidden (unlisted)</option>
-                        <option value="private" <?= $bvis === 'private' ? 'selected' : '' ?>>Private (admins only)</option>
+                        <option value="private" <?= $bvis === 'private' ? 'selected' : '' ?>>Private (members only)</option>
                     </select>
                     <?php if (!empty($boardErr['visibility'])): ?><span class="field-error"><?= $e($boardErr['visibility']) ?></span><?php endif; ?>
+                </label>
+                <label class="field"><span>Who can post</span>
+                    <?php $bMinRole = $boardOld['post_min_role'] ?? 'user'; ?>
+                    <select name="post_min_role" class="input">
+                        <option value="user" <?= $bMinRole === 'user' ? 'selected' : '' ?>>All members</option>
+                        <option value="moderator" <?= $bMinRole === 'moderator' ? 'selected' : '' ?>>Moderators and admins</option>
+                        <option value="admin" <?= $bMinRole === 'admin' ? 'selected' : '' ?>>Admins only (announcements)</option>
+                    </select>
+                    <?php if (!empty($boardErr['post_min_role'])): ?><span class="field-error"><?= $e($boardErr['post_min_role']) ?></span><?php endif; ?>
+                </label>
+                <label class="field"><span>Edit window (minutes, 0 = no limit)</span>
+                    <input type="number" name="edit_window_minutes" class="input" min="0" max="10080" value="<?= $e((string) ($boardOld['edit_window_minutes'] ?? '0')) ?>">
+                    <?php if (!empty($boardErr['edit_window_minutes'])): ?><span class="field-error"><?= $e($boardErr['edit_window_minutes']) ?></span><?php endif; ?>
                 </label>
                 <label class="field"><span>Assignment mode</span>
                     <?php $bmode = $boardOld['assignment_mode'] ?? 'off'; ?>
@@ -133,6 +147,7 @@
                     </select>
                 </label>
                 <label class="checkline"><input type="checkbox" name="allow_anonymous" value="1" <?= $boardChecked('allow_anonymous', false) ? 'checked' : '' ?>> Allow anonymous posting</label>
+                <label class="checkline"><input type="checkbox" name="require_approval" value="1" <?= $boardChecked('require_approval', false) ? 'checked' : '' ?>> Require approval before posts appear</label>
                 <label class="checkline"><input type="checkbox" name="tags_enabled" value="1" <?= $boardChecked('tags_enabled', true) ? 'checked' : '' ?>> Allow approved tags</label>
                 <label class="checkline"><input type="checkbox" name="wiki_enabled" value="1" <?= $boardChecked('wiki_enabled', false) ? 'checked' : '' ?>> Allow wiki-style post editing</label>
                 <button class="btn btn-small" type="submit">Add board</button>

@@ -7,8 +7,6 @@ namespace App\Controller;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
-use App\Core\ValidationException;
-use App\Security\ApiScopes;
 use App\Service\ApiTokenService;
 
 final class AdminApiTokenController extends Controller
@@ -25,13 +23,7 @@ final class AdminApiTokenController extends Controller
     {
         $this->requireAdmin();
         $this->gate();
-        return $this->view('admin/api_tokens', [
-            'tokens' => $this->container->get(ApiTokenService::class)->list(),
-            'scopes_catalogue' => ApiScopes::all(),
-            'errors' => [],
-            'old' => [],
-            'new_token' => null,
-        ]);
+        return $this->view('admin/api_tokens', $this->container->get(ApiTokenService::class)->pageModel());
     }
 
     /** @param array<string,string> $params */
@@ -39,40 +31,17 @@ final class AdminApiTokenController extends Controller
     {
         $admin = $this->requireAdmin();
         $this->gate();
-        $service = $this->container->get(ApiTokenService::class);
-        $days = $request->str('expires_in_days');
-        try {
-            $result = $service->mint(
-                $admin,
-                (string) $request->post('current_password', ''),
-                $request->str('name'),
-                (array) $request->post('scopes', []),
-                $days === '' ? null : (int) $days,
-            );
-            // One-time plaintext: render DIRECTLY (not via the cookie-backed Flash, which
-            // would leak the token into a Set-Cookie header). A later GET has no new_token,
-            // so the secret is shown exactly once. A reload re-POSTs (mints again) — an
-            // accepted minor wart; the alternative (cookie flash) leaks the secret.
-            return $this->view('admin/api_tokens', [
-                'tokens' => $service->list(),
-                'scopes_catalogue' => ApiScopes::all(),
-                'errors' => [],
-                'old' => [],
-                'new_token' => $result['token'],
-            ]);
-        } catch (ValidationException $e) {
-            return $this->view('admin/api_tokens', [
-                'tokens' => $service->list(),
-                'scopes_catalogue' => ApiScopes::all(),
-                'errors' => $e->errors,
-                'old' => $e->old + [
-                    'name' => $request->str('name'),
-                    'scopes' => array_values(array_filter((array) $request->post('scopes', []), 'is_string')),
-                    'expires_in_days' => $days,
-                ],
-                'new_token' => null,
-            ], 422);
-        }
+        $outcome = $this->container->get(ApiTokenService::class)->mintPage(
+            $admin,
+            (string) $request->post('current_password', ''),
+            $request->str('name'),
+            (array) $request->post('scopes', []),
+            $request->str('expires_in_days'),
+            $request->str('idempotency_key') ?: null,
+        );
+        // The plaintext remains in the direct response only; a replay returns
+        // the service-owned 409 model with no secret.
+        return $this->view('admin/api_tokens', $outcome['model'], $outcome['status']);
     }
 
     /** @param array<string,string> $params */

@@ -10,11 +10,13 @@ use App\Core\NotFoundException;
 use App\Domain\User;
 use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
 use App\Repository\NotificationRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReportRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\BoardAuthority;
 use App\Security\BoardPolicy;
 use App\Security\Cap;
 use App\Security\WriteGate;
@@ -27,6 +29,9 @@ use App\Security\WriteGate;
  */
 final class ReportService
 {
+    /** Report reason vocabulary (shared by submit validation + the queue filter). */
+    public const REASONS = ['spam', 'harassment', 'off_topic', 'nsfw', 'illegal', 'other'];
+
     public function __construct(
         private Database $db,
         private ReportRepository $reports,
@@ -38,6 +43,8 @@ final class ReportService
         private WriteGate $writeGate,
         private ?FirstPartyHookRegistry $hooks = null,
         private ?AuthorityGate $authority = null,
+        private ?BoardAuthority $boardAuthority = null,
+        private ?BoardRepository $boards = null,
     ) {
     }
 
@@ -46,9 +53,65 @@ final class ReportService
         return $this->authority ?? AuthorityGate::legacy();
     }
 
+    /**
+     * The /mod/reports read model (PR #44 spec §4): scope resolution through
+     * the authority gate (core.report.handle), allowlisted filters clamped to
+     * the actor's scope, rows plus the real total (has_next comes from it),
+     * and the boards select. Board-scope behavior is byte-identical to the
+     * controller assembly this replaces.
+     *
+     * @param array<string,mixed> $raw
+     * @return array<string,mixed>
+     */
+    public function queueModel(User $user, array $raw, int $page, int $perPage = 50): array
+    {
+        if ($this->boardAuthority === null || $this->boards === null) {
+            throw new \LogicException('Report queue dependencies are not wired.');
+        }
+        // Queue discovery through the gate: legacy/shadow reproduce
+        // admin-or-assigned exactly; under enforce a custom deputy's grant
+        // surfaces their boards.
+        $scope = $this->boardAuthority->moderableBoardIds($user, Cap::REPORT_HANDLE);
+        if ($scope === []) {
+            throw new NotFoundException('Not found.'); // not a handler of anything
+        }
+
+        $status = (string) ($raw['status'] ?? '');
+        $status = in_array($status, ['open', 'triaged'], true) ? $status : '';
+        $reason = (string) ($raw['reason_code'] ?? '');
+        $reason = in_array($reason, self::REASONS, true) ? $reason : '';
+        $boardId = max(0, (int) ($raw['board_id'] ?? 0));
+        if ($boardId > 0 && $scope !== null && !in_array($boardId, $scope, true)) {
+            $boardId = 0; // the board filter can never widen visibility
+        }
+        $page = max(0, $page);
+        $perPage = max(1, min(200, $perPage));
+        $filters = ['status' => $status, 'reason_code' => $reason, 'board_id' => $boardId];
+
+        $total = $this->reports->queueCount($scope === null, $scope ?? [], $filters);
+        $boards = [];
+        foreach ($this->boards->allOrdered() as $board) {
+            if ($scope !== null && !in_array((int) $board['id'], $scope, true)) {
+                continue;
+            }
+            $boards[] = ['id' => (int) $board['id'], 'name' => (string) $board['name']];
+        }
+
+        return [
+            'reports' => $this->reports->queue($scope === null, $scope ?? [], $perPage, $page * $perPage, $filters),
+            'reasons' => self::REASONS,
+            'boards' => $boards,
+            'filters' => $filters,
+            'total' => $total,
+            'page' => $page,
+            'has_next' => ($page + 1) * $perPage < $total,
+        ];
+    }
+
     public function submitPostReport(User $reporter, int $postId, ?string $reasonCode, string $reason, bool $notifyReporter): void
     {
         $this->writeGate->assertCanWrite($reporter);
+        $reasonCode = in_array($reasonCode, self::REASONS, true) ? $reasonCode : null;
 
         $post = $this->posts->findWithContext($postId);
         if ($post === null || (int) $post['is_deleted'] === 1) {

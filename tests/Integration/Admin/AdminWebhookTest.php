@@ -79,11 +79,28 @@ final class AdminWebhookTest extends TestCase
         $this->assertRedirectContains($this->post('/admin/webhooks/' . $id . '/test', []), '/admin/webhooks/' . $id);
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM webhook_deliveries WHERE webhook_id = ? AND event_type = 'ping'", [$id]));
 
-        $this->post('/admin/webhooks/' . $id . '/toggle', ['active' => '0']);
+        // Pause/resume report which direction they went, not a generic "updated".
+        $paused = $this->post('/admin/webhooks/' . $id . '/toggle', ['active' => '0']);
         self::assertSame(0, (int) $this->db->fetchValue('SELECT is_active FROM webhooks WHERE id = ?', [$id]));
+        self::assertStringContainsString('paused', urldecode(implode(' ', $paused->cookieHeaders())));
 
-        $this->assertRedirectContains($this->post('/admin/webhooks/' . $id . '/delete', []), '/admin/webhooks');
+        // Delete is password-reauthed (it discards delivery history + secret).
+        $this->assertRedirectContains(
+            $this->post('/admin/webhooks/' . $id . '/delete', ['current_password' => 'password123']),
+            '/admin/webhooks',
+        );
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM webhooks WHERE id = ?', [$id]));
+    }
+
+    public function test_delete_with_wrong_password_is_422_and_keeps_the_endpoint(): void
+    {
+        $this->enable();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+        $this->register();
+        $id = (int) $this->db->fetchValue('SELECT id FROM webhooks WHERE name = ?', ['CI hook']);
+
+        $this->assertStatus(422, $this->post('/admin/webhooks/' . $id . '/delete', ['current_password' => 'WRONG']));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM webhooks WHERE id = ?', [$id]));
     }
 
     public function test_send_test_for_unknown_webhook_redirects_without_500(): void

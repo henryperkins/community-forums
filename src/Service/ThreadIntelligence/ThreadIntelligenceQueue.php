@@ -9,6 +9,7 @@ use App\Repository\ThreadIntelligenceJobRepository;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use PDOException;
 use RuntimeException;
 
 /** Durable, transaction-participating stale markers and curator pause controls. */
@@ -242,14 +243,30 @@ final class ThreadIntelligenceQueue
      */
     private function lockCurrentVisibilityOrFail(int $threadId): ?array
     {
-        $current = $this->db->fetch(
-            'SELECT t.id, t.is_deleted, t.is_pending, b.visibility
-             FROM threads t
-             STRAIGHT_JOIN boards b ON b.id = t.board_id
-             WHERE t.id = ?
-             LOCK IN SHARE MODE SKIP LOCKED',
-            [$threadId],
-        );
+        try {
+            $current = $this->db->fetch(
+                'SELECT t.id, t.is_deleted, t.is_pending, b.visibility
+                 FROM threads t
+                 STRAIGHT_JOIN boards b ON b.id = t.board_id
+                 WHERE t.id = ?
+                 LOCK IN SHARE MODE SKIP LOCKED',
+                [$threadId],
+            );
+        } catch (PDOException $e) {
+            // MariaDB snapshot isolation: errno 1020 means the thread/board row
+            // committed-changed after the enclosing transaction's read view
+            // formed (only reachable when a caller nests this inside a wider
+            // transaction that already performed a consistent read — e.g. the
+            // posting transaction's markStale, or resume via the community
+            // memory service). The server has already rolled that transaction
+            // back, so no reconcile write can happen here; surface the same
+            // bounded-transient contract as the SKIP LOCKED busy branch below
+            // instead of a raw driver error.
+            if (($e->errorInfo[1] ?? null) === 1020) {
+                throw new RuntimeException('thread visibility is busy; retry the canonical mutation', 0, $e);
+            }
+            throw $e;
+        }
         if ($current !== null) {
             return $current;
         }

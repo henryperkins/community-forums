@@ -56,31 +56,42 @@ final class ReportRepository
 
     /**
      * Open/triaged reports visible to a moderator. Admins see all (post + DM);
-     * board moderators see post-reports for their boards only.
+     * board moderators see post-reports for their boards only. Optional
+     * `$filters` narrow by `status` ('open'|'triaged'), `reason_code`, and
+     * `board_id`; oldest first (triage order). LIMIT/OFFSET are clamped +
+     * inlined (EMULATE_PREPARES=false forbids binding them).
      *
      * @param list<int> $boardIds
+     * @param array<string,mixed> $filters
      * @return array<int,array<string,mixed>>
      */
-    public function queue(bool $isAdmin, array $boardIds, int $limit = 50): array
+    public function queue(bool $isAdmin, array $boardIds, int $limit = 50, int $offset = 0, array $filters = []): array
     {
         $limit = max(1, $limit);
+        $offset = max(0, $offset);
+        [$extraWhere, $extraParams] = $this->queueFilters($filters);
+
         if ($isAdmin) {
             return $this->db->fetchAll(
                 "SELECT r.*, rep.username AS reporter_username,
-                        p.body AS post_body, p.thread_id, t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug,
+                        p.body AS post_body, p.thread_id, p.user_id AS post_author_id, pa.username AS post_author_username,
+                        p.is_anonymous AS post_is_anonymous,
+                        t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug,
                         dm.body AS dm_body, dm.body_html AS dm_body_html, dm.conversation_id AS dm_conversation_id,
                         dm_sender.username AS dm_sender_username, dm_sender.display_name AS dm_sender_display_name,
                         c.kind AS dm_conversation_kind, c.title AS dm_conversation_title
                  FROM reports r
                  JOIN users rep ON rep.id = r.reporter_id
                  LEFT JOIN posts p ON p.id = r.post_id
+                 LEFT JOIN users pa ON pa.id = p.user_id
                  LEFT JOIN threads t ON t.id = p.thread_id
                  LEFT JOIN boards b ON b.id = t.board_id
                  LEFT JOIN dm_messages dm ON dm.id = r.dm_message_id
                  LEFT JOIN users dm_sender ON dm_sender.id = dm.user_id
                  LEFT JOIN conversations c ON c.id = dm.conversation_id
-                 WHERE r.status IN ('open','triaged')
-                 ORDER BY r.created_at ASC LIMIT " . $limit,
+                 WHERE r.status IN ('open','triaged')" . $extraWhere . "
+                 ORDER BY r.created_at ASC LIMIT " . $limit . ' OFFSET ' . $offset,
+                $extraParams,
             );
         }
         if ($boardIds === []) {
@@ -89,16 +100,81 @@ final class ReportRepository
         $place = implode(',', array_fill(0, count($boardIds), '?'));
         return $this->db->fetchAll(
             "SELECT r.*, rep.username AS reporter_username,
-                    p.body AS post_body, p.thread_id, t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug
+                    p.body AS post_body, p.thread_id, p.user_id AS post_author_id, pa.username AS post_author_username,
+                    p.is_anonymous AS post_is_anonymous,
+                    t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug
              FROM reports r
              JOIN users rep ON rep.id = r.reporter_id
              JOIN posts p ON p.id = r.post_id
+             LEFT JOIN users pa ON pa.id = p.user_id
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
-             WHERE r.status IN ('open','triaged') AND t.board_id IN ($place)
-             ORDER BY r.created_at ASC LIMIT " . $limit,
-            $boardIds,
+             WHERE r.status IN ('open','triaged') AND t.board_id IN ($place)" . $extraWhere . '
+             ORDER BY r.created_at ASC LIMIT ' . $limit . ' OFFSET ' . $offset,
+            array_merge($boardIds, $extraParams),
         );
+    }
+
+    /**
+     * Total open/triaged reports matching the same scope + filters as queue().
+     *
+     * @param list<int> $boardIds
+     * @param array<string,mixed> $filters
+     */
+    public function queueCount(bool $isAdmin, array $boardIds, array $filters = []): int
+    {
+        [$extraWhere, $extraParams] = $this->queueFilters($filters);
+
+        if ($isAdmin) {
+            return (int) $this->db->fetchValue(
+                "SELECT COUNT(*)
+                 FROM reports r
+                 LEFT JOIN posts p ON p.id = r.post_id
+                 LEFT JOIN threads t ON t.id = p.thread_id
+                 WHERE r.status IN ('open','triaged')" . $extraWhere,
+                $extraParams,
+            );
+        }
+        if ($boardIds === []) {
+            return 0;
+        }
+        $place = implode(',', array_fill(0, count($boardIds), '?'));
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*)
+             FROM reports r
+             JOIN posts p ON p.id = r.post_id
+             JOIN threads t ON t.id = p.thread_id
+             WHERE r.status IN ('open','triaged') AND t.board_id IN ($place)" . $extraWhere,
+            array_merge($boardIds, $extraParams),
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $filters
+     * @return array{0:string,1:array<int,mixed>} appended WHERE SQL + positional params
+     */
+    private function queueFilters(array $filters): array
+    {
+        $where = '';
+        $params = [];
+
+        $status = (string) ($filters['status'] ?? '');
+        if (in_array($status, ['open', 'triaged'], true)) {
+            $where .= ' AND r.status = ?';
+            $params[] = $status;
+        }
+        $reason = (string) ($filters['reason_code'] ?? '');
+        if ($reason !== '') {
+            $where .= ' AND r.reason_code = ?';
+            $params[] = $reason;
+        }
+        $boardId = (int) ($filters['board_id'] ?? 0);
+        if ($boardId > 0) {
+            $where .= ' AND t.board_id = ?';
+            $params[] = $boardId;
+        }
+
+        return [$where, $params];
     }
 
     /** @param list<int> $boardIds */

@@ -2,6 +2,12 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Email delivery');
+$pagerBase = array_filter([
+    'status' => $f_status ?? '',
+    'kind' => $f_kind ?? '',
+    'email' => $f_email ?? '',
+], static fn ($v): bool => $v !== '');
+$page = (int) ($page ?? 1);
 ?>
 <div class="admin">
     <header class="admin-head">
@@ -90,10 +96,11 @@ $this->section('title', 'Email delivery');
                 <input type="text" name="email" class="input" value="<?= $e($f_email ?? '') ?>">
             </label>
             <button class="btn btn-small" type="submit">Filter</button>
-            <a class="btn btn-small" href="/admin/email/export">Download CSV</a>
+            <a class="btn btn-small" href="/admin/email/export<?= $pagerBase !== [] ? '?' . $e(http_build_query($pagerBase)) : '' ?>">Download CSV</a>
         </form>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Email delivery log">
         <table class="audit">
-            <thead><tr><th>When</th><th>To</th><th>Kind</th><th>Status</th><th>Attempts</th><th>Subject</th><th>Detail</th><th>Action</th></tr></thead>
+            <thead><tr><th scope="col">When</th><th scope="col">To</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Attempts</th><th scope="col">Subject</th><th scope="col">Detail</th><th scope="col">Action</th></tr></thead>
             <tbody>
             <?php foreach ($deliveries as $d): ?>
                 <tr>
@@ -126,18 +133,29 @@ $this->section('title', 'Email delivery');
             <?php endif; ?>
             </tbody>
         </table>
+        </div>
         <p class="muted"><?= (int) $total ?> total matching deliveries.</p>
+        <nav class="pager">
+            <?php if ($page > 1): ?>
+                <a class="btn btn-small" href="/admin/email?<?= $e(http_build_query($pagerBase + ['page' => $page - 1])) ?>">Previous</a>
+            <?php endif; ?>
+            <?php if (!empty($has_next)): ?>
+                <a class="btn btn-small" href="/admin/email?<?= $e(http_build_query($pagerBase + ['page' => $page + 1])) ?>">Next</a>
+            <?php endif; ?>
+        </nav>
     </section>
 
     <section class="card">
         <h2>Suppressed addresses</h2>
         <form method="post" action="/admin/email/suppressions" class="inline-form">
             <?= $this->csrfField() ?>
-            <input type="email" name="email" class="input" placeholder="address@example.com" required>
+            <label class="sr-only" for="suppress-email">Email address to suppress</label>
+            <input type="email" id="suppress-email" name="email" class="input" placeholder="address@example.com" required>
             <button class="btn btn-small" type="submit">Suppress</button>
         </form>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Suppressed addresses">
         <table class="audit">
-            <thead><tr><th>Email</th><th>Reason</th><th>Since</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Email</th><th scope="col">Reason</th><th scope="col">Since</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($suppressions as $row): ?>
                 <tr>
@@ -158,6 +176,7 @@ $this->section('title', 'Email delivery');
             <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
     </div>
 </div>

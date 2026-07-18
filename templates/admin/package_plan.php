@@ -34,12 +34,12 @@ $this->section('title', 'Install plan: ' . $package['name']);
         <p class="muted">Installing records provenance and permissions; nothing executes until you consent and enable.</p>
         <table class="audit">
             <tbody>
-                <tr><th>Package</th><td><?= $e($package['name']) ?> <code><?= $e($package['package_uid']) ?></code></td></tr>
-                <tr><th>Version</th><td><?= $e($release['version']) ?></td></tr>
-                <tr><th>Digest</th><td><code><?= $e($release['digest']) ?></code></td></tr>
-                <tr><th>Registry</th><td><?= $plan['registry'] !== null ? $e($plan['registry']['source_id']) : 'local' ?></td></tr>
-                <tr><th>Review</th><td><?= $e($release['review_status']) ?></td></tr>
-                <tr><th>Compatibility</th><td><?= $plan['compatible'] === true ? '<span class="pill">compatible</span>' : '<span class="pill">incompatible</span>' ?></td></tr>
+                <tr><th scope="row">Package</th><td><?= $e($package['name']) ?> <code><?= $e($package['package_uid']) ?></code></td></tr>
+                <tr><th scope="row">Version</th><td><?= $e($release['version']) ?></td></tr>
+                <tr><th scope="row">Digest</th><td><code><?= $e($release['digest']) ?></code></td></tr>
+                <tr><th scope="row">Registry</th><td><?= $plan['registry'] !== null ? $e($plan['registry']['source_id']) : 'local' ?></td></tr>
+                <tr><th scope="row">Review</th><td><?= $e($release['review_status']) ?></td></tr>
+                <tr><th scope="row">Compatibility</th><td><?= $plan['compatible'] === true ? '<span class="pill">compatible</span>' : '<span class="pill">incompatible</span>' ?></td></tr>
             </tbody>
         </table>
     </section>
@@ -51,7 +51,7 @@ $this->section('title', 'Install plan: ' . $package['name']);
         <?php else: ?>
             <div class="table-scroll" tabindex="0" role="region" aria-label="Package permission preview">
             <table class="audit">
-                <thead><tr><th>Permission</th><th>Risk</th></tr></thead>
+                <thead><tr><th scope="col">Permission</th><th scope="col">Risk</th></tr></thead>
                 <tbody>
                 <?php foreach ($plan['permissions'] as $permission): ?>
                     <tr>
@@ -72,7 +72,11 @@ $this->section('title', 'Install plan: ' . $package['name']);
                 <?= $this->csrfField() ?>
                 <input type="hidden" name="release_id" value="<?= (int) $release['id'] ?>">
                 <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
-                <button type="submit">Install (disabled until consent)</button>
+                <div class="form-actions">
+                    <button class="btn" type="submit">Record install</button>
+                    <a class="linkbtn" href="<?= $e($base) ?>">Cancel</a>
+                </div>
+                <p class="muted">Nothing runs yet: the next step asks you to review and consent to the permissions, and the package stays disabled until you enable it.</p>
             </form>
         </section>
     <?php endif; ?>

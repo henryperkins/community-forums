@@ -115,7 +115,13 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
         <form method="post" action="/admin/branding" class="stacked card">
             <?= $this->csrfField() ?>
             <input type="hidden" name="reset" value="1">
-            <button class="btn btn-secondary" type="submit">Reset to defaults</button>
+            <p class="muted">Reset clears every stored colour, logo, favicon, theme preset, and custom CSS, restoring the built-in chrome. It cannot be undone.</p>
+            <label class="field">
+                <span>Type <code>RESET</code> to confirm</span>
+                <input type="text" name="reset_confirm" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+            </label>
+            <?php if (!empty($errors['reset_confirm'])): ?><p class="field-error"><?= $e($errors['reset_confirm']) ?></p><?php endif; ?>
+            <div class="form-actions"><button class="btn danger" type="submit">Reset to defaults</button></div>
         </form>
     </div>
 </div>

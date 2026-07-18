@@ -9,6 +9,7 @@ $history = $history ?? ['warnings' => [], 'notes' => [], 'bans' => [], 'log' => 
 $ctx = $error_context ?? null;
 $errs = $errors ?? [];
 $old = $old ?? [];
+$pii = $pii ?? null;
 /** Field error scoped to the originating form (so a warn error is not echoed under ban). */
 $ferr = function (string $context, string $field) use ($ctx, $errs, $e): string {
     if ($ctx !== $context || empty($errs[$field])) {
@@ -37,10 +38,30 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             <?php if ($status === 'suspended'): ?>
                 <div><dt>Suspended until</dt><dd><?= $subject['suspended_until'] ? $e(human_datetime((string) $subject['suspended_until'])) : 'Indefinite' ?></dd></div>
             <?php endif; ?>
+            <div><dt>Joined</dt><dd><?= $e(human_date((string) $subject['created_at'])) ?></dd></div>
+            <div><dt>Last seen</dt><dd><?= !empty($subject['last_seen_at']) ? $e(human_date((string) $subject['last_seen_at'])) : 'never' ?></dd></div>
             <div><dt>Reputation</dt><dd><?= (int) $subject['reputation'] ?></dd></div>
             <div><dt>Posts</dt><dd><?= (int) ($subject['post_count'] ?? 0) ?></dd></div>
             <div><dt>Profile</dt><dd><a href="/u/<?= $e($subject['username']) ?>">View public profile</a></dd></div>
         </dl>
+    </section>
+
+    <section class="card">
+        <h2>Contact &amp; signals <span class="muted">(PII — access is audited)</span></h2>
+        <?php if ($pii !== null): ?>
+            <dl class="profile-stats">
+                <div><dt>Email</dt><dd><code><?= $e($pii['email']) ?></code></dd></div>
+                <div><dt>Recent session IPs</dt><dd><?= empty($pii['session_ips']) ? '<span class="muted">none recorded</span>' : $e(implode(', ', $pii['session_ips'])) ?></dd></div>
+                <div><dt>Recent post IPs</dt><dd><?= empty($pii['post_ips']) ? '<span class="muted">none recorded</span>' : $e(implode(', ', $pii['post_ips'])) ?></dd></div>
+            </dl>
+            <p class="muted">Shown for this view only; this access was written to the audit log. IPs are anonymised on the retention schedule.</p>
+        <?php else: ?>
+            <p class="muted">Email and recently observed IPs are hidden by default (ADMIN §5.5). Revealing them writes a <code>view_pii</code> audit entry naming you.</p>
+            <form method="post" action="/admin/users/<?= $uid ?>/pii" class="inline-form">
+                <?= $this->csrfField() ?>
+                <button class="btn btn-small" type="submit">Reveal email &amp; IPs (audited)</button>
+            </form>
+        <?php endif; ?>
     </section>
 
     <section class="card">
@@ -62,6 +83,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             <?php endif; ?>
 
             <h3>Suspend</h3>
+            <p class="muted">Temporary read-only state; reversible with Lift and auto-expires when an Until is set.</p>
             <form method="post" action="/admin/users/<?= $uid ?>/suspend" class="stacked">
                 <?= $this->csrfField() ?>
                 <label class="field">
@@ -78,6 +100,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             </form>
 
             <h3>Permanent ban</h3>
+            <p class="muted">Revokes access until an admin lifts it. Type the username to confirm — this is the record's most consequential action.</p>
             <form method="post" action="/admin/users/<?= $uid ?>/ban" class="stacked">
                 <?= $this->csrfField() ?>
                 <label class="field">
@@ -85,6 +108,11 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('ban', 'reason')) ?>" required>
                 </label>
                 <?= $ferr('ban', 'reason') ?>
+                <label class="field">
+                    <span>Type <code>@<?= $e($subject['username']) ?></code>'s username to confirm</span>
+                    <input type="text" name="confirm_username" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+                </label>
+                <?= $ferr('ban', 'confirm_username') ?>
                 <div class="form-actions"><button class="btn danger" type="submit">Ban permanently</button></div>
             </form>
         <?php endif; ?>
@@ -221,7 +249,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                         <form method="post" action="/admin/users/<?= $uid ?>/badges/revoke" class="inline">
                             <?= $this->csrfField() ?>
                             <input type="hidden" name="slug" value="<?= $e($b['slug']) ?>">
-                            <button class="linkbtn muted" type="submit">Revoke</button>
+                            <button class="linkbtn danger" type="submit" aria-label="Revoke the <?= $e($b['name']) ?> badge">Revoke</button>
                         </form>
                     </li>
                 <?php endforeach; ?>
@@ -256,7 +284,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <li>
                         <span class="record-when"><?= $e(human_datetime((string) $bn['created_at'])) ?></span>
                         <span class="record-body">
-                            <?= $e($bn['type']) ?> · <?= $e($bn['reason']) ?>
+                            <?= ($bn['type'] ?? '') === 'post' ? 'read-only (suspension)' : 'full ban' ?> · <?= $e($bn['reason']) ?>
                             <?php if (!empty($bn['lifted_at'])): ?>
                                 <span class="pill">lifted <?= $e(human_date((string) $bn['lifted_at'])) ?></span>
                             <?php elseif (!empty($bn['expires_at'])): ?>
@@ -299,6 +327,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     </li>
                 <?php endforeach; ?>
             </ul>
+            <p class="muted"><a href="/admin/audit?target_type=user&amp;target_id=<?= $uid ?>">Full trail in the audit log</a></p>
         <?php endif; ?>
     </section>
     </div>

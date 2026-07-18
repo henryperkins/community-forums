@@ -13,6 +13,13 @@ $this->section('title', 'Registry trust');
     <div class="admin-pane">
     <p class="muted">The private signing root lives offline with the operator; this console pins, rotates, and revokes public keys only. Trust changes require your password. The local blocklist works regardless of registry state.</p>
 
+    <?php if (empty($registries)): ?>
+        <section class="card">
+            <h2>Registries</h2>
+            <p class="muted">No registry sources are configured yet. Add one below — it starts disabled until you enable it with your password.</p>
+        </section>
+    <?php endif; ?>
+
     <?php foreach ($registries as $reg): ?>
     <section class="card">
         <h2><?= $e($reg['display_name']) ?> <code><?= $e($reg['source_id']) ?></code>
@@ -24,7 +31,7 @@ $this->section('title', 'Registry trust');
 
         <div class="table-scroll table-scroll-wide" tabindex="0" role="region" aria-label="<?= $e('Signing keys for ' . $reg['display_name']) ?>">
         <table class="audit">
-            <thead><tr><th>Key id</th><th>Status</th><th>Window</th><th>Fingerprint</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Key id</th><th scope="col">Status</th><th scope="col">Window</th><th scope="col">Fingerprint</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($reg['keys'] as $key): ?>
                 <tr>
@@ -36,8 +43,10 @@ $this->section('title', 'Registry trust');
                         <?php if ($key['status'] !== 'revoked'): ?>
                         <form method="post" action="/admin/registry-keys/<?= (int) $key['id'] ?>/revoke" class="inline-form">
                             <?= $this->csrfField() ?>
-                            <input type="text" name="reason" placeholder="Revocation reason" required>
-                            <input type="password" name="current_password" placeholder="Your password" autocomplete="current-password" required>
+                            <label class="sr-only" for="revoke-reason-<?= (int) $key['id'] ?>">Revocation reason for key <?= $e($key['key_id']) ?></label>
+                            <input type="text" id="revoke-reason-<?= (int) $key['id'] ?>" name="reason" placeholder="Revocation reason" required>
+                            <label class="sr-only" for="revoke-password-<?= (int) $key['id'] ?>">Your password to revoke key <?= $e($key['key_id']) ?></label>
+                            <input type="password" id="revoke-password-<?= (int) $key['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
                             <button class="btn" type="submit">Revoke</button>
                         </form>
                         <?php endif; ?>
@@ -128,7 +137,7 @@ $this->section('title', 'Registry trust');
         <h2>Local blocklist (registry-independent)</h2>
         <div class="table-scroll table-scroll-wide" tabindex="0" role="region" aria-label="Local blocklist entries">
         <table class="audit">
-            <thead><tr><th>Digest</th><th>Package uid</th><th>Reason</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Digest</th><th scope="col">Package uid</th><th scope="col">Reason</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($blocks as $block): ?>
                 <tr>
@@ -138,12 +147,16 @@ $this->section('title', 'Registry trust');
                     <td class="form-cell">
                         <form method="post" action="/admin/blocklist/<?= (int) $block['id'] ?>/remove" class="inline-form">
                             <?= $this->csrfField() ?>
-                            <input type="password" name="current_password" placeholder="Your password" autocomplete="current-password" required>
+                            <label class="sr-only" for="block-remove-password-<?= (int) $block['id'] ?>">Your password to remove this block</label>
+                            <input type="password" id="block-remove-password-<?= (int) $block['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
                             <button class="btn" type="submit">Remove (re-enables)</button>
                         </form>
                     </td>
                 </tr>
             <?php endforeach; ?>
+            <?php if (empty($blocks)): ?>
+                <tr><td colspan="4" class="muted">No local blocks. Blocking takes effect immediately, with or without a registry.</td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
         </div>
@@ -163,7 +176,7 @@ $this->section('title', 'Registry trust');
         <?php if ($advisories === []): ?><p class="muted">None ingested.</p><?php else: ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Registry advisories">
         <table class="audit">
-            <thead><tr><th>Advisory</th><th>Package</th><th>Severity</th><th>Action</th><th>Acknowledged</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Advisory</th><th scope="col">Package</th><th scope="col">Severity</th><th scope="col">Action</th><th scope="col">Acknowledged</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($advisories as $a): ?>
                 <tr>

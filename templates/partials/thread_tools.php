@@ -6,6 +6,9 @@ $showTags = !empty($topic_tool_sections['tags']);
 $showMemory = !empty($topic_tool_sections['memory']);
 $showManagement = !empty($topic_tool_sections['management']);
 $hasTools = in_array(true, $topic_tool_sections, true);
+$moveBoards = is_array($move_boards ?? null) ? $move_boards : [];
+$moveError = (string) ($move_error ?? '');
+$moveSelected = (int) ($move_selected ?? 0);
 ?>
 <?php if ($hasTools): ?>
 <div class="topic-tools-scrim" data-topic-tools-scrim hidden></div>
@@ -99,7 +102,7 @@ $hasTools = in_array(true, $topic_tool_sections, true);
         </details>
         <?php endif; ?>
         <?php if ($showManagement): ?>
-        <details data-topic-tools-section="management">
+        <details data-topic-tools-section="management"<?= $moveError !== '' ? ' open' : '' ?>>
             <summary><span>Topic management</span><span><?= !empty($assignment) ? '@' . $e($assignment['assigned_username']) : 'unassigned' ?></span></summary>
             <div class="topic-tools-section-body">
                 <?php if (!empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)): ?>
@@ -114,6 +117,20 @@ $hasTools = in_array(true, $topic_tool_sections, true);
                             <button class="btn btn-small" type="submit">Assign to me</button>
                         <?php endif; ?>
                         <?php if (!empty($assignment)): ?><button class="linkbtn muted" type="submit" name="action" value="unassign">Unassign</button><?php endif; ?>
+                    </form>
+                <?php endif; ?>
+                <?php if (!empty($can_move) && $moveBoards !== []): ?>
+                    <form method="post" action="/mod/t/<?= (int) $thread['id'] ?>/move">
+                        <?= $this->csrfField() ?>
+                        <label for="thread-move-board-<?= (int) $thread['id'] ?>">Move to board</label>
+                        <select id="thread-move-board-<?= (int) $thread['id'] ?>" class="input" name="board_id" required>
+                            <option value="">Choose a board…</option>
+                            <?php foreach ($moveBoards as $candidate): ?>
+                                <option value="<?= (int) $candidate['id'] ?>"<?= $moveSelected === (int) $candidate['id'] ? ' selected' : '' ?>><?= $e($candidate['label']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if ($moveError !== ''): ?><p class="field-error" role="alert"><?= $e($moveError) ?></p><?php endif; ?>
+                        <button class="btn btn-small" type="submit">Move topic</button>
                     </form>
                 <?php endif; ?>
                 <?php if (($accepted_post_id ?? null) !== null && !empty($can_mark_solved)): ?>
