@@ -9,7 +9,9 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
+use App\Repository\PostRepository;
 use App\Service\ModerationService;
+use App\Service\PreferenceService;
 use App\Service\ThreadReadService;
 use App\Service\ThreadSplitMergeService;
 
@@ -119,7 +121,16 @@ final class ModerationController extends Controller
         $user = $this->requireUser();
         $postId = (int) ($params['id'] ?? 0);
         $post = $this->container->get(ModerationService::class)->restorePost($user, $postId, $request->str('reason'));
-        return $this->redirectWithFlash('/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug'] . '#p' . $postId, 'Post restored.');
+        $page = $this->container->get(PostRepository::class)->pageOfPost(
+            (int) $post['thread_id'],
+            $postId,
+            $this->container->get(PreferenceService::class)->postsPerPage($user->id()),
+            includeDeleted: true,
+        );
+        $location = '/t/' . (int) $post['thread_id'] . '-' . $post['thread_slug']
+            . ($page > 1 ? '?page=' . $page : '') . '#p' . $postId;
+
+        return $this->redirectWithFlash($location, 'Post restored.');
     }
 
     /** Reveal the author of an anonymous post (scoped + audited). @param array<string,string> $params post id */

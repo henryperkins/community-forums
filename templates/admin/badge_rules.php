@@ -17,7 +17,7 @@ $this->section('title', 'Badge rules');
             <?= $this->csrfField() ?>
             <label class="field">
                 <span>Badge</span>
-                <select class="input" name="badge_id" required>
+                <select class="input" name="badge_id"<?= field_attrs($errors ?? [], 'badge_id') ?> required>
                     <?php foreach ($badges as $badge): ?>
                         <option value="<?= (int) $badge['id'] ?>"<?= (int) ($old['badge_id'] ?? 0) === (int) $badge['id'] ? ' selected' : '' ?>><?= $e($badge['name']) ?></option>
                     <?php endforeach; ?>
@@ -26,7 +26,7 @@ $this->section('title', 'Badge rules');
             <?= field_error($errors ?? [], 'badge_id') ?>
             <label class="field">
                 <span>Rule</span>
-                <select class="input" name="rule_type" required>
+                <select class="input" name="rule_type"<?= field_attrs($errors ?? [], 'rule_type') ?> required>
                     <?php foreach (['post_count' => 'Post count', 'thread_count' => 'Thread count', 'reputation' => 'Reputation', 'solved_count' => 'Solved answers'] as $value => $label): ?>
                         <option value="<?= $e($value) ?>"<?= ($old['rule_type'] ?? '') === $value ? ' selected' : '' ?>><?= $e($label) ?></option>
                     <?php endforeach; ?>
@@ -40,7 +40,7 @@ $this->section('title', 'Badge rules');
             <?= field_error($errors ?? [], 'threshold') ?>
             <label class="field">
                 <span>Board scope</span>
-                <select class="input" name="board_id">
+                <select class="input" name="board_id"<?= field_attrs($errors ?? [], 'board_id') ?>>
                     <option value="">All boards</option>
                     <?php foreach ($boards as $board): ?>
                         <option value="<?= (int) $board['id'] ?>"<?= (int) ($old['board_id'] ?? 0) === (int) $board['id'] ? ' selected' : '' ?>><?= $e($board['name']) ?></option>

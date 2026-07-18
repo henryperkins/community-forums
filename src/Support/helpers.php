@@ -114,20 +114,24 @@ if (!function_exists('field_attrs')) {
      * Attributes for an input whose field is in error: aria-invalid +
      * aria-describedby pointing at {@see field_error}'s id, plus autofocus on
      * the FIRST errored field so a 422 re-render lands focus on the problem.
-     * Emits nothing when the field is clean. Server-rendered attribute only —
-     * no JS involved, so the strict CSP is untouched.
+     * When $describedBy is supplied, it is preserved as a help-text reference
+     * and the error id is appended on invalid fields. Server-rendered attribute
+     * only — no JS involved, so the strict CSP is untouched.
      *
      * @param array<string,string> $errors
      */
-    function field_attrs(array $errors, string $field, ?string $id = null): string
+    function field_attrs(array $errors, string $field, ?string $id = null, ?string $describedBy = null): string
     {
+        $esc = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         if (empty($errors[$field])) {
-            return '';
+            return $describedBy !== null && $describedBy !== ''
+                ? ' aria-describedby="' . $esc($describedBy) . '"'
+                : '';
         }
         $id ??= 'err-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $field);
-        $esc = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $description = $describedBy !== null && $describedBy !== '' ? $describedBy . ' ' . $id : $id;
         $focus = array_key_first($errors) === $field ? ' autofocus' : '';
-        return ' aria-invalid="true" aria-describedby="' . $esc($id) . '"' . $focus;
+        return ' aria-invalid="true" aria-describedby="' . $esc($description) . '"' . $focus;
     }
 }
 

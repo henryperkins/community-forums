@@ -14,7 +14,7 @@
     <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>" class="stacked card">
         <?= $this->csrfField() ?>
         <label class="field"><span>Category</span>
-            <select name="category_id" class="input">
+            <select name="category_id" class="input"<?= field_attrs($errors, 'category_id') ?>>
                 <?php foreach ($categories as $category): ?>
                     <option value="<?= (int) $category['id'] ?>" <?= (int) ($old['category_id'] ?? $board['category_id']) === (int) $category['id'] ? 'selected' : '' ?>>#<?= $e($category['name']) ?></option>
                 <?php endforeach; ?>
@@ -40,7 +40,7 @@
 
         <label class="field"><span>Visibility</span>
             <?php $vis = $old['visibility'] ?? $board['visibility']; ?>
-            <select name="visibility" class="input">
+            <select name="visibility" class="input"<?= field_attrs($errors, 'visibility') ?>>
                 <option value="public" <?= $vis === 'public' ? 'selected' : '' ?>>Public</option>
                 <option value="hidden" <?= $vis === 'hidden' ? 'selected' : '' ?>>Hidden (unlisted)</option>
                 <option value="private" <?= $vis === 'private' ? 'selected' : '' ?>>Private (members only)</option>
@@ -50,7 +50,7 @@
 
         <label class="field"><span>Who can post</span>
             <?php $minRole = $old['post_min_role'] ?? ($board['post_min_role'] ?? 'user'); ?>
-            <select name="post_min_role" class="input">
+            <select name="post_min_role" class="input"<?= field_attrs($errors, 'post_min_role') ?>>
                 <option value="user" <?= $minRole === 'user' ? 'selected' : '' ?>>All members</option>
                 <option value="moderator" <?= $minRole === 'moderator' ? 'selected' : '' ?>>Moderators and admins</option>
                 <option value="admin" <?= $minRole === 'admin' ? 'selected' : '' ?>>Admins only (announcements)</option>

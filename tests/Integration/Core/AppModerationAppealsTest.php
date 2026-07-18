@@ -159,6 +159,22 @@ final class AppModerationAppealsTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND type = 'mod'", [(int) $this->member['id']]));
     }
 
+    public function test_invalid_appeal_action_without_authority_stays_403(): void
+    {
+        $this->actingAs($this->member);
+        $this->post('/appeals/posts/' . $this->replyId, ['reason' => 'Please review this removal.']);
+        $appealId = (int) $this->db->fetchValue('SELECT id FROM moderation_appeals');
+
+        $this->actingAs($this->makeUser(['username' => 'appeal-outsider']));
+        $response = $this->post('/mod/appeals/' . $appealId . '/resolve', [
+            'outcome' => 'not-an-outcome',
+            'note' => 'No authority here.',
+        ]);
+
+        $this->assertStatus(403, $response);
+        self::assertSame('open', (string) $this->db->fetchValue('SELECT status FROM moderation_appeals WHERE id = ?', [$appealId]));
+    }
+
     public function test_appeal_queue_is_board_scoped_for_non_admin_moderators(): void
     {
         // Appeal #1 lives in the first board (the deleted reply from setUp).

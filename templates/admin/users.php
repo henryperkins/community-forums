@@ -97,6 +97,12 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
 
         <form method="post" action="/admin/users/bulk" class="user-directory">
             <?= $this->csrfField() ?>
+            <?php foreach ($filters as $key => $value): ?>
+                <?php if ($value !== ''): ?>
+                    <input type="hidden" name="<?= $e((string) $key) ?>" value="<?= $e((string) $value) ?>">
+                <?php endif; ?>
+            <?php endforeach; ?>
+            <input type="hidden" name="page" value="<?= (int) $page ?>">
             <div class="table-scroll" tabindex="0" role="region" aria-label="User directory">
             <table class="audit">
                 <thead>

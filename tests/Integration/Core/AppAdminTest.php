@@ -99,6 +99,22 @@ final class AppAdminTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM boards WHERE slug = 'general-2'"));
     }
 
+    public function test_explicit_board_slug_over_64_chars_is_422_not_silently_truncated(): void
+    {
+        $this->actingAs($this->admin);
+        $typedSlug = str_repeat('s', 65);
+
+        $res = $this->post('/admin/boards', [
+            'category_id' => (string) $this->categoryId,
+            'name' => 'Long slug board',
+            'slug' => $typedSlug,
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('64 characters or fewer', $res->body());
+        self::assertNull($this->boards()->findBySlug(str_repeat('s', 64)));
+    }
+
     public function test_blank_slug_with_duplicate_name_still_auto_suffixes(): void
     {
         $this->actingAs($this->admin);

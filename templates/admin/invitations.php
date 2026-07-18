@@ -47,7 +47,7 @@ $this->section('title', 'Invitations');
             <?= field_error($errors ?? [], 'expires_in_days') ?>
 
             <label>Grant board membership (optional)
-                <select name="onboarding_board_id" class="input">
+                <select name="onboarding_board_id" class="input"<?= field_attrs($errors ?? [], 'onboarding_board_id') ?>>
                     <option value="">No board grant</option>
                     <?php foreach (($boards ?? []) as $board): ?>
                         <option value="<?= (int) $board['id'] ?>"<?= (string) ($old['onboarding_board_id'] ?? '') === (string) $board['id'] ? ' selected' : '' ?>><?= $e($board['name']) ?></option>

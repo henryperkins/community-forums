@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\BoardModeratorRepository;
+use App\Repository\UserPreferenceRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -86,5 +87,36 @@ final class AppDeletedPostStubTest extends TestCase
         $res = $this->get('/t/' . $seed['thread']['thread_id'] . '-' . $seed['thread']['slug']);
         self::assertStringContainsString('Recoverable reply body.', $res->body());
         self::assertStringNotContainsString('Removed by a warden', $res->body());
+    }
+
+    public function test_restore_from_later_stub_page_redirects_back_to_that_page(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'stubpageradmin']);
+        (new UserPreferenceRepository($this->db))->merge((int) $admin['id'], ['posts_per_page' => 10]);
+        $board = $this->makeBoard($this->makeCategory('Stub Paging'), ['slug' => 'stub-paging']);
+        $author = $this->makeUser(['username' => 'stubpagerauthor']);
+        $thread = $this->makeThread($board, $author, 'Stub paging topic', 'Opening body.');
+        for ($i = 1; $i <= 9; $i++) {
+            $this->posting()->reply(
+                $this->userEntity($author),
+                $thread['thread_id'],
+                ['body' => 'Earlier reply ' . $i . '.'],
+            );
+        }
+        $target = $this->posting()->reply(
+            $this->userEntity($author),
+            $thread['thread_id'],
+            ['body' => 'Restore me on page two.'],
+        );
+
+        $this->actingAs($admin);
+        $this->post('/posts/' . $target . '/delete', ['reason' => 'temporary removal']);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug'], ['page' => '2']);
+        $this->assertStatus(200, $page);
+
+        $response = $this->post('/mod/p/' . $target . '/restore');
+
+        $this->assertRedirectContains($response, '?page=2#p' . $target);
+        self::assertSame(0, (int) $this->posts()->find($target)['is_deleted']);
     }
 }

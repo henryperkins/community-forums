@@ -85,7 +85,7 @@ $this->section('title', 'Sign-in providers');
             <label>Provider key
                 <input type="text" name="provider_key" maxlength="32" value="<?= $e($old['provider_key'] ?? '') ?>"
                        pattern="[a-z0-9][a-z0-9_-]{1,31}" required
-                       aria-describedby="provider-key-help">
+                       <?= field_attrs($errors ?? [], 'provider_key', describedBy: 'provider-key-help') ?>>
             </label>
             <p class="muted" id="provider-key-help">Stable slug used in <code>/auth/{key}/…</code> URLs and identity rows — it cannot be changed later. Lowercase letters, digits, hyphens, underscores.</p>
             <?= field_error($errors ?? [], 'provider_key') ?>
@@ -97,7 +97,7 @@ $this->section('title', 'Sign-in providers');
 
             <label>Issuer (pinned)
                 <input type="url" name="issuer" maxlength="512" value="<?= $e($old['issuer'] ?? '') ?>"
-                       placeholder="https://gitlab.com" required>
+                       placeholder="https://gitlab.com"<?= field_attrs($errors ?? [], 'issuer') ?> required>
             </label>
             <p class="muted">Discovery is resolved from <code>{issuer}/.well-known/openid-configuration</code>; the JWKS URL must be same-origin with this issuer. Enter the issuer exactly as the IdP publishes it — a trailing slash is significant.</p>
             <?= field_error($errors ?? [], 'issuer') ?>
@@ -108,13 +108,13 @@ $this->section('title', 'Sign-in providers');
             <?= field_error($errors ?? [], 'client_id') ?>
 
             <label>Client secret
-                <input type="password" name="client_secret" autocomplete="off" required>
+                <input type="password" name="client_secret" autocomplete="off"<?= field_attrs($errors ?? [], 'client_secret') ?> required>
             </label>
             <p class="muted">Stored write-only in the encrypted service-secret vault (<code>service_secrets</code> must be enabled first); rotate it from the vault, not here.</p>
             <?= field_error($errors ?? [], 'client_secret') ?>
 
             <label>Claim map (optional JSON)
-                <textarea name="claim_map_json" rows="2" placeholder='{"email":"upn"}'><?= $e($old['claim_map_json'] ?? '') ?></textarea>
+                <textarea name="claim_map_json" rows="2" placeholder='{"email":"upn"}'<?= field_attrs($errors ?? [], 'claim_map_json') ?>><?= $e($old['claim_map_json'] ?? '') ?></textarea>
             </label>
             <p class="muted">Renames the cosmetic claims only (<code>email</code>, <code>email_verified</code>, <code>name</code>, <code>username</code>, <code>picture</code>). The subject claim is always <code>sub</code>.</p>
             <?= field_error($errors ?? [], 'claim_map_json') ?>

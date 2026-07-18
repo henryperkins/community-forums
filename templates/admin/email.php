@@ -165,12 +165,10 @@ $page = (int) ($page ?? 1);
         <form method="post" action="/admin/email/suppressions" class="inline-form">
             <?= $this->csrfField() ?>
             <label class="sr-only" for="suppress-email">Email address to suppress</label>
-            <input type="email" id="suppress-email" name="email" class="input" placeholder="address@example.com" value="<?= $e(($suppress_old ?? [])['email'] ?? '') ?>" required>
+            <input type="email" id="suppress-email" name="email" class="input" placeholder="address@example.com" value="<?= $e(($suppress_old ?? [])['email'] ?? '') ?>"<?= field_attrs($suppress_errors ?? [], 'email', 'err-suppress-email') ?> required>
             <button class="btn btn-small" type="submit">Suppress</button>
         </form>
-        <?php if (!empty(($suppress_errors ?? [])['email'] ?? null)): ?>
-            <p class="field-error" role="alert"><?= $e($suppress_errors['email']) ?></p>
-        <?php endif; ?>
+        <?= field_error($suppress_errors ?? [], 'email', 'err-suppress-email') ?>
         <?php if (!empty($unsuppress_error ?? null)): ?>
             <p class="field-error" role="alert"><?= $e($unsuppress_error) ?></p>
         <?php endif; ?>

@@ -125,16 +125,16 @@ final class AppealService
 
     public function resolve(User $actor, int $appealId, string $outcome, string $note): void
     {
-        if (!in_array($outcome, self::OUTCOMES, true)) {
-            throw new ValidationException(['outcome' => 'Choose a valid appeal outcome.']);
-        }
         $appeal = $this->appeals->find($appealId);
         if ($appeal === null || (string) $appeal['status'] !== 'open') {
             throw new NotFoundException('Appeal not found.');
         }
+        $this->assertCanResolve($actor, $appeal);
+        if (!in_array($outcome, self::OUTCOMES, true)) {
+            throw new ValidationException(['outcome' => 'Choose a valid appeal outcome.']);
+        }
         $note = trim($note);
 
-        $this->assertCanResolve($actor, $appeal);
         $this->db->transaction(function () use ($actor, $appeal, $appealId, $outcome, $note): void {
             if ($outcome === 'reversed') {
                 $this->reverseTarget($actor, $appeal, $note);

@@ -81,7 +81,7 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
                     </label>
                     <label class="field">
                         <span>Custom CSS</span>
-                        <textarea name="custom_css" class="input code-area" rows="8" maxlength="12000" spellcheck="false"><?= $e($custom_css) ?></textarea>
+                        <textarea name="custom_css" class="input code-area" rows="8" maxlength="12000" spellcheck="false"<?= field_attrs($errors ?? [], 'custom_css') ?>><?= $e($custom_css) ?></textarea>
                     </label>
                     <label class="checkline">
                         <input type="checkbox" name="custom_css_ack" value="1">

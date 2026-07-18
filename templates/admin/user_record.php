@@ -226,7 +226,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             <?= $this->csrfField() ?>
             <label class="field">
                 <span>Badge</span>
-                <select name="slug" class="input" required>
+                <select name="slug" class="input"<?= field_attrs($errs, 'slug') ?> required>
                     <?php foreach ($catalogue as $b): ?>
                         <option value="<?= $e($b['slug']) ?>"><?= $e($b['name']) ?></option>
                     <?php endforeach; ?>

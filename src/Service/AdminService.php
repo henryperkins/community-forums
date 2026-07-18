@@ -809,7 +809,9 @@ final class AdminService
         // rewrite (round-2 audit finding 5): the operator asked for that exact
         // identifier. A blank slug (derived from the name) keeps the
         // auto-suffix convenience via uniqueSlug() below.
-        if ($rawSlug !== '' && $this->slugTaken($slug, $existing !== null ? (int) $existing['id'] : null)) {
+        if ($rawSlug !== '' && mb_strlen($rawSlug) > 64) {
+            $errors['slug'] = 'Slug must be 64 characters or fewer.';
+        } elseif ($rawSlug !== '' && $this->slugTaken($slug, $existing !== null ? (int) $existing['id'] : null)) {
             $errors['slug'] = 'That slug is already in use or reserved.';
         }
 
