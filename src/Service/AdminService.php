@@ -56,7 +56,13 @@ final class AdminService
         private ?AuthorityGate $authority = null,
         private ?CapabilityResolver $resolver = null,
         private ?ThreadIntelligenceBoardSweep $threadIntelligenceBoardSweep = null,
+        private ?BoardRecountService $recounts = null,
     ) {
+    }
+
+    private function recounts(): BoardRecountService
+    {
+        return $this->recounts ??= new BoardRecountService($this->db, $this->boards);
     }
 
     private function gate(): AuthorityGate
@@ -314,53 +320,112 @@ final class AdminService
     }
 
     /**
+     * Read-only preview for the delete confirmation (spec §3): the
+     * authoritative thread-row count — every row, because hidden, held, and
+     * deleted threads move with the board too — plus the unarchived
+     * destination options and whether the delete is blocked for lack of one.
+     * The same count the transactional delete recomputes under lock, so the
+     * preview can never promise an outcome the POST refuses.
+     *
+     * @return array{threads:int, options:list<array{id:int,label:string}>, blocked:bool, selected:int}
+     */
+    public function boardDeleteImpact(int $boardId, int $selected = 0): array
+    {
+        $threads = $this->boards->countThreads($boardId);
+        $options = [];
+        if ($threads > 0) {
+            foreach ($this->boards->allOrdered() as $candidate) {
+                if ((int) $candidate['id'] === $boardId || (int) ($candidate['is_archived'] ?? 0) === 1) {
+                    continue;
+                }
+                $options[] = ['id' => (int) $candidate['id'], 'label' => '#' . $candidate['name'] . ' (/c/' . $candidate['slug'] . ')'];
+            }
+        }
+
+        return [
+            'threads' => $threads,
+            'options' => $options,
+            'blocked' => $threads > 0 && $options === [],
+            'selected' => $selected,
+        ];
+    }
+
+    /**
      * Delete a board. An empty board deletes directly. A board that still has
      * threads deletes only when $moveThreadsTo names a destination: every
      * thread (including held and soft-deleted rows, so nothing orphans) is
-     * reassigned in the same transaction, the destination's denormalised
-     * counters are recomputed from authoritative rows (ADMIN §4.4 "choose what
-     * happens to its threads"), and both steps are audited.
+     * reassigned, the destination's denormalised counters are recomputed from
+     * authoritative rows (ADMIN §4.4 "choose what happens to its threads"),
+     * and both steps are audited. All validation runs INSIDE the transaction
+     * against exclusively locked rows (spec §3): the count cannot go stale
+     * (the board X-lock blocks concurrent thread FK inserts at the parent
+     * check, and the FOR UPDATE count locks existing rows against competing
+     * writes), and a destination archived between preview and POST is caught
+     * by the locked re-read. Lock-then-read in ascending id order — the
+     * transaction's first reads are locking reads, never consistent reads
+     * (the MariaDB snapshot-isolation 1020 trap).
+     *
+     * @return int threads moved (0 for an empty-board delete)
      */
-    public function deleteBoard(User $admin, int $id, ?int $moveThreadsTo = null): void
+    public function deleteBoard(User $admin, int $id, ?int $moveThreadsTo = null): int
     {
         $this->assertAdmin($admin);
-        $board = $this->boards->find($id);
-        if ($board === null) {
+        if ($this->boards->find($id) === null) {
             throw new NotFoundException('Board not found.');
         }
 
-        $dest = null;
-        if ($this->boards->hasThreads($id)) {
-            if ($moveThreadsTo === null || $moveThreadsTo <= 0) {
-                throw new ValidationException(['board' => 'This board still has threads. Choose a destination board to move them to, or delete its content first.']);
+        $moved = $this->db->transaction(function () use ($admin, $id, $moveThreadsTo): int {
+            $lockIds = [$id];
+            if ($moveThreadsTo !== null && $moveThreadsTo > 0 && $moveThreadsTo !== $id) {
+                $lockIds[] = $moveThreadsTo;
             }
-            if ($moveThreadsTo === $id) {
-                throw new ValidationException(['move_to_board_id' => 'Choose a different board as the destination.']);
+            sort($lockIds, SORT_NUMERIC);
+            $locked = [];
+            foreach ($lockIds as $lockId) {
+                $row = $this->boards->findForUpdate($lockId);
+                if ($row !== null) {
+                    $locked[(int) $row['id']] = $row;
+                }
             }
-            $dest = $this->boards->find($moveThreadsTo);
-            if ($dest === null) {
-                throw new ValidationException(['move_to_board_id' => 'Choose a valid destination board.']);
+            $board = $locked[$id] ?? null;
+            if ($board === null) {
+                throw new NotFoundException('Board not found.');
             }
-            if ((int) ($dest['is_archived'] ?? 0) === 1) {
-                throw new ValidationException(['move_to_board_id' => 'The destination board is archived (read-only). Unarchive it first or pick another board.']);
-            }
-        }
 
-        $this->db->transaction(function () use ($admin, $id, $board, $dest): void {
+            $count = $this->boards->countThreads($id, forUpdate: true);
+
+            $dest = null;
+            if ($count > 0) {
+                if ($moveThreadsTo === null || $moveThreadsTo <= 0) {
+                    throw new ValidationException(['board' => 'This board still has threads. Choose a destination board to move them to, or delete its content first.']);
+                }
+                if ($moveThreadsTo === $id) {
+                    throw new ValidationException(['move_to_board_id' => 'Choose a different board as the destination.']);
+                }
+                $dest = $locked[$moveThreadsTo] ?? null;
+                if ($dest === null) {
+                    throw new ValidationException(['move_to_board_id' => 'Choose a valid destination board.']);
+                }
+                if ((int) ($dest['is_archived'] ?? 0) === 1) {
+                    throw new ValidationException(['move_to_board_id' => 'The destination board is archived (read-only). Unarchive it first or pick another board.']);
+                }
+            }
+
+            $movedRows = 0;
             if ($dest !== null) {
                 $destId = (int) $dest['id'];
-                $moved = $this->db->run(
+                $movedRows = $this->db->run(
                     'UPDATE threads SET board_id = :dest WHERE board_id = :src',
                     ['dest' => $destId, 'src' => $id],
                 )->rowCount();
-                $this->boards->recountContent($destId);
+                $this->recounts()->recount($destId);
                 $this->log->log([
                     'actor_id' => $admin->id(),
                     'action' => 'move_board_content',
                     'target_type' => 'board',
                     'target_id' => $id,
                     'before' => ['board_id' => $id, 'slug' => $board['slug']],
-                    'after' => ['board_id' => $destId, 'slug' => $dest['slug'], 'threads_moved' => $moved],
+                    'after' => ['board_id' => $destId, 'slug' => $dest['slug'], 'threads_moved' => $movedRows],
                 ]);
             }
             $this->boards->delete($id);
@@ -371,12 +436,15 @@ final class AdminService
                 'target_id' => $id,
                 'before' => ['name' => $board['name'], 'slug' => $board['slug']],
             ]);
+            return $movedRows;
         });
-        if ($dest !== null) {
+
+        if ($moved > 0 && $moveThreadsTo !== null) {
             // Moved threads inherit the destination's read gate; let the Thread
             // Intelligence sweep re-evaluate them like a visibility change.
-            $this->threadIntelligenceBoardSweep?->markVisibilityChanged((int) $dest['id']);
+            $this->threadIntelligenceBoardSweep?->markVisibilityChanged($moveThreadsTo);
         }
+        return $moved;
     }
 
     // ---- Structure ordering + archive (Phase 2) ---------------------------

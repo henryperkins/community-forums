@@ -193,4 +193,79 @@ final class AdminBoardSettingsTest extends TestCase
         $this->assertSeeText($res, 'move_to_board_id');
         $this->assertSeeText($res, 'Move threads and delete board');
     }
+
+    public function test_hidden_content_board_previews_the_authoritative_count_and_deletes_as_previewed(): void
+    {
+        // PR #44 spec §3: the old preview read the denormalised thread_count
+        // (excludes hidden/held/deleted rows) while the POST gate counted raw
+        // rows — a soft-deleted-only board previewed as "0 threads, deletable"
+        // then dead-ended at 422 with no destination select on the page.
+        $seed = $this->seedBoard(['name' => 'Shadowed']);
+        $dest = $this->makeBoard($seed['category'], ['name' => 'Receiver']);
+        $author = $this->makeUser();
+        $made = $this->makeThread($seed['board'], $author, 'Hidden cargo', 'Body.');
+        $this->db->run('UPDATE threads SET is_deleted = 1 WHERE id = ?', [(int) $made['thread_id']]);
+        $this->db->run('UPDATE boards SET thread_count = 0, post_count = 0 WHERE id = ?', [(int) $seed['board']['id']]);
+        $srcId = (int) $seed['board']['id'];
+        $destId = (int) $dest['id'];
+
+        $this->actingAs($seed['admin']);
+        $confirm = $this->get('/admin/boards/' . $srcId . '/delete');
+        $this->assertStatus(200, $confirm);
+        $this->assertSeeText($confirm, '1 (including hidden, held, and deleted)');
+        $this->assertSeeText($confirm, 'move_to_board_id');
+
+        // Without a destination the delete is refused — as the preview said.
+        $refused = $this->post('/admin/boards/' . $srcId . '/delete', ['confirm' => (string) $seed['board']['slug']]);
+        $this->assertStatus(422, $refused);
+
+        // With one, it completes exactly as previewed: the hidden row moves,
+        // and the destination's counters exclude it (recount predicates).
+        $ok = $this->post('/admin/boards/' . $srcId . '/delete', [
+            'confirm' => (string) $seed['board']['slug'],
+            'move_to_board_id' => (string) $destId,
+        ]);
+        $this->assertRedirectContains($ok, '/admin/structure');
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM boards WHERE id = ?', [$srcId]));
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM threads WHERE board_id = ?', [$destId]));
+        $destRow = (new BoardRepository($this->db))->find($destId);
+        self::assertSame(0, (int) $destRow['thread_count']);
+        self::assertSame(0, (int) $destRow['post_count']);
+        // The flash reports the actual moved count, not the stale denorm.
+        $this->assertSeeText($this->get('/admin/structure'), 'Moved 1 thread and deleted the board.');
+    }
+
+    public function test_pending_content_board_previews_and_deletes_the_held_thread(): void
+    {
+        $seed = $this->seedBoard(['name' => 'Holding']);
+        $dest = $this->makeBoard($seed['category'], ['name' => 'Landing']);
+        $this->db->run('UPDATE boards SET require_approval = 1 WHERE id = ?', [(int) $seed['board']['id']]);
+        $author = $this->makeUser();
+        $made = $this->makeThread($seed['board'], $author, 'Held cargo', 'Body.');
+        self::assertSame(
+            1,
+            (int) $this->db->fetchValue('SELECT is_pending FROM threads WHERE id = ?', [(int) $made['thread_id']]),
+            'fixture: the thread must be held',
+        );
+        $srcId = (int) $seed['board']['id'];
+        $destId = (int) $dest['id'];
+
+        $this->actingAs($seed['admin']);
+        $confirm = $this->get('/admin/boards/' . $srcId . '/delete');
+        $this->assertStatus(200, $confirm);
+        $this->assertSeeText($confirm, '1 (including hidden, held, and deleted)');
+
+        $refused = $this->post('/admin/boards/' . $srcId . '/delete', ['confirm' => (string) $seed['board']['slug']]);
+        $this->assertStatus(422, $refused);
+
+        $ok = $this->post('/admin/boards/' . $srcId . '/delete', [
+            'confirm' => (string) $seed['board']['slug'],
+            'move_to_board_id' => (string) $destId,
+        ]);
+        $this->assertRedirectContains($ok, '/admin/structure');
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM threads WHERE board_id = ?', [$destId]));
+        $destRow = (new BoardRepository($this->db))->find($destId);
+        self::assertSame(0, (int) $destRow['thread_count'], 'held rows stay out of the visible counters');
+        self::assertSame(0, (int) $destRow['post_count']);
+    }
 }

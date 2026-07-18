@@ -372,13 +372,17 @@ final class AdminController extends Controller
         }
         $moveTo = $request->int('move_to_board_id', 0);
         try {
-            $this->container->get(AdminService::class)->deleteBoard($admin, (int) $board['id'], $moveTo > 0 ? $moveTo : null);
+            $moved = $this->container->get(AdminService::class)->deleteBoard($admin, (int) $board['id'], $moveTo > 0 ? $moveTo : null);
         } catch (ValidationException $e) {
             return $this->confirmBoardView($board, 'delete', $e->first(), 422, $moveTo);
         }
+        // Flash from the service's actual moved count — never the stale
+        // denormalised thread_count snapshot (spec §3).
         return $this->redirectWithFlash(
             '/admin/structure',
-            $moveTo > 0 && (int) ($board['thread_count'] ?? 0) > 0 ? 'Threads moved and board deleted.' : 'Board deleted.',
+            $moved > 0
+                ? 'Moved ' . $moved . ' thread' . ($moved === 1 ? '' : 's') . ' and deleted the board.'
+                : 'Board deleted.',
         );
     }
 
@@ -586,11 +590,23 @@ final class AdminController extends Controller
     private function confirmBoardView(array $board, string $kind, ?string $error = null, int $status = 200, int $moveSelected = 0): Response
     {
         $id = (int) $board['id'];
-        $threads = (int) ($board['thread_count'] ?? 0);
+        // Delete previews use the authoritative row count (every thread row —
+        // hidden, held, and deleted move too), the same count the delete
+        // recomputes under lock, so the preview always matches the outcome
+        // (spec §3). Archive/unarchive keep the visible-content summary.
+        $deleteImpact = $kind === 'delete'
+            ? $this->container->get(AdminService::class)->boardDeleteImpact($id, $moveSelected)
+            : null;
+        $threads = $deleteImpact !== null ? $deleteImpact['threads'] : (int) ($board['thread_count'] ?? 0);
         $impact = [
             ['label' => 'Board', 'value' => '#' . $board['name'] . '  (/c/' . $board['slug'] . ')'],
             ['label' => 'Visibility', 'value' => ucfirst((string) $board['visibility'])],
-            ['label' => 'Threads', 'value' => $threads],
+            [
+                'label' => 'Threads',
+                'value' => $deleteImpact !== null
+                    ? $threads . ' (including hidden, held, and deleted)'
+                    : $threads,
+            ],
             ['label' => 'Posts', 'value' => (int) ($board['post_count'] ?? 0)],
         ];
 
@@ -619,17 +635,9 @@ final class AdminController extends Controller
         } else {
             // Destinations for the move-threads-then-delete path: every other
             // non-archived board (an archived destination is read-only and the
-            // service refuses it).
-            $moveOptions = [];
-            if ($threads > 0) {
-                foreach ($this->container->get(BoardRepository::class)->allOrdered() as $candidate) {
-                    if ((int) $candidate['id'] === $id || (int) ($candidate['is_archived'] ?? 0) === 1) {
-                        continue;
-                    }
-                    $moveOptions[] = ['id' => (int) $candidate['id'], 'label' => '#' . $candidate['name'] . ' (/c/' . $candidate['slug'] . ')'];
-                }
-            }
-            $blocked = $threads > 0 && $moveOptions === [];
+            // service refuses it). Assembled by AdminService::boardDeleteImpact.
+            $moveOptions = $deleteImpact['options'] ?? [];
+            $blocked = (bool) ($deleteImpact['blocked'] ?? false);
             $data = [
                 'page_title' => 'Delete board',
                 'heading' => 'Delete the “' . $board['name'] . '” board?',

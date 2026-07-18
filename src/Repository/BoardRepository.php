@@ -150,6 +150,29 @@ final class BoardRepository
         return $this->db->fetchValue('SELECT 1 FROM threads WHERE board_id = ? LIMIT 1', [$id]) !== false;
     }
 
+    /** @return array<string,mixed>|null the row under an exclusive lock (X) */
+    public function findForUpdate(int $id): ?array
+    {
+        return $this->db->fetch('SELECT * FROM boards WHERE id = ? FOR UPDATE', [$id]);
+    }
+
+    /**
+     * Authoritative thread-row count — deliberately unfiltered: held and
+     * soft-deleted threads move with a board delete too, so the preview and
+     * the move must count every row. $forUpdate locks the counted rows for
+     * the delete transaction: with the rows locked no competing write can
+     * commit between count and move, which also keeps the transaction free
+     * of consistent reads before its writes (the MariaDB snapshot-isolation
+     * 1020 trap — see ThreadIntelligenceQueue::lockCurrentVisibilityOrFail).
+     */
+    public function countThreads(int $id, bool $forUpdate = false): int
+    {
+        return (int) $this->db->fetchValue(
+            'SELECT COUNT(*) FROM threads WHERE board_id = ?' . ($forUpdate ? ' FOR UPDATE' : ''),
+            [$id],
+        );
+    }
+
     public function nextPosition(int $categoryId): int
     {
         return (int) $this->db->fetchValue(
@@ -226,33 +249,6 @@ final class BoardRepository
             'UPDATE boards SET post_count = post_count + ? WHERE id = ?',
             [$delta, $boardId],
         );
-    }
-
-    /**
-     * Recompute thread_count and post_count for ONE board from authoritative
-     * rows, using the exact WHERE clauses RepairService::repairBoardCounters()
-     * uses (is_deleted = 0 AND is_pending = 0 on both threads and posts), then
-     * refresh the last-activity cache. Used after a bulk thread move so the
-     * destination board's denormalised counters cannot drift.
-     */
-    public function recountContent(int $boardId): void
-    {
-        $this->db->run(
-            'UPDATE boards b SET thread_count = (
-                SELECT COUNT(*) FROM threads t WHERE t.board_id = b.id AND t.is_deleted = 0 AND t.is_pending = 0
-             ) WHERE b.id = ?',
-            [$boardId],
-        );
-        $this->db->run(
-            'UPDATE boards b SET post_count = (
-                SELECT COUNT(*) FROM posts p
-                JOIN threads t ON t.id = p.thread_id
-                WHERE t.board_id = b.id AND p.is_deleted = 0 AND p.is_pending = 0
-                  AND t.is_deleted = 0 AND t.is_pending = 0
-             ) WHERE b.id = ?',
-            [$boardId],
-        );
-        $this->recomputeLastPost($boardId);
     }
 
     /** Recompute the board's last-activity cache from its newest non-deleted post. */

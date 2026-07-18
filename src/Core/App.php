@@ -195,6 +195,7 @@ use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeRuleService;
 use App\Service\BadgeService;
+use App\Service\BoardRecountService;
 use App\Service\CommunityMemoryService;
 use App\Service\ComposerSuggestionService;
 use App\Service\DirectMessageService;
@@ -1920,6 +1921,10 @@ final class App
             $c->get(FirstPartyHookRegistry::class),
             $c->get(ThreadIntelligenceQueue::class),
         ));
+        $c->bind(BoardRecountService::class, fn (Container $c) => new BoardRecountService(
+            $c->get(Database::class),
+            $c->get(BoardRepository::class),
+        ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
             $c->get(CategoryRepository::class),
@@ -1933,6 +1938,7 @@ final class App
             $c->get(AuthorityGate::class),
             $c->get(CapabilityResolver::class),
             $c->get(ThreadIntelligenceBoardSweep::class),
+            $c->get(BoardRecountService::class),
         ));
         $c->bind(AdminDashboardService::class, fn (Container $c) => new AdminDashboardService(
             $c->get(Database::class),
