@@ -58,8 +58,11 @@ final class AppUserModerationTest extends TestCase
     public function testCannotSuspendSelfOrAnotherAdmin(): void
     {
         $this->actingAs($this->admin);
-        // Self → validation error (flash redirect), no status change.
-        $this->post('/mod/u/' . $this->admin['id'] . '/suspend', ['reason' => 'x']);
+        // Self → validation error: the staff panel re-renders at 422 with the
+        // message inline (no draft-dropping redirect), no status change.
+        $self = $this->post('/mod/u/' . $this->admin['id'] . '/suspend', ['reason' => 'x']);
+        $this->assertStatus(422, $self);
+        $this->assertSeeText($self, 'You cannot moderate your own account.');
         self::assertSame('active', $this->userStatus((int) $this->admin['id']));
 
         // Another admin → forbidden.
@@ -81,6 +84,52 @@ final class AppUserModerationTest extends TestCase
         // Suspend is admin-only.
         $this->assertStatus(403, $this->post('/mod/u/' . $this->bad['id'] . '/suspend', ['reason' => 'no']));
         self::assertSame('active', $this->userStatus((int) $this->bad['id']));
+    }
+
+    /**
+     * Audit 2026-07-17 N3 (prior #41): a ValidationException on /mod/u/* must
+     * re-render the staff panel (/mod/u/{id}) at 422 with the error inline and
+     * the typed input preserved — the anti-draft-loss pattern the
+     * /admin/users/{id} record already follows — never a flash redirect that
+     * drops the input.
+     */
+    public function testWarnValidationRerendersPanelNotRedirect(): void
+    {
+        $board = $this->makeBoard($this->makeCategory());
+        $modA = $this->makeUser(['username' => 'moda']);
+        (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modA['id']);
+
+        $this->actingAs($modA);
+        $r = $this->post('/mod/u/' . $this->bad['id'] . '/warn', ['reason' => '   ']);
+        $this->assertStatus(422, $r);
+        $this->assertSeeText($r, 'A reason is required.');
+        // The 422 body is the staff panel, carrying a retry form back to
+        // the same action so the flow recovers without retyping.
+        $this->assertSeeText($r, '@baduser');
+        $this->assertSeeText($r, '/mod/u/' . $this->bad['id'] . '/warn');
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [(int) $this->bad['id']]));
+    }
+
+    public function testSuspendValidationKeepsTypedReason(): void
+    {
+        $this->actingAs($this->admin);
+        $r = $this->post('/mod/u/' . $this->bad['id'] . '/suspend', [
+            'reason' => 'Repeated harassment third strike',
+            'until' => 'not-a-timestamp',
+        ]);
+        $this->assertStatus(422, $r);
+        $this->assertSeeText($r, 'Use a valid UTC timestamp');
+        $this->assertSeeText($r, 'Repeated harassment third strike');
+        self::assertSame('active', $this->userStatus((int) $this->bad['id']));
+    }
+
+    public function testNoteValidationRerendersWithError(): void
+    {
+        $this->actingAs($this->admin);
+        $r = $this->post('/mod/u/' . $this->bad['id'] . '/note', ['body' => '']);
+        $this->assertStatus(422, $r);
+        $this->assertSeeText($r, 'A note cannot be empty.');
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM user_notes WHERE subject_user_id = ?', [(int) $this->bad['id']]));
     }
 
     public function testPlainMemberCannotWarn(): void

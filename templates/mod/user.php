@@ -37,6 +37,37 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
     </nav>
 
     <div class="mod-pane">
+        <?php if ($ctx !== null && $errs !== [] && (!empty($is_self) || !in_array($ctx, ['warn', 'note'], true))): ?>
+            <?php
+            // Failed action whose form is not on this page (suspend/ban/lift
+            // post from elsewhere; warn/note forms are hidden on self):
+            // surface the error and, for suspend/ban, a retry form carrying
+            // the typed input so nothing is lost (anti-draft-loss).
+            ?>
+            <section class="card mod-action-retry">
+                <h2>Moderation action failed</h2>
+                <?php foreach ($errs as $message): ?>
+                    <p class="field-error"><?= $e($message) ?></p>
+                <?php endforeach; ?>
+                <?php if (empty($is_self) && in_array($ctx, ['suspend', 'ban'], true)): ?>
+                    <form method="post" action="/mod/u/<?= $uid ?>/<?= $e($ctx) ?>" class="stacked">
+                        <?= $this->csrfField() ?>
+                        <label class="field">
+                            <span>Reason</span>
+                            <input type="text" name="reason" class="input" maxlength="255" value="<?= $e((string) ($old['reason'] ?? '')) ?>" required>
+                        </label>
+                        <?php if ($ctx === 'suspend'): ?>
+                            <label class="field">
+                                <span>Until (UTC, optional — leave blank for indefinite)</span>
+                                <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e((string) ($old['until'] ?? '')) ?>">
+                            </label>
+                        <?php endif; ?>
+                        <div class="form-actions"><button class="btn danger" type="submit">Try again</button></div>
+                    </form>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
+
         <section class="card">
             <h2>Member</h2>
             <dl class="profile-stats">
@@ -65,6 +96,9 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                 <h2>Issue a warning</h2>
                 <form method="post" action="/mod/u/<?= $uid ?>/warn" class="stacked">
                     <?= $this->csrfField() ?>
+                    <?php if ($oldv('warn', 'board_id') !== ''): ?>
+                        <input type="hidden" name="board_id" value="<?= (int) $oldv('warn', 'board_id') ?>">
+                    <?php endif; ?>
                     <label class="field">
                         <span>Reason (shown to the member)</span>
                         <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('warn', 'reason')) ?>" required>
