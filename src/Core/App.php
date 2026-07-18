@@ -1275,6 +1275,8 @@ final class App
             $c->get(WriteGate::class),
             $c->get(FirstPartyHookRegistry::class),
             $c->get(AuthorityGate::class),
+            $c->get(BoardAuthority::class),
+            $c->get(BoardRepository::class),
         ));
         $c->bind(DirectMessageService::class, fn (Container $c) => new DirectMessageService(
             $c->get(Database::class),

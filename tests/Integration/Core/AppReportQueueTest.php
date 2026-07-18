@@ -54,6 +54,36 @@ final class AppReportQueueTest extends TestCase
         self::assertSame(0, $this->modNotifs((int) $this->reporter['id']));
     }
 
+    public function testQueueExactMultipleOfPageSizeHasNoNextLink(): void
+    {
+        // PR #44 spec §4: has_next came from count(rows) === PER_PAGE — a dead
+        // Next link when the scoped queue is an exact page multiple. Fifty
+        // distinct posts, one reporter, filtered to this board.
+        $author = $this->makeUser(['username' => 'bulkauthor']);
+        $thread = $this->makeThread($this->board, $author, 'Busy topic', 'OP body.');
+        $postIds = [];
+        for ($i = 0; $i < 50; $i++) {
+            $postIds[] = (int) $this->db->insert(
+                'INSERT INTO posts (thread_id, user_id, body, body_html, is_op, is_anonymous, is_deleted, is_pending, created_at)
+                 VALUES (?, ?, ?, ?, 0, 0, 0, 0, UTC_TIMESTAMP())',
+                [(int) $thread['thread_id'], (int) $author['id'], 'Reportable ' . $i, '<p>Reportable</p>'],
+            );
+        }
+        $this->actingAs($this->reporter);
+        foreach ($postIds as $postId) {
+            $this->post('/posts/' . $postId . '/report', ['reason_code' => 'spam']);
+        }
+
+        $this->actingAs($this->modA);
+        $first = $this->get('/mod/reports', ['board_id' => (string) (int) $this->board['id']]);
+        $this->assertStatus(200, $first);
+        $this->assertSeeText($first, '50');
+        $this->assertDontSeeText($first, 'Next');
+
+        $second = $this->get('/mod/reports', ['board_id' => (string) (int) $this->board['id'], 'page' => '1']);
+        $this->assertStatus(200, $second);
+    }
+
     public function testQueueIsBoardScoped(): void
     {
         $this->actingAs($this->reporter);

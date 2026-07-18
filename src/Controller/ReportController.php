@@ -9,11 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Domain\User;
-use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
-use App\Repository\ReportRepository;
-use App\Security\Cap;
-use App\Service\ModerationService;
 use App\Service\ReportService;
 
 /**
@@ -23,7 +19,6 @@ use App\Service\ReportService;
  */
 final class ReportController extends Controller
 {
-    private const REASONS = ['spam', 'harassment', 'off_topic', 'nsfw', 'illegal', 'other'];
     private const PER_PAGE = 50;
 
     /** @param array<string,string> $params post id */
@@ -32,7 +27,7 @@ final class ReportController extends Controller
         $user = $this->requireModeration();
         $postId = (int) ($params['id'] ?? 0);
         $reasonCode = (string) $request->post('reason_code', '');
-        $reasonCode = in_array($reasonCode, self::REASONS, true) ? $reasonCode : null;
+        $reasonCode = in_array($reasonCode, ReportService::REASONS, true) ? $reasonCode : null;
         $notify = $request->post('notify_reporter') !== null;
 
         $this->container->get(ReportService::class)
@@ -46,54 +41,15 @@ final class ReportController extends Controller
     public function queue(Request $request): Response
     {
         $user = $this->requireModeration();
-        // Queue discovery through the gate (core.report.handle — the queue's
-        // action key): legacy/shadow reproduce admin-or-assigned exactly;
-        // under enforce a custom deputy's grant surfaces their boards.
-        $scope = $this->container->get(ModerationService::class)->moderableBoardIds($user, Cap::REPORT_HANDLE);
-        if ($scope === []) {
-            throw new NotFoundException('Not found.'); // not a handler of anything
-        }
+        // Scope resolution, filter allowlisting, rows + real total, and the
+        // boards select all live in ReportService::queueModel (spec §4).
+        $model = $this->container->get(ReportService::class)->queueModel($user, [
+            'status' => $request->str('status'),
+            'reason_code' => $request->str('reason_code'),
+            'board_id' => $request->int('board_id', 0),
+        ], max(0, $request->int('page', 0)), self::PER_PAGE);
 
-        // Filters (ADMIN §3.2: board, reason, status) + pagination past the
-        // former fixed cap. Filter values are allowlisted; the board filter is
-        // clamped to the actor's scope so it can never widen visibility.
-        $status = $request->str('status');
-        $status = in_array($status, ['open', 'triaged'], true) ? $status : '';
-        $reason = $request->str('reason_code');
-        $reason = in_array($reason, self::REASONS, true) ? $reason : '';
-        $boardId = max(0, $request->int('board_id', 0));
-        if ($boardId > 0 && $scope !== null && !in_array($boardId, $scope, true)) {
-            $boardId = 0;
-        }
-        $page = max(0, $request->int('page', 0));
-        $filters = [
-            'status' => $status,
-            'reason_code' => $reason,
-            'board_id' => $boardId,
-        ];
-
-        $reports = $this->container->get(ReportRepository::class)
-            ->queue($scope === null, $scope ?? [], self::PER_PAGE, $page * self::PER_PAGE, $filters);
-        $total = $this->container->get(ReportRepository::class)->queueCount($scope === null, $scope ?? [], $filters);
-
-        // Boards offered in the filter select: the actor's scope (all for admins).
-        $boards = [];
-        foreach ($this->container->get(BoardRepository::class)->allOrdered() as $board) {
-            if ($scope !== null && !in_array((int) $board['id'], $scope, true)) {
-                continue;
-            }
-            $boards[] = ['id' => (int) $board['id'], 'name' => (string) $board['name']];
-        }
-
-        return $this->view('mod/reports', [
-            'reports' => $reports,
-            'reasons' => self::REASONS,
-            'boards' => $boards,
-            'filters' => ['status' => $status, 'reason_code' => $reason, 'board_id' => $boardId],
-            'total' => $total,
-            'page' => $page,
-            'has_next' => count($reports) === self::PER_PAGE,
-        ]);
+        return $this->view('mod/reports', $model);
     }
 
     /** @param array<string,string> $params report id */
