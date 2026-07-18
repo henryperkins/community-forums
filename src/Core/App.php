@@ -256,6 +256,7 @@ use App\Service\SecretVault;
 use App\Service\SinceLastReadContextService;
 use App\Service\SolvedAnswerService;
 use App\Service\TitleService;
+use App\Service\TagService;
 use App\Service\ThreadReadService;
 use App\Service\ThreadSplitMergeService;
 use App\Service\ThreadWorkflowService;
@@ -924,6 +925,7 @@ final class App
         $c->bind(ThreadAssignmentRepository::class, fn (Container $c) => new ThreadAssignmentRepository($c->get(Database::class)));
         $c->bind(FollowRepository::class, fn (Container $c) => new FollowRepository($c->get(Database::class)));
         $c->bind(TagRepository::class, fn (Container $c) => new TagRepository($c->get(Database::class)));
+        $c->bind(TagService::class, fn (Container $c) => new TagService($c->get(TagRepository::class)));
         $c->bind(BadgeRepository::class, fn (Container $c) => new BadgeRepository($c->get(Database::class)));
         $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));

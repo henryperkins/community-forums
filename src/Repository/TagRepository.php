@@ -218,6 +218,17 @@ final class TagRepository
         );
     }
 
+    /**
+     * Every thread_tags row for a tag — the exact set mergeInto() moves
+     * (deliberately no visibility/tags_enabled/is_deleted/is_pending filters;
+     * countThreadsForTag below remains the public-listing count). PR #44
+     * spec §4.
+     */
+    public function countAssociationsForTag(int $tagId): int
+    {
+        return (int) $this->db->fetchValue('SELECT COUNT(*) FROM thread_tags WHERE tag_id = ?', [$tagId]);
+    }
+
     public function countThreadsForTag(int $tagId, int $viewerId, bool $isAdmin): int
     {
         [$visSql, $params] = $this->visibility($isAdmin, $viewerId);

@@ -15,7 +15,7 @@
             <dl class="impact-list">
                 <dt>Source tag</dt><dd><?= $e($source['name']) ?> (<code><?= $e($source['slug']) ?></code>)</dd>
                 <dt>Merges into</dt><dd><?= $e($target['name']) ?> (<code><?= $e($target['slug']) ?></code>)</dd>
-                <dt>Threads affected</dt><dd><?= (int) $thread_count ?></dd>
+                <dt>Impact</dt><dd><?= (int) $association_count ?> tag association<?= (int) $association_count === 1 ? '' : 's' ?> (includes hidden, held, and deleted threads)</dd>
             </dl>
 
             <form method="post" action="/admin/tags/<?= (int) $source['id'] ?>/merge" class="stacked confirm-form">
