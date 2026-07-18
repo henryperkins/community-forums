@@ -74,6 +74,31 @@ draft-loss classes wholesale and builds three of the four untracked features.
 9. **Alt-account / device signals** on the user record (ADMIN §5.5). The
    audited email+IP reveal shipped; matching heuristics across accounts are a
    privacy-sensitive design of their own.
+10. **Board soft-delete with reserved slugs** (ADMIN §4.4, including the
+    optional soft-delete-threads-with-board path). The PR #44 safety
+    remediation (2026-07-18) codifies the shipped behaviour as
+    hard-DELETE-with-forced-move: every thread row (hidden, held, and deleted
+    included) moves to a destination inside one locking transaction, and the
+    board row is removed — which cascades `board_slug_history` away and so
+    actively un-reserves its slugs. Soft-delete semantics (retained row,
+    reserved slugs, optional thread soft-delete) remain the §4.4 target and
+    are deferred, not dropped.
+
+### Post-review decisions (2026-07-18, PR #44 review)
+
+- **Private staff notes are admin-only**, narrowing §3.4's "Add mod note →
+  `mod.user.warn`" mapping. The shipped `user_notes` table is globally scoped
+  (no board column), so any-board-moderator read/write meant every moderator
+  of any single board could read every note about every member — strictly
+  worse than the narrowed capability. Board-scoped notes can widen this later;
+  the narrowing is annotated at ADMIN §3.4 and recorded in its changelog.
+- **Follow-up (pre-existing, out of the PR #44 scope):** the reports queue
+  de-anonymizes without an audit trail — `ReportRepository.php` queue/detail
+  queries select the raw author of anonymous reported posts (lines 77, 85,
+  102, 107) and `templates/mod/reports.php:91-113` renders `@username` plus a
+  "Warn author…" link, bypassing the audited `/mod/p/{id}/reveal` flow every
+  other surface uses. Logged here for its own fix; deliberately not expanded
+  into the PR #44 remediation.
 
 ## Consequences
 
