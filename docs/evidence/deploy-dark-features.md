@@ -31,7 +31,17 @@ committed browser/no-JS/a11y evidence, the abuse/moderation runbook
 (`docs/runbooks/group_dms.md`), and a join-boundary hardening of the
 conversation-list preview found during the evidence run; the default split is
 now **50/7**, and the *Ready for acceptance* readiness category retired with
-its last row.
+its last row; **2026-07-18 config-gate dormancy sweep reconciled** — a code +
+live-install audit widened the
+[Operationally dormant](#operationally-dormant-default-on-but-inert-in-practice)
+section from two rows to five: `package_registry`/`package_themes` (no
+registry source or trust key ships), `oauth`/`provider_registry` (no
+credentialed, enabled sign-in provider), and `email` (no `MAIL_FROM`, so
+sending fails closed) join `capabilities` and `slash_giphy`; the settings-gated
+Notes bullet now also records F8 telemetry, the `observe` anti-abuse posture,
+and the abstaining `NullSpamScorer` seam; `/admin/features` still badges only
+the original two rows — extending its computed categories to the new rows is
+open follow-up.
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -80,7 +90,11 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
   are: `engagement`, `notifications`, `email`, `mentions`, `search`, `dms`,
   `moderation_queue`, `community`, `oauth`, `presence`, `announcements`,
   `rich_composer`, `drafts`, `uploads`, `anti_abuse`, `branding`, `seo`, and
-  `product_tour`.
+  `product_tour`. (2026-07-18: `email` and `oauth` remain outside the
+  graduated/dark flag tables but now carry rows in the
+  [Operationally dormant](#operationally-dormant-default-on-but-inert-in-practice)
+  section for their unmet config gates — `MAIL_FROM` unset and no credentialed,
+  enabled provider.)
 - **Increment 6 reconciliation (2026-07-05):** Inc 6 added 3 *routes* under the
   `capabilities` flag (`POST /admin/roles/{id}/assignments`,
   `POST /admin/role-assignments/{id}/revoke`,
@@ -446,24 +460,33 @@ as of 2026-07-09.
 
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
-| `server_extensions` | Sandboxed isolated server-extension runtime | Deploy-dark; manifest validation, fail-closed Bubblewrap probe seam, async worker, and admin inspection landed (`0065`); no public/untrusted runtime until Phase 5 Gate B sandbox acceptance |
+| `server_extensions` | Sandboxed isolated server-extension runtime | Deploy-dark; manifest validation, fail-closed Bubblewrap probe seam, async worker, and admin inspection landed (`0065`); no public/untrusted runtime until Phase 5 Gate B sandbox acceptance. Independent of the flag, hosts without a `bwrap` binary stay fail-closed — the probe reports unsupported (e.g. Windows dev hosts) |
 | `governance` | Operator groups, approvals, access review | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
 | `service_principals` | Remote-app service identities | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
 | `verified_links` | Verified profile links and richer profile fields | Deploy-dark (inert/reserved — no `enabled()` consumer or route yet); reserved for Phase 5 Gate B |
 
 ## Operationally dormant (default-ON but inert in practice)
 
-Recorded 2026-07-13. Two flags are default-ON in `FeatureFlags::DEFAULTS` yet
-deliver no (or reduced) behavior on a stock install because a **config gate**
-outside the flag map is unsatisfied. They are not graduation candidates — they
-already graduated — but a deploy-dark inventory that omitted them would
-overstate what a fresh install actually runs. Closing each gap is an
-operational or product step, not another flag flip.
+Recorded 2026-07-13; extended 2026-07-18 after a config-gate sweep verified
+against the code and a live zero-override install (no `features` settings row;
+`package_registries`/`registry_trust_keys` empty; the three builtin
+`identity_providers` rows disabled with no credentials; `MAIL_FROM` unset).
+Seven default-ON flags across the five rows below deliver no (or reduced)
+behavior on a stock install because a **config gate** outside the flag map is
+unsatisfied. They are not graduation candidates — they already graduated — but
+a deploy-dark inventory that omitted them would overstate what a fresh install
+actually runs. Closing each gap is an operational or product step, not another
+flag flip. `/admin/features` currently computes readiness badges only for
+`capabilities` and `slash_giphy`; surfacing the three rows added 2026-07-18
+there is open follow-up.
 
 | Flag | Why dormant | Path to live |
 |---|---|---|
 | `capabilities` | Default-ON, but the resolver posture defaults to `shadow` (`CAPABILITIES_MODE` unset): legacy authorization still decides every live answer; roles/grants are reachable and feed only `resolver.shadow_mismatch` telemetry. | Run the documented mismatch soak, then intentionally set `CAPABILITIES_MODE=enforce` (`docs/runbooks/capabilities.md` §Staged rollout — the only expected soak mismatch is the ADR 0016 suspended-staff pending-view divergence). This is an **operational cutover**, not a flag graduation. `/admin/roles` displays the effective posture. |
 | `slash_giphy` | Default-ON, but inert until `giphy_public_key` is set — and the key currently gates the **entire** slash menu (`SlashGiphyController::pickerConfig` 404s without it), so the non-GIPHY inserts (table, task list, poll, custom emoji) stay hidden on keyless installs too. | Either configure a key together with the runbook's required privacy-policy disclosure (member search terms/IPs go client→GIPHY directly), or decouple the non-GIPHY insert commands from the provider key — a product decision to record (`docs/runbooks/slash_giphy.md`). |
+| `package_registry`, `package_themes` | Default-ON, but nothing ships a registry source or trust anchor (`package_registries` and `registry_trust_keys` start empty; migrations seed neither), so the catalogue is empty, `worker:registry-refresh` has nothing to fetch, and no package — theme packages included — can be installed. The staff consoles and safe-mode/rollback machinery render but have nothing to act on. | Add a registry source and pin its signing trust key at `/admin/registries` (`POST /admin/registries`, `POST /admin/registries/{id}/keys`), enable it, then let `worker:registry-refresh` pull the first verified snapshot (`docs/runbooks/package_registry.md`). |
+| `oauth`, `provider_registry` | Default-ON, but no sign-in provider is usable out of the box: the three builtin rows seeded by `0052` (`google`/`apple`/`github`) start `is_enabled=0` and no client credentials are configured, so no OAuth button renders and every callback fails closed; password sign-in is unaffected. | Builtin providers: set `OAUTH_<PROVIDER>_CLIENT_ID`/`_SECRET`. Generic OIDC: add the provider at `/admin/providers` with its vault-stored secret (`service_secrets` must be live) and enable it through the reauth'd flow (`docs/runbooks/provider_registry.md`). |
+| `email` | Default-ON, but with `MAIL_FROM` unset the mailer reports unconfigured and the notification layer fails closed by design (`SendmailMailer::isConfigured()`): notification instants, daily digests, password-reset and verification mail are all skipped while in-app notifications keep delivering. | Set `MAIL_FROM` (plus optional `MAIL_FROM_NAME`/`MAIL_DRIVER`), then confirm delivery with `POST /admin/email/test`. |
 
 ## Recommended activation order (2026-07-13)
 
@@ -490,9 +513,15 @@ product decision per flag.
 
 - A default-dark flag is not proof that the feature is accepted for broad
   rollout. Acceptance requires the evidence listed in the relevant phase ledger.
-- Some dark behavior is controlled by settings rather than feature flags. For
-  example, email domain send blocking is opt-in setting/config gated, while
-  announcement banners default on through `announcements`.
+- Some dark behavior is controlled by settings/config rather than feature
+  flags. For example, email domain send blocking is opt-in setting/config
+  gated, while announcement banners default on through `announcements`.
+  Recorded 2026-07-18: F8 structured telemetry also ships dark
+  (`TELEMETRY_ENABLED` defaults `false`); the anti-abuse posture defaults to
+  `observe`, so content is scored and audited but never flagged/held/blocked
+  until an operator raises `ANTIABUSE_MODE`; and the `SpamScorer` seam is
+  bound to the abstaining `NullSpamScorer` until a first-party scorer lands
+  (Gate B), leaving the config spam thresholds inert.
 - TOTP/recovery code support is not listed here because it does not have a
   global default-off feature flag in `FeatureFlags`; it is user/account opt-in.
 - `polls` graduated out of deploy-dark on 2026-06-30: its `FeatureFlags` default
