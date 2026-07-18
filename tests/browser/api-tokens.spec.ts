@@ -101,6 +101,14 @@ test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke
   await expectNoSeriousA11yViolations(page, info); // reveal state is accessible
   await shot(page, info, 'api-token-minted');
 
+  // Refresh-safety (PR #44 §7): the reload re-POSTs the same idempotency key
+  // and is refused at 409 — one row, no plaintext, page still usable.
+  await page.reload();
+  await expect(page.getByText('already processed')).toBeVisible();
+  await expect(page.locator('code').filter({ hasText: /^rbt_/ })).toHaveCount(0);
+  await expect(page.locator('table tbody tr', { hasText: tokenName })).toHaveCount(1);
+  await expectNoSeriousA11yViolations(page, info); // conflict state is accessible
+
   // Revoke via the row form (PRG back to the list).
   const row = page.locator('table tbody tr', { hasText: tokenName });
   await expect(row).toContainText('active');

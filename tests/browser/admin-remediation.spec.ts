@@ -254,6 +254,137 @@ test('webhook pause/resume flashes say which happened and delete is reauthed', a
   await expect(page.getByRole('status')).toContainText('deleted');
 });
 
+test('dashboard site-name 422 keeps the typed value on both viewports', async ({ page }, info) => {
+  await login(page, 'admin@retro.test');
+  await page.goto('/admin');
+  // Model the stale-form threat the server contract exists for (PR #44 §5): a
+  // cached page carries no maxlength guarantee, so lift the client cap and let
+  // the SERVER refuse. PHPUnit pins the same 422 at the HTTP layer.
+  const siteForm = page.locator('form[action="/admin/site"]');
+  const nameInput = siteForm.locator('input[name="site_name"]');
+  await nameInput.evaluate((el) => el.removeAttribute('maxlength'));
+  const typed = 'Overlong site name draft — '.repeat(4).trim();
+  await nameInput.fill(typed);
+  const [response] = await Promise.all([
+    page.waitForResponse((r) => r.url().endsWith('/admin/site') && r.request().method() === 'POST'),
+    siteForm.locator('button[type="submit"]').click(),
+  ]);
+  expect(response.status()).toBe(422);
+  await expect(page.locator('body')).toContainText('Site name must be 1–80 characters.');
+  await expect(page.locator('form[action="/admin/site"] input[name="site_name"]')).toHaveValue(typed);
+  await shot(page, info, 'remediation-dashboard-422-draft');
+});
+
+test('scoped moderator panel: overlap select, no global history, out-of-scope 404', async ({ page }, info) => {
+  desktopOnly(info);
+  await login(page, 'admin@retro.test');
+  await page.goto('/admin/users');
+  const idOf = async (name: string): Promise<string> => {
+    const href = await page.locator('a.user-link', { hasText: name }).first().getAttribute('href');
+    return href?.match(/\/admin\/users\/(\d+)/)?.[1] ?? '';
+  };
+  const bobId = await idOf('bob');
+  const danaId = await idOf('dana');
+  expect(bobId).not.toBe('');
+  expect(danaId).not.toBe('');
+
+  await login(page, 'alice@retro.test');
+  await page.goto(`/mod/u/${bobId}`);
+  // The scoped model (PR #44 §2): an overlap board select and scoped warnings
+  // only — no staff notes, no bans, no audit trail, no email.
+  await expect(page.locator('select[name="board_id"] option', { hasText: '#General' })).toHaveCount(1);
+  await expect(page.locator('body')).not.toContainText('Private staff note');
+  await expect(page.locator('body')).not.toContainText('Audit trail');
+  await expect(page.locator('body')).not.toContainText('bob@retro.test');
+  await shot(page, info, 'remediation-mod-panel-scoped');
+
+  const warnForm = page.locator(`form[action="/mod/u/${bobId}/warn"]`);
+  await warnForm.locator('select[name="board_id"]').selectOption({ label: '#General' });
+  await warnForm.locator('input[name="reason"]').fill('Scoped warn from the evidence run.');
+  await warnForm.getByRole('button', { name: 'Record warning' }).click();
+  await expect(page.getByRole('status')).toContainText('Warning recorded.');
+
+  // A member with no participation in alice's boards does not exist for her —
+  // the same 404 a missing id produces (no membership oracle).
+  const miss = await page.goto(`/mod/u/${danaId}`);
+  expect(miss?.status()).toBe(404);
+  await shot(page, info, 'remediation-mod-panel-out-of-scope');
+});
+
+test('board delete previews the authoritative count including hidden content', async ({ page }, info) => {
+  desktopOnly(info);
+  await login(page, 'admin@retro.test');
+
+  // Scratch board whose only topic is then soft-deleted: the visible counters
+  // say zero while one row still exists — the preview must say so (PR #44 §3).
+  // Unique name/slug per run so a rerun against the same segment DB (or a
+  // leftover from an aborted run) can never collide.
+  const suffix = Date.now().toString(36);
+  const boardName = `Shadow Attic ${suffix}`;
+  const boardSlug = `shadow-attic-${suffix}`;
+  await page.goto('/admin/structure');
+  const addBoard = page.locator('form:has(input[name="slug"])').last();
+  await addBoard.locator('select[name="category_id"]').selectOption({ index: 0 });
+  await addBoard.locator('input[name="name"]').fill(boardName);
+  await addBoard.locator('input[name="slug"]').fill(boardSlug);
+  await addBoard.locator('button[type="submit"]').last().click();
+  await expect(page.locator('body')).toContainText(boardName);
+
+  await page.goto(`/c/${boardSlug}`);
+  await page.locator('details.composer-details > summary').click();
+  const composer = page.locator('form.composer').first();
+  await composer.locator('input[name="title"]').fill('Hidden cargo topic');
+  await composer.locator('textarea.composer-input').fill('This topic is about to be soft-deleted.');
+  await composer.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/t\/\d+-/);
+
+  // Deleting the opening post retracts the topic (a soft-deleted thread row).
+  // The delete form lives in the post's \u00b7\u00b7\u00b7 menu disclosure.
+  const post = page.locator('article[data-post]').first();
+  await post.hover();
+  await post.locator('details.post-menu > summary').click();
+  await post.locator('form[action$="/delete"] button[type="submit"]').click();
+  await expect(page.getByRole('status')).toContainText('deleted');
+
+  await page.goto('/admin/structure');
+  // .last(): the row list nests, so the text filter also matches ancestor
+  // rows — the innermost match is the scratch board's own row.
+  await page
+    .locator('li.admin-board-row', { hasText: boardName })
+    .last()
+    .getByRole('link', { name: 'Delete', exact: true })
+    .click();
+  await expect(page.locator('body')).toContainText('1 (including hidden, held, and deleted)');
+  await expect(page.locator('select[name="move_to_board_id"]')).toBeVisible();
+  await shot(page, info, 'remediation-board-delete-authoritative-count');
+
+  const destination = await page
+    .locator('select[name="move_to_board_id"] option', { hasText: '(/c/general)' })
+    .getAttribute('value');
+  await page.locator('select[name="move_to_board_id"]').selectOption(destination ?? '');
+  await page.locator('input[name="confirm"]').fill(boardSlug);
+  await page.locator('form:has(input[name="confirm"]) button[type="submit"]').click();
+  await expect(page.getByRole('status')).toContainText('Moved 1 thread and deleted the board.');
+});
+
+test('mint refresh cannot re-mint: the replay is a 409 conflict', async ({ page }, info) => {
+  desktopOnly(info);
+  await login(page, 'admin@retro.test');
+  await page.goto('/admin/api-tokens');
+  await page.locator('input[name="name"]').fill('Refresh evidence token');
+  await page.locator('input[name="scopes[]"][value="read:boards"]').check();
+  await page.locator('input[name="current_password"]').fill('password123');
+  await page.getByRole('button', { name: 'Create token' }).click();
+  await expect(page.getByText(/will not be shown again/)).toBeVisible();
+
+  // The browser refresh re-POSTs the same idempotency key (PR #44 §7).
+  await page.reload();
+  await expect(page.getByText('already processed')).toBeVisible();
+  await expect(page.locator('code').filter({ hasText: /^rbt_/ })).toHaveCount(0);
+  await expect(page.locator('table tbody tr', { hasText: 'Refresh evidence token' })).toHaveCount(1);
+  await shot(page, info, 'remediation-token-refresh-conflict');
+});
+
 test('operator tables scroll inside a phone viewport', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', '390px scroll-region evidence');
   await login(page, 'admin@retro.test');

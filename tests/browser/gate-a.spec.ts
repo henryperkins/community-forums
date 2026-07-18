@@ -418,7 +418,8 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
   await shot(page, info, '35-admin-package-install-plan');
 
   await page.fill('input[name="current_password"]', 'password123');
-  await page.getByRole('button', { name: /Install/ }).click();
+  // Remediated label: the plan page's submit reads "Record install".
+  await page.getByRole('button', { name: 'Record install' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Consent to permissions' })).toBeVisible();
   await shot(page, info, '36-admin-package-consent');
 
@@ -910,6 +911,14 @@ test('admin API tokens: mint shows the secret once, then revoke', async ({ page 
   await expect(page.locator('code').filter({ hasText: /^rbt_/ })).toBeVisible();
   await shot(page, info, '20-admin-api-token-minted');
 
+  // Refresh-safety (PR #44 §7): reloading re-POSTs the same idempotency key —
+  // the server refuses with a 409 conflict, keeps exactly one row, and never
+  // re-reveals a credential.
+  await page.reload();
+  await expect(page.getByText('already processed')).toBeVisible();
+  await expect(page.locator('code').filter({ hasText: /^rbt_/ })).toHaveCount(0);
+  await expect(page.locator('table tbody tr', { hasText: tokenName })).toHaveCount(1);
+
   // The token is listed active; revoke it via the row form (PRG redirect back to the list).
   const row = page.locator('table tbody tr', { hasText: tokenName });
   await expect(row).toContainText('active');
@@ -1012,7 +1021,8 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
     // project-local endpoint while its receiver is still alive so later topic
     // events cannot queue ahead of the next project's live receiver and spend
     // that test's delivery deadline retrying a closed port.
-    await page.getByRole('button', { name: 'Delete' }).click();
+    await page.fill('form[action$="/delete"] input[name="current_password"]', 'password123');
+    await page.getByRole('button', { name: 'Delete webhook' }).click();
     await page.waitForURL(/\/admin\/webhooks$/);
     await expect(page.getByText('Webhook deleted.')).toBeVisible();
   } finally {
@@ -1172,7 +1182,7 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
   await shot(page, info, '20-structure-before');
 
   // Move #feedback up one slot via the server-rendered button (no-JS path).
-  const feedbackRow = page.locator('li.admin-board-row[data-board-id]', { hasText: 'Feedback' });
+  const feedbackRow = page.locator('li.admin-board-row', { hasText: 'Feedback' });
   await feedbackRow.getByRole('button', { name: /Move Feedback up/i }).click();
   await expect(page).toHaveURL(/\/admin\/structure/);
   await shot(page, info, '21-structure-after-move');

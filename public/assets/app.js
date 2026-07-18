@@ -700,7 +700,15 @@
             if (e.target === newTopic) { closeTopic(); }
         });
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && newTopic.open) { closeTopic(); }
+            if (e.key !== 'Escape' || !newTopic.open) { return; }
+            // Escape peels overlays outermost-first (same contract as the DM
+            // rail): an open composer popover — slash/reference menu, emoji or
+            // GIF dialog — owns this keypress, and the compose modal closes
+            // only when it is the topmost thing open. (With focus inside the
+            // composer the popover handler also stops propagation; this guard
+            // covers keypresses that reach the document directly.)
+            if (newTopic.querySelector('.composer-slash-menu:not([hidden]), .composer-reference-menu:not([hidden]), [role="dialog"]:not([hidden])')) { return; }
+            closeTopic();
         });
         var cancel = newTopic.querySelector('[data-close-composer]');
         if (cancel) { cancel.addEventListener('click', closeTopic); }

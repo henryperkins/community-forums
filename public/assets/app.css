@@ -2792,6 +2792,11 @@ body[data-route="thread"] .thread-conversation {
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* Containing block for absolutely-positioned descendants (.sr-only column
+       headers): without it their boxes resolve against the document, escape
+       this clip at the table's unscrolled x-offset, and stretch the page —
+       mobile Chrome then zooms the whole layout viewport out. */
+    position: relative;
 }
 .admin .table-scroll:focus-visible {
     outline: 2px solid var(--accent);
