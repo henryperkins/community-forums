@@ -159,6 +159,35 @@ final class AppealService
         });
     }
 
+    /**
+     * The member /appeals view model (PR #44 spec §4): current appeals plus
+     * the eligible targets the no-JS forms render from — one shape for the
+     * happy render AND both 422 re-renders, so a failed submit can never drop
+     * the form context.
+     *
+     * @return array{appeals:array<int,array<string,mixed>>, eligible:array<int,array<string,mixed>>}
+     */
+    public function memberViewModel(int $userId): array
+    {
+        return [
+            'appeals' => $this->forUser($userId),
+            'eligible' => $this->eligibleTargetsForUser($userId),
+        ];
+    }
+
+    /**
+     * The staff /mod/appeals view model — queue rows + the outcome vocabulary.
+     *
+     * @return array{appeals:array<int,array<string,mixed>>, outcomes:list<string>}
+     */
+    public function queueViewModel(User $actor): array
+    {
+        return [
+            'appeals' => $this->queue($actor),
+            'outcomes' => self::OUTCOMES,
+        ];
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function forUser(int $userId): array
     {

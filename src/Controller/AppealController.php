@@ -17,10 +17,7 @@ final class AppealController extends Controller
     public function index(Request $request, array $params): Response
     {
         $user = $this->requireAppeals();
-        $service = $this->container->get(AppealService::class);
-        return $this->view('appeals/index', [
-            'appeals' => $service->forUser($user->id()),
-            'eligible' => $service->eligibleTargetsForUser($user->id()),
+        return $this->view('appeals/index', $this->container->get(AppealService::class)->memberViewModel($user->id()) + [
             'errors' => [],
         ]);
     }
@@ -33,10 +30,7 @@ final class AppealController extends Controller
             $this->container->get(AppealService::class)
                 ->openForPost($user, (int) ($params['id'] ?? 0), $request->str('reason'));
         } catch (ValidationException $e) {
-            $service = $this->container->get(AppealService::class);
-            return $this->view('appeals/index', [
-                'appeals' => $service->forUser($user->id()),
-                'eligible' => $service->eligibleTargetsForUser($user->id()),
+            return $this->view('appeals/index', $this->container->get(AppealService::class)->memberViewModel($user->id()) + [
                 'errors' => $e->errors,
                 'old' => $this->oldReason('post', (int) ($params['id'] ?? 0), $request),
             ], 422);
@@ -52,10 +46,7 @@ final class AppealController extends Controller
             $this->container->get(AppealService::class)
                 ->openForModerationLog($user, (int) ($params['id'] ?? 0), $request->str('reason'));
         } catch (ValidationException $e) {
-            $service = $this->container->get(AppealService::class);
-            return $this->view('appeals/index', [
-                'appeals' => $service->forUser($user->id()),
-                'eligible' => $service->eligibleTargetsForUser($user->id()),
+            return $this->view('appeals/index', $this->container->get(AppealService::class)->memberViewModel($user->id()) + [
                 'errors' => $e->errors,
                 'old' => $this->oldReason('moderation_log', (int) ($params['id'] ?? 0), $request),
             ], 422);
@@ -67,10 +58,7 @@ final class AppealController extends Controller
     public function queue(Request $request, array $params): Response
     {
         $actor = $this->requireAppeals();
-        return $this->view('mod/appeals', [
-            'appeals' => $this->container->get(AppealService::class)->queue($actor),
-            'outcomes' => ['upheld', 'modified', 'reversed', 'dismissed'],
-        ]);
+        return $this->view('mod/appeals', $this->container->get(AppealService::class)->queueViewModel($actor));
     }
 
     /** @param array<string,string> $params */
@@ -88,9 +76,7 @@ final class AppealController extends Controller
         } catch (ValidationException $e) {
             // 422 re-render preserving the typed resolution (anti-draft-loss):
             // the failing appeal keeps its chosen outcome + note on screen.
-            return $this->view('mod/appeals', [
-                'appeals' => $this->container->get(AppealService::class)->queue($actor),
-                'outcomes' => ['upheld', 'modified', 'reversed', 'dismissed'],
+            return $this->view('mod/appeals', $this->container->get(AppealService::class)->queueViewModel($actor) + [
                 'errors' => $e->errors,
                 'old' => [
                     'appeal_id' => $appealId,
