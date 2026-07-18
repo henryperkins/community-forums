@@ -24,6 +24,7 @@ final class AdminDashboardService
         private ?ThreadIntelligenceAdminService $threadIntelligence = null,
         private ?SettingRepository $settings = null,
         private ?CustomEmojiService $customEmoji = null,
+        private ?AuditQueryService $auditQuery = null,
     ) {
     }
 
@@ -84,6 +85,9 @@ final class AdminDashboardService
         ];
 
         $audit = $this->moderationLog->recent(10);
+        if ($this->auditQuery !== null) {
+            $audit = $this->auditQuery->enrich($audit);
+        }
         $auditTotal = $this->moderationLog->searchCount([]);
         $mailerConfigured = $this->mailer->isConfigured();
         $sendBlocked = $this->emailDomainVerifier->blockedReason() !== null;

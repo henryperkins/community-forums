@@ -46,10 +46,12 @@ $page = (int) ($page ?? 0);
                 <label class="field">
                     <span>From</span>
                     <input type="date" name="from" class="input" value="<?= $e($filters['from'] ?? '') ?>">
+                    <?php if (!empty($errors['from'])): ?><span class="field-error"><?= $e($errors['from']) ?></span><?php endif; ?>
                 </label>
                 <label class="field">
                     <span>To</span>
                     <input type="date" name="to" class="input" value="<?= $e($filters['to'] ?? '') ?>">
+                    <?php if (!empty($errors['to'])): ?><span class="field-error"><?= $e($errors['to']) ?></span><?php endif; ?>
                 </label>
             </div>
             <div class="form-actions">

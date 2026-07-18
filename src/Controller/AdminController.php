@@ -14,11 +14,11 @@ use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
-use App\Repository\ModerationLogRepository;
 use App\Repository\SettingRepository;
 use App\Security\BoardPolicy;
 use App\Service\AdminDashboardService;
 use App\Service\AdminService;
+use App\Service\AuditQueryService;
 use App\Service\CustomEmojiService;
 
 /**
@@ -49,28 +49,34 @@ final class AdminController extends Controller
     {
         $this->requireAdmin();
 
-        $filters = [
-            'actor' => trim($request->str('actor')),
-            'action' => trim($request->str('action')),
-            'target_type' => trim($request->str('target_type')),
-            'target_id' => ctype_digit(trim($request->str('target_id'))) ? trim($request->str('target_id')) : '',
-            'from' => trim($request->str('from')),
-            'to' => trim($request->str('to')),
+        $raw = [
+            'actor' => $request->str('actor'),
+            'action' => $request->str('action'),
+            'target_type' => $request->str('target_type'),
+            'target_id' => $request->str('target_id'),
+            'from' => $request->str('from'),
+            'to' => $request->str('to'),
         ];
         $page = max(0, $request->int('page', 0));
 
-        $log = $this->container->get(ModerationLogRepository::class);
-        $rows = $log->search($filters, self::AUDIT_PER_PAGE, $page * self::AUDIT_PER_PAGE);
+        try {
+            $model = $this->container->get(AuditQueryService::class)->page($raw, $page, self::AUDIT_PER_PAGE);
+        } catch (ValidationException $e) {
+            // Bad dates: refuse with the typed values preserved and NO rows —
+            // never a silently-unfiltered (or junk-filtered) 200 (spec §4).
+            return $this->view('admin/audit', [
+                'rows' => [],
+                'filters' => $e->old + $raw,
+                'total' => 0,
+                'page' => $page,
+                'per_page' => self::AUDIT_PER_PAGE,
+                'has_next' => false,
+                'base_query' => array_filter($raw, static fn ($v): bool => $v !== ''),
+                'errors' => $e->errors,
+            ], 422);
+        }
 
-        return $this->view('admin/audit', [
-            'rows' => $rows,
-            'filters' => $filters,
-            'total' => $log->searchCount($filters),
-            'page' => $page,
-            'per_page' => self::AUDIT_PER_PAGE,
-            'has_next' => count($rows) === self::AUDIT_PER_PAGE,
-            'base_query' => array_filter($filters, static fn ($v): bool => $v !== ''),
-        ]);
+        return $this->view('admin/audit', $model + ['errors' => []]);
     }
 
     /** @param array<string,string> $params */

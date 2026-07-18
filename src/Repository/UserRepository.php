@@ -116,6 +116,48 @@ final class UserRepository
         return $out;
     }
 
+    /**
+     * Ids whose username or display name contains $q (the audit screen's
+     * actor-substring resolution — keeps ModerationLogRepository single-table).
+     *
+     * @return list<int>
+     */
+    public function idsMatchingName(string $q, int $limit = 500): array
+    {
+        $q = trim($q);
+        if ($q === '') {
+            return [];
+        }
+        $limit = max(1, min(1000, $limit));
+        $rows = $this->db->fetchAll(
+            'SELECT id FROM users WHERE username LIKE :q1 OR display_name LIKE :q2 ORDER BY id ASC LIMIT ' . $limit,
+            ['q1' => '%' . $q . '%', 'q2' => '%' . $q . '%'],
+        );
+        return array_map(static fn (array $r): int => (int) $r['id'], $rows);
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return array<int,array{username:string,display_name:?string}> id => handles
+     */
+    public function handlesForIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+        $place = implode(',', array_fill(0, count($ids), '?'));
+        $rows = $this->db->fetchAll("SELECT id, username, display_name FROM users WHERE id IN ($place)", $ids);
+        $out = [];
+        foreach ($rows as $r) {
+            $out[(int) $r['id']] = [
+                'username' => (string) $r['username'],
+                'display_name' => $r['display_name'] !== null ? (string) $r['display_name'] : null,
+            ];
+        }
+        return $out;
+    }
+
     public function usernameExists(string $username): bool
     {
         return $this->db->fetchValue('SELECT 1 FROM users WHERE username = ? LIMIT 1', [$username]) !== false;

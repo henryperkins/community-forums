@@ -194,6 +194,7 @@ use App\Service\Extension\ExtensionSandbox;
 use App\Service\EmailVerificationService;
 use App\Service\PasswordResetService;
 use App\Service\BadgeRuleService;
+use App\Service\AuditQueryService;
 use App\Service\BadgeService;
 use App\Service\BoardRecountService;
 use App\Service\CommunityMemoryService;
@@ -1925,6 +1926,10 @@ final class App
             $c->get(Database::class),
             $c->get(BoardRepository::class),
         ));
+        $c->bind(AuditQueryService::class, fn (Container $c) => new AuditQueryService(
+            $c->get(ModerationLogRepository::class),
+            $c->get(UserRepository::class),
+        ));
         $c->bind(AdminService::class, fn (Container $c) => new AdminService(
             $c->get(Database::class),
             $c->get(CategoryRepository::class),
@@ -1950,6 +1955,7 @@ final class App
             $c->get(ThreadIntelligenceAdminService::class),
             $c->get(SettingRepository::class),
             $c->get(CustomEmojiService::class),
+            $c->get(AuditQueryService::class),
         ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),

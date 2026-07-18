@@ -38,6 +38,8 @@ use App\Security\WriteGate;
  */
 final class UserModerationService
 {
+    private ?AuditQueryService $auditQueryService = null;
+
     public function __construct(
         private Database $db,
         private UserRepository $users,
@@ -585,8 +587,14 @@ final class UserModerationService
                  LIMIT ' . $limit,
                 [$subjectId],
             ),
-            'log' => $this->log->recentForTarget('user', $subjectId, $limit),
+            'log' => $this->auditQuery()->enrich($this->log->recentForTarget('user', $subjectId, $limit)),
         ];
+    }
+
+    /** Lazy enricher for the audit-trail leg (both ctor deps are in hand). */
+    private function auditQuery(): AuditQueryService
+    {
+        return $this->auditQueryService ??= new AuditQueryService($this->log, $this->users);
     }
 
     // ---- guards -----------------------------------------------------------
