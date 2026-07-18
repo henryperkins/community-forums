@@ -125,6 +125,12 @@
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Operator surfaces are not part of the member onboarding journey: the
+        // auto-start tour must never float over the admin console or the
+        // moderation queues. Manual replay (data-tour-replay) still works
+        // everywhere.
+        var path = window.location.pathname;
+        if (path.indexOf('/admin') === 0 || path.indexOf('/mod') === 0) { return; }
         if (document.body.getAttribute('data-tour') === '1') { run(); }
     });
 })();

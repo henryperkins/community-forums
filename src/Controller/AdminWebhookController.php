@@ -93,6 +93,7 @@ final class AdminWebhookController extends Controller
             'events_catalogue' => WebhookEvents::all(),
             'errors' => [],
             'old' => [],
+            'error_context' => null,
             'new_secret' => $newSecret,
         ], $status);
     }
@@ -121,6 +122,7 @@ final class AdminWebhookController extends Controller
                     'url' => $request->str('url'),
                     'events' => (array) $request->post('events', []),
                 ],
+                'error_context' => 'update',
                 'new_secret' => null,
             ], 422);
         }
@@ -132,8 +134,12 @@ final class AdminWebhookController extends Controller
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
-        $this->service()->setActive($admin, $id, (string) $request->post('active', '0') === '1');
-        return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Webhook updated.');
+        $active = (string) $request->post('active', '0') === '1';
+        $this->service()->setActive($admin, $id, $active);
+        return $this->redirectWithFlash(
+            '/admin/webhooks/' . $id,
+            $active ? 'Webhook resumed — deliveries will flow on the next worker run.' : 'Webhook paused — no deliveries will be attempted.',
+        );
     }
 
     /** @param array<string,string> $params */
@@ -156,6 +162,7 @@ final class AdminWebhookController extends Controller
                 'events_catalogue' => WebhookEvents::all(),
                 'errors' => $e->errors,
                 'old' => [],
+                'error_context' => 'rotate',
                 'new_secret' => null,
             ], 422);
         }
@@ -181,7 +188,27 @@ final class AdminWebhookController extends Controller
     {
         $admin = $this->requireAdmin();
         $this->gate();
-        $this->service()->delete($admin, (int) ($params['id'] ?? 0));
+        $id = (int) ($params['id'] ?? 0);
+        try {
+            // Password-reauthed like rotate: deleting discards the endpoint's
+            // delivery history and revokes its secret — the more destructive
+            // act must not be the easier one.
+            $this->service()->delete($admin, (string) $request->post('current_password', ''), $id);
+        } catch (ValidationException $e) {
+            $webhook = $this->service()->get($id);
+            if ($webhook === null) {
+                throw new NotFoundException();
+            }
+            return $this->view('admin/webhook_detail', [
+                'webhook' => $webhook,
+                'deliveries' => $this->service()->deliveriesFor($id),
+                'events_catalogue' => WebhookEvents::all(),
+                'errors' => $e->errors,
+                'old' => [],
+                'error_context' => 'delete',
+                'new_secret' => null,
+            ], 422);
+        }
         return $this->redirectWithFlash('/admin/webhooks', 'Webhook deleted.');
     }
 

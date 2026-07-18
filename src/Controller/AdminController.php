@@ -22,33 +22,54 @@ use App\Service\AdminService;
 use App\Service\CustomEmojiService;
 
 /**
- * Minimal admin console: dashboard + audit feed, site naming, and
- * category/board management (create / edit / delete-when-empty). Admin-only;
- * non-admins get 403, guests are bounced to login.
+ * Minimal admin console: dashboard + audit log, site naming, and
+ * category/board management (create / edit / delete-when-empty-or-move).
+ * Admin-only; non-admins get 403, guests are bounced to login.
  */
 final class AdminController extends Controller
 {
+    private const AUDIT_PER_PAGE = 50;
+
     /** @param array<string,string> $params */
     public function dashboard(Request $request, array $params): Response
     {
         $this->requireAdmin();
-        $settings = $this->container->get(SettingRepository::class);
-        $dashboard = $this->container->get(AdminDashboardService::class)->summary();
-        $customEmojiOn = $this->container->get(FeatureFlags::class)->enabled('custom_emoji');
-        return $this->view('admin/dashboard', [
-            'cards' => $dashboard['cards'],
-            'attention' => $dashboard['attention'],
-            'audit' => $dashboard['audit'],
-            'custom_emoji_on' => $customEmojiOn,
-            'custom_emoji' => $customEmojiOn ? $this->container->get(CustomEmojiService::class)->catalogue() : [],
-            'mailer_configured' => $dashboard['mailer_configured'],
-            'send_blocked' => $dashboard['send_blocked'],
-            'registration_mode' => $settings->getString('registration_mode', 'open'),
-            'antiabuse_mode' => $settings->getString('antiabuse_mode', 'observe'),
-            'antiabuse_blocked_words' => (array) $settings->get('antiabuse_blocked_words', []),
-            'registration_modes' => AdminService::REGISTRATION_MODES,
-            'invitations_flag_on' => $this->container->get(FeatureFlags::class)->enabled('invitations'),
-            'antiabuse_modes' => AdminService::ANTIABUSE_MODES,
+        return $this->dashboardView();
+    }
+
+    /**
+     * The searchable, paginated audit-log screen (ADMIN §3.6 / §9.2
+     * "Moderation → Audit log"). Site-wide and admin-only for now; a
+     * board-scoped moderator view needs per-row board resolution and is
+     * recorded in ADR 0021 rather than shipped half-scoped.
+     *
+     * @param array<string,string> $params
+     */
+    public function audit(Request $request, array $params): Response
+    {
+        $this->requireAdmin();
+
+        $filters = [
+            'actor' => trim($request->str('actor')),
+            'action' => trim($request->str('action')),
+            'target_type' => trim($request->str('target_type')),
+            'target_id' => ctype_digit(trim($request->str('target_id'))) ? trim($request->str('target_id')) : '',
+            'from' => trim($request->str('from')),
+            'to' => trim($request->str('to')),
+        ];
+        $page = max(0, $request->int('page', 0));
+
+        $log = $this->container->get(ModerationLogRepository::class);
+        $rows = $log->search($filters, self::AUDIT_PER_PAGE, $page * self::AUDIT_PER_PAGE);
+
+        return $this->view('admin/audit', [
+            'rows' => $rows,
+            'filters' => $filters,
+            'total' => $log->searchCount($filters),
+            'page' => $page,
+            'per_page' => self::AUDIT_PER_PAGE,
+            'has_next' => count($rows) === self::AUDIT_PER_PAGE,
+            'base_query' => array_filter($filters, static fn ($v): bool => $v !== ''),
         ]);
     }
 
@@ -63,22 +84,32 @@ final class AdminController extends Controller
     public function updateSite(Request $request, array $params): Response
     {
         $admin = $this->requireAdmin();
-        return $this->run(
-            fn () => $this->container->get(AdminService::class)->setSiteName($admin, $request->str('site_name')),
-            '/admin',
-            'Site name updated.',
-        );
+        try {
+            $this->container->get(AdminService::class)->setSiteName($admin, $request->str('site_name'));
+        } catch (ValidationException $e) {
+            // Re-render the dashboard (anti-draft-loss) instead of a flash
+            // redirect that drops the typed name.
+            return $this->dashboardView([
+                'settings_errors' => $e->errors,
+                'settings_old' => $e->old + ['site_name' => $request->str('site_name')],
+            ], 422);
+        }
+        return $this->redirectWithFlash('/admin', 'Site name updated.');
     }
 
     /** @param array<string,string> $params */
     public function updateSettings(Request $request, array $params): Response
     {
         $admin = $this->requireAdmin();
-        return $this->run(
-            fn () => $this->container->get(AdminService::class)->updateModerationSettings($admin, $request->allInput()),
-            '/admin',
-            'Trust & safety settings saved.',
-        );
+        try {
+            $this->container->get(AdminService::class)->updateModerationSettings($admin, $request->allInput());
+        } catch (ValidationException $e) {
+            return $this->dashboardView([
+                'settings_errors' => $e->errors,
+                'settings_old' => $e->old + $request->allInput(),
+            ], 422);
+        }
+        return $this->redirectWithFlash('/admin', 'Trust & safety settings saved.');
     }
 
     /** @param array<string,string> $params */
@@ -320,7 +351,8 @@ final class AdminController extends Controller
 
     /**
      * Confirmation page for deleting a board (shows thread/post counts,
-     * visibility, and whether deletion is blocked). GET only.
+     * visibility, and — when it still has threads — a destination picker to
+     * move them). GET only.
      *
      * @param array<string,string> $params
      */
@@ -338,12 +370,16 @@ final class AdminController extends Controller
         if (trim((string) $request->post('confirm', '')) !== (string) $board['slug']) {
             return $this->confirmBoardView($board, 'delete', 'Enter the board slug exactly to confirm deletion.', 422);
         }
+        $moveTo = $request->int('move_to_board_id', 0);
         try {
-            $this->container->get(AdminService::class)->deleteBoard($admin, (int) $board['id']);
+            $this->container->get(AdminService::class)->deleteBoard($admin, (int) $board['id'], $moveTo > 0 ? $moveTo : null);
         } catch (ValidationException $e) {
-            return $this->confirmBoardView($board, 'delete', $e->first(), 422);
+            return $this->confirmBoardView($board, 'delete', $e->first(), 422, $moveTo);
         }
-        return $this->redirectWithFlash('/admin/structure', 'Board deleted.');
+        return $this->redirectWithFlash(
+            '/admin/structure',
+            $moveTo > 0 && (int) ($board['thread_count'] ?? 0) > 0 ? 'Threads moved and board deleted.' : 'Board deleted.',
+        );
     }
 
     // ---- Structure ordering + archive (Phase 2) ---------------------------
@@ -494,6 +530,37 @@ final class AdminController extends Controller
     }
 
     /**
+     * Render the dashboard. Shared by the GET view and the site-name /
+     * trust-and-safety POST 422 re-renders (anti-draft-loss), which pass
+     * `settings_errors` / `settings_old` through `$extra`.
+     *
+     * @param array<string,mixed> $extra
+     */
+    private function dashboardView(array $extra = [], int $status = 200): Response
+    {
+        $settings = $this->container->get(SettingRepository::class);
+        $dashboard = $this->container->get(AdminDashboardService::class)->summary();
+        $customEmojiOn = $this->container->get(FeatureFlags::class)->enabled('custom_emoji');
+        return $this->view('admin/dashboard', [
+            'cards' => $dashboard['cards'],
+            'attention' => $dashboard['attention'],
+            'audit' => $dashboard['audit'],
+            'custom_emoji_on' => $customEmojiOn,
+            'custom_emoji' => $customEmojiOn ? $this->container->get(CustomEmojiService::class)->catalogue() : [],
+            'mailer_configured' => $dashboard['mailer_configured'],
+            'send_blocked' => $dashboard['send_blocked'],
+            'registration_mode' => $settings->getString('registration_mode', 'open'),
+            'antiabuse_mode' => $settings->getString('antiabuse_mode', 'observe'),
+            'antiabuse_blocked_words' => (array) $settings->get('antiabuse_blocked_words', []),
+            'registration_modes' => AdminService::REGISTRATION_MODES,
+            'invitations_flag_on' => $this->container->get(FeatureFlags::class)->enabled('invitations'),
+            'antiabuse_modes' => AdminService::ANTIABUSE_MODES,
+            'settings_errors' => [],
+            'settings_old' => [],
+        ] + $extra, $status);
+    }
+
+    /**
      * Confirmation screen for deleting a category: shows the board count and
      * blocks (no form) when the category still has boards.
      *
@@ -525,13 +592,15 @@ final class AdminController extends Controller
     }
 
     /**
-     * Confirmation screen for a board delete/archive/unarchive. Delete blocks
-     * (no form) when the board still has threads; archive/unarchive are always
-     * available. All three require the board slug typed to confirm.
+     * Confirmation screen for a board delete/archive/unarchive. A delete of a
+     * board that still has threads offers a move-threads-to destination
+     * (ADMIN §4.4) and blocks only when no destination exists; archive/
+     * unarchive are always available. All three require the board slug typed
+     * to confirm.
      *
      * @param array<string,mixed> $board
      */
-    private function confirmBoardView(array $board, string $kind, ?string $error = null, int $status = 200): Response
+    private function confirmBoardView(array $board, string $kind, ?string $error = null, int $status = 200, int $moveSelected = 0): Response
     {
         $id = (int) $board['id'];
         $threads = (int) ($board['thread_count'] ?? 0);
@@ -565,18 +634,35 @@ final class AdminController extends Controller
                 'blocked_reason' => null,
             ];
         } else {
-            $blocked = $threads > 0;
+            // Destinations for the move-threads-then-delete path: every other
+            // non-archived board (an archived destination is read-only and the
+            // service refuses it).
+            $moveOptions = [];
+            if ($threads > 0) {
+                foreach ($this->container->get(BoardRepository::class)->allOrdered() as $candidate) {
+                    if ((int) $candidate['id'] === $id || (int) ($candidate['is_archived'] ?? 0) === 1) {
+                        continue;
+                    }
+                    $moveOptions[] = ['id' => (int) $candidate['id'], 'label' => '#' . $candidate['name'] . ' (/c/' . $candidate['slug'] . ')'];
+                }
+            }
+            $blocked = $threads > 0 && $moveOptions === [];
             $data = [
                 'page_title' => 'Delete board',
                 'heading' => 'Delete the “' . $board['name'] . '” board?',
-                'intro' => 'Deleting a board cannot be undone and removes its settings, moderators, and members. Only empty boards can be deleted.',
+                'intro' => $threads > 0
+                    ? 'Deleting a board cannot be undone and removes its settings, moderators, and members. This board still has content: choose another board to receive its threads, and they will be moved before the board is deleted.'
+                    : 'Deleting a board cannot be undone and removes its settings, moderators, and members.',
                 'action' => '/admin/boards/' . $id . '/delete',
-                'submit_label' => 'Delete board',
+                'submit_label' => $threads > 0 ? 'Move threads and delete board' : 'Delete board',
                 'danger' => true,
                 'blocked' => $blocked,
                 'blocked_reason' => $blocked
-                    ? 'This board still has ' . $threads . ' thread' . ($threads === 1 ? '' : 's') . '. Move or delete its content before deleting the board.'
+                    ? 'This board still has ' . $threads . ' thread' . ($threads === 1 ? '' : 's') . ' and there is no other unarchived board to move them to. Create or unarchive a destination board first.'
                     : null,
+                'move_options' => $moveOptions,
+                'move_selected' => $moveSelected,
+                'move_label' => 'Move its ' . $threads . ' thread' . ($threads === 1 ? '' : 's') . ' to',
             ];
         }
 
@@ -616,20 +702,6 @@ final class AdminController extends Controller
             throw new NotFoundException('Board not found.');
         }
         return $board;
-    }
-
-    /**
-     * Run an admin action, redirecting with a success flash, or — on a
-     * validation failure — back with the first error message.
-     */
-    private function run(callable $action, string $redirectTo, string $success): Response
-    {
-        try {
-            $action();
-        } catch (ValidationException $e) {
-            return $this->redirectWithFlash($redirectTo, $e->first());
-        }
-        return $this->redirectWithFlash($redirectTo, $success);
     }
 
     /** @return array<int,array<int,array<string,mixed>>> category_id => boards */

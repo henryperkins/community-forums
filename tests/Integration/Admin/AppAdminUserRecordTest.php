@@ -63,9 +63,10 @@ final class AppAdminUserRecordTest extends TestCase
         // Sortable header links carry the sort key as a shareable GET URL.
         self::assertStringContainsString('sort=username', $body);
         self::assertStringContainsString('sort=reputation', $body);
-        // Bulk selection foundation is present but disabled (no wired destructive action).
+        // Bulk selection is wired to the two-step confirm flow (2026-07-18 remediation).
         self::assertStringContainsString('name="selected[]"', $body);
-        self::assertStringContainsString('Bulk moderation requires a separate confirmation step', $body);
+        self::assertStringContainsString('action="/admin/users/bulk"', $body);
+        self::assertStringContainsString('name="bulk_action"', $body);
     }
 
     public function test_directory_filter_values_are_preserved_in_controls(): void
@@ -295,7 +296,7 @@ final class AppAdminUserRecordTest extends TestCase
         $this->actingAs($this->makeAdmin());
         $sid = (int) $this->makeUser(['username' => 'banme'])['id'];
         $this->assertRedirectContains(
-            $this->post('/admin/users/' . $sid . '/ban', ['reason' => 'abuse']),
+            $this->post('/admin/users/' . $sid . '/ban', ['reason' => 'abuse', 'confirm_username' => 'banme']),
             '/admin/users/' . $sid,
         );
         self::assertSame('banned', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
@@ -319,7 +320,9 @@ final class AppAdminUserRecordTest extends TestCase
     {
         $this->actingAs($this->makeAdmin(['username' => 'banneradmin']));
         $other = $this->makeAdmin(['username' => 'targetadmin']);
-        $this->assertStatus(403, $this->post('/admin/users/' . (int) $other['id'] . '/ban', ['reason' => 'x']));
+        // Correct typed confirmation so the request reaches the peer-admin rule
+        // (the confirmation 422 would otherwise mask the 403).
+        $this->assertStatus(403, $this->post('/admin/users/' . (int) $other['id'] . '/ban', ['reason' => 'x', 'confirm_username' => 'targetadmin']));
         self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [(int) $other['id']]));
     }
 }

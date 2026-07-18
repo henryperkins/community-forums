@@ -45,11 +45,11 @@ foreach ($installed_permissions as $permission) {
         <h2>Provenance</h2>
         <table class="audit">
             <tbody>
-                <tr><th>Package identity</th><td><code><?= $e($package['package_uid']) ?></code></td></tr>
-                <tr><th>Pinned source</th><td><?= $registry !== null ? $e($registry['source_id']) . ' (' . $e($registry['base_url']) . ')' : 'local' ?></td></tr>
-                <tr><th>Type</th><td><?= $e($package['type']) ?></td></tr>
-                <tr><th>Trust class</th><td><code><?= $e($package['trust_class']) ?></code>; trust is never implied by being listed</td></tr>
-                <tr><th>Advisory status</th><td><?= $e($package['advisory_status']) ?><?= $blocked ? ' · locally blocked' : '' ?></td></tr>
+                <tr><th scope="row">Package identity</th><td><code><?= $e($package['package_uid']) ?></code></td></tr>
+                <tr><th scope="row">Pinned source</th><td><?= $registry !== null ? $e($registry['source_id']) . ' (' . $e($registry['base_url']) . ')' : 'local' ?></td></tr>
+                <tr><th scope="row">Type</th><td><?= $e($package['type']) ?></td></tr>
+                <tr><th scope="row">Trust class</th><td><code><?= $e($package['trust_class']) ?></code>; trust is never implied by being listed</td></tr>
+                <tr><th scope="row">Advisory status</th><td><?= $e($package['advisory_status']) ?><?= $blocked ? ' · locally blocked' : '' ?></td></tr>
             </tbody>
         </table>
     </section>
@@ -58,7 +58,7 @@ foreach ($installed_permissions as $permission) {
         <h2>Releases (immutable: any changed byte is a new release)</h2>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Package releases">
         <table class="audit">
-            <thead><tr><th>Version</th><th>Channel</th><th>Digest (sha256)</th><th>Signed by</th><th>Review</th><th>Core range</th><th>Advisory</th><th>Local review</th></tr></thead>
+            <thead><tr><th scope="col">Version</th><th scope="col">Channel</th><th scope="col">Digest (sha256)</th><th scope="col">Signed by</th><th scope="col">Review</th><th scope="col">Core range</th><th scope="col">Advisory</th><th scope="col">Local review</th></tr></thead>
             <tbody>
             <?php foreach ($releases as $r): ?>
                 <tr>
@@ -99,17 +99,17 @@ foreach ($installed_permissions as $permission) {
                         <?php endforeach; ?>
                     </select>
                 </label>
-                <button type="submit">Install plan</button>
+                <button class="btn btn-small" type="submit">Install plan</button>
             </form>
         <?php else: ?>
             <table class="audit">
                 <tbody>
-                    <tr><th>State</th><td><span class="pill"><?= $e($stateLabel($installedState)) ?></span></td></tr>
-                    <tr><th>Health</th><td><?= $e($installed['health']) ?><?= $installed['quarantine_reason'] !== null ? ' · ' . $e($installed['quarantine_reason']) : '' ?></td></tr>
-                    <tr><th>Version</th><td><?= $currentRelease !== null ? $e($currentRelease['version']) : '<span class="muted">unknown</span>' ?></td></tr>
-                    <tr><th>Digest</th><td><code><?= $e(substr((string) $installed['digest'], 0, 24)) ?>...</code></td></tr>
-                    <tr><th>Pinned</th><td><?= (int) $installed['pinned'] === 1 ? 'yes' : 'no' ?></td></tr>
-                    <tr><th>Update policy</th><td><?= $e($installed['update_policy']) ?></td></tr>
+                    <tr><th scope="row">State</th><td><span class="pill"><?= $e($stateLabel($installedState)) ?></span></td></tr>
+                    <tr><th scope="row">Health</th><td><?= $e($installed['health']) ?><?= $installed['quarantine_reason'] !== null ? ' · ' . $e($installed['quarantine_reason']) : '' ?></td></tr>
+                    <tr><th scope="row">Version</th><td><?= $currentRelease !== null ? $e($currentRelease['version']) : '<span class="muted">unknown</span>' ?></td></tr>
+                    <tr><th scope="row">Digest</th><td><code><?= $e(substr((string) $installed['digest'], 0, 24)) ?>...</code></td></tr>
+                    <tr><th scope="row">Pinned</th><td><?= (int) $installed['pinned'] === 1 ? 'yes' : 'no' ?></td></tr>
+                    <tr><th scope="row">Update policy</th><td><?= $e($installed['update_policy']) ?></td></tr>
                 </tbody>
             </table>
 
@@ -120,7 +120,7 @@ foreach ($installed_permissions as $permission) {
                 <p class="field-error">Staged, awaiting re-consent: <?= $e($stagedRelease['version']) ?>. <a href="<?= $e($base) ?>/consent">Review and approve</a>.</p>
                 <form method="post" action="<?= $e($base) ?>/update/cancel" class="inline-form">
                     <?= $this->csrfField() ?>
-                    <button type="submit">Cancel staged update</button>
+                    <button class="btn btn-small" type="submit">Cancel staged update</button>
                 </form>
             <?php endif; ?>
 
@@ -129,28 +129,28 @@ foreach ($installed_permissions as $permission) {
                     <form method="post" action="<?= $e($base) ?>/enable" class="stacked">
                         <?= $this->csrfField() ?>
                         <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
-                        <button type="submit">Enable</button>
+                        <button class="btn btn-small" type="submit">Enable</button>
                     </form>
                 <?php endif; ?>
 
                 <?php if ($installedState === 'enabled'): ?>
                     <form method="post" action="<?= $e($base) ?>/disable" class="stacked">
                         <?= $this->csrfField() ?>
-                        <button type="submit">Disable</button>
+                        <button class="btn btn-small" type="submit">Disable</button>
                     </form>
                 <?php endif; ?>
 
                 <?php if ($installedState === 'quarantined'): ?>
                     <form method="post" action="<?= $e($base) ?>/reverify" class="stacked">
                         <?= $this->csrfField() ?>
-                        <button type="submit">Re-verify</button>
+                        <button class="btn btn-small" type="submit">Re-verify</button>
                     </form>
                 <?php endif; ?>
 
                 <form method="post" action="<?= $e($base) ?>/pin" class="stacked">
                     <?= $this->csrfField() ?>
                     <input type="hidden" name="pinned" value="<?= (int) $installed['pinned'] === 1 ? '0' : '1' ?>">
-                    <button type="submit"><?= (int) $installed['pinned'] === 1 ? 'Unpin' : 'Pin' ?></button>
+                    <button class="btn btn-small" type="submit"><?= (int) $installed['pinned'] === 1 ? 'Unpin' : 'Pin' ?></button>
                 </form>
 
                 <form method="post" action="<?= $e($base) ?>/update-policy" class="stacked">
@@ -162,7 +162,7 @@ foreach ($installed_permissions as $permission) {
                             <option value="notify" <?= $installed['update_policy'] === 'notify' ? 'selected' : '' ?>>notify</option>
                         </select>
                     </label>
-                    <button type="submit">Save policy</button>
+                    <button class="btn btn-small" type="submit">Save policy</button>
                 </form>
 
                 <?php if ($stagedRelease === null): ?>
@@ -183,7 +183,7 @@ foreach ($installed_permissions as $permission) {
                             </select>
                         </label>
                         <label>Current password <input type="password" name="current_password" autocomplete="current-password"></label>
-                        <button type="submit">Update</button>
+                        <button class="btn btn-small" type="submit">Update</button>
                     </form>
                 <?php endif; ?>
 
@@ -199,19 +199,19 @@ foreach ($installed_permissions as $permission) {
                             </select>
                         </label>
                         <label>Current password <input type="password" name="current_password" autocomplete="current-password"></label>
-                        <button type="submit">Rollback</button>
+                        <button class="btn btn-small" type="submit">Rollback</button>
                     </form>
                 <?php endif; ?>
 
                 <form method="post" action="<?= $e($base) ?>/export" class="stacked">
                     <?= $this->csrfField() ?>
-                    <button type="submit">Export</button>
+                    <button class="btn btn-small" type="submit">Export</button>
                 </form>
 
                 <form method="post" action="<?= $e($base) ?>/uninstall" class="stacked">
                     <?= $this->csrfField() ?>
                     <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
-                    <button type="submit">Uninstall</button>
+                    <button class="btn btn-small danger" type="submit">Uninstall</button>
                 </form>
             </div>
 
@@ -221,7 +221,7 @@ foreach ($installed_permissions as $permission) {
             <?php else: ?>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="Installed package permissions">
                 <table class="audit">
-                    <thead><tr><th>Permission</th><th>Risk</th><th>Granted</th></tr></thead>
+                    <thead><tr><th scope="col">Permission</th><th scope="col">Risk</th><th scope="col">Granted</th></tr></thead>
                     <tbody>
                     <?php foreach ($permission_labels as $permission): ?>
                         <tr>
@@ -244,7 +244,7 @@ foreach ($installed_permissions as $permission) {
         <?php else: ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Package lifecycle history">
         <table class="audit">
-            <thead><tr><th>Event</th><th>Versions</th><th>Digest</th><th>Stage</th><th>Detail</th><th>When</th></tr></thead>
+            <thead><tr><th scope="col">Event</th><th scope="col">Versions</th><th scope="col">Digest</th><th scope="col">Stage</th><th scope="col">Detail</th><th scope="col">When</th></tr></thead>
             <tbody>
             <?php foreach ($history as $h): ?>
                 <tr>
@@ -269,7 +269,7 @@ foreach ($installed_permissions as $permission) {
         <?php else: ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Package advisories">
         <table class="audit">
-            <thead><tr><th>Advisory</th><th>Severity</th><th>Action</th><th>Affected</th><th>Acknowledged</th></tr></thead>
+            <thead><tr><th scope="col">Advisory</th><th scope="col">Severity</th><th scope="col">Action</th><th scope="col">Affected</th><th scope="col">Acknowledged</th></tr></thead>
             <tbody>
             <?php foreach ($advisories as $a): ?>
                 <tr>

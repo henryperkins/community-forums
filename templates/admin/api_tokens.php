@@ -16,6 +16,7 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
         <div class="flash" role="status">
             <strong>Copy this token now — it will not be shown again:</strong>
             <code><?= $e($new_token) ?></code>
+            <p class="muted">Do not reload this page: refreshing re-submits the form and mints another token.</p>
         </div>
     <?php endif; ?>
 
@@ -52,8 +53,9 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
 
     <section class="card">
         <h2>Tokens</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="API tokens">
         <table class="audit">
-            <thead><tr><th>Name</th><th>Scopes</th><th>Created</th><th>Last used</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Name</th><th scope="col">Scopes</th><th scope="col">Created</th><th scope="col">Last used</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($tokens as $t): ?>
                 <tr>
@@ -66,14 +68,18 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
                         <?php if (!$t['revoked_at']): ?>
                         <form method="post" action="/admin/api-tokens/<?= (int) $t['id'] ?>/revoke" class="inline">
                             <?= $this->csrfField() ?>
-                            <button class="linkbtn danger" type="submit">Revoke</button>
+                            <button class="linkbtn danger" type="submit" aria-label="Revoke the <?= $e($t['name']) ?> token">Revoke</button>
                         </form>
                         <?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
+            <?php if (empty($tokens)): ?>
+                <tr><td colspan="6" class="muted">No tokens yet. Tokens are shown once at creation and stored only as hashes.</td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
     </div>
 </div>

@@ -129,13 +129,17 @@ final class EmailOpsService
         });
     }
 
-    /** Re-queue a failed delivery for the worker. No-op (no audit) when not failed. */
-    public function requeueFailed(User $admin, int $id): void
+    /**
+     * Re-queue a failed delivery for the worker. Returns whether a row was
+     * actually requeued so the caller can report the idempotent no-op honestly
+     * (a delivery that is not in the failed state is left untouched, no audit).
+     */
+    public function requeueFailed(User $admin, int $id): bool
     {
         $this->writeGate->assertCanWrite($admin);
-        $this->db->transaction(function () use ($admin, $id): void {
+        return (bool) $this->db->transaction(function () use ($admin, $id): bool {
             if ($this->deliveries->requeue($id) !== 1) {
-                return;
+                return false;
             }
             $this->log->log([
                 'actor_id' => $admin->id(),
@@ -144,6 +148,7 @@ final class EmailOpsService
                 'target_id' => 0,
                 'after' => ['delivery_id' => $id],
             ]);
+            return true;
         });
     }
 }

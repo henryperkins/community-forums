@@ -46,6 +46,7 @@ final class AdminDashboardService
         ];
 
         $audit = $this->moderationLog->recent(10);
+        $auditTotal = $this->moderationLog->searchCount([]);
         $mailerConfigured = $this->mailer->isConfigured();
         $sendBlocked = $this->emailDomainVerifier->blockedReason() !== null;
         $reportsEnabled = $this->features->enabled('moderation_queue');
@@ -83,9 +84,9 @@ final class AdminDashboardService
             ],
             [
                 'title' => 'Audit',
-                'count' => count($audit),
-                'detail' => 'Latest staff and system actions',
-                'href' => '/admin#recent-activity',
+                'count' => $auditTotal,
+                'detail' => 'Search the full staff and system action log',
+                'href' => '/admin/audit',
             ],
         ];
 

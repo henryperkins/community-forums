@@ -491,7 +491,8 @@ final class UserRepository
         $limit = max(1, min(200, (int) ($filters['limit'] ?? 50)));
         $offset = max(0, (int) ($filters['offset'] ?? 0));
 
-        $sql = 'SELECT id, username, display_name, email, role, status, reputation, post_count, created_at, last_seen_at
+        $sql = 'SELECT id, username, display_name, email, role, status, reputation, post_count, created_at, last_seen_at,
+                (SELECT COUNT(*) FROM board_moderators bm WHERE bm.user_id = users.id) AS moderated_boards
                 FROM users';
         if ($where !== []) {
             $sql .= ' WHERE ' . implode(' AND ', $where);

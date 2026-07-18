@@ -72,13 +72,13 @@ final class BoardRepository
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,position?:int,visibility?:string,post_min_role?:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,edit_window_seconds?:int} $data
      */
     public function create(array $data): int
     {
         return $this->db->insert(
-            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, assignment_mode, tags_enabled, wiki_enabled, created_at)
-             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, :assignment_mode, :tags_enabled, :wiki_enabled, UTC_TIMESTAMP())',
+            'INSERT INTO boards (category_id, slug, name, description, position, post_min_role, visibility, allow_anonymous, require_approval, assignment_mode, tags_enabled, wiki_enabled, edit_window_seconds, created_at)
+             VALUES (:category_id, :slug, :name, :description, :position, :post_min_role, :visibility, :allow_anonymous, :require_approval, :assignment_mode, :tags_enabled, :wiki_enabled, :edit_window_seconds, UTC_TIMESTAMP())',
             [
                 'category_id' => $data['category_id'],
                 'slug' => $data['slug'],
@@ -92,12 +92,13 @@ final class BoardRepository
                 'assignment_mode' => $data['assignment_mode'] ?? 'off',
                 'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
                 'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
+                'edit_window_seconds' => max(0, (int) ($data['edit_window_seconds'] ?? 0)),
             ],
         );
     }
 
     /**
-     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,position?:int} $data
+     * @param array{category_id:int,slug:string,name:string,description:?string,visibility:string,post_min_role:string,allow_anonymous?:int,require_approval?:int,assignment_mode?:string,tags_enabled?:int,wiki_enabled?:int,edit_window_seconds?:int,position?:int} $data
      */
     public function update(int $id, array $data): void
     {
@@ -118,6 +119,10 @@ final class BoardRepository
             'tags_enabled' => array_key_exists('tags_enabled', $data) ? (!empty($data['tags_enabled']) ? 1 : 0) : 1,
             'wiki_enabled' => !empty($data['wiki_enabled']) ? 1 : 0,
         ];
+        if (array_key_exists('edit_window_seconds', $data)) {
+            $sql .= ', edit_window_seconds = :edit_window_seconds';
+            $params['edit_window_seconds'] = max(0, (int) $data['edit_window_seconds']);
+        }
         if (array_key_exists('position', $data)) {
             $sql .= ', position = :position';
             $params['position'] = (int) $data['position'];
@@ -221,6 +226,33 @@ final class BoardRepository
             'UPDATE boards SET post_count = post_count + ? WHERE id = ?',
             [$delta, $boardId],
         );
+    }
+
+    /**
+     * Recompute thread_count and post_count for ONE board from authoritative
+     * rows, using the exact WHERE clauses RepairService::repairBoardCounters()
+     * uses (is_deleted = 0 AND is_pending = 0 on both threads and posts), then
+     * refresh the last-activity cache. Used after a bulk thread move so the
+     * destination board's denormalised counters cannot drift.
+     */
+    public function recountContent(int $boardId): void
+    {
+        $this->db->run(
+            'UPDATE boards b SET thread_count = (
+                SELECT COUNT(*) FROM threads t WHERE t.board_id = b.id AND t.is_deleted = 0 AND t.is_pending = 0
+             ) WHERE b.id = ?',
+            [$boardId],
+        );
+        $this->db->run(
+            'UPDATE boards b SET post_count = (
+                SELECT COUNT(*) FROM posts p
+                JOIN threads t ON t.id = p.thread_id
+                WHERE t.board_id = b.id AND p.is_deleted = 0 AND p.is_pending = 0
+                  AND t.is_deleted = 0 AND t.is_pending = 0
+             ) WHERE b.id = ?',
+            [$boardId],
+        );
+        $this->recomputeLastPost($boardId);
     }
 
     /** Recompute the board's last-activity cache from its newest non-deleted post. */

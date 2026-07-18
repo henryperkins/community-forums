@@ -21,6 +21,7 @@ $topicToolSections = [
         !empty($can_self_assign) || !empty($can_staff_assign) || !empty($assignment)
         || !empty($can_mark_solved) || !empty($can_pin) || !empty($can_lock)
         || !empty($can_create_poll) || !empty($poll['can_close']) || !empty($can_split_merge)
+        || !empty($can_move)
     ),
 ];
 $hasTopicTools = in_array(true, $topicToolSections, true);
@@ -249,6 +250,9 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         'features' => $features,
         'can_write' => $can_write,
         'can_split_merge' => $can_split_merge,
+        'restructure_error' => $restructure_error ?? '',
+        'restructure_context' => $restructure_context ?? '',
+        'restructure_old' => $restructure_old ?? [],
     ]) ?>
     <?= $this->partial('partials/thread_tools', [
         'thread' => $thread,
@@ -278,5 +282,9 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         'poll' => $poll,
         'can_create_poll' => $can_create_poll,
         'can_split_merge' => $can_split_merge,
+        'can_move' => $can_move,
+        'move_boards' => $move_boards ?? [],
+        'move_error' => $move_error ?? '',
+        'move_selected' => $move_selected ?? 0,
     ]) ?>
 </article>

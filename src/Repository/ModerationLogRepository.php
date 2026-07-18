@@ -51,6 +51,96 @@ final class ModerationLogRepository
         );
     }
 
+    /**
+     * Filterable page of the audit trail for the /admin/audit screen
+     * (ADMIN §3.6). Filters: `actor` (username/display-name substring),
+     * `action` (prefix), `target_type` (exact), `target_id` (exact),
+     * `from`/`to` (created_at date bounds, inclusive). LIMIT/OFFSET are
+     * clamped + inlined (EMULATE_PREPARES=false forbids binding them); every
+     * value gets its own named placeholder.
+     *
+     * @param array<string,mixed> $filters
+     * @return array<int,array<string,mixed>>
+     */
+    public function search(array $filters, int $limit = 50, int $offset = 0): array
+    {
+        [$where, $params] = $this->searchFilters($filters);
+        $limit = max(1, min(200, $limit));
+        $offset = max(0, $offset);
+
+        $sql = 'SELECT m.*, u.username AS actor_username, u.display_name AS actor_display_name
+                FROM moderation_log m
+                LEFT JOIN users u ON u.id = m.actor_id';
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $sql .= ' ORDER BY m.id DESC LIMIT ' . $limit . ' OFFSET ' . $offset;
+
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    /** @param array<string,mixed> $filters */
+    public function searchCount(array $filters): int
+    {
+        [$where, $params] = $this->searchFilters($filters);
+        $sql = 'SELECT COUNT(*)
+                FROM moderation_log m
+                LEFT JOIN users u ON u.id = m.actor_id';
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        return (int) $this->db->fetchValue($sql, $params);
+    }
+
+    /**
+     * @param array<string,mixed> $filters
+     * @return array{0:array<int,string>,1:array<string,mixed>}
+     */
+    private function searchFilters(array $filters): array
+    {
+        $where = [];
+        $params = [];
+
+        $actor = trim((string) ($filters['actor'] ?? ''));
+        if ($actor !== '') {
+            $like = '%' . $actor . '%';
+            $where[] = '(u.username LIKE :actor1 OR u.display_name LIKE :actor2)';
+            $params['actor1'] = $like;
+            $params['actor2'] = $like;
+        }
+
+        $action = trim((string) ($filters['action'] ?? ''));
+        if ($action !== '') {
+            $where[] = 'm.action LIKE :action';
+            $params['action'] = $action . '%';
+        }
+
+        $targetType = trim((string) ($filters['target_type'] ?? ''));
+        if ($targetType !== '') {
+            $where[] = 'm.target_type = :target_type';
+            $params['target_type'] = $targetType;
+        }
+
+        $targetId = trim((string) ($filters['target_id'] ?? ''));
+        if ($targetId !== '' && ctype_digit($targetId)) {
+            $where[] = 'm.target_id = :target_id';
+            $params['target_id'] = (int) $targetId;
+        }
+
+        $from = trim((string) ($filters['from'] ?? ''));
+        if ($from !== '') {
+            $where[] = 'm.created_at >= :from_at';
+            $params['from_at'] = $from . ' 00:00:00';
+        }
+        $to = trim((string) ($filters['to'] ?? ''));
+        if ($to !== '') {
+            $where[] = 'm.created_at <= :to_at';
+            $params['to_at'] = $to . ' 23:59:59';
+        }
+
+        return [$where, $params];
+    }
+
     /** @return array<int,array<string,mixed>> recent entries for one target, newest first */
     public function recentForTarget(string $targetType, int $targetId, int $limit = 20): array
     {

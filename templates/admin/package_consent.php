@@ -32,7 +32,7 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
             <?php else: ?>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="New package permissions">
                 <table class="audit">
-                    <thead><tr><th>Permission</th><th>Risk</th></tr></thead>
+                    <thead><tr><th scope="col">Permission</th><th scope="col">Risk</th></tr></thead>
                     <tbody>
                     <?php foreach ($staged_plan['diff']['added'] as $permission): ?>
                         <tr>
@@ -72,7 +72,7 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
             <?php else: ?>
                 <div class="table-scroll" tabindex="0" role="region" aria-label="Pending package permissions">
                 <table class="audit">
-                    <thead><tr><th>Permission</th><th>Risk</th></tr></thead>
+                    <thead><tr><th scope="col">Permission</th><th scope="col">Risk</th></tr></thead>
                     <tbody>
                     <?php foreach ($pending_permissions as $permission): ?>
                         <tr>
@@ -96,7 +96,10 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
                 <input type="hidden" name="staged_release_id" value="<?= (int) $install['staged_release_id'] ?>">
             <?php endif; ?>
             <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
-            <button type="submit">Grant and continue</button>
+            <div class="form-actions">
+                <button class="btn" type="submit">Grant and continue</button>
+                <a class="linkbtn" href="<?= $e($base) ?>">Cancel — back to the package</a>
+            </div>
         </form>
     </section>
     </div>

@@ -2,6 +2,15 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Roles');
+// Group the flat capability catalogue by its middle namespace token
+// (core.board.* → Board, core.user.* → User, …) so the checkbox run scans as
+// tiers instead of one undifferentiated list.
+$groupedCatalogue = [];
+foreach ($catalogue as $capKey => $capMeta) {
+    $parts = explode('.', (string) $capKey);
+    $groupedCatalogue[ucfirst($parts[1] ?? 'other')][$capKey] = $capMeta;
+}
+ksort($groupedCatalogue);
 ?>
 <div class="admin">
     <header class="admin-head">
@@ -21,8 +30,9 @@ $this->section('title', 'Roles');
 
     <section class="card">
         <h2>Roles</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Role definitions">
         <table class="audit">
-            <thead><tr><th>Name</th><th>Key</th><th>Kind</th><th>Version</th><th>Capabilities</th><th>Active assignments</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Name</th><th scope="col">Key</th><th scope="col">Kind</th><th scope="col">Version</th><th scope="col">Capabilities</th><th scope="col">Active assignments</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($rows as $r): $role = $r['role']; ?>
                 <tr>
@@ -37,6 +47,7 @@ $this->section('title', 'Roles');
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </section>
 
     <section class="card">
@@ -53,18 +64,20 @@ $this->section('title', 'Roles');
             </label>
             <?php if (!empty($errors['description'])): ?><p class="field-error"><?= $e($errors['description']) ?></p><?php endif; ?>
 
-            <fieldset>
-                <legend>Capabilities (delegable only; protected authority is never offered)</legend>
-                <?php $checked = (array) ($old['capabilities'] ?? []); ?>
-                <?php foreach ($catalogue as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
-                    <label>
-                        <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
-                        <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
-                        <?php if ($meta['risk'] === 'high'): ?><span class="pill">high risk</span><?php endif; ?>
-                        <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
-                    </label>
-                <?php endforeach; ?>
-            </fieldset>
+            <?php $checked = (array) ($old['capabilities'] ?? []); ?>
+            <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
+                <fieldset>
+                    <legend><?= $e($groupLabel) ?> capabilities (delegable only; protected authority is never offered)</legend>
+                    <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
+                        <label>
+                            <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
+                            <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
+                            <?php if ($meta['risk'] === 'high'): ?><span class="pill">high risk</span><?php endif; ?>
+                            <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
+                        </label>
+                    <?php endforeach; ?>
+                </fieldset>
+            <?php endforeach; ?>
             <?php if (!empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
 
             <label>Confirm your password

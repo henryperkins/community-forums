@@ -2104,6 +2104,7 @@ final class App
         $r->post('/admin/tags', [TagController::class, 'create']);
         $r->post('/admin/tags/{id}', [TagController::class, 'update']);
         $r->post('/admin/tags/{id}/merge', [TagController::class, 'merge']);
+        $r->get('/admin/tags/{id}/merge', [TagController::class, 'mergeConfirm']);
 
         $r->post('/threads', [PostController::class, 'createThread']);
         $r->post('/t/{id}/reply', [PostController::class, 'reply']);
@@ -2150,6 +2151,7 @@ final class App
         $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
+        $r->get('/admin/audit', [AdminController::class, 'audit']);
         $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
         $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
         $r->post('/admin/api-tokens/{id}/revoke', [AdminApiTokenController::class, 'revoke']);
@@ -2302,7 +2304,10 @@ final class App
         // Per-user admin record (ADMIN §5.1/§5.2): directory + record screen,
         // manual badges + cosmetic title. Static before generic.
         $r->get('/admin/users', [AdminUserController::class, 'index']);
+        $r->post('/admin/users/bulk', [AdminUserController::class, 'bulkConfirm']);
+        $r->post('/admin/users/bulk/apply', [AdminUserController::class, 'bulkApply']);
         $r->get('/admin/users/{id}', [AdminUserController::class, 'show']);
+        $r->post('/admin/users/{id}/pii', [AdminUserController::class, 'revealPii']);
         $r->post('/admin/users/{id}/title', [AdminUserController::class, 'setTitle']);
         $r->post('/admin/users/{id}/avatar/remove', [AdminUserController::class, 'removeAvatar']);
         $r->post('/admin/users/{id}/signature/remove', [AdminUserController::class, 'removeSignature']);
@@ -2342,6 +2347,7 @@ final class App
         $r->post('/mod/appeals/{id}/resolve', [AppealController::class, 'resolve']);
 
         // User moderation (P2-08).
+        $r->get('/mod/u/{id}', [UserModerationController::class, 'show']);
         $r->post('/mod/u/{id}/warn', [UserModerationController::class, 'warn']);
         $r->post('/mod/u/{id}/note', [UserModerationController::class, 'note']);
         $r->post('/mod/u/{id}/suspend', [UserModerationController::class, 'suspend']);

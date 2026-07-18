@@ -9,6 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Repository\BoardMemberRepository;
+use App\Repository\BoardRepository;
 use App\Repository\PostRepository;
 use App\Repository\ReactionRepository;
 use App\Repository\SubscriptionRepository;
@@ -201,14 +202,25 @@ final class ThreadController extends Controller
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_PIN);
         $canLock = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_LOCK);
-        // core.thread.move has no thread-view control to gate yet — moving a
-        // thread to another board isn't reachable from templates/thread.php or
-        // templates/partials/post.php today (only /admin/boards/{id}/move exists,
-        // which is unrelated board-reordering, not this capability). Computed
-        // here and exposed as can_move so a future move-thread control can
-        // consume it without another controller change.
+        // Destinations for the Topic-tools "Move to board" control (ADMIN §3.3):
+        // an admin may target any unarchived board; a scoped moderator only the
+        // boards they moderate for core.thread.move. The service still enforces
+        // authority over BOTH ends of the move regardless of this list.
         $canMove = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_MOVE);
+        $moveBoards = [];
+        if ($canMove) {
+            $moderableIds = $this->container->get(ModerationService::class)->moderableBoardIds($user, Cap::THREAD_MOVE);
+            foreach ($this->container->get(BoardRepository::class)->allOrdered() as $candidate) {
+                if ((int) $candidate['id'] === (int) $thread['board_id'] || (int) ($candidate['is_archived'] ?? 0) === 1) {
+                    continue;
+                }
+                if ($moderableIds !== null && !in_array((int) $candidate['id'], $moderableIds, true)) {
+                    continue;
+                }
+                $moveBoards[] = ['id' => (int) $candidate['id'], 'label' => '#' . $candidate['name']];
+            }
+        }
         $canSplitMerge = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_SPLIT_MERGE);
         $canDeletePosts = $user !== null
@@ -447,6 +459,12 @@ final class ThreadController extends Controller
             'polls_on' => $pollsOn,
             'poll' => $poll,
             'can_create_poll' => $canCreatePoll,
+            'move_boards' => $moveBoards,
+            'move_error' => '',
+            'move_selected' => 0,
+            'restructure_error' => '',
+            'restructure_context' => '',
+            'restructure_old' => [],
             'reply_errors' => [],
             'reply_old' => [],
             'edit_post_id' => 0,

@@ -4,6 +4,7 @@ $this->layout('layout');
 $this->section('title', 'Webhook: ' . $webhook['name']);
 $id = (int) $webhook['id'];
 $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((string) $webhook['events'], true) ?: []);
+$errorContext = $error_context ?? null;
 ?>
 <div class="admin">
     <header class="admin-head">
@@ -55,10 +56,6 @@ $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((strin
                 <?= $this->csrfField() ?>
                 <button class="btn" type="submit">Send test event</button>
             </form>
-            <form method="post" action="/admin/webhooks/<?= $id ?>/delete" class="inline">
-                <?= $this->csrfField() ?>
-                <button class="linkbtn danger" type="submit">Delete</button>
-            </form>
         </div>
         <h3>Rotate signing secret</h3>
         <form method="post" action="/admin/webhooks/<?= $id ?>/rotate" class="stacked">
@@ -66,15 +63,26 @@ $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((strin
             <label>Confirm your password
                 <input type="password" name="current_password" autocomplete="current-password" required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?php if ($errorContext === 'rotate' && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
             <div class="form-actions"><button class="btn" type="submit">Rotate secret</button></div>
+        </form>
+        <h3>Delete endpoint</h3>
+        <p class="muted">Deleting removes the endpoint and its delivery history and revokes its signing secret. This cannot be undone.</p>
+        <form method="post" action="/admin/webhooks/<?= $id ?>/delete" class="stacked">
+            <?= $this->csrfField() ?>
+            <label>Confirm your password
+                <input type="password" name="current_password" autocomplete="current-password" required>
+            </label>
+            <?php if ($errorContext === 'delete' && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <div class="form-actions"><button class="btn danger" type="submit">Delete webhook</button></div>
         </form>
     </section>
 
     <section class="card">
         <h2>Recent deliveries</h2>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Recent webhook deliveries">
         <table class="audit">
-            <thead><tr><th>Event</th><th>Status</th><th>Attempts</th><th>Last response</th><th>Error</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Event</th><th scope="col">Status</th><th scope="col">Attempts</th><th scope="col">Last response</th><th scope="col">Error</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($deliveries as $d): ?>
                 <tr>
@@ -98,6 +106,7 @@ $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((strin
             <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
     </div>
 </div>

@@ -95,9 +95,12 @@ final class UserModerationService
 
         $this->db->transaction(function () use ($actor, $subject, $until, $reason): void {
             $this->users->setStatus((int) $subject['id'], 'suspended', $until);
+            // History row: type='post' (read-only) — a suspension keeps login +
+            // read access (ADMIN §1.2), unlike a full ban. Enforcement rides
+            // users.status; this row is the accountable record.
             $this->db->run(
                 "INSERT INTO bans (user_id, scope, type, reason, created_by, created_at, expires_at)
-                 VALUES (?, 'site', 'full', ?, ?, UTC_TIMESTAMP(), ?)",
+                 VALUES (?, 'site', 'post', ?, ?, UTC_TIMESTAMP(), ?)",
                 [(int) $subject['id'], $reason, $actor->id(), $until],
             );
             $this->audit($actor, 'suspend', (int) $subject['id'], $reason);
@@ -217,6 +220,55 @@ final class UserModerationService
             ]);
         });
         $this->resolver->invalidate();
+    }
+
+    /**
+     * Gated PII disclosure for the admin record (ADMIN §5.2/§5.5): returns the
+     * subject's email plus recently observed session/post IPs, and writes ONE
+     * view_pii audit row per disclosure — access is the audited event. The
+     * values are returned for a single render, never stored in the view state.
+     *
+     * @return array{email:string,session_ips:array<int,string>,post_ips:array<int,string>}
+     */
+    public function revealPii(User $admin, int $subjectId): array
+    {
+        $this->assertAdmin($admin);
+        $subject = $this->requireSubject($subjectId);
+
+        $sessionIps = [];
+        foreach ($this->db->fetchAll(
+            'SELECT DISTINCT ip FROM sessions WHERE user_id = ? AND ip IS NOT NULL ORDER BY ip LIMIT 5',
+            [$subjectId],
+        ) as $row) {
+            $unpacked = @inet_ntop((string) $row['ip']);
+            if ($unpacked !== false) {
+                $sessionIps[] = $unpacked;
+            }
+        }
+        $postIps = [];
+        foreach ($this->db->fetchAll(
+            'SELECT DISTINCT ip FROM posts WHERE user_id = ? AND ip IS NOT NULL ORDER BY ip LIMIT 5',
+            [$subjectId],
+        ) as $row) {
+            $unpacked = @inet_ntop((string) $row['ip']);
+            if ($unpacked !== false) {
+                $postIps[] = $unpacked;
+            }
+        }
+
+        $this->log->log([
+            'actor_id' => $admin->id(),
+            'action' => 'view_pii',
+            'target_type' => 'user',
+            'target_id' => $subjectId,
+            'reason' => 'admin_record_reveal',
+        ]);
+
+        return [
+            'email' => (string) ($subject['email'] ?? ''),
+            'session_ips' => $sessionIps,
+            'post_ips' => $postIps,
+        ];
     }
 
     /**

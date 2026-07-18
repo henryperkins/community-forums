@@ -26,14 +26,17 @@ use App\Support\Str;
 
 /**
  * Minimal admin console operations: site naming, category + board CRUD with
- * delete-only-when-empty, board slug-change history (for 301 redirects), and an
- * audit row for every structural/config change.
+ * delete-only-when-empty (or move-then-delete), board slug-change history (for
+ * 301 redirects), and an audit row for every structural/config change.
  */
 final class AdminService
 {
     private const VISIBILITIES = ['public', 'hidden', 'private'];
     private const ROLES = ['user', 'moderator', 'admin'];
     private const ASSIGNMENT_MODES = ['off', 'self', 'staff'];
+
+    /** Longest per-board edit window offered in the UI: one week, in minutes. */
+    private const MAX_EDIT_WINDOW_MINUTES = 10080;
 
     /** Registration modes (P3-05 + P5-13 `invite`) — interpreted by RegistrationPolicy. */
     public const REGISTRATION_MODES = RegistrationPolicy::MODES;
@@ -66,7 +69,7 @@ final class AdminService
         $this->assertAdmin($admin);
         $name = trim($name);
         if ($name === '' || mb_strlen($name) > 80) {
-            throw new ValidationException(['site_name' => 'Site name must be 1–80 characters.']);
+            throw new ValidationException(['site_name' => 'Site name must be 1–80 characters.'], ['site_name' => $name]);
         }
         $before = $this->settings->getString('site_name', '');
         $this->db->transaction(function () use ($admin, $name, $before): void {
@@ -218,9 +221,9 @@ final class AdminService
     public function createBoard(User $admin, array $input): int
     {
         $this->assertAdmin($admin);
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled] = $this->validateBoard($input, null);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds] = $this->validateBoard($input, null);
 
-        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled): int {
+        return $this->db->transaction(function () use ($admin, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds): int {
             $id = $this->boards->create([
                 'category_id' => $categoryId,
                 'slug' => $slug,
@@ -233,13 +236,14 @@ final class AdminService
                 'assignment_mode' => $assignmentMode,
                 'tags_enabled' => $tagsEnabled,
                 'wiki_enabled' => $wikiEnabled,
+                'edit_window_seconds' => $editWindowSeconds,
             ]);
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'create_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'post_min_role' => $role, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled, 'edit_window_seconds' => $editWindowSeconds],
             ]);
             return $id;
         });
@@ -253,7 +257,7 @@ final class AdminService
         if ($board === null) {
             throw new NotFoundException('Board not found.');
         }
-        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled] = $this->validateBoard($input, $board);
+        [$categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds] = $this->validateBoard($input, $board);
 
         $oldSlug = (string) $board['slug'];
         $slugChanged = $slug !== $oldSlug;
@@ -265,7 +269,7 @@ final class AdminService
             $position = $this->boards->nextPosition($categoryId);
         }
 
-        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $oldSlug, $slugChanged, $position, $board): void {
+        $this->db->transaction(function () use ($admin, $id, $categoryId, $name, $slug, $description, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds, $oldSlug, $slugChanged, $position, $board): void {
             if ($slugChanged) {
                 $this->boards->recordSlugChange($id, $oldSlug);
             }
@@ -281,6 +285,7 @@ final class AdminService
                 'assignment_mode' => $assignmentMode,
                 'tags_enabled' => $tagsEnabled,
                 'wiki_enabled' => $wikiEnabled,
+                'edit_window_seconds' => $editWindowSeconds,
                 'position' => $position,
             ]);
             if ($visibility !== (string) $board['visibility']) {
@@ -291,24 +296,62 @@ final class AdminService
                 'action' => 'update_board',
                 'target_type' => 'board',
                 'target_id' => $id,
-                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0), 'require_approval' => (int) ($board['require_approval'] ?? 0), 'assignment_mode' => $board['assignment_mode'] ?? 'off', 'tags_enabled' => (int) ($board['tags_enabled'] ?? 1), 'wiki_enabled' => (int) ($board['wiki_enabled'] ?? 0)],
-                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled],
+                'before' => ['name' => $board['name'], 'slug' => $oldSlug, 'visibility' => $board['visibility'], 'post_min_role' => (string) ($board['post_min_role'] ?? 'user'), 'allow_anonymous' => (int) ($board['allow_anonymous'] ?? 0), 'require_approval' => (int) ($board['require_approval'] ?? 0), 'assignment_mode' => $board['assignment_mode'] ?? 'off', 'tags_enabled' => (int) ($board['tags_enabled'] ?? 1), 'wiki_enabled' => (int) ($board['wiki_enabled'] ?? 0), 'edit_window_seconds' => (int) ($board['edit_window_seconds'] ?? 0)],
+                'after' => ['name' => $name, 'slug' => $slug, 'visibility' => $visibility, 'post_min_role' => $role, 'allow_anonymous' => $allowAnon, 'require_approval' => $requireApproval, 'assignment_mode' => $assignmentMode, 'tags_enabled' => $tagsEnabled, 'wiki_enabled' => $wikiEnabled, 'edit_window_seconds' => $editWindowSeconds],
             ]);
         });
     }
 
-    public function deleteBoard(User $admin, int $id): void
+    /**
+     * Delete a board. An empty board deletes directly. A board that still has
+     * threads deletes only when $moveThreadsTo names a destination: every
+     * thread (including held and soft-deleted rows, so nothing orphans) is
+     * reassigned in the same transaction, the destination's denormalised
+     * counters are recomputed from authoritative rows (ADMIN §4.4 "choose what
+     * happens to its threads"), and both steps are audited.
+     */
+    public function deleteBoard(User $admin, int $id, ?int $moveThreadsTo = null): void
     {
         $this->assertAdmin($admin);
         $board = $this->boards->find($id);
         if ($board === null) {
             throw new NotFoundException('Board not found.');
         }
+
+        $dest = null;
         if ($this->boards->hasThreads($id)) {
-            throw new ValidationException(['board' => 'Only empty boards can be deleted.']);
+            if ($moveThreadsTo === null || $moveThreadsTo <= 0) {
+                throw new ValidationException(['board' => 'This board still has threads. Choose a destination board to move them to, or delete its content first.']);
+            }
+            if ($moveThreadsTo === $id) {
+                throw new ValidationException(['move_to_board_id' => 'Choose a different board as the destination.']);
+            }
+            $dest = $this->boards->find($moveThreadsTo);
+            if ($dest === null) {
+                throw new ValidationException(['move_to_board_id' => 'Choose a valid destination board.']);
+            }
+            if ((int) ($dest['is_archived'] ?? 0) === 1) {
+                throw new ValidationException(['move_to_board_id' => 'The destination board is archived (read-only). Unarchive it first or pick another board.']);
+            }
         }
 
-        $this->db->transaction(function () use ($admin, $id, $board): void {
+        $this->db->transaction(function () use ($admin, $id, $board, $dest): void {
+            if ($dest !== null) {
+                $destId = (int) $dest['id'];
+                $moved = $this->db->run(
+                    'UPDATE threads SET board_id = :dest WHERE board_id = :src',
+                    ['dest' => $destId, 'src' => $id],
+                )->rowCount();
+                $this->boards->recountContent($destId);
+                $this->log->log([
+                    'actor_id' => $admin->id(),
+                    'action' => 'move_board_content',
+                    'target_type' => 'board',
+                    'target_id' => $id,
+                    'before' => ['board_id' => $id, 'slug' => $board['slug']],
+                    'after' => ['board_id' => $destId, 'slug' => $dest['slug'], 'threads_moved' => $moved],
+                ]);
+            }
             $this->boards->delete($id);
             $this->log->log([
                 'actor_id' => $admin->id(),
@@ -318,6 +361,11 @@ final class AdminService
                 'before' => ['name' => $board['name'], 'slug' => $board['slug']],
             ]);
         });
+        if ($dest !== null) {
+            // Moved threads inherit the destination's read gate; let the Thread
+            // Intelligence sweep re-evaluate them like a visibility change.
+            $this->threadIntelligenceBoardSweep?->markVisibilityChanged((int) $dest['id']);
+        }
     }
 
     // ---- Structure ordering + archive (Phase 2) ---------------------------
@@ -650,7 +698,7 @@ final class AdminService
     /**
      * @param array<string,mixed> $input
      * @param array<string,mixed>|null $existing
-     * @return array{0:int,1:string,2:string,3:?string,4:string,5:string,6:int,7:int,8:string,9:int,10:int}
+     * @return array{0:int,1:string,2:string,3:?string,4:string,5:string,6:int,7:int,8:string,9:int,10:int,11:int}
      */
     private function validateBoard(array $input, ?array $existing): array
     {
@@ -679,9 +727,13 @@ final class AdminService
             $errors['visibility'] = 'Invalid visibility.';
         }
 
-        $role = (string) ($input['post_min_role'] ?? 'user');
+        // Falls back to the EXISTING stored value, never a hard-coded 'user':
+        // a form that omits the field (or an older cached page) must not
+        // silently re-open an admins-only board (ADMIN §4.2 post_min_role).
+        $role = (string) ($input['post_min_role'] ?? ($existing['post_min_role'] ?? 'user'));
         if (!in_array($role, self::ROLES, true)) {
-            $role = 'user';
+            $errors['post_min_role'] = 'Choose who can post from the list.';
+            $role = (string) ($existing['post_min_role'] ?? 'user');
         }
 
         $allowAnon = !empty($input['allow_anonymous']) ? 1 : 0;
@@ -693,6 +745,18 @@ final class AdminService
         $tagsEnabled = array_key_exists('tags_enabled', $input) ? (!empty($input['tags_enabled']) ? 1 : 0) : (int) ($existing['tags_enabled'] ?? 1);
         $wikiEnabled = !empty($input['wiki_enabled']) ? 1 : 0;
 
+        // Edit window (ADMIN §4.2): submitted in whole minutes, stored in
+        // seconds, 0 = no limit. Absent field keeps the stored value.
+        $editWindowSeconds = (int) ($existing['edit_window_seconds'] ?? 0);
+        if (array_key_exists('edit_window_minutes', $input)) {
+            $minutesRaw = trim((string) $input['edit_window_minutes']);
+            if ($minutesRaw === '' || !ctype_digit($minutesRaw) || (int) $minutesRaw > self::MAX_EDIT_WINDOW_MINUTES) {
+                $errors['edit_window_minutes'] = 'Edit window must be 0–' . self::MAX_EDIT_WINDOW_MINUTES . ' minutes (0 = no limit).';
+            } else {
+                $editWindowSeconds = ((int) $minutesRaw) * 60;
+            }
+        }
+
         if ($errors !== []) {
             throw new ValidationException($errors, $input);
         }
@@ -701,7 +765,7 @@ final class AdminService
         // unless it already belongs to the board being edited.
         $slug = $this->uniqueSlug($slug, $existing !== null ? (int) $existing['id'] : null);
 
-        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled];
+        return [$categoryId, $name, $slug, $description !== '' ? $description : null, $visibility, $role, $allowAnon, $requireApproval, $assignmentMode, $tagsEnabled, $wikiEnabled, $editWindowSeconds];
     }
 
     private function uniqueSlug(string $slug, ?int $boardId): string

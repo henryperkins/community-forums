@@ -66,8 +66,7 @@ $createOld = $errorForm === 'create' ? $old : [];
                             </div>
                         <?php endif; ?>
                         <?php if ((int) ($tag['is_enabled'] ?? 1) === 1 && count($tags) > 1): ?>
-                            <form method="post" action="/admin/tags/<?= (int) $tag['id'] ?>/merge" class="inline-form">
-                                <?= $this->csrfField() ?>
+                            <form method="get" action="/admin/tags/<?= (int) $tag['id'] ?>/merge" class="inline-form">
                                 <label class="sr-only" for="merge-tag-<?= (int) $tag['id'] ?>">Merge into</label>
                                 <select id="merge-tag-<?= (int) $tag['id'] ?>" class="input input-small" name="target_id">
                                     <?php foreach ($tags as $target): ?>
@@ -76,7 +75,7 @@ $createOld = $errorForm === 'create' ? $old : [];
                                         <?php endif; ?>
                                     <?php endforeach; ?>
                                 </select>
-                                <button class="linkbtn muted" type="submit">Merge</button>
+                                <button class="linkbtn danger" type="submit">Merge…</button>
                             </form>
                         <?php endif; ?>
                     </li>

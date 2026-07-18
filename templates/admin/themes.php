@@ -32,11 +32,11 @@ $this->section('title', 'Themes');
         <?php else: ?>
             <table class="audit">
                 <tbody>
-                    <tr><th>Package</th><td><strong><?= $e($active['package_name']) ?></strong><br><code><?= $e($active['package_uid']) ?></code></td></tr>
-                    <tr><th>Version</th><td><?= $e($active['release_version']) ?></td></tr>
-                    <tr><th>CSS digest</th><td><code><?= $e($active['css_digest']) ?></code></td></tr>
-                    <tr><th>Install state</th><td><?= $e($active['install_state']) ?></td></tr>
-                    <tr><th>Activated</th><td><?= $e($state['activated_at'] ?? '') ?> UTC</td></tr>
+                    <tr><th scope="row">Package</th><td><strong><?= $e($active['package_name']) ?></strong><br><code><?= $e($active['package_uid']) ?></code></td></tr>
+                    <tr><th scope="row">Version</th><td><?= $e($active['release_version']) ?></td></tr>
+                    <tr><th scope="row">CSS digest</th><td><code><?= $e($active['css_digest']) ?></code></td></tr>
+                    <tr><th scope="row">Install state</th><td><?= $e($active['install_state']) ?></td></tr>
+                    <tr><th scope="row">Activated</th><td><?= $e($state['activated_at'] ?? '') ?> UTC</td></tr>
                 </tbody>
             </table>
         <?php endif; ?>
@@ -46,7 +46,7 @@ $this->section('title', 'Themes');
             <form method="post" action="/admin/themes/rollback" class="stacked">
                 <?= $this->csrfField() ?>
                 <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
-                <button type="submit">Roll back</button>
+                <button class="btn btn-small" type="submit">Roll back</button>
             </form>
         <?php endif; ?>
     </section>
@@ -58,7 +58,7 @@ $this->section('title', 'Themes');
         <?php else: ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Installed theme packages">
         <table class="audit">
-            <thead><tr><th>Package</th><th>Version</th><th>State</th><th>Latest build</th><th>Actions</th></tr></thead>
+            <thead><tr><th scope="col">Package</th><th scope="col">Version</th><th scope="col">State</th><th scope="col">Latest build</th><th scope="col">Actions</th></tr></thead>
             <tbody>
             <?php foreach ($installs as $install): ?>
                 <tr>
@@ -76,12 +76,12 @@ $this->section('title', 'Themes');
                         <?php if ($install['state'] === 'enabled'): ?>
                             <form method="post" action="/admin/themes/<?= (int) $install['id'] ?>/preview" class="inline-form">
                                 <?= $this->csrfField() ?>
-                                <button type="submit">Preview</button>
+                                <button class="btn btn-small" type="submit">Preview</button>
                             </form>
                             <form method="post" action="/admin/themes/<?= (int) $install['id'] ?>/activate" class="stacked">
                                 <?= $this->csrfField() ?>
                                 <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
-                                <button type="submit">Activate</button>
+                                <button class="btn btn-small" type="submit">Activate</button>
                             </form>
                         <?php else: ?>
                             <a href="/admin/packages/<?= (int) $install['package_id'] ?>">Enable it from Packages first</a>
@@ -103,7 +103,7 @@ $this->section('title', 'Themes');
             <p>Previewing <strong><?= $e($preview['package_name']) ?></strong> <code><?= $e($preview['css_digest']) ?></code> in this admin session only.</p>
             <form method="post" action="/admin/themes/preview/clear" class="inline-form">
                 <?= $this->csrfField() ?>
-                <button type="submit">End preview</button>
+                <button class="btn btn-small" type="submit">End preview</button>
             </form>
         <?php endif; ?>
     </section>

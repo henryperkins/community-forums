@@ -9,15 +9,19 @@ use App\Core\Response;
 use App\Core\ValidationException;
 use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
+use App\Repository\ThreadRepository;
 use App\Service\ModerationService;
 use App\Service\ThreadSplitMergeService;
 
 /**
  * Inline content moderation invoked from the thread view: pin/unpin,
- * lock/unlock, move, and post restore. Authorization is board-scoped and
- * enforced in ModerationService (admin anywhere, or assigned board moderator);
- * the controller only requires a logged-in user. Soft-deleting a post lives in
- * PostController::delete.
+ * lock/unlock, move, split/merge, and post restore. Authorization is
+ * board-scoped and enforced in ModerationService (admin anywhere, or assigned
+ * board moderator); the controller only requires a logged-in user. A failed
+ * move/split/merge re-renders the thread view at 422 with the typed input
+ * preserved (anti-draft-loss — same renderThread mechanism the reply and edit
+ * forms use) instead of a flash redirect that drops it. Soft-deleting a post
+ * lives in PostController::delete.
  */
 final class ModerationController extends Controller
 {
@@ -47,9 +51,10 @@ final class ModerationController extends Controller
         try {
             $result = $this->container->get(ModerationService::class)->moveThread($user, $threadId, $destBoardId);
         } catch (ValidationException $e) {
-            $thread = $this->container->get(\App\Repository\ThreadRepository::class)->find($threadId);
-            $url = $thread !== null ? '/t/' . $threadId . '-' . $thread['slug'] : '/';
-            return $this->redirectWithFlash($url, $e->first());
+            return $this->rerenderThread($request, $threadId, [
+                'move_error' => $e->first(),
+                'move_selected' => $destBoardId,
+            ]);
         }
 
         return $this->redirectWithFlash($this->threadUrl($result['thread']), $result['moved'] ? 'Thread moved.' : 'Thread already in that board.');
@@ -61,17 +66,23 @@ final class ModerationController extends Controller
         $this->requireSplitMerge();
         $user = $this->requireUser();
         $threadId = (int) ($params['id'] ?? 0);
+        $postIds = $this->postIds($request->post('post_ids', ''));
         try {
             $thread = $this->container->get(ThreadSplitMergeService::class)->split(
                 $user,
                 $threadId,
-                $this->postIds($request->post('post_ids', '')),
+                $postIds,
                 $request->str('title'),
             );
         } catch (ValidationException $e) {
-            $source = $this->container->get(\App\Repository\ThreadRepository::class)->find($threadId);
-            $url = $source !== null ? '/t/' . $threadId . '-' . $source['slug'] : '/';
-            return $this->redirectWithFlash($url, $e->first());
+            return $this->rerenderThread($request, $threadId, [
+                'restructure_error' => $e->first(),
+                'restructure_context' => 'split',
+                'restructure_old' => [
+                    'title' => $request->str('title'),
+                    'post_ids' => $postIds,
+                ],
+            ]);
         }
 
         return $this->redirectWithFlash($this->threadUrl($thread), 'Thread split.');
@@ -90,9 +101,13 @@ final class ModerationController extends Controller
                 (int) $request->int('target_thread_id', 0),
             );
         } catch (ValidationException $e) {
-            $source = $this->container->get(\App\Repository\ThreadRepository::class)->find($threadId);
-            $url = $source !== null ? '/t/' . $threadId . '-' . $source['slug'] : '/';
-            return $this->redirectWithFlash($url, $e->first());
+            return $this->rerenderThread($request, $threadId, [
+                'restructure_error' => $e->first(),
+                'restructure_context' => 'merge',
+                'restructure_old' => [
+                    'target_thread_id' => $request->str('target_thread_id'),
+                ],
+            ]);
         }
 
         return $this->redirectWithFlash($this->threadUrl($thread), 'Thread merged.');
@@ -117,6 +132,23 @@ final class ModerationController extends Controller
             '/t/' . $r['thread_id'] . '-' . $r['thread_slug'] . '#p' . $r['post_id'],
             'Author of this anonymous post: ' . $r['username'] . ' (this reveal has been logged).',
         );
+    }
+
+    /**
+     * Re-render the thread view at 422 with moderation-form context preserved
+     * (same mechanism as PostController's reply/edit failure re-renders).
+     *
+     * @param array<string,mixed> $extra
+     */
+    private function rerenderThread(Request $request, int $threadId, array $extra): Response
+    {
+        $thread = $this->container->get(ThreadRepository::class)->findWithBoard($threadId);
+        if ($thread === null || (int) ($thread['is_deleted'] ?? 0) === 1) {
+            throw new NotFoundException('Thread not found.');
+        }
+        return (new ThreadController($this->container))
+            ->renderThread($request, $thread, $extra)
+            ->withStatus(422);
     }
 
     /** @param array<string,mixed> $thread */

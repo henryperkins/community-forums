@@ -346,6 +346,21 @@ final class PostingService
             throw new ForbiddenException('This board is archived and is read-only.');
         }
 
+        // Per-board edit window (ADMIN §4.2): once it elapses, members can no
+        // longer edit their own posts here; staff stay exempt. 0 = no limit.
+        // ValidationException (not Forbidden) so the thread re-render keeps the
+        // typed edit on screen instead of a kernel error page dropping it.
+        $editWindow = (int) ($editBoard['edit_window_seconds'] ?? 0);
+        if ($editWindow > 0 && !$user->isModerator()) {
+            $createdAt = strtotime(((string) $post['created_at']) . ' UTC');
+            if ($createdAt !== false && time() - $createdAt > $editWindow) {
+                throw new ValidationException(
+                    ['body' => 'The edit window for this board (' . intdiv($editWindow, 60) . ' minutes) has closed.'],
+                    ['body' => (string) ($input['body'] ?? '')],
+                );
+            }
+        }
+
         $body = (string) ($input['body'] ?? '');
         $this->validate(null, $body, $input, requireTitle: false);
         $changed = $body !== (string) $post['body'];

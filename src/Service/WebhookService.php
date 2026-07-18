@@ -138,22 +138,45 @@ final class WebhookService
         });
     }
 
-    public function delete(User $admin, int $webhookId): void
+    /**
+     * Deleting an endpoint discards its delivery history and revokes its
+     * signing secret, so — like rotateSecret, and unlike the reversible
+     * pause — it is password-reauthed.
+     */
+    public function delete(User $admin, string $currentPassword, int $webhookId): void
     {
         $this->writeGate->assertCanWrite($admin);
+        $this->assertPassword($admin, $currentPassword);
+        $this->remove($admin, $webhookId);
+    }
+
+    /**
+     * Reauth-free deletion for the package-credential revocation path
+     * (PackageIntegrationService::revokeCredential joins its transaction):
+     * defensive revokes are deliberately friction-free — WriteGate only.
+     * Operator-UI deletion goes through delete(), which reauths.
+     */
+    public function deleteWithoutReauth(User $actor, int $webhookId): void
+    {
+        $this->writeGate->assertCanWrite($actor);
+        $this->remove($actor, $webhookId);
+    }
+
+    private function remove(User $actor, int $webhookId): void
+    {
         $wh = $this->webhooks->findById($webhookId);
         if ($wh === null) {
             return;
         }
 
         $ref = (string) $wh['secret_ref'];
-        $this->db->transaction(function () use ($webhookId, $ref, $admin): void {
+        $this->db->transaction(function () use ($webhookId, $ref, $actor): void {
             $this->webhooks->delete($webhookId);
             if ($ref !== '') {
-                $this->vault->revoke($ref, $admin);
+                $this->vault->revoke($ref, $actor);
             }
             $this->log->log([
-                'actor_id' => $admin->id(),
+                'actor_id' => $actor->id(),
                 'action' => 'webhook_deleted',
                 'target_type' => 'webhook',
                 'target_id' => $webhookId,

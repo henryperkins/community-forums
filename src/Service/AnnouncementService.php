@@ -21,6 +21,8 @@ use App\Security\WriteGate;
  * opt-in in-app broadcast. NO email channel and NO `announcements` table: the
  * broadcast reuses notifications.type='announcement'. The version increments on
  * every publish so a member's per-version dismissal never hides a newer banner.
+ * Publish history is derived from the audit trail (set_announcement rows), not
+ * a table of its own.
  */
 final class AnnouncementService
 {
@@ -69,13 +71,15 @@ final class AnnouncementService
                     'announcement:' . $version . ':',
                 );
             }
+            // The message is part of the audit payload so the console can show
+            // a publish history (ADMIN §7.4 "audited") without a new table.
             $this->log->log([
                 'actor_id' => $admin->id(),
                 'action' => 'set_announcement',
                 'target_type' => 'setting',
                 'target_id' => 0,
                 'reason' => 'site_announcement',
-                'after' => ['active' => true, 'version' => $version, 'broadcast' => $inAppBroadcast, 'email_broadcast' => $emailBroadcast, 'email_count' => $emailCount],
+                'after' => ['active' => true, 'version' => $version, 'message' => $message, 'broadcast' => $inAppBroadcast, 'email_broadcast' => $emailBroadcast, 'email_count' => $emailCount],
             ]);
         });
     }
@@ -97,6 +101,42 @@ final class AnnouncementService
                 'after' => ['active' => false],
             ]);
         });
+    }
+
+    /**
+     * Recent publish/clear history for the console, straight from the audit
+     * trail. Older set_announcement rows predate the message-in-payload change
+     * and render without a message.
+     *
+     * @return array<int,array{when:string,actor:?string,action:string,version:?int,message:?string,broadcast:bool,email_broadcast:bool}>
+     */
+    public function recentHistory(int $limit = 10): array
+    {
+        $limit = max(1, min(50, $limit));
+        $rows = $this->db->fetchAll(
+            "SELECT m.action, m.after_json, m.created_at, u.username AS actor_username
+             FROM moderation_log m
+             LEFT JOIN users u ON u.id = m.actor_id
+             WHERE m.action IN ('set_announcement', 'clear_announcement')
+             ORDER BY m.id DESC
+             LIMIT " . $limit,
+        );
+
+        $history = [];
+        foreach ($rows as $row) {
+            $after = json_decode((string) ($row['after_json'] ?? ''), true);
+            $after = is_array($after) ? $after : [];
+            $history[] = [
+                'when' => (string) $row['created_at'],
+                'actor' => isset($row['actor_username']) ? (string) $row['actor_username'] : null,
+                'action' => (string) $row['action'],
+                'version' => isset($after['version']) && is_numeric($after['version']) ? (int) $after['version'] : null,
+                'message' => isset($after['message']) && is_string($after['message']) ? $after['message'] : null,
+                'broadcast' => !empty($after['broadcast']),
+                'email_broadcast' => !empty($after['email_broadcast']),
+            ];
+        }
+        return $history;
     }
 
     private function currentVersion(): int

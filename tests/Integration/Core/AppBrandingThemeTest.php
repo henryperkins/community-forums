@@ -68,7 +68,7 @@ final class AppBrandingThemeTest extends TestCase
         $this->post('/admin/branding', ['site_name' => 'Temp', 'color_primary' => '#222222', 'theme_default' => 'system']);
         $this->assertSeeText($this->get('/brand.css'), '#222222');
 
-        $this->post('/admin/branding', ['reset' => '1']);
+        $this->post('/admin/branding', ['reset' => '1', 'reset_confirm' => 'RESET']);
         // Colours cleared → brand.css carries no overrides and the shell stops linking it.
         $this->assertDontSeeText($this->get('/brand.css'), '#222222');
         $this->assertDontSeeText($this->get('/'), '/brand.css');

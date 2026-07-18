@@ -34,6 +34,7 @@
 
         <label class="field"><span>Description</span>
             <input type="text" name="description" class="input" maxlength="255" value="<?= $e($old['description'] ?? $board['description'] ?? '') ?>">
+            <?php if (!empty($errors['description'])): ?><span class="field-error"><?= $e($errors['description']) ?></span><?php endif; ?>
         </label>
 
         <label class="field"><span>Visibility</span>
@@ -41,8 +42,27 @@
             <select name="visibility" class="input">
                 <option value="public" <?= $vis === 'public' ? 'selected' : '' ?>>Public</option>
                 <option value="hidden" <?= $vis === 'hidden' ? 'selected' : '' ?>>Hidden (unlisted)</option>
-                <option value="private" <?= $vis === 'private' ? 'selected' : '' ?>>Private (admins only)</option>
+                <option value="private" <?= $vis === 'private' ? 'selected' : '' ?>>Private (members only)</option>
             </select>
+            <?php if (!empty($errors['visibility'])): ?><span class="field-error"><?= $e($errors['visibility']) ?></span><?php endif; ?>
+        </label>
+
+        <label class="field"><span>Who can post</span>
+            <?php $minRole = $old['post_min_role'] ?? ($board['post_min_role'] ?? 'user'); ?>
+            <select name="post_min_role" class="input">
+                <option value="user" <?= $minRole === 'user' ? 'selected' : '' ?>>All members</option>
+                <option value="moderator" <?= $minRole === 'moderator' ? 'selected' : '' ?>>Moderators and admins</option>
+                <option value="admin" <?= $minRole === 'admin' ? 'selected' : '' ?>>Admins only (announcements)</option>
+            </select>
+            <span class="muted">Everyone who can read the board still sees its content; this only limits who may start topics and reply.</span>
+            <?php if (!empty($errors['post_min_role'])): ?><span class="field-error"><?= $e($errors['post_min_role']) ?></span><?php endif; ?>
+        </label>
+
+        <label class="field"><span>Edit window (minutes, 0 = no limit)</span>
+            <?php $editWindow = $old['edit_window_minutes'] ?? (string) intdiv((int) ($board['edit_window_seconds'] ?? 0), 60); ?>
+            <input type="number" name="edit_window_minutes" class="input" min="0" max="10080" value="<?= $e((string) $editWindow) ?>">
+            <span class="muted">How long members may edit their own posts here. Staff are exempt.</span>
+            <?php if (!empty($errors['edit_window_minutes'])): ?><span class="field-error"><?= $e($errors['edit_window_minutes']) ?></span><?php endif; ?>
         </label>
 
         <?php $anon = $old['allow_anonymous'] ?? ($board['allow_anonymous'] ?? 0); ?>

@@ -1,6 +1,11 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php $this->layout('layout'); $this->section('title', 'Appeals queue'); ?>
-<?php $appealCount = count($appeals ?? []); ?>
+<?php
+$appealCount = count($appeals ?? []);
+$errors = $errors ?? [];
+$old = $old ?? [];
+$failedAppealId = (int) ($old['appeal_id'] ?? 0);
+?>
 <div class="mod reports-view">
     <header class="mod-head">
         <span>
@@ -18,11 +23,11 @@
 
     <div class="mod-pane">
         <header class="board-header">
-            <h1>Appeals</h1>
+            <h2>Appeals</h2>
             <p class="muted">Open appeals in your moderation scope.</p>
         </header>
 
-        <?php if (!empty($errors)): ?>
+        <?php if (!empty($errors) && $failedAppealId === 0): ?>
             <div class="card error-list" role="alert">
                 <?php foreach ($errors as $message): ?>
                     <p><?= $e($message) ?></p>
@@ -35,6 +40,7 @@
         <?php else: ?>
             <ul class="report-list">
                 <?php foreach ($appeals as $appeal): ?>
+                    <?php $isFailedRow = $failedAppealId === (int) $appeal['id']; ?>
                     <li class="report-row is-open">
                         <div class="report-head">
                             <span class="badge"><?= $e((string) $appeal['status']) ?></span>
@@ -47,16 +53,24 @@
                             <?= $this->csrfField() ?>
                             <label class="field">
                                 <span>Outcome</span>
+                                <?php $selectedOutcome = $isFailedRow ? (string) ($old['outcome'] ?? '') : ''; ?>
                                 <select name="outcome" class="input">
                                     <?php foreach (($outcomes ?? ['upheld','modified','reversed','dismissed']) as $outcome): ?>
-                                        <option value="<?= $e($outcome) ?>"><?= $e(ucfirst($outcome)) ?></option>
+                                        <option value="<?= $e($outcome) ?>"<?= $selectedOutcome === $outcome ? ' selected' : '' ?>><?= $e(ucfirst($outcome)) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </label>
                             <label class="field">
                                 <span>Resolution note</span>
-                                <textarea name="note" class="input" rows="2"></textarea>
+                                <textarea name="note" class="input" rows="2"><?= $isFailedRow ? $e((string) ($old['note'] ?? '')) : '' ?></textarea>
                             </label>
+                            <?php if ($isFailedRow && !empty($errors)): ?>
+                                <div class="error-list" role="alert">
+                                    <?php foreach ($errors as $message): ?>
+                                        <p class="field-error"><?= $e($message) ?></p>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                             <button class="btn btn-small" type="submit">Resolve appeal</button>
                         </form>
                     </li>

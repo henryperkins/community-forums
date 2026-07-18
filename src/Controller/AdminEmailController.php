@@ -47,8 +47,10 @@ final class AdminEmailController extends Controller
         $mailer = $this->container->get(Mailer::class);
         $domain = $this->container->get(EmailDomainVerifier::class)->current();
 
+        $rows = $deliveries->recent($perPage, $offset, $status, $kind, $email !== '' ? $email : null);
+
         return $this->view('admin/email', [
-            'deliveries' => $deliveries->recent($perPage, $offset, $status, $kind, $email !== '' ? $email : null),
+            'deliveries' => $rows,
             'total' => $deliveries->count($status, $kind, $email !== '' ? $email : null),
             'status_counts' => $deliveries->statusCounts(),
             'suppressions' => $suppress->list(100, 0, null),
@@ -61,6 +63,8 @@ final class AdminEmailController extends Controller
             'f_kind' => $kind ?? '',
             'f_email' => $email,
             'page' => $page,
+            'per_page' => $perPage,
+            'has_next' => count($rows) === $perPage,
         ]);
     }
 
@@ -110,9 +114,12 @@ final class AdminEmailController extends Controller
         $admin = $this->requireAdmin();
         $this->gate();
 
-        $this->container->get(EmailOpsService::class)->requeueFailed($admin, (int) ($params['id'] ?? 0));
+        $requeued = $this->container->get(EmailOpsService::class)->requeueFailed($admin, (int) ($params['id'] ?? 0));
 
-        return $this->redirectWithFlash('/admin/email?status=failed', 'Failed delivery requeued.');
+        return $this->redirectWithFlash(
+            '/admin/email?status=failed',
+            $requeued ? 'Failed delivery requeued.' : 'That delivery is not in a failed state — nothing was requeued.',
+        );
     }
 
     /** @param array<string,string> $params */

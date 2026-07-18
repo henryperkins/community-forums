@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Core\FeatureFlags;
+use App\Core\HttpException;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
@@ -16,7 +17,7 @@ use App\Service\RateLimitService;
 /**
  * Admin announcements console (ADMIN §7.4). Compose the site banner and opt into
  * an in-app broadcast, or clear the banner. Flag-gated behind `announcements`;
- * every action requires an admin. No email channel.
+ * every action requires an admin.
  */
 final class AdminAnnouncementController extends Controller
 {
@@ -39,6 +40,7 @@ final class AdminAnnouncementController extends Controller
         $this->gate();
         return $this->view('admin/announcements', [
             'announcement' => $this->currentAnnouncement(),
+            'history' => $this->service()->recentHistory(10),
             'errors' => [],
             'old' => [],
         ]);
@@ -56,9 +58,29 @@ final class AdminAnnouncementController extends Controller
             return $this->redirectWithFlash('/admin/announcements', 'Announcement cleared.');
         }
 
-        // Throttle publishes per-admin (RateLimitService keys signed-in callers by
-        // account); throws HTTP 429 which the kernel renders.
-        $this->container->get(RateLimitService::class)->enforce('announce', $request, $admin);
+        $old = [
+            'message' => $request->str('message'),
+            'dismissible' => $request->post('dismissible') !== null,
+            'broadcast' => $request->post('broadcast') !== null,
+            'broadcast_email' => $request->post('broadcast_email') !== null,
+        ];
+
+        // Throttle publishes per-admin. A 429 re-renders the form with the
+        // typed banner text preserved (anti-draft-loss) rather than letting the
+        // kernel render an error page that drops it.
+        try {
+            $this->container->get(RateLimitService::class)->enforce('announce', $request, $admin);
+        } catch (HttpException $e) {
+            if ($e->statusCode() !== 429) {
+                throw $e;
+            }
+            return $this->view('admin/announcements', [
+                'announcement' => $this->currentAnnouncement(),
+                'history' => $this->service()->recentHistory(10),
+                'errors' => ['message' => $e->getMessage()],
+                'old' => $old,
+            ], 429);
+        }
 
         try {
             $this->service()->setBanner(
@@ -71,13 +93,9 @@ final class AdminAnnouncementController extends Controller
         } catch (ValidationException $e) {
             return $this->view('admin/announcements', [
                 'announcement' => $this->currentAnnouncement(),
+                'history' => $this->service()->recentHistory(10),
                 'errors' => $e->errors,
-                'old' => $e->old + [
-                    'message' => $request->str('message'),
-                    'dismissible' => $request->post('dismissible') !== null,
-                    'broadcast' => $request->post('broadcast') !== null,
-                    'broadcast_email' => $request->post('broadcast_email') !== null,
-                ],
+                'old' => $e->old + $old,
             ], 422);
         }
         return $this->redirectWithFlash('/admin/announcements', 'Announcement published.');

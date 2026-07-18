@@ -6,6 +6,7 @@ $disabledNote = 'Disabled until the feature flag is enabled';
 
 $always = [
     ['key' => 'dashboard', 'label' => 'Dashboard', 'href' => '/admin'],
+    ['key' => 'audit', 'label' => 'Audit log', 'href' => '/admin/audit'],
     ['key' => 'features', 'label' => 'Feature flags', 'href' => '/admin/features'],
     ['key' => 'thread_intelligence', 'label' => 'Thread Intelligence', 'href' => '/admin/thread-intelligence', 'flags_any' => ['community_memory', 'automated_context']],
     ['key' => 'structure', 'label' => 'Boards & categories', 'href' => '/admin/structure'],
@@ -31,8 +32,20 @@ $dark = [
 ?>
 <nav class="subnav admin-subnav" aria-label="Admin navigation">
     <?php foreach ($always as $item): ?>
-        <?php if (!empty($item['flags_any']) && !array_filter($item['flags_any'], static fn ($flag): bool => !empty($features[$flag]))): continue; endif; ?>
-        <?php if (empty($item['flag']) || !empty($features[$item['flag']])): ?>
+        <?php
+        // A multi-flag console (Thread Intelligence) renders the same
+        // disabled-span treatment as single-flag items when every controlling
+        // flag is off — hidden entries read as "removed", a disabled entry
+        // explains itself. The route itself stays reachable as a recovery
+        // surface (mirrors theme safe-mode).
+        $enabled = true;
+        if (!empty($item['flags_any'])) {
+            $enabled = array_filter($item['flags_any'], static fn ($flag): bool => !empty($features[$flag])) !== [];
+        } elseif (!empty($item['flag'])) {
+            $enabled = !empty($features[$item['flag']]);
+        }
+        ?>
+        <?php if ($enabled): ?>
             <a href="<?= $e($item['href']) ?>"<?= $active === $item['key'] ? ' class="active" aria-current="page"' : '' ?>><?= $e($item['label']) ?></a>
         <?php else: ?>
             <span class="subnav-action subnav-item is-disabled<?= $active === $item['key'] ? ' active' : '' ?>" aria-disabled="true"<?= $active === $item['key'] ? ' aria-current="page"' : '' ?>>

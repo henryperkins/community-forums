@@ -928,3 +928,20 @@
         }
     }
 })();
+
+// --- Admin console remediation (2026-07-18): bulk-select toggle -------------
+// Users directory: the header checkbox toggles every row checkbox on the page
+// (ADMIN §5.1 bulk-select). Selection works without JS — this only saves
+// fifty clicks. Self-contained IIFE so it appends safely after the main one.
+(function () {
+    'use strict';
+    document.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t || !t.matches || !t.matches('[data-bulk-toggle]')) { return; }
+        var form = t.closest('form');
+        if (!form) { return; }
+        Array.prototype.forEach.call(form.querySelectorAll('input[name="selected[]"]'), function (box) {
+            box.checked = t.checked;
+        });
+    });
+})();

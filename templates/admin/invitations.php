@@ -65,9 +65,10 @@ $this->section('title', 'Invitations');
         <?php if (empty($rows)): ?>
             <p class="muted">No invitations have been issued yet.</p>
         <?php else: ?>
-            <table class="table">
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Issued invitations">
+            <table class="audit">
                 <thead>
-                    <tr><th>Created</th><th>By</th><th>Binding</th><th>Uses</th><th>Expires</th><th>Status</th><th></th></tr>
+                    <tr><th scope="col">Created</th><th scope="col">By</th><th scope="col">Binding</th><th scope="col">Uses</th><th scope="col">Expires</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
                 </thead>
                 <tbody>
                 <?php foreach ($rows as $row): ?>
@@ -86,7 +87,7 @@ $this->section('title', 'Invitations');
                             <?php if ($row['status'] === 'active'): ?>
                                 <form method="post" action="/admin/invitations/<?= (int) $row['id'] ?>/revoke">
                                     <?= $this->csrfField() ?>
-                                    <button class="btn btn-small" type="submit">Revoke</button>
+                                    <button class="btn btn-small danger" type="submit">Revoke</button>
                                 </form>
                             <?php endif; ?>
                         </td>
@@ -94,6 +95,7 @@ $this->section('title', 'Invitations');
                 <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         <?php endif; ?>
     </section>
     </div>

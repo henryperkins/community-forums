@@ -23,7 +23,7 @@ $replyCount = count($pending_posts ?? []);
 
     <div class="mod-pane">
         <header class="board-header">
-            <h1>Approval hold</h1>
+            <h2>Approval hold</h2>
             <p class="muted">Content held by anti-abuse rules or board approval. Approving publishes it and runs the normal counters and notifications; rejecting removes it.</p>
         </header>
 

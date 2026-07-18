@@ -121,10 +121,12 @@ final class AppAdminTest extends TestCase
         $this->makeThread($board, $author, 'a thread');
 
         $this->actingAs($this->admin);
-        // The confirmation page shows impact and blocks a non-empty board.
+        // The confirmation page shows impact; with no other unarchived board to
+        // move the threads to, it blocks (2026-07-18: delete offers a move
+        // destination instead of the old flat "empty boards only" refusal).
         $confirm = $this->get('/admin/boards/' . $board['id'] . '/delete');
         $this->assertStatus(200, $confirm);
-        $this->assertSeeText($confirm, 'Only empty boards can be deleted');
+        $this->assertSeeText($confirm, 'no other unarchived board to move them to');
 
         // A matching typed confirm on a non-empty board is refused (422), not deleted.
         $blocked = $this->post('/admin/boards/' . $board['id'] . '/delete', ['confirm' => 'tmp']);

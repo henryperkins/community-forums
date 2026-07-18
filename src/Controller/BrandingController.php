@@ -86,6 +86,15 @@ final class BrandingController extends Controller
         $settings = $this->container->get(SettingRepository::class);
 
         if ($request->str('reset') === '1') {
+            // Destructive posture parity with structure deletes: reset clears
+            // every stored brand asset and colour, so it requires the typed
+            // confirmation the form asks for (enforced server-side).
+            if (trim($request->str('reset_confirm')) !== 'RESET') {
+                return $this->view('admin/branding', $this->formData($settings, [
+                    'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
+                    'errors' => ['reset_confirm' => 'Type RESET to confirm restoring the default branding.'],
+                ]), 422);
+            }
             foreach ([
                 'brand_color_primary',
                 'brand_color_accent',
@@ -171,13 +180,23 @@ final class BrandingController extends Controller
             $settings->set('brand_custom_css', $customCss);
         }
 
-        $this->storeAsset($admin->id(), $request->file('logo'), 'brand_logo', 'brand_logo_path');
-        $this->storeAsset($admin->id(), $request->file('logo_light'), 'brand_logo_light', 'brand_logo_light_path');
-        $this->storeAsset($admin->id(), $request->file('logo_dark'), 'brand_logo_dark', 'brand_logo_dark_path');
-        $this->storeAsset($admin->id(), $request->file('favicon'), 'brand_favicon', 'brand_favicon_path');
+        // A rejected upload must not hide under a success flash: keep the old
+        // asset (never 500) but tell the operator exactly which file was
+        // refused and why.
+        $assetErrors = [];
+        $this->storeAsset($admin->id(), $request->file('logo'), 'brand_logo', 'brand_logo_path', 'Logo', $assetErrors);
+        $this->storeAsset($admin->id(), $request->file('logo_light'), 'brand_logo_light', 'brand_logo_light_path', 'Light logo', $assetErrors);
+        $this->storeAsset($admin->id(), $request->file('logo_dark'), 'brand_logo_dark', 'brand_logo_dark_path', 'Dark logo', $assetErrors);
+        $this->storeAsset($admin->id(), $request->file('favicon'), 'brand_favicon', 'brand_favicon_path', 'Favicon', $assetErrors);
         $this->bustBrandCache($settings);
 
         $this->audit($admin->id(), 'update');
+        if ($assetErrors !== []) {
+            return $this->redirectWithFlash(
+                '/admin/branding',
+                'Branding updated, but ' . implode(' ', $assetErrors) . ' The previous asset was kept.',
+            );
+        }
         return $this->redirectWithFlash('/admin/branding', 'Branding updated.');
     }
 
@@ -202,16 +221,23 @@ final class BrandingController extends Controller
         return array_replace($data, $overrides);
     }
 
-    /** @param array{name:string,type:string,tmp_name:string,error:int,size:int}|null $file */
-    private function storeAsset(int $adminId, ?array $file, string $purpose, string $settingKey): void
+    /**
+     * @param array{name:string,type:string,tmp_name:string,error:int,size:int}|null $file
+     * @param array<int,string> $assetErrors collects a per-asset failure sentence
+     */
+    private function storeAsset(int $adminId, ?array $file, string $purpose, string $settingKey, string $label, array &$assetErrors): void
     {
         if ($file === null) {
             return;
         }
         try {
             $row = $this->container->get(AttachmentService::class)->storeUpload($adminId, $file, $purpose);
-        } catch (\App\Core\ValidationException) {
-            return; // keep the existing asset on a bad upload rather than 500
+        } catch (\App\Core\ValidationException $e) {
+            // Keep the existing asset on a bad upload rather than 500 — but
+            // report it (a swallowed rejection under "Branding updated." reads
+            // as success).
+            $assetErrors[] = $label . ' upload was rejected: ' . $e->first();
+            return;
         }
         $this->container->get(AttachmentRepository::class)->finalizeBrandAsset((int) $row['id'], $adminId);
         $this->container->get(SettingRepository::class)->set($settingKey, '/media/' . (int) $row['id']);

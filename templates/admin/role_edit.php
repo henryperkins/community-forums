@@ -5,7 +5,7 @@ $this->section('title', 'Role: ' . ($row['role']['name'] ?? ''));
 $role = $row['role'];
 $isSystem = ((string) $role['kind']) === 'system';
 $checked = (array) ($old['capabilities'] ?? $current_keys);
-// This page hosts four forms (edit-definition, clone, per-row renew, assign)
+// This page hosts five forms (edit-definition, clone, per-row renew, assign)
 // that share one flat $errors bag and some field names (current_password,
 // ends_at). Scope each form's error paragraphs to the failure that produced
 // them via mutually exclusive context flags, so e.g. a renew reauth error lands
@@ -13,7 +13,17 @@ $checked = (array) ($old['capabilities'] ?? $current_keys);
 $renewAssignmentId = (int) ($old['renew_assignment_id'] ?? 0);
 $renewErrorContext = isset($old['renew_assignment_id']);
 $assignErrorContext = isset($old['assignment']);
-$defErrorContext = !$renewErrorContext && !$assignErrorContext;
+$cloneErrorContext = isset($old['clone']);
+$defErrorContext = !$renewErrorContext && !$assignErrorContext && !$cloneErrorContext;
+// Group the flat capability catalogue by its middle namespace token
+// (core.board.* → Board, core.user.* → User, …) so the checkbox run scans as
+// tiers instead of one undifferentiated list.
+$groupedCatalogue = [];
+foreach ($catalogue as $capKey => $capMeta) {
+    $parts = explode('.', (string) $capKey);
+    $groupedCatalogue[ucfirst($parts[1] ?? 'other')][$capKey] = $capMeta;
+}
+ksort($groupedCatalogue);
 ?>
 <div class="admin">
     <header class="admin-head">
@@ -44,16 +54,19 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
             </label>
             <?php if ($defErrorContext && !empty($errors['description'])): ?><p class="field-error"><?= $e($errors['description']) ?></p><?php endif; ?>
 
-            <fieldset>
-                <legend>Capabilities</legend>
-                <?php foreach ($catalogue as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
-                    <label>
-                        <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
-                        <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
-                        <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
-                    </label>
-                <?php endforeach; ?>
-            </fieldset>
+            <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
+                <fieldset>
+                    <legend><?= $e($groupLabel) ?> capabilities</legend>
+                    <?php foreach ($groupCaps as $key => $meta): $enforced = \App\Security\EnforcedCapabilities::has($key); ?>
+                        <label>
+                            <input type="checkbox" name="capabilities[]" value="<?= $e($key) ?>" <?= in_array($key, $checked, true) ? 'checked' : '' ?><?= $enforced ? '' : ' disabled' ?>>
+                            <code><?= $e($key) ?></code> - <?= $e($meta['consent'] ?? $meta['description']) ?>
+                            <?php if ($meta['risk'] === 'high'): ?><span class="pill">high risk</span><?php endif; ?>
+                            <?php if (!$enforced): ?><span class="muted">(not yet enforceable)</span><?php endif; ?>
+                        </label>
+                    <?php endforeach; ?>
+                </fieldset>
+            <?php endforeach; ?>
             <?php if ($defErrorContext && !empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
 
             <label>Confirm your password
@@ -78,11 +91,14 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
         <form method="post" action="/admin/roles/<?= (int) $role['id'] ?>/clone" class="stacked">
             <?= $this->csrfField() ?>
             <label>New role name
-                <input type="text" name="name" maxlength="190" required>
+                <input type="text" name="name" maxlength="190" value="<?= $e((string) ($old['clone']['name'] ?? '')) ?>" required>
             </label>
+            <?php if ($cloneErrorContext && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <?php if ($cloneErrorContext && !empty($errors['role'])): ?><p class="field-error"><?= $e($errors['role']) ?></p><?php endif; ?>
             <label>Confirm your password
                 <input type="password" name="current_password" autocomplete="current-password" required>
             </label>
+            <?php if ($cloneErrorContext && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
             <div class="form-actions"><button class="btn" type="submit">Clone</button></div>
         </form>
     </section>
@@ -106,8 +122,9 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
         <?php if (empty($assignments)): ?>
         <p class="muted">No one has been assigned this role yet.</p>
         <?php else: ?>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Role assignments">
         <table class="audit">
-            <thead><tr><th>Member</th><th>Scope</th><th>Window</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Member</th><th scope="col">Scope</th><th scope="col">Window</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
             <tbody>
             <?php foreach ($assignments as $a): ?>
                 <tr>
@@ -124,12 +141,13 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
                         <?php if ($a['status'] !== 'revoked'): ?>
                         <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/revoke" class="inline">
                             <?= $this->csrfField() ?>
-                            <button class="linkbtn danger" type="submit">Revoke</button>
+                            <button class="linkbtn danger" type="submit" aria-label="Revoke this role from @<?= $e($a['username']) ?>">Revoke</button>
                         </form>
                         <form method="post" action="/admin/role-assignments/<?= (int) $a['id'] ?>/renew" class="inline-form">
                             <?= $this->csrfField() ?>
                             <input type="text" class="input" name="ends_at" placeholder="YYYY-MM-DD HH:MM" aria-label="New expiry (UTC) for @<?= $e($a['username']) ?>" value="<?= $renewAssignmentId === (int) $a['id'] ? $e((string) ($old['renew']['ends_at'] ?? '')) : '' ?>" required>
-                            <input type="password" class="input" name="current_password" placeholder="Your password" autocomplete="current-password" required>
+                            <label class="sr-only" for="renew-password-<?= (int) $a['id'] ?>">Your password to renew @<?= $e($a['username']) ?>'s assignment</label>
+                            <input type="password" class="input" id="renew-password-<?= (int) $a['id'] ?>" name="current_password" placeholder="Your password" autocomplete="current-password" required>
                             <button class="btn btn-small" type="submit">Renew</button>
                         </form>
                         <?php endif; ?>
@@ -146,6 +164,7 @@ $defErrorContext = !$renewErrorContext && !$assignErrorContext;
             <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
         <?php endif; ?>
     </section>
 

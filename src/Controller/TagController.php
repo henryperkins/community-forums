@@ -125,6 +125,38 @@ final class TagController extends Controller
         return $this->redirectWithFlash('/admin/tags', 'Tag updated.');
     }
 
+    /**
+     * Confirmation page for a tag merge (GET). Merging retags every thread and
+     * deletes the source tag — irreversible mass-retagging — so it shows the
+     * affected-thread count before the POST (ADMIN §9.4 "show impact").
+     *
+     * @param array<string,string> $params
+     */
+    public function mergeConfirm(Request $request, array $params): Response
+    {
+        $this->requireTags();
+        $this->requireAdmin();
+        $sourceId = (int) ($params['id'] ?? 0);
+        $targetId = (int) $request->int('target_id', 0);
+        $repo = $this->container->get(TagRepository::class);
+
+        $source = $repo->find($sourceId);
+        if ($source === null) {
+            throw new NotFoundException('Tag not found.');
+        }
+        $target = $targetId > 0 ? $repo->find($targetId) : null;
+        if ($target === null || $targetId === $sourceId) {
+            return $this->redirectWithFlash('/admin/tags', 'Choose a different target tag to merge into.');
+        }
+
+        return $this->view('admin/tag_merge_confirm', [
+            'source' => $source,
+            'target' => $target,
+            // Admin view: the full thread count, unscoped by visibility.
+            'thread_count' => $repo->countThreadsForTag($sourceId, 0, true),
+        ]);
+    }
+
     /** @param array<string,string> $params */
     public function merge(Request $request, array $params): Response
     {

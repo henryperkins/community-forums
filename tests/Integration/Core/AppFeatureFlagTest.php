@@ -1046,11 +1046,11 @@ final class AppFeatureFlagTest extends TestCase
         $this->actingAs($this->makeAdmin(['username' => 'sm_default_admin']));
 
         // Available by default: the split route is live. An empty selection fails
-        // validation and redirects back to the thread (proving it is not 404-dark).
-        $this->assertRedirectContains(
-            $this->post('/mod/t/' . $thread['thread_id'] . '/split', ['title' => 'Attempted split']),
-            '/t/' . $thread['thread_id'],
-        );
+        // validation and re-renders the thread at 422 with the typed input kept
+        // (2026-07-18 draft-loss remediation) — proving it is not 404-dark.
+        $live = $this->post('/mod/t/' . $thread['thread_id'] . '/split', ['title' => 'Attempted split']);
+        $this->assertStatus(422, $live);
+        $this->assertSeeText($live, 'Attempted split');
         self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('split_merge'));
 
         // Isolation: graduating split_merge must not enable a dark neighbour.
