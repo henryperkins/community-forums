@@ -97,6 +97,12 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
 
         <form method="post" action="/admin/users/bulk" class="user-directory">
             <?= $this->csrfField() ?>
+            <?php foreach ($filters as $key => $value): ?>
+                <?php if ($value !== ''): ?>
+                    <input type="hidden" name="<?= $e((string) $key) ?>" value="<?= $e((string) $value) ?>">
+                <?php endif; ?>
+            <?php endforeach; ?>
+            <input type="hidden" name="page" value="<?= (int) $page ?>">
             <div class="table-scroll" tabindex="0" role="region" aria-label="User directory">
             <table class="audit">
                 <thead>
@@ -115,7 +121,7 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
                 <?php foreach ($users as $u): ?>
                     <tr>
                         <td class="col-select">
-                            <input type="checkbox" name="selected[]" value="<?= (int) $u['id'] ?>" aria-label="Select <?= $e($u['username']) ?>">
+                            <input type="checkbox" name="selected[]" value="<?= (int) $u['id'] ?>"<?= in_array((int) $u['id'], $bulk_selected ?? [], true) ? ' checked' : '' ?> aria-label="Select <?= $e($u['username']) ?>">
                         </td>
                         <td data-label="User">
                             <a href="/admin/users/<?= (int) $u['id'] ?>" class="user-link"><?= $e($u['username']) ?></a>
@@ -156,7 +162,7 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
             </fieldset>
         </form>
 
-        <nav class="pager">
+        <nav class="pager" aria-label="Pagination">
             <?php if ($page > 0): ?>
                 <a class="btn btn-small" href="/admin/users?<?= $e(http_build_query(array_merge($base, ['page' => $page - 1]))) ?>">Previous</a>
             <?php endif; ?>

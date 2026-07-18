@@ -54,10 +54,10 @@ $settingsOld = $settings_old ?? [];
         <form method="post" action="/admin/site" class="inline-form">
             <?= $this->csrfField() ?>
             <label class="sr-only" for="admin-site-name">Site name</label>
-            <input type="text" id="admin-site-name" name="site_name" class="input" maxlength="80" value="<?= $e((string) ($settingsOld['site_name'] ?? $site_name)) ?>" required>
+            <input type="text" id="admin-site-name" name="site_name" class="input" maxlength="80" value="<?= $e((string) ($settingsOld['site_name'] ?? $site_name)) ?>"<?= field_attrs($settingsErrors, 'site_name') ?> required>
             <button class="btn btn-small" type="submit">Update</button>
         </form>
-        <?php if (!empty($settingsErrors['site_name'])): ?><p class="field-error"><?= $e($settingsErrors['site_name']) ?></p><?php endif; ?>
+        <?= field_error($settingsErrors, 'site_name') ?>
     </section>
 
     <section class="card">
@@ -77,7 +77,7 @@ $settingsOld = $settings_old ?? [];
                     <span class="field-error">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</span>
                 <?php endif; ?>
                 <?php if (!empty($settingsErrors['registration_mode'])): ?>
-                    <span class="field-error"><?= $e($settingsErrors['registration_mode']) ?></span>
+                    <?= field_error($settingsErrors, 'registration_mode') ?>
                 <?php endif; ?>
             </label>
             <label class="field">
@@ -90,7 +90,7 @@ $settingsOld = $settings_old ?? [];
                 </select>
                 <span class="muted">observe = log only · flag · hold = queue for approval · block = reject</span>
                 <?php if (!empty($settingsErrors['antiabuse_mode'])): ?>
-                    <span class="field-error"><?= $e($settingsErrors['antiabuse_mode']) ?></span>
+                    <?= field_error($settingsErrors, 'antiabuse_mode') ?>
                 <?php endif; ?>
             </label>
             <label class="field">
@@ -101,7 +101,7 @@ $settingsOld = $settings_old ?? [];
                 <textarea name="antiabuse_blocked_words" class="input" rows="4" placeholder="One word or phrase per line (commas also separate entries)"><?= $e($wordsValue) ?></textarea>
                 <span class="muted">One per line, or comma-separated. Case-insensitive; matched as substrings against new posts. Entries shorter than 3 characters are ignored.</span>
                 <?php if (!empty($settingsErrors['antiabuse_blocked_words'])): ?>
-                    <span class="field-error"><?= $e($settingsErrors['antiabuse_blocked_words']) ?></span>
+                    <?= field_error($settingsErrors, 'antiabuse_blocked_words') ?>
                 <?php endif; ?>
             </label>
             <div class="form-actions"><button class="btn" type="submit">Save settings</button></div>
@@ -111,31 +111,35 @@ $settingsOld = $settings_old ?? [];
     <?php if (!empty($custom_emoji_on)): ?>
     <section class="card custom-emoji-panel" aria-labelledby="custom-emoji-heading">
         <h2 id="custom-emoji-heading">Custom emoji</h2>
+        <?php $emojiErr = $emoji_errors ?? []; $emojiOld = $emoji_old ?? []; ?>
         <form method="post" action="/admin/custom-emoji" class="stacked">
             <?= $this->csrfField() ?>
             <div class="form-grid">
                 <label class="field">
                     <span>Shortcode</span>
-                    <input type="text" name="shortcode" class="input" maxlength="40" placeholder="party" pattern="[A-Za-z0-9_+\-]{2,40}" required>
+                    <input type="text" name="shortcode" class="input" maxlength="40" placeholder="party" pattern="[A-Za-z0-9_+\-]{2,40}" value="<?= $e((string) ($emojiOld['shortcode'] ?? '')) ?>"<?= field_attrs($emojiErr, 'shortcode', 'err-emoji-shortcode') ?> required>
                 </label>
                 <label class="field">
                     <span>Name</span>
-                    <input type="text" name="name" class="input" maxlength="80" placeholder="Party" required>
+                    <input type="text" name="name" class="input" maxlength="80" placeholder="Party" value="<?= $e((string) ($emojiOld['name'] ?? '')) ?>"<?= field_attrs($emojiErr, 'name', 'err-emoji-name') ?> required>
                 </label>
                 <label class="field">
                     <span>Asset path</span>
-                    <input type="text" name="image_path" class="input" placeholder="/emoji/party.webp" required>
+                    <input type="text" name="image_path" class="input" placeholder="/emoji/party.webp" value="<?= $e((string) ($emojiOld['image_path'] ?? '')) ?>"<?= field_attrs($emojiErr, 'image_path', 'err-emoji-image_path') ?> required>
                 </label>
                 <label class="field">
                     <span>MIME type</span>
-                    <select name="mime" class="input" required>
-                        <option value="image/webp">image/webp</option>
-                        <option value="image/png">image/png</option>
+                    <select name="mime" class="input"<?= field_attrs($emojiErr, 'mime', 'err-emoji-mime') ?> required>
+                        <option value="image/webp"<?= ($emojiOld['mime'] ?? '') === 'image/webp' ? ' selected' : '' ?>>image/webp</option>
+                        <option value="image/png"<?= ($emojiOld['mime'] ?? '') === 'image/png' ? ' selected' : '' ?>>image/png</option>
                     </select>
                 </label>
             </div>
+            <?php foreach (['shortcode', 'name', 'image_path', 'mime'] as $emojiField): ?>
+                <?= field_error($emojiErr, $emojiField, 'err-emoji-' . $emojiField) ?>
+            <?php endforeach; ?>
             <label class="checkline">
-                <input type="checkbox" name="allow_reactions" value="1">
+                <input type="checkbox" name="allow_reactions" value="1"<?= !empty($emojiOld['allow_reactions']) ? ' checked' : '' ?>>
                 <span>Allow as a reaction</span>
             </label>
             <div class="form-actions"><button class="btn" type="submit">Save emoji</button></div>

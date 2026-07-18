@@ -157,6 +157,9 @@ final class AppAdminThreadIntelligenceTest extends TestCase
         $this->assertStatus(200, $dashboard);
         self::assertStringContainsString('Thread Intelligence', $dashboard->body());
         self::assertStringContainsString('/admin/thread-intelligence', $dashboard->body());
+        // Grammar (round-2 audit finding 10): a single warning must read
+        // "warning needs", never "1 ... warning need operator review."
+        self::assertStringNotContainsString('warning need ', $dashboard->body());
     }
 
     private function rebuildApp(string $apiKey): void

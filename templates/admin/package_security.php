@@ -17,7 +17,7 @@ $this->section('title', 'Package security response');
         <h2>Emergency execution brake
             <?= $execution_disabled ? '<span class="pill pill-admin">disabled</span>' : '<span class="pill">live</span>' ?></h2>
         <p class="muted"><?php if ($execution_disabled): ?>Package execution is halted: <?= (int) $affected_installs ?> integration install(s) paused. Operators can still view, revoke, export, and uninstall.<?php else: ?>Package-owned webhooks and credentials are live for <?= (int) $affected_installs ?> integration install(s).<?php endif; ?></p>
-        <?php foreach (['execution', 'current_password'] as $ek): ?><?php if (!empty($errors[$ek])): ?><p class="field-error"><?= $e($errors[$ek]) ?></p><?php endif; ?><?php endforeach; ?>
+        <?php foreach (['execution', 'current_password'] as $ek): ?><?= field_error($errors ?? [], $ek, 'err-brake-' . $ek) ?><?php endforeach; ?>
         <form method="post" action="/admin/packages/security/execution" class="inline-form">
             <?= $this->csrfField() ?>
             <input type="hidden" name="disabled" value="<?= $execution_disabled ? '0' : '1' ?>">

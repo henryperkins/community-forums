@@ -45,16 +45,16 @@ $count = count($subjects ?? []);
 
                 <label class="field">
                     <span>Reason (shared; shown to each member)</span>
-                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e((string) ($old['reason'] ?? '')) ?>" required>
+                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e((string) ($old['reason'] ?? '')) ?>"<?= field_attrs($errors ?? [], 'reason') ?> required>
                 </label>
-                <?php if (!empty($errors['reason'])): ?><p class="field-error"><?= $e($errors['reason']) ?></p><?php endif; ?>
+                <?= field_error($errors ?? [], 'reason') ?>
 
                 <?php if ($isSuspend): ?>
                     <label class="field">
                         <span>Until (UTC, optional — leave blank for indefinite)</span>
-                        <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e((string) ($old['until'] ?? '')) ?>">
+                        <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e((string) ($old['until'] ?? '')) ?>"<?= field_attrs($errors ?? [], 'until') ?>>
                     </label>
-                    <?php if (!empty($errors['until'])): ?><p class="field-error"><?= $e($errors['until']) ?></p><?php endif; ?>
+                    <?= field_error($errors ?? [], 'until') ?>
                 <?php endif; ?>
 
                 <div class="form-actions">

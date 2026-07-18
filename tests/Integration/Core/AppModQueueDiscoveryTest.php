@@ -85,7 +85,7 @@ final class AppModQueueDiscoveryTest extends TestCase
 
         // Plain member: both closed.
         $this->actingAs($member);
-        $this->assertStatus(403, $this->get('/mod/approvals'));
+        $this->assertStatus(404, $this->get('/mod/approvals')); // uniform posture (round-2 audit, ADR 0023)
         $this->assertStatus(404, $this->get('/mod/reports'));
 
         // Admin: everything, unscoped.

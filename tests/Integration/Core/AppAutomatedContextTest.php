@@ -199,4 +199,44 @@ final class AppAutomatedContextTest extends TestCase
             $page->body(),
         );
     }
+
+    public function test_staff_context_links_rank_posts_against_deleted_stub_pages(): void
+    {
+        $this->setFlags(['automated_context' => true]);
+        $viewer = $this->makeAdmin(['username' => 'contextstaff']);
+        $author = $this->makeUser(['username' => 'contextstubauthor']);
+        (new UserPreferenceRepository($this->db))->merge((int) $viewer['id'], ['posts_per_page' => 10]);
+        $board = $this->makeBoard($this->makeCategory('Context Staff Paging'), ['slug' => 'context-staff-paging']);
+        $thread = $this->makeThread($board, $author, 'Context staff paging topic', 'Opening post.');
+
+        $deleted = $this->posting()->reply(
+            $this->userEntity($author),
+            $thread['thread_id'],
+            ['body' => 'Deleted row that still occupies a staff-stream slot.'],
+        );
+        $this->db->run('UPDATE posts SET is_deleted = 1, deleted_at = UTC_TIMESTAMP() WHERE id = ?', [$deleted]);
+
+        $replyIds = [];
+        for ($i = 1; $i <= 9; $i++) {
+            $replyIds[] = $this->posting()->reply(
+                $this->userEntity($author),
+                $thread['thread_id'],
+                ['body' => 'Staff paging update ' . $i . '.'],
+            );
+        }
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], $thread['thread_id'], $replyIds[7]],
+        );
+
+        $this->actingAs($viewer);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString(
+            '/t/' . $thread['thread_id'] . '-' . $thread['slug'] . '?page=2#p' . $replyIds[8],
+            $page->body(),
+        );
+        self::assertStringNotContainsString('href="#p' . $replyIds[8] . '"', $page->body());
+    }
 }

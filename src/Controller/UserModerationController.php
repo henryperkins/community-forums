@@ -117,7 +117,7 @@ final class UserModerationController extends Controller
         ?string $errorContext = null,
         array $old = [],
     ): Response {
-        $actor = $this->requireStaff();
+        $actor = $this->requireStaffSurface();
         // Actor-aware, board-scoped model (spec §2) — used for the 200 AND
         // every 422 re-render, so a scoped moderator never sees the full
         // record even on error, and out-of-scope subjects 404 uniformly.
@@ -148,6 +148,20 @@ final class UserModerationController extends Controller
             return $user;
         }
         throw new ForbiddenException('Staff access required.');
+    }
+
+    /**
+     * Same staff check as {@see requireStaff} but for BROWSING the panel:
+     * zero-authority viewers get the existence-hiding 404 (uniform /mod
+     * posture, round-2 audit + ADR 0023). Write paths keep the 403.
+     */
+    private function requireStaffSurface(): User
+    {
+        try {
+            return $this->requireStaff();
+        } catch (ForbiddenException) {
+            throw new NotFoundException('Not found.');
+        }
     }
 
     /** @return array<string,mixed> */

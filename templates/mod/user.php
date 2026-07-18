@@ -126,7 +126,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <?= $this->csrfField() ?>
                     <label class="field">
                         <span>Note (visible to admins only)</span>
-                        <textarea name="body" class="input" rows="3"><?= $e($oldv('note', 'body')) ?></textarea>
+                        <textarea name="body" class="input" rows="3" maxlength="65535"><?= $e($oldv('note', 'body')) ?></textarea>
                     </label>
                     <?= $ferr('note', 'body') ?>
                     <div class="form-actions"><button class="btn" type="submit">Add note</button></div>

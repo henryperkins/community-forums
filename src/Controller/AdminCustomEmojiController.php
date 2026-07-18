@@ -9,6 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
+use App\Service\AdminDashboardService;
 use App\Service\CustomEmojiService;
 
 final class AdminCustomEmojiController extends Controller
@@ -19,11 +20,22 @@ final class AdminCustomEmojiController extends Controller
         $this->requireEmojiAdmin();
         $admin = $this->requireAdmin();
         try {
-            $this->container->get(CustomEmojiService::class)->create($admin, $request->allInput());
+            $result = $this->container->get(CustomEmojiService::class)->create($admin, $request->allInput());
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin', $e->first());
+            // Anti-draft-loss: re-render the dashboard (where the form lives)
+            // with the errors + typed input instead of a flash redirect.
+            return $this->view(
+                'admin/dashboard',
+                $this->container->get(AdminDashboardService::class)->dashboardModel([
+                    'emoji_errors' => $e->errors,
+                    'emoji_old' => $e->old,
+                ]),
+                422,
+            );
         }
-        return $this->redirectWithFlash('/admin', 'Custom emoji saved.');
+        return $this->redirectWithFlash('/admin', $result['replaced']
+            ? 'Custom emoji replaced — :' . $result['shortcode'] . ': already existed.'
+            : 'Custom emoji saved.');
     }
 
     /** @param array<string,string> $params */

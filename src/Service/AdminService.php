@@ -507,6 +507,7 @@ final class AdminService
     public function moveCategory(User $admin, int $id, string $dir): void
     {
         $this->assertAdmin($admin);
+        $this->requireDirection($dir);
         $ids = array_map(static fn (array $c): int => (int) $c['id'], $this->categories->all());
         $reordered = $this->swap($ids, $id, $dir);
         if ($reordered === null) {
@@ -519,6 +520,7 @@ final class AdminService
     public function moveBoard(User $admin, int $id, string $dir): void
     {
         $this->assertAdmin($admin);
+        $this->requireDirection($dir);
         $board = $this->boards->find($id);
         if ($board === null) {
             throw new NotFoundException('Board not found.');
@@ -562,6 +564,14 @@ final class AdminService
                 'after' => ['is_archived' => $on ? 1 : 0],
             ]);
         });
+    }
+
+    /** swap() treats any non-"up" value as "down" — whitelist before it runs. */
+    private function requireDirection(string $dir): void
+    {
+        if (!in_array($dir, ['up', 'down'], true)) {
+            throw new ValidationException(['dir' => 'Direction must be "up" or "down".']);
+        }
     }
 
     /**
@@ -795,6 +805,15 @@ final class AdminService
 
         $rawSlug = trim((string) ($input['slug'] ?? ''));
         $slug = Str::slug($rawSlug !== '' ? $rawSlug : $name, 64);
+        // An EXPLICITLY typed slug that collides is an error, not a silent
+        // rewrite (round-2 audit finding 5): the operator asked for that exact
+        // identifier. A blank slug (derived from the name) keeps the
+        // auto-suffix convenience via uniqueSlug() below.
+        if ($rawSlug !== '' && mb_strlen($rawSlug) > 64) {
+            $errors['slug'] = 'Slug must be 64 characters or fewer.';
+        } elseif ($rawSlug !== '' && $this->slugTaken($slug, $existing !== null ? (int) $existing['id'] : null)) {
+            $errors['slug'] = 'That slug is already in use or reserved.';
+        }
 
         $description = trim((string) ($input['description'] ?? ''));
         if (mb_strlen($description) > 255) {

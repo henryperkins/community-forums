@@ -23,8 +23,8 @@ $page = (int) ($page ?? 0);
             <div class="filter-grid">
                 <label class="field">
                     <span>Actor</span>
-                    <input type="search" name="actor" class="input" maxlength="80" value="<?= $e($filters['actor'] ?? '') ?>" placeholder="Username or display name">
-                    <?php if (!empty($errors['actor'])): ?><span class="field-error"><?= $e($errors['actor']) ?></span><?php endif; ?>
+                    <input type="search" name="actor" class="input" maxlength="80" value="<?= $e($filters['actor'] ?? '') ?>" placeholder="Username or display name"<?= field_attrs($errors ?? [], 'actor') ?>>
+                    <?= field_error($errors ?? [], 'actor') ?>
                 </label>
                 <label class="field">
                     <span>Action</span>
@@ -42,18 +42,18 @@ $page = (int) ($page ?? 0);
                 </label>
                 <label class="field">
                     <span>Target #</span>
-                    <input type="number" name="target_id" class="input" min="1" value="<?= $e($filters['target_id'] ?? '') ?>">
-                    <?php if (!empty($errors['target_id'])): ?><span class="field-error"><?= $e($errors['target_id']) ?></span><?php endif; ?>
+                    <input type="number" name="target_id" class="input" min="1" value="<?= $e($filters['target_id'] ?? '') ?>"<?= field_attrs($errors ?? [], 'target_id') ?>>
+                    <?= field_error($errors ?? [], 'target_id') ?>
                 </label>
                 <label class="field">
                     <span>From</span>
-                    <input type="date" name="from" class="input" value="<?= $e($filters['from'] ?? '') ?>">
-                    <?php if (!empty($errors['from'])): ?><span class="field-error"><?= $e($errors['from']) ?></span><?php endif; ?>
+                    <input type="date" name="from" class="input" value="<?= $e($filters['from'] ?? '') ?>"<?= field_attrs($errors ?? [], 'from') ?>>
+                    <?= field_error($errors ?? [], 'from') ?>
                 </label>
                 <label class="field">
                     <span>To</span>
-                    <input type="date" name="to" class="input" value="<?= $e($filters['to'] ?? '') ?>">
-                    <?php if (!empty($errors['to'])): ?><span class="field-error"><?= $e($errors['to']) ?></span><?php endif; ?>
+                    <input type="date" name="to" class="input" value="<?= $e($filters['to'] ?? '') ?>"<?= field_attrs($errors ?? [], 'to') ?>>
+                    <?= field_error($errors ?? [], 'to') ?>
                 </label>
             </div>
             <div class="form-actions">
@@ -111,7 +111,7 @@ $page = (int) ($page ?? 0);
         </div>
 
         <p class="muted"><?= (int) $total ?> matching entr<?= (int) $total === 1 ? 'y' : 'ies' ?>.</p>
-        <nav class="pager">
+        <nav class="pager" aria-label="Pagination">
             <?php if ($page > 0): ?>
                 <a class="btn btn-small" href="/admin/audit?<?= $e(http_build_query($base + ['page' => $page - 1])) ?>">Previous</a>
             <?php endif; ?>

@@ -26,8 +26,9 @@ $this->section('title', 'Disable ' . ($row['display_name'] ?? 'provider'));
                 They will be locked out until they use password reset on their listed email, or you
                 re-enable the provider. Contact them first.
             </p>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Sole sign-in accounts">
             <table class="audit">
-                <thead><tr><th>Account</th><th>Email</th></tr></thead>
+                <thead><tr><th scope="col">Account</th><th scope="col">Email</th></tr></thead>
                 <tbody>
                 <?php foreach ($sole_accounts as $a): ?>
                     <tr>
@@ -37,6 +38,7 @@ $this->section('title', 'Disable ' . ($row['display_name'] ?? 'provider'));
                 <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         <?php endif; ?>
 
         <?php if (!empty($errors['provider'])): ?><p class="field-error" role="alert"><?= $e($errors['provider']) ?></p><?php endif; ?>
@@ -44,9 +46,9 @@ $this->section('title', 'Disable ' . ($row['display_name'] ?? 'provider'));
         <form method="post" action="/admin/providers/<?= (int) $row['id'] ?>/disable" class="stacked">
             <?= $this->csrfField() ?>
             <label>Your password (re-authentication)
-                <input type="password" name="current_password" autocomplete="current-password" required>
+                <input type="password" name="current_password" autocomplete="current-password"<?= field_attrs($errors ?? [], 'current_password') ?> required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'current_password') ?>
             <button class="btn" type="submit">Disable <?= $e($row['display_name']) ?></button>
             <a class="btn btn-secondary" href="/admin/providers">Cancel</a>
         </form>

@@ -79,17 +79,27 @@ final class ThreadController extends Controller
         $postRepo = $this->container->get(PostRepository::class);
         $markdown = $this->container->get(Markdown::class);
 
-        $total = $postRepo->countByThread((int) $thread['id']);
+        // Deleted-reply stubs (ADMIN §3.3): viewers who can delete or restore on
+        // this board read the staff variant that keeps soft-deleted rows in the
+        // stream as restorable stubs. Computed before the page query because the
+        // count (and so pagination) differs between the two views.
+        $canDeletePosts = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::POST_DELETE_ANY);
+        $canRestorePosts = $user !== null
+            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::POST_RESTORE);
+        $includeDeleted = $canDeletePosts || $canRestorePosts;
+
+        $total = $postRepo->countByThread((int) $thread['id'], $includeDeleted);
         $pages = max(1, (int) ceil($total / $perPage));
         // When re-rendering for a failed inline edit and the caller didn't pin an
         // explicit ?page, open the page that actually contains the edited post so
         // its re-opened edit form (with the rejected text) is on screen.
         $editPostId = (int) ($extra['edit_post_id'] ?? 0);
         $page = $editPostId > 0 && $request->query('page') === null
-            ? min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage)))
+            ? min($pages, max(1, $postRepo->pageOfPost((int) $thread['id'], $editPostId, $perPage, $includeDeleted)))
             : min($pages, max(1, $request->int('page', 1)));
 
-        $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage);
+        $posts = $postRepo->listByThread((int) $thread['id'], $perPage, ($page - 1) * $perPage, $includeDeleted);
         $titleService = $this->container->get(TitleService::class);
         foreach ($posts as &$post) {
             if (trim((string) ($post['body_html'] ?? '')) === '') {
@@ -177,7 +187,12 @@ final class ThreadController extends Controller
         if ($sinceLastReadContext !== null) {
             $threadUrl = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug'];
             foreach ($sinceLastReadContext['items'] as &$item) {
-                $targetPage = $postRepo->pageOfPost((int) $thread['id'], (int) $item['post_id'], $perPage);
+                $targetPage = $postRepo->pageOfPost(
+                    (int) $thread['id'],
+                    (int) $item['post_id'],
+                    $perPage,
+                    $includeDeleted,
+                );
                 if ($targetPage === $page) {
                     $item['url'] = '#p' . (int) $item['post_id'];
                     continue;
@@ -214,8 +229,8 @@ final class ThreadController extends Controller
         }
         $canSplitMerge = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_SPLIT_MERGE);
-        $canDeletePosts = $user !== null
-            && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::POST_DELETE_ANY);
+        // $canDeletePosts / $canRestorePosts are computed above the page query —
+        // they also select the staff (with-deleted) post list variant.
 
         // Accepted-answer ("solved") state (P2-09). The OP or a board moderator
         // may accept/clear an answer; everyone sees the accepted marker. The
@@ -407,6 +422,7 @@ final class ThreadController extends Controller
             'can_move' => $canMove,
             'can_split_merge' => $canSplitMerge,
             'can_delete_posts' => $canDeletePosts,
+            'can_restore_posts' => $canRestorePosts,
             'engagement' => $engagement,
             'show_signatures' => $reading['show_signatures'],
             'show_avatars' => $reading['show_avatars'],

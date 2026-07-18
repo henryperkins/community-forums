@@ -159,6 +159,29 @@ final class AppAdminStructureReorderTest extends TestCase
         self::assertSame(1, (int) $this->boards()->find((int) $b2['id'])['position']);
     }
 
+    public function test_move_with_unknown_direction_is_422_and_order_unchanged(): void
+    {
+        $this->actingAs($this->admin);
+        $b1 = $this->makeBoard($this->categoryId, ['slug' => 'dir-one', 'name' => 'DirOne']); // pos 0
+        $b2 = $this->makeBoard($this->categoryId, ['slug' => 'dir-two', 'name' => 'DirTwo']); // pos 1
+        $this->get('/admin/structure');
+
+        // Unvalidated direction used to fall through to "down" and really move
+        // the board (round-2 audit finding 6).
+        $res = $this->post('/admin/boards/' . $b1['id'] . '/move', ['dir' => 'sideways']);
+        $this->assertStatus(422, $res);
+        self::assertSame(0, (int) $this->boards()->find((int) $b1['id'])['position']);
+        self::assertSame(1, (int) $this->boards()->find((int) $b2['id'])['position']);
+    }
+
+    public function test_move_category_with_unknown_direction_is_422(): void
+    {
+        $this->actingAs($this->admin);
+        $this->makeCategory('SecondCat');
+        $this->get('/admin/structure');
+        $this->assertStatus(422, $this->post('/admin/categories/' . $this->categoryId . '/move', ['dir' => 'diagonal']));
+    }
+
     public function test_bulk_reorder_with_foreign_id_is_422_and_order_unchanged(): void
     {
         $this->actingAs($this->admin);

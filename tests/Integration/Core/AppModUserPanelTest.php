@@ -62,6 +62,22 @@ final class AppModUserPanelTest extends TestCase
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings'));
     }
 
+    public function test_warn_reason_over_255_chars_is_422_not_500(): void
+    {
+        $seed = $this->seedScopedModerator();
+        $this->actingAs($seed['mod']);
+
+        $long = str_repeat('m', 256);
+        $res = $this->post('/mod/u/' . (int) $seed['subject']['id'] . '/warn', [
+            'reason' => $long,
+            'board_id' => (int) $seed['board']['id'],
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString($long, $res->body()); // anti-draft-loss
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings'));
+    }
+
     public function test_note_failure_preserves_nothing_lost_and_success_lands_back_on_panel(): void
     {
         // Scoped-behavior update (PR #44, spec §2): notes are admin-only now
@@ -79,15 +95,17 @@ final class AppModUserPanelTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM user_notes'));
     }
 
-    public function test_regular_member_gets_403_and_guest_is_bounced_to_login(): void
+    public function test_regular_member_gets_404_and_guest_is_bounced_to_login(): void
     {
         $this->makeAdmin(); // past the first-run setup gate
         $subject = $this->makeUser();
 
         $this->assertRedirectContains($this->get('/mod/u/' . (int) $subject['id']), '/login');
 
+        // Zero-authority browse hides the surface — uniform /mod posture
+        // (round-2 audit, ADR 0023). Write paths keep their 403s.
         $this->actingAs($this->makeUser());
-        $this->assertStatus(403, $this->get('/mod/u/' . (int) $subject['id']));
+        $this->assertStatus(404, $this->get('/mod/u/' . (int) $subject['id']));
     }
 
     public function test_admin_panel_links_to_the_full_record(): void
