@@ -247,6 +247,40 @@ test('staff appeals queue has no serious axe violations (resolve form)', async (
   await page.waitForURL(/\/mod\/appeals$/);
 });
 
+test('group DM surfaces have no serious axe violations (compose, rail, report)', async ({ page }, info) => {
+  // group_dms graduated to default-on (GA 2026-07-18, ADR 0022) and the seed
+  // deliberately does NOT override the flag, so these scans certify the
+  // GA-default surface: the compose fields (recipients + group title), the
+  // details rail with the owner tools, and the reading room with the report
+  // form open.
+  await login(page, 'alice@retro.test');
+  await visit(page, '/messages/new');
+  await expect(page.locator('.dm-compose input[name="title"]')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.dm-compose');
+
+  await page.fill('input[name="to"]', 'bob, carol');
+  await page.fill('.dm-compose input[name="title"]', 'A11y counsel');
+  await page.fill('.dm-form textarea[name="body"]', 'Scanning the group reading room.');
+  await page.locator('.dm-form button[type="submit"]').click();
+  await page.waitForURL(/\/messages\/\d+/);
+  const convPath = new URL(page.url()).pathname;
+
+  // Below 1400px (both projects) the rail is the :target drawer; open it.
+  await page.locator('[data-rail-toggle]').click();
+  await expect(page.locator('.dm-inforail')).toBeInViewport();
+  await expect(page.locator('.dm-inforail .dm-owner-tool')).toHaveCount(2);
+  await expectNoSeriousA11yViolations(page, info, '.dm-inforail');
+
+  // A recipient's view: the ··· report control is a native <details>; scan the
+  // reading room with the reason form open.
+  await login(page, 'bob@retro.test');
+  await visit(page, convPath);
+  const line = page.locator('.dm-group:not(.mine) .dm-line').first();
+  await line.locator('.dm-line-menu summary').click();
+  await expect(line.locator('.dm-report-form')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.dm-threadpane');
+});
+
 test('server-draft conflict panel has no serious axe violations', async ({ page }, info) => {
   // server_drafts graduated to default-on (GA 2026-07-02, ADR 0010). The
   // feature's interactive surface is the composer's conflict panel (keep local /

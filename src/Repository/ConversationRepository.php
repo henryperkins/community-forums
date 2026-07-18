@@ -267,7 +267,8 @@ final class ConversationRepository
              JOIN conversations c ON c.id = me.conversation_id
              LEFT JOIN conversation_participants op ON op.conversation_id = c.id AND op.user_id <> me.user_id AND op.left_at IS NULL AND c.kind = \'direct\'
              LEFT JOIN users ou ON ou.id = op.user_id
-             LEFT JOIN dm_messages lm ON lm.id = (SELECT MAX(id) FROM dm_messages WHERE conversation_id = c.id)
+             LEFT JOIN dm_messages lm ON lm.id = (SELECT MAX(m.id) FROM dm_messages m
+                 WHERE m.conversation_id = c.id AND m.id > me.joined_after_message_id)
              WHERE me.user_id = ? AND me.left_at IS NULL';
         $params = [$userId];
         if ($q !== null && $q !== '') {

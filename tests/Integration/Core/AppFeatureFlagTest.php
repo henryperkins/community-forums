@@ -47,13 +47,11 @@ final class AppFeatureFlagTest extends TestCase
     {
         $flags = new FeatureFlags(new SettingRepository($this->db));
         $defaults = $flags->all();
-        foreach (['tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory', 'content_references'] as $flag) {
+        // group_dms graduated 2026-07-18 (ADR 0022), completing the set: every
+        // Phase 4 Gate A flag is now default-on.
+        foreach (['tags', 'expanded_feeds', 'reputation_ledger', 'badge_rules', 'community_memory', 'content_references', 'group_dms'] as $flag) {
             self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
             self::assertTrue($flags->enabled($flag), "$flag should be default-on after graduation");
-        }
-        foreach (['group_dms'] as $flag) {
-            self::assertArrayHasKey($flag, $defaults, "$flag should be declared in FeatureFlags::DEFAULTS");
-            self::assertFalse($flags->enabled($flag), "$flag should deploy dark by default");
         }
 
         $this->setFlags(['tags' => false]);
@@ -159,7 +157,7 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue($flags->enabled('rich_composer'));
 
         // Isolation: graduating wysiwyg_composer must not enable a dark neighbour.
-        self::assertFalse($flags->enabled('group_dms'));
+        self::assertFalse($flags->enabled('link_previews'));
 
         // Available by default on a real page for a signed-in member.
         $this->makeBoard($this->makeCategory(), ['slug' => 'wysiwyg-default']);
@@ -202,8 +200,10 @@ final class AppFeatureFlagTest extends TestCase
         ]), '/t/' . $thread['thread_id']);
         self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('topic_workflow'));
 
-        // Isolation: graduating topic_workflow must not enable a Gate A neighbour.
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'));
+        // Isolation: graduating topic_workflow must not enable a dark carryover
+        // neighbour (group_dms graduated 2026-07-18, so it is no longer a valid
+        // dark cross-check; link_previews is).
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'));
 
         // Operator rollback: disabling the flag takes the route offline (404).
         $this->setFlags(['topic_workflow' => false]);
@@ -246,18 +246,17 @@ final class AppFeatureFlagTest extends TestCase
 
         $defaults = $flags->all();
         self::assertCount(57, $defaults, 'the declared flag inventory must remain stable during graduation');
-        self::assertSame(49, count(array_filter($defaults)), 'fresh and upgraded installs should have 49 default-on flags');
-        self::assertSame(8, count($defaults) - count(array_filter($defaults)), 'fresh and upgraded installs should keep 8 default-dark flags');
+        self::assertSame(50, count(array_filter($defaults)), 'fresh and upgraded installs should have 50 default-on flags');
+        self::assertSame(7, count($defaults) - count(array_filter($defaults)), 'fresh and upgraded installs should keep 7 default-dark flags');
         self::assertSame([
             'custom_css',
-            'group_dms',
             'link_previews',
             'expanded_files',
             'server_extensions',
             'governance',
             'service_principals',
             'verified_links',
-        ], array_keys(array_filter($defaults, static fn (bool $enabled): bool => !$enabled)), 'only the approved eight flags stay default-dark');
+        ], array_keys(array_filter($defaults, static fn (bool $enabled): bool => !$enabled)), 'only the approved seven flags stay default-dark');
 
         $this->setFlags(['capabilities' => false, 'passkeys' => false]);
         $overridden = new FeatureFlags(new SettingRepository($this->db));
@@ -616,7 +615,7 @@ final class AppFeatureFlagTest extends TestCase
         // …but the core forum stays up, and rolling appeals back must not enable a
         // still-dark neighbour.
         $this->assertStatus(200, $this->get('/'));
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'));
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'));
     }
 
     public function test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible(): void
@@ -646,10 +645,10 @@ final class AppFeatureFlagTest extends TestCase
 
         // …but core profile editing is NOT part of the lifecycle slice and stays
         // up, and rolling account_lifecycle back must not enable a still-dark
-        // neighbour (appeals graduated 2026-07-02, so it is no longer a valid
-        // dark cross-check; group_dms is).
+        // neighbour (appeals graduated 2026-07-02 and group_dms 2026-07-18, so
+        // neither is a valid dark cross-check any more; link_previews is).
         self::assertNotSame(404, $this->get('/settings/account')->status(), 'core profile editing must stay available');
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'), 'disabling account_lifecycle must not surface a still-dark flag');
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'), 'disabling account_lifecycle must not surface a still-dark flag');
     }
 
     public function test_profile_media_carryover_defaults_on_and_is_operator_reversible(): void
@@ -690,48 +689,74 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/users/' . (int) $member['id'] . '/signature/remove'));
         $this->assertStatus(404, $this->post('/admin/users/' . (int) $member['id'] . '/avatar/remove'));
 
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'), 'disabling profile_media must not surface a still-dark flag');
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'), 'disabling profile_media must not surface a still-dark flag');
     }
 
-    public function test_group_dms_flag_gates_group_creation_and_management(): void
+    public function test_group_dms_defaults_on_and_is_operator_reversible(): void
     {
-        // group_dms defaults dark; the legacy `dms` flag defaults on. Group DMs
-        // must NOT ship live just because dms is on (PR #17 regression guard).
+        // group_dms graduated to default-on (GA 2026-07-18; ADR 0022) with
+        // browser/no-JS/a11y + runbook acceptance evidence
+        // (docs/runbooks/group_dms.md). Group creation/management still ride the
+        // DM substrate — both `dms` and `group_dms` must be on (PR #17 regression
+        // guard) — but the surface now answers with NO features override, and an
+        // operator rollback re-gates creation + management to 422/404 while
+        // existing group conversations stay readable and replyable (rollback is
+        // data-preserving, mirroring the badge-rules history precedent).
+        $flags = new FeatureFlags(new SettingRepository($this->db));
+        self::assertTrue($flags->enabled('group_dms'), 'group_dms graduated to default-on');
+        self::assertArrayHasKey('group_dms', $flags->all(), 'group_dms must be a declared flag');
+
         $owner = $this->makeUser(['username' => 'gdmowner']);
         $this->makeUser(['username' => 'gdmbob']);
         $this->makeUser(['username' => 'gdmcarol']);
+        $this->makeUser(['username' => 'gdmdana']);
         // Give the owner a post so they clear the new-account DM anti-spam throttle.
         $this->makeThread($this->makeBoard($this->makeCategory()), $owner, 'Hi', 'establishing a post.');
         $this->actingAs($owner);
 
-        // A 1:1 direct message still works while group_dms is dark.
-        $direct = $this->post('/messages', ['to' => 'gdmbob', 'body' => 'hello there']);
-        self::assertLessThan(400, $direct->status(), '1:1 DM must stay available while group_dms is dark');
+        // Available by default: a group create (extra recipient + title)
+        // succeeds with no features override…
+        $created = $this->post('/messages', ['to' => 'gdmbob, gdmcarol', 'title' => 'Room', 'body' => 'hi all']);
+        self::assertLessThan(400, $created->status(), 'group creation should succeed with the GA default');
+        $groupId = (int) $this->db->fetchValue("SELECT id FROM conversations WHERE kind = 'group' ORDER BY id DESC LIMIT 1");
+        self::assertGreaterThan(0, $groupId, 'a group conversation row exists under the GA default');
 
-        // A group create (extra recipient + title) is refused server-side and
-        // creates no group conversation.
-        $this->assertStatus(422, $this->post('/messages', ['to' => 'gdmbob, gdmcarol', 'title' => 'Room', 'body' => 'hi all']));
-        self::assertSame(
-            0,
-            (int) $this->db->fetchValue("SELECT COUNT(*) FROM conversations WHERE kind = 'group'"),
-            'no group conversation may be created while group_dms is dark',
+        // …and the owner-management routes answer too.
+        $this->assertRedirectContains(
+            $this->post('/messages/' . $groupId . '/members', ['username' => 'gdmdana']),
+            '/messages/' . $groupId,
         );
 
-        // Group-management routes 404 (the flag gate fires before any lookup).
-        $this->assertStatus(404, $this->post('/messages/1/members', ['username' => 'gdmcarol']));
-        $this->assertStatus(404, $this->post('/messages/1/members/remove', ['user_id' => 1]));
-        $this->assertStatus(404, $this->post('/messages/1/rename', ['title' => 'x']));
-        $this->assertStatus(404, $this->post('/messages/1/transfer', ['user_id' => 1]));
+        // Isolation: graduating group_dms must not enable a dark neighbour.
+        self::assertFalse($flags->enabled('link_previews'));
 
-        // Enabling the flag lets a group be created.
-        $this->setFlags(['group_dms' => true]);
-        $ok = $this->post('/messages', ['to' => 'gdmbob, gdmcarol', 'title' => 'Room', 'body' => 'hi again']);
-        self::assertLessThan(400, $ok->status(), 'group creation should succeed once group_dms is on');
+        // Operator rollback: group creation is refused server-side again (422,
+        // draft preserved, no new group row) and every management route re-gates
+        // to 404 (the flag gate fires before any lookup)…
+        $this->setFlags(['group_dms' => false]);
+        $this->assertStatus(422, $this->post('/messages', ['to' => 'gdmbob, gdmcarol', 'title' => 'Second room', 'body' => 'hi again']));
         self::assertSame(
             1,
             (int) $this->db->fetchValue("SELECT COUNT(*) FROM conversations WHERE kind = 'group'"),
-            'enabling group_dms permits group creation',
+            'no new group conversation may be created after rollback',
         );
+        $this->assertStatus(404, $this->post('/messages/' . $groupId . '/members', ['username' => 'gdmcarol']));
+        $this->assertStatus(404, $this->post('/messages/' . $groupId . '/members/remove', ['user_id' => 1]));
+        $this->assertStatus(404, $this->post('/messages/' . $groupId . '/rename', ['title' => 'x']));
+        $this->assertStatus(404, $this->post('/messages/' . $groupId . '/transfer', ['user_id' => 1]));
+
+        // …while the pre-rollback group stays readable and replyable (members
+        // keep their history; the flag never orphans conversations) and 1:1
+        // direct messages are untouched.
+        $view = $this->get('/messages/' . $groupId);
+        $this->assertStatus(200, $view);
+        $this->assertSeeText($view, 'Room');
+        $this->assertRedirectContains(
+            $this->post('/messages/' . $groupId, ['body' => 'still here after rollback']),
+            '/messages/' . $groupId,
+        );
+        $direct = $this->post('/messages', ['to' => 'gdmbob', 'body' => 'hello there']);
+        self::assertLessThan(400, $direct->status(), '1:1 DM must stay available while group_dms is rolled back');
     }
 
     public function test_content_references_are_available_by_default_and_can_be_disabled(): void
@@ -1016,7 +1041,7 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue($flags->enabled('custom_profile_fields'), 'custom_profile_fields graduated to default-on');
 
         // Isolation: graduating this flag must not enable a dark neighbour.
-        self::assertFalse($flags->enabled('group_dms'));
+        self::assertFalse($flags->enabled('link_previews'));
 
         $member = $this->makeUser(['username' => 'cpf_default_member']);
         $this->actingAs($member);
@@ -1054,7 +1079,7 @@ final class AppFeatureFlagTest extends TestCase
         self::assertTrue((new FeatureFlags(new SettingRepository($this->db)))->enabled('split_merge'));
 
         // Isolation: graduating split_merge must not enable a dark neighbour.
-        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('group_dms'));
+        self::assertFalse((new FeatureFlags(new SettingRepository($this->db)))->enabled('link_previews'));
 
         // Operator rollback: disabling the flag takes both routes offline (404).
         $this->setFlags(['split_merge' => false]);

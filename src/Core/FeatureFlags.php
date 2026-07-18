@@ -51,7 +51,7 @@ final class FeatureFlags
 
         // ── Phase 4 Gate A ───────────────────────────────────────────────
         'topic_workflow' => true,     // canonical status, history, snooze, assignment — GA default-on (2026-07-01; reversible via features override)
-        'group_dms' => false,         // group conversation creation/invites
+        'group_dms' => true,          // bounded group conversations over the DM substrate — GA default-on (2026-07-18; ADR 0022; reversible via features override)
         'tags' => true,               // curated tag catalogue + thread tagging — GA default-on (2026-07-01; reversible via features override)
         'expanded_feeds' => true,     // board/tag follows, Following + Latest feeds — GA default-on (2026-07-01; reversible via features override)
         'reputation_ledger' => true,  // idempotent reputation events + windowed ranks — GA default-on (2026-07-01; reversible via features override)

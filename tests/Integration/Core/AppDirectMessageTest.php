@@ -354,9 +354,42 @@ final class AppDirectMessageTest extends TestCase
         self::assertStringContainsString('class="dm-search"', $res->body());
         self::assertStringContainsString('name="q"', $res->body());
         // …and the round "+" is a native <details> compose dialog posting to the
-        // existing /messages endpoint, with the group title gated dark.
+        // existing /messages endpoint, with the group-title field rendering by
+        // default now that group_dms graduated (GA 2026-07-18; ADR 0022).
         self::assertStringContainsString('dm-compose-details', $res->body());
         self::assertStringContainsString('name="to"', $res->body());
-        self::assertStringNotContainsString('name="title"', $res->body());
+        self::assertStringContainsString('name="title"', $res->body());
+    }
+
+    public function test_group_list_preview_respects_the_join_boundary(): void
+    {
+        // The reading-room list preview must honour the same membership
+        // interval as the message view (2026-07-18 graduation finding): a
+        // member added after a message was sent must not have that body leaked
+        // through the last-message preview — or matched by the list search —
+        // on /messages.
+        $owner = $this->established(['username' => 'boundaryowner']);
+        $bob = $this->makeUser(['username' => 'boundarybob']);
+        $dana = $this->makeUser(['username' => 'boundarydana']);
+
+        $convId = $this->dm()->startGroup(
+            $this->userEntity($owner),
+            [(int) $bob['id']],
+            'Boundary room',
+            'Pre-join secret: the vault code is 4-8-15.',
+        )['conversation_id'];
+        $this->dm()->addParticipant($this->userEntity($owner), $convId, (int) $dana['id']);
+
+        $this->actingAs($dana);
+        $list = $this->get('/messages');
+        $this->assertStatus(200, $list);
+        $this->assertSeeText($list, 'Boundary room');
+        self::assertStringNotContainsString('Pre-join secret', $list->body(), 'the list preview must not leak pre-join message content');
+        // The list search must not match on the invisible body either.
+        self::assertStringNotContainsString('Boundary room', $this->get('/messages', ['q' => 'vault code'])->body());
+
+        // A message sent after the join boundary previews normally.
+        $this->dm()->reply($this->userEntity($owner), $convId, 'After the boundary — visible.');
+        $this->assertSeeText($this->get('/messages'), 'After the boundary');
     }
 }
