@@ -72,10 +72,10 @@ async function exitThemeSafeMode(page: Page, changed: boolean): Promise<void> {
 }
 
 async function setRegistrationMode(page: Page, mode: 'open' | 'invite' | 'closed'): Promise<void> {
-  await visit(page, '/admin');
+  await visit(page, '/admin/settings');
   await page.selectOption('select[name="registration_mode"]', mode);
-  await page.click('form[action="/admin/settings"] button[type="submit"]');
-  await page.waitForURL((u) => u.pathname === '/admin');
+  await page.click('form[action="/admin/settings/registration"] button[type="submit"]');
+  await page.waitForURL((u) => u.pathname === '/admin/settings');
 }
 
 async function expectNoSeriousA11yViolations(page: Page, info: TestInfo): Promise<void> {

@@ -273,7 +273,6 @@ final class ThreadIntelligenceEnqueueIntegrationTest extends TestCase
             db: $this->db,
             categories: new CategoryRepository($this->db),
             boards: new BoardRepository($this->db),
-            settings: new SettingRepository($this->db),
             log: new ModerationLogRepository($this->db),
             writeGate: new WriteGate(),
             users: new UserRepository($this->db),

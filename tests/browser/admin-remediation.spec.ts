@@ -255,9 +255,9 @@ test('webhook pause/resume flashes say which happened and delete is reauthed', a
   await expect(page.getByRole('status')).toContainText('deleted');
 });
 
-test('dashboard site-name 422 keeps the typed value on both viewports', async ({ page }, info) => {
+test('general settings site-name 422 keeps the typed value on both viewports', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
-  await page.goto('/admin');
+  await page.goto('/admin/settings');
   // Model the stale-form threat the server contract exists for (PR #44 §5): a
   // cached page carries no maxlength guarantee, so lift the client cap and let
   // the SERVER refuse. PHPUnit pins the same 422 at the HTTP layer.
@@ -273,7 +273,7 @@ test('dashboard site-name 422 keeps the typed value on both viewports', async ({
   expect(response.status()).toBe(422);
   await expect(page.locator('body')).toContainText('Site name must be 1–80 characters.');
   await expect(page.locator('form[action="/admin/site"] input[name="site_name"]')).toHaveValue(typed);
-  await shot(page, info, 'remediation-dashboard-422-draft');
+  await shot(page, info, 'remediation-settings-422-draft');
 });
 
 test('scoped moderator panel: overlap select, no global history, out-of-scope 404', async ({ page }, info) => {

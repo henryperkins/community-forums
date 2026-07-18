@@ -10,7 +10,6 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
-use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\WriteGate;
 use App\Service\AdminService;
@@ -38,7 +37,6 @@ final class AppAdminStructureReorderTest extends TestCase
             $this->db,
             new CategoryRepository($this->db),
             new BoardRepository($this->db),
-            new SettingRepository($this->db),
             new ModerationLogRepository($this->db),
             new WriteGate(),
             new UserRepository($this->db),

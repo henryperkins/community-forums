@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
@@ -14,12 +13,10 @@ use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
-use App\Repository\SettingRepository;
 use App\Security\BoardPolicy;
 use App\Service\AdminDashboardService;
 use App\Service\AdminService;
 use App\Service\AuditQueryService;
-use App\Service\CustomEmojiService;
 
 /**
  * Minimal admin console: dashboard + audit log, site naming, and
@@ -84,38 +81,6 @@ final class AdminController extends Controller
     {
         $this->requireAdmin();
         return $this->structureView();
-    }
-
-    /** @param array<string,string> $params */
-    public function updateSite(Request $request, array $params): Response
-    {
-        $admin = $this->requireAdmin();
-        try {
-            $this->container->get(AdminService::class)->setSiteName($admin, $request->str('site_name'));
-        } catch (ValidationException $e) {
-            // Re-render the dashboard (anti-draft-loss) instead of a flash
-            // redirect that drops the typed name.
-            return $this->dashboardView([
-                'settings_errors' => $e->errors,
-                'settings_old' => $e->old + ['site_name' => $request->str('site_name')],
-            ], 422);
-        }
-        return $this->redirectWithFlash('/admin', 'Site name updated.');
-    }
-
-    /** @param array<string,string> $params */
-    public function updateSettings(Request $request, array $params): Response
-    {
-        $admin = $this->requireAdmin();
-        try {
-            $this->container->get(AdminService::class)->updateModerationSettings($admin, $request->allInput());
-        } catch (ValidationException $e) {
-            return $this->dashboardView([
-                'settings_errors' => $e->errors,
-                'settings_old' => $e->old + $request->allInput(),
-            ], 422);
-        }
-        return $this->redirectWithFlash('/admin', 'Trust & safety settings saved.');
     }
 
     /** @param array<string,string> $params */
@@ -537,19 +502,12 @@ final class AdminController extends Controller
         ], $extra), $status);
     }
 
-    /**
-     * Render the dashboard. Shared by the GET view and the site-name /
-     * trust-and-safety POST 422 re-renders (anti-draft-loss), which pass
-     * `settings_errors` / `settings_old` through `$extra`.
-     *
-     * @param array<string,mixed> $extra
-     */
-    private function dashboardView(array $extra = [], int $status = 200): Response
+    /** Render the operational admin landing page. */
+    private function dashboardView(): Response
     {
         return $this->view(
             'admin/dashboard',
-            $this->container->get(AdminDashboardService::class)->dashboardModel($extra),
-            $status,
+            $this->container->get(AdminDashboardService::class)->summary(),
         );
     }
 

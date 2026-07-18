@@ -20,23 +20,21 @@ final class AppCustomEmojiGiphyTest extends TestCase
         $admin = $this->makeAdmin(['username' => 'emoji_default_admin']);
         $this->actingAs($admin);
 
-        $dashboard = $this->get('/admin');
-        $this->assertStatus(200, $dashboard);
-        self::assertStringContainsString('Custom emoji', $dashboard->body());
-        self::assertStringContainsString('name="shortcode"', $dashboard->body());
+        $emojiPage = $this->get('/admin/custom-emoji');
+        $this->assertStatus(200, $emojiPage);
+        self::assertStringContainsString('Custom emoji', $emojiPage->body());
+        self::assertStringContainsString('name="shortcode"', $emojiPage->body());
 
         $this->assertRedirect($this->post('/admin/custom-emoji', [
             'shortcode' => 'party',
             'name' => 'Party',
             'image_path' => '/emoji/party.webp',
             'mime' => 'image/webp',
-        ]));
+        ]), '/admin/custom-emoji');
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
 
         (new SettingRepository($this->db))->set('features', ['custom_emoji' => false]);
-        $disabledDashboard = $this->get('/admin');
-        $this->assertStatus(200, $disabledDashboard);
-        self::assertStringNotContainsString('name="shortcode"', $disabledDashboard->body());
+        $this->assertStatus(404, $this->get('/admin/custom-emoji'));
 
         $res = $this->post('/admin/custom-emoji', [
             'shortcode' => 'wave',

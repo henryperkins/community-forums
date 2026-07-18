@@ -68,14 +68,13 @@ final class AppAdminModerationTest extends TestCase
     public function test_admin_can_set_antiabuse_mode_and_blocked_words(): void
     {
         $this->actingAs($this->admin);
-        $this->get('/admin'); // seed CSRF
+        $this->get('/admin/moderation'); // seed CSRF
 
-        $res = $this->post('/admin/settings', [
-            'registration_mode' => 'open',
+        $res = $this->post('/admin/moderation', [
             'antiabuse_mode' => 'block',
             'antiabuse_blocked_words' => "spammyword\nBadWord, evil",
         ]);
-        $this->assertRedirect($res, '/admin');
+        $this->assertRedirect($res, '/admin/moderation');
 
         self::assertSame('block', $this->settings()->getString('antiabuse_mode'));
         $words = (array) $this->settings()->get('antiabuse_blocked_words', []);
@@ -87,26 +86,25 @@ final class AppAdminModerationTest extends TestCase
         // (PR #44 spec §5). The old clamp-to-'observe' silently LOWERED an
         // enforced 'block' posture on a bogus POST — refusing is the safe
         // contract, and the saved posture must stand.
-        $invalid = $this->post('/admin/settings', ['antiabuse_mode' => 'nuke', 'registration_mode' => 'open']);
+        $invalid = $this->post('/admin/moderation', ['antiabuse_mode' => 'nuke']);
         $this->assertStatus(422, $invalid);
         self::assertSame('block', $this->settings()->getString('antiabuse_mode'));
 
-        // The dashboard renders the saved blocked words back into the textarea.
-        $this->post('/admin/settings', ['antiabuse_mode' => 'flag', 'registration_mode' => 'open', 'antiabuse_blocked_words' => 'visibleword']);
-        $this->assertSeeText($this->get('/admin'), 'visibleword');
+        // The owning page renders the saved blocked words back into the textarea.
+        $this->post('/admin/moderation', ['antiabuse_mode' => 'flag', 'antiabuse_blocked_words' => 'visibleword']);
+        $this->assertSeeText($this->get('/admin/moderation'), 'visibleword');
     }
 
     public function test_blocked_words_drops_too_short_entries_and_survives_array_input(): void
     {
         $this->actingAs($this->admin);
-        $this->get('/admin'); // seed CSRF
+        $this->get('/admin/moderation'); // seed CSRF
 
         // A stray 1–2 char fragment (e.g. from splitting "1,000 followers" on the
         // comma) must be dropped, because matching is unanchored substring and a
         // 1-char rule would blanket-match legitimate posts. The real phrase-parts
         // that clear the floor are kept.
-        $this->post('/admin/settings', [
-            'registration_mode' => 'open',
+        $this->post('/admin/moderation', [
             'antiabuse_mode' => 'flag',
             'antiabuse_blocked_words' => "1\nab\n000 followers\nlegitword",
         ]);
@@ -118,12 +116,11 @@ final class AppAdminModerationTest extends TestCase
 
         // An array-shaped POST must not coerce to the literal word "Array"; it is
         // treated as empty input (no E_WARNING, no bogus rule stored).
-        $res = $this->post('/admin/settings', [
-            'registration_mode' => 'open',
+        $res = $this->post('/admin/moderation', [
             'antiabuse_mode' => 'flag',
             'antiabuse_blocked_words' => ['x', 'y'],
         ]);
-        $this->assertRedirect($res, '/admin');
+        $this->assertRedirect($res, '/admin/moderation');
         $after = (array) $this->settings()->get('antiabuse_blocked_words', []);
         self::assertNotContains('Array', $after);
         self::assertNotContains('array', $after);
@@ -134,8 +131,8 @@ final class AppAdminModerationTest extends TestCase
     {
         // Admin closes registration.
         $this->actingAs($this->admin);
-        $this->get('/admin');
-        $this->post('/admin/settings', ['registration_mode' => 'closed', 'antiabuse_mode' => 'observe']);
+        $this->get('/admin/settings');
+        $this->post('/admin/settings/registration', ['registration_mode' => 'closed']);
         self::assertSame('closed', $this->settings()->getString('registration_mode'));
         $this->logoutClient();
 
@@ -168,25 +165,25 @@ final class AppAdminModerationTest extends TestCase
         self::assertNull($this->users()->findByUsername('unknownmode'));
     }
 
-    public function test_registration_mode_invite_persists_and_dashboard_warns_while_dark(): void
+    public function test_registration_mode_invite_persists_and_settings_page_warns_while_dark(): void
     {
         $this->settings()->set('features', ['invitations' => false]);
         $this->actingAs($this->admin);
-        $this->get('/admin'); // seed CSRF
+        $this->get('/admin/settings'); // seed CSRF
 
-        $res = $this->post('/admin/settings', ['registration_mode' => 'invite', 'antiabuse_mode' => 'observe']);
-        $this->assertRedirect($res, '/admin');
+        $res = $this->post('/admin/settings/registration', ['registration_mode' => 'invite']);
+        $this->assertRedirect($res, '/admin/settings');
         self::assertSame('invite', $this->settings()->getString('registration_mode'));
 
         // The select offers the new mode, and — with features.invitations still
-        // dark — the dashboard warns that invite mode is effectively closed.
-        $body = $this->get('/admin')->body();
+        // dark — the settings page warns that invite mode is effectively closed.
+        $body = $this->get('/admin/settings')->body();
         self::assertStringContainsString('(invitation required)', $body);
         self::assertStringContainsString('effectively closed', $body);
 
         // A bogus mode is refused at 422 (PR #44 spec §5); the saved mode
         // stands instead of silently reopening registration.
-        $invalid = $this->post('/admin/settings', ['registration_mode' => 'banana', 'antiabuse_mode' => 'observe']);
+        $invalid = $this->post('/admin/settings/registration', ['registration_mode' => 'banana']);
         $this->assertStatus(422, $invalid);
         self::assertSame('invite', $this->settings()->getString('registration_mode'));
     }
@@ -196,8 +193,8 @@ final class AppAdminModerationTest extends TestCase
         $this->settings()->set('registration_mode', 'closed');
         // Reopen via the admin form.
         $this->actingAs($this->admin);
-        $this->get('/admin');
-        $this->post('/admin/settings', ['registration_mode' => 'open', 'antiabuse_mode' => 'observe']);
+        $this->get('/admin/settings');
+        $this->post('/admin/settings/registration', ['registration_mode' => 'open']);
         $this->logoutClient();
 
         $this->get('/register');
@@ -211,20 +208,19 @@ final class AppAdminModerationTest extends TestCase
         self::assertNotNull($this->users()->findByUsername('fresh'));
     }
 
-    public function test_non_admin_cannot_change_moderation_settings(): void
+    public function test_non_admin_cannot_change_registration_settings(): void
     {
         $user = $this->makeUser(['username' => 'nobody']);
         $this->actingAs($user);
         $this->get('/'); // seed CSRF
-        $this->assertStatus(403, $this->post('/admin/settings', ['registration_mode' => 'closed']));
+        $this->assertStatus(403, $this->post('/admin/settings/registration', ['registration_mode' => 'closed']));
         // The setting is unchanged (still the install default / unset).
         self::assertNotSame('closed', $this->settings()->getString('registration_mode', 'open'));
     }
 
     public function test_site_name_422_preserves_the_typed_name_and_error(): void
     {
-        // PR #44 spec §5: dashboardView's `[defaults] + $extra` union kept the
-        // pristine left side, silently dropping the 422 payload.
+        // The owning settings page keeps the typed value on a server-side 422.
         $this->actingAs($this->admin);
         $typed = str_repeat('N', 81);
 
@@ -235,14 +231,13 @@ final class AppAdminModerationTest extends TestCase
         $this->assertSeeText($res, $typed);
     }
 
-    public function test_settings_422_preserves_typed_values_and_error(): void
+    public function test_anti_abuse_422_preserves_typed_values_and_error(): void
     {
         // A present-but-invalid mode must not silently downgrade the enforced
         // anti-abuse posture — it re-renders at 422 with the input preserved.
         $this->actingAs($this->admin);
 
-        $res = $this->post('/admin/settings', [
-            'registration_mode' => 'open',
+        $res = $this->post('/admin/moderation', [
             'antiabuse_mode' => 'bogus-mode',
             'antiabuse_blocked_words' => "keepthisword\nandthistoo",
         ]);
@@ -253,19 +248,4 @@ final class AppAdminModerationTest extends TestCase
         self::assertSame('observe', $this->settings()->getString('antiabuse_mode', 'observe'), 'nothing persisted');
     }
 
-    public function test_settings_422_uses_the_typed_invite_mode_for_the_dark_feature_warning(): void
-    {
-        $this->settings()->set('features', ['invitations' => false]);
-        $this->actingAs($this->admin);
-
-        $res = $this->post('/admin/settings', [
-            'registration_mode' => 'invite',
-            'antiabuse_mode' => 'invalid-mode',
-            'antiabuse_blocked_words' => 'preservedword',
-        ]);
-
-        $this->assertStatus(422, $res);
-        self::assertStringContainsString('<option value="invite" selected>', $res->body());
-        $this->assertSeeText($res, 'registration is effectively closed');
-    }
 }

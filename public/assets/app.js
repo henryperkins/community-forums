@@ -676,6 +676,132 @@
         }
     }
 
+    // Admin workspace navigation: a second, deliberately separate drawer from
+    // the member rail. Its server-rendered grouped links remain expanded when
+    // JS is unavailable; enhancement only applies at the 860px breakpoint.
+    var adminNavToggle = document.querySelector('[data-admin-nav-toggle]');
+    var adminNav = document.querySelector('[data-admin-nav]');
+    var adminNavClose = document.querySelector('[data-admin-nav-close]');
+    var adminNavScrim = document.querySelector('[data-admin-nav-scrim]');
+    if (adminNavToggle && adminNav && adminNavScrim) {
+        var adminNavMedia = window.matchMedia('(max-width: 860px)');
+        var adminNavLastFocus = null;
+        adminNavToggle.hidden = false;
+        if (adminNavClose) { adminNavClose.hidden = false; }
+
+        var setAdminNavInert = function (inert) {
+            if (inert) {
+                adminNav.setAttribute('inert', '');
+            } else {
+                adminNav.removeAttribute('inert');
+            }
+        };
+        var adminNavFocusable = function () {
+            return Array.prototype.slice.call(adminNav.querySelectorAll(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )).filter(function (el) {
+                return !el.hidden && el.getAttribute('aria-hidden') !== 'true';
+            });
+        };
+        var setAdminNav = function (open, restoreFocus) {
+            open = !!open && adminNavMedia.matches;
+            document.body.classList.toggle('admin-nav-open', open);
+            adminNavToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            adminNavScrim.hidden = !open;
+
+            if (adminNavMedia.matches) {
+                adminNav.setAttribute('aria-hidden', open ? 'false' : 'true');
+                setAdminNavInert(!open);
+            } else {
+                adminNav.removeAttribute('aria-hidden');
+                setAdminNavInert(false);
+            }
+
+            if (open) {
+                adminNavLastFocus = document.activeElement;
+                if (typeof setNav === 'function') { setNav(false); }
+                window.requestAnimationFrame(function () {
+                    var focusable = adminNavFocusable();
+                    (adminNavClose || focusable[0] || adminNav).focus();
+                });
+            } else if (restoreFocus !== false && adminNavLastFocus && document.contains(adminNavLastFocus)) {
+                adminNavLastFocus.focus();
+                adminNavLastFocus = null;
+            }
+        };
+        var syncAdminNavBreakpoint = function () {
+            setAdminNav(false, false);
+        };
+
+        adminNavToggle.addEventListener('click', function () {
+            setAdminNav(!document.body.classList.contains('admin-nav-open'));
+        });
+        if (adminNavClose) {
+            adminNavClose.addEventListener('click', function () { setAdminNav(false); });
+        }
+        adminNavScrim.addEventListener('click', function () { setAdminNav(false); });
+        adminNav.addEventListener('click', function (e) {
+            if (e.target.closest && e.target.closest('a')) {
+                // Let the link's native navigation start before making its
+                // ancestor inert; otherwise keyboard activation can lose the
+                // default action in Chromium.
+                window.setTimeout(function () { setAdminNav(false, false); }, 0);
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (!document.body.classList.contains('admin-nav-open')) { return; }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setAdminNav(false);
+                return;
+            }
+            if (e.key !== 'Tab') { return; }
+            var focusable = adminNavFocusable();
+            if (!focusable.length) {
+                e.preventDefault();
+                return;
+            }
+            var first = focusable[0];
+            var last = focusable[focusable.length - 1];
+            if (!adminNav.contains(document.activeElement)) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+            } else if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        });
+        if (adminNavMedia.addEventListener) {
+            adminNavMedia.addEventListener('change', syncAdminNavBreakpoint);
+        } else {
+            adminNavMedia.addListener(syncAdminNavBreakpoint);
+        }
+        if (navToggle) {
+            navToggle.addEventListener('click', function () {
+                if (document.body.classList.contains('nav-open')) { setAdminNav(false, false); }
+            });
+        }
+        syncAdminNavBreakpoint();
+    }
+
+    // The recent-activity table keeps its semantic scroll region. On narrow
+    // screens this removes the directional cue and edge fade at the true end.
+    Array.prototype.forEach.call(document.querySelectorAll('[data-overflow-cue]'), function (shell) {
+        var region = shell.querySelector('[data-overflow-region]');
+        if (!region) { return; }
+        var updateOverflowCue = function () {
+            var max = Math.max(0, region.scrollWidth - region.clientWidth);
+            shell.classList.toggle('is-unneeded', max <= 1);
+            shell.classList.toggle('is-at-end', max > 1 && region.scrollLeft >= max - 2);
+        };
+        region.addEventListener('scroll', updateOverflowCue, { passive: true });
+        window.addEventListener('resize', updateOverflowCue);
+        window.requestAnimationFrame(updateOverflowCue);
+    });
+
     // New-Topic composer becomes a centred modal once JS is present (handoff §5.2).
     // The overlay itself is CSS, gated on .has-js; here we add Esc, scrim-click, and
     // a Cancel button to dismiss it, and focus the title on open. Without JS the
