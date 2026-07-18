@@ -54,6 +54,8 @@ final class AdminFeatureController extends Controller
     /**
      * Read-only readiness classification for the rows that are not simply
      * shipped: the default-dark carryovers and the ADR-reserved Gate B set.
+     * (`group_dms` graduated to default-on on 2026-07-18 — ADR 0022 — and left
+     * this map with the last "Ready for acceptance" row.)
      * The two "Operational configuration required" rows (`capabilities` in
      * shadow posture, `slash_giphy` without a key) are computed live in
      * readiness() so the badge clears once the operational step is done.
@@ -64,13 +66,6 @@ final class AdminFeatureController extends Controller
      * @var array<string,array{status:string,class:string,note:string,href?:string,link?:string}>
      */
     private const READINESS = [
-        'group_dms' => [
-            'status' => 'Ready for acceptance',
-            'class' => 'state-active',
-            'note' => 'Member journey verified end-to-end on desktop and mobile (2026-07-13); needs committed browser/no-JS/a11y evidence and the moderation runbook, then the enablement decision. Admin access stays report-only.',
-            'href' => '/mod/reports',
-            'link' => 'Report queue',
-        ],
         'expanded_files' => [
             'status' => 'Missing user UI',
             'class' => 'state-paused',
@@ -197,9 +192,6 @@ final class AdminFeatureController extends Controller
     private function readiness(array $effective, SettingRepository $settings): array
     {
         $readiness = self::READINESS;
-        if (!($effective['moderation_queue'] ?? false)) {
-            unset($readiness['group_dms']['href'], $readiness['group_dms']['link']);
-        }
         if (!($effective['branding'] ?? false)) {
             unset($readiness['custom_css']['href'], $readiness['custom_css']['link']);
         }

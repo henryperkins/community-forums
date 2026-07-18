@@ -29,8 +29,8 @@ final class AppAdminFeaturesTest extends TestCase
         $this->assertStatus(200, $page);
         self::assertStringContainsString('Feature flags', $page->body());
         self::assertStringContainsString('57 declared', $page->body());
-        self::assertStringContainsString('49 default-on', $page->body());
-        self::assertStringContainsString('8 default-dark', $page->body());
+        self::assertStringContainsString('50 default-on', $page->body());
+        self::assertStringContainsString('7 default-dark', $page->body());
         self::assertStringContainsString('<code>server_extensions</code>', $page->body());
         self::assertStringContainsString('Phase 5 Gate B', $page->body());
         self::assertStringContainsString('Effective on', $page->body());
@@ -83,9 +83,11 @@ final class AppAdminFeaturesTest extends TestCase
         $body = $page->body();
         self::assertStringContainsString('Readiness / next step', $body);
 
-        // The six categories, each anchored by its row-specific finding.
-        self::assertStringContainsString('Ready for acceptance', $body);
-        self::assertStringContainsString('Member journey verified end-to-end', $body); // group_dms
+        // The five categories, each anchored by its row-specific finding.
+        // (group_dms graduated 2026-07-18 — ADR 0022 — so the "Ready for
+        // acceptance" category left the map with its last row.)
+        self::assertStringNotContainsString('Ready for acceptance', $body);
+        self::assertStringNotContainsString('Member journey verified end-to-end', $body); // group_dms row is plain now
         self::assertStringContainsString('Missing user UI', $body);
         self::assertStringContainsString('no member file chooser', $body); // expanded_files
         self::assertStringContainsString('Missing admin operations', $body);
@@ -99,7 +101,6 @@ final class AppAdminFeaturesTest extends TestCase
         self::assertStringContainsString('stays dark until its workstream lands its own release evidence', $body);
 
         // Actionable rows link to their real surfaces…
-        self::assertStringContainsString('<a href="/mod/reports">Report queue</a>', $body);
         self::assertStringContainsString('<a href="/admin/roles">Roles &amp; resolver posture</a>', $body);
         self::assertStringContainsString('<a href="/admin/branding">Custom CSS editor</a>', $body);
         // …shipped default-on flags carry an Operations link to their console…
@@ -114,9 +115,9 @@ final class AppAdminFeaturesTest extends TestCase
         // The two "Operational configuration required" rows are computed live:
         // a stored GIPHY key and an enforce resolver posture must clear them,
         // and readiness links must never point at a surface that would 404
-        // (moderation_queue / branding rolled back drop the link, not the badge).
+        // (branding rolled back drops the custom_css link, not the badge).
         (new SettingRepository($this->db))->set('giphy_public_key', 'pk-public-test');
-        $this->withCapabilitiesEnforced(['moderation_queue' => false, 'branding' => false]);
+        $this->withCapabilitiesEnforced(['branding' => false]);
         $this->actingAs($this->makeAdmin(['username' => 'dormant-clear-admin']));
 
         $page = $this->get('/admin/features');
@@ -125,9 +126,7 @@ final class AppAdminFeaturesTest extends TestCase
         $body = $page->body();
         self::assertStringNotContainsString('Resolver posture is', $body);
         self::assertStringNotContainsString('giphy_public_key is unset', $body);
-        self::assertStringContainsString('Ready for acceptance', $body);
         self::assertStringContainsString('Safety-blocked', $body);
-        self::assertStringNotContainsString('href="/mod/reports"', $body);
         self::assertStringNotContainsString('href="/admin/branding"', $body);
     }
 

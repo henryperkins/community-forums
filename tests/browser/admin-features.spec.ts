@@ -6,9 +6,10 @@ import path from 'node:path';
  * Browser evidence for the read-only readiness classification on the
  * /admin/features inventory (2026-07-13 dark-flag readiness audit,
  * docs/evidence/deploy-dark-features.md): the readiness column renders the
- * six categories beside their rows, actionable rows link to their real
- * surfaces, a console that would 404 while its flag is dark is never linked,
- * and the pane is free of serious/critical axe violations.
+ * readiness categories beside their rows (five since group_dms graduated on
+ * 2026-07-18 and retired "Ready for acceptance"), actionable rows link to
+ * their real surfaces, a console that would 404 while its flag is dark is
+ * never linked, and the pane is free of serious/critical axe violations.
  *
  * Posture notes against the shared evidence seed: CAPABILITIES_MODE is unset,
  * so the `capabilities` row shows the live-computed shadow-posture badge; the
@@ -83,11 +84,12 @@ test('admin feature inventory classifies readiness and links actionable surfaces
   await expect(page.getByRole('heading', { name: 'Feature flags' })).toBeVisible();
   expect(await page.locator('th', { hasText: 'Readiness / next step' }).count()).toBeGreaterThan(0);
 
-  // The four dark carryovers carry their categories, with links to surfaces
-  // that answer today.
-  const groupDms = flagRow(page, 'group_dms');
-  await expect(groupDms.getByText('Ready for acceptance')).toBeVisible();
-  await expect(groupDms.getByRole('link', { name: 'Report queue' })).toHaveAttribute('href', '/mod/reports');
+  // The three dark carryovers carry their categories, with links to surfaces
+  // that answer today. group_dms graduated 2026-07-18 (ADR 0022): its row
+  // carries no readiness badge any more, and the "Ready for acceptance"
+  // category left the pane with its last row.
+  await expect(flagRow(page, 'group_dms').locator('.state', { hasText: 'Ready for acceptance' })).toHaveCount(0);
+  await expect(page.getByText('Ready for acceptance')).toHaveCount(0);
   await expect(flagRow(page, 'expanded_files').getByText('Missing user UI')).toBeVisible();
   await expect(flagRow(page, 'link_previews').getByText('Missing admin operations')).toBeVisible();
   const customCss = flagRow(page, 'custom_css');

@@ -24,7 +24,14 @@ default-dark rows carry refreshed findings from an enable-and-drive pass (only
 [Operationally dormant](#operationally-dormant-default-on-but-inert-in-practice)
 section records default-ON flags that are inert in practice, and a
 [recommended activation order](#recommended-activation-order-2026-07-13) is
-added; `/admin/features` now renders these readiness categories read-only.
+added; `/admin/features` now renders these readiness categories read-only;
+**2026-07-18 `group_dms` graduation reconciled** — the first item of the
+activation order completed: `group_dms` flipped default-ON (ADR 0022) with the
+committed browser/no-JS/a11y evidence, the abuse/moderation runbook
+(`docs/runbooks/group_dms.md`), and a join-boundary hardening of the
+conversation-list preview found during the evidence run; the default split is
+now **50/7**, and the *Ready for acceptance* readiness category retired with
+its last row.
 
 This inventory lists feature flags that default to `false` in
 `src/Core/FeatureFlags.php`, plus recently graduated flags retained here for
@@ -50,14 +57,14 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
 `FeatureFlags::enabled('...')` call sites in `src/`, and shared
 `$features[...]` consumers in templates/bootstrapping code.
 
-- `FeatureFlags::DEFAULTS` declares 57 flags: 49 default `true`, 8 default
-  `false`. (Phase 5 Gate A/B2 support flipped `false`->`true` on 2026-07-09 and
-  Thread Intelligence flipped its two owning defaults on 2026-07-12;
-  the admin feature-inventory canary in
-  `tests/Integration/Admin/AppAdminFeaturesTest.php` enforces the `49`/`8`
+- `FeatureFlags::DEFAULTS` declares 57 flags: 50 default `true`, 7 default
+  `false`. (Phase 5 Gate A/B2 support flipped `false`->`true` on 2026-07-09,
+  Thread Intelligence flipped its two owning defaults on 2026-07-12, and
+  `group_dms` flipped on 2026-07-18; the admin feature-inventory canary in
+  `tests/Integration/Admin/AppAdminFeaturesTest.php` enforces the `50`/`7`
   split.)
-- This deploy-dark inventory has 39 table rows: all 8 current default-dark
-  flags, plus 31 retained graduated flags that are default-ON and
+- This deploy-dark inventory has 39 table rows: all 7 current default-dark
+  flags, plus 32 retained graduated flags that are default-ON and
   operator-reversible.
 - No table flag is absent from `FeatureFlags::DEFAULTS`; no current
   default-dark flag is missing from these tables.
@@ -97,9 +104,14 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
 - **Thread Intelligence default flip (2026-07-12):** the default split changed
   from `47`/`10` to `49`/`8`. `community_memory` and `automated_context`
   graduated together after the ADR 0019 evidence package; both remain
-  independently reversible. Gate B plus the four unfinished Phase 3/4
-  carryovers (`custom_css`, `group_dms`, `link_previews`, `expanded_files`)
-  remain default-dark.
+  independently reversible.
+- **group_dms default flip (2026-07-18):** the default split changed from
+  `49`/`8` to `50`/`7` (ADR 0022). Gate B plus the three unfinished Phase 3/4
+  carryovers (`custom_css`, `link_previews`, `expanded_files`) remain
+  default-dark. The evidence run also hardened
+  `ConversationRepository::listForUser`: the conversation-list preview and its
+  search now honour the viewer's `joined_after_message_id` boundary
+  (regression: `AppDirectMessageTest::test_group_list_preview_respects_the_join_boundary`).
 
 ## Phase 3 / Phase 3 Carryover
 
@@ -115,7 +127,7 @@ Audited 2026-07-12 against `src/Core/FeatureFlags.php`, literal
 | Flag | Surface | Broad-rollout state |
 |---|---|---|
 | `topic_workflow` | Canonical status, history, snooze, assignment | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: browser `29-topic-workflow`, `.wf-actions`/`.wf-bar` axe pass, runbook `docs/runbooks/topic_workflow.md`. Retained here for traceability. |
-| `group_dms` | Group conversation creation and invites | Accepted Gate A engineering baseline; default-dark until intentional enablement. 2026-07-13 live drive: the member journey works end-to-end on desktop + mobile (creation, validation draft preservation, membership intervals, owner actions, mute/leave, reporting) — remaining work is the committed Playwright/no-JS/a11y evidence, the abuse/moderation runbook, and the enablement decision; admin access stays report-only (no private-message browser) |
+| `group_dms` | Group conversation creation and invites | **Graduated 2026-07-18 — now default-ON** (ADR 0022; no longer deploy-dark; reversible via `features` override — rollback re-gates creation to 422 and management to 404 while existing groups stay readable/replyable). Acceptance evidence: `AppFeatureFlagTest` (`test_group_dms_defaults_on_and_is_operator_reversible`), `AppDirectMessageTest` (incl. the join-boundary list-preview regression), `AppPhase4GateATest`, browser `group-dms-01…06` desktop+mobile + `group-dms-07-no-js` (`tests/browser/group-dms.spec.ts`), `.dm-compose`/`.dm-inforail`/`.dm-threadpane` axe passes, runbook `docs/runbooks/group_dms.md`. Admin access stays report-only (no private-message browser — ADR 0022 constraint). Retained here for traceability. |
 | `tags` | Curated tag catalogue and thread tagging | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `expanded_feeds` | Board/tag follows, expanded Following and Latest feeds | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppFollowFeedTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
 | `reputation_ledger` | Reputation-event ledger and windowed rankings | **Graduated 2026-07-01 — now default-ON** (no longer deploy-dark; reversible via `features` override). Acceptance evidence: `AppFeatureFlagTest`, `AppPhase4GateATest`, `AppLeaderboardTest`, runbook `docs/runbooks/phase4-tags-feeds-reputation.md`, Imladris map `docs/design-system/imladris/ACTIVATED_FEATURES.md`. Retained here for traceability. |
@@ -165,7 +177,8 @@ and the scanner operations surface must be built) → `custom_css`
 (**safety-blocked**: theme safe mode does not suppress `/brand.css` custom CSS,
 so the documented recovery path is unsafe until that is repaired). The original
 tier labels below are retained for history; the per-entry Have/Need lists are
-updated in place.
+updated in place. **2026-07-18: the first item completed — `group_dms`
+graduated (ADR 0022); three dark carryovers remain in the order above.**
 
 ### Tier 1 — browser evidence already captured; docs and sign-off remain
 
@@ -224,7 +237,8 @@ updated in place.
      final-admin guard, anonymizing purge, and the not-`pending_deletion` skip);
      `AppFeatureFlagTest` covers it via `test_account_lifecycle_carryover_defaults_on_and_is_operator_reversible`
      (default-on plus operator rollback to 404; its dark cross-check now uses
-     `group_dms` since appeals graduated 2026-07-02); the `phase 4 account lifecycle` Playwright
+     `link_previews` — appeals graduated 2026-07-02 and `group_dms`
+     2026-07-18); the `phase 4 account lifecycle` Playwright
      journey drives export→deactivate→reactivate→request→cancel through the no-JS
      forms (dedicated `dana` account), capturing `35-account-lifecycle` +
      `36-account-deletion-scheduled` on desktop + mobile; `/settings/account/lifecycle`
@@ -382,20 +396,30 @@ updated in place.
       and accessibility captures, migration/backup/security evidence, and the
       data-preserving rollback rehearsal indexed in the Thread Intelligence
       evidence package, plus the ADR 0019 intentional-enablement decision.
-16. **`group_dms`** — bounded group-conversation creation, membership
-    intervals, owner actions, unread/history boundaries, admin-actionable
-    reports, inactive-account rejection, and DM-report rate limiting. Largest
-    remaining member-facing surface; accepted Gate A engineering baseline.
-    **Re-ranked first among the remaining dark carryovers on 2026-07-13** —
-    the closest to graduation despite its original tier-5 slot.
-    - Have: Gate A regression coverage (`AppPhase4GateATest`;
-      `AppDirectMessageTest` covers the DM substrate); 2026-07-13 live drive:
-      the member journey works end-to-end on desktop + mobile — creation,
-      validation draft preservation, membership intervals, owner actions,
-      mute/leave, and reporting.
-    - Need: committed journey browser/no-JS/a11y evidence, the
-      abuse/moderation runbook, and the intentional-enablement decision. Admin
-      access must remain report-only — no private-message browser.
+16. **`group_dms`** — ✓ **Graduated 2026-07-18 (default-ON; ADR 0022).**
+    Bounded group-conversation creation, membership intervals, owner actions,
+    unread/history boundaries, admin-actionable reports, inactive-account
+    rejection, and DM-report rate limiting. Was re-ranked first among the
+    remaining dark carryovers on 2026-07-13; the graduation package closed
+    exactly the three items that ranking listed.
+    - Evidence completed: `AppFeatureFlagTest`
+      (`test_group_dms_defaults_on_and_is_operator_reversible` — zero-override
+      liveness, owner-route availability, dark-neighbour isolation, and the
+      data-preserving rollback: creation 422 with the draft preserved,
+      management 404, the pre-rollback group still readable/replyable);
+      the join-boundary list-preview hardening found during the run
+      (`ConversationRepository::listForUser` + regression
+      `AppDirectMessageTest::test_group_list_preview_respects_the_join_boundary`);
+      the `tests/browser/group-dms.spec.ts` journey in the standard
+      `npm run evidence` set (desktop+mobile `group-dms-01…06`: creation with
+      the rail roster, 422 draft preservation, owner tools + group history,
+      the late joiner's interval-bounded view, the departed read-only view,
+      the staff report queue with the 404 no-browse proof; plus the
+      JavaScript-disabled `group-dms-07-no-js` pass over create/:target
+      rail/mute/report); `.dm-compose`/`.dm-inforail`/`.dm-threadpane` axe
+      scans in `tests/browser/a11y.spec.ts`; abuse/moderation runbook
+      `docs/runbooks/group_dms.md`; intentional-enablement decision ADR 0022
+      (admin access stays report-only — no private-message browser).
 
 ## Phase 5 Gate A
 
@@ -446,8 +470,9 @@ operational or product step, not another flag flip.
 Engineering-readiness order from the live-drive pass; enablement itself stays a
 product decision per flag.
 
-1. Close the group-DM evidence/runbook package and graduate `group_dms`
-   (admin access stays report-only — no private-message browser).
+1. ~~Close the group-DM evidence/runbook package and graduate `group_dms`
+   (admin access stays report-only — no private-message browser).~~
+   ✓ **Done 2026-07-18** (ADR 0022; runbook `docs/runbooks/group_dms.md`).
 2. Soak `capabilities` shadow mismatches, then intentionally flip
    `CAPABILITIES_MODE=enforce` (operational cutover, not a flag change).
 3. Decide GIPHY: configure `giphy_public_key` with the privacy disclosure, or
@@ -571,20 +596,33 @@ product decision per flag.
   stored `user_profile_fields` rows.
 - The graduation readiness ranking (added 2026-07-02) orders the Phase 3/4 dark
   flags by remaining evidence effort only; enablement order stays a product
-  decision. `group_dms` still requires an intentional-enablement decision;
-  `community_memory` received that decision through ADR 0019 and graduated with
-  `automated_context` on 2026-07-12.
+  decision. `community_memory` received that decision through ADR 0019 and
+  graduated with `automated_context` on 2026-07-12; `group_dms` received it
+  through ADR 0022 and graduated on 2026-07-18.
+- `group_dms` graduated out of deploy-dark on 2026-07-18: its `FeatureFlags`
+  default is now `true` (ADR 0022). Acceptance completed exactly the three
+  items its readiness entry listed — the committed `group-dms.spec.ts`
+  browser/no-JS journey (captures `group-dms-01…07`) in the standard
+  `npm run evidence` run, the `.dm-compose`/`.dm-inforail`/`.dm-threadpane`
+  axe scans, and the abuse/moderation runbook `docs/runbooks/group_dms.md` —
+  plus a join-boundary hardening of the conversation-list preview found during
+  the evidence run. It is retained here for traceability and remains
+  reversible via the `features` override; disabling the flag re-gates group
+  creation (422, draft preserved) and the management routes (404) while
+  existing group conversations stay readable and replyable, and staff access
+  remains report-only.
 - Since 2026-07-13 the `/admin/features` inventory renders these readiness
   categories beside each affected flag (read-only — deliberately no toggles:
   enablement stays a deliberate `settings.features` write per
-  `docs/runbooks/operations.md` §2): *Ready for acceptance* (`group_dms`),
-  *Missing user UI* (`expanded_files`), *Missing admin operations*
-  (`link_previews`), *Safety-blocked* (`custom_css`), *Operational
-  configuration required* (`capabilities` until the posture is `enforce`;
-  `slash_giphy` until a GIPHY key is set — both computed live, so the badge
-  clears when the operational step is done), and *Reserved (ADR 0018)* (the
-  four Gate B flags). Actionable rows link to their real surfaces; a surface
-  that would 404 while its flag is dark is never linked. Evidence:
+  `docs/runbooks/operations.md` §2): *Missing user UI* (`expanded_files`),
+  *Missing admin operations* (`link_previews`), *Safety-blocked*
+  (`custom_css`), *Operational configuration required* (`capabilities` until
+  the posture is `enforce`; `slash_giphy` until a GIPHY key is set — both
+  computed live, so the badge clears when the operational step is done), and
+  *Reserved (ADR 0018)* (the four Gate B flags). The *Ready for acceptance*
+  category retired on 2026-07-18 when its last row, `group_dms`, graduated
+  (ADR 0022). Actionable rows link to their real surfaces; a surface that
+  would 404 while its flag is dark is never linked. Evidence:
   `AppAdminFeaturesTest` (classification, live-clearing, no-dark-links), the
   `tests/browser/admin-features.spec.ts` journey with desktop + mobile
   captures `docs/evidence/browser/{desktop,mobile}/admin-feature-readiness.png`,

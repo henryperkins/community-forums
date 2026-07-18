@@ -4,7 +4,7 @@
   "description": "Playwright browser-evidence run for RetroBoards Gate A (desktop + mobile capture).",
   "scripts": {
     "prepare-db": "bash prepare.sh",
-    "evidence": "bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts && bash prepare.sh && playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts api-tokens.spec.ts providers.spec.ts invitations.spec.ts thread-intelligence.spec.ts composer-shell.spec.ts admin-features.spec.ts && bash prepare.sh && playwright test admin-remediation.spec.ts",
+    "evidence": "bash prepare.sh && playwright test thread-view-study.spec.ts rich-content.spec.ts && bash prepare.sh && playwright test gate-a.spec.ts server-drafts.spec.ts appeals.spec.ts group-dms.spec.ts api-tokens.spec.ts providers.spec.ts invitations.spec.ts thread-intelligence.spec.ts composer-shell.spec.ts admin-features.spec.ts && bash prepare.sh && playwright test admin-remediation.spec.ts",
     "evidence:passkeys": "bash prepare.sh && playwright test passkeys.spec.ts totp.spec.ts",
     "evidence:dark": "RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && playwright test server-drafts.spec.ts",
     "a11y": "bash -c \"RB_BROWSER_DARK_SURFACES=1 bash prepare.sh && RB_BROWSER_DARK_SURFACES=1 playwright test a11y.spec.ts package-review.spec.ts && RB_BROWSER_DARK_SURFACES=1 playwright test thread-intelligence.spec.ts --grep 'no-JS|axe'\"",

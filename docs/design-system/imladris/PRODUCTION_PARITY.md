@@ -12,9 +12,9 @@ Classification: **core** (unflagged) · **GA** (flag default-on) · **dark** (im
 | Topic workflow, tags, split/merge | `tags/*`, mod tools partials; `topic_workflow` `tags` `split_merge` | GA | `feature-ui/moderation/`, `feature-ui/tags/` |
 | Polls | in thread + composer; `polls` | GA | `feature-ui/polls/` |
 | Thread Intelligence (Living Briefs, memory, references, related) | partials `living_brief` `thread_memory_tools`; `community_memory` `automated_context` `content_references` | GA | `feature-ui/conversation/` |
-| Link previews · expanded files · group DMs · custom CSS | behind flags | **dark** | `feature-ui/conversation/` (link_previews); others behavior-only until surfaced |
+| Link previews · expanded files · custom CSS | behind flags | **dark** | `feature-ui/conversation/` (link_previews); others behavior-only until surfaced |
 | Search, notifications, announcements, presence | `search` `notifications` partial `announcement_banner`; flags GA | GA | kit screens |
-| DMs | `dm/index` `new` `show` | GA | kit conversation + Composer dm mount |
+| DMs (incl. group conversations — `group_dms` GA 2026-07-18) | `dm/index` `new` `show` | GA | kit conversation + Composer dm mount |
 | Feeds, follows, badges, reputation, leaderboard | `leaderboard`, partials `badges`; `badge_rules` `reputation_ledger` GA | GA | `feature-ui/account/`, leaderboard specimens |
 | Profiles (+gated), preferences, account lifecycle | `profile/*`, `account/*` (13 templates); `account_lifecycle` `custom_profile_fields` `profile_media` GA | GA/core | kit account screens · `ui_kits/system` (profile-gated) |
 | Auth: login, register, forgot/reset, MFA, verify, passkeys | `auth/*`, `passkeys.js` | core | `ui_kits/auth` — login, passkey sign-in, step-up, register, invited registration, forgot, reset, MFA, verify |

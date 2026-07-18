@@ -125,10 +125,10 @@ $this->section('title', $title);
                                                 <form method="post" action="/dm/<?= (int) $m['id'] ?>/report" class="dm-report-form">
                                                     <?= $this->csrfField() ?>
                                                     <button type="button" class="linkbtn dm-copy" data-copy-message hidden><?= $this->partial('partials/icon', ['name' => 'copy']) ?><span>Copy text</span></button>
-                                                    <select name="reason_code" class="input input-small">
+                                                    <select name="reason_code" class="input input-small" aria-label="Report reason">
                                                         <?php foreach ($reasons as $rc): ?><option value="<?= $e($rc) ?>"><?= $e(ucfirst(str_replace('_', ' ', $rc))) ?></option><?php endforeach; ?>
                                                     </select>
-                                                    <input type="text" name="reason" class="input input-small" placeholder="Details (optional)" maxlength="255">
+                                                    <input type="text" name="reason" class="input input-small" placeholder="Details (optional)" maxlength="255" aria-label="Report details">
                                                     <button class="btn btn-small danger" type="submit">Report message</button>
                                                 </form>
                                             </details>
