@@ -9,31 +9,30 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
-use App\Service\AdminDashboardService;
 use App\Service\CustomEmojiService;
 
 final class AdminCustomEmojiController extends Controller
 {
     /** @param array<string,string> $params */
-    public function create(Request $request, array $params): Response
+    public function index(Request $request, array $params): Response
     {
         $this->requireEmojiAdmin();
-        $admin = $this->requireAdmin();
+        return $this->page();
+    }
+
+    /** @param array<string,string> $params */
+    public function create(Request $request, array $params): Response
+    {
+        $admin = $this->requireEmojiAdmin();
         try {
             $result = $this->container->get(CustomEmojiService::class)->create($admin, $request->allInput());
         } catch (ValidationException $e) {
-            // Anti-draft-loss: re-render the dashboard (where the form lives)
-            // with the errors + typed input instead of a flash redirect.
-            return $this->view(
-                'admin/dashboard',
-                $this->container->get(AdminDashboardService::class)->dashboardModel([
-                    'emoji_errors' => $e->errors,
-                    'emoji_old' => $e->old,
-                ]),
-                422,
-            );
+            return $this->page([
+                'emoji_errors' => $e->errors,
+                'emoji_old' => array_replace($request->allInput(), $e->old),
+            ], 422);
         }
-        return $this->redirectWithFlash('/admin', $result['replaced']
+        return $this->redirectWithFlash('/admin/custom-emoji', $result['replaced']
             ? 'Custom emoji replaced — :' . $result['shortcode'] . ': already existed.'
             : 'Custom emoji saved.');
     }
@@ -41,24 +40,35 @@ final class AdminCustomEmojiController extends Controller
     /** @param array<string,string> $params */
     public function enable(Request $request, array $params): Response
     {
-        $this->requireEmojiAdmin();
-        $this->container->get(CustomEmojiService::class)->setEnabled($this->requireAdmin(), (string) ($params['shortcode'] ?? ''), true);
-        return $this->redirectWithFlash('/admin', 'Custom emoji enabled.');
+        $admin = $this->requireEmojiAdmin();
+        $this->container->get(CustomEmojiService::class)->setEnabled($admin, (string) ($params['shortcode'] ?? ''), true);
+        return $this->redirectWithFlash('/admin/custom-emoji', 'Custom emoji enabled.');
     }
 
     /** @param array<string,string> $params */
     public function disable(Request $request, array $params): Response
     {
-        $this->requireEmojiAdmin();
-        $this->container->get(CustomEmojiService::class)->setEnabled($this->requireAdmin(), (string) ($params['shortcode'] ?? ''), false);
-        return $this->redirectWithFlash('/admin', 'Custom emoji disabled.');
+        $admin = $this->requireEmojiAdmin();
+        $this->container->get(CustomEmojiService::class)->setEnabled($admin, (string) ($params['shortcode'] ?? ''), false);
+        return $this->redirectWithFlash('/admin/custom-emoji', 'Custom emoji disabled.');
     }
 
-    private function requireEmojiAdmin(): void
+    /** @param array<string,mixed> $overlay */
+    private function page(array $overlay = [], int $status = 200): Response
     {
-        $this->requireAdmin();
+        return $this->view(
+            'admin/custom_emoji',
+            $this->container->get(CustomEmojiService::class)->pageModel($overlay),
+            $status,
+        );
+    }
+
+    private function requireEmojiAdmin(): \App\Domain\User
+    {
+        $admin = $this->requireAdmin();
         if (!$this->container->get(FeatureFlags::class)->enabled('custom_emoji')) {
             throw new NotFoundException('Not found.');
         }
+        return $admin;
     }
 }

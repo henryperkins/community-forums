@@ -150,6 +150,64 @@ final class AppFieldErrorA11yTest extends TestCase
         $this->assertFieldWired($email->body(), 'input', 'email', 'err-suppress-email', 'suppress-email');
     }
 
+    public function test_split_settings_pages_wire_validation_errors_to_their_owner_fields(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'a11y_settings_admin']));
+
+        $site = $this->post('/admin/site', ['site_name' => str_repeat('x', 81)]);
+        $this->assertStatus(422, $site);
+        $siteField = $this->assertFieldWired(
+            $site->body(),
+            'input',
+            'site_name',
+            'err-site_name',
+            'admin-site-name',
+        );
+        self::assertStringContainsString('site-name-help', $siteField);
+
+        $registration = $this->post('/admin/settings/registration', ['registration_mode' => 'unknown']);
+        $this->assertStatus(422, $registration);
+        $registrationField = $this->assertFieldWired(
+            $registration->body(),
+            'select',
+            'registration_mode',
+            'err-registration_mode',
+            'admin-registration-mode',
+        );
+        self::assertStringContainsString('registration-help', $registrationField);
+
+        $moderation = $this->post('/admin/moderation', [
+            'antiabuse_mode' => 'unknown',
+            'antiabuse_blocked_words' => 'typed draft',
+        ]);
+        $this->assertStatus(422, $moderation);
+        $moderationField = $this->assertFieldWired(
+            $moderation->body(),
+            'select',
+            'antiabuse_mode',
+            'err-antiabuse_mode',
+            'admin-antiabuse-mode',
+        );
+        self::assertStringContainsString('antiabuse-help', $moderationField);
+    }
+
+    public function test_custom_emoji_owner_wires_each_validation_error(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'a11y_emoji_admin']));
+        $response = $this->post('/admin/custom-emoji', [
+            'shortcode' => '!',
+            'name' => '',
+            'image_path' => 'https://example.test/emoji.svg',
+            'mime' => 'image/svg+xml',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $this->assertFieldWired($response->body(), 'input', 'shortcode', 'err-emoji-shortcode');
+        $this->assertFieldWired($response->body(), 'input', 'name', 'err-emoji-name');
+        $this->assertFieldWired($response->body(), 'input', 'image_path', 'err-emoji-image_path');
+        $this->assertFieldWired($response->body(), 'select', 'mime', 'err-emoji-mime');
+    }
+
     private function assertFieldWired(
         string $body,
         string $tag,

@@ -14,12 +14,10 @@ use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
 use App\Repository\ModerationLogRepository;
-use App\Repository\SettingRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
 use App\Security\Cap;
 use App\Security\CapabilityResolver;
-use App\Security\RegistrationPolicy;
 use App\Security\WriteGate;
 use App\Service\ThreadIntelligence\ThreadIntelligenceBoardSweep;
 use App\Support\Str;
@@ -38,16 +36,10 @@ final class AdminService
     /** Longest per-board edit window offered in the UI: one week, in minutes. */
     private const MAX_EDIT_WINDOW_MINUTES = 10080;
 
-    /** Registration modes (P3-05 + P5-13 `invite`) — interpreted by RegistrationPolicy. */
-    public const REGISTRATION_MODES = RegistrationPolicy::MODES;
-    /** Anti-abuse enforcement postures (AntiAbuseService::mode), safest first. */
-    public const ANTIABUSE_MODES = ['observe', 'flag', 'hold', 'block'];
-
     public function __construct(
         private Database $db,
         private CategoryRepository $categories,
         private BoardRepository $boards,
-        private SettingRepository $settings,
         private ModerationLogRepository $log,
         private WriteGate $writeGate,
         private UserRepository $users,
@@ -68,97 +60,6 @@ final class AdminService
     private function gate(): AuthorityGate
     {
         return $this->authority ?? AuthorityGate::legacy();
-    }
-
-    public function setSiteName(User $admin, string $name): void
-    {
-        $this->assertAdmin($admin);
-        $name = trim($name);
-        if ($name === '' || mb_strlen($name) > 80) {
-            throw new ValidationException(['site_name' => 'Site name must be 1–80 characters.'], ['site_name' => $name]);
-        }
-        $before = $this->settings->getString('site_name', '');
-        $this->db->transaction(function () use ($admin, $name, $before): void {
-            $this->settings->set('site_name', $name);
-            $this->log->log([
-                'actor_id' => $admin->id(),
-                'action' => 'update_setting',
-                'target_type' => 'setting',
-                'target_id' => 0,
-                'reason' => 'site_name',
-                'before' => ['site_name' => $before],
-                'after' => ['site_name' => $name],
-            ]);
-        });
-    }
-
-    /**
-     * Trust & safety settings (P3-05): registration mode plus the enforced
-     * anti-abuse posture (mode + admin-managed blocked words). Persisted to
-     * `settings` (read by AuthController / AntiAbuseService) and audited.
-     *
-     * @param array<string,mixed> $input
-     */
-    public function updateModerationSettings(User $admin, array $input): void
-    {
-        $this->assertAdmin($admin);
-
-        // A present-but-invalid mode is refused, not silently coerced: a stale
-        // or hand-crafted form must never quietly downgrade the registration
-        // gate or the enforced anti-abuse posture (PR #44 spec §5 — the 422
-        // re-renders with the typed input preserved). Absent keys keep their
-        // defaults as before.
-        $regMode = (string) ($input['registration_mode'] ?? 'open');
-        if (!in_array($regMode, self::REGISTRATION_MODES, true)) {
-            throw new ValidationException(
-                ['registration_mode' => 'Unknown registration mode.'],
-                ['registration_mode' => $regMode],
-            );
-        }
-        $aaMode = (string) ($input['antiabuse_mode'] ?? 'observe');
-        if (!in_array($aaMode, self::ANTIABUSE_MODES, true)) {
-            throw new ValidationException(
-                ['antiabuse_mode' => 'Unknown anti-abuse mode.'],
-                ['antiabuse_mode' => $aaMode],
-            );
-        }
-        // Blocked words: one per line or comma-separated; trimmed, de-duped
-        // (case-insensitively), each between MIN_BLOCKED_WORD_LENGTH and 100
-        // chars. A too-short entry is dropped rather than stored, because
-        // matching is unanchored substring (AntiAbuseService::matchedBlockedWord)
-        // and a 1–2 char rule would blanket-match legitimate posts. An
-        // array-shaped POST (antiabuse_blocked_words[]=…) is treated as empty
-        // rather than coerced to the literal string "Array".
-        $raw = is_string($input['antiabuse_blocked_words'] ?? null) ? $input['antiabuse_blocked_words'] : '';
-        $words = [];
-        foreach (preg_split('/[\r\n,]+/', $raw) ?: [] as $w) {
-            $w = trim((string) $w);
-            $len = mb_strlen($w);
-            if ($len >= AntiAbuseService::MIN_BLOCKED_WORD_LENGTH && $len <= 100) {
-                $words[mb_strtolower($w)] = $w;
-            }
-        }
-        $words = array_values($words);
-
-        $before = [
-            'registration_mode' => $this->settings->getString('registration_mode', 'open'),
-            'antiabuse_mode' => $this->settings->getString('antiabuse_mode', 'observe'),
-            'antiabuse_blocked_words' => (array) $this->settings->get('antiabuse_blocked_words', []),
-        ];
-        $this->db->transaction(function () use ($admin, $regMode, $aaMode, $words, $before): void {
-            $this->settings->set('registration_mode', $regMode);
-            $this->settings->set('antiabuse_mode', $aaMode);
-            $this->settings->set('antiabuse_blocked_words', $words);
-            $this->log->log([
-                'actor_id' => $admin->id(),
-                'action' => 'update_setting',
-                'target_type' => 'setting',
-                'target_id' => 0,
-                'reason' => 'moderation_settings',
-                'before' => $before,
-                'after' => ['registration_mode' => $regMode, 'antiabuse_mode' => $aaMode, 'antiabuse_blocked_words' => $words],
-            ]);
-        });
     }
 
     // ---- Categories -------------------------------------------------------

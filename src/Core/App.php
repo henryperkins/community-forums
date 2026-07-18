@@ -22,6 +22,7 @@ use App\Controller\AdminPackagesController;
 use App\Controller\AdminRegistryController;
 use App\Controller\AdminProviderController;
 use App\Controller\AdminRoleController;
+use App\Controller\AdminSettingsController;
 use App\Controller\AdminThemeController;
 use App\Controller\AdminThreadIntelligenceController;
 use App\Controller\AdminUserController;
@@ -177,6 +178,7 @@ use App\Service\AccountService;
 use App\Service\AccountLifecycleService;
 use App\Service\AdminDashboardService;
 use App\Service\AdminService;
+use App\Service\AdminSettingsService;
 use App\Service\AnnouncementService;
 use App\Service\AntiAbuseService;
 use App\Service\AppealService;
@@ -1947,7 +1949,6 @@ final class App
             $c->get(Database::class),
             $c->get(CategoryRepository::class),
             $c->get(BoardRepository::class),
-            $c->get(SettingRepository::class),
             $c->get(ModerationLogRepository::class),
             $c->get(WriteGate::class),
             $c->get(UserRepository::class),
@@ -1966,9 +1967,14 @@ final class App
             $c->get(Mailer::class),
             $c->get(EmailDomainVerifier::class),
             $c->get(ThreadIntelligenceAdminService::class),
-            $c->get(SettingRepository::class),
-            $c->get(CustomEmojiService::class),
             $c->get(AuditQueryService::class),
+        ));
+        $c->bind(AdminSettingsService::class, fn (Container $c) => new AdminSettingsService(
+            $c->get(Database::class),
+            $c->get(SettingRepository::class),
+            $c->get(ModerationLogRepository::class),
+            $c->get(WriteGate::class),
+            $c->get(FeatureFlags::class),
         ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),
@@ -2196,6 +2202,11 @@ final class App
         $r->post('/dm/{id}/report', [ConversationController::class, 'report']);
 
         $r->get('/admin', [AdminController::class, 'dashboard']);
+        $r->get('/admin/settings', [AdminSettingsController::class, 'general']);
+        $r->post('/admin/settings', [AdminSettingsController::class, 'obsoleteCombinedUpdate']);
+        $r->post('/admin/settings/registration', [AdminSettingsController::class, 'updateRegistration']);
+        $r->get('/admin/moderation', [AdminSettingsController::class, 'moderation']);
+        $r->post('/admin/moderation', [AdminSettingsController::class, 'updateAntiAbuse']);
         $r->get('/admin/audit', [AdminController::class, 'audit']);
         $r->get('/admin/api-tokens', [AdminApiTokenController::class, 'index']);
         $r->post('/admin/api-tokens', [AdminApiTokenController::class, 'mint']);
@@ -2310,12 +2321,12 @@ final class App
         $r->post('/admin/badge-rules/{id}/revoke', [AdminBadgeRuleController::class, 'revoke']);
         $r->post('/admin/link-previews/{id}/refresh', [AdminLinkPreviewController::class, 'refresh']);
         $r->post('/admin/link-previews/{id}/purge', [AdminLinkPreviewController::class, 'purge']);
+        $r->get('/admin/custom-emoji', [AdminCustomEmojiController::class, 'index']);
         $r->post('/admin/custom-emoji', [AdminCustomEmojiController::class, 'create']);
         $r->post('/admin/custom-emoji/{shortcode}/enable', [AdminCustomEmojiController::class, 'enable']);
         $r->post('/admin/custom-emoji/{shortcode}/disable', [AdminCustomEmojiController::class, 'disable']);
         $r->get('/admin/structure', [AdminController::class, 'structure']);
-        $r->post('/admin/site', [AdminController::class, 'updateSite']);
-        $r->post('/admin/settings', [AdminController::class, 'updateSettings']);
+        $r->post('/admin/site', [AdminSettingsController::class, 'updateSite']);
         $r->post('/admin/categories', [AdminController::class, 'createCategory']);
         $r->post('/admin/categories/{id}', [AdminController::class, 'updateCategory']);
         // Destructive structure actions are two-step: a GET confirmation page

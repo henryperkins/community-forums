@@ -51,7 +51,7 @@ final class AppAdminTest extends TestCase
         $this->actingAs($this->admin);
         $this->get('/admin');
         $response = $this->post('/admin/site', ['site_name' => 'New Name']);
-        $this->assertRedirect($response, '/admin');
+        $this->assertRedirect($response, '/admin/settings');
 
         self::assertSame('New Name', (new \App\Repository\SettingRepository($this->db))->getString('site_name'));
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'update_setting'"));

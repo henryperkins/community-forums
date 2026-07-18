@@ -64,9 +64,17 @@ async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
 }
 
 async function visit(page: Page, url: string): Promise<void> {
-  const resp = await page.goto(url);
-  expect(resp, `no response for ${url}`).not.toBeNull();
-  expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
+    const resp = await page.goto(url);
+    expect(resp, `no response for ${url}`).not.toBeNull();
+    expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
+}
+
+async function openAdminSections(page: Page): Promise<void> {
+  const toggle = page.locator('[data-admin-nav-toggle]');
+  if (await toggle.isVisible()) {
+    await toggle.click();
+    await expect(page.locator('[data-admin-nav]')).toHaveAttribute('aria-hidden', 'false');
+  }
 }
 
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
@@ -706,7 +714,7 @@ test('phase 4 custom emoji: admin catalogue, Markdown render, and reaction', asy
   });
 
   await login(page, 'admin@retro.test');
-  await visit(page, '/admin');
+  await visit(page, '/admin/custom-emoji');
   const panel = page.locator('.custom-emoji-panel');
   await expect(panel).toBeVisible();
   await panel.locator('input[name="shortcode"]').fill(shortcode);
@@ -715,7 +723,7 @@ test('phase 4 custom emoji: admin catalogue, Markdown render, and reaction', asy
   await panel.locator('select[name="mime"]').selectOption('image/png');
   await panel.locator('input[name="allow_reactions"]').check();
   await panel.getByRole('button', { name: 'Save emoji' }).click();
-  await page.waitForURL(/\/admin$/);
+  await page.waitForURL(/\/admin\/custom-emoji$/);
   await expect(page.getByRole('status').getByText('Custom emoji saved.')).toBeVisible();
   await expect(page.locator('.custom-emoji-panel')).toContainText(token);
   await shot(page, info, '48-custom-emoji-admin');
@@ -892,6 +900,7 @@ test('admin API tokens: mint shows the secret once, then revoke', async ({ page 
 
   // The flag-gated discovery link appears on the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
+  await openAdminSections(page);
   await page.getByRole('link', { name: 'API tokens' }).click();
   await page.waitForURL(/\/admin\/api-tokens$/);
   await expect(page.getByRole('heading', { name: 'API tokens' })).toBeVisible();
@@ -968,6 +977,7 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
   try {
     await login(page, 'admin@retro.test');
     await visit(page, '/admin');
+    await openAdminSections(page);
     await expect(page.getByRole('link', { name: 'Webhooks' })).toHaveAttribute('href', '/admin/webhooks');
     await visit(page, '/admin/webhooks');
     await expect(page.getByRole('heading', { name: 'Webhooks' })).toBeVisible();
@@ -1249,6 +1259,7 @@ test('admin email delivery: dashboard, suppress/remove, and a test-send', async 
 
   // The email link appears on the admin dashboard subnav (email flag defaults on).
   await visit(page, '/admin');
+  await openAdminSections(page);
   await page.getByRole('navigation', { name: 'Admin navigation' })
     .getByRole('link', { name: 'Email', exact: true }).click();
   await page.waitForURL(/\/admin\/email$/);

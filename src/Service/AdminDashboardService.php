@@ -9,7 +9,6 @@ use App\Core\FeatureFlags;
 use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\ModerationLogRepository;
-use App\Repository\SettingRepository;
 use App\Service\ThreadIntelligence\ThreadIntelligenceAdminService;
 
 final class AdminDashboardService
@@ -22,55 +21,16 @@ final class AdminDashboardService
         private Mailer $mailer,
         private EmailDomainVerifier $emailDomainVerifier,
         private ?ThreadIntelligenceAdminService $threadIntelligence = null,
-        private ?SettingRepository $settings = null,
-        private ?CustomEmojiService $customEmoji = null,
         private ?AuditQueryService $auditQuery = null,
     ) {
     }
 
     /**
-     * The complete dashboard view model (PR #44 spec §5): summary() plus the
-     * settings/branding context the controller used to assemble inline. The
-     * overlay REPLACES base keys (array_replace) so a 422 re-render's
-     * `settings_errors`/`settings_old` actually reach the template — the old
-     * `[defaults] + $extra` union kept the pristine left-hand side.
-     *
-     * @param array<string,mixed> $overlay
-     * @return array<string,mixed>
-     */
-    public function dashboardModel(array $overlay = []): array
-    {
-        $summary = $this->summary();
-        $customEmojiOn = $this->features->enabled('custom_emoji');
-        $base = [
-            'cards' => $summary['cards'],
-            'attention' => $summary['attention'],
-            'audit' => $summary['audit'],
-            'custom_emoji_on' => $customEmojiOn,
-            'custom_emoji' => $customEmojiOn ? ($this->customEmoji?->catalogue() ?? []) : [],
-            'mailer_configured' => $summary['mailer_configured'],
-            'send_blocked' => $summary['send_blocked'],
-            'registration_mode' => $this->settings?->getString('registration_mode', 'open') ?? 'open',
-            'antiabuse_mode' => $this->settings?->getString('antiabuse_mode', 'observe') ?? 'observe',
-            'antiabuse_blocked_words' => (array) ($this->settings?->get('antiabuse_blocked_words', []) ?? []),
-            'registration_modes' => AdminService::REGISTRATION_MODES,
-            'invitations_flag_on' => $this->features->enabled('invitations'),
-            'antiabuse_modes' => AdminService::ANTIABUSE_MODES,
-            'settings_errors' => [],
-            'settings_old' => [],
-        ];
-
-        return array_replace($base, $overlay);
-    }
-
-    /**
      * @return array{
-     *   cards:array<int,array{title:string,count:int,detail:string,href:?string}>,
-     *   attention:array<int,array{label:string,href:?string}>,
-     *   audit:array<int,array<string,mixed>>,
-     *   counts:array{reports:int,pending_threads:int,pending_replies:int,new_users_today:int,active_users:int,failed_emails:int,open_appeals:int},
-     *   mailer_configured:bool,
-     *   send_blocked:bool
+     *   queue_cards:list<array{title:string,count:int,detail:string,href:?string,status:string}>,
+     *   activity_cards:list<array{title:string,count:int,detail:string,href:?string}>,
+     *   attention:list<array{label:string,href:?string}>,
+     *   audit:list<array<string,mixed>>
      * }
      */
     public function summary(): array
@@ -89,20 +49,21 @@ final class AdminDashboardService
         if ($this->auditQuery !== null) {
             $audit = $this->auditQuery->enrich($audit);
         }
-        $auditTotal = $this->moderationLog->searchCount([]);
-        $mailerConfigured = $this->mailer->isConfigured();
-        $sendBlocked = $this->emailDomainVerifier->blockedReason() !== null;
+
         $reportsEnabled = $this->features->enabled('moderation_queue');
         $appealsEnabled = $this->features->enabled('appeals');
         $emailEnabled = $this->features->enabled('email');
         $pendingApprovals = $counts['pending_threads'] + $counts['pending_replies'];
+        $mailerConfigured = $this->mailer->isConfigured();
+        $sendBlocked = $this->emailDomainVerifier->blockedReason() !== null;
 
-        $cards = [
+        $queueCards = [
             [
                 'title' => 'Reports',
                 'count' => $counts['reports'],
                 'detail' => $reportsEnabled ? 'Open or triaged moderation queue items' : 'Moderation queue disabled',
                 'href' => $reportsEnabled ? '/mod/reports' : null,
+                'status' => !$reportsEnabled ? 'unavailable' : ($counts['reports'] > 0 ? 'attention' : 'clear'),
             ],
             [
                 'title' => 'Approval hold',
@@ -113,18 +74,14 @@ final class AdminDashboardService
                 // /mod/approvals shares the moderation_queue gate — never link
                 // a card at a route the flag just took dark (round-2 audit).
                 'href' => $reportsEnabled ? '/mod/approvals' : null,
+                'status' => !$reportsEnabled ? 'unavailable' : ($pendingApprovals > 0 ? 'attention' : 'clear'),
             ],
             [
                 'title' => 'Appeals',
                 'count' => $counts['open_appeals'],
                 'detail' => $appealsEnabled ? 'Open moderation appeals' : 'Appeals disabled',
                 'href' => $appealsEnabled ? '/mod/appeals' : null,
-            ],
-            [
-                'title' => 'New users today',
-                'count' => $counts['new_users_today'],
-                'detail' => $counts['active_users'] . ' active in the last 15 minutes',
-                'href' => '/admin/users',
+                'status' => !$appealsEnabled ? 'unavailable' : ($counts['open_appeals'] > 0 ? 'attention' : 'clear'),
             ],
             [
                 'title' => 'Email failures',
@@ -135,24 +92,33 @@ final class AdminDashboardService
                         ? 'Sending is not configured'
                         : ($sendBlocked ? 'Sending blocked pending SPF/DKIM' : 'Delivery log and suppressions')),
                 'href' => $emailEnabled ? '/admin/email?status=failed' : null,
-            ],
-            [
-                'title' => 'Audit',
-                'count' => $auditTotal,
-                'detail' => 'Search the full staff and system action log',
-                'href' => '/admin/audit',
+                'status' => !$emailEnabled
+                    ? 'unavailable'
+                    : (($counts['failed_emails'] > 0 || !$mailerConfigured || $sendBlocked) ? 'attention' : 'clear'),
             ],
         ];
 
         $threadIntelligence = null;
         if ($this->features->enabled('community_memory') || $this->features->enabled('automated_context')) {
             $threadIntelligence = $this->threadIntelligence?->overview();
-            if ($threadIntelligence !== null) {
-                $cards[] = [
+            if ($threadIntelligence === null) {
+                $queueCards[] = [
+                    'title' => 'Thread Intelligence',
+                    'count' => 0,
+                    'detail' => 'Operational status is unavailable',
+                    'href' => '/admin/thread-intelligence',
+                    'status' => 'unavailable',
+                ];
+            } else {
+                $threadAttention = (int) $threadIntelligence['warning_count'] > 0
+                    || (int) $threadIntelligence['queue_attention'] > 0
+                    || (string) $threadIntelligence['heartbeat'] !== 'healthy';
+                $queueCards[] = [
                     'title' => 'Thread Intelligence',
                     'count' => (int) $threadIntelligence['warning_count'],
                     'detail' => (int) $threadIntelligence['queue_attention'] . ' threads need operator attention · worker ' . (string) $threadIntelligence['heartbeat'],
                     'href' => '/admin/thread-intelligence',
+                    'status' => $threadAttention ? 'attention' : 'clear',
                 ];
             }
         }
@@ -189,16 +155,10 @@ final class AdminDashboardService
             ];
         }
         if ($emailEnabled && !$mailerConfigured) {
-            $attention[] = [
-                'label' => 'Email sending is not configured yet.',
-                'href' => '/admin/email',
-            ];
+            $attention[] = ['label' => 'Email sending is not configured yet.', 'href' => '/admin/email'];
         }
         if ($emailEnabled && $sendBlocked) {
-            $attention[] = [
-                'label' => 'Email sending is blocked until SPF and DKIM pass.',
-                'href' => '/admin/email',
-            ];
+            $attention[] = ['label' => 'Email sending is blocked until SPF and DKIM pass.', 'href' => '/admin/email'];
         }
         if ($threadIntelligence !== null && (int) $threadIntelligence['warning_count'] > 0) {
             $tiWarnings = (int) $threadIntelligence['warning_count'];
@@ -209,12 +169,23 @@ final class AdminDashboardService
         }
 
         return [
-            'cards' => $cards,
+            'queue_cards' => $queueCards,
+            'activity_cards' => [
+                [
+                    'title' => 'New users today',
+                    'count' => $counts['new_users_today'],
+                    'detail' => 'Accounts created since 00:00 UTC',
+                    'href' => '/admin/users',
+                ],
+                [
+                    'title' => 'Active now',
+                    'count' => $counts['active_users'],
+                    'detail' => 'Seen in the last 15 minutes',
+                    'href' => '/admin/users',
+                ],
+            ],
             'attention' => $attention,
             'audit' => $audit,
-            'counts' => $counts,
-            'mailer_configured' => $mailerConfigured,
-            'send_blocked' => $sendBlocked,
         ];
     }
 }

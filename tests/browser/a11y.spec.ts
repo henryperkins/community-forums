@@ -452,7 +452,7 @@ test('phase 4 custom emoji surfaces have no serious axe violations', async ({ pa
   });
 
   await login(page, 'admin@retro.test');
-  await visit(page, '/admin');
+  await visit(page, '/admin/custom-emoji');
   const panel = page.locator('.custom-emoji-panel');
   await expect(panel).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '.custom-emoji-panel');
@@ -463,7 +463,7 @@ test('phase 4 custom emoji surfaces have no serious axe violations', async ({ pa
   await panel.locator('select[name="mime"]').selectOption('image/png');
   await panel.locator('input[name="allow_reactions"]').check();
   await panel.getByRole('button', { name: 'Save emoji' }).click();
-  await page.waitForURL(/\/admin$/);
+  await page.waitForURL(/\/admin\/custom-emoji$/);
   await expect(page.getByRole('status').getByText('Custom emoji saved.')).toBeVisible();
   await expect(page.locator('.custom-emoji-panel')).toContainText(token);
   await expectNoSeriousA11yViolations(page, info, '.custom-emoji-panel');

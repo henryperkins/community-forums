@@ -81,6 +81,19 @@ final class CustomEmojiService
         );
     }
 
+    /**
+     * @param array<string,mixed> $overlay
+     * @return array<string,mixed>
+     */
+    public function pageModel(array $overlay = []): array
+    {
+        return array_replace([
+            'custom_emoji' => $this->catalogue(),
+            'emoji_errors' => [],
+            'emoji_old' => [],
+        ], $overlay);
+    }
+
     /** @return list<array{shortcode:string,name:string,image_path:string,mime:string,is_enabled:int,allow_reactions:int,created_at:string,updated_at:?string}> */
     public function catalogue(): array
     {

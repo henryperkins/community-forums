@@ -29,7 +29,7 @@ final class AppAdminNavIaTest extends TestCase
         $body = $this->get('/admin')->body();
 
         foreach (['Moderation', 'Content', 'People', 'Appearance', 'Notifications', 'Integrations', 'Settings'] as $label) {
-            self::assertStringContainsString('subnav-group-label">' . $label, $body, "nav group '$label' missing");
+            self::assertStringContainsString('class="admin-nav-group-title">' . $label, $body, "nav group '$label' missing");
         }
         self::assertStringContainsString('href="/mod/reports"', $body);
         self::assertStringContainsString('href="/mod/approvals"', $body);
