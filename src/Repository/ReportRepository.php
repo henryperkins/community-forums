@@ -75,6 +75,7 @@ final class ReportRepository
             return $this->db->fetchAll(
                 "SELECT r.*, rep.username AS reporter_username,
                         p.body AS post_body, p.thread_id, p.user_id AS post_author_id, pa.username AS post_author_username,
+                        p.is_anonymous AS post_is_anonymous,
                         t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug,
                         dm.body AS dm_body, dm.body_html AS dm_body_html, dm.conversation_id AS dm_conversation_id,
                         dm_sender.username AS dm_sender_username, dm_sender.display_name AS dm_sender_display_name,
@@ -100,6 +101,7 @@ final class ReportRepository
         return $this->db->fetchAll(
             "SELECT r.*, rep.username AS reporter_username,
                     p.body AS post_body, p.thread_id, p.user_id AS post_author_id, pa.username AS post_author_username,
+                    p.is_anonymous AS post_is_anonymous,
                     t.slug AS thread_slug, t.title AS thread_title, b.slug AS board_slug
              FROM reports r
              JOIN users rep ON rep.id = r.reporter_id

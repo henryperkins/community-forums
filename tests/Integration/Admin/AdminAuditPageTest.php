@@ -65,6 +65,45 @@ final class AdminAuditPageTest extends TestCase
         $this->assertSeeText($second, 'Previous');
     }
 
+    /** Raw rows (no bcrypt) so a 500-account fixture stays fast. */
+    private function bulkInsertUsers(string $prefix, int $count): void
+    {
+        $values = [];
+        $params = [];
+        for ($i = 0; $i < $count; $i++) {
+            $values[] = "(?, ?, NULL, 'user', 'active', UTC_TIMESTAMP())";
+            $params[] = $prefix . $i;
+            $params[] = $prefix . $i . '@example.test';
+        }
+        $this->db->run(
+            'INSERT INTO users (username, email, password_hash, role, status, created_at) VALUES ' . implode(',', $values),
+            $params,
+        );
+    }
+
+    public function test_actor_filter_matching_over_500_accounts_is_refused_not_truncated(): void
+    {
+        // Past the resolution cap the old code silently filtered by the first
+        // 500 ids — incomplete rows AND a false total. Refuse loudly instead.
+        $admin = $this->makeAdmin(['password' => 'password123']);
+        $this->bulkInsertUsers('swarm', 501);
+        $this->actingAs($admin);
+
+        $res = $this->get('/admin/audit', ['actor' => 'swarm']);
+
+        $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'matches too many accounts');
+    }
+
+    public function test_actor_filter_matching_exactly_500_accounts_still_answers(): void
+    {
+        $admin = $this->makeAdmin(['password' => 'password123']);
+        $this->bulkInsertUsers('flock', 500);
+        $this->actingAs($admin);
+
+        $this->assertStatus(200, $this->get('/admin/audit', ['actor' => 'flock']));
+    }
+
     public function test_dashboard_audit_card_links_to_the_audit_screen(): void
     {
         $this->actingAs($this->makeAdmin());

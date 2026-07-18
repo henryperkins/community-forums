@@ -1900,6 +1900,7 @@ final class App
             $c->get(FeatureFlags::class)->enabled('link_previews') ? $c->get(LinkPreviewService::class) : null,
             $c->get(AuthorityGate::class),
             $c->get(ThreadIntelligenceQueue::class),
+            $c->get(BoardAuthority::class),
         ));
         $c->bind(BoardAuthority::class, fn (Container $c) => new BoardAuthority(
             $c->get(WriteGate::class),

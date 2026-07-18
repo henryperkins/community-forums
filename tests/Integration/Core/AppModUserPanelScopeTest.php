@@ -274,4 +274,3 @@ final class AppModUserPanelScopeTest extends TestCase
         $this->assertSeeText($res, '/admin/users/' . $id);
     }
 }
-

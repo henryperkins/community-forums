@@ -104,6 +104,34 @@ final class AppReportQueueTest extends TestCase
         $this->assertStatus(200, $this->get('/mod/reports'));
     }
 
+    public function testQueueMasksAnonymousAuthorsAndOffersNoWarnShortcut(): void
+    {
+        // Two reported replies: one named, one posted anonymously. The queue may
+        // attribute the former, but the anonymous author stays masked — unmasking
+        // is only the audited /mod/p/{id}/reveal action (ADMIN §1.3), never a
+        // queue row byline or a /mod/u/{id} warn shortcut.
+        $anonAuthor = $this->makeUser(['username' => 'maskedwriter']);
+        $thread = $this->makeThread($this->board, $anonAuthor, 'Anon topic', 'OP');
+        $anonReply = $this->posting()->reply($this->userEntity($anonAuthor), $thread['thread_id'], ['body' => 'anonymous reply']);
+        $this->db->run('UPDATE posts SET is_anonymous = 1 WHERE id = ?', [$anonReply]);
+
+        $this->actingAs($this->reporter);
+        $this->post('/posts/' . $this->replyId . '/report', ['reason_code' => 'spam']);
+        $this->post('/posts/' . $anonReply . '/report', ['reason_code' => 'spam']);
+
+        $this->actingAs($this->modA);
+        $queue = $this->get('/mod/reports');
+        $this->assertStatus(200, $queue);
+
+        $namedAuthorId = (int) $this->db->fetchValue('SELECT user_id FROM posts WHERE id = ?', [$this->replyId]);
+        $this->assertSeeText($queue, 'post by @author');
+        $this->assertSeeText($queue, '/mod/u/' . $namedAuthorId . '"');
+
+        $this->assertSeeText($queue, 'post by Anonymous');
+        $this->assertDontSeeText($queue, 'maskedwriter');
+        $this->assertDontSeeText($queue, '/mod/u/' . (int) $anonAuthor['id'] . '"');
+    }
+
     public function testResolveNotifiesOptedInReporter(): void
     {
         $this->actingAs($this->reporter);

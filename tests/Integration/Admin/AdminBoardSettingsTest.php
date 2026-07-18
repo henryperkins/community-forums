@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Admin;
 
+use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use Tests\Support\TestCase;
 
@@ -135,6 +136,46 @@ final class AdminBoardSettingsTest extends TestCase
 
         $this->assertRedirect($res);
         self::assertSame('Staff edit lands.', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+    }
+
+    public function test_assigned_board_moderator_is_exempt_from_the_edit_window(): void
+    {
+        // "Staff stay exempt" (ADMIN §4.2) is board-scoped authority, not just
+        // the global role: a member assigned to moderate THIS board edits their
+        // own old post past the window.
+        $seed = $this->seedBoard();
+        $boardMod = $this->makeUser(['password' => 'password123', 'username' => 'deskmod']);
+        (new BoardModeratorRepository($this->db))->assign((int) $seed['board']['id'], (int) $boardMod['id']);
+        $made = $this->makeThread($seed['board'], $boardMod, 'Mod topic', 'Original.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$made['thread_id']]);
+        $this->db->run('UPDATE boards SET edit_window_seconds = 60 WHERE id = ?', [(int) $seed['board']['id']]);
+        $this->db->run('UPDATE posts SET created_at = UTC_TIMESTAMP() - INTERVAL 1 HOUR WHERE id = ?', [$postId]);
+
+        $this->actingAs($boardMod);
+        $res = $this->post('/posts/' . $postId . '/edit', ['body' => 'Board-mod edit lands.']);
+
+        $this->assertRedirect($res);
+        self::assertSame('Board-mod edit lands.', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
+    }
+
+    public function test_moderator_of_another_board_is_not_exempt_from_the_edit_window(): void
+    {
+        // The exemption is scoped: moderating some OTHER board buys nothing here.
+        $seed = $this->seedBoard();
+        $elsewhere = $this->makeBoard($seed['category'], ['name' => 'Elsewhere']);
+        $offMod = $this->makeUser(['password' => 'password123', 'username' => 'awaymod']);
+        (new BoardModeratorRepository($this->db))->assign((int) $elsewhere['id'], (int) $offMod['id']);
+        $made = $this->makeThread($seed['board'], $offMod, 'Away topic', 'Original.');
+        $postId = (int) $this->db->fetchValue('SELECT id FROM posts WHERE thread_id = ? AND is_op = 1', [$made['thread_id']]);
+        $this->db->run('UPDATE boards SET edit_window_seconds = 60 WHERE id = ?', [(int) $seed['board']['id']]);
+        $this->db->run('UPDATE posts SET created_at = UTC_TIMESTAMP() - INTERVAL 1 HOUR WHERE id = ?', [$postId]);
+
+        $this->actingAs($offMod);
+        $res = $this->post('/posts/' . $postId . '/edit', ['body' => 'Out-of-scope edit.']);
+
+        $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'edit window');
+        self::assertSame('Original.', (string) $this->db->fetchValue('SELECT body FROM posts WHERE id = ?', [$postId]));
     }
 
     public function test_delete_with_move_relocates_threads_recounts_and_deletes(): void

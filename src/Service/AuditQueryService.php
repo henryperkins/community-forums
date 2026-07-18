@@ -20,6 +20,9 @@ use DateTimeZone;
  */
 final class AuditQueryService
 {
+    /** Actor-substring resolution cap — past it the filter is refused, never silently truncated. */
+    private const ACTOR_MATCH_LIMIT = 500;
+
     public function __construct(
         private ModerationLogRepository $log,
         private UserRepository $users,
@@ -69,7 +72,16 @@ final class AuditQueryService
         $repoFilters = $filters;
         unset($repoFilters['actor']);
         if ($filters['actor'] !== '') {
-            $actorIds = $this->users->idsMatchingName($filters['actor']);
+            // Fetch one past the cap: rows and total computed from a truncated
+            // id list would silently drop matches, so a too-broad filter is
+            // refused outright rather than answered incompletely.
+            $actorIds = $this->users->idsMatchingName($filters['actor'], self::ACTOR_MATCH_LIMIT + 1);
+            if (count($actorIds) > self::ACTOR_MATCH_LIMIT) {
+                throw new ValidationException(
+                    ['actor' => 'That filter matches too many accounts — add more of the name, or use the exact username.'],
+                    $filters,
+                );
+            }
             if ($actorIds === []) {
                 // No actor matches ⇒ no rows — never fall through unfiltered.
                 return [

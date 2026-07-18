@@ -92,13 +92,16 @@ draft-loss classes wholesale and builds three of the four untracked features.
   of any single board could read every note about every member — strictly
   worse than the narrowed capability. Board-scoped notes can widen this later;
   the narrowing is annotated at ADMIN §3.4 and recorded in its changelog.
-- **Follow-up (pre-existing, out of the PR #44 scope):** the reports queue
-  de-anonymizes without an audit trail — `ReportRepository.php` queue/detail
-  queries select the raw author of anonymous reported posts (lines 77, 85,
-  102, 107) and `templates/mod/reports.php:91-113` renders `@username` plus a
-  "Warn author…" link, bypassing the audited `/mod/p/{id}/reveal` flow every
-  other surface uses. Logged here for its own fix; deliberately not expanded
-  into the PR #44 remediation.
+- **Anonymous authors stay masked in the reports queue.** The queue's author
+  byline and "Warn author…" shortcut are PR #44 additions (the queue previously
+  showed no author at all); as first written they exposed the raw author of
+  anonymous reported posts, bypassing the audited `/mod/p/{id}/reveal` flow
+  every other surface uses — an earlier revision of this ADR mislabelled that
+  exposure "pre-existing". Fixed inside this PR: `ReportRepository::queue()`
+  also selects `posts.is_anonymous`, the byline renders through
+  `mask_author()`, and the warn shortcut is withheld for anonymous posts, so
+  unmasking remains exclusively the audited reveal on the post itself
+  (ADMIN §1.3).
 
 ## Consequences
 

@@ -86,10 +86,11 @@ $staleBefore = time() - 86400;
                             <span class="muted">by <?= $e($r['reporter_username']) ?> · <?= $e(human_datetime($r['created_at'])) ?></span>
                         </div>
                         <?php if (($r['post_id'] ?? null) !== null): ?>
+                            <?php $reportedAuthor = mask_author(null, $r['post_author_username'] ?? null, 'user', (int) ($r['post_is_anonymous'] ?? 0) === 1); ?>
                             <p class="report-target">
                                 <a href="/t/<?= (int) $r['thread_id'] ?>-<?= $e($r['thread_slug']) ?>#p<?= (int) $r['post_id'] ?>"><?= $e($r['thread_title'] ?? 'thread') ?></a>
                                 <?php if (($r['post_author_username'] ?? '') !== ''): ?>
-                                    <span class="muted">· post by @<?= $e($r['post_author_username']) ?></span>
+                                    <span class="muted">· post by <?= $reportedAuthor['profile_url'] !== null ? '@' : '' ?><?= $e($reportedAuthor['label']) ?></span>
                                 <?php endif; ?>
                             </p>
                             <blockquote class="report-excerpt"><?= $e(mb_strimwidth((string) ($r['post_body'] ?? ''), 0, 240, '…')) ?></blockquote>
@@ -109,7 +110,9 @@ $staleBefore = time() - 86400;
                             <?php endif; ?>
                             <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/resolve"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Resolve</button></form>
                             <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/dismiss"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Dismiss</button></form>
-                            <?php if (($r['post_author_id'] ?? null) !== null): ?>
+                            <?php // Anonymous authors stay masked here: no /mod/u/{id} shortcut —
+                                  // unmasking is only the audited reveal on the post itself (ADMIN §1.3). ?>
+                            <?php if (($r['post_author_id'] ?? null) !== null && (int) ($r['post_is_anonymous'] ?? 0) === 0): ?>
                                 <a class="linkbtn" href="/mod/u/<?= (int) $r['post_author_id'] ?>">Warn author…</a>
                             <?php endif; ?>
                         </div>

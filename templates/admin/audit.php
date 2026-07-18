@@ -24,6 +24,7 @@ $page = (int) ($page ?? 0);
                 <label class="field">
                     <span>Actor</span>
                     <input type="search" name="actor" class="input" maxlength="80" value="<?= $e($filters['actor'] ?? '') ?>" placeholder="Username or display name">
+                    <?php if (!empty($errors['actor'])): ?><span class="field-error"><?= $e($errors['actor']) ?></span><?php endif; ?>
                 </label>
                 <label class="field">
                     <span>Action</span>

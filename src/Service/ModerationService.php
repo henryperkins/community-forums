@@ -278,20 +278,28 @@ final class ModerationService
         $this->assertNotArchived($destBoardId);
 
         $this->db->transaction(function () use ($mod, $threadId, $thread, $srcBoardId, $destBoardId): void {
-            $postCount = (int) $this->db->fetchValue(
-                'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0',
+            // Board counters exclude held/deleted content (RepairService:
+            // is_deleted = 0 AND is_pending = 0, thread and post alike), so the
+            // shift must apply the same filters: a held thread contributes
+            // nothing to either board, and a visible thread moves only its
+            // approved posts — never a held reply.
+            $threadCounted = (int) ($thread['is_deleted'] ?? 0) === 0 && (int) ($thread['is_pending'] ?? 0) === 0;
+            $postCount = !$threadCounted ? 0 : (int) $this->db->fetchValue(
+                'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0',
                 [$threadId],
             );
             $this->threads->setBoard($threadId, $destBoardId);
-            $this->db->run(
-                'UPDATE boards SET thread_count = GREATEST(0, CAST(thread_count AS SIGNED) - 1),
-                    post_count = GREATEST(0, CAST(post_count AS SIGNED) - ?) WHERE id = ?',
-                [$postCount, $srcBoardId],
-            );
-            $this->db->run(
-                'UPDATE boards SET thread_count = thread_count + 1, post_count = post_count + ? WHERE id = ?',
-                [$postCount, $destBoardId],
-            );
+            if ($threadCounted) {
+                $this->db->run(
+                    'UPDATE boards SET thread_count = GREATEST(0, CAST(thread_count AS SIGNED) - 1),
+                        post_count = GREATEST(0, CAST(post_count AS SIGNED) - ?) WHERE id = ?',
+                    [$postCount, $srcBoardId],
+                );
+                $this->db->run(
+                    'UPDATE boards SET thread_count = thread_count + 1, post_count = post_count + ? WHERE id = ?',
+                    [$postCount, $destBoardId],
+                );
+            }
             $this->boards->recomputeLastPost($srcBoardId);
             $this->boards->recomputeLastPost($destBoardId);
             $this->log->log([

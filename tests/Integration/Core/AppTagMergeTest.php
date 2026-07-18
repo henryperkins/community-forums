@@ -54,6 +54,27 @@ final class AppTagMergeTest extends TestCase
         return ['admin' => $admin, 'source' => $source, 'target' => $target];
     }
 
+    public function test_merge_form_requires_an_enabled_destination(): void
+    {
+        // One enabled tag + one disabled tag used to pass the count($tags) > 1
+        // gate while every destination option was filtered out — a Merge… form
+        // with an empty selector. The gate must count enabled tags only.
+        $admin = $this->makeAdmin(['username' => 'gateadmin']);
+        $this->db->insert("INSERT INTO tags (slug, name, visibility, is_enabled, created_at) VALUES ('lonely', 'Lonely', 'public', 1, UTC_TIMESTAMP())");
+        $this->db->insert("INSERT INTO tags (slug, name, visibility, is_enabled, created_at) VALUES ('retired', 'Retired', 'public', 0, UTC_TIMESTAMP())");
+
+        $this->actingAs($admin);
+        $one = $this->get('/admin/tags');
+        $this->assertStatus(200, $one);
+        $this->assertDontSeeText($one, 'Merge…');
+
+        // A second enabled tag makes a real destination — the form returns.
+        $this->db->run("UPDATE tags SET is_enabled = 1 WHERE slug = 'retired'");
+        $two = $this->get('/admin/tags');
+        $this->assertStatus(200, $two);
+        $this->assertSeeText($two, 'Merge…');
+    }
+
     public function test_merge_confirm_counts_every_association_and_merge_moves_them_all(): void
     {
         $seed = $this->seedMergePair();

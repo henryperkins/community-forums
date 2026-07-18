@@ -19,6 +19,7 @@ use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\BoardAuthority;
 use App\Security\BoardPolicy;
 use App\Security\Cap;
 use App\Security\WebhookEvents;
@@ -56,6 +57,7 @@ final class PostingService
         private ?LinkPreviewService $linkPreviews = null,
         private ?AuthorityGate $authority = null,
         private ?ThreadIntelligenceQueue $threadIntelligence = null,
+        private ?BoardAuthority $boardAuthority = null,
     ) {
     }
 
@@ -347,11 +349,14 @@ final class PostingService
         }
 
         // Per-board edit window (ADMIN §4.2): once it elapses, members can no
-        // longer edit their own posts here; staff stay exempt. 0 = no limit.
+        // longer edit their own posts here; staff stay exempt — site staff by
+        // role, or a moderator assigned to THIS board (the canModerate axis:
+        // scoped assignment, not the global role). 0 = no limit.
         // ValidationException (not Forbidden) so the thread re-render keeps the
         // typed edit on screen instead of a kernel error page dropping it.
         $editWindow = (int) ($editBoard['edit_window_seconds'] ?? 0);
-        if ($editWindow > 0 && !$user->isModerator()) {
+        if ($editWindow > 0 && !$user->isModerator()
+            && !($this->boardAuthority?->canModerate($user, (int) $post['board_id']) ?? false)) {
             $createdAt = strtotime(((string) $post['created_at']) . ' UTC');
             if ($createdAt !== false && time() - $createdAt > $editWindow) {
                 throw new ValidationException(
