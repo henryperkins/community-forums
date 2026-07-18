@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integration\Admin;
 
 use App\Repository\BadgeRepository;
+use App\Repository\SessionRepository;
 use Tests\Support\TestCase;
 
 final class AppAdminUserRecordTest extends TestCase
@@ -324,5 +325,44 @@ final class AppAdminUserRecordTest extends TestCase
         // (the confirmation 422 would otherwise mask the 403).
         $this->assertStatus(403, $this->post('/admin/users/' . (int) $other['id'] . '/ban', ['reason' => 'x', 'confirm_username' => 'targetadmin']));
         self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [(int) $other['id']]));
+    }
+
+    public function test_pii_reveal_lists_most_recent_ips_first(): void
+    {
+        // Packed-byte order inverts recency here (inet_pton: .9 < .10, but
+        // .10 is the newest activity) — "recently observed" must mean time,
+        // not VARBINARY collation (PR #44 spec §6).
+        $this->actingAs($this->makeAdmin());
+        $subject = $this->makeUser(['username' => 'ipsubject']);
+        $sid = (int) $subject['id'];
+
+        $sessions = new SessionRepository($this->db);
+        $expires = gmdate('Y-m-d H:i:s', time() + 3600);
+        $oldSession = hash('sha256', 'pii-old-session');
+        $newSession = hash('sha256', 'pii-new-session');
+        $sessions->create(['id' => $oldSession, 'user_id' => $sid, 'csrf_secret' => 's1', 'ip' => '10.0.0.9', 'user_agent' => 'phpunit', 'expires_at' => $expires]);
+        $sessions->create(['id' => $newSession, 'user_id' => $sid, 'csrf_secret' => 's2', 'ip' => '10.0.0.10', 'user_agent' => 'phpunit', 'expires_at' => $expires]);
+        $this->db->run('UPDATE sessions SET last_seen_at = ? WHERE id = ?', ['2026-07-01 00:00:00', $oldSession]);
+        $this->db->run('UPDATE sessions SET last_seen_at = ? WHERE id = ?', ['2026-07-15 00:00:00', $newSession]);
+
+        $board = $this->makeBoard($this->makeCategory('Pii'));
+        $this->makeThread($board, $subject, 'First topic', 'First body.');
+        $this->makeThread($board, $subject, 'Second topic', 'Second body.');
+        $postIds = array_map(
+            static fn (array $r): int => (int) $r['id'],
+            $this->db->fetchAll('SELECT id FROM posts WHERE user_id = ? ORDER BY id ASC', [$sid]),
+        );
+        $this->db->run('UPDATE posts SET ip = ?, created_at = ? WHERE id = ?', [inet_pton('10.0.1.9'), '2026-07-01 00:00:00', $postIds[0]]);
+        $this->db->run('UPDATE posts SET ip = ?, created_at = ? WHERE id = ?', [inet_pton('10.0.1.10'), '2026-07-15 00:00:00', $postIds[1]]);
+
+        $res = $this->post('/admin/users/' . $sid . '/pii');
+
+        $this->assertStatus(200, $res);
+        $body = $res->body();
+        foreach (['10.0.0.9', '10.0.0.10', '10.0.1.9', '10.0.1.10'] as $ip) {
+            self::assertStringContainsString($ip, $body);
+        }
+        self::assertLessThan(strpos($body, '10.0.0.9'), strpos($body, '10.0.0.10'), 'most recent session IP must list first');
+        self::assertLessThan(strpos($body, '10.0.1.9'), strpos($body, '10.0.1.10'), 'most recent post IP must list first');
     }
 }

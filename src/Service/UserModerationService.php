@@ -414,9 +414,12 @@ final class UserModerationService
         $this->assertAdmin($admin);
         $subject = $this->requireSubject($subjectId);
 
+        // Five distinct addresses each, most recently OBSERVED first —
+        // "recent" is activity time, never VARBINARY byte order (spec §6).
         $sessionIps = [];
         foreach ($this->db->fetchAll(
-            'SELECT DISTINCT ip FROM sessions WHERE user_id = ? AND ip IS NOT NULL ORDER BY ip LIMIT 5',
+            'SELECT ip FROM sessions WHERE user_id = ? AND ip IS NOT NULL
+             GROUP BY ip ORDER BY MAX(last_seen_at) DESC LIMIT 5',
             [$subjectId],
         ) as $row) {
             $unpacked = @inet_ntop((string) $row['ip']);
@@ -426,7 +429,8 @@ final class UserModerationService
         }
         $postIps = [];
         foreach ($this->db->fetchAll(
-            'SELECT DISTINCT ip FROM posts WHERE user_id = ? AND ip IS NOT NULL ORDER BY ip LIMIT 5',
+            'SELECT ip FROM posts WHERE user_id = ? AND ip IS NOT NULL
+             GROUP BY ip ORDER BY MAX(created_at) DESC LIMIT 5',
             [$subjectId],
         ) as $row) {
             $unpacked = @inet_ntop((string) $row['ip']);
