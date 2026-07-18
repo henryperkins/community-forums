@@ -73,12 +73,16 @@ final class AppUserModerationTest extends TestCase
 
     public function testBoardModeratorCanWarnButNotSuspend(): void
     {
+        // Scoped-behavior update (PR #44, spec §2): a moderator warn requires
+        // the subject to have participated in the mod's board, and a board_id
+        // attribution inside that overlap.
         $board = $this->makeBoard($this->makeCategory());
         $modA = $this->makeUser(['username' => 'moda']);
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modA['id']);
+        $this->makeThread($board, $this->bad, 'Warned topic', 'Warned body.');
 
         $this->actingAs($modA);
-        $this->post('/mod/u/' . $this->bad['id'] . '/warn', ['reason' => 'mind the rules']);
+        $this->post('/mod/u/' . $this->bad['id'] . '/warn', ['reason' => 'mind the rules', 'board_id' => (string) (int) $board['id']]);
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [(int) $this->bad['id']]));
 
         // Suspend is admin-only.
@@ -98,6 +102,9 @@ final class AppUserModerationTest extends TestCase
         $board = $this->makeBoard($this->makeCategory());
         $modA = $this->makeUser(['username' => 'moda']);
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $modA['id']);
+        // Scoped panel admission (PR #44, spec §2): the 422 re-render is the
+        // scoped panel, so the subject must participate in the mod's board.
+        $this->makeThread($board, $this->bad, 'Rerender topic', 'Rerender body.');
 
         $this->actingAs($modA);
         $r = $this->post('/mod/u/' . $this->bad['id'] . '/warn', ['reason' => '   ']);

@@ -1247,6 +1247,8 @@ final class App
             $c->get(SessionRepository::class),
             $c->get(ReauthGate::class),
             $c->get(CapabilityResolver::class),
+            $c->get(BoardRepository::class),
+            $c->get(IdempotencyRepository::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
             $c->get(Database::class),

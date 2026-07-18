@@ -14,18 +14,22 @@ use Tests\Support\TestCase;
  */
 final class AppModUserPanelTest extends TestCase
 {
-    /** @return array{mod:array<string,mixed>,subject:array<string,mixed>} */
+    /** @return array{mod:array<string,mixed>,subject:array<string,mixed>,admin:array<string,mixed>,board:array<string,mixed>} */
     private function seedScopedModerator(): array
     {
         // An admin must exist or the first-run setup gate (SetupService::
         // isInitialized = adminCount > 0) redirects every request to /setup.
-        $this->makeAdmin(['username' => 'panelroot']);
+        $admin = $this->makeAdmin(['username' => 'panelroot']);
         $category = $this->makeCategory('Panel');
         $board = $this->makeBoard($category);
         $mod = $this->makeUser(['username' => 'panelmod', 'password' => 'password123']);
         (new BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $mod['id']);
         $subject = $this->makeUser(['username' => 'panelsubject']);
-        return ['mod' => $mod, 'subject' => $subject];
+        // Scoped-behavior update (PR #44, spec §2): panel admission for a
+        // non-admin moderator now requires the subject to have participated in
+        // a board they moderate — seed that participation.
+        $this->makeThread($board, $subject, 'Panel fixture topic', 'Panel fixture body.');
+        return ['mod' => $mod, 'subject' => $subject, 'admin' => $admin, 'board' => $board];
     }
 
     public function test_board_moderator_can_open_the_panel(): void
@@ -59,8 +63,11 @@ final class AppModUserPanelTest extends TestCase
 
     public function test_note_failure_preserves_nothing_lost_and_success_lands_back_on_panel(): void
     {
+        // Scoped-behavior update (PR #44, spec §2): notes are admin-only now
+        // (mods get 403 — covered in AppModUserPanelScopeTest), so the
+        // anti-draft-loss contract for the note form is exercised as an admin.
         $seed = $this->seedScopedModerator();
-        $this->actingAs($seed['mod']);
+        $this->actingAs($seed['admin']);
 
         $fail = $this->post('/mod/u/' . (int) $seed['subject']['id'] . '/note', ['body' => '']);
         $this->assertStatus(422, $fail);

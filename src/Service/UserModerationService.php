@@ -7,6 +7,7 @@ namespace App\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use App\Core\Database;
+use App\Core\DuplicateSubmissionException;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
@@ -14,6 +15,8 @@ use App\Domain\User;
 use App\Repository\AttachmentRepository;
 use App\Hook\FirstPartyHookRegistry;
 use App\Repository\BoardModeratorRepository;
+use App\Repository\BoardRepository;
+use App\Repository\IdempotencyRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\ProtectedOwnerRepository;
 use App\Repository\SessionRepository;
@@ -49,6 +52,8 @@ final class UserModerationService
         private ?SessionRepository $sessions = null,
         private ?ReauthGate $reauth = null,
         private ?CapabilityResolver $resolver = null,
+        private ?BoardRepository $boards = null,
+        private ?IdempotencyRepository $idempotency = null,
     ) {
     }
 
@@ -57,24 +62,70 @@ final class UserModerationService
         return $this->authority ?? AuthorityGate::legacy();
     }
 
-    public function warn(User $actor, int $subjectId, string $reason, ?int $boardId = null): void
+    public function warn(User $actor, int $subjectId, string $reason, ?int $boardId = null, ?string $idempotencyKey = null): void
     {
         $this->assertStaff($actor);
         $reason = $this->requireReason($reason);
         $subject = $this->requireSubject($subjectId);
 
-        $this->db->transaction(function () use ($actor, $subject, $reason, $boardId): void {
-            $this->db->run(
+        if (!$actor->isAdmin()) {
+            $overlap = $this->moderatorOverlap($actor, $subjectId);
+            if ($overlap === []) {
+                // Byte-identical to the missing-subject 404 (spec §2): an
+                // out-of-scope subject does not exist for this actor.
+                throw new NotFoundException('User not found.');
+            }
+            // Board attribution is required and revalidated server-side —
+            // assigned to the actor AND participated-in by the subject (that
+            // conjunction IS overlap membership). One uniform message for
+            // every miss, so the field is not a board-existence oracle.
+            if ($boardId === null || !in_array($boardId, $overlap, true)) {
+                throw new ValidationException(
+                    ['board_id' => 'Choose a board you moderate where this member has participated.'],
+                );
+            }
+        } elseif ($boardId !== null && $this->boards !== null && $this->boards->find($boardId) === null) {
+            throw new ValidationException(['board_id' => 'Choose a valid board.']);
+        }
+
+        // Idempotent submit (composer seam, P3-03): a duplicate replays the
+        // original outcome instead of stacking warnings.
+        $key = $this->idempotency?->hash($idempotencyKey);
+        if ($key !== null) {
+            $existing = $this->idempotency->findWithContext($actor->id(), $key);
+            if ($existing !== null && $existing['context'] === 'mod_warn') {
+                return; // the original warn already committed — nothing to do
+            }
+        }
+
+        $this->db->transaction(function () use ($actor, $subject, $reason, $boardId, $key): void {
+            $warningId = $this->db->insert(
                 'INSERT INTO warnings (user_id, issued_by, board_id, reason, created_at) VALUES (?, ?, ?, ?, UTC_TIMESTAMP())',
                 [(int) $subject['id'], $actor->id(), $boardId, $reason],
             );
-            $this->audit($actor, 'warn', (int) $subject['id'], $reason);
+            // Claim the key before the audit row so a concurrent duplicate
+            // rolls the whole write back and the caller replays.
+            if ($key !== null && !$this->idempotency->record($actor->id(), $key, 'mod_warn', 'warning', $warningId)) {
+                throw new DuplicateSubmissionException();
+            }
+            $this->log->log([
+                'actor_id' => $actor->id(),
+                'action' => 'warn',
+                'target_type' => 'user',
+                'target_id' => (int) $subject['id'],
+                'reason' => $reason,
+                'after' => ['board_id' => $boardId],
+            ]);
         });
     }
 
     public function addNote(User $actor, int $subjectId, string $body): void
     {
         $this->assertStaff($actor);
+        // Notes are admin-only (PR #44 review decision, recorded in ADR 0021):
+        // globally-scoped user_notes readable by any board moderator was
+        // strictly worse than narrowing ADMIN §3.4's "Add mod note" mapping.
+        $this->assertAdmin($actor);
         $body = trim($body);
         if ($body === '') {
             throw new ValidationException(['body' => 'A note cannot be empty.']);
@@ -83,6 +134,134 @@ final class UserModerationService
         $this->db->run(
             'INSERT INTO user_notes (subject_user_id, author_id, body, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP())',
             [(int) $subject['id'], $actor->id(), $body],
+        );
+    }
+
+    /**
+     * Actor-aware staff-panel model (spec §2). Admin → identity + the full
+     * history + site-wide warn options. Non-admin staff → a board-scoped
+     * model for subjects who participated in a board the actor moderates:
+     * whitelisted identity keys (no email), the overlap boards, warnings
+     * scoped to those boards, and nothing else — notes, bans, and the audit
+     * trail are not queried at all. An empty overlap throws the byte-identical
+     * missing-subject 404.
+     *
+     * @return array<string,mixed>
+     */
+    public function panelFor(User $actor, int $subjectId): array
+    {
+        $subject = $this->requireSubject($subjectId);
+
+        if ($actor->isAdmin()) {
+            $names = [];
+            $options = [];
+            foreach ($this->boards?->allOrdered() ?? [] as $board) {
+                $names[(int) $board['id']] = (string) $board['name'];
+                $options[] = ['id' => (int) $board['id'], 'name' => (string) $board['name']];
+            }
+            return [
+                'scope' => 'admin',
+                'subject' => $subject,
+                'history' => $this->history($subjectId),
+                'warn_board_options' => $options,
+                'board_names' => $names,
+            ];
+        }
+
+        $overlap = $this->moderatorOverlap($actor, $subjectId);
+        if ($overlap === []) {
+            throw new NotFoundException('User not found.');
+        }
+        $names = [];
+        $options = [];
+        foreach ($this->boards?->allOrdered() ?? [] as $board) {
+            if (!in_array((int) $board['id'], $overlap, true)) {
+                continue;
+            }
+            $names[(int) $board['id']] = (string) $board['name'];
+            $options[] = ['id' => (int) $board['id'], 'name' => (string) $board['name']];
+        }
+
+        return [
+            'scope' => 'moderator',
+            'subject' => [
+                'id' => (int) $subject['id'],
+                'username' => (string) $subject['username'],
+                'display_name' => $subject['display_name'],
+                'role' => (string) $subject['role'],
+                'status' => (string) $subject['status'],
+                'suspended_until' => $subject['suspended_until'] ?? null,
+                'created_at' => $subject['created_at'] ?? null,
+                'last_seen_at' => $subject['last_seen_at'] ?? null,
+                'post_count' => (int) ($subject['post_count'] ?? 0),
+                'reputation' => (int) ($subject['reputation'] ?? 0),
+            ],
+            'history' => ['warnings' => $this->scopedWarnings($subjectId, $overlap)],
+            'warn_board_options' => $options,
+            'board_names' => $names,
+        ];
+    }
+
+    /**
+     * Boards where the subject has authored a thread or post, restricted to
+     * $boardIds. Deliberately WITHOUT is_deleted/is_pending filters: the panel
+     * exists for accountability, and hidden, held, and deleted content is
+     * exactly what gets moderated. Anonymous authorship also counts — the
+     * anonymity mask is render-time attribution, not provenance; this reads
+     * the stored user_id like every other moderation surface (spec §2).
+     *
+     * @param list<int> $boardIds
+     * @return list<int>
+     */
+    private function participationBoards(int $subjectId, array $boardIds): array
+    {
+        if ($boardIds === []) {
+            return [];
+        }
+        $in = implode(',', array_map('intval', $boardIds));
+        $found = [];
+        foreach ($this->db->fetchAll(
+            "SELECT DISTINCT board_id FROM threads WHERE user_id = ? AND board_id IN ($in)",
+            [$subjectId],
+        ) as $row) {
+            $found[(int) $row['board_id']] = true;
+        }
+        foreach ($this->db->fetchAll(
+            "SELECT DISTINCT t.board_id FROM posts p JOIN threads t ON t.id = p.thread_id
+             WHERE p.user_id = ? AND t.board_id IN ($in)",
+            [$subjectId],
+        ) as $row) {
+            $found[(int) $row['board_id']] = true;
+        }
+        return array_keys($found);
+    }
+
+    /** @return list<int> the actor's moderated boards where the subject participated */
+    private function moderatorOverlap(User $actor, int $subjectId): array
+    {
+        return $this->participationBoards($subjectId, $this->boardMods->boardsFor($actor->id()));
+    }
+
+    /**
+     * @param list<int> $boardIds
+     * @return array<int,array<string,mixed>>
+     */
+    private function scopedWarnings(int $subjectId, array $boardIds, int $limit = 10): array
+    {
+        if ($boardIds === []) {
+            return [];
+        }
+        $in = implode(',', array_map('intval', $boardIds));
+        $limit = max(1, min(50, $limit));
+        return $this->db->fetchAll(
+            "SELECT w.id, w.reason, w.points, w.board_id, w.created_at,
+                    u.username AS issued_by_username
+             FROM warnings w
+             LEFT JOIN users u ON u.id = w.issued_by
+             WHERE w.user_id = ? AND w.board_id IN ($in)
+             ORDER BY w.id DESC
+             LIMIT " . $limit,
+            [$subjectId],
         );
     }
 

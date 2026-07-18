@@ -96,9 +96,20 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                 <h2>Issue a warning</h2>
                 <form method="post" action="/mod/u/<?= $uid ?>/warn" class="stacked">
                     <?= $this->csrfField() ?>
-                    <?php if ($oldv('warn', 'board_id') !== ''): ?>
-                        <input type="hidden" name="board_id" value="<?= (int) $oldv('warn', 'board_id') ?>">
-                    <?php endif; ?>
+                    <?php $warnKey = $oldv('warn', 'idempotency_key') !== '' ? $oldv('warn', 'idempotency_key') : bin2hex(random_bytes(16)); ?>
+                    <input type="hidden" name="idempotency_key" value="<?= $e($warnKey) ?>">
+                    <label class="field">
+                        <span>Board<?= empty($is_admin) ? ' (where this member participated)' : '' ?></span>
+                        <select name="board_id" class="input"<?= empty($is_admin) ? ' required' : '' ?>>
+                            <?php if (!empty($is_admin)): ?>
+                                <option value="">Site-wide (no board)</option>
+                            <?php endif; ?>
+                            <?php foreach (($warn_board_options ?? []) as $wopt): ?>
+                                <option value="<?= (int) $wopt['id'] ?>"<?= (int) $oldv('warn', 'board_id') === (int) $wopt['id'] ? ' selected' : '' ?>>#<?= $e($wopt['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <?= $ferr('warn', 'board_id') ?>
                     <label class="field">
                         <span>Reason (shown to the member)</span>
                         <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('warn', 'reason')) ?>" required>
@@ -108,24 +119,26 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                 </form>
             </section>
 
+            <?php if (!empty($is_admin)): ?>
             <section class="card">
                 <h2>Private staff note</h2>
                 <form method="post" action="/mod/u/<?= $uid ?>/note" class="stacked">
                     <?= $this->csrfField() ?>
                     <label class="field">
-                        <span>Note (visible to staff only)</span>
+                        <span>Note (visible to admins only)</span>
                         <textarea name="body" class="input" rows="3"><?= $e($oldv('note', 'body')) ?></textarea>
                     </label>
                     <?= $ferr('note', 'body') ?>
                     <div class="form-actions"><button class="btn" type="submit">Add note</button></div>
                 </form>
             </section>
+            <?php endif; ?>
         <?php endif; ?>
 
         <section class="card">
             <h2>History</h2>
 
-            <h3>Warnings</h3>
+            <h3>Warnings<?= empty($is_admin) ? ' (your boards)' : '' ?></h3>
             <?php if (empty($history['warnings'])): ?>
                 <p class="muted">No warnings.</p>
             <?php else: ?>
@@ -133,13 +146,18 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <?php foreach ($history['warnings'] as $w): ?>
                         <li>
                             <span class="record-when"><?= $e(human_datetime((string) $w['created_at'])) ?></span>
-                            <span class="record-body"><?= $e($w['reason']) ?></span>
+                            <span class="record-body">
+                                <?= $e($w['reason']) ?>
+                                <?php $wBoard = $w['board_id'] ?? null; ?>
+                                <span class="pill"><?= $wBoard === null ? 'Site-wide' : '#' . $e(($board_names ?? [])[(int) $wBoard] ?? ('board ' . (int) $wBoard)) ?></span>
+                            </span>
                             <span class="muted">by @<?= $e($w['issued_by_username'] ?? 'system') ?></span>
                         </li>
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
 
+            <?php if (!empty($is_admin)): ?>
             <h3>Bans &amp; suspensions</h3>
             <?php if (empty($history['bans'])): ?>
                 <p class="muted">No ban history.</p>
@@ -192,6 +210,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                         </li>
                     <?php endforeach; ?>
                 </ul>
+            <?php endif; ?>
             <?php endif; ?>
         </section>
     </div>

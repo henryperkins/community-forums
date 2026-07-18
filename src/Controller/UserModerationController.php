@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\DuplicateSubmissionException;
 use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\Request;
@@ -35,7 +36,17 @@ final class UserModerationController extends Controller
     public function warn(Request $request, array $params): Response
     {
         return $this->run($params, fn ($svc, User $actor, int $id) =>
-            $svc->warn($actor, $id, $request->str('reason'), $request->int('board_id', 0) ?: null), 'Warning recorded.', 'warn', ['reason' => $request->str('reason'), 'board_id' => $request->str('board_id')]);
+            $svc->warn(
+                $actor,
+                $id,
+                $request->str('reason'),
+                $request->int('board_id', 0) ?: null,
+                $request->str('idempotency_key') ?: null,
+            ), 'Warning recorded.', 'warn', [
+                'reason' => $request->str('reason'),
+                'board_id' => $request->str('board_id'),
+                'idempotency_key' => $request->str('idempotency_key'),
+            ]);
     }
 
     /** @param array<string,string> $params */
@@ -85,6 +96,9 @@ final class UserModerationController extends Controller
             $action($this->container->get(UserModerationService::class), $actor, $subjectId);
         } catch (ValidationException $e) {
             return $this->panel($subjectId, $e, 422, $context, $old);
+        } catch (DuplicateSubmissionException) {
+            // The original submit already committed — replay its outcome.
+            return $this->redirectWithFlash('/mod/u/' . $subjectId, $okMessage);
         }
         return $this->redirectWithFlash('/mod/u/' . $subjectId, $okMessage);
     }
@@ -103,14 +117,14 @@ final class UserModerationController extends Controller
         array $old = [],
     ): Response {
         $actor = $this->requireStaff();
-        $subject = $this->requireSubject($subjectId);
-        $moderation = $this->container->get(UserModerationService::class);
+        // Actor-aware, board-scoped model (spec §2) — used for the 200 AND
+        // every 422 re-render, so a scoped moderator never sees the full
+        // record even on error, and out-of-scope subjects 404 uniformly.
+        $model = $this->container->get(UserModerationService::class)->panelFor($actor, $subjectId);
 
-        return $this->view('mod/user', [
-            'subject' => $subject,
-            'history' => $moderation->history($subjectId),
+        return $this->view('mod/user', $model + [
             'is_admin' => $actor->isAdmin(),
-            'is_self' => (int) $subject['id'] === $actor->id(),
+            'is_self' => (int) $model['subject']['id'] === $actor->id(),
             'error_context' => $errorContext,
             'errors' => $error?->errors ?? [],
             'old' => $old !== [] ? $old : ($error?->old ?? []),
