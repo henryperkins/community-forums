@@ -72,4 +72,58 @@ final class UserModerationSetTitleTest extends TestCase
         $this->expectException(ForbiddenException::class);
         $this->service()->setTitle($this->userEntity($admin), (int) $user['id'], 'Nope');
     }
+
+    public function test_bulk_plan_normalizes_duplicate_and_non_positive_ids(): void
+    {
+        $user = $this->makeUser(['username' => 'bulkplanuser']);
+
+        $subjects = $this->service()->bulkPlan('warn', [
+            (int) $user['id'],
+            (int) $user['id'],
+            0,
+            -1,
+        ]);
+
+        self::assertCount(1, $subjects);
+        self::assertSame((int) $user['id'], (int) $subjects[0]['id']);
+    }
+
+    public function test_bulk_apply_rejects_an_unknown_action_before_any_write(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'bulkbadactor']);
+        $user = $this->makeUser(['username' => 'bulkbadsubject']);
+
+        try {
+            $this->service()->bulkApply(
+                $this->userEntity($admin),
+                'delete',
+                [(int) $user['id']],
+                'must not become a warning',
+                null,
+            );
+            self::fail('Unknown bulk actions must be rejected.');
+        } catch (ValidationException $e) {
+            self::assertArrayHasKey('bulk_action', $e->errors);
+        }
+
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings'));
+    }
+
+    public function test_bulk_apply_deduplicates_subject_ids_before_writing(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'bulkdupeactor']);
+        $user = $this->makeUser(['username' => 'bulkdupesubject']);
+        $userId = (int) $user['id'];
+
+        $result = $this->service()->bulkApply(
+            $this->userEntity($admin),
+            'warn',
+            [$userId, $userId, 0, -1],
+            'one warning only',
+            null,
+        );
+
+        self::assertSame(1, $result['done']);
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [$userId]));
+    }
 }

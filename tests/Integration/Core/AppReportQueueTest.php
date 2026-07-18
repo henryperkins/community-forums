@@ -5,6 +5,13 @@ declare(strict_types=1);
 namespace Tests\Integration\Core;
 
 use App\Repository\BoardModeratorRepository;
+use App\Repository\NotificationRepository;
+use App\Repository\PostRepository;
+use App\Repository\ReportRepository;
+use App\Repository\UserRepository;
+use App\Security\BoardPolicy;
+use App\Security\WriteGate;
+use App\Service\ReportService;
 use Tests\Support\TestCase;
 
 /**
@@ -37,6 +44,20 @@ final class AppReportQueueTest extends TestCase
         return (int) $this->db->fetchValue("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND type = 'mod'", [$userId]);
     }
 
+    private function reportService(): ReportService
+    {
+        return new ReportService(
+            $this->db,
+            new ReportRepository($this->db),
+            new PostRepository($this->db),
+            new BoardPolicy(),
+            new BoardModeratorRepository($this->db),
+            new NotificationRepository($this->db),
+            new UserRepository($this->db),
+            new WriteGate(),
+        );
+    }
+
     public function testSubmitDedupesAndAlertsStaff(): void
     {
         $this->actingAs($this->reporter);
@@ -52,6 +73,19 @@ final class AppReportQueueTest extends TestCase
         self::assertGreaterThanOrEqual(1, $this->modNotifs((int) $this->modA['id']));
         self::assertGreaterThanOrEqual(1, $this->modNotifs((int) $this->admin['id']));
         self::assertSame(0, $this->modNotifs((int) $this->reporter['id']));
+    }
+
+    public function test_service_normalizes_an_unknown_reason_code_for_every_caller(): void
+    {
+        $this->reportService()->submitPostReport(
+            $this->userEntity($this->reporter),
+            $this->replyId,
+            'invented-reason',
+            'service boundary check',
+            false,
+        );
+
+        self::assertNull($this->db->fetchValue('SELECT reason_code FROM reports WHERE post_id = ?', [$this->replyId]));
     }
 
     public function testQueueExactMultipleOfPageSizeHasNoNextLink(): void

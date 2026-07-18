@@ -13,7 +13,7 @@ the remainder so later status cannot silently claim the ADMIN.md sections comple
 re-verification identified defects, draft-loss regressions, orphaned UI, and four
 untracked deferrals (bulk moderation, the audit-log screen, email-template
 editing, the staff alert matrix). The 2026-07-18 remediation fixes the defect and
-draft-loss classes wholesale and builds three of the four untracked features.
+draft-loss classes wholesale and builds two of the four untracked features.
 
 ## Decision — shipped in this remediation (summary, not a deferral)
 

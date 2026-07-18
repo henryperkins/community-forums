@@ -180,22 +180,13 @@ final class AdminWebhookController extends Controller
         $admin = $this->requireAdmin();
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
-        try {
-            // Password-reauthed like rotate: deleting discards the endpoint's
-            // delivery history and revokes its secret — the more destructive
-            // act must not be the easier one.
-            $this->service()->delete($admin, (string) $request->post('current_password', ''), $id);
-        } catch (ValidationException $e) {
-            $model = $this->service()->detailModel($id);
-            if ($model === null) {
-                throw new NotFoundException();
-            }
-            return $this->view('admin/webhook_detail', $model + [
-                'errors' => $e->errors,
-                'old' => [],
-                'error_context' => 'delete',
-                'new_secret' => null,
-            ], 422);
+        $outcome = $this->service()->deleteConsole(
+            $admin,
+            (string) $request->post('current_password', ''),
+            $id,
+        );
+        if (!$outcome['deleted']) {
+            return $this->view('admin/webhook_detail', (array) $outcome['model'], $outcome['status']);
         }
         return $this->redirectWithFlash('/admin/webhooks', 'Webhook deleted.');
     }

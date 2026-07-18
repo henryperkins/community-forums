@@ -48,11 +48,14 @@ final class AuditQueryService
             'actor' => trim((string) ($raw['actor'] ?? '')),
             'action' => trim((string) ($raw['action'] ?? '')),
             'target_type' => trim((string) ($raw['target_type'] ?? '')),
-            'target_id' => ctype_digit($targetId) ? $targetId : '',
+            'target_id' => $targetId,
             'from' => trim((string) ($raw['from'] ?? '')),
             'to' => trim((string) ($raw['to'] ?? '')),
         ];
         $errors = [];
+        if ($targetId !== '' && !ctype_digit($targetId)) {
+            $errors['target_id'] = 'Use a numeric target ID.';
+        }
         foreach (['from', 'to'] as $key) {
             if ($filters[$key] === '') {
                 continue;

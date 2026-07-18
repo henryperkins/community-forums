@@ -36,16 +36,39 @@ final class ThreadReadService
     public function loadForUser(?User $user, int $threadId): array
     {
         $thread = $this->threads->findWithBoard($threadId);
-        if ($thread === null || (int) $thread['is_deleted'] === 1) {
+        if ($thread === null) {
             throw new NotFoundException('Thread not found.');
         }
-        $boardId = (int) $thread['board_id'];
+        return $this->assertReadableRows($user, $thread, [
+            'id' => (int) $thread['board_id'],
+            'visibility' => (string) $thread['board_visibility'],
+        ]);
+    }
+
+    /**
+     * Apply the canonical read gate to caller-supplied current rows. Mutation
+     * services use this after locking the thread and board, avoiding a stale
+     * non-locking reload between authorization and the write.
+     *
+     * @param array<string,mixed> $thread
+     * @param array<string,mixed> $board
+     * @return array<string,mixed>
+     */
+    public function assertReadableRows(?User $user, array $thread, array $board): array
+    {
+        if ((int) ($thread['is_deleted'] ?? 0) === 1) {
+            throw new NotFoundException('Thread not found.');
+        }
+        $boardId = (int) ($board['id'] ?? 0);
+        if ($boardId <= 0 || (int) ($thread['board_id'] ?? 0) !== $boardId) {
+            throw new NotFoundException('Thread not found.');
+        }
         $isMember = $user !== null && $this->members->isMember($boardId, $user->id());
         // Spec §1 decision: board-moderator ASSIGNMENT counts as readable in
         // moderation flows — a non-member moderator of a private board must be
         // able to see their own 422 re-render. BoardPolicy stays pure; the
         // assignment is resolved here and passed nowhere else.
-        $readable = $this->policy->canRead(['visibility' => $thread['board_visibility']], $user, $isMember)
+        $readable = $this->policy->canRead(['visibility' => (string) ($board['visibility'] ?? 'private')], $user, $isMember)
             || ($user !== null && $this->authority->isAssigned($user, $boardId));
         if (!$readable) {
             throw new NotFoundException('Thread not found.');

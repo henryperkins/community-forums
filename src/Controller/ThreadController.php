@@ -209,10 +209,8 @@ final class ThreadController extends Controller
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_MOVE);
         $moveBoards = [];
         if ($canMove) {
-            $moveBoards = array_values(array_filter(
-                $this->container->get(ModerationService::class)->moveDestinations($user),
-                fn (array $b): bool => $b['id'] !== (int) $thread['board_id'],
-            ));
+            $moveBoards = $this->container->get(ModerationService::class)
+                ->moveDestinations($user, (int) $thread['board_id']);
         }
         $canSplitMerge = $user !== null
             && $this->container->get(ModerationService::class)->canModerate($user, (int) $thread['board_id'], Cap::THREAD_SPLIT_MERGE);

@@ -73,7 +73,7 @@ $settingsOld = $settings_old ?? [];
                         <option value="<?= $e($m) ?>"<?= $regSelected === $m ? ' selected' : '' ?>><?= $e(ucfirst($m) . ($regModeNotes[$m] ?? '')) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <?php if (($registration_mode ?? 'open') === 'invite' && empty($invitations_flag_on)): ?>
+                <?php if ($regSelected === 'invite' && empty($invitations_flag_on)): ?>
                     <span class="field-error">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</span>
                 <?php endif; ?>
                 <?php if (!empty($settingsErrors['registration_mode'])): ?>
@@ -100,6 +100,9 @@ $settingsOld = $settings_old ?? [];
                     : implode("\n", $antiabuse_blocked_words ?? []); ?>
                 <textarea name="antiabuse_blocked_words" class="input" rows="4" placeholder="One word or phrase per line (commas also separate entries)"><?= $e($wordsValue) ?></textarea>
                 <span class="muted">One per line, or comma-separated. Case-insensitive; matched as substrings against new posts. Entries shorter than 3 characters are ignored.</span>
+                <?php if (!empty($settingsErrors['antiabuse_blocked_words'])): ?>
+                    <span class="field-error"><?= $e($settingsErrors['antiabuse_blocked_words']) ?></span>
+                <?php endif; ?>
             </label>
             <div class="form-actions"><button class="btn" type="submit">Save settings</button></div>
         </form>

@@ -139,6 +139,21 @@ final class AdminAuditPageTest extends TestCase
         $this->assertSeeText($ok, 'datecheck marker');
     }
 
+    public function test_non_numeric_target_id_is_a_422_instead_of_dropping_the_filter(): void
+    {
+        $admin = $this->makeAdmin(['password' => 'password123']);
+        $target = $this->makeUser();
+        $this->actingAs($admin);
+        $this->post('/admin/users/' . (int) $target['id'] . '/warn', ['reason' => 'target-id marker']);
+
+        $res = $this->get('/admin/audit', ['target_id' => 'not-a-number']);
+
+        $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'Use a numeric target ID.');
+        $this->assertSeeText($res, 'not-a-number');
+        $this->assertDontSeeText($res, 'target-id marker');
+    }
+
     public function test_exact_multiple_of_page_size_has_no_next_link(): void
     {
         // Unique action prefix so ambient fixture rows cannot skew the count

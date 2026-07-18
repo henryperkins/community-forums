@@ -358,7 +358,7 @@ final class AdminUserController extends Controller
      */
     private function bulkConfirmView(string $action, array $ids, array $errors = [], array $old = [], int $status = 200): Response
     {
-        $subjects = $this->container->get(UserModerationService::class)->bulkPlan($ids);
+        $subjects = $this->container->get(UserModerationService::class)->bulkPlan($action, $ids);
 
         return $this->view('admin/users_bulk_confirm', [
             'action' => $action,

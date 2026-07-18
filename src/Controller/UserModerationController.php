@@ -28,22 +28,23 @@ final class UserModerationController extends Controller
     /** @param array<string,string> $params subject user id */
     public function show(Request $request, array $params): Response
     {
-        $this->requireStaff();
         return $this->panel((int) ($params['id'] ?? 0));
     }
 
     /** @param array<string,string> $params subject user id */
     public function warn(Request $request, array $params): Response
     {
+        $reason = $request->post('reason', '');
+        $reason = is_string($reason) ? $reason : '';
         return $this->run($params, fn ($svc, User $actor, int $id) =>
             $svc->warn(
                 $actor,
                 $id,
-                $request->str('reason'),
+                $reason,
                 $request->int('board_id', 0) ?: null,
                 $request->str('idempotency_key') ?: null,
             ), 'Warning recorded.', 'warn', [
-                'reason' => $request->str('reason'),
+                'reason' => $reason,
                 'board_id' => $request->str('board_id'),
                 'idempotency_key' => $request->str('idempotency_key'),
             ]);

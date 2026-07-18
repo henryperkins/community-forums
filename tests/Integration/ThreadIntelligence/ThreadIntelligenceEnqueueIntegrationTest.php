@@ -232,6 +232,7 @@ final class ThreadIntelligenceEnqueueIntegrationTest extends TestCase
             moderation: $moderation,
             logs: new ModerationLogRepository($this->db),
             readService: $this->readService(),
+            boards: new BoardRepository($this->db),
             threadIntelligence: $queue,
         );
         $actor = $this->userEntity($this->makeAdmin());

@@ -165,7 +165,10 @@ final class AppealService
      * happy render AND both 422 re-renders, so a failed submit can never drop
      * the form context.
      *
-     * @return array{appeals:array<int,array<string,mixed>>, eligible:array<int,array<string,mixed>>}
+     * @return array{
+     *   appeals:array<int,array<string,mixed>>,
+     *   eligible:array{posts:array<int,array<string,mixed>>,moderation_logs:array<int,array<string,mixed>>}
+     * }
      */
     public function memberViewModel(int $userId): array
     {

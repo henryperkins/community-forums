@@ -138,18 +138,13 @@ final class TagController extends Controller
         $this->requireTags();
         $this->requireAdmin();
         try {
-            $impact = $this->container->get(TagService::class)
-                ->mergeImpact((int) ($params['id'] ?? 0), (int) $request->int('target_id', 0));
+            $model = $this->container->get(TagService::class)
+                ->mergeConfirmation((int) ($params['id'] ?? 0), (int) $request->int('target_id', 0));
         } catch (ValidationException) {
             return $this->redirectWithFlash('/admin/tags', 'Choose a different target tag to merge into.');
         }
 
-        return $this->view('admin/tag_merge_confirm', [
-            'source' => $impact['source'],
-            'target' => $impact['target'],
-            // The honest impact: every association the merge will move.
-            'association_count' => $impact['associations'],
-        ]);
+        return $this->view('admin/tag_merge_confirm', $model);
     }
 
     /** @param array<string,string> $params */

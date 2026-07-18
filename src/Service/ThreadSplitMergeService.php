@@ -9,6 +9,7 @@ use App\Core\ForbiddenException;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Domain\User;
+use App\Repository\BoardRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\PostRepository;
 use App\Repository\ThreadRepository;
@@ -25,6 +26,7 @@ final class ThreadSplitMergeService
         private ModerationService $moderation,
         private ModerationLogRepository $logs,
         private ThreadReadService $readService,
+        private BoardRepository $boards,
         private ?ThreadIntelligenceQueue $threadIntelligence = null,
     ) {
     }
@@ -32,39 +34,42 @@ final class ThreadSplitMergeService
     /** @param list<int> $postIds @return array<string,mixed> new thread row */
     public function split(User $actor, int $sourceThreadId, array $postIds, string $title): array
     {
-        // Read (404) → authority (403) → validation (422) — spec §1.
-        $source = $this->readService->loadForUser($actor, $sourceThreadId);
-        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
-            throw new ForbiddenException('You do not moderate this board.');
-        }
-
         $postIds = array_values(array_unique(array_filter(array_map('intval', $postIds), static fn (int $id): bool => $id > 0)));
         $title = trim($title);
-        if ($title === '') {
-            throw new ValidationException(['title' => 'A split thread title is required.']);
-        }
-        if ($postIds === []) {
-            throw new ValidationException(['post_ids' => 'Choose at least one reply to split.']);
-        }
 
-        $placeholders = implode(',', array_fill(0, count($postIds), '?'));
-        $selected = $this->db->fetchAll(
-            "SELECT * FROM posts
-             WHERE thread_id = ? AND id IN ($placeholders) AND is_deleted = 0
-             ORDER BY created_at ASC, id ASC",
-            array_merge([$sourceThreadId], $postIds),
-        );
-        if (count($selected) !== count($postIds)) {
-            throw new ValidationException(['post_ids' => 'Every selected post must belong to this thread.']);
-        }
-        foreach ($selected as $post) {
-            if ((int) $post['is_op'] === 1) {
-                throw new ValidationException(['post_ids' => 'The original post cannot be split out of its thread.']);
+        $newThreadId = $this->db->transaction(function () use ($actor, $sourceThreadId, $postIds, $title): int {
+            $source = $this->threads->findForUpdate($sourceThreadId);
+            if ($source === null) {
+                throw new NotFoundException('Thread not found.');
             }
-        }
+            $board = $this->boards->findForUpdate((int) $source['board_id']);
+            if ($board === null) {
+                throw new NotFoundException('Thread not found.');
+            }
+            // Read and authority are re-evaluated from the locked current rows.
+            $this->readService->assertReadableRows($actor, $source, $board);
+            if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
+                throw new ForbiddenException('You do not moderate this board.');
+            }
+            // Preserve the public contract's read (404) -> authority (403) ->
+            // validation (422) ordering even for direct service callers.
+            if ($title === '') {
+                throw new ValidationException(['title' => 'A split thread title is required.']);
+            }
+            if ($postIds === []) {
+                throw new ValidationException(['post_ids' => 'Choose at least one reply to split.']);
+            }
 
-        $newThreadId = $this->db->transaction(function () use ($actor, $source, $sourceThreadId, $selected, $postIds, $title): int {
-            $this->threads->findForUpdate($sourceThreadId);
+            $selected = $this->posts->findManyForUpdate($sourceThreadId, $postIds);
+            if (count($selected) !== count($postIds)) {
+                throw new ValidationException(['post_ids' => 'Every selected post must belong to this thread.']);
+            }
+            foreach ($selected as $post) {
+                if ((int) $post['is_op'] === 1) {
+                    throw new ValidationException(['post_ids' => 'The original post cannot be split out of its thread.']);
+                }
+            }
+
             $slug = Str::slug($title);
             $newThreadId = $this->threads->create((int) $source['board_id'], (int) $selected[0]['user_id'], $title, $slug);
             $this->threads->findForUpdate($newThreadId);
@@ -113,31 +118,56 @@ final class ThreadSplitMergeService
     /** @return array<string,mixed> target thread row */
     public function merge(User $actor, int $sourceThreadId, int $targetThreadId): array
     {
-        // Read (404) → source authority (403) → validation (422) — spec §1.
-        $source = $this->readService->loadForUser($actor, $sourceThreadId);
-        if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
-            throw new ForbiddenException('You do not moderate the source board.');
-        }
-        if ($sourceThreadId === $targetThreadId) {
-            throw new ValidationException(['target_thread_id' => 'Choose a different target thread.']);
-        }
-        // The target resolves from the ACTOR's perspective: a target that does
-        // not exist and one the actor cannot read produce the same 422 — the
-        // picker never doubles as an existence oracle for private threads.
-        try {
-            $target = $this->readService->loadForUser($actor, $targetThreadId);
-        } catch (NotFoundException) {
-            throw new ValidationException(['target_thread_id' => 'Choose a valid target thread.']);
-        }
-        if (!$this->moderation->canModerate($actor, (int) $target['board_id'], Cap::THREAD_SPLIT_MERGE)) {
-            throw new ForbiddenException('You do not moderate the target board.');
-        }
-
-        $this->db->transaction(function () use ($actor, $source, $target, $sourceThreadId, $targetThreadId): void {
+        $this->db->transaction(function () use ($actor, $sourceThreadId, $targetThreadId): void {
             $affectedThreadIds = [$sourceThreadId, $targetThreadId];
             sort($affectedThreadIds, SORT_NUMERIC);
+            $lockedThreads = [];
             foreach ($affectedThreadIds as $affectedThreadId) {
-                $this->threads->findForUpdate($affectedThreadId);
+                $lockedThreads[$affectedThreadId] = $this->threads->findForUpdate($affectedThreadId);
+            }
+            $source = $lockedThreads[$sourceThreadId] ?? null;
+            if ($source === null) {
+                throw new NotFoundException('Thread not found.');
+            }
+
+            $boardIds = [(int) $source['board_id']];
+            $target = $lockedThreads[$targetThreadId] ?? null;
+            if ($target !== null) {
+                $boardIds[] = (int) $target['board_id'];
+            }
+            $boardIds = array_values(array_unique($boardIds));
+            sort($boardIds, SORT_NUMERIC);
+            $lockedBoards = [];
+            foreach ($boardIds as $boardId) {
+                $lockedBoards[$boardId] = $this->boards->findForUpdate($boardId);
+            }
+
+            $sourceBoard = $lockedBoards[(int) $source['board_id']] ?? null;
+            if ($sourceBoard === null) {
+                throw new NotFoundException('Thread not found.');
+            }
+            $this->readService->assertReadableRows($actor, $source, $sourceBoard);
+            if (!$this->moderation->canModerate($actor, (int) $source['board_id'], Cap::THREAD_SPLIT_MERGE)) {
+                throw new ForbiddenException('You do not moderate the source board.');
+            }
+            if ($sourceThreadId === $targetThreadId) {
+                throw new ValidationException(['target_thread_id' => 'Choose a different target thread.']);
+            }
+            if ($target === null) {
+                throw new ValidationException(['target_thread_id' => 'Choose a valid target thread.']);
+            }
+            $targetBoard = $lockedBoards[(int) $target['board_id']] ?? null;
+            try {
+                if ($targetBoard === null) {
+                    throw new NotFoundException('Thread not found.');
+                }
+                $this->readService->assertReadableRows($actor, $target, $targetBoard);
+            } catch (NotFoundException) {
+                // Missing and unreadable targets are deliberately uniform.
+                throw new ValidationException(['target_thread_id' => 'Choose a valid target thread.']);
+            }
+            if (!$this->moderation->canModerate($actor, (int) $target['board_id'], Cap::THREAD_SPLIT_MERGE)) {
+                throw new ForbiddenException('You do not moderate the target board.');
             }
             $this->db->run('UPDATE posts SET thread_id = ?, is_op = 0 WHERE thread_id = ?', [$targetThreadId, $sourceThreadId]);
             $this->db->run('UPDATE threads SET is_deleted = 1 WHERE id = ?', [$sourceThreadId]);

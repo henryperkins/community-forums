@@ -43,6 +43,7 @@ $page = (int) ($page ?? 0);
                 <label class="field">
                     <span>Target #</span>
                     <input type="number" name="target_id" class="input" min="1" value="<?= $e($filters['target_id'] ?? '') ?>">
+                    <?php if (!empty($errors['target_id'])): ?><span class="field-error"><?= $e($errors['target_id']) ?></span><?php endif; ?>
                 </label>
                 <label class="field">
                     <span>From</span>

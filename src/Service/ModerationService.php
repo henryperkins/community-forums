@@ -73,17 +73,19 @@ final class ModerationService
 
     /**
      * Board rows the actor may use as a thread-move destination (every
-     * unarchived board within their core.thread.move authority). The caller
-     * excludes the thread's current board; the move itself still re-enforces
-     * authority over BOTH ends.
+     * unarchived board within their core.thread.move authority), excluding the
+     * current board. The move itself still re-enforces authority over BOTH ends.
      *
      * @return list<array{id:int,label:string}>
      */
-    public function moveDestinations(User $user): array
+    public function moveDestinations(User $user, int $currentBoardId): array
     {
         $moderableIds = $this->moderableBoardIds($user, Cap::THREAD_MOVE);
         $out = [];
         foreach ($this->boards->allOrdered() as $candidate) {
+            if ((int) $candidate['id'] === $currentBoardId) {
+                continue;
+            }
             if ((int) ($candidate['is_archived'] ?? 0) === 1) {
                 continue;
             }
@@ -254,30 +256,42 @@ final class ModerationService
      */
     public function moveThread(User $mod, int $threadId, int $destBoardId): array
     {
-        // Read (404) → authority (403) → validation (422), in that order
-        // (spec §1): an actor who cannot read the thread gets the same 404 a
-        // missing thread produces — never a 422 or success redirect that
-        // confirms it exists. The same-board no-op is therefore reachable
-        // only by an authorized reader (it used to leak the slug in the
-        // Location header before ANY check).
-        $thread = $this->readService->loadForUser($mod, $threadId);
-        $srcBoardId = (int) $thread['board_id'];
-        $this->assertCanModerate($mod, $srcBoardId, Cap::THREAD_MOVE);
-        if ($srcBoardId === $destBoardId) {
-            return ['thread' => $thread, 'moved' => false];
-        }
-        $dest = $this->boards->find($destBoardId);
-        if ($dest === null) {
-            throw new ValidationException(['board_id' => 'Choose a destination board.']);
-        }
-        $this->assertCanModerate($mod, $destBoardId, Cap::THREAD_MOVE);
-        // A move mutates BOTH boards (counters + last-post caches), so an archived
-        // board on either end is read-only: moving content out of a frozen source,
-        // or into a frozen destination, are both writes that stay closed.
-        $this->assertNotArchived($srcBoardId);
-        $this->assertNotArchived($destBoardId);
+        return $this->db->transaction(function () use ($mod, $threadId, $destBoardId): array {
+            // The thread lock comes first: its CURRENT board determines which
+            // two board rows must then be locked in deterministic ID order.
+            $thread = $this->threads->findForUpdate($threadId);
+            if ($thread === null) {
+                throw new NotFoundException('Thread not found.');
+            }
+            $srcBoardId = (int) $thread['board_id'];
+            $boardIds = array_values(array_unique([$srcBoardId, $destBoardId]));
+            sort($boardIds, SORT_NUMERIC);
+            $lockedBoards = [];
+            foreach ($boardIds as $boardId) {
+                $lockedBoards[$boardId] = $this->boards->findForUpdate($boardId);
+            }
+            $source = $lockedBoards[$srcBoardId] ?? null;
+            if ($source === null) {
+                throw new NotFoundException('Thread not found.');
+            }
 
-        $this->db->transaction(function () use ($mod, $threadId, $thread, $srcBoardId, $destBoardId): void {
+            // Read (404) → authority (403) → validation (422), using only the
+            // locked current rows so a concurrent move cannot change the source
+            // board or counter population after authorization.
+            $this->readService->assertReadableRows($mod, $thread, $source);
+            $this->assertCanModerate($mod, $srcBoardId, Cap::THREAD_MOVE);
+            if ($srcBoardId === $destBoardId) {
+                return ['thread' => $thread, 'moved' => false];
+            }
+            $dest = $lockedBoards[$destBoardId] ?? null;
+            if ($dest === null) {
+                throw new ValidationException(['board_id' => 'Choose a destination board.']);
+            }
+            $this->assertCanModerate($mod, $destBoardId, Cap::THREAD_MOVE);
+            if ((int) ($source['is_archived'] ?? 0) === 1 || (int) ($dest['is_archived'] ?? 0) === 1) {
+                throw new ForbiddenException('This board is archived (read-only).');
+            }
+
             // Board counters exclude held/deleted content (RepairService:
             // is_deleted = 0 AND is_pending = 0, thread and post alike), so the
             // shift must apply the same filters: a held thread contributes
@@ -314,9 +328,8 @@ final class ModerationService
                 $threadId,
                 ThreadIntelligenceQueue::TRIGGER_THREAD_MOVED,
             );
+            return ['thread' => $thread, 'moved' => true];
         });
-
-        return ['thread' => $thread, 'moved' => true];
     }
 
     /** @return array<string,mixed> */

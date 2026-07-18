@@ -177,6 +177,7 @@ test('board moderator staff panel preserves a failed warn', async ({ page }, inf
   await warnForm.locator('input[name="reason"]').fill('   ');
   await warnForm.getByRole('button', { name: 'Record warning' }).click();
   await expect(page.locator('body')).toContainText('A reason is required.');
+  await expect(warnForm.locator('input[name="reason"]')).toHaveValue('   ');
 });
 
 test('split failure re-renders the thread with the typed title intact', async ({ page }, info) => {
@@ -378,7 +379,8 @@ test('mint refresh cannot re-mint: the replay is a 409 conflict', async ({ page 
   await expect(page.getByText(/will not be shown again/)).toBeVisible();
 
   // The browser refresh re-POSTs the same idempotency key (PR #44 §7).
-  await page.reload();
+  const replay = await page.reload();
+  expect(replay?.status()).toBe(409);
   await expect(page.getByText('already processed')).toBeVisible();
   await expect(page.locator('code').filter({ hasText: /^rbt_/ })).toHaveCount(0);
   await expect(page.locator('table tbody tr', { hasText: 'Refresh evidence token' })).toHaveCount(1);

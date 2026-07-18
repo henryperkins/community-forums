@@ -95,4 +95,19 @@ final class AppTagMergeTest extends TestCase
         );
         self::assertSame(0, (int) $this->db->fetchValue('SELECT is_enabled FROM tags WHERE id = ?', [$seed['source']]));
     }
+
+    public function test_merge_refuses_a_destination_that_is_no_longer_enabled(): void
+    {
+        $seed = $this->seedMergePair();
+        $this->db->run('UPDATE tags SET is_enabled = 0 WHERE id = ?', [$seed['target']]);
+        $this->actingAs($seed['admin']);
+
+        $res = $this->post('/admin/tags/' . $seed['source'] . '/merge', [
+            'target_id' => (string) $seed['target'],
+        ]);
+
+        $this->assertRedirectContains($res, '/admin/tags');
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT is_enabled FROM tags WHERE id = ?', [$seed['source']]));
+        self::assertSame(4, (int) $this->db->fetchValue('SELECT COUNT(*) FROM thread_tags WHERE tag_id = ?', [$seed['source']]));
+    }
 }

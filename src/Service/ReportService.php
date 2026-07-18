@@ -111,6 +111,7 @@ final class ReportService
     public function submitPostReport(User $reporter, int $postId, ?string $reasonCode, string $reason, bool $notifyReporter): void
     {
         $this->writeGate->assertCanWrite($reporter);
+        $reasonCode = in_array($reasonCode, self::REASONS, true) ? $reasonCode : null;
 
         $post = $this->posts->findWithContext($postId);
         if ($post === null || (int) $post['is_deleted'] === 1) {

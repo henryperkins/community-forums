@@ -252,4 +252,20 @@ final class AppAdminModerationTest extends TestCase
         $this->assertSeeText($res, 'keepthisword');
         self::assertSame('observe', $this->settings()->getString('antiabuse_mode', 'observe'), 'nothing persisted');
     }
+
+    public function test_settings_422_uses_the_typed_invite_mode_for_the_dark_feature_warning(): void
+    {
+        $this->settings()->set('features', ['invitations' => false]);
+        $this->actingAs($this->admin);
+
+        $res = $this->post('/admin/settings', [
+            'registration_mode' => 'invite',
+            'antiabuse_mode' => 'invalid-mode',
+            'antiabuse_blocked_words' => 'preservedword',
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('<option value="invite" selected>', $res->body());
+        $this->assertSeeText($res, 'registration is effectively closed');
+    }
 }

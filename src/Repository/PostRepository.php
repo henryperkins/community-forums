@@ -51,6 +51,27 @@ final class PostRepository
         return $this->db->fetch('SELECT * FROM posts WHERE id = ?', [$id]);
     }
 
+    /**
+     * Lock the selected live posts in canonical render order.
+     *
+     * @param list<int> $ids
+     * @return array<int,array<string,mixed>>
+     */
+    public function findManyForUpdate(int $threadId, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        return $this->db->fetchAll(
+            "SELECT * FROM posts
+             WHERE thread_id = ? AND id IN ($placeholders) AND is_deleted = 0
+             ORDER BY created_at ASC, id ASC
+             FOR UPDATE",
+            array_merge([$threadId], $ids),
+        );
+    }
+
     /** Post joined with its thread + board, for permission and lock checks. @return array<string,mixed>|null */
     public function findWithContext(int $id): ?array
     {

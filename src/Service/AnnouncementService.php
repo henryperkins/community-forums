@@ -6,6 +6,8 @@ namespace App\Service;
 
 use App\Core\Database;
 use App\Core\ForbiddenException;
+use App\Core\HttpException;
+use App\Core\Request;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\EmailDeliveryRepository;
@@ -35,6 +37,7 @@ final class AnnouncementService
         private NotificationRepository $notifications,
         private EmailDeliveryRepository $deliveries,
         private WriteGate $writeGate,
+        private ?RateLimitService $rateLimits = null,
     ) {
     }
 
@@ -101,6 +104,69 @@ final class AnnouncementService
                 'after' => ['active' => false],
             ]);
         });
+    }
+
+    /** @return array<string,mixed> */
+    public function consoleModel(array $errors = [], array $old = []): array
+    {
+        $current = $this->settings->get('site_announcement', []);
+        return [
+            'announcement' => is_array($current) ? $current : [],
+            'history' => $this->recentHistory(10),
+            'errors' => $errors,
+            'old' => $old,
+        ];
+    }
+
+    /**
+     * Complete POST outcome for the admin console: either a redirect message or
+     * a fully populated 422/429 model. The controller calls this once.
+     *
+     * @return array{model:?array<string,mixed>,status:int,message:?string}
+     */
+    public function saveConsole(User $admin, Request $request): array
+    {
+        if ($request->str('action') === 'clear') {
+            $this->clearBanner($admin);
+            return ['model' => null, 'status' => 303, 'message' => 'Announcement cleared.'];
+        }
+
+        $old = [
+            'message' => $request->str('message'),
+            'dismissible' => $request->post('dismissible') !== null,
+            'broadcast' => $request->post('broadcast') !== null,
+            'broadcast_email' => $request->post('broadcast_email') !== null,
+        ];
+        try {
+            $this->rateLimits?->enforce('announce', $request, $admin);
+        } catch (HttpException $e) {
+            if ($e->statusCode() !== 429) {
+                throw $e;
+            }
+            return [
+                'model' => $this->consoleModel(['message' => $e->getMessage()], $old),
+                'status' => 429,
+                'message' => null,
+            ];
+        }
+
+        try {
+            $this->setBanner(
+                $admin,
+                $request->str('message'),
+                $request->post('dismissible') !== null,
+                $request->post('broadcast') !== null,
+                $request->post('broadcast_email') !== null,
+            );
+        } catch (ValidationException $e) {
+            return [
+                'model' => $this->consoleModel($e->errors, $e->old + $old),
+                'status' => 422,
+                'message' => null,
+            ];
+        }
+
+        return ['model' => null, 'status' => 303, 'message' => 'Announcement published.'];
     }
 
     /**

@@ -926,7 +926,10 @@ final class App
         $c->bind(ThreadAssignmentRepository::class, fn (Container $c) => new ThreadAssignmentRepository($c->get(Database::class)));
         $c->bind(FollowRepository::class, fn (Container $c) => new FollowRepository($c->get(Database::class)));
         $c->bind(TagRepository::class, fn (Container $c) => new TagRepository($c->get(Database::class)));
-        $c->bind(TagService::class, fn (Container $c) => new TagService($c->get(TagRepository::class)));
+        $c->bind(TagService::class, fn (Container $c) => new TagService(
+            $c->get(Database::class),
+            $c->get(TagRepository::class),
+        ));
         $c->bind(BadgeRepository::class, fn (Container $c) => new BadgeRepository($c->get(Database::class)));
         $c->bind(OAuthIdentityRepository::class, fn (Container $c) => new OAuthIdentityRepository($c->get(Database::class)));
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
@@ -1238,6 +1241,7 @@ final class App
             $c->get(NotificationRepository::class),
             $c->get(EmailDeliveryRepository::class),
             $c->get(WriteGate::class),
+            $c->get(RateLimitService::class),
         ));
         $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(
             $c->get(Database::class),
@@ -1255,6 +1259,7 @@ final class App
             $c->get(CapabilityResolver::class),
             $c->get(BoardRepository::class),
             $c->get(IdempotencyRepository::class),
+            $c->get(BoardAuthority::class),
         ));
         $c->bind(AppealService::class, fn (Container $c) => new AppealService(
             $c->get(Database::class),
@@ -1384,6 +1389,7 @@ final class App
             $c->get(ModerationService::class),
             $c->get(ModerationLogRepository::class),
             $c->get(ThreadReadService::class),
+            $c->get(BoardRepository::class),
             $c->get(ThreadIntelligenceQueue::class),
         ));
         $c->bind(CommunityMemoryService::class, fn (Container $c) => new CommunityMemoryService(

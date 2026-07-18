@@ -19,6 +19,12 @@ final class TagRepository
     }
 
     /** @return array<string,mixed>|null */
+    public function findForUpdate(int $id): ?array
+    {
+        return $this->db->fetch('SELECT * FROM tags WHERE id = ? FOR UPDATE', [$id]);
+    }
+
+    /** @return array<string,mixed>|null */
     public function findBySlug(string $slug): ?array
     {
         $tag = $this->db->fetch('SELECT * FROM tags WHERE slug = ?', [$slug]);
@@ -131,31 +137,41 @@ final class TagRepository
         if ($sourceId === $targetId) {
             return;
         }
-        $source = $this->find($sourceId);
-        $target = $this->find($targetId);
-        if ($source === null || $target === null) {
-            return;
-        }
-
-        $this->db->transaction(function () use ($sourceId, $targetId, $source): void {
-            $this->db->run(
-                'INSERT IGNORE INTO thread_tags (thread_id, tag_id, added_by, created_at)
-                 SELECT thread_id, ?, added_by, created_at FROM thread_tags WHERE tag_id = ?',
-                [$targetId, $sourceId],
-            );
-            $this->db->run(
-                "INSERT IGNORE INTO follows (user_id, target_type, target_id, created_at)
-                 SELECT user_id, 'tag', ?, created_at FROM follows WHERE target_type = 'tag' AND target_id = ?",
-                [$targetId, $sourceId],
-            );
-            $this->db->run('DELETE FROM thread_tags WHERE tag_id = ?', [$sourceId]);
-            $this->db->run("DELETE FROM follows WHERE target_type = 'tag' AND target_id = ?", [$sourceId]);
-            $this->db->run(
-                'INSERT IGNORE INTO tag_aliases (alias_slug, tag_id, created_at) VALUES (?, ?, UTC_TIMESTAMP())',
-                [(string) $source['slug'], $targetId],
-            );
-            $this->db->run('UPDATE tags SET is_enabled = 0, updated_at = UTC_TIMESTAMP() WHERE id = ?', [$sourceId]);
+        $this->db->transaction(function () use ($sourceId, $targetId): void {
+            $tagIds = [$sourceId, $targetId];
+            sort($tagIds, SORT_NUMERIC);
+            $locked = [];
+            foreach ($tagIds as $tagId) {
+                $locked[$tagId] = $this->findForUpdate($tagId);
+            }
+            $source = $locked[$sourceId] ?? null;
+            if ($source === null || ($locked[$targetId] ?? null) === null) {
+                return;
+            }
+            $this->mergeLocked($sourceId, $targetId, (string) $source['slug']);
         });
+    }
+
+    /** Execute a merge after the caller has locked and validated both tag rows. */
+    public function mergeLocked(int $sourceId, int $targetId, string $sourceSlug): void
+    {
+        $this->db->run(
+            'INSERT IGNORE INTO thread_tags (thread_id, tag_id, added_by, created_at)
+             SELECT thread_id, ?, added_by, created_at FROM thread_tags WHERE tag_id = ?',
+            [$targetId, $sourceId],
+        );
+        $this->db->run(
+            "INSERT IGNORE INTO follows (user_id, target_type, target_id, created_at)
+             SELECT user_id, 'tag', ?, created_at FROM follows WHERE target_type = 'tag' AND target_id = ?",
+            [$targetId, $sourceId],
+        );
+        $this->db->run('DELETE FROM thread_tags WHERE tag_id = ?', [$sourceId]);
+        $this->db->run("DELETE FROM follows WHERE target_type = 'tag' AND target_id = ?", [$sourceId]);
+        $this->db->run(
+            'INSERT IGNORE INTO tag_aliases (alias_slug, tag_id, created_at) VALUES (?, ?, UTC_TIMESTAMP())',
+            [$sourceSlug, $targetId],
+        );
+        $this->db->run('UPDATE tags SET is_enabled = 0, updated_at = UTC_TIMESTAMP() WHERE id = ?', [$sourceId]);
     }
 
     /** @return array<int,array<string,mixed>> */

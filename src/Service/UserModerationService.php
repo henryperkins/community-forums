@@ -22,6 +22,7 @@ use App\Repository\ProtectedOwnerRepository;
 use App\Repository\SessionRepository;
 use App\Repository\UserRepository;
 use App\Security\AuthorityGate;
+use App\Security\BoardAuthority;
 use App\Security\Cap;
 use App\Security\CapabilityResolver;
 use App\Security\LastOwnerGuard;
@@ -56,6 +57,7 @@ final class UserModerationService
         private ?CapabilityResolver $resolver = null,
         private ?BoardRepository $boards = null,
         private ?IdempotencyRepository $idempotency = null,
+        private ?BoardAuthority $boardAuthority = null,
     ) {
     }
 
@@ -69,6 +71,9 @@ final class UserModerationService
         $this->assertStaff($actor);
         $reason = $this->requireReason($reason);
         $subject = $this->requireSubject($subjectId);
+        if ((int) $subject['id'] === $actor->id()) {
+            throw new ValidationException(['reason' => 'You cannot warn your own account.']);
+        }
 
         if (!$actor->isAdmin()) {
             $overlap = $this->moderatorOverlap($actor, $subjectId);
@@ -86,6 +91,7 @@ final class UserModerationService
                     ['board_id' => 'Choose a board you moderate where this member has participated.'],
                 );
             }
+            $this->assertCanWarnBoard($actor, $boardId);
         } elseif ($boardId !== null && $this->boards !== null && $this->boards->find($boardId) === null) {
             throw new ValidationException(['board_id' => 'Choose a valid board.']);
         }
@@ -627,8 +633,9 @@ final class UserModerationService
      * @param list<int> $ids
      * @return array<int,array<string,mixed>>
      */
-    public function bulkPlan(array $ids): array
+    public function bulkPlan(string $action, array $ids): array
     {
+        $ids = $this->normalizeBulkCommand($action, $ids);
         $subjects = [];
         foreach ($ids as $id) {
             $row = $this->users->find((int) $id);
@@ -654,6 +661,7 @@ final class UserModerationService
      */
     public function bulkApply(User $admin, string $action, array $ids, string $reason, ?string $until): array
     {
+        $ids = $this->normalizeBulkCommand($action, $ids);
         $done = 0;
         $skipped = [];
         foreach ($ids as $id) {
@@ -677,6 +685,22 @@ final class UserModerationService
         return ['done' => $done, 'skipped' => $skipped];
     }
 
+    /** @param list<int> $ids @return list<int> */
+    private function normalizeBulkCommand(string $action, array $ids): array
+    {
+        if (!in_array($action, ['warn', 'suspend'], true)) {
+            throw new ValidationException(['bulk_action' => 'Choose a valid bulk action.']);
+        }
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn (int $id): bool => $id > 0,
+        )));
+        if ($ids === []) {
+            throw new NotFoundException('No matching members.');
+        }
+        return $ids;
+    }
+
     private function usernameOf(int $id): string
     {
         $row = $this->users->find($id);
@@ -695,6 +719,25 @@ final class UserModerationService
             [], // site probe: staff-any — admin OR moderates ≥1 board, site-wide
             'UserModerationService::assertStaff',
             'Staff access required.', // keep the existing message verbatim
+        );
+    }
+
+    private function assertCanWarnBoard(User $actor, int $boardId): void
+    {
+        if ($this->boardAuthority !== null) {
+            if (!$this->boardAuthority->canModerate($actor, $boardId, Cap::USER_WARN)) {
+                throw new ForbiddenException('You do not have permission to warn members for this board.');
+            }
+            return;
+        }
+
+        $this->gate()->assert(
+            fn (): bool => $actor->isAdmin() || $this->boardMods->isModerator($boardId, $actor->id()),
+            $actor,
+            Cap::USER_WARN,
+            ['board_id' => $boardId],
+            'UserModerationService::warn',
+            'You do not have permission to warn members for this board.',
         );
     }
 

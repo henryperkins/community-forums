@@ -176,6 +176,23 @@ final class AppModUserPanelScopeTest extends TestCase
         self::assertStringContainsString('board_id', $after);
     }
 
+    public function test_self_warning_is_rejected_without_writing_a_warning(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'selfwarnadmin']);
+        $this->actingAs($admin);
+
+        $res = $this->post('/mod/u/' . (int) $admin['id'] . '/warn', [
+            'reason' => 'crafted self-warning',
+        ]);
+
+        $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'You cannot warn your own account.');
+        self::assertSame(
+            0,
+            (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [(int) $admin['id']]),
+        );
+    }
+
     public function test_admin_warn_site_wide_named_board_and_missing_board(): void
     {
         $seed = $this->seedScoped();

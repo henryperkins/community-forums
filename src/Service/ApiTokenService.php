@@ -185,6 +185,68 @@ final class ApiTokenService
         });
     }
 
+    /** @return array<string,mixed> */
+    public function pageModel(array $overlay = []): array
+    {
+        return array_replace([
+            'tokens' => $this->list(),
+            'scopes_catalogue' => ApiScopes::all(),
+            'errors' => [],
+            'old' => [],
+            'new_token' => null,
+            'conflict' => false,
+        ], $overlay);
+    }
+
+    /**
+     * Complete mint-page operation, including the one-time secret, 422 model,
+     * and replay-safe 409 model.
+     *
+     * @param array<int,mixed> $scopes
+     * @return array{model:array<string,mixed>,status:int}
+     */
+    public function mintPage(
+        User $admin,
+        string $currentPassword,
+        string $name,
+        array $scopes,
+        string $expiresInDays,
+        ?string $idempotencyKey,
+    ): array {
+        try {
+            $result = $this->mint(
+                $admin,
+                $currentPassword,
+                $name,
+                $scopes,
+                $expiresInDays === '' ? null : (int) $expiresInDays,
+                $idempotencyKey,
+            );
+            return [
+                'model' => $this->pageModel(['new_token' => $result['token']]),
+                'status' => 200,
+            ];
+        } catch (ValidationException $e) {
+            return [
+                'model' => $this->pageModel([
+                    'errors' => $e->errors,
+                    'old' => $e->old + [
+                        'name' => $name,
+                        'scopes' => array_values(array_filter($scopes, 'is_string')),
+                        'expires_in_days' => $expiresInDays,
+                        'idempotency_key' => $idempotencyKey ?? '',
+                    ],
+                ]),
+                'status' => 422,
+            ];
+        } catch (DuplicateSubmissionException) {
+            return [
+                'model' => $this->pageModel(['conflict' => true]),
+                'status' => 409,
+            ];
+        }
+    }
+
     public function auditScopeDenied(ApiPrincipal $p, string $scope): void
     {
         $this->log->log([

@@ -56,8 +56,10 @@ final class AdminPackageLifecycleController extends Controller
 
         try {
             $this->lifecycle()->install($admin, (string) $request->post('current_password', ''), $packageId, $releaseId);
-            $this->flash()->add('Install recorded — review and grant the permissions below.');
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId . '/consent'));
+            return $this->noindex($this->redirectWithFlash(
+                '/admin/packages/' . $packageId . '/consent',
+                'Install recorded — review and grant the permissions below.',
+            ));
         } catch (ValidationException $e) {
             return $this->planView($admin, $packageId, $releaseId, $e->errors);
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -94,12 +96,16 @@ final class AdminPackageLifecycleController extends Controller
                     ], 422);
                 }
                 $this->updates()->applyStaged($admin, (string) $request->post('current_password', ''), (int) $install['id']);
-                $this->flash()->add('Update approved and applied.');
-            } else {
-                $this->lifecycle()->consent($admin, (string) $request->post('current_password', ''), (int) $install['id']);
-                $this->flash()->add('Permissions granted. Enable the package when you are ready.');
+                return $this->noindex($this->redirectWithFlash(
+                    '/admin/packages/' . $packageId,
+                    'Update approved and applied.',
+                ));
             }
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+            $this->lifecycle()->consent($admin, (string) $request->post('current_password', ''), (int) $install['id']);
+            return $this->noindex($this->redirectWithFlash(
+                '/admin/packages/' . $packageId,
+                'Permissions granted. Enable the package when you are ready.',
+            ));
         } catch (ValidationException $e) {
             return $this->consentView($admin, $packageId, $e->errors, 422);
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -179,11 +185,12 @@ final class AdminPackageLifecycleController extends Controller
                 $this->releaseId($request),
             );
             if ($result['status'] === 'staged') {
-                $this->flash()->add('Update staged — approve the permission changes below.');
-                return $this->noindex($this->redirect('/admin/packages/' . $packageId . '/consent'));
+                return $this->noindex($this->redirectWithFlash(
+                    '/admin/packages/' . $packageId . '/consent',
+                    'Update staged — approve the permission changes below.',
+                ));
             }
-            $this->flash()->add('Package updated.');
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, 'Package updated.'));
         } catch (ValidationException $e) {
             return $this->detailView($packageId, $e->errors, 422, $this->releaseId($request));
         } catch (PackagePolicyException | RegistryVerificationException $e) {
@@ -220,11 +227,12 @@ final class AdminPackageLifecycleController extends Controller
                 (int) $request->str('release_id'),
             );
             if ($result['status'] === 'staged') {
-                $this->flash()->add('Rollback staged — approve the permission changes below.');
-                return $this->noindex($this->redirect('/admin/packages/' . $packageId . '/consent'));
+                return $this->noindex($this->redirectWithFlash(
+                    '/admin/packages/' . $packageId . '/consent',
+                    'Rollback staged — approve the permission changes below.',
+                ));
             }
-            $this->flash()->add('Rollback applied.');
-            return $this->noindex($this->redirect('/admin/packages/' . $packageId));
+            return $this->noindex($this->redirectWithFlash('/admin/packages/' . $packageId, 'Rollback applied.'));
         } catch (ValidationException $e) {
             return $this->detailView($packageId, $e->errors, 422, (int) $request->str('release_id'));
         } catch (PackagePolicyException | RegistryVerificationException $e) {

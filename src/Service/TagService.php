@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Database;
 use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Repository\TagRepository;
@@ -17,8 +18,10 @@ use App\Repository\TagRepository;
  */
 final class TagService
 {
-    public function __construct(private TagRepository $tags)
-    {
+    public function __construct(
+        private Database $db,
+        private TagRepository $tags,
+    ) {
     }
 
     /**
@@ -31,7 +34,7 @@ final class TagService
             throw new NotFoundException('Tag not found.');
         }
         $target = $targetId > 0 && $targetId !== $sourceId ? $this->tags->find($targetId) : null;
-        if ($target === null) {
+        if ($target === null || (int) ($target['is_enabled'] ?? 0) !== 1) {
             throw new ValidationException(['target_id' => 'Choose a different target tag to merge into.']);
         }
 
@@ -42,10 +45,38 @@ final class TagService
         ];
     }
 
-    /** Same guards as the preview, then the repository's transactional merge. */
+    /** @return array{source:array<string,mixed>,target:array<string,mixed>,association_count:int} */
+    public function mergeConfirmation(int $sourceId, int $targetId): array
+    {
+        $impact = $this->mergeImpact($sourceId, $targetId);
+        return [
+            'source' => $impact['source'],
+            'target' => $impact['target'],
+            'association_count' => $impact['associations'],
+        ];
+    }
+
+    /** Validate and mutate against the same locked tag rows. */
     public function merge(int $sourceId, int $targetId): void
     {
-        $this->mergeImpact($sourceId, $targetId);
-        $this->tags->mergeInto($sourceId, $targetId);
+        $this->db->transaction(function () use ($sourceId, $targetId): void {
+            $tagIds = array_values(array_unique([$sourceId, $targetId]));
+            sort($tagIds, SORT_NUMERIC);
+            $locked = [];
+            foreach ($tagIds as $tagId) {
+                $locked[$tagId] = $this->tags->findForUpdate($tagId);
+            }
+
+            $source = $locked[$sourceId] ?? null;
+            if ($source === null) {
+                throw new NotFoundException('Tag not found.');
+            }
+            $target = $targetId > 0 && $targetId !== $sourceId ? ($locked[$targetId] ?? null) : null;
+            if ($target === null || (int) ($target['is_enabled'] ?? 0) !== 1) {
+                throw new ValidationException(['target_id' => 'Choose a different target tag to merge into.']);
+            }
+
+            $this->tags->mergeLocked($sourceId, $targetId, (string) $source['slug']);
+        });
     }
 }

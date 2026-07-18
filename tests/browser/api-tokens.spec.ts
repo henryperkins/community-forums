@@ -103,7 +103,8 @@ test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke
 
   // Refresh-safety (PR #44 §7): the reload re-POSTs the same idempotency key
   // and is refused at 409 — one row, no plaintext, page still usable.
-  await page.reload();
+  const replay = await page.reload();
+  expect(replay?.status()).toBe(409);
   await expect(page.getByText('already processed')).toBeVisible();
   await expect(page.locator('code').filter({ hasText: /^rbt_/ })).toHaveCount(0);
   await expect(page.locator('table tbody tr', { hasText: tokenName })).toHaveCount(1);

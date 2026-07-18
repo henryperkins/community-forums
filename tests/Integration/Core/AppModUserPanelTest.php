@@ -58,6 +58,7 @@ final class AppModUserPanelTest extends TestCase
 
         $this->assertStatus(422, $res);
         $this->assertSeeText($res, 'A reason is required.');
+        self::assertMatchesRegularExpression('/name="reason"[^>]*value="   "/', $res->body());
         self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings'));
     }
 

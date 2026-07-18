@@ -8,6 +8,7 @@ use App\Core\Config;
 use App\Core\Database;
 use App\Core\EgressBlockedException;
 use App\Core\FeatureFlags;
+use App\Core\NotFoundException;
 use App\Core\ValidationException;
 use App\Core\WebhooksDisabledException;
 use App\Domain\User;
@@ -148,6 +149,35 @@ final class WebhookService
         $this->writeGate->assertCanWrite($admin);
         $this->assertPassword($admin, $currentPassword);
         $this->remove($admin, $webhookId);
+    }
+
+    /**
+     * Complete delete-page operation: mutation or the fully populated 422
+     * detail model, without controller-side delete/read/deliveries sequencing.
+     *
+     * @return array{deleted:bool,model:?array<string,mixed>,status:int}
+     */
+    public function deleteConsole(User $admin, string $currentPassword, int $webhookId): array
+    {
+        try {
+            $this->delete($admin, $currentPassword, $webhookId);
+            return ['deleted' => true, 'model' => null, 'status' => 303];
+        } catch (ValidationException $e) {
+            $model = $this->detailModel($webhookId);
+            if ($model === null) {
+                throw new NotFoundException();
+            }
+            return [
+                'deleted' => false,
+                'model' => $model + [
+                    'errors' => $e->errors,
+                    'old' => [],
+                    'error_context' => 'delete',
+                    'new_secret' => null,
+                ],
+                'status' => 422,
+            ];
+        }
     }
 
     /**

@@ -27,7 +27,6 @@ final class ReportController extends Controller
         $user = $this->requireModeration();
         $postId = (int) ($params['id'] ?? 0);
         $reasonCode = (string) $request->post('reason_code', '');
-        $reasonCode = in_array($reasonCode, ReportService::REASONS, true) ? $reasonCode : null;
         $notify = $request->post('notify_reporter') !== null;
 
         $this->container->get(ReportService::class)
