@@ -263,6 +263,26 @@ final class WebhookService
         return $this->webhooks->findById($id);
     }
 
+    /**
+     * The webhook detail-page read model (PR #44 spec §4): one shape for the
+     * GET and every 422 re-render — callers overlay only errors/error_context/
+     * old/new_secret. Null when the webhook does not exist.
+     *
+     * @return array{webhook:array<string,mixed>,deliveries:array<int,array<string,mixed>>,events_catalogue:array<string,string>}|null
+     */
+    public function detailModel(int $id): ?array
+    {
+        $webhook = $this->get($id);
+        if ($webhook === null) {
+            return null;
+        }
+        return [
+            'webhook' => $webhook,
+            'deliveries' => $this->deliveriesFor($id),
+            'events_catalogue' => WebhookEvents::all(),
+        ];
+    }
+
     /** @return array<int,array<string,mixed>> */
     public function deliveriesFor(int $webhookId, int $limit = 50): array
     {
