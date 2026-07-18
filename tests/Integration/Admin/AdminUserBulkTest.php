@@ -163,4 +163,25 @@ final class AdminUserBulkTest extends TestCase
             (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'view_pii' AND target_id = ?", [(int) $target['id']]),
         );
     }
+
+    public function test_directory_exact_multiple_of_page_size_has_no_next_link(): void
+    {
+        // PR #44 spec §4: has_next came from count(rows) === PER_PAGE — a dead
+        // Next link on any exact multiple. Unique username prefix so ambient
+        // fixture users cannot skew the filtered count.
+        $this->actingAs($this->makeAdmin());
+        for ($i = 0; $i < 50; $i++) {
+            $this->makeUser(['username' => 'pageruser' . str_pad((string) $i, 2, '0', STR_PAD_LEFT)]);
+        }
+
+        $first = $this->get('/admin/users', ['q' => 'pageruser']);
+        $this->assertStatus(200, $first);
+        $this->assertSeeText($first, 'pageruser00');
+        $this->assertDontSeeText($first, 'Next');
+
+        // Past-the-end page renders empty without error.
+        $second = $this->get('/admin/users', ['q' => 'pageruser', 'page' => '1']);
+        $this->assertStatus(200, $second);
+        $this->assertDontSeeText($second, 'pageruser00');
+    }
 }

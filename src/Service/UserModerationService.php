@@ -597,6 +597,92 @@ final class UserModerationService
         return $this->auditQueryService ??= new AuditQueryService($this->log, $this->users);
     }
 
+    /**
+     * Directory read model for /admin/users (PR #44 spec §4): rows plus the
+     * real filtered total, so has_next is honest on exact page multiples.
+     *
+     * @param array<string,string> $filters allowlisted by the controller
+     * @return array<string,mixed>
+     */
+    public function directoryModel(array $filters, int $page, int $perPage = 50): array
+    {
+        $page = max(0, $page);
+        $perPage = max(1, min(200, $perPage));
+        $total = $this->users->directoryCount($filters);
+
+        return [
+            'users' => $this->users->directory($filters + ['limit' => $perPage, 'offset' => $page * $perPage]),
+            'filters' => $filters,
+            'q' => (string) ($filters['q'] ?? ''),
+            'page' => $page,
+            'total' => $total,
+            'has_next' => ($page + 1) * $perPage < $total,
+            'base_query' => array_filter($filters, static fn ($v): bool => $v !== '' && $v !== null),
+        ];
+    }
+
+    /**
+     * Step-1 subjects for the bulk confirmation (ADMIN §5.1/§3.2).
+     *
+     * @param list<int> $ids
+     * @return array<int,array<string,mixed>>
+     */
+    public function bulkPlan(array $ids): array
+    {
+        $subjects = [];
+        foreach ($ids as $id) {
+            $row = $this->users->find((int) $id);
+            if ($row !== null) {
+                $subjects[] = $row;
+            }
+        }
+        if ($subjects === []) {
+            throw new NotFoundException('No matching members.');
+        }
+        return $subjects;
+    }
+
+    /**
+     * Step-2 bulk apply — one audited service call per member. Per-member
+     * refusals (an admin target, yourself) are skipped and reported; a
+     * shared-input failure (empty reason, malformed expiry) on the first
+     * member rethrows before anything is written (behavior-preserving move
+     * from AdminUserController::bulkApply — PR #44 spec §4 boundary).
+     *
+     * @param list<int> $ids
+     * @return array{done:int, skipped:list<string>}
+     */
+    public function bulkApply(User $admin, string $action, array $ids, string $reason, ?string $until): array
+    {
+        $done = 0;
+        $skipped = [];
+        foreach ($ids as $id) {
+            try {
+                if ($action === 'suspend') {
+                    $this->suspend($admin, $id, $until, $reason);
+                } else {
+                    $this->warn($admin, $id, $reason);
+                }
+                $done++;
+            } catch (ValidationException $e) {
+                if ($done === 0 && (isset($e->errors['reason']) || isset($e->errors['until']))) {
+                    // Shared-input failure — nothing has been written yet.
+                    throw $e;
+                }
+                $skipped[] = $this->usernameOf($id) . ' (' . $e->first() . ')';
+            } catch (ForbiddenException $e) {
+                $skipped[] = $this->usernameOf($id) . ' (' . $e->getMessage() . ')';
+            }
+        }
+        return ['done' => $done, 'skipped' => $skipped];
+    }
+
+    private function usernameOf(int $id): string
+    {
+        $row = $this->users->find($id);
+        return $row !== null ? '@' . (string) $row['username'] : '#' . $id;
+    }
+
     // ---- guards -----------------------------------------------------------
 
     private function assertStaff(User $actor): void

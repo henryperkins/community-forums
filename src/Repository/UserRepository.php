@@ -547,6 +547,23 @@ final class UserRepository
     }
 
     /**
+     * Total rows the directory filters match — shares directoryFilters() with
+     * directory() (which is why the count lives here), so /admin/users can
+     * compute has_next from the real total (PR #44 spec §4).
+     *
+     * @param array<string,mixed> $filters
+     */
+    public function directoryCount(array $filters = []): int
+    {
+        [$where, $params] = $this->directoryFilters($filters);
+        $sql = 'SELECT COUNT(*) FROM users';
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        return (int) $this->db->fetchValue($sql, $params);
+    }
+
+    /**
      * Build the shared WHERE fragments + bound params for the directory.
      *
      * @param array<string,mixed> $filters

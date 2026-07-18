@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Core\ForbiddenException;
 use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
@@ -85,35 +84,20 @@ final class AdminUserController extends Controller
 
         $reason = $request->str('reason');
         $until = trim($request->str('until'));
-        $service = $this->container->get(UserModerationService::class);
 
-        $done = 0;
-        $skipped = [];
-        foreach ($ids as $id) {
-            try {
-                if ($action === 'suspend') {
-                    $service->suspend($admin, $id, $until !== '' ? $until : null, $reason);
-                } else {
-                    $service->warn($admin, $id, $reason);
-                }
-                $done++;
-            } catch (ValidationException $e) {
-                // Shared-input failure (reason/until) aborts up front: nothing
-                // has been written yet on the first member, so re-render the
-                // confirmation with the error + typed input.
-                if ($done === 0 && (isset($e->errors['reason']) || isset($e->errors['until']))) {
-                    return $this->bulkConfirmView($action, $ids, $e->errors, ['reason' => $reason, 'until' => $until], 422);
-                }
-                $skipped[] = $this->usernameOf($id) . ' (' . $e->first() . ')';
-            } catch (ForbiddenException $e) {
-                $skipped[] = $this->usernameOf($id) . ' (' . $e->getMessage() . ')';
-            }
+        try {
+            $result = $this->container->get(UserModerationService::class)
+                ->bulkApply($admin, $action, $ids, $reason, $until !== '' ? $until : null);
+        } catch (ValidationException $e) {
+            // Shared-input failure (reason/until) aborted before any member
+            // was written — re-render the confirmation with the typed input.
+            return $this->bulkConfirmView($action, $ids, $e->errors, ['reason' => $reason, 'until' => $until], 422);
         }
 
         $verb = $action === 'suspend' ? 'Suspended' : 'Warned';
-        $message = $verb . ' ' . $done . ' member' . ($done === 1 ? '' : 's') . '.';
-        if ($skipped !== []) {
-            $message .= ' Skipped: ' . implode('; ', $skipped);
+        $message = $verb . ' ' . $result['done'] . ' member' . ($result['done'] === 1 ? '' : 's') . '.';
+        if ($result['skipped'] !== []) {
+            $message .= ' Skipped: ' . implode('; ', $result['skipped']);
         }
         return $this->redirectWithFlash('/admin/users', $message);
     }
@@ -356,23 +340,13 @@ final class AdminUserController extends Controller
      */
     private function directoryView(Request $request, ?string $bulkError = null, int $status = 200): Response
     {
-        $page = max(0, $request->int('page', 0));
-        $filters = $this->readFilters($request);
-
-        $rows = $this->container->get(UserRepository::class)->directory(
-            $filters + ['limit' => self::PER_PAGE, 'offset' => $page * self::PER_PAGE],
+        $model = $this->container->get(UserModerationService::class)->directoryModel(
+            $this->readFilters($request),
+            max(0, $request->int('page', 0)),
+            self::PER_PAGE,
         );
 
-        return $this->view('admin/users', [
-            'users' => $rows,
-            'filters' => $filters,
-            'q' => $filters['q'],
-            'page' => $page,
-            'has_next' => count($rows) === self::PER_PAGE,
-            'bulk_error' => $bulkError,
-            // Query string for the current filters (sort links + pager reuse it).
-            'base_query' => array_filter($filters, static fn ($v): bool => $v !== '' && $v !== null),
-        ], $status);
+        return $this->view('admin/users', $model + ['bulk_error' => $bulkError], $status);
     }
 
     /**
@@ -384,17 +358,7 @@ final class AdminUserController extends Controller
      */
     private function bulkConfirmView(string $action, array $ids, array $errors = [], array $old = [], int $status = 200): Response
     {
-        $users = $this->container->get(UserRepository::class);
-        $subjects = [];
-        foreach ($ids as $id) {
-            $row = $users->find($id);
-            if ($row !== null) {
-                $subjects[] = $row;
-            }
-        }
-        if ($subjects === []) {
-            throw new NotFoundException('No matching members.');
-        }
+        $subjects = $this->container->get(UserModerationService::class)->bulkPlan($ids);
 
         return $this->view('admin/users_bulk_confirm', [
             'action' => $action,
@@ -422,12 +386,6 @@ final class AdminUserController extends Controller
             }
         }
         return $ids;
-    }
-
-    private function usernameOf(int $id): string
-    {
-        $row = $this->container->get(UserRepository::class)->find($id);
-        return $row !== null ? '@' . (string) $row['username'] : '#' . $id;
     }
 
     /**
