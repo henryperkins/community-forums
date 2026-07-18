@@ -20,7 +20,8 @@ $mime = (string) ($old['mime'] ?? 'image/webp');
     <div class="admin-pane">
         <p class="pane-intro">Add approved static assets to the post renderer and optionally make them available as reactions.</p>
 
-        <section class="card custom-emoji-panel" aria-labelledby="custom-emoji-create-heading">
+        <div class="custom-emoji-panel">
+        <section class="card" aria-labelledby="custom-emoji-create-heading">
             <h2 id="custom-emoji-create-heading">Add or replace emoji</h2>
             <form method="post" action="/admin/custom-emoji" class="stacked">
                 <?= $this->csrfField() ?>
@@ -90,5 +91,6 @@ $mime = (string) ($old['mime'] ?? 'image/webp');
                 </div>
             <?php endif; ?>
         </section>
+        </div>
     </div>
 </div>
