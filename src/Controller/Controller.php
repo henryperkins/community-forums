@@ -10,6 +10,7 @@ use App\Core\FeatureFlags;
 use App\Core\Flash;
 use App\Core\ForbiddenException;
 use App\Core\HttpException;
+use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
@@ -138,6 +139,18 @@ abstract class Controller
             throw new ForbiddenException('Administrator access required.');
         }
         return $user;
+    }
+
+    /**
+     * Existence-hiding gate for the moderation-queue family (reports AND
+     * approvals — the P2-08 rollback lever must kill both together, round-2
+     * audit finding 7 / ADR 0023): flag off ⇒ the routes read as absent.
+     */
+    protected function requireModerationQueue(): void
+    {
+        if (!$this->container->get(FeatureFlags::class)->enabled('moderation_queue')) {
+            throw new NotFoundException('Not found.');
+        }
     }
 
     /**

@@ -138,6 +138,13 @@ final class UserModerationService
         if ($body === '') {
             throw new ValidationException(['body' => 'A note cannot be empty.']);
         }
+        // user_notes.body is TEXT — a 65,535-BYTE ceiling (not characters).
+        if (strlen($body) > 65535) {
+            throw new ValidationException(
+                ['body' => 'Note must be 64 KB or smaller.'],
+                ['body' => $body],
+            );
+        }
         $subject = $this->requireSubject($subjectId);
         $this->db->run(
             'INSERT INTO user_notes (subject_user_id, author_id, body, created_at) VALUES (?, ?, ?, UTC_TIMESTAMP())',
@@ -777,6 +784,14 @@ final class UserModerationService
         $reason = trim($reason);
         if ($reason === '') {
             throw new ValidationException(['reason' => 'A reason is required.']);
+        }
+        // warnings.reason, bans.reason AND the moderation_log.reason audit column
+        // are all VARCHAR(255); the UI maxlength is a hint, not enforcement.
+        if (mb_strlen($reason) > 255) {
+            throw new ValidationException(
+                ['reason' => 'Reason must be 255 characters or fewer.'],
+                ['reason' => $reason],
+            );
         }
         return $reason;
     }

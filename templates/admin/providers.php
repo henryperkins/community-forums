@@ -17,7 +17,7 @@ $this->section('title', 'Sign-in providers');
     (Google, Apple, GitHub) are configured through environment variables and only shown
     here for visibility. Disabling never deletes linked identities.</p>
 
-    <?php if (!empty($errors['provider'])): ?><p class="field-error" role="alert"><?= $e($errors['provider']) ?></p><?php endif; ?>
+    <?= field_error($errors ?? [], 'provider', 'err-provider', alert: true) ?>
 
     <section class="card">
         <h2>Providers</h2>
@@ -38,6 +38,9 @@ $this->section('title', 'Sign-in providers');
                             <span class="muted"><?= $e(human_datetime((string) $r['health_checked_at'])) ?></span>
                         <?php endif; ?>
                     </td>
+                    <?php // data-sole-count is NOT a PE hook (no JS reads it) — it is the
+                          // integration-test anchor for the lockout count (round-2 audit
+                          // finding 8 reclassified; see AppAdminProvidersTest). ?>
                     <td data-sole-count="<?= (int) $r['sole_method_count'] ?>"><?= (int) $r['sole_method_count'] ?></td>
                     <td>
                         <?php if ($builtin): ?>
@@ -56,11 +59,9 @@ $this->section('title', 'Sign-in providers');
                                 <form method="post" action="/admin/providers/<?= $id ?>/enable" class="inline-form">
                                     <?= $this->csrfField() ?>
                                     <label>Your password
-                                        <input type="password" name="current_password" autocomplete="current-password" required>
+                                        <input type="password" name="current_password" autocomplete="current-password"<?= ($enable_error_id ?? null) === $id ? field_attrs($errors ?? [], 'enable_password', 'err-enable-' . $id) : '' ?> required>
                                     </label>
-                                    <?php if (($enable_error_id ?? null) === $id && !empty($errors['enable_password'])): ?>
-                                        <p class="field-error" role="alert"><?= $e($errors['enable_password']) ?></p>
-                                    <?php endif; ?>
+                                    <?= ($enable_error_id ?? null) === $id ? field_error($errors ?? [], 'enable_password', 'err-enable-' . $id, alert: true) : '' ?>
                                     <button class="btn btn-small" type="submit">Enable</button>
                                 </form>
                             <?php else: ?>
@@ -87,41 +88,41 @@ $this->section('title', 'Sign-in providers');
                        aria-describedby="provider-key-help">
             </label>
             <p class="muted" id="provider-key-help">Stable slug used in <code>/auth/{key}/…</code> URLs and identity rows — it cannot be changed later. Lowercase letters, digits, hyphens, underscores.</p>
-            <?php if (!empty($errors['provider_key'])): ?><p class="field-error"><?= $e($errors['provider_key']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'provider_key') ?>
 
             <label>Display name
-                <input type="text" name="display_name" maxlength="190" value="<?= $e($old['display_name'] ?? '') ?>" required>
+                <input type="text" name="display_name" maxlength="190" value="<?= $e($old['display_name'] ?? '') ?>"<?= field_attrs($errors ?? [], 'display_name') ?> required>
             </label>
-            <?php if (!empty($errors['display_name'])): ?><p class="field-error"><?= $e($errors['display_name']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'display_name') ?>
 
             <label>Issuer (pinned)
                 <input type="url" name="issuer" maxlength="512" value="<?= $e($old['issuer'] ?? '') ?>"
                        placeholder="https://gitlab.com" required>
             </label>
             <p class="muted">Discovery is resolved from <code>{issuer}/.well-known/openid-configuration</code>; the JWKS URL must be same-origin with this issuer. Enter the issuer exactly as the IdP publishes it — a trailing slash is significant.</p>
-            <?php if (!empty($errors['issuer'])): ?><p class="field-error"><?= $e($errors['issuer']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'issuer') ?>
 
             <label>Client ID
-                <input type="text" name="client_id" maxlength="255" value="<?= $e($old['client_id'] ?? '') ?>" required>
+                <input type="text" name="client_id" maxlength="255" value="<?= $e($old['client_id'] ?? '') ?>"<?= field_attrs($errors ?? [], 'client_id') ?> required>
             </label>
-            <?php if (!empty($errors['client_id'])): ?><p class="field-error"><?= $e($errors['client_id']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'client_id') ?>
 
             <label>Client secret
                 <input type="password" name="client_secret" autocomplete="off" required>
             </label>
             <p class="muted">Stored write-only in the encrypted service-secret vault (<code>service_secrets</code> must be enabled first); rotate it from the vault, not here.</p>
-            <?php if (!empty($errors['client_secret'])): ?><p class="field-error"><?= $e($errors['client_secret']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'client_secret') ?>
 
             <label>Claim map (optional JSON)
                 <textarea name="claim_map_json" rows="2" placeholder='{"email":"upn"}'><?= $e($old['claim_map_json'] ?? '') ?></textarea>
             </label>
             <p class="muted">Renames the cosmetic claims only (<code>email</code>, <code>email_verified</code>, <code>name</code>, <code>username</code>, <code>picture</code>). The subject claim is always <code>sub</code>.</p>
-            <?php if (!empty($errors['claim_map_json'])): ?><p class="field-error"><?= $e($errors['claim_map_json']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'claim_map_json') ?>
 
             <label>Your password (re-authentication)
-                <input type="password" name="current_password" autocomplete="current-password" required>
+                <input type="password" name="current_password" autocomplete="current-password"<?= field_attrs($errors ?? [], 'current_password') ?> required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'current_password') ?>
 
             <button class="btn" type="submit">Add provider</button>
         </form>

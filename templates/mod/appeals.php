@@ -71,7 +71,7 @@ $failedAppealId = (int) ($old['appeal_id'] ?? 0);
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
-                            <button class="btn btn-small" type="submit">Resolve appeal</button>
+                            <button class="btn btn-small" type="submit" aria-label="Resolve appeal #<?= (int) $appeal['id'] ?>">Resolve appeal</button>
                         </form>
                     </li>
                 <?php endforeach; ?>

@@ -23,28 +23,28 @@ $this->section('title', 'Invitations');
         <p class="muted">Invitations admit one member per use, expire automatically, and never grant staff or custom roles. Bind to an email address or a domain to restrict who can redeem.</p>
         <form method="post" action="/admin/invitations" class="stacked">
             <?= $this->csrfField() ?>
-            <?php if (!empty($errors['create'])): ?><p class="field-error"><?= $e($errors['create']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'create') ?>
 
             <label>Bind to email (optional)
-                <input type="email" name="email" maxlength="255" value="<?= $e($old['email'] ?? '') ?>" placeholder="person@example.com">
+                <input type="email" name="email" maxlength="255" value="<?= $e($old['email'] ?? '') ?>" placeholder="person@example.com"<?= field_attrs($errors ?? [], 'email') ?>>
             </label>
-            <?php if (!empty($errors['email'])): ?><p class="field-error"><?= $e($errors['email']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'email') ?>
 
             <label>Bind to domain (optional)
-                <input type="text" name="domain" maxlength="190" value="<?= $e($old['domain'] ?? '') ?>" placeholder="example.com">
+                <input type="text" name="domain" maxlength="190" value="<?= $e($old['domain'] ?? '') ?>" placeholder="example.com"<?= field_attrs($errors ?? [], 'domain') ?>>
             </label>
-            <?php if (!empty($errors['domain'])): ?><p class="field-error"><?= $e($errors['domain']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'domain') ?>
 
             <?php $maxUses = (int) ($limits['max_uses'] ?? 100); $maxDays = (int) ($limits['max_expiry_days'] ?? 365); $defaultDays = (int) ($limits['default_expiry_days'] ?? 14); ?>
             <label>Max uses (1–<?= $maxUses ?>, default 1)
-                <input type="number" name="max_uses" min="1" max="<?= $maxUses ?>" value="<?= $e($old['max_uses'] ?? '') ?>">
+                <input type="number" name="max_uses" min="1" max="<?= $maxUses ?>" value="<?= $e($old['max_uses'] ?? '') ?>"<?= field_attrs($errors ?? [], 'max_uses') ?>>
             </label>
-            <?php if (!empty($errors['max_uses'])): ?><p class="field-error"><?= $e($errors['max_uses']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'max_uses') ?>
 
             <label>Expires in days (1–<?= $maxDays ?>, default <?= $defaultDays ?>)
-                <input type="number" name="expires_in_days" min="1" max="<?= $maxDays ?>" value="<?= $e($old['expires_in_days'] ?? '') ?>">
+                <input type="number" name="expires_in_days" min="1" max="<?= $maxDays ?>" value="<?= $e($old['expires_in_days'] ?? '') ?>"<?= field_attrs($errors ?? [], 'expires_in_days') ?>>
             </label>
-            <?php if (!empty($errors['expires_in_days'])): ?><p class="field-error"><?= $e($errors['expires_in_days']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'expires_in_days') ?>
 
             <label>Grant board membership (optional)
                 <select name="onboarding_board_id" class="input">
@@ -54,7 +54,7 @@ $this->section('title', 'Invitations');
                     <?php endforeach; ?>
                 </select>
             </label>
-            <?php if (!empty($errors['onboarding_board_id'])): ?><p class="field-error"><?= $e($errors['onboarding_board_id']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'onboarding_board_id') ?>
 
             <div class="form-actions"><button class="btn" type="submit">Issue invitation</button></div>
         </form>

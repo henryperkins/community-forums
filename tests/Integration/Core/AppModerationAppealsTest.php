@@ -195,7 +195,7 @@ final class AppModerationAppealsTest extends TestCase
 
         // A user who moderates nothing cannot reach the queue at all.
         $this->actingAs($this->makeUser(['username' => 'nobodymod']));
-        self::assertSame(403, $this->get('/mod/appeals')->status());
+        self::assertSame(404, $this->get('/mod/appeals')->status()); // uniform posture (round-2 audit, ADR 0023)
 
         // Admin still sees both appeals site-wide.
         $this->actingAs($this->admin);

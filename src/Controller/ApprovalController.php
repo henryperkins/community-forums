@@ -26,6 +26,7 @@ final class ApprovalController extends Controller
 {
     public function queue(Request $request): Response
     {
+        $this->requireModerationQueue();
         $user = $this->requireUser();
         $gate = $this->container->get(AuthorityGate::class);
         // Row scope: the boards whose pending rows this actor may act on
@@ -47,7 +48,10 @@ final class ApprovalController extends Controller
         // assigned board moderator through in legacy/shadow, matching the
         // reports queue this page sits beside (ADMIN §3.2; 2026-07-17 audit N1).
         if (!$sitePass && $scope === []) {
-            throw new ForbiddenException('Moderator access required.'); // keep the existing message verbatim
+            // Zero-authority BROWSE of a staff surface hides its existence —
+            // byte-identical to /mod/reports' empty-scope 404 (ADMIN §9.4,
+            // round-2 audit posture rule, ADR 0023). Actions below stay 403.
+            throw new NotFoundException('Not found.');
         }
 
         return $this->view('mod/approvals', [
@@ -83,6 +87,7 @@ final class ApprovalController extends Controller
     /** @param array<string,string> $params */
     private function actThread(array $params, bool $approve): Response
     {
+        $this->requireModerationQueue();
         $mod = $this->requireUser();
         $threadId = (int) ($params['id'] ?? 0);
         $thread = $this->container->get(ThreadRepository::class)->find($threadId);
@@ -105,6 +110,7 @@ final class ApprovalController extends Controller
     /** @param array<string,string> $params */
     private function actPost(array $params, bool $approve): Response
     {
+        $this->requireModerationQueue();
         $mod = $this->requireUser();
         $postId = (int) ($params['id'] ?? 0);
         $post = $this->container->get(PostRepository::class)->findWithContext($postId);

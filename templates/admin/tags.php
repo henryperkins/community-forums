@@ -6,6 +6,7 @@ $errors = $errors ?? [];
 $old = $old ?? [];
 $errorForm = $error_form ?? null;
 $createOld = $errorForm === 'create' ? $old : [];
+$createErrors = $errorForm === 'create' ? $errors : [];
 ?>
 <div class="admin">
     <header class="admin-head">
@@ -19,10 +20,10 @@ $createOld = $errorForm === 'create' ? $old : [];
         <h2>Add a tag</h2>
         <form method="post" action="/admin/tags" class="stacked">
             <?= $this->csrfField() ?>
-            <label class="field"><span>Name</span><input class="input" type="text" name="name" maxlength="80" value="<?= $e($createOld['name'] ?? '') ?>" required></label>
-            <?php if ($errorForm === 'create' && !empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
-            <label class="field"><span>Slug</span><input class="input" type="text" name="slug" maxlength="64" value="<?= $e($createOld['slug'] ?? '') ?>"></label>
-            <?php if ($errorForm === 'create' && !empty($errors['slug'])): ?><p class="field-error"><?= $e($errors['slug']) ?></p><?php endif; ?>
+            <label class="field"><span>Name</span><input class="input" type="text" name="name" maxlength="80" value="<?= $e($createOld['name'] ?? '') ?>"<?= field_attrs($createErrors, 'name') ?> required></label>
+            <?= field_error($createErrors, 'name') ?>
+            <label class="field"><span>Slug</span><input class="input" type="text" name="slug" maxlength="64" value="<?= $e($createOld['slug'] ?? '') ?>"<?= field_attrs($createErrors, 'slug') ?>></label>
+            <?= field_error($createErrors, 'slug') ?>
             <label class="field"><span>Description</span><input class="input" type="text" name="description" maxlength="255" value="<?= $e($createOld['description'] ?? '') ?>"></label>
             <button class="btn btn-small" type="submit">Add tag</button>
         </form>

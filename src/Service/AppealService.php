@@ -271,7 +271,9 @@ final class AppealService
         $isAdmin = $actor->isAdmin();
         $boardIds = $isAdmin ? [] : $this->boardMods->boardsFor($actor->id());
         if (!$isAdmin && $boardIds === []) {
-            throw new ForbiddenException('Staff access required.');
+            // Zero-authority browse hides the surface (uniform /mod posture,
+            // round-2 audit + ADR 0023); resolve actions keep their 403s.
+            throw new NotFoundException('Not found.');
         }
         return $this->appeals->openQueue($isAdmin, $boardIds);
     }

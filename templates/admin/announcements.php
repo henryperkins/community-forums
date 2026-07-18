@@ -36,9 +36,9 @@ $active = is_array($ann) && !empty($ann['active']);
         <form method="post" action="/admin/announcements" class="stacked">
             <?= $this->csrfField() ?>
             <label>Message
-                <textarea name="message" rows="3" maxlength="500" required><?= $e((string) ($old['message'] ?? '')) ?></textarea>
+                <textarea name="message" rows="3" maxlength="500"<?= field_attrs($errors ?? [], 'message') ?> required><?= $e((string) ($old['message'] ?? '')) ?></textarea>
             </label>
-            <?php if (!empty($errors['message'])): ?><p class="field-error" role="alert"><?= $e($errors['message']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'message') ?>
 
             <label><input type="checkbox" name="dismissible" value="1" <?= !empty($old['dismissible']) ? 'checked' : '' ?>> Members can dismiss this banner</label>
             <label><input type="checkbox" name="broadcast" value="1" <?= !empty($old['broadcast']) ? 'checked' : '' ?>> Also send an in-app broadcast notification to all members</label>

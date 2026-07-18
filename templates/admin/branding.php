@@ -24,21 +24,21 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Site name</span>
-                    <input type="text" name="site_name" class="input" maxlength="80" value="<?= $e($site_name) ?>" required data-brand-name>
+                    <input type="text" name="site_name" class="input" maxlength="80" value="<?= $e($site_name) ?>"<?= field_attrs($errors ?? [], 'site_name') ?> required data-brand-name>
                 </label>
-                <?php if (!empty($errors['site_name'])): ?><p class="field-error"><?= $e($errors['site_name']) ?></p><?php endif; ?>
+                <?= field_error($errors ?? [], 'site_name') ?>
 
                 <label class="field">
                     <span>Primary colour (hex, e.g. #2f6fed)</span>
-                    <input type="text" name="color_primary" class="input" maxlength="7" placeholder="#2f6fed" value="<?= $e($color_primary) ?>" data-brand-primary>
+                    <input type="text" name="color_primary" class="input" maxlength="7" placeholder="#2f6fed" value="<?= $e($color_primary) ?>"<?= field_attrs($errors ?? [], 'color_primary') ?> data-brand-primary>
                 </label>
-                <?php if (!empty($errors['color_primary'])): ?><p class="field-error"><?= $e($errors['color_primary']) ?></p><?php endif; ?>
+                <?= field_error($errors ?? [], 'color_primary') ?>
 
                 <label class="field">
                     <span>Accent colour (hex)</span>
-                    <input type="text" name="color_accent" class="input" maxlength="7" placeholder="#7c3aed" value="<?= $e($color_accent) ?>" data-brand-accent>
+                    <input type="text" name="color_accent" class="input" maxlength="7" placeholder="#7c3aed" value="<?= $e($color_accent) ?>"<?= field_attrs($errors ?? [], 'color_accent') ?> data-brand-accent>
                 </label>
-                <?php if (!empty($errors['color_accent'])): ?><p class="field-error"><?= $e($errors['color_accent']) ?></p><?php endif; ?>
+                <?= field_error($errors ?? [], 'color_accent') ?>
 
                 <label class="field">
                     <span>Default theme for signed-out visitors</span>
@@ -87,7 +87,7 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
                         <input type="checkbox" name="custom_css_ack" value="1">
                         <span>I understand this CSS applies site-wide and can affect usability.</span>
                     </label>
-                    <?php if (!empty($errors['custom_css'])): ?><p class="field-error"><?= $e($errors['custom_css']) ?></p><?php endif; ?>
+                    <?= field_error($errors ?? [], 'custom_css') ?>
                 <?php else: ?>
                     <p class="muted">Custom CSS is saved behind the custom_css feature flag and is not available on this install.</p>
                 <?php endif; ?>
@@ -118,9 +118,9 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
             <p class="muted">Reset clears every stored colour, logo, favicon, theme preset, and custom CSS, restoring the built-in chrome. It cannot be undone.</p>
             <label class="field">
                 <span>Type <code>RESET</code> to confirm</span>
-                <input type="text" name="reset_confirm" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+                <input type="text" name="reset_confirm" class="input" autocomplete="off" autocapitalize="off" spellcheck="false"<?= field_attrs($errors ?? [], 'reset_confirm') ?> required>
             </label>
-            <?php if (!empty($errors['reset_confirm'])): ?><p class="field-error"><?= $e($errors['reset_confirm']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'reset_confirm') ?>
             <div class="form-actions"><button class="btn danger" type="submit">Reset to defaults</button></div>
         </form>
     </div>

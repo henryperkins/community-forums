@@ -255,6 +255,11 @@ final class TagController extends Controller
             throw new ValidationException(['name' => 'Tag name must be 1-80 characters.']);
         }
         $rawSlug = trim((string) $request->str('slug'));
+        // An explicitly typed over-length slug is an error, not a silent
+        // truncation (round-2 audit finding 5) — name over-length already 422s.
+        if ($rawSlug !== '' && mb_strlen($rawSlug) > 64) {
+            throw new ValidationException(['slug' => 'Tag slug must be 64 characters or fewer.']);
+        }
         $slug = Str::slug($rawSlug !== '' ? $rawSlug : $name, 64);
         $description = trim((string) $request->str('description'));
         return [$slug, $name, $description !== '' ? mb_substr($description, 0, 255) : null];

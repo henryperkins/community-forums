@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\DuplicateSubmissionException;
 use App\Core\FeatureFlags;
 use App\Core\NotFoundException;
 use App\Core\Request;
@@ -54,7 +55,8 @@ final class AdminUserController extends Controller
         $action = (string) $request->post('bulk_action', '');
         $ids = $this->selectedIds($request);
         if (!in_array($action, self::BULK_ACTIONS, true)) {
-            return $this->directoryView($request, 'Choose a bulk action to apply.', 422);
+            // Keep the ticked rows ticked — the operator only forgot the action.
+            return $this->directoryView($request, 'Choose a bulk action to apply.', 422, $ids);
         }
         if ($ids === []) {
             return $this->directoryView($request, 'Select at least one member first.', 422);
@@ -79,7 +81,7 @@ final class AdminUserController extends Controller
         $action = (string) $request->post('bulk_action', '');
         $ids = $this->selectedIds($request);
         if (!in_array($action, self::BULK_ACTIONS, true) || $ids === []) {
-            return $this->directoryView($request, 'The bulk selection is no longer valid — start again.', 422);
+            return $this->directoryView($request, 'The bulk selection is no longer valid — start again.', 422, $ids);
         }
 
         $reason = $request->str('reason');
@@ -229,9 +231,20 @@ final class AdminUserController extends Controller
         $this->requireSubject($id); // 404 before any write
         try {
             $this->container->get(UserModerationService::class)
-                ->warn($admin, $id, $request->str('reason'), $request->int('board_id', 0) ?: null);
+                ->warn(
+                    $admin,
+                    $id,
+                    $request->str('reason'),
+                    $request->int('board_id', 0) ?: null,
+                    $request->str('idempotency_key') ?: null,
+                );
         } catch (ValidationException $e) {
-            return $this->record($id, $e, 422, 'warn', ['reason' => $request->str('reason')]);
+            return $this->record($id, $e, 422, 'warn', [
+                'reason' => $request->str('reason'),
+                'idempotency_key' => $request->str('idempotency_key'),
+            ]);
+        } catch (DuplicateSubmissionException) {
+            // The original warn already committed — replay its outcome.
         }
         return $this->redirectWithFlash('/admin/users/' . $id, 'Warning recorded.');
     }
@@ -337,8 +350,10 @@ final class AdminUserController extends Controller
 
     /**
      * Render the directory (shared by GET and the bulk 422 re-renders).
+     *
+     * @param list<int> $selectedIds ticked rows to re-tick on a 422 re-render
      */
-    private function directoryView(Request $request, ?string $bulkError = null, int $status = 200): Response
+    private function directoryView(Request $request, ?string $bulkError = null, int $status = 200, array $selectedIds = []): Response
     {
         $model = $this->container->get(UserModerationService::class)->directoryModel(
             $this->readFilters($request),
@@ -346,7 +361,7 @@ final class AdminUserController extends Controller
             self::PER_PAGE,
         );
 
-        return $this->view('admin/users', $model + ['bulk_error' => $bulkError], $status);
+        return $this->view('admin/users', $model + ['bulk_error' => $bulkError, 'bulk_selected' => $selectedIds], $status);
     }
 
     /**

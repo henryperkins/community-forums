@@ -1320,6 +1320,19 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     border-radius: var(--radius); padding: 8px 12px; margin: 8px 0; color: var(--text-muted);
 }
 
+/* Email status facts (F24): one line per independent fact. */
+.email-status-facts { list-style: none; padding: 0; margin: 0 0 12px; color: var(--text-muted); }
+.email-status-facts li { margin: 2px 0; }
+
+/* Deleted-reply stub (ADMIN §3.3 Restore) — staff-only render. */
+.post-deleted {
+    background: var(--surface-3); border: 1px dashed var(--border);
+    border-radius: var(--radius); padding: 8px 12px; color: var(--text-muted);
+}
+.post-deleted .post-author { color: var(--text-muted); }
+.post-deleted-body { opacity: 0.75; margin-top: 8px; }
+.post-deleted-restore { margin-top: 8px; }
+
 /* ── Phase 3: product tour (P3-11) ────────────────────────────────────────
    Enhancement only; the forum is fully usable without it. No inline styles
    (the strict CSP forbids them) — the popover is positioned by class. */
@@ -2614,6 +2627,31 @@ body[data-route="thread"] .thread-conversation {
 }
 .admin .subnav .subnav-action.is-disabled {
     cursor: default;
+}
+/* §9.2 grouped nav (round-2 audit finding 13): groups flow inline and wrap;
+   labels read as small section eyebrows between hairline separators. */
+.admin .subnav .subnav-group {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding-right: 10px;
+    margin-right: 4px;
+    border-right: 1px solid var(--border-hair);
+}
+.admin .subnav .subnav-group:last-child { border-right: 0; padding-right: 0; margin-right: 0; }
+.admin .subnav .subnav-group-label {
+    font-family: var(--font-label);
+    font-size: .66rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--text-faint);
+    padding: 9px 4px 9px 6px;
+    white-space: nowrap;
+}
+@media (max-width: 480px) {
+    .admin .subnav .subnav-group { border-right: 0; padding-right: 0; margin-right: 0; width: 100%; }
+    .admin .subnav .subnav-group-label { width: 100%; padding-bottom: 0; }
 }
 .admin .subnav .subnav-action.is-disabled .subnav-item-label {
     color: var(--text-muted);

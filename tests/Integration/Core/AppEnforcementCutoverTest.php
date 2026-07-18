@@ -267,7 +267,11 @@ final class AppEnforcementCutoverTest extends TestCase
         $this->withCapabilitiesEnforced(['anti_abuse' => true]);
 
         $this->actingAs($mod);
-        $this->assertStatus(403, $this->get('/mod/approvals')); // approved tightening: state beats role
+        // Approved tightening: state beats role — the suspended mod cannot view
+        // the queue. Since the round-2 posture rule (ADR 0023: zero-authority
+        // BROWSE of a staff surface hides it), the denial renders as the same
+        // existence-hiding 404 the reports queue uses, not a bare 403.
+        $this->assertStatus(404, $this->get('/mod/approvals'));
     }
 
     /**

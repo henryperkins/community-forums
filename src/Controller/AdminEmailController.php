@@ -33,14 +33,25 @@ final class AdminEmailController extends Controller
         $this->requireAdmin();
         $this->gate();
 
-        $model = $this->container->get(EmailOpsService::class)->dashboardModel(
+        return $this->emailView(
             $this->oneOf($request->str('status'), self::STATUSES),
             $this->oneOf($request->str('kind'), self::KINDS),
             $request->str('email'),
             max(1, $request->int('page', 1)),
         );
+    }
 
-        return $this->view('admin/email', $model);
+    /**
+     * Rebuild the dashboard model — shared by GET and the suppression 422
+     * re-renders (anti-draft-loss: never redirect away from a typed address).
+     *
+     * @param array<string,mixed> $extra
+     */
+    private function emailView(?string $status, ?string $kind, string $emailFilter, int $page, array $extra = [], int $httpStatus = 200): Response
+    {
+        $model = $this->container->get(EmailOpsService::class)->dashboardModel($status, $kind, $emailFilter, $page);
+
+        return $this->view('admin/email', $extra + $model, $httpStatus);
     }
 
     /** @param array<string,string> $params */
@@ -65,7 +76,10 @@ final class AdminEmailController extends Controller
         try {
             $this->container->get(EmailOpsService::class)->manualSuppress($admin, $request->str('email'));
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin/email', $e->first());
+            return $this->emailView(null, null, '', 1, [
+                'suppress_errors' => $e->errors,
+                'suppress_old' => ['email' => $request->str('email')],
+            ], 422);
         }
         return $this->redirectWithFlash('/admin/email', 'Address added to the suppression list.');
     }
@@ -78,7 +92,7 @@ final class AdminEmailController extends Controller
         try {
             $this->container->get(EmailOpsService::class)->unsuppress($admin, $request->str('email'));
         } catch (ValidationException $e) {
-            return $this->redirectWithFlash('/admin/email', $e->first());
+            return $this->emailView(null, null, '', 1, ['unsuppress_error' => $e->first()], 422);
         }
         return $this->redirectWithFlash('/admin/email', 'Address removed from the suppression list.');
     }

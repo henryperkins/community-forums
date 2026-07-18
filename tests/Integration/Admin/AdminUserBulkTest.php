@@ -31,6 +31,22 @@ final class AdminUserBulkTest extends TestCase
         $this->assertSeeText($res, 'Warn 2 members');
     }
 
+    public function test_bulk_422_preserves_the_row_selection(): void
+    {
+        $admin = $this->makeAdmin(['password' => 'password123']);
+        $a = (int) $this->makeUser(['username' => 'bulksel1'])['id'];
+        $b = (int) $this->makeUser(['username' => 'bulksel2'])['id'];
+        $this->actingAs($admin);
+
+        // Missing action with rows ticked: the 422 re-render must keep the ticks
+        // (round-2 audit finding 4 — the error used to clear the selection).
+        $res = $this->post('/admin/users/bulk', ['selected' => [(string) $a, (string) $b], 'bulk_action' => '']);
+
+        $this->assertStatus(422, $res);
+        self::assertMatchesRegularExpression('/value="' . $a . '"[^>]*checked/', $res->body());
+        self::assertMatchesRegularExpression('/value="' . $b . '"[^>]*checked/', $res->body());
+    }
+
     public function test_bulk_warn_applies_and_audits_per_member(): void
     {
         $admin = $this->makeAdmin(['password' => 'password123']);

@@ -23,7 +23,7 @@ $this->section('title', 'Badge rules');
                     <?php endforeach; ?>
                 </select>
             </label>
-            <?php if (!empty($errors['badge_id'])): ?><p class="field-error"><?= $e($errors['badge_id']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'badge_id') ?>
             <label class="field">
                 <span>Rule</span>
                 <select class="input" name="rule_type" required>
@@ -32,12 +32,12 @@ $this->section('title', 'Badge rules');
                     <?php endforeach; ?>
                 </select>
             </label>
-            <?php if (!empty($errors['rule_type'])): ?><p class="field-error"><?= $e($errors['rule_type']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'rule_type') ?>
             <label class="field">
                 <span>Threshold</span>
-                <input class="input" type="number" min="1" max="1000000" name="threshold" value="<?= $e((string) ($old['threshold'] ?? '1')) ?>" required>
+                <input class="input" type="number" min="1" max="1000000" name="threshold" value="<?= $e((string) ($old['threshold'] ?? '1')) ?>"<?= field_attrs($errors ?? [], 'threshold') ?> required>
             </label>
-            <?php if (!empty($errors['threshold'])): ?><p class="field-error"><?= $e($errors['threshold']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'threshold') ?>
             <label class="field">
                 <span>Board scope</span>
                 <select class="input" name="board_id">
@@ -47,7 +47,7 @@ $this->section('title', 'Badge rules');
                     <?php endforeach; ?>
                 </select>
             </label>
-            <?php if (!empty($errors['board_id'])): ?><p class="field-error"><?= $e($errors['board_id']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'board_id') ?>
             <button class="btn" type="submit">Create rule</button>
         </form>
     </section>

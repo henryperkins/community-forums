@@ -17,14 +17,30 @@ $page = (int) ($page ?? 1);
     <?= $this->partial('admin/_nav', ['active' => 'email', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
+    <?php // F24: one status line per independent fact — transport, From, domain.
+          // The old combined copy could claim "Sending is configured" while email
+          // fails closed with no From (round-2 audit, 2026-07-18). ?>
+    <?php $domain = $domain_status ?? []; ?>
     <?php if (empty($mailer_configured)): ?>
-        <div class="flash" role="alert">
-            <strong>Email is not ready to send.</strong>
-            Configure your sending domain (set a From address) before sending. Queued mail waits until the transport is configured.
-        </div>
-    <?php else: ?>
-        <p class="muted">Sending is configured<?php if (($mail_from ?? '') !== ''): ?> from <code><?= $e($mail_from) ?></code><?php endif; ?>. The delivery worker drains queued mail.</p>
+        <div class="flash" role="alert"><strong>Email is not ready to send.</strong> Outbound messages are skipped until the transport is configured — see the status facts below.</div>
     <?php endif; ?>
+    <ul class="email-status-facts">
+        <li><strong>Transport:</strong>
+            <?= empty($mailer_configured) ? 'not configured — outbound email is skipped' : 'configured — the delivery worker drains queued mail' ?></li>
+        <li><strong>From address:</strong>
+            <?php if (($mail_from ?? '') !== ''): ?><code><?= $e($mail_from) ?></code>
+            <?php else: ?>not set — email fails closed (messages are skipped) until a From address is configured<?php endif; ?></li>
+        <li><strong>Sending domain:</strong>
+            <?php if (($domain['domain'] ?? '') === ''): ?>
+                none — derived from the From address once it is set
+            <?php elseif (!empty($send_blocked)): ?>
+                <code><?= $e((string) $domain['domain']) ?></code> — blocked until SPF and DKIM pass
+            <?php elseif (($domain['spf_status'] ?? '') === 'pass' && ($domain['dkim_status'] ?? '') === 'pass'): ?>
+                <code><?= $e((string) $domain['domain']) ?></code> — verified (SPF and DKIM pass)
+            <?php else: ?>
+                <code><?= $e((string) $domain['domain']) ?></code> — unverified; send blocking is off (ADR 0008 opt-in)
+            <?php endif; ?></li>
+    </ul>
     <?php if (!empty($send_blocked)): ?>
         <div class="flash" role="alert">
             <strong>Email sending is blocked until SPF and DKIM pass.</strong>
@@ -34,7 +50,6 @@ $page = (int) ($page ?? 1);
 
     <section class="card">
         <h2>Sending domain</h2>
-        <?php $domain = $domain_status ?? []; ?>
         <?php if (($domain['domain'] ?? '') === ''): ?>
             <p class="muted">Set a From address before verifying SPF and DKIM.</p>
         <?php else: ?>
@@ -135,7 +150,7 @@ $page = (int) ($page ?? 1);
         </table>
         </div>
         <p class="muted"><?= (int) $total ?> total matching deliveries.</p>
-        <nav class="pager">
+        <nav class="pager" aria-label="Pagination">
             <?php if ($page > 1): ?>
                 <a class="btn btn-small" href="/admin/email?<?= $e(http_build_query($pagerBase + ['page' => $page - 1])) ?>">Previous</a>
             <?php endif; ?>
@@ -150,9 +165,15 @@ $page = (int) ($page ?? 1);
         <form method="post" action="/admin/email/suppressions" class="inline-form">
             <?= $this->csrfField() ?>
             <label class="sr-only" for="suppress-email">Email address to suppress</label>
-            <input type="email" id="suppress-email" name="email" class="input" placeholder="address@example.com" required>
+            <input type="email" id="suppress-email" name="email" class="input" placeholder="address@example.com" value="<?= $e(($suppress_old ?? [])['email'] ?? '') ?>" required>
             <button class="btn btn-small" type="submit">Suppress</button>
         </form>
+        <?php if (!empty(($suppress_errors ?? [])['email'] ?? null)): ?>
+            <p class="field-error" role="alert"><?= $e($suppress_errors['email']) ?></p>
+        <?php endif; ?>
+        <?php if (!empty($unsuppress_error ?? null)): ?>
+            <p class="field-error" role="alert"><?= $e($unsuppress_error) ?></p>
+        <?php endif; ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Suppressed addresses">
         <table class="audit">
             <thead><tr><th scope="col">Email</th><th scope="col">Reason</th><th scope="col">Since</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>

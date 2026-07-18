@@ -11,11 +11,12 @@ $errs = $errors ?? [];
 $old = $old ?? [];
 $pii = $pii ?? null;
 /** Field error scoped to the originating form (so a warn error is not echoed under ban). */
-$ferr = function (string $context, string $field) use ($ctx, $errs, $e): string {
-    if ($ctx !== $context || empty($errs[$field])) {
-        return '';
-    }
-    return '<p class="field-error">' . $e($errs[$field]) . '</p>';
+$ferr = function (string $context, string $field) use ($ctx, $errs): string {
+    return $ctx === $context ? field_error($errs, $field, 'err-' . $context . '-' . $field) : '';
+};
+/** Input attributes (aria-invalid / aria-describedby / autofocus) scoped the same way. */
+$fattr = function (string $context, string $field) use ($ctx, $errs): string {
+    return $ctx === $context ? field_attrs($errs, $field, 'err-' . $context . '-' . $field) : '';
 };
 /** Old value scoped to the originating form. */
 $oldv = function (string $context, string $field) use ($ctx, $old): string {
@@ -88,12 +89,12 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Reason</span>
-                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('suspend', 'reason')) ?>" required>
+                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('suspend', 'reason')) ?>"<?= $fattr('suspend', 'reason') ?> required>
                 </label>
                 <?= $ferr('suspend', 'reason') ?>
                 <label class="field">
                     <span>Until (UTC, optional — leave blank for indefinite)</span>
-                    <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($oldv('suspend', 'until')) ?>">
+                    <input type="text" name="until" class="input" placeholder="YYYY-MM-DD HH:MM:SS" value="<?= $e($oldv('suspend', 'until')) ?>"<?= $fattr('suspend', 'until') ?>>
                 </label>
                 <?= $ferr('suspend', 'until') ?>
                 <div class="form-actions"><button class="btn danger" type="submit">Suspend</button></div>
@@ -105,12 +106,12 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                 <?= $this->csrfField() ?>
                 <label class="field">
                     <span>Reason</span>
-                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('ban', 'reason')) ?>" required>
+                    <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('ban', 'reason')) ?>"<?= $fattr('ban', 'reason') ?> required>
                 </label>
                 <?= $ferr('ban', 'reason') ?>
                 <label class="field">
                     <span>Type <code>@<?= $e($subject['username']) ?></code>'s username to confirm</span>
-                    <input type="text" name="confirm_username" class="input" autocomplete="off" autocapitalize="off" spellcheck="false" required>
+                    <input type="text" name="confirm_username" class="input" autocomplete="off" autocapitalize="off" spellcheck="false"<?= $fattr('ban', 'confirm_username') ?> required>
                 </label>
                 <?= $ferr('ban', 'confirm_username') ?>
                 <div class="form-actions"><button class="btn danger" type="submit">Ban permanently</button></div>
@@ -139,7 +140,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             </label>
             <label class="field">
                 <span>Your current password</span>
-                <input type="password" name="current_password" class="input" required>
+                <input type="password" name="current_password" class="input"<?= $fattr('change_role', 'current_password') ?> required>
             </label>
             <?= $ferr('change_role', 'current_password') ?>
             <div class="form-actions"><button class="btn danger" type="submit">Change role</button></div>
@@ -151,9 +152,11 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
         <h3>Issue a warning</h3>
         <form method="post" action="/admin/users/<?= $uid ?>/warn" class="stacked">
             <?= $this->csrfField() ?>
+            <?php $warnKey = $oldv('warn', 'idempotency_key') !== '' ? $oldv('warn', 'idempotency_key') : bin2hex(random_bytes(16)); ?>
+            <input type="hidden" name="idempotency_key" value="<?= $e($warnKey) ?>">
             <label class="field">
                 <span>Reason (shown to the member)</span>
-                <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('warn', 'reason')) ?>" required>
+                <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('warn', 'reason')) ?>"<?= $fattr('warn', 'reason') ?> required>
             </label>
             <?= $ferr('warn', 'reason') ?>
             <div class="form-actions"><button class="btn" type="submit">Record warning</button></div>
@@ -164,7 +167,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             <?= $this->csrfField() ?>
             <label class="field">
                 <span>Note (visible to staff only)</span>
-                <textarea name="body" class="input" rows="3"><?= $e($oldv('note', 'body')) ?></textarea>
+                <textarea name="body" class="input" rows="3" maxlength="65535"<?= $fattr('note', 'body') ?>><?= $e($oldv('note', 'body')) ?></textarea>
             </label>
             <?= $ferr('note', 'body') ?>
             <div class="form-actions"><button class="btn" type="submit">Add note</button></div>
@@ -178,9 +181,9 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             <?= $this->csrfField() ?>
             <label class="field">
                 <span>Title override</span>
-                <input type="text" name="title" class="input" maxlength="64" value="<?= $e($old['title'] ?? ($stored_title ?? '')) ?>">
+                <input type="text" name="title" class="input" maxlength="64" value="<?= $e($old['title'] ?? ($stored_title ?? '')) ?>"<?= field_attrs($errs, 'title') ?>>
             </label>
-            <?php if (!empty($errs['title'])): ?><p class="field-error"><?= $e($errs['title']) ?></p><?php endif; ?>
+            <?= field_error($errs, 'title') ?>
             <div class="form-actions"><button class="btn" type="submit">Save title</button></div>
         </form>
         <form method="post" action="/admin/users/<?= $uid ?>/title" class="inline-form">
@@ -229,7 +232,7 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
                     <?php endforeach; ?>
                 </select>
             </label>
-            <?php if (!empty($errs['slug'])): ?><p class="field-error"><?= $e($errs['slug']) ?></p><?php endif; ?>
+            <?= field_error($errs, 'slug') ?>
             <label class="field">
                 <span>Reason (optional)</span>
                 <input type="text" name="reason" class="input" maxlength="255" value="<?= $e($oldv('badge_grant', 'reason')) ?>">

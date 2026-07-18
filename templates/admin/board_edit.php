@@ -1,5 +1,5 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Edit board'); ?>
+<?php $this->layout('layout'); $this->section('title', 'Edit board'); $errors = $errors ?? []; $old = $old ?? []; ?>
 <div class="admin">
     <header class="admin-head">
         <h1>Edit board</h1>
@@ -9,7 +9,7 @@
 
     <div class="admin-pane">
     <?php if (!empty($roster_error ?? null)): ?>
-        <div class="flash flash-error"><?= $e($roster_error) ?></div>
+        <div class="flash flash-error" role="alert"><?= $e($roster_error) ?></div>
     <?php endif; ?>
     <form method="post" action="/admin/boards/<?= (int) $board['id'] ?>" class="stacked card">
         <?= $this->csrfField() ?>
@@ -19,22 +19,23 @@
                     <option value="<?= (int) $category['id'] ?>" <?= (int) ($old['category_id'] ?? $board['category_id']) === (int) $category['id'] ? 'selected' : '' ?>>#<?= $e($category['name']) ?></option>
                 <?php endforeach; ?>
             </select>
-            <?php if (!empty($errors['category_id'])): ?><span class="field-error"><?= $e($errors['category_id']) ?></span><?php endif; ?>
+            <?= field_error($errors, 'category_id') ?>
         </label>
 
         <label class="field"><span>Name</span>
-            <input type="text" name="name" class="input" maxlength="80" value="<?= $e($old['name'] ?? $board['name']) ?>" required>
-            <?php if (!empty($errors['name'])): ?><span class="field-error"><?= $e($errors['name']) ?></span><?php endif; ?>
+            <input type="text" name="name" class="input" maxlength="80" value="<?= $e($old['name'] ?? $board['name']) ?>"<?= field_attrs($errors, 'name') ?> required>
+            <?= field_error($errors, 'name') ?>
         </label>
 
         <label class="field"><span>Slug</span>
-            <input type="text" name="slug" class="input" maxlength="64" value="<?= $e($old['slug'] ?? $board['slug']) ?>">
+            <input type="text" name="slug" class="input" maxlength="64" value="<?= $e($old['slug'] ?? $board['slug']) ?>"<?= field_attrs($errors, 'slug') ?>>
             <span class="muted">Changing the slug keeps the old one working via a redirect.</span>
+            <?= field_error($errors, 'slug') ?>
         </label>
 
         <label class="field"><span>Description</span>
-            <input type="text" name="description" class="input" maxlength="255" value="<?= $e($old['description'] ?? $board['description'] ?? '') ?>">
-            <?php if (!empty($errors['description'])): ?><span class="field-error"><?= $e($errors['description']) ?></span><?php endif; ?>
+            <input type="text" name="description" class="input" maxlength="255" value="<?= $e($old['description'] ?? $board['description'] ?? '') ?>"<?= field_attrs($errors, 'description') ?>>
+            <?= field_error($errors, 'description') ?>
         </label>
 
         <label class="field"><span>Visibility</span>
@@ -44,7 +45,7 @@
                 <option value="hidden" <?= $vis === 'hidden' ? 'selected' : '' ?>>Hidden (unlisted)</option>
                 <option value="private" <?= $vis === 'private' ? 'selected' : '' ?>>Private (members only)</option>
             </select>
-            <?php if (!empty($errors['visibility'])): ?><span class="field-error"><?= $e($errors['visibility']) ?></span><?php endif; ?>
+            <?= field_error($errors, 'visibility') ?>
         </label>
 
         <label class="field"><span>Who can post</span>
@@ -55,14 +56,14 @@
                 <option value="admin" <?= $minRole === 'admin' ? 'selected' : '' ?>>Admins only (announcements)</option>
             </select>
             <span class="muted">Everyone who can read the board still sees its content; this only limits who may start topics and reply.</span>
-            <?php if (!empty($errors['post_min_role'])): ?><span class="field-error"><?= $e($errors['post_min_role']) ?></span><?php endif; ?>
+            <?= field_error($errors, 'post_min_role') ?>
         </label>
 
         <label class="field"><span>Edit window (minutes, 0 = no limit)</span>
             <?php $editWindow = $old['edit_window_minutes'] ?? (string) intdiv((int) ($board['edit_window_seconds'] ?? 0), 60); ?>
-            <input type="number" name="edit_window_minutes" class="input" min="0" max="10080" value="<?= $e((string) $editWindow) ?>">
+            <input type="number" name="edit_window_minutes" class="input" min="0" max="10080" value="<?= $e((string) $editWindow) ?>"<?= field_attrs($errors, 'edit_window_minutes') ?>>
             <span class="muted">How long members may edit their own posts here. Staff are exempt.</span>
-            <?php if (!empty($errors['edit_window_minutes'])): ?><span class="field-error"><?= $e($errors['edit_window_minutes']) ?></span><?php endif; ?>
+            <?= field_error($errors, 'edit_window_minutes') ?>
         </label>
 
         <?php $anon = $old['allow_anonymous'] ?? ($board['allow_anonymous'] ?? 0); ?>

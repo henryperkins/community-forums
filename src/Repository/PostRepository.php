@@ -88,33 +88,38 @@ final class PostRepository
     }
 
     /**
-     * One page of non-deleted posts for a thread, oldest first, with author.
+     * One page of a thread's posts, oldest first, with author. By default only
+     * live rows; $includeDeleted=true is the STAFF stream — soft-deleted rows
+     * kept in place as restorable stubs (ADMIN §3.3 — "delete" preserves
+     * content for restore and accountability). Approval-held (is_pending=1,
+     * P3-05) rows are always excluded: they surface in /mod/approvals, and the
+     * author is told their reply awaits release.
      *
      * @return array<int,array<string,mixed>>
      */
-    public function listByThread(int $threadId, int $limit, int $offset): array
+    public function listByThread(int $threadId, int $limit, int $offset, bool $includeDeleted = false): array
     {
         $limit = max(1, $limit);
         $offset = max(0, $offset);
-        // Approval-held replies (is_pending=1, P3-05) are excluded from the public
-        // thread render; the author is told their reply awaits approval and it
-        // becomes visible only when a moderator releases it.
+        $deletedClause = $includeDeleted ? '' : ' AND p.is_deleted = 0';
         return $this->db->fetchAll(
             'SELECT p.*, u.username AS author_username, u.display_name AS author_display_name, u.role AS author_role,
                     u.signature AS author_signature, u.reputation AS author_reputation, u.title AS author_title
              FROM posts p
              JOIN users u ON u.id = p.user_id
-             WHERE p.thread_id = :thread_id AND p.is_deleted = 0 AND p.is_pending = 0
+             WHERE p.thread_id = :thread_id' . $deletedClause . ' AND p.is_pending = 0
              ORDER BY p.created_at ASC, p.id ASC
              LIMIT ' . $limit . ' OFFSET ' . $offset,
             ['thread_id' => $threadId],
         );
     }
 
-    public function countByThread(int $threadId): int
+    /** Pagination companion to {@see listByThread} — same visibility rules. */
+    public function countByThread(int $threadId, bool $includeDeleted = false): int
     {
+        $deletedClause = $includeDeleted ? '' : ' AND is_deleted = 0';
         return (int) $this->db->fetchValue(
-            'SELECT COUNT(*) FROM posts WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0',
+            'SELECT COUNT(*) FROM posts WHERE thread_id = ?' . $deletedClause . ' AND is_pending = 0',
             [$threadId],
         );
     }
@@ -189,16 +194,19 @@ final class PostRepository
     }
 
     /**
-     * 1-based page (at $perPage) on which a post appears in the public thread
-     * render order — created_at ASC, id ASC over visible posts, matching
-     * {@see listByThread}. Lets a failed inline edit re-render the page that
-     * actually contains the post. Returns 1 when the post is missing/hidden.
+     * 1-based page (at $perPage) on which a post appears in the thread render
+     * order — created_at ASC, id ASC over visible posts, matching
+     * {@see listByThread} with the SAME $includeDeleted stream (staff viewers
+     * paginate the with-deleted stream, so their refocus must rank against it
+     * too). Lets a failed inline edit re-render the page that actually contains
+     * the post. Returns 1 when the post is missing/hidden.
      */
-    public function pageOfPost(int $threadId, int $postId, int $perPage): int
+    public function pageOfPost(int $threadId, int $postId, int $perPage, bool $includeDeleted = false): int
     {
         $perPage = max(1, $perPage);
+        $deletedClause = $includeDeleted ? '' : ' AND is_deleted = 0';
         $target = $this->db->fetch(
-            'SELECT created_at, id FROM posts WHERE id = ? AND thread_id = ? AND is_deleted = 0 AND is_pending = 0',
+            'SELECT created_at, id FROM posts WHERE id = ? AND thread_id = ?' . $deletedClause . ' AND is_pending = 0',
             [$postId, $threadId],
         );
         if ($target === null) {
@@ -209,7 +217,7 @@ final class PostRepository
         // forbid reusing a named placeholder, so created_at is bound twice.
         $rank = (int) $this->db->fetchValue(
             'SELECT COUNT(*) FROM posts
-             WHERE thread_id = :tid AND is_deleted = 0 AND is_pending = 0
+             WHERE thread_id = :tid' . $deletedClause . ' AND is_pending = 0
                AND (created_at < :ca1 OR (created_at = :ca2 AND id <= :pid))',
             ['tid' => $threadId, 'ca1' => (string) $target['created_at'], 'ca2' => (string) $target['created_at'], 'pid' => $postId],
         );

@@ -31,9 +31,9 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
             <?php $mintKey = (string) ($old['idempotency_key'] ?? '') !== '' ? (string) $old['idempotency_key'] : bin2hex(random_bytes(16)); ?>
             <input type="hidden" name="idempotency_key" value="<?= $e($mintKey) ?>">
             <label>Name
-                <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? '') ?>" required>
+                <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? '') ?>"<?= field_attrs($errors ?? [], 'name') ?> required>
             </label>
-            <?php if (!empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'name') ?>
 
             <fieldset>
                 <legend>Scopes</legend>
@@ -41,17 +41,17 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
                     <label><input type="checkbox" name="scopes[]" value="<?= $e($scope) ?>"<?= in_array((string) $scope, $selectedScopes, true) ? ' checked' : '' ?>> <?= $e($scope) ?> — <?= $e($desc) ?></label>
                 <?php endforeach; ?>
             </fieldset>
-            <?php if (!empty($errors['scopes'])): ?><p class="field-error"><?= $e($errors['scopes']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'scopes') ?>
 
             <label>Expires in days (optional)
-                <input type="number" name="expires_in_days" min="1" max="365" value="<?= $e($old['expires_in_days'] ?? '') ?>">
+                <input type="number" name="expires_in_days" min="1" max="365" value="<?= $e($old['expires_in_days'] ?? '') ?>"<?= field_attrs($errors ?? [], 'expires_in_days') ?>>
             </label>
-            <?php if (!empty($errors['expires_in_days'])): ?><p class="field-error"><?= $e($errors['expires_in_days']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'expires_in_days') ?>
 
             <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
+                <input type="password" name="current_password" autocomplete="current-password"<?= field_attrs($errors ?? [], 'current_password') ?> required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'current_password') ?>
 
             <div class="form-actions"><button class="btn" type="submit">Create token</button></div>
         </form>
