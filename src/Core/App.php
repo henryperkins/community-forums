@@ -1942,6 +1942,8 @@ final class App
             $c->get(Mailer::class),
             $c->get(EmailDomainVerifier::class),
             $c->get(ThreadIntelligenceAdminService::class),
+            $c->get(SettingRepository::class),
+            $c->get(CustomEmojiService::class),
         ));
         $c->bind(SetupService::class, fn (Container $c) => new SetupService(
             $c->get(Database::class),

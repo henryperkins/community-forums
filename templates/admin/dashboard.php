@@ -76,6 +76,9 @@ $settingsOld = $settings_old ?? [];
                 <?php if (($registration_mode ?? 'open') === 'invite' && empty($invitations_flag_on)): ?>
                     <span class="field-error">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</span>
                 <?php endif; ?>
+                <?php if (!empty($settingsErrors['registration_mode'])): ?>
+                    <span class="field-error"><?= $e($settingsErrors['registration_mode']) ?></span>
+                <?php endif; ?>
             </label>
             <label class="field">
                 <span>Anti-abuse enforcement</span>
@@ -86,6 +89,9 @@ $settingsOld = $settings_old ?? [];
                     <?php endforeach; ?>
                 </select>
                 <span class="muted">observe = log only · flag · hold = queue for approval · block = reject</span>
+                <?php if (!empty($settingsErrors['antiabuse_mode'])): ?>
+                    <span class="field-error"><?= $e($settingsErrors['antiabuse_mode']) ?></span>
+                <?php endif; ?>
             </label>
             <label class="field">
                 <span>Blocked words</span>

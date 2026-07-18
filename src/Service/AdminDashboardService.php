@@ -9,6 +9,7 @@ use App\Core\FeatureFlags;
 use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
 use App\Repository\ModerationLogRepository;
+use App\Repository\SettingRepository;
 use App\Service\ThreadIntelligence\ThreadIntelligenceAdminService;
 
 final class AdminDashboardService
@@ -21,7 +22,44 @@ final class AdminDashboardService
         private Mailer $mailer,
         private EmailDomainVerifier $emailDomainVerifier,
         private ?ThreadIntelligenceAdminService $threadIntelligence = null,
+        private ?SettingRepository $settings = null,
+        private ?CustomEmojiService $customEmoji = null,
     ) {
+    }
+
+    /**
+     * The complete dashboard view model (PR #44 spec §5): summary() plus the
+     * settings/branding context the controller used to assemble inline. The
+     * overlay REPLACES base keys (array_replace) so a 422 re-render's
+     * `settings_errors`/`settings_old` actually reach the template — the old
+     * `[defaults] + $extra` union kept the pristine left-hand side.
+     *
+     * @param array<string,mixed> $overlay
+     * @return array<string,mixed>
+     */
+    public function dashboardModel(array $overlay = []): array
+    {
+        $summary = $this->summary();
+        $customEmojiOn = $this->features->enabled('custom_emoji');
+        $base = [
+            'cards' => $summary['cards'],
+            'attention' => $summary['attention'],
+            'audit' => $summary['audit'],
+            'custom_emoji_on' => $customEmojiOn,
+            'custom_emoji' => $customEmojiOn ? ($this->customEmoji?->catalogue() ?? []) : [],
+            'mailer_configured' => $summary['mailer_configured'],
+            'send_blocked' => $summary['send_blocked'],
+            'registration_mode' => $this->settings?->getString('registration_mode', 'open') ?? 'open',
+            'antiabuse_mode' => $this->settings?->getString('antiabuse_mode', 'observe') ?? 'observe',
+            'antiabuse_blocked_words' => (array) ($this->settings?->get('antiabuse_blocked_words', []) ?? []),
+            'registration_modes' => AdminService::REGISTRATION_MODES,
+            'invitations_flag_on' => $this->features->enabled('invitations'),
+            'antiabuse_modes' => AdminService::ANTIABUSE_MODES,
+            'settings_errors' => [],
+            'settings_old' => [],
+        ];
+
+        return array_replace($base, $overlay);
     }
 
     /**

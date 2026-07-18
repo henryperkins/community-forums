@@ -431,11 +431,7 @@ final class AdminController extends Controller
                 $this->container->get(AdminService::class)->reorderBoards($admin, (int) $request->post('category_id', 0), $ids);
             }
         } catch (ValidationException $e) {
-            return $this->view('admin/structure', [
-                'categories' => $this->container->get(CategoryRepository::class)->all(),
-                'boards_by_category' => $this->boardsByCategory(),
-                'reorder_error' => $e->first(),
-            ], 422);
+            return $this->structureView(['reorder_error' => $e->first()], 422);
         }
         return $this->redirectWithFlash('/admin/structure', 'Order updated.');
     }
@@ -523,10 +519,12 @@ final class AdminController extends Controller
      */
     private function structureView(array $extra = [], int $status = 200): Response
     {
-        return $this->view('admin/structure', [
+        // array_replace, not `+`: the 422 context must WIN over base keys —
+        // the union form only survives today on key disjointness (spec §5).
+        return $this->view('admin/structure', array_replace([
             'categories' => $this->container->get(CategoryRepository::class)->all(),
             'boards_by_category' => $this->boardsByCategory(),
-        ] + $extra, $status);
+        ], $extra), $status);
     }
 
     /**
@@ -538,26 +536,11 @@ final class AdminController extends Controller
      */
     private function dashboardView(array $extra = [], int $status = 200): Response
     {
-        $settings = $this->container->get(SettingRepository::class);
-        $dashboard = $this->container->get(AdminDashboardService::class)->summary();
-        $customEmojiOn = $this->container->get(FeatureFlags::class)->enabled('custom_emoji');
-        return $this->view('admin/dashboard', [
-            'cards' => $dashboard['cards'],
-            'attention' => $dashboard['attention'],
-            'audit' => $dashboard['audit'],
-            'custom_emoji_on' => $customEmojiOn,
-            'custom_emoji' => $customEmojiOn ? $this->container->get(CustomEmojiService::class)->catalogue() : [],
-            'mailer_configured' => $dashboard['mailer_configured'],
-            'send_blocked' => $dashboard['send_blocked'],
-            'registration_mode' => $settings->getString('registration_mode', 'open'),
-            'antiabuse_mode' => $settings->getString('antiabuse_mode', 'observe'),
-            'antiabuse_blocked_words' => (array) $settings->get('antiabuse_blocked_words', []),
-            'registration_modes' => AdminService::REGISTRATION_MODES,
-            'invitations_flag_on' => $this->container->get(FeatureFlags::class)->enabled('invitations'),
-            'antiabuse_modes' => AdminService::ANTIABUSE_MODES,
-            'settings_errors' => [],
-            'settings_old' => [],
-        ] + $extra, $status);
+        return $this->view(
+            'admin/dashboard',
+            $this->container->get(AdminDashboardService::class)->dashboardModel($extra),
+            $status,
+        );
     }
 
     /**

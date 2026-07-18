@@ -97,13 +97,24 @@ final class AdminService
     {
         $this->assertAdmin($admin);
 
+        // A present-but-invalid mode is refused, not silently coerced: a stale
+        // or hand-crafted form must never quietly downgrade the registration
+        // gate or the enforced anti-abuse posture (PR #44 spec §5 — the 422
+        // re-renders with the typed input preserved). Absent keys keep their
+        // defaults as before.
         $regMode = (string) ($input['registration_mode'] ?? 'open');
         if (!in_array($regMode, self::REGISTRATION_MODES, true)) {
-            $regMode = 'open';
+            throw new ValidationException(
+                ['registration_mode' => 'Unknown registration mode.'],
+                ['registration_mode' => $regMode],
+            );
         }
         $aaMode = (string) ($input['antiabuse_mode'] ?? 'observe');
         if (!in_array($aaMode, self::ANTIABUSE_MODES, true)) {
-            $aaMode = 'observe';
+            throw new ValidationException(
+                ['antiabuse_mode' => 'Unknown anti-abuse mode.'],
+                ['antiabuse_mode' => $aaMode],
+            );
         }
         // Blocked words: one per line or comma-separated; trimmed, de-duped
         // (case-insensitively), each between MIN_BLOCKED_WORD_LENGTH and 100
