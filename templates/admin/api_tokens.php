@@ -12,11 +12,15 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
     <?= $this->partial('admin/_nav', ['active' => 'api_tokens', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
+    <?php if (!empty($conflict)): ?>
+        <div class="flash flash-error" role="alert">
+            That token request was already processed. No new token was minted — the original was shown once. Start again if you still need one.
+        </div>
+    <?php endif; ?>
     <?php if (!empty($new_token)): ?>
         <div class="flash" role="status">
             <strong>Copy this token now — it will not be shown again:</strong>
             <code><?= $e($new_token) ?></code>
-            <p class="muted">Do not reload this page: refreshing re-submits the form and mints another token.</p>
         </div>
     <?php endif; ?>
 
@@ -24,6 +28,8 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
         <h2>Create a token</h2>
         <form method="post" action="/admin/api-tokens" class="stacked">
             <?= $this->csrfField() ?>
+            <?php $mintKey = (string) ($old['idempotency_key'] ?? '') !== '' ? (string) $old['idempotency_key'] : bin2hex(random_bytes(16)); ?>
+            <input type="hidden" name="idempotency_key" value="<?= $e($mintKey) ?>">
             <label>Name
                 <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? '') ?>" required>
             </label>

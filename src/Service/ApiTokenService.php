@@ -7,10 +7,12 @@ namespace App\Service;
 use App\Core\ApiTokensDisabledException;
 use App\Core\Config;
 use App\Core\Database;
+use App\Core\DuplicateSubmissionException;
 use App\Core\FeatureFlags;
 use App\Core\ValidationException;
 use App\Domain\User;
 use App\Repository\ApiTokenRepository;
+use App\Repository\IdempotencyRepository;
 use App\Repository\ModerationLogRepository;
 use App\Repository\UserRepository;
 use App\Security\ApiPrincipal;
@@ -36,6 +38,7 @@ final class ApiTokenService
         private WriteGate $writeGate,
         private ?PackageCredentialAuthGuard $packageAuthGuard = null,
         private ?UserRepository $users = null,
+        private ?IdempotencyRepository $idempotency = null,
     ) {
     }
 
@@ -43,7 +46,7 @@ final class ApiTokenService
      * @param array<int,mixed> $scopes
      * @return array{token:string,id:int}
      */
-    public function mint(User $admin, string $currentPassword, string $name, array $scopes, ?int $expiresInDays): array
+    public function mint(User $admin, string $currentPassword, string $name, array $scopes, ?int $expiresInDays, ?string $idempotencyKey = null): array
     {
         $this->writeGate->assertCanWrite($admin);
         if (!$this->flags->enabled('api_tokens')) {
@@ -77,10 +80,23 @@ final class ApiTokenService
             $expiresAt = gmdate('Y-m-d H:i:s', time() + $expiresInDays * 86400);
         }
 
+        // Replay-safe mint (PR #44 spec §7, submission_idempotency seam) —
+        // checked only after reauth + field validation so idempotency state is
+        // never probeable pre-auth. Unlike the composer there is NO replay:
+        // the plaintext is not stored, so a duplicate is refused outright and
+        // the caller maps it to a 409.
+        $key = $this->idempotency?->hash($idempotencyKey);
+        if ($key !== null) {
+            $existing = $this->idempotency->findWithContext($admin->id(), $key);
+            if ($existing !== null && $existing['context'] === 'api_token_mint') {
+                throw new DuplicateSubmissionException();
+            }
+        }
+
         $plaintext = 'rbt_' . bin2hex(random_bytes(24));
         $hash = hash('sha256', $plaintext);
 
-        $id = $this->db->transaction(function () use ($name, $hash, $clean, $admin, $expiresAt): int {
+        $id = $this->db->transaction(function () use ($name, $hash, $clean, $admin, $expiresAt, $key): int {
             $id = $this->tokens->insert($name, $hash, json_encode($clean) ?: '[]', $admin->id(), $expiresAt);
             $this->log->log([
                 'actor_id' => $admin->id(),
@@ -89,6 +105,11 @@ final class ApiTokenService
                 'target_id' => $id,
                 'after' => ['name' => $name, 'scopes' => $clean, 'expires_at' => $expiresAt],
             ]);
+            // A concurrent duplicate losing this race rolls the token + audit
+            // row back with it.
+            if ($key !== null && !$this->idempotency->record($admin->id(), $key, 'api_token_mint', 'api_token', $id)) {
+                throw new DuplicateSubmissionException();
+            }
             return $id;
         });
 

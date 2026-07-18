@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Core\DuplicateSubmissionException;
 use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
@@ -48,11 +49,13 @@ final class AdminApiTokenController extends Controller
                 $request->str('name'),
                 (array) $request->post('scopes', []),
                 $days === '' ? null : (int) $days,
+                $request->str('idempotency_key') ?: null,
             );
-            // One-time plaintext: render DIRECTLY (not via the cookie-backed Flash, which
-            // would leak the token into a Set-Cookie header). A later GET has no new_token,
-            // so the secret is shown exactly once. A reload re-POSTs (mints again) — an
-            // accepted minor wart; the alternative (cookie flash) leaks the secret.
+            // One-time plaintext: render DIRECTLY (not via the cookie-backed
+            // Flash, which would leak the token into a Set-Cookie header). A
+            // later GET has no new_token, so the secret is shown exactly once.
+            // A reload re-POSTs the same idempotency key and lands in the 409
+            // branch below — it can no longer mint a second credential.
             return $this->view('admin/api_tokens', [
                 'tokens' => $service->list(),
                 'scopes_catalogue' => ApiScopes::all(),
@@ -69,9 +72,21 @@ final class AdminApiTokenController extends Controller
                     'name' => $request->str('name'),
                     'scopes' => array_values(array_filter((array) $request->post('scopes', []), 'is_string')),
                     'expires_in_days' => $days,
+                    'idempotency_key' => $request->str('idempotency_key'),
                 ],
                 'new_token' => null,
             ], 422);
+        } catch (DuplicateSubmissionException) {
+            // The original mint already showed its plaintext once; a replayed
+            // key must never produce (or re-reveal) a credential.
+            return $this->view('admin/api_tokens', [
+                'tokens' => $service->list(),
+                'scopes_catalogue' => ApiScopes::all(),
+                'errors' => [],
+                'old' => [],
+                'new_token' => null,
+                'conflict' => true,
+            ], 409);
         }
     }
 
