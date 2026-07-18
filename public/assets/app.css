@@ -1320,6 +1320,19 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     border-radius: var(--radius); padding: 8px 12px; margin: 8px 0; color: var(--text-muted);
 }
 
+/* Email status facts (F24): one line per independent fact. */
+.email-status-facts { list-style: none; padding: 0; margin: 0 0 12px; color: var(--text-muted); }
+.email-status-facts li { margin: 2px 0; }
+
+/* Deleted-reply stub (ADMIN §3.3 Restore) — staff-only render. */
+.post-deleted {
+    background: var(--surface-3); border: 1px dashed var(--border);
+    border-radius: var(--radius); padding: 8px 12px; color: var(--text-muted);
+}
+.post-deleted .post-author { color: var(--text-muted); }
+.post-deleted-body { opacity: 0.75; margin-top: 8px; }
+.post-deleted-restore { margin-top: 8px; }
+
 /* ── Phase 3: product tour (P3-11) ────────────────────────────────────────
    Enhancement only; the forum is fully usable without it. No inline styles
    (the strict CSP forbids them) — the popover is positioned by class. */

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Core\FeatureFlags;
-use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Domain\User;
@@ -77,9 +75,7 @@ final class ReportController extends Controller
 
     private function requireModeration(): User
     {
-        if (!$this->container->get(FeatureFlags::class)->enabled('moderation_queue')) {
-            throw new NotFoundException('Not found.');
-        }
+        $this->requireModerationQueue();
         return $this->requireUser();
     }
 }

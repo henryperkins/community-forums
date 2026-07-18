@@ -109,12 +109,12 @@ $jobList = array_map(
                     <?php if ($cred['status'] !== 'revoked'): ?>
                         <form method="post" action="<?= $e($base) ?>/integration/credentials/<?= (int) $cred['id'] ?>/rotate" class="inline">
                             <?= $this->csrfField() ?>
-                            <input type="password" name="current_password" placeholder="password" autocomplete="current-password">
-                            <button type="submit">Rotate</button>
+                            <input type="password" name="current_password" placeholder="password" aria-label="Your current password" autocomplete="current-password">
+                            <button type="submit" aria-label="Rotate credential #<?= (int) $cred['id'] ?>">Rotate</button>
                         </form>
                         <form method="post" action="<?= $e($base) ?>/integration/credentials/<?= (int) $cred['id'] ?>/revoke" class="inline">
                             <?= $this->csrfField() ?>
-                            <button type="submit">Revoke</button>
+                            <button type="submit" aria-label="Revoke credential #<?= (int) $cred['id'] ?>">Revoke</button>
                         </form>
                     <?php endif; ?>
                 </td>

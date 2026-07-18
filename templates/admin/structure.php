@@ -14,7 +14,7 @@
 
     <div class="admin-pane">
     <?php if (!empty($reorder_error ?? null)): ?>
-        <div class="flash flash-error"><?= $e($reorder_error) ?></div>
+        <div class="flash flash-error" role="alert"><?= $e($reorder_error) ?></div>
     <?php endif; ?>
 
     <div class="admin-structure">
@@ -42,7 +42,7 @@
                     </span>
                 </div>
                 <?php if ($catFailed && !empty($update_category_error ?? null)): ?>
-                    <p class="field-error"><?= $e($update_category_error) ?></p>
+                    <p class="field-error" role="alert"><?= $e($update_category_error) ?></p>
                 <?php endif; ?>
 
                 <ul class="admin-board-list">
@@ -83,7 +83,7 @@
     <section class="card">
         <h2>Add a category</h2>
         <?php if (!empty($create_category_error ?? null)): ?>
-            <div class="flash flash-error"><?= $e($create_category_error) ?></div>
+            <div class="flash flash-error" role="alert"><?= $e($create_category_error) ?></div>
         <?php endif; ?>
         <form method="post" action="/admin/categories" class="inline-form">
             <?= $this->csrfField() ?>
@@ -97,7 +97,7 @@
         <section class="card">
             <h2>Add a board</h2>
             <?php if (!empty($boardErr)): ?>
-                <div class="flash flash-error">Please fix the highlighted fields.</div>
+                <div class="flash flash-error" role="alert">Please fix the highlighted fields.</div>
             <?php endif; ?>
             <form method="post" action="/admin/boards" class="stacked">
                 <?= $this->csrfField() ?>
@@ -107,14 +107,16 @@
                             <option value="<?= (int) $category['id'] ?>" <?= (int) ($boardOld['category_id'] ?? 0) === (int) $category['id'] ? 'selected' : '' ?>>#<?= $e($category['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if (!empty($boardErr['category_id'])): ?><span class="field-error"><?= $e($boardErr['category_id']) ?></span><?php endif; ?>
+                    <?= field_error($boardErr, 'category_id', 'err-board-category_id') ?>
                 </label>
-                <label class="field"><span>Name</span><input type="text" name="name" class="input" maxlength="80" value="<?= $e($boardOld['name'] ?? '') ?>" required>
-                    <?php if (!empty($boardErr['name'])): ?><span class="field-error"><?= $e($boardErr['name']) ?></span><?php endif; ?>
+                <label class="field"><span>Name</span><input type="text" name="name" class="input" maxlength="80" value="<?= $e($boardOld['name'] ?? '') ?>"<?= field_attrs($boardErr, 'name', 'err-board-name') ?> required>
+                    <?= field_error($boardErr, 'name', 'err-board-name') ?>
                 </label>
-                <label class="field"><span>Slug <span class="muted">(optional — derived from name)</span></span><input type="text" name="slug" class="input" maxlength="64" value="<?= $e($boardOld['slug'] ?? '') ?>"></label>
-                <label class="field"><span>Description</span><input type="text" name="description" class="input" maxlength="255" value="<?= $e($boardOld['description'] ?? '') ?>">
-                    <?php if (!empty($boardErr['description'])): ?><span class="field-error"><?= $e($boardErr['description']) ?></span><?php endif; ?>
+                <label class="field"><span>Slug <span class="muted">(optional — derived from name)</span></span><input type="text" name="slug" class="input" maxlength="64" value="<?= $e($boardOld['slug'] ?? '') ?>"<?= field_attrs($boardErr, 'slug', 'err-board-slug') ?>>
+                    <?= field_error($boardErr, 'slug', 'err-board-slug') ?>
+                </label>
+                <label class="field"><span>Description</span><input type="text" name="description" class="input" maxlength="255" value="<?= $e($boardOld['description'] ?? '') ?>"<?= field_attrs($boardErr, 'description', 'err-board-description') ?>>
+                    <?= field_error($boardErr, 'description', 'err-board-description') ?>
                 </label>
                 <label class="field"><span>Visibility</span>
                     <?php $bvis = $boardOld['visibility'] ?? 'public'; ?>
@@ -123,7 +125,7 @@
                         <option value="hidden" <?= $bvis === 'hidden' ? 'selected' : '' ?>>Hidden (unlisted)</option>
                         <option value="private" <?= $bvis === 'private' ? 'selected' : '' ?>>Private (members only)</option>
                     </select>
-                    <?php if (!empty($boardErr['visibility'])): ?><span class="field-error"><?= $e($boardErr['visibility']) ?></span><?php endif; ?>
+                    <?= field_error($boardErr, 'visibility', 'err-board-visibility') ?>
                 </label>
                 <label class="field"><span>Who can post</span>
                     <?php $bMinRole = $boardOld['post_min_role'] ?? 'user'; ?>
@@ -132,11 +134,11 @@
                         <option value="moderator" <?= $bMinRole === 'moderator' ? 'selected' : '' ?>>Moderators and admins</option>
                         <option value="admin" <?= $bMinRole === 'admin' ? 'selected' : '' ?>>Admins only (announcements)</option>
                     </select>
-                    <?php if (!empty($boardErr['post_min_role'])): ?><span class="field-error"><?= $e($boardErr['post_min_role']) ?></span><?php endif; ?>
+                    <?= field_error($boardErr, 'post_min_role', 'err-board-post_min_role') ?>
                 </label>
                 <label class="field"><span>Edit window (minutes, 0 = no limit)</span>
-                    <input type="number" name="edit_window_minutes" class="input" min="0" max="10080" value="<?= $e((string) ($boardOld['edit_window_minutes'] ?? '0')) ?>">
-                    <?php if (!empty($boardErr['edit_window_minutes'])): ?><span class="field-error"><?= $e($boardErr['edit_window_minutes']) ?></span><?php endif; ?>
+                    <input type="number" name="edit_window_minutes" class="input" min="0" max="10080" value="<?= $e((string) ($boardOld['edit_window_minutes'] ?? '0')) ?>"<?= field_attrs($boardErr, 'edit_window_minutes', 'err-board-edit_window_minutes') ?>>
+                    <?= field_error($boardErr, 'edit_window_minutes', 'err-board-edit_window_minutes') ?>
                 </label>
                 <label class="field"><span>Assignment mode</span>
                     <?php $bmode = $boardOld['assignment_mode'] ?? 'off'; ?>

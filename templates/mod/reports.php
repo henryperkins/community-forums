@@ -106,21 +106,21 @@ $staleBefore = time() - 86400;
                         <?php if (($r['reason'] ?? '') !== ''): ?><p class="report-note"><?= $e($r['reason']) ?></p><?php endif; ?>
                         <div class="report-actions">
                             <?php if ($r['status'] === 'open'): ?>
-                                <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/claim"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Claim</button></form>
+                                <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/claim"><?= $this->csrfField() ?><button class="linkbtn" type="submit" aria-label="Claim report #<?= (int) $r['id'] ?>">Claim</button></form>
                             <?php endif; ?>
-                            <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/resolve"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Resolve</button></form>
-                            <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/dismiss"><?= $this->csrfField() ?><button class="linkbtn" type="submit">Dismiss</button></form>
+                            <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/resolve"><?= $this->csrfField() ?><button class="linkbtn" type="submit" aria-label="Resolve report #<?= (int) $r['id'] ?>">Resolve</button></form>
+                            <form class="inline" method="post" action="/mod/reports/<?= (int) $r['id'] ?>/dismiss"><?= $this->csrfField() ?><button class="linkbtn" type="submit" aria-label="Dismiss report #<?= (int) $r['id'] ?>">Dismiss</button></form>
                             <?php // Anonymous authors stay masked here: no /mod/u/{id} shortcut —
                                   // unmasking is only the audited reveal on the post itself (ADMIN §1.3). ?>
                             <?php if (($r['post_author_id'] ?? null) !== null && (int) ($r['post_is_anonymous'] ?? 0) === 0): ?>
-                                <a class="linkbtn" href="/mod/u/<?= (int) $r['post_author_id'] ?>">Warn author…</a>
+                                <a class="linkbtn" href="/mod/u/<?= (int) $r['post_author_id'] ?>" aria-label="Warn @<?= $e($r['post_author_username'] ?? '') ?>">Warn author…</a>
                             <?php endif; ?>
                         </div>
                     </li>
                 <?php endforeach; ?>
             </ul>
             <p class="muted"><?= $total ?> report<?= $total === 1 ? '' : 's' ?> in scope.</p>
-            <nav class="pager">
+            <nav class="pager" aria-label="Pagination">
                 <?php if ($page > 0): ?>
                     <a class="btn btn-small" href="/mod/reports?<?= $e(http_build_query($pagerBase + ['page' => $page - 1])) ?>">Previous</a>
                 <?php endif; ?>

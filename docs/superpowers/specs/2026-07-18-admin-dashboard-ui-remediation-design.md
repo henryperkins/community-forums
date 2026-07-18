@@ -44,7 +44,7 @@ Guests retain the normal login redirect and non-admin users receive 403. The mod
 `templates/admin/_nav.php` contains one data model and one rendered navigation tree for every admin page:
 
 - Dashboard: Dashboard
-- Moderation: Reports, Approvals, Audit log, Anti-abuse
+- Moderation: Reports, Approvals, Appeals, Audit log, Anti-abuse
 - Content: Boards & categories, Tags
 - People: Users, Roles, Invitations, Badge rules
 - Appearance: Branding, Themes, Custom emoji
@@ -68,7 +68,7 @@ The dashboard order is fixed:
 4. Community today
 5. Recent activity
 
-Queue health contains Reports, Approval hold, Email failures, and Thread Intelligence when enabled. Community today contains New users today and Active now. The cumulative Audit and ambiguous Users cards are removed. The full audit-log link sits in the Recent activity heading.
+Queue health contains Reports, Approval hold, Appeals, Email failures, and Thread Intelligence when enabled. Reports and Approval hold share the `moderation_queue` availability gate; Appeals follows its own feature gate. Community today contains New users today and Active now. The cumulative Audit and ambiguous Users cards are removed. The full audit-log link sits in the Recent activity heading.
 
 The Recent activity table remains semantic and sits in a labelled, keyboard-focusable horizontal scroll region. At mobile widths it gains the exact cue “Scroll for Target and Reason” and a right-edge fade. JavaScript removes the cue/fade when no overflow exists or the region reaches its horizontal end.
 

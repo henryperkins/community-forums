@@ -18,8 +18,12 @@ final class CustomEmojiService
     ) {
     }
 
-    /** @param array<string,mixed> $input */
-    public function create(User $admin, array $input): int
+    /**
+     * @param array<string,mixed> $input
+     * @return array{replaced:bool,shortcode:string} replaced=true when the
+     *         shortcode already existed and this write overwrote it
+     */
+    public function create(User $admin, array $input): array
     {
         $this->writeGate->assertCanWrite($admin);
         if (!$admin->isAdmin()) {
@@ -50,13 +54,19 @@ final class CustomEmojiService
             throw new ValidationException($errors, $input);
         }
 
-        return $this->db->insert(
+        // Replacing an existing shortcode stays possible (there is no separate
+        // edit flow) but must be reported honestly, not flashed as a fresh save.
+        $replaced = $this->db->fetchValue('SELECT 1 FROM custom_emoji WHERE shortcode = ?', [$shortcode]) !== false;
+
+        $this->db->insert(
             "INSERT INTO custom_emoji (shortcode, name, image_path, mime, is_enabled, allow_reactions, created_by, created_at)
              VALUES (?, ?, ?, ?, 1, ?, ?, UTC_TIMESTAMP())
              ON DUPLICATE KEY UPDATE name = VALUES(name), image_path = VALUES(image_path), mime = VALUES(mime),
                 is_enabled = 1, allow_reactions = VALUES(allow_reactions), updated_at = UTC_TIMESTAMP()",
             [$shortcode, $name, $imagePath, $mime, $allowReactions ? 1 : 0, $admin->id()],
         );
+
+        return ['replaced' => $replaced, 'shortcode' => $shortcode];
     }
 
     public function setEnabled(User $admin, string $shortcode, bool $enabled): void

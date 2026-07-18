@@ -31,7 +31,7 @@
             <?php endforeach; ?>
         </ul>
 
-        <nav class="pager">
+        <nav class="pager" aria-label="Pagination">
             <?php $viewParam = 'view=' . rawurlencode($feed_view ?? 'following') . '&'; ?>
             <?php if ($page > 1): ?><a class="btn btn-small" href="/feed?<?= $viewParam ?>page=<?= $page - 1 ?>">← Newer</a><?php endif; ?>
             <?php if (!empty($has_more)): ?><a class="btn btn-small" href="/feed?<?= $viewParam ?>page=<?= $page + 1 ?>">Older →</a><?php endif; ?>

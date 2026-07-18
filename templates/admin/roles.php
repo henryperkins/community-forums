@@ -26,7 +26,8 @@ ksort($groupedCatalogue);
     closed. Unknown mode values run <code>shadow</code> and emit
     <code>capabilities.mode_invalid</code> telemetry. System roles are protected
     compatibility anchors and cannot be edited; clone one to adapt it
-    (cloning copies only currently-enforceable capabilities).</p>
+    (cloning copies only currently-enforceable capabilities). Try changes safely in the
+    <a href="/admin/roles/simulator">permission simulator</a>.</p>
 
     <section class="card">
         <h2>Roles</h2>
@@ -55,14 +56,14 @@ ksort($groupedCatalogue);
         <form method="post" action="/admin/roles" class="stacked">
             <?= $this->csrfField() ?>
             <label>Name
-                <input type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? '') ?>" required>
+                <input type="text" name="name" maxlength="190" value="<?= $e($old['name'] ?? '') ?>"<?= field_attrs($errors ?? [], 'name') ?> required>
             </label>
-            <?php if (!empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'name') ?>
 
             <label>Description (optional)
-                <input type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? '') ?>">
+                <input type="text" name="description" maxlength="255" value="<?= $e($old['description'] ?? '') ?>"<?= field_attrs($errors ?? [], 'description') ?>>
             </label>
-            <?php if (!empty($errors['description'])): ?><p class="field-error"><?= $e($errors['description']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'description') ?>
 
             <?php $checked = (array) ($old['capabilities'] ?? []); ?>
             <?php foreach ($groupedCatalogue as $groupLabel => $groupCaps): ?>
@@ -78,12 +79,12 @@ ksort($groupedCatalogue);
                     <?php endforeach; ?>
                 </fieldset>
             <?php endforeach; ?>
-            <?php if (!empty($errors['capabilities'])): ?><p class="field-error"><?= $e($errors['capabilities']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'capabilities') ?>
 
             <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
+                <input type="password" name="current_password" autocomplete="current-password"<?= field_attrs($errors ?? [], 'current_password') ?> required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'current_password') ?>
 
             <div class="form-actions"><button class="btn" type="submit">Create role</button></div>
         </form>

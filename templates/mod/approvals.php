@@ -40,8 +40,8 @@ $replyCount = count($pending_posts ?? []);
                                 <span class="muted">by @<?= $e($t['author_username']) ?> in #<?= $e($t['board_slug']) ?> · <?= $e($t['created_at']) ?> UTC</span>
                             </div>
                             <div class="approval-actions">
-                                <form method="post" action="/mod/approvals/thread/<?= (int) $t['id'] ?>/approve"><?= $this->csrfField() ?><button class="btn" type="submit">Approve</button></form>
-                                <form method="post" action="/mod/approvals/thread/<?= (int) $t['id'] ?>/reject"><?= $this->csrfField() ?><button class="btn btn-secondary" type="submit">Reject</button></form>
+                                <form method="post" action="/mod/approvals/thread/<?= (int) $t['id'] ?>/approve"><?= $this->csrfField() ?><button class="btn" type="submit" aria-label="Approve topic '<?= $e($t['title']) ?>'">Approve</button></form>
+                                <form method="post" action="/mod/approvals/thread/<?= (int) $t['id'] ?>/reject"><?= $this->csrfField() ?><button class="btn btn-secondary" type="submit" aria-label="Reject topic '<?= $e($t['title']) ?>'">Reject</button></form>
                             </div>
                         </li>
                     <?php endforeach; ?>
@@ -63,8 +63,8 @@ $replyCount = count($pending_posts ?? []);
                                 <p><?= $e(mb_strimwidth((string) $p['body'], 0, 280, '…')) ?></p>
                             </div>
                             <div class="approval-actions">
-                                <form method="post" action="/mod/approvals/post/<?= (int) $p['id'] ?>/approve"><?= $this->csrfField() ?><button class="btn" type="submit">Approve</button></form>
-                                <form method="post" action="/mod/approvals/post/<?= (int) $p['id'] ?>/reject"><?= $this->csrfField() ?><button class="btn btn-secondary" type="submit">Reject</button></form>
+                                <form method="post" action="/mod/approvals/post/<?= (int) $p['id'] ?>/approve"><?= $this->csrfField() ?><button class="btn" type="submit" aria-label="Approve reply in '<?= $e($p['thread_title']) ?>'">Approve</button></form>
+                                <form method="post" action="/mod/approvals/post/<?= (int) $p['id'] ?>/reject"><?= $this->csrfField() ?><button class="btn btn-secondary" type="submit" aria-label="Reject reply in '<?= $e($p['thread_title']) ?>'">Reject</button></form>
                             </div>
                         </li>
                     <?php endforeach; ?>

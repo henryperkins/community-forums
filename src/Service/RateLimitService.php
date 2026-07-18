@@ -55,7 +55,7 @@ final class RateLimitService
         $key = $this->key($policy, $request, $user, $subject);
         if ($this->limiter->tooManyAttempts($key, $max)) {
             $wait = max(1, $this->limiter->availableIn($key));
-            throw new HttpException(429, "You're doing that too quickly. Please wait {$wait} second(s) and try again.");
+            throw new HttpException(429, "You're doing that too quickly. Please wait " . human_duration($wait) . ' and try again.');
         }
         $this->limiter->hit($key, $decay);
     }

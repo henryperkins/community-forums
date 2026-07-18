@@ -11,7 +11,7 @@ $this->section('title', 'Package catalogue');
     <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
 
     <div class="admin-pane">
-    <p class="muted">Staff browse of signed registry metadata. A signature proves byte provenance under a pinned key; install and enable still require review, consent, and local policy checks.</p>
+    <p class="muted">Staff browse of signed registry metadata. A signature proves byte provenance under a pinned key; install and enable still require review, consent, and local policy checks. Emergency controls live in the <a href="/admin/packages/security">package security console</a>.</p>
 
     <?php foreach ($data['registries'] as $registry): ?>
         <?php if (!$registry['fresh']): ?>
@@ -29,7 +29,7 @@ $this->section('title', 'Package catalogue');
         <?php else: ?>
         <div class="table-scroll" tabindex="0" role="region" aria-label="Package catalogue">
         <table class="audit">
-            <thead><tr><th>Package</th><th>Type</th><th>Install</th><th>Trust class</th><th>Latest</th><th>Compatibility</th><th>Advisory</th><th></th></tr></thead>
+            <thead><tr><th scope="col">Package</th><th scope="col">Type</th><th scope="col">Install</th><th scope="col">Trust class</th><th scope="col">Latest</th><th scope="col">Compatibility</th><th scope="col">Advisory</th><th scope="col"><span class="sr-only">Details</span></th></tr></thead>
             <tbody>
             <?php foreach ($data['packages'] as $p): ?>
                 <?php $state = $data['installed_states'][(int) $p['id']] ?? null; ?>

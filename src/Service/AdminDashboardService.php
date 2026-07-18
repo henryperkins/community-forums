@@ -42,6 +42,7 @@ final class AdminDashboardService
             'new_users_today' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM users WHERE created_at >= UTC_DATE()'),
             'active_users' => (int) $this->db->fetchValue('SELECT COUNT(*) FROM users WHERE last_seen_at >= UTC_TIMESTAMP() - INTERVAL 15 MINUTE'),
             'failed_emails' => (int) (($this->emailDeliveries->statusCounts())['failed'] ?? 0),
+            'open_appeals' => (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_appeals WHERE status = 'open'"),
         ];
 
         $audit = $this->moderationLog->recent(10);
@@ -50,6 +51,7 @@ final class AdminDashboardService
         }
 
         $reportsEnabled = $this->features->enabled('moderation_queue');
+        $appealsEnabled = $this->features->enabled('appeals');
         $emailEnabled = $this->features->enabled('email');
         $pendingApprovals = $counts['pending_threads'] + $counts['pending_replies'];
         $mailerConfigured = $this->mailer->isConfigured();
@@ -66,9 +68,20 @@ final class AdminDashboardService
             [
                 'title' => 'Approval hold',
                 'count' => $pendingApprovals,
-                'detail' => $counts['pending_threads'] . ' threads · ' . $counts['pending_replies'] . ' replies',
-                'href' => '/mod/approvals',
-                'status' => $pendingApprovals > 0 ? 'attention' : 'clear',
+                'detail' => $reportsEnabled
+                    ? $counts['pending_threads'] . ' threads · ' . $counts['pending_replies'] . ' replies'
+                    : 'Moderation queue disabled',
+                // /mod/approvals shares the moderation_queue gate — never link
+                // a card at a route the flag just took dark (round-2 audit).
+                'href' => $reportsEnabled ? '/mod/approvals' : null,
+                'status' => !$reportsEnabled ? 'unavailable' : ($pendingApprovals > 0 ? 'attention' : 'clear'),
+            ],
+            [
+                'title' => 'Appeals',
+                'count' => $counts['open_appeals'],
+                'detail' => $appealsEnabled ? 'Open moderation appeals' : 'Appeals disabled',
+                'href' => $appealsEnabled ? '/mod/appeals' : null,
+                'status' => !$appealsEnabled ? 'unavailable' : ($counts['open_appeals'] > 0 ? 'attention' : 'clear'),
             ],
             [
                 'title' => 'Email failures',
@@ -119,10 +132,18 @@ final class AdminDashboardService
                 'href' => '/mod/reports',
             ];
         }
-        if ($pendingApprovals > 0) {
+        if ($reportsEnabled && $pendingApprovals > 0) {
             $attention[] = [
                 'label' => $pendingApprovals . ' queued approvals need review (' . $counts['pending_threads'] . ' threads, ' . $counts['pending_replies'] . ' replies).',
                 'href' => '/mod/approvals',
+            ];
+        }
+        if ($appealsEnabled && $counts['open_appeals'] > 0) {
+            $attention[] = [
+                'label' => $counts['open_appeals'] === 1
+                    ? '1 open appeal is waiting for a staff decision.'
+                    : $counts['open_appeals'] . ' open appeals are waiting for a staff decision.',
+                'href' => '/mod/appeals',
             ];
         }
         if ($emailEnabled && $counts['failed_emails'] > 0) {
@@ -140,9 +161,9 @@ final class AdminDashboardService
             $attention[] = ['label' => 'Email sending is blocked until SPF and DKIM pass.', 'href' => '/admin/email'];
         }
         if ($threadIntelligence !== null && (int) $threadIntelligence['warning_count'] > 0) {
-            $warnings = (int) $threadIntelligence['warning_count'];
+            $tiWarnings = (int) $threadIntelligence['warning_count'];
             $attention[] = [
-                'label' => $warnings . ' Thread Intelligence warning' . ($warnings === 1 ? '' : 's') . ' need operator review.',
+                'label' => $tiWarnings . ' Thread Intelligence warning' . ($tiWarnings === 1 ? ' needs' : 's need') . ' operator review.',
                 'href' => '/admin/thread-intelligence',
             ];
         }

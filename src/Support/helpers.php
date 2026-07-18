@@ -85,3 +85,75 @@ if (!function_exists('human_date')) {
         return $ts === false ? '' : gmdate('M j, Y', $ts);
     }
 }
+
+if (!function_exists('field_error')) {
+    /**
+     * Accessible field-error line (round-2 audit finding 11): renders the
+     * message with a stable id so the input can reference it. Pair with
+     * {@see field_attrs} ON the input. Escapes internally — safe to echo raw.
+     * $alert adds role="alert" for the page/row-level notices that should be
+     * announced assertively (per-field lines rely on aria-describedby instead —
+     * a live region on every field would be noisy).
+     *
+     * @param array<string,string> $errors
+     */
+    function field_error(array $errors, string $field, ?string $id = null, bool $alert = false): string
+    {
+        $message = $errors[$field] ?? null;
+        if ($message === null || $message === '') {
+            return '';
+        }
+        $id ??= 'err-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $field);
+        $esc = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return '<p class="field-error" id="' . $esc($id) . '"' . ($alert ? ' role="alert"' : '') . '>' . $esc((string) $message) . '</p>';
+    }
+}
+
+if (!function_exists('field_attrs')) {
+    /**
+     * Attributes for an input whose field is in error: aria-invalid +
+     * aria-describedby pointing at {@see field_error}'s id, plus autofocus on
+     * the FIRST errored field so a 422 re-render lands focus on the problem.
+     * When $describedBy is supplied, it is preserved as a help-text reference
+     * and the error id is appended on invalid fields. Server-rendered attribute
+     * only — no JS involved, so the strict CSP is untouched.
+     *
+     * @param array<string,string> $errors
+     */
+    function field_attrs(array $errors, string $field, ?string $id = null, ?string $describedBy = null): string
+    {
+        $esc = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        if (empty($errors[$field])) {
+            return $describedBy !== null && $describedBy !== ''
+                ? ' aria-describedby="' . $esc($describedBy) . '"'
+                : '';
+        }
+        $id ??= 'err-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $field);
+        $description = $describedBy !== null && $describedBy !== '' ? $describedBy . ' ' . $id : $id;
+        $focus = array_key_first($errors) === $field ? ' autofocus' : '';
+        return ' aria-invalid="true" aria-describedby="' . $esc($description) . '"' . $focus;
+    }
+}
+
+if (!function_exists('human_duration')) {
+    /**
+     * A wait shown to people: "12 seconds" / "about 58 minutes" / "about 2
+     * hours". Minutes and hours round UP so the promise is never shorter than
+     * the real wait (rate-limit copy, round-2 audit finding 10).
+     */
+    function human_duration(int $seconds): string
+    {
+        $seconds = max(1, $seconds);
+        if ($seconds < 60) {
+            return $seconds . ' second' . ($seconds === 1 ? '' : 's');
+        }
+        $minutes = intdiv($seconds + 59, 60);
+        if ($minutes < 60) {
+            return 'about ' . $minutes . ' minute' . ($minutes === 1 ? '' : 's');
+        }
+        $hours = intdiv($minutes, 60);
+        $rem = $minutes % 60;
+        return 'about ' . $hours . ' hour' . ($hours === 1 ? '' : 's')
+            . ($rem > 0 ? ' ' . $rem . ' minute' . ($rem === 1 ? '' : 's') : '');
+    }
+}

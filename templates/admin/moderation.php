@@ -30,7 +30,7 @@ $wordsValue = isset($old['antiabuse_blocked_words']) && is_string($old['antiabus
                 <?= $this->csrfField() ?>
                 <label class="field" for="admin-antiabuse-mode">
                     <span>Anti-abuse mode</span>
-                    <select id="admin-antiabuse-mode" name="antiabuse_mode" class="input" aria-describedby="antiabuse-help<?= !empty($errors['antiabuse_mode']) ? ' antiabuse-error' : '' ?>">
+                    <select id="admin-antiabuse-mode" name="antiabuse_mode" class="input"<?= field_attrs($errors, 'antiabuse_mode', null, 'antiabuse-help') ?>>
                         <?php if (!in_array($selected, $modes, true)): ?>
                             <option value="<?= $e($selected) ?>" selected><?= $e($selected) ?></option>
                         <?php endif; ?>
@@ -39,19 +39,15 @@ $wordsValue = isset($old['antiabuse_blocked_words']) && is_string($old['antiabus
                         <?php endforeach; ?>
                     </select>
                     <span class="muted" id="antiabuse-help">Observe logs only; flag records a concern; hold queues content; block rejects it.</span>
-                    <?php if (!empty($errors['antiabuse_mode'])): ?>
-                        <span class="field-error" id="antiabuse-error"><?= $e($errors['antiabuse_mode']) ?></span>
-                    <?php endif; ?>
                 </label>
+                <?= field_error($errors, 'antiabuse_mode') ?>
 
                 <label class="field" for="admin-blocked-words">
                     <span>Blocked words</span>
-                    <textarea id="admin-blocked-words" name="antiabuse_blocked_words" class="input" rows="7" placeholder="One word or phrase per line"><?= $e($wordsValue) ?></textarea>
-                    <span class="muted">One per line or comma-separated. Matching is case-insensitive; entries shorter than 3 characters are ignored.</span>
-                    <?php if (!empty($errors['antiabuse_blocked_words'])): ?>
-                        <span class="field-error"><?= $e($errors['antiabuse_blocked_words']) ?></span>
-                    <?php endif; ?>
+                    <textarea id="admin-blocked-words" name="antiabuse_blocked_words" class="input" rows="7" placeholder="One word or phrase per line"<?= field_attrs($errors, 'antiabuse_blocked_words', null, 'antiabuse-blocked-words-help') ?>><?= $e($wordsValue) ?></textarea>
+                    <span class="muted" id="antiabuse-blocked-words-help">One per line or comma-separated. Matching is case-insensitive; entries shorter than 3 characters are ignored.</span>
                 </label>
+                <?= field_error($errors, 'antiabuse_blocked_words') ?>
 
                 <div class="form-actions"><button class="btn" type="submit">Save anti-abuse settings</button></div>
             </form>

@@ -46,6 +46,48 @@ final class AppCustomEmojiGiphyTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
     }
 
+    public function test_invalid_emoji_input_rerenders_dashboard_422_with_typed_values(): void
+    {
+        // Anti-draft-loss (round-2 audit finding 8a): the failure used to
+        // redirect to /admin and drop every typed field.
+        (new SettingRepository($this->db))->set('features', ['custom_emoji' => true]);
+        $this->actingAs($this->makeAdmin(['username' => 'emoji_form_admin']));
+
+        $res = $this->post('/admin/custom-emoji', [
+            'shortcode' => 'X!',
+            'name' => 'Typed Name',
+            'image_path' => '/emoji/typed.webp',
+            'mime' => 'image/webp',
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('Use 2-40 lowercase letters', $res->body());
+        self::assertMatchesRegularExpression('/name="name"[^>]*value="Typed Name"/', $res->body());
+        self::assertMatchesRegularExpression('~name="image_path"[^>]*value="/emoji/typed\.webp"~', $res->body());
+        // The errored input is wired to its error line like every other admin form.
+        self::assertMatchesRegularExpression('/name="shortcode"[^>]*aria-describedby="err-emoji-shortcode"/', $res->body());
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
+    }
+
+    public function test_duplicate_shortcode_says_replaced_instead_of_silently_upserting(): void
+    {
+        // Round-2 audit finding 9: replacing an existing emoji flashed the same
+        // "saved" copy as a fresh create.
+        (new SettingRepository($this->db))->set('features', ['custom_emoji' => true]);
+        $this->actingAs($this->makeAdmin(['username' => 'emoji_dupe_admin']));
+
+        $this->assertRedirect($this->post('/admin/custom-emoji', [
+            'shortcode' => 'dupe', 'name' => 'First', 'image_path' => '/emoji/first.webp', 'mime' => 'image/webp',
+        ]));
+        $this->assertRedirect($this->post('/admin/custom-emoji', [
+            'shortcode' => 'dupe', 'name' => 'Second', 'image_path' => '/emoji/second.webp', 'mime' => 'image/webp',
+        ]));
+
+        self::assertStringContainsString('replaced', $this->get('/admin')->body());
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM custom_emoji'));
+        self::assertSame('Second', (string) $this->db->fetchValue("SELECT name FROM custom_emoji WHERE shortcode = 'dupe'"));
+    }
+
     public function test_custom_emoji_renders_through_markdown_and_can_be_used_as_reaction(): void
     {
         (new SettingRepository($this->db))->set('features', ['custom_emoji' => true]);

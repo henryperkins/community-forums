@@ -64,7 +64,48 @@ final class AppAdminEmailTest extends TestCase
         $this->assertRedirectContains($res, '/admin/email');
         self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM email_deliveries WHERE kind = 'test'"));
 
-        self::assertStringContainsString('Configure your sending domain', $this->get('/admin/email')->body());
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('not configured — outbound email is skipped', $body);
+        // The not-ready state keeps its assertive live region (review finding:
+        // the F24 rewrite must not drop the old flash's role="alert").
+        self::assertStringContainsString('Email is not ready to send', $body);
+        self::assertStringContainsString('role="alert"', $body);
+    }
+
+    public function test_suppress_validation_failure_rerenders_422_and_preserves_the_typed_address(): void
+    {
+        // Anti-draft-loss: the failure used to redirect and drop the typed
+        // address (round-2 audit finding 8b).
+        $this->actingAs($this->makeAdmin(['username' => 'suppressadmin']));
+        $res = $this->post('/admin/email/suppressions', ['email' => 'not-an-email']);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('Enter a valid email address.', $res->body());
+        self::assertMatchesRegularExpression('/name="email"[^>]*value="not-an-email"/', $res->body());
+    }
+
+    public function test_email_status_reports_one_fact_per_line_without_contradiction(): void
+    {
+        // Transport up (array driver) but no From — the F24 contradiction combo:
+        // the old copy claimed "Sending is configured" while email fails closed.
+        $this->useArrayMailer('');
+        $this->actingAs($this->makeAdmin(['username' => 'statusadmin']));
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('Transport:', $body);
+        self::assertStringContainsString('From address:', $body);
+        self::assertStringContainsString('Sending domain:', $body);
+        self::assertStringContainsString('fails closed', $body);
+        self::assertStringNotContainsString('Sending is configured', $body);
+    }
+
+    public function test_email_status_shows_from_and_domain_when_configured(): void
+    {
+        $this->useArrayMailer('sender@example.test');
+        $this->actingAs($this->makeAdmin(['username' => 'statusadmin2']));
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString('sender@example.test', $body);
+        self::assertStringContainsString('example.test', $body);
+        self::assertStringNotContainsString('fails closed', $body);
+        self::assertStringNotContainsString('Sending is configured', $body);
     }
 
     public function test_test_send_with_configured_transport_enqueues_and_marks_sent_with_audit(): void

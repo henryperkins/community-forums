@@ -26,20 +26,20 @@ $errorContext = $error_context ?? null;
         <form method="post" action="/admin/webhooks/<?= $id ?>" class="stacked">
             <?= $this->csrfField() ?>
             <label>Name
-                <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? $webhook['name']) ?>" required>
+                <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? $webhook['name']) ?>"<?= field_attrs($errors ?? [], 'name') ?> required>
             </label>
-            <?php if (!empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'name') ?>
             <label>URL
-                <input type="url" name="url" maxlength="512" value="<?= $e($old['url'] ?? $webhook['url']) ?>" required>
+                <input type="url" name="url" maxlength="512" value="<?= $e($old['url'] ?? $webhook['url']) ?>"<?= field_attrs($errors ?? [], 'url') ?> required>
             </label>
-            <?php if (!empty($errors['url'])): ?><p class="field-error"><?= $e($errors['url']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'url') ?>
             <fieldset>
                 <legend>Events</legend>
                 <?php foreach ($events_catalogue as $event => $desc): ?>
                     <label><input type="checkbox" name="events[]" value="<?= $e($event) ?>" <?= in_array($event, $selected, true) ? 'checked' : '' ?>> <?= $e($event) ?></label>
                 <?php endforeach; ?>
             </fieldset>
-            <?php if (!empty($errors['events'])): ?><p class="field-error"><?= $e($errors['events']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'events') ?>
             <div class="form-actions"><button class="btn" type="submit">Save</button></div>
         </form>
     </section>
@@ -61,9 +61,9 @@ $errorContext = $error_context ?? null;
         <form method="post" action="/admin/webhooks/<?= $id ?>/rotate" class="stacked">
             <?= $this->csrfField() ?>
             <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
+                <input type="password" name="current_password" autocomplete="current-password"<?= $errorContext === 'rotate' ? field_attrs($errors ?? [], 'current_password', 'err-rotate-current_password') : '' ?> required>
             </label>
-            <?php if ($errorContext === 'rotate' && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?= $errorContext === 'rotate' ? field_error($errors ?? [], 'current_password', 'err-rotate-current_password') : '' ?>
             <div class="form-actions"><button class="btn" type="submit">Rotate secret</button></div>
         </form>
         <h3>Delete endpoint</h3>
@@ -71,9 +71,9 @@ $errorContext = $error_context ?? null;
         <form method="post" action="/admin/webhooks/<?= $id ?>/delete" class="stacked">
             <?= $this->csrfField() ?>
             <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
+                <input type="password" name="current_password" autocomplete="current-password"<?= $errorContext === 'delete' ? field_attrs($errors ?? [], 'current_password', 'err-delete-current_password') : '' ?> required>
             </label>
-            <?php if ($errorContext === 'delete' && !empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?= $errorContext === 'delete' ? field_error($errors ?? [], 'current_password', 'err-delete-current_password') : '' ?>
             <div class="form-actions"><button class="btn danger" type="submit">Delete webhook</button></div>
         </form>
     </section>

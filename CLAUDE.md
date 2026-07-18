@@ -37,7 +37,9 @@ composer test                                            # full suite (alias for
 vendor/bin/phpunit --testsuite unit                      # or: integration
 vendor/bin/phpunit tests/Integration/Core/AppFeatureFlagTest.php          # one file
 vendor/bin/phpunit --filter test_tags_flag_gates_public_and_admin_tag_routes   # one method
-# Tests run against DB_TEST_DATABASE (default retroboards_test); bootstrap.php drops + re-migrates it on every run.
+# Tests run against DB_TEST_DATABASE (default retroboards_test); bootstrap.php reuses the schema via a
+# migration fingerprint and only rebuilds when migrations changed — force with RB_TEST_FRESH=1 (also the
+# recovery from an interrupted run's committed rows). Parallel sessions: use a private DB_TEST_DATABASE.
 
 # Migrations / data integrity
 php bin/console migrate:status        # show applied vs pending

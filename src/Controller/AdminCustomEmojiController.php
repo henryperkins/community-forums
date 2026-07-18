@@ -25,14 +25,16 @@ final class AdminCustomEmojiController extends Controller
     {
         $admin = $this->requireEmojiAdmin();
         try {
-            $this->container->get(CustomEmojiService::class)->create($admin, $request->allInput());
+            $result = $this->container->get(CustomEmojiService::class)->create($admin, $request->allInput());
         } catch (ValidationException $e) {
             return $this->page([
                 'emoji_errors' => $e->errors,
                 'emoji_old' => array_replace($request->allInput(), $e->old),
             ], 422);
         }
-        return $this->redirectWithFlash('/admin/custom-emoji', 'Custom emoji saved.');
+        return $this->redirectWithFlash('/admin/custom-emoji', $result['replaced']
+            ? 'Custom emoji replaced — :' . $result['shortcode'] . ': already existed.'
+            : 'Custom emoji saved.');
     }
 
     /** @param array<string,string> $params */

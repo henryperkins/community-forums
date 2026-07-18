@@ -60,7 +60,7 @@ function observeBrowserProblems(page: Page): string[] {
 async function expectGroupedDirectory(page: Page): Promise<void> {
   await expect(page.locator('.admin-nav-group-title')).toHaveText(GROUPS);
   for (const href of [
-    '/admin', '/mod/reports', '/mod/approvals', '/admin/audit', '/admin/moderation',
+    '/admin', '/mod/reports', '/mod/approvals', '/mod/appeals', '/admin/audit', '/admin/moderation',
     '/admin/structure', '/admin/tags', '/admin/users', '/admin/roles', '/admin/invitations',
     '/admin/badge-rules', '/admin/branding', '/admin/themes', '/admin/custom-emoji',
     '/admin/email', '/admin/announcements', '/admin/packages', '/admin/registries',
@@ -97,7 +97,7 @@ test('desktop admin rail and operational hierarchy are complete, quiet, and axe-
   expect(hierarchy).toEqual([0, 1, 2, 3]);
 
   await expect(page.locator('[data-queue-status] .queue-card-head')).toHaveText([
-    'Reports', 'Approval hold', 'Email failures', 'Thread Intelligence',
+    'Reports', 'Approval hold', 'Appeals', 'Email failures', 'Thread Intelligence',
   ]);
   const statuses = await page.locator('[data-queue-status]').evaluateAll((cards) => cards.map((card) => card.getAttribute('data-queue-status')));
   expect(statuses.every((status) => ['attention', 'clear', 'unavailable'].includes(status ?? ''))).toBe(true);
@@ -128,6 +128,10 @@ test('mobile drawer closes every way, contains focus, restores focus, and cleans
   expect(toggleBox!.height).toBeGreaterThanOrEqual(44);
   await expect(nav).toHaveAttribute('aria-hidden', 'true');
   await expect(nav).toHaveAttribute('inert', '');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect.poll(() => nav.evaluate((element) => parseFloat(getComputedStyle(element).transitionDuration)))
+    .toBeLessThanOrEqual(0.000001);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   await shot(page, info, '07-admin-dashboard');
 
   await toggle.focus();

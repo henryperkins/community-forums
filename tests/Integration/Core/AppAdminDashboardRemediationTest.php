@@ -99,7 +99,7 @@ final class AppAdminDashboardRemediationTest extends TestCase
         }
 
         foreach ([
-            '/admin', '/mod/reports', '/mod/approvals', '/admin/audit', '/admin/moderation',
+            '/admin', '/mod/reports', '/mod/approvals', '/mod/appeals', '/admin/audit', '/admin/moderation',
             '/admin/structure', '/admin/tags', '/admin/users', '/admin/roles', '/admin/invitations',
             '/admin/badge-rules', '/admin/branding', '/admin/themes', '/admin/custom-emoji',
             '/admin/email', '/admin/announcements', '/admin/packages', '/admin/registries',
@@ -122,6 +122,8 @@ final class AppAdminDashboardRemediationTest extends TestCase
     public function test_shared_navigation_explains_feature_disabled_destinations(): void
     {
         $this->settings()->set('features', [
+            'moderation_queue' => false,
+            'appeals' => false,
             'anti_abuse' => false,
             'custom_emoji' => false,
             'server_extensions' => false,
@@ -130,7 +132,7 @@ final class AppAdminDashboardRemediationTest extends TestCase
 
         $body = $this->get('/admin')->body();
 
-        foreach (['Anti-abuse', 'Custom emoji', 'Extensions'] as $label) {
+        foreach (['Reports', 'Approvals', 'Appeals', 'Anti-abuse', 'Custom emoji', 'Extensions'] as $label) {
             self::assertMatchesRegularExpression(
                 '~<span[^>]*aria-disabled="true"[^>]*>.*?' . preg_quote($label, '~') . '.*?Disabled until the feature flag is enabled.*?</span>~s',
                 $body,
@@ -286,6 +288,7 @@ final class AppAdminDashboardRemediationTest extends TestCase
     {
         $this->settings()->set('features', [
             'moderation_queue' => false,
+            'appeals' => false,
             'email' => false,
             'community_memory' => false,
             'automated_context' => false,
@@ -300,8 +303,11 @@ final class AppAdminDashboardRemediationTest extends TestCase
         $body = $this->get('/admin')->body();
 
         self::assertMatchesRegularExpression('~data-queue-status="unavailable"[^>]*>.*?Reports~s', $body);
-        self::assertMatchesRegularExpression('~data-queue-status="attention"[^>]*>.*?Approval hold~s', $body);
+        self::assertMatchesRegularExpression('~data-queue-status="unavailable"[^>]*>.*?Approval hold~s', $body);
+        self::assertMatchesRegularExpression('~data-queue-status="unavailable"[^>]*>.*?Appeals~s', $body);
         self::assertMatchesRegularExpression('~data-queue-status="unavailable"[^>]*>.*?Email failures~s', $body);
+        self::assertStringNotContainsString('href="/mod/approvals"', $body);
+        self::assertStringNotContainsString('href="/mod/appeals"', $body);
         self::assertStringNotContainsString('>Thread Intelligence<', $body);
     }
 }

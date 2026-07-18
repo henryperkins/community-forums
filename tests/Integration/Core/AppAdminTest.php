@@ -75,6 +75,59 @@ final class AppAdminTest extends TestCase
         self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM moderation_log WHERE action = 'create_board'"));
     }
 
+    public function test_dashboard_users_card_is_labelled_new_users_today(): void
+    {
+        // Round-2 audit finding 10: the headline number is today's signups but
+        // the card just said "Users" — it read as community size.
+        $this->actingAs($this->admin);
+        self::assertStringContainsString('New users today', $this->get('/admin')->body());
+    }
+
+    public function test_explicit_taken_board_slug_is_422_not_silently_suffixed(): void
+    {
+        // Round-2 audit finding 5: a typed identifier must not be rewritten
+        // ("general" → "general-2") without the operator being told.
+        $this->actingAs($this->admin);
+        $this->makeBoard($this->categoryId, ['slug' => 'general', 'name' => 'General']);
+        $res = $this->post('/admin/boards', [
+            'category_id' => (string) $this->categoryId,
+            'name' => 'Other board',
+            'slug' => 'general',
+        ]);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('already in use', $res->body());
+        self::assertSame(0, (int) $this->db->fetchValue("SELECT COUNT(*) FROM boards WHERE slug = 'general-2'"));
+    }
+
+    public function test_explicit_board_slug_over_64_chars_is_422_not_silently_truncated(): void
+    {
+        $this->actingAs($this->admin);
+        $typedSlug = str_repeat('s', 65);
+
+        $res = $this->post('/admin/boards', [
+            'category_id' => (string) $this->categoryId,
+            'name' => 'Long slug board',
+            'slug' => $typedSlug,
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('64 characters or fewer', $res->body());
+        self::assertNull($this->boards()->findBySlug(str_repeat('s', 64)));
+    }
+
+    public function test_blank_slug_with_duplicate_name_still_auto_suffixes(): void
+    {
+        $this->actingAs($this->admin);
+        $this->makeBoard($this->categoryId, ['slug' => 'dupe-name', 'name' => 'Dupe Name']);
+        $res = $this->post('/admin/boards', [
+            'category_id' => (string) $this->categoryId,
+            'name' => 'Dupe Name',
+            'slug' => '',
+        ]);
+        $this->assertRedirectContains($res, '/admin/structure');
+        self::assertSame(1, (int) $this->db->fetchValue("SELECT COUNT(*) FROM boards WHERE slug = 'dupe-name-2'"));
+    }
+
     public function test_dashboard_prioritizes_operational_summary_and_attention_links(): void
     {
         $board = $this->makeBoard($this->categoryId, ['slug' => 'ops', 'name' => 'Operations']);

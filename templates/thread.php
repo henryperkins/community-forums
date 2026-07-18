@@ -173,6 +173,17 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                     <div class="post-day-divider" data-post-day="<?= $e($postDay) ?>"><span></span><time datetime="<?= $e($postDay) ?>"><?= $e(gmdate('F j, Y', strtotime($postDay . ' UTC') ?: 0)) ?></time><span></span></div>
                 <?php endif; ?>
                 <?php $previousDay = $postDay; ?>
+                <?php if ((int) ($p['is_deleted'] ?? 0) === 1): ?>
+                    <?php // Staff-only restorable stub (ADMIN §3.3) — the with-deleted
+                          // list variant only ever reaches staff. Clearing the author
+                          // run is enough to break grouping for the next live reply. ?>
+                    <?php $prevAuthorId = null; ?>
+                    <?= $this->partial('partials/post_deleted', [
+                        'p' => $p,
+                        'can_restore_posts' => $can_restore_posts ?? false,
+                    ]) ?>
+                    <?php continue; ?>
+                <?php endif; ?>
                 <?php
                 // Group a reply with the one above it when the same non-anonymous
                 // author posted again within ten minutes (§5.1); the partial keeps the

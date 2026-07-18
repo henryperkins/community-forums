@@ -292,6 +292,67 @@ final class AppAdminUserRecordTest extends TestCase
         self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
     }
 
+    public function test_warn_reason_over_255_chars_is_422_and_preserves_typed_text(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'warnlong'])['id'];
+        $long = str_repeat('r', 256);
+        $res = $this->post('/admin/users/' . $sid . '/warn', ['reason' => $long]);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString($long, $res->body()); // anti-draft-loss
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [$sid]));
+    }
+
+    public function test_suspend_reason_over_255_chars_is_422_and_user_stays_active(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'susplong'])['id'];
+        $long = str_repeat('s', 256);
+        $res = $this->post('/admin/users/' . $sid . '/suspend', ['reason' => $long, 'until' => '']);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString($long, $res->body());
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_ban_reason_over_255_chars_is_422_and_user_stays_active(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'banlong'])['id'];
+        $long = str_repeat('b', 256);
+        $res = $this->post('/admin/users/' . $sid . '/ban', ['reason' => $long, 'confirm_username' => 'banlong']);
+        $this->assertStatus(422, $res);
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_admin_warn_form_carries_an_idempotency_key(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'warnform'])['id'];
+        self::assertStringContainsString('name="idempotency_key"', $this->get('/admin/users/' . $sid)->body());
+    }
+
+    public function test_admin_warn_double_submit_records_one_warning_and_replays_redirect(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'warnonce'])['id'];
+        $key = bin2hex(random_bytes(16));
+        $body = ['reason' => 'unique-idem-reason', 'idempotency_key' => $key];
+        $this->assertRedirectContains($this->post('/admin/users/' . $sid . '/warn', $body), '/admin/users/' . $sid);
+        $this->assertRedirectContains($this->post('/admin/users/' . $sid . '/warn', $body), '/admin/users/' . $sid);
+        self::assertSame(1, (int) $this->db->fetchValue('SELECT COUNT(*) FROM warnings WHERE user_id = ?', [$sid]));
+    }
+
+    public function test_note_body_over_64kb_is_422_and_preserved(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'notelong'])['id'];
+        $big = str_repeat('n', 65536);
+        $res = $this->post('/admin/users/' . $sid . '/note', ['body' => $big]);
+        $this->assertStatus(422, $res);
+        self::assertStringContainsString('64 KB', $res->body());
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM user_notes WHERE subject_user_id = ?', [$sid]));
+    }
+
     public function test_ban_then_lift_returns_to_admin_record(): void
     {
         $this->actingAs($this->makeAdmin());

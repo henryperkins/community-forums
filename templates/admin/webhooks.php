@@ -29,14 +29,14 @@ $this->section('title', 'Webhooks');
         <form method="post" action="/admin/webhooks" class="stacked">
             <?= $this->csrfField() ?>
             <label>Name
-                <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? '') ?>" required>
+                <input type="text" name="name" maxlength="80" value="<?= $e($old['name'] ?? '') ?>"<?= field_attrs($errors ?? [], 'name') ?> required>
             </label>
-            <?php if (!empty($errors['name'])): ?><p class="field-error"><?= $e($errors['name']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'name') ?>
 
             <label>URL
-                <input type="url" name="url" maxlength="512" value="<?= $e($old['url'] ?? '') ?>" required>
+                <input type="url" name="url" maxlength="512" value="<?= $e($old['url'] ?? '') ?>"<?= field_attrs($errors ?? [], 'url') ?> required>
             </label>
-            <?php if (!empty($errors['url'])): ?><p class="field-error"><?= $e($errors['url']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'url') ?>
 
             <fieldset>
                 <legend>Events</legend>
@@ -45,12 +45,12 @@ $this->section('title', 'Webhooks');
                     <label><input type="checkbox" name="events[]" value="<?= $e($event) ?>" <?= in_array($event, $selectedEvents, true) ? 'checked' : '' ?>> <?= $e($event) ?> - <?= $e($desc) ?></label>
                 <?php endforeach; ?>
             </fieldset>
-            <?php if (!empty($errors['events'])): ?><p class="field-error"><?= $e($errors['events']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'events') ?>
 
             <label>Confirm your password
-                <input type="password" name="current_password" autocomplete="current-password" required>
+                <input type="password" name="current_password" autocomplete="current-password"<?= field_attrs($errors ?? [], 'current_password') ?> required>
             </label>
-            <?php if (!empty($errors['current_password'])): ?><p class="field-error"><?= $e($errors['current_password']) ?></p><?php endif; ?>
+            <?= field_error($errors ?? [], 'current_password') ?>
 
             <div class="form-actions"><button class="btn" type="submit">Register endpoint</button></div>
         </form>

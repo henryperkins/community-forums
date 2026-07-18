@@ -10,7 +10,8 @@ $groups = [
     ],
     'Moderation' => [
         ['key' => 'reports', 'label' => 'Reports', 'href' => '/mod/reports', 'flag' => 'moderation_queue'],
-        ['key' => 'approvals', 'label' => 'Approvals', 'href' => '/mod/approvals'],
+        ['key' => 'approvals', 'label' => 'Approvals', 'href' => '/mod/approvals', 'flag' => 'moderation_queue'],
+        ['key' => 'appeals', 'label' => 'Appeals', 'href' => '/mod/appeals', 'flag' => 'appeals'],
         ['key' => 'audit', 'label' => 'Audit log', 'href' => '/admin/audit'],
         ['key' => 'moderation', 'label' => 'Anti-abuse', 'href' => '/admin/moderation', 'flag' => 'anti_abuse'],
     ],

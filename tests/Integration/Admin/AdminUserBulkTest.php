@@ -31,6 +31,51 @@ final class AdminUserBulkTest extends TestCase
         $this->assertSeeText($res, 'Warn 2 members');
     }
 
+    public function test_bulk_422_preserves_the_row_selection(): void
+    {
+        $admin = $this->makeAdmin(['password' => 'password123']);
+        $a = (int) $this->makeUser(['username' => 'bulksel1'])['id'];
+        $b = (int) $this->makeUser(['username' => 'bulksel2'])['id'];
+        $this->actingAs($admin);
+
+        // Missing action with rows ticked: the 422 re-render must keep the ticks
+        // (round-2 audit finding 4 — the error used to clear the selection).
+        $res = $this->post('/admin/users/bulk', ['selected' => [(string) $a, (string) $b], 'bulk_action' => '']);
+
+        $this->assertStatus(422, $res);
+        self::assertMatchesRegularExpression('/value="' . $a . '"[^>]*checked/', $res->body());
+        self::assertMatchesRegularExpression('/value="' . $b . '"[^>]*checked/', $res->body());
+    }
+
+    public function test_bulk_form_carries_filtered_page_state_into_422_rerender(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'bulkfilteradmin']);
+        $ids = [];
+        for ($i = 0; $i < 51; $i++) {
+            $ids[] = (int) $this->makeUser([
+                'username' => 'bulkfilter' . str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+            ])['id'];
+        }
+        $this->actingAs($admin);
+
+        $page = $this->get('/admin/users', ['q' => 'bulkfilter', 'role' => 'user', 'page' => '1']);
+        $this->assertStatus(200, $page);
+        self::assertMatchesRegularExpression('/type="hidden" name="q" value="bulkfilter"/', $page->body());
+        self::assertMatchesRegularExpression('/type="hidden" name="role" value="user"/', $page->body());
+        self::assertMatchesRegularExpression('/type="hidden" name="page" value="1"/', $page->body());
+
+        $res = $this->post('/admin/users/bulk', [
+            'q' => 'bulkfilter',
+            'role' => 'user',
+            'page' => '1',
+            'selected' => [(string) $ids[0]],
+            'bulk_action' => '',
+        ]);
+
+        $this->assertStatus(422, $res);
+        self::assertMatchesRegularExpression('/value="' . $ids[0] . '"[^>]*checked/', $res->body());
+    }
+
     public function test_bulk_warn_applies_and_audits_per_member(): void
     {
         $admin = $this->makeAdmin(['password' => 'password123']);

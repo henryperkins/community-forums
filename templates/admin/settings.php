@@ -29,12 +29,10 @@ $modes = $registration_modes ?? \App\Security\RegistrationPolicy::MODES;
                 <?= $this->csrfField() ?>
                 <label class="field" for="admin-site-name">
                     <span>Community name</span>
-                    <input type="text" id="admin-site-name" name="site_name" class="input" maxlength="80" value="<?= $e($siteValue) ?>" required aria-describedby="site-name-help<?= !empty($errors['site_name']) ? ' site-name-error' : '' ?>">
+                    <input type="text" id="admin-site-name" name="site_name" class="input" maxlength="80" value="<?= $e($siteValue) ?>"<?= field_attrs($errors, 'site_name', null, 'site-name-help') ?> required>
                     <span class="muted" id="site-name-help">Use 1–80 characters.</span>
-                    <?php if (!empty($errors['site_name'])): ?>
-                        <span class="field-error" id="site-name-error"><?= $e($errors['site_name']) ?></span>
-                    <?php endif; ?>
                 </label>
+                <?= field_error($errors, 'site_name') ?>
                 <div class="form-actions"><button class="btn" type="submit">Save site name</button></div>
             </form>
         </section>
@@ -46,7 +44,7 @@ $modes = $registration_modes ?? \App\Security\RegistrationPolicy::MODES;
                 <?= $this->csrfField() ?>
                 <label class="field" for="admin-registration-mode">
                     <span>Registration mode</span>
-                    <select id="admin-registration-mode" name="registration_mode" class="input" aria-describedby="registration-help<?= !empty($errors['registration_mode']) ? ' registration-error' : '' ?>">
+                    <select id="admin-registration-mode" name="registration_mode" class="input"<?= field_attrs($errors, 'registration_mode', null, 'registration-help') ?>>
                         <?php if (!in_array($registrationSelected, $modes, true)): ?>
                             <option value="<?= $e($registrationSelected) ?>" selected><?= $e($registrationSelected) ?></option>
                         <?php endif; ?>
@@ -59,10 +57,8 @@ $modes = $registration_modes ?? \App\Security\RegistrationPolicy::MODES;
                     <?php if ($registrationSelected === 'invite' && empty($invitations_flag_on)): ?>
                         <span class="field-error">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</span>
                     <?php endif; ?>
-                    <?php if (!empty($errors['registration_mode'])): ?>
-                        <span class="field-error" id="registration-error"><?= $e($errors['registration_mode']) ?></span>
-                    <?php endif; ?>
                 </label>
+                <?= field_error($errors, 'registration_mode') ?>
                 <div class="form-actions"><button class="btn" type="submit">Save registration mode</button></div>
             </form>
         </section>
