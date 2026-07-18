@@ -8,6 +8,7 @@ use App\Core\Database;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use LogicException;
+use PDOException;
 
 /**
  * Append-only Thread Intelligence attempt/evidence ledger (migration 0077).
@@ -224,6 +225,28 @@ final class ThreadIntelligenceGenerationRepository
         $limit = max(1, min($limit, 500));
         $cutoff = $now->modify('-90 days')->format('Y-m-d H:i:s');
 
+        try {
+            return $this->pruneEligibleLocked($cutoff, $limit);
+        } catch (PDOException $e) {
+            // MariaDB snapshot isolation (innodb_snapshot_isolation=ON) raises
+            // errno 1020 when the locking revalidation below touches a row that
+            // committed-changed after this transaction's candidate read — the
+            // exact race the revalidate-under-lock exists to absorb (a job
+            // flipping into dead/review_required mid-pass). The server has
+            // already rolled the whole transaction back, so resolve it to the
+            // designed outcome: nothing pruned this pass; the next pass
+            // re-evaluates under a fresh read view. This catch is sound only
+            // because pruneEligible owns the outermost transaction (sole caller
+            // is the prune-evidence console command).
+            if (($e->errorInfo[1] ?? null) === 1020) {
+                return 0;
+            }
+            throw $e;
+        }
+    }
+
+    private function pruneEligibleLocked(string $cutoff, int $limit): int
+    {
         return $this->db->transaction(function () use ($cutoff, $limit): int {
             $rows = $this->db->fetchAll(
                 "SELECT g.id, g.thread_id
