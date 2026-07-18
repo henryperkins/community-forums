@@ -9,9 +9,7 @@ use App\Core\NotFoundException;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\ValidationException;
-use App\Mail\Mailer;
 use App\Repository\EmailDeliveryRepository;
-use App\Repository\EmailSuppressionRepository;
 use App\Service\EmailDomainVerifier;
 use App\Service\EmailOpsService;
 use App\Service\RateLimitService;
@@ -35,37 +33,14 @@ final class AdminEmailController extends Controller
         $this->requireAdmin();
         $this->gate();
 
-        $status = $this->oneOf($request->str('status'), self::STATUSES);
-        $kind = $this->oneOf($request->str('kind'), self::KINDS);
-        $email = trim($request->str('email'));
-        $page = max(1, $request->int('page', 1));
-        $perPage = 50;
-        $offset = ($page - 1) * $perPage;
+        $model = $this->container->get(EmailOpsService::class)->dashboardModel(
+            $this->oneOf($request->str('status'), self::STATUSES),
+            $this->oneOf($request->str('kind'), self::KINDS),
+            $request->str('email'),
+            max(1, $request->int('page', 1)),
+        );
 
-        $deliveries = $this->container->get(EmailDeliveryRepository::class);
-        $suppress = $this->container->get(EmailSuppressionRepository::class);
-        $mailer = $this->container->get(Mailer::class);
-        $domain = $this->container->get(EmailDomainVerifier::class)->current();
-
-        $rows = $deliveries->recent($perPage, $offset, $status, $kind, $email !== '' ? $email : null);
-
-        return $this->view('admin/email', [
-            'deliveries' => $rows,
-            'total' => $deliveries->count($status, $kind, $email !== '' ? $email : null),
-            'status_counts' => $deliveries->statusCounts(),
-            'suppressions' => $suppress->list(100, 0, null),
-            'suppression_count' => $suppress->count(null),
-            'mailer_configured' => $mailer->isConfigured(),
-            'mail_from' => (string) $this->config()->get('mail.from', ''),
-            'domain_status' => $domain,
-            'send_blocked' => !empty($domain['required']) && empty($domain['allowed']),
-            'f_status' => $status ?? '',
-            'f_kind' => $kind ?? '',
-            'f_email' => $email,
-            'page' => $page,
-            'per_page' => $perPage,
-            'has_next' => count($rows) === $perPage,
-        ]);
+        return $this->view('admin/email', $model);
     }
 
     /** @param array<string,string> $params */

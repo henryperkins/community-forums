@@ -1226,6 +1226,7 @@ final class App
             $c->get(WriteGate::class),
             $c->get(Mailer::class),
             $c->get(EmailDomainVerifier::class),
+            $config,
         ));
         $c->bind(AnnouncementService::class, fn (Container $c) => new AnnouncementService(
             $c->get(Database::class),

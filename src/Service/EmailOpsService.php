@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Core\Config;
 use App\Core\Database;
 use App\Core\ValidationException;
 use App\Domain\User;
@@ -34,7 +35,42 @@ final class EmailOpsService
         private WriteGate $writeGate,
         private Mailer $mailer,
         private EmailDomainVerifier $domainVerifier,
+        private ?Config $config = null,
     ) {
+    }
+
+    /**
+     * The delivery-ops dashboard read model (PR #44 spec §4): the whole
+     * /admin/email assembly, with has_next computed from the real filtered
+     * total — 1-based pages, so page*per_page < total.
+     *
+     * @return array<string,mixed>
+     */
+    public function dashboardModel(?string $status, ?string $kind, ?string $email, int $page, int $perPage = 50): array
+    {
+        $page = max(1, $page);
+        $perPage = max(1, min(200, $perPage));
+        $email = $email !== null && trim($email) !== '' ? trim($email) : null;
+        $domain = $this->domainVerifier->current();
+        $total = $this->deliveries->count($status, $kind, $email);
+
+        return [
+            'deliveries' => $this->deliveries->recent($perPage, ($page - 1) * $perPage, $status, $kind, $email),
+            'total' => $total,
+            'status_counts' => $this->deliveries->statusCounts(),
+            'suppressions' => $this->suppress->list(100, 0, null),
+            'suppression_count' => $this->suppress->count(null),
+            'mailer_configured' => $this->mailer->isConfigured(),
+            'mail_from' => (string) ($this->config?->get('mail.from', '') ?? ''),
+            'domain_status' => $domain,
+            'send_blocked' => !empty($domain['required']) && empty($domain['allowed']),
+            'f_status' => $status ?? '',
+            'f_kind' => $kind ?? '',
+            'f_email' => $email ?? '',
+            'page' => $page,
+            'per_page' => $perPage,
+            'has_next' => $page * $perPage < $total,
+        ];
     }
 
     /**

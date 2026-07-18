@@ -256,4 +256,25 @@ final class AppAdminEmailTest extends TestCase
         self::assertSame('sent', (string) $this->db->fetchValue("SELECT status FROM email_deliveries WHERE kind = 'system'"));
         self::assertStringContainsString('Maintenance window at 02:00 UTC', $mailer->to('member@example.test')[0]['text']);
     }
+
+    public function test_delivery_log_exact_multiple_of_page_size_has_no_next_link(): void
+    {
+        // PR #44 spec §4: has_next came from count(rows) === per_page — a dead
+        // Next link whenever the filtered log was an exact page multiple. A
+        // unique recipient keeps ambient fixture rows out of the count.
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+        $deliveries = new \App\Repository\EmailDeliveryRepository($this->db);
+        for ($i = 0; $i < 50; $i++) {
+            $deliveries->enqueue(null, 'pagermark@example.test', 'system', 'Bulk ' . $i, null);
+        }
+
+        $first = $this->get('/admin/email', ['email' => 'pagermark@example.test']);
+        $this->assertStatus(200, $first);
+        $this->assertSeeText($first, 'pagermark@example.test');
+        $this->assertDontSeeText($first, 'page=2'); // no pager link past the end
+
+        $second = $this->get('/admin/email', ['email' => 'pagermark@example.test', 'page' => '2']);
+        $this->assertStatus(200, $second);
+        $this->assertDontSeeText($second, 'Bulk 0');
+    }
 }

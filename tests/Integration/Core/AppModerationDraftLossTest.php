@@ -111,11 +111,22 @@ final class AppModerationDraftLossTest extends TestCase
 
     public function test_requeue_of_a_non_failed_delivery_reports_the_noop(): void
     {
+        // PR #44 spec §4: the old test requeued id 999999 and proved only the
+        // missing-row path. A REAL delivery in a non-failed state must no-op
+        // with its row untouched.
         $this->actingAs($this->makeAdmin(['password' => 'password123']));
-        $res = $this->post('/admin/email/deliveries/999999/requeue');
+        $deliveries = new \App\Repository\EmailDeliveryRepository($this->db);
+        $id = $deliveries->enqueue(null, 'sent-already@example.test', 'system', 'Done', null);
+        $this->db->run("UPDATE email_deliveries SET status = 'sent', attempt_count = 1 WHERE id = ?", [$id]);
+
+        $res = $this->post('/admin/email/deliveries/' . $id . '/requeue');
+
         $this->assertRedirectContains($res, '/admin/email');
         $flash = urldecode(implode(' ', $res->cookieHeaders()));
         self::assertStringContainsString('not in a failed state', $flash);
+        $row = $this->db->fetch('SELECT status, attempt_count FROM email_deliveries WHERE id = ?', [$id]);
+        self::assertSame('sent', (string) $row['status']);
+        self::assertSame(1, (int) $row['attempt_count']);
     }
 
     public function test_webhook_delete_requires_reauth(): void
