@@ -31,10 +31,10 @@ against the org that owns the app.
 
 Fly has no managed MySQL offering, so pick one of:
 
-- **A MariaDB Machine in the same org**, with its own volume for `/var/lib/mysql`,
-  reached over private networking at `<db-app>.internal:3306`. Keep it off the
-  public internet: do not allocate public IPs, and do not expose port 3306
-  through `[http_service]`/`[[services]]`.
+- **The repository's MariaDB Fly app**, defined by `fly.database.toml` and
+  `deploy/mariadb/Dockerfile`, with its own volume for `/var/lib/mysql`. It is
+  reached over private networking at `<db-app>.internal:3306`. Its service has no
+  public port mapping; do not allocate public IPs for it.
 - **An external managed MySQL provider.** Require TLS and restrict source
   addresses where the provider supports it.
 
@@ -43,6 +43,25 @@ The app needs DML plus DDL on its own schema (the release command runs
 migrations); it does not need `SUPER` or rights on other schemas.
 
 Character set must be `utf8mb4` — `config/config.php` hardcodes it in the DSN.
+
+For a new Fly environment, export the three required secrets and run the
+idempotent bootstrap command. It creates both apps when absent, creates the
+database volume, deploys MariaDB, waits for it to become ready, sets the
+application's private database hostname, and deploys the application:
+
+```bash
+export APP_KEY="$(openssl rand -hex 32)"
+export DB_PASSWORD='<store-a-strong-unique-password>'
+export DB_ROOT_PASSWORD='<store-a-different-strong-password>'
+
+deploy/fly-bootstrap.sh
+```
+
+The defaults are `community-forums`, `community-forums-db`, region `iad`, and a
+10 GB database volume. Override them with `FLY_APP_NAME`, `FLY_DB_APP_NAME`,
+`FLY_REGION`, and `FLY_DB_VOLUME_SIZE`; set `FLY_ORG` when the authenticated Fly
+account has access to more than one organization. Store the supplied passwords
+in the operator's secret manager: Fly secrets cannot be read back.
 
 ## 3. Configure secrets
 
