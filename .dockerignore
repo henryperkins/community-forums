@@ -13,3 +13,5 @@ docs/
 tests/
 phpunit.xml
 *.md
+.worktrees
+imladris-design-system.zip
