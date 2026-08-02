@@ -4,6 +4,10 @@ Documented operating procedures required by `PHASE_2_PLAN.md` §10 (observabilit
 and operating requirements) and §12 (staged release and rollback). All commands
 run from the project root on the VPS. `bin/console help` lists every command.
 
+For the Fly.io deployment (`fly.toml`, `Dockerfile`, `deploy/`) — MySQL/MariaDB
+provisioning, secrets, the release command, and first-run setup — see
+`docs/runbooks/deployment-fly.md`.
+
 > **Golden rule (PHASE_2_PLAN §12):** for a logic defect, **disable the feature
 > flag first**, then investigate. Restore from backup only for proven data
 > corruption. Keep migrations additive; never drop a Phase 1 column in the same
