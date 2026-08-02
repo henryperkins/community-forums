@@ -12,22 +12,10 @@ COPY src/client/ src/client/
 RUN npm run build:wysiwyg
 
 # ---------------------------------------------------------------------------
-# Stage 2: install Composer dependencies (production only, no dev)
+# Stage 2: PHP base — OS libraries + PHP extensions shared by the vendor
+#           (Composer) stage and the final runtime stage.
 # ---------------------------------------------------------------------------
-FROM composer:2 AS vendor
-WORKDIR /build
-COPY composer.json composer.lock ./
-RUN composer install \
-    --no-dev \
-    --prefer-dist \
-    --no-interaction \
-    --no-progress \
-    --optimize-autoloader
-
-# ---------------------------------------------------------------------------
-# Stage 3: final PHP + Apache runtime
-# ---------------------------------------------------------------------------
-FROM php:8.2-apache-bookworm
+FROM php:8.2-apache-bookworm AS phpbase
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -45,6 +33,29 @@ RUN apt-get update \
     && a2enmod rewrite \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# Stage 3: install Composer dependencies (production only, no dev).
+#           Derived from phpbase so all required extensions (including ext-gd)
+#           are present when Composer verifies platform requirements.
+# ---------------------------------------------------------------------------
+FROM phpbase AS vendor
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /build
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress \
+    --optimize-autoloader
+
+# ---------------------------------------------------------------------------
+# Stage 4: final PHP + Apache runtime
+# ---------------------------------------------------------------------------
+FROM phpbase
 
 WORKDIR /var/www/html
 
