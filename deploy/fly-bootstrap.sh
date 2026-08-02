@@ -1,11 +1,12 @@
 #!/bin/sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 
 APP_NAME=${FLY_APP_NAME:-community-forums}
 DB_APP_NAME=${FLY_DB_APP_NAME:-"${APP_NAME}-db"}
-REGION=${FLY_REGION:-iad}
+APP_URL=${FLY_APP_URL:-"https://${APP_NAME}.fly.dev"}
+REGION=iad
 DB_VOLUME=${FLY_DB_VOLUME:-mariadb_data}
 DB_VOLUME_SIZE=${FLY_DB_VOLUME_SIZE:-10}
 
@@ -50,6 +51,8 @@ if ! flyctl volumes list --app "$DB_APP_NAME" | grep -Fq "$DB_VOLUME"; then
         --region "$REGION" \
         --size "$DB_VOLUME_SIZE" \
         --yes
+else
+    echo "Reusing $DB_VOLUME; DB_PASSWORD and DB_ROOT_PASSWORD must match its initialized credentials."
 fi
 
 flyctl secrets set --app "$DB_APP_NAME" \
@@ -76,6 +79,7 @@ create_app "$APP_NAME"
 
 flyctl secrets set --app "$APP_NAME" \
     APP_KEY="$APP_KEY" \
+    APP_URL="$APP_URL" \
     DB_HOST="${DB_APP_NAME}.internal" \
     DB_PORT="3306" \
     DB_DATABASE="retroboards" \
@@ -86,4 +90,4 @@ flyctl deploy \
     --app "$APP_NAME" \
     --config "$ROOT/fly.toml"
 
-echo "Deployment complete: https://${APP_NAME}.fly.dev"
+echo "Deployment complete: $APP_URL"

@@ -45,9 +45,9 @@ migrations); it does not need `SUPER` or rights on other schemas.
 Character set must be `utf8mb4` — `config/config.php` hardcodes it in the DSN.
 
 For a new Fly environment, export the three required secrets and run the
-idempotent bootstrap command. It creates both apps when absent, creates the
-database volume, deploys MariaDB, waits for it to become ready, sets the
-application's private database hostname, and deploys the application:
+bootstrap command. It creates both apps when absent, creates the database
+volume, deploys MariaDB, waits for it to become ready, sets the application's
+private database hostname, and deploys the application:
 
 ```bash
 export APP_KEY="$(openssl rand -hex 32)"
@@ -59,9 +59,14 @@ deploy/fly-bootstrap.sh
 
 The defaults are `community-forums`, `community-forums-db`, region `iad`, and a
 10 GB database volume. Override them with `FLY_APP_NAME`, `FLY_DB_APP_NAME`,
-`FLY_REGION`, and `FLY_DB_VOLUME_SIZE`; set `FLY_ORG` when the authenticated Fly
-account has access to more than one organization. Store the supplied passwords
-in the operator's secret manager: Fly secrets cannot be read back.
+`FLY_APP_URL`, and `FLY_DB_VOLUME_SIZE`; set `FLY_ORG` when the authenticated
+Fly account has access to more than one organization. Both checked-in Fly
+configurations use `iad`, so the bootstrap creates the volume there as well.
+Store the supplied passwords in the operator's secret manager: Fly secrets
+cannot be read back. On a rerun with an initialized database volume, supply the
+original database passwords. Changing the `MARIADB_*` initialization secrets
+does not rotate credentials in an existing MariaDB data directory; rotate the
+database user in MariaDB first, then update the Fly secrets.
 
 ## 3. Configure secrets
 
