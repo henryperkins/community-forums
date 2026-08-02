@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM php:8.4-apache-bookworm
 
 RUN apt-get update \
@@ -21,8 +22,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /var/www/html
 
-COPY composer.json ./
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+COPY composer.json composer.lock ./
+RUN --mount=type=secret,id=composer_auth,required=false \
+    if [ -f /run/secrets/composer_auth ]; then export COMPOSER_AUTH="$(cat /run/secrets/composer_auth)"; fi \
+    && composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
 COPY --chown=www-data:www-data . .
 COPY deploy/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
