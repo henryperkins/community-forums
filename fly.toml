@@ -1,43 +1,49 @@
-app = "community-forums"
-primary_region = "iad"
+# fly.toml app configuration file generated for community-forums on 2026-08-02T12:48:04Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'community-forums'
+primary_region = 'iad'
 
 [build]
-  dockerfile = "Dockerfile"
-
-[env]
-  APP_DEBUG = "false"
-  APP_ENV = "production"
-  APP_URL = "https://community-forums.fly.dev"
-  PACKAGES_STORAGE_PATH = "/data/packages"
-  RATELIMIT_PATH = "/data/ratelimit"
-  SECURITY_HSTS = "true"
-  SESSION_SECURE = "true"
-  UPLOADS_PATH = "/data/media"
+  dockerfile = 'Dockerfile'
 
 [deploy]
-  release_command = "php bin/console migrate"
+  release_command = 'php bin/console migrate'
+
+[env]
+  APP_DEBUG = 'false'
+  APP_ENV = 'production'
+  APP_URL = 'https://community-forums.fly.dev'
+  PACKAGES_STORAGE_PATH = '/data/packages'
+  RATELIMIT_PATH = '/data/ratelimit'
+  SECURITY_HSTS = 'true'
+  SESSION_SECURE = 'true'
+  UPLOADS_PATH = '/data/media'
+
+[[mounts]]
+  source = 'community_forums_data'
+  destination = '/data'
+  initial_size = '3gb'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
   [[http_service.checks]]
-    grace_period = "20s"
-    interval = "15s"
-    method = "GET"
-    path = "/healthz"
-    timeout = "5s"
+    interval = '15s'
+    timeout = '5s'
+    grace_period = '20s'
+    method = 'GET'
+    path = '/healthz'
 
 [[vm]]
-  cpu_kind = "shared"
+  memory = '512mb'
+  cpu_kind = 'shared'
   cpus = 1
-  memory = "512mb"
-
-[[mounts]]
-  source = "community_forums_data"
-  destination = "/data"
-  initial_size = "3gb"
+  memory_mb = 512
