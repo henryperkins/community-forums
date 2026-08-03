@@ -11,6 +11,8 @@ use Tests\Support\TestCase;
 
 final class AppAutomatedContextTest extends TestCase
 {
+    private const PURGE_MIGRATION = __DIR__ . '/../../../database/migrations/0078_purge_since_last_read_context.php';
+
     /** @param array<string,bool> $flags */
     private function setFlags(array $flags): void
     {
@@ -102,6 +104,82 @@ final class AppAutomatedContextTest extends TestCase
             [(int) $viewer['id'], $thread['thread_id']],
         ));
         self::assertGreaterThan($firstReply, $secondReply);
+    }
+
+    public function test_since_last_read_context_never_exposes_or_persists_anonymous_author_identity(): void
+    {
+        $this->makeAdmin();
+        $this->setFlags(['automated_context' => true]);
+        $author = $this->makeUser([
+            'username' => 'context-secret-identity',
+            'display_name' => 'Context Secret Name',
+        ]);
+        $starter = $this->makeUser(['username' => 'context-anonymous-starter']);
+        $viewer = $this->makeUser(['username' => 'context-anonymous-viewer']);
+        $board = $this->makeBoard(
+            $this->makeCategory('Anonymous Context'),
+            ['slug' => 'anonymous-context', 'allow_anonymous' => 1],
+        );
+        $thread = $this->makeThread($board, $starter, 'Anonymous context topic', 'Opening post.');
+        $opId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [$thread['thread_id']],
+        );
+
+        $this->posting()->reply(
+            $this->userEntity($author),
+            $thread['thread_id'],
+            ['body' => 'Anonymous unread update.', 'is_anonymous' => '1'],
+        );
+        $this->db->run(
+            'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0)',
+            [(int) $viewer['id'], $thread['thread_id'], $opId],
+        );
+
+        $this->actingAs($viewer);
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('<strong>Anonymous</strong>', $page->body());
+        self::assertStringNotContainsString('@Anonymous', $page->body());
+        self::assertStringNotContainsString('context-secret-identity', $page->body());
+        self::assertStringNotContainsString('Context Secret Name', $page->body());
+
+        $contextText = (string) $this->db->fetchValue(
+            'SELECT context_text FROM since_last_read_context WHERE user_id = ? AND thread_id = ?',
+            [(int) $viewer['id'], $thread['thread_id']],
+        );
+        self::assertStringContainsString('Anonymous: Anonymous unread update.', $contextText);
+        self::assertStringNotContainsString('@Anonymous', $contextText);
+        self::assertStringNotContainsString('context-secret-identity', $contextText);
+        self::assertStringNotContainsString('Context Secret Name', $contextText);
+    }
+
+    public function test_privacy_migration_purges_regenerable_since_last_read_context(): void
+    {
+        $author = $this->makeUser(['username' => 'context-purge-author']);
+        $viewer = $this->makeUser(['username' => 'context-purge-viewer']);
+        $board = $this->makeBoard($this->makeCategory('Context Purge'), ['slug' => 'context-purge']);
+        $thread = $this->makeThread($board, $author, 'Context purge topic', 'Opening post.');
+        $postId = (int) $this->db->fetchValue(
+            'SELECT id FROM posts WHERE thread_id = ? AND is_op = 1',
+            [$thread['thread_id']],
+        );
+        $this->db->run(
+            'INSERT INTO since_last_read_context
+                (user_id, thread_id, from_post_id, to_post_id, post_count, context_text, generated_at, expires_at)
+             VALUES (?, ?, ?, ?, 1, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL 14 DAY))',
+            [(int) $viewer['id'], $thread['thread_id'], $postId, $postId, '@Context Secret Name: cached identity'],
+        );
+
+        self::assertFileExists(self::PURGE_MIGRATION);
+        $migration = require self::PURGE_MIGRATION;
+        $migration->up($this->db->pdo());
+
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM since_last_read_context'));
+
+        $migration->down($this->db->pdo());
+        self::assertSame(0, (int) $this->db->fetchValue('SELECT COUNT(*) FROM since_last_read_context'));
     }
 
     public function test_since_last_read_context_counts_full_window_with_bounded_items(): void
