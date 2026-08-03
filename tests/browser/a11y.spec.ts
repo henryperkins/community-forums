@@ -41,6 +41,26 @@ async function visit(page: Page, url: string): Promise<void> {
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
+/**
+ * Open the board's New topic composer. With JS on, app.js promotes the board
+ * identity button (desktop) / FAB (mobile) to the real opener and hides the
+ * native <details> summary via .has-js .js-native-topic-trigger (app.css) — the
+ * summary is only the no-JS path, so clicking it here waits forever on a
+ * display:none element. Mirrors openNewTopicComposer() in wysiwyg-composer.spec.ts.
+ * Callers have already navigated to the board.
+ */
+async function openTopicComposer(page: Page): Promise<void> {
+  const details = page.locator('details.composer-details#new-topic');
+  const promoted = page.locator('[data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  const summary = details.locator(':scope > summary');
+  const opener = (await promoted.isVisible())
+    ? promoted
+    : ((await fab.isVisible()) ? fab : summary);
+  await opener.click();
+  await expect(details).toHaveJSProperty('open', true);
+}
+
 async function openTopicTools(page: Page, section: 'watch' | 'standing' | 'tags' | 'memory' | 'management') {
   const trigger = page.getByRole('button', { name: 'Topic tools', exact: true });
   await trigger.click();
@@ -289,14 +309,14 @@ test('server-draft conflict panel has no serious axe violations', async ({ page 
   // polls (.poll-panel) and topic_workflow ([data-topic-tools]) axe precedent.
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openTopicComposer(page);
   const body = page.locator('form.composer textarea.composer-input').first();
   await expect(body).toBeVisible();
 
   const key = serverDraftKey('/threads');
   await discardServerDraft(page, key);
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openTopicComposer(page);
   await expect(body).toBeVisible();
 
   await body.fill('Local first draft for the a11y conflict scan');
@@ -367,7 +387,7 @@ test('wysiwyg composer toolbar and reference picker have no serious axe violatio
   try {
     await login(page, 'bob@retro.test');
     await visit(page, '/c/general');
-    await page.locator('details.composer-details > summary').click();
+    await openTopicComposer(page);
     const form = page.locator('form.composer').first();
     const editor = form.locator('.wysiwyg-composer .ProseMirror');
     await expect(editor).toBeVisible();
@@ -397,7 +417,7 @@ test('phase 4 content reference cards have no serious axe violations', async ({ 
   // so this gate is not blocked by unrelated thread-page issues.
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openTopicComposer(page);
   await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
   await page.locator('form.composer input[name="title"]').first().fill('A11y reference source');
   await page.locator('form.composer textarea.composer-input').first().fill(
@@ -471,7 +491,7 @@ test('phase 4 custom emoji surfaces have no serious axe violations', async ({ pa
   await page.context().clearCookies();
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openTopicComposer(page);
   await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
   await page.locator('form.composer input[name="title"]').first().fill(`Custom emoji a11y ${suffix}`);
   await page.locator('form.composer textarea.composer-input').first().fill(`Hello ${token}`);
@@ -499,7 +519,7 @@ test('phase 4 slash combobox has no serious axe violations and is keyboard opera
   // and Escape-to-close.
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openTopicComposer(page);
   const body = page.locator('form.composer textarea.composer-input').first();
   await expect(body).toBeVisible();
 

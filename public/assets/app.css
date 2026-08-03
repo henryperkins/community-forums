@@ -184,7 +184,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     vertical-align: middle;
 }
 .badge-muted { background: var(--surface-3); color: var(--text-muted); }
-.badge-staff { background: var(--gold-100); color: var(--gold-800); border: 1px solid var(--gold-200); }
+/* The staff badge is declared once, with the rest of the §10 chip ledger below. */
 
 .flash {
     background: var(--surface-done);
@@ -492,6 +492,13 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     font-family: var(--font-mono);
     font-size: .875em;
     line-height: 1.6;
+}
+/* A code block scrolls horizontally, so it is a keyboard-operable scroll region
+   (WCAG 2.1.1). The sanitizer stamps tabindex/role/label; the ring is ours, and
+   matches the scrollable-table treatment below. */
+.formatted-content pre:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
 }
 .formatted-content code {
     padding: .1em .35em;
@@ -1558,8 +1565,11 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
 /* Archived = the ghost of the set: faded, transparent, dashed (§10). */
 .chip-archived { color: var(--ink-400); background: transparent; border-style: dashed; border-color: var(--border-strong); }
-/* Staff = gold so it never reads as the green OP badge (§10). */
-.badge-staff  { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
+/* Staff = gold so it never reads as the green OP badge (§10). The pair is semantic,
+   not the numbered primitives: --gold-700 on --gold-100 measured 3.55:1 and, because
+   the dark register never remaps the numbered golds, shipped a light-register chip on
+   a twilight page. --on-staff/--surface-staff flip and clear AA in both. */
+.badge-staff  { color: var(--on-staff); background: var(--surface-staff); border-color: var(--gold-200); }
 /* Accepted answer = outlined on the card surface, distinct from the filled Solved chip (§10). */
 .badge-solved { color: var(--on-done);   background: var(--surface-raised); border-color: var(--green-200); }
 .tag {
@@ -1857,14 +1867,21 @@ body.variant-plain .nav-toggle { display: none; }  /* no rail on auth/error page
     border-radius: 0; box-shadow: none; padding: 0; margin-top: 18px;
 }
 .thread-conversation { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-body[data-route="thread"] .thread-conversation {
+/* FT-01. The viewport-capped column and its inner scroll port are an ENHANCED
+   affordance: they trade document scrolling for a pinned composer, which only
+   works once app.js can drive the drawer. Ungated, they also applied to the
+   unenhanced document, where the in-flow Topic tools left the reading pane at
+   12px. Without JS the thread is one naturally-flowing document instead.
+   The @media twin below must carry the same gate at the same specificity. */
+body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     height: calc(100vh - var(--topbar-h) - 48px);
     height: calc(100dvh - var(--topbar-h) - 48px);
 }
-.thread-scroll {
-    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-    padding: 0 8px 12px 0; scrollbar-gutter: stable;
-}
+.thread-scroll { overscroll-behavior: contain; padding: 0 8px 12px 0; scrollbar-gutter: stable; }
+/* No route prefix: the Community Inbox injects this same markup under
+   data-route="inbox" and app.js re-enhances it, and .thread-scroll is the only
+   scroll surface there (.inbox-reading.is-open is overflow:hidden). */
+[data-thread-enhanced="1"] > .thread-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .thread-dock {
     position: relative; z-index: 2; flex: 0 0 auto; min-width: 0;
     margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-hair);
@@ -1876,7 +1893,7 @@ body[data-route="thread"] .thread-conversation {
 .inbox-reading.is-open .thread-conversation { height: 100%; min-height: 0; }
 @media (max-width: 860px) {
     body[data-route="thread"] .main { padding-bottom: 16px; }
-    body[data-route="thread"] .thread-conversation {
+    body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         height: calc(100vh - var(--topbar-h) - 32px);
         height: calc(100dvh - var(--topbar-h) - 32px);
     }

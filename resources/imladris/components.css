@@ -67,7 +67,7 @@
 }
 .badge svg, .chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* Role badges */
-.badge-staff  { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
+.badge-staff  { color: var(--on-staff); background: var(--surface-staff); border-color: var(--gold-200); }
 .badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
 .badge-solved { color: var(--on-done); background: var(--surface-raised); border-color: var(--green-200); }
 /* Status chips */

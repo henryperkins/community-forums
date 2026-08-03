@@ -78,6 +78,57 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         </div>
         <?php if ($current_user === null): ?><?= $this->partial('partials/thread_status_history', compact('status_history', 'status_labels')) ?><?php endif; ?>
     </header>
+    <?php
+    /* FT-01. Topic tools and the split/merge disclosure belong to the topic head, and
+       they must render INSIDE .thread-scroll. Every in-flow sibling of .thread-scroll
+       takes its height out of the fixed-height column, so rendering them after
+       .thread-dock left the unenhanced reading pane at 12px of an 854px viewport.
+       They stay SIBLINGS here: nesting the restructure markup inside [data-topic-tools]
+       would make app.js hide the dialog's own ancestor when opening it. */
+    ?>
+    <?= $this->partial('partials/thread_tools', [
+        'thread' => $thread,
+        'topic_tool_sections' => $topicToolSections,
+        'subscription' => $subscription,
+        'notifications_on' => $notifications_on,
+        'workflow_on' => $workflow_on,
+        'can_write' => $can_write,
+        'can_change_statuses' => $can_change_statuses,
+        'status_labels' => $status_labels,
+        'status_history' => $status_history,
+        'tags_on' => $tags_on,
+        'thread_tags' => $thread_tags,
+        'all_tags' => $all_tags,
+        'can_edit_tags' => $can_edit_tags,
+        'living_brief' => $living_brief,
+        'memory_history' => $memory_history,
+        'memory_refresh' => $memory_refresh,
+        'memory_automation_paused' => $memory_automation_paused,
+        'assignment' => $assignment,
+        'can_self_assign' => $can_self_assign,
+        'can_staff_assign' => $can_staff_assign,
+        'accepted_post_id' => $accepted_post_id,
+        'can_mark_solved' => $can_mark_solved,
+        'can_pin' => $can_pin,
+        'can_lock' => $can_lock,
+        'poll' => $poll,
+        'can_create_poll' => $can_create_poll,
+        'can_split_merge' => $can_split_merge,
+        'can_move' => $can_move,
+        'move_boards' => $move_boards ?? [],
+        'move_error' => $move_error ?? '',
+        'move_selected' => $move_selected ?? 0,
+    ]) ?>
+    <?= $this->partial('partials/thread_restructure', [
+        'thread' => $thread,
+        'posts' => $posts,
+        'features' => $features,
+        'can_write' => $can_write,
+        'can_split_merge' => $can_split_merge,
+        'restructure_error' => $restructure_error ?? '',
+        'restructure_context' => $restructure_context ?? '',
+        'restructure_old' => $restructure_old ?? [],
+    ]) ?>
         <?php if (!empty($polls_on) && !empty($poll)): ?>
             <section class="poll-card poll-panel">
                 <div class="poll-head">
@@ -255,47 +306,4 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
             <div class="joinbar">You don't have permission to reply in this board.</div>
         <?php endif; ?>
     </div>
-    <?= $this->partial('partials/thread_restructure', [
-        'thread' => $thread,
-        'posts' => $posts,
-        'features' => $features,
-        'can_write' => $can_write,
-        'can_split_merge' => $can_split_merge,
-        'restructure_error' => $restructure_error ?? '',
-        'restructure_context' => $restructure_context ?? '',
-        'restructure_old' => $restructure_old ?? [],
-    ]) ?>
-    <?= $this->partial('partials/thread_tools', [
-        'thread' => $thread,
-        'topic_tool_sections' => $topicToolSections,
-        'subscription' => $subscription,
-        'notifications_on' => $notifications_on,
-        'workflow_on' => $workflow_on,
-        'can_write' => $can_write,
-        'can_change_statuses' => $can_change_statuses,
-        'status_labels' => $status_labels,
-        'status_history' => $status_history,
-        'tags_on' => $tags_on,
-        'thread_tags' => $thread_tags,
-        'all_tags' => $all_tags,
-        'can_edit_tags' => $can_edit_tags,
-        'living_brief' => $living_brief,
-        'memory_history' => $memory_history,
-        'memory_refresh' => $memory_refresh,
-        'memory_automation_paused' => $memory_automation_paused,
-        'assignment' => $assignment,
-        'can_self_assign' => $can_self_assign,
-        'can_staff_assign' => $can_staff_assign,
-        'accepted_post_id' => $accepted_post_id,
-        'can_mark_solved' => $can_mark_solved,
-        'can_pin' => $can_pin,
-        'can_lock' => $can_lock,
-        'poll' => $poll,
-        'can_create_poll' => $can_create_poll,
-        'can_split_merge' => $can_split_merge,
-        'can_move' => $can_move,
-        'move_boards' => $move_boards ?? [],
-        'move_error' => $move_error ?? '',
-        'move_selected' => $move_selected ?? 0,
-    ]) ?>
 </article>

@@ -107,7 +107,11 @@ MARKDOWN;
         self::assertStringContainsString('<ul>', $response->body());
         self::assertStringContainsString('<blockquote>', $response->body());
         self::assertStringContainsString('<code>repair</code>', $response->body());
-        self::assertStringContainsString('<pre><code class="language-text">verified profile content', $response->body());
+        self::assertStringContainsString(
+            '<pre tabindex="0" role="region" aria-label="Scrollable code block">'
+                . '<code class="language-text">verified profile content',
+            $response->body(),
+        );
     }
 
     public function test_unknown_profile_is_404(): void

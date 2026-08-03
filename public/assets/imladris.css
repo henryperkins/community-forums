@@ -136,6 +136,10 @@
     --warning: var(--amber);   --surface-review:  var(--gold-100);  --on-review:  #7E5F22;
     --pending: var(--ink-400); --surface-pending: var(--parchment-200); --on-pending: var(--ink-500);
     --info:    var(--river-500); --surface-info:  var(--river-100);  --on-info:    var(--river-700);
+    /* Staff is an authority mark rather than a status, but it takes the ledger's
+       shape so it flips register with everything else. The ink is one step darker
+       than --on-review so the badge never reads as the Needs answer chip. */
+    --surface-staff: var(--gold-100); --on-staff: var(--gold-800);
     --star:    var(--gold-600); /* the esteem star                              */
     --artifact-link: var(--river-500);
     --presence:      var(--leaf); /* the "online" leaf dot                      */
@@ -193,6 +197,7 @@
     --warning: var(--gold-400);   --surface-review:  rgba(194,154,68,.16); --on-review:  #DCC68A;
     --pending: var(--ink-300);    --surface-pending: var(--twilight-700);  --on-pending: #AEB8B4;
     --info:    var(--river-400);  --surface-info:    rgba(63,110,137,.20); --on-info:    var(--river-200);
+    --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --star:    var(--gold-400);
     --presence: var(--green-400);
     --focus-ring: rgba(210,176,98,.75);
@@ -425,7 +430,7 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
 }
 .badge svg, .chip svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 /* Role badges */
-.badge-staff  { color: var(--gold-700); background: var(--gold-100); border-color: var(--gold-200); }
+.badge-staff  { color: var(--on-staff); background: var(--surface-staff); border-color: var(--gold-200); }
 .badge-muted  { color: var(--text-muted); background: var(--surface-sunken); border-color: var(--border-hair); }
 .badge-solved { color: var(--on-done); background: var(--surface-raised); border-color: var(--green-200); }
 /* Status chips */

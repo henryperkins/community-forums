@@ -444,6 +444,55 @@ test('no-JavaScript board composer and canonical thread remain usable', async ({
     await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
     await expect(page.locator('[data-thread-study]')).toBeVisible();
     await expect(page.locator('[data-board-identity]')).toHaveCount(0);
+
+    // FT-01. Without JS the thread is ONE naturally-flowing document: no
+    // viewport-capped column, no nested scroll port, and Topic tools reachable by
+    // ordinary page scrolling. Visibility alone is not enough — the reported
+    // defect was a .thread-scroll collapsed to 12px of an 854px viewport, which
+    // still satisfies toBeVisible() and produces no horizontal overflow.
+    const geometry = await page.evaluate(() => {
+      const conversation = document.querySelector('.thread-conversation') as HTMLElement | null;
+      const scroll = document.querySelector('.thread-scroll') as HTMLElement | null;
+      const tools = document.querySelector('[data-topic-tools]') as HTMLElement | null;
+      const stream = document.querySelector('.post-stream') as HTMLElement | null;
+      return {
+        enhancedCount: document.querySelectorAll('[data-thread-enhanced]').length,
+        overflowY: scroll ? getComputedStyle(scroll).overflowY : null,
+        clientHeight: scroll ? scroll.clientHeight : null,
+        scrollHeight: scroll ? scroll.scrollHeight : null,
+        conversationHeight: conversation ? getComputedStyle(conversation).height : null,
+        conversationClipped: conversation ? conversation.scrollHeight > conversation.clientHeight + 1 : null,
+        toolsInsideScroll: !!(tools && scroll && scroll.contains(tools)),
+        toolsBeforeStream: !!(tools && stream
+          && (tools.compareDocumentPosition(stream) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0),
+        toolsRendered: !!(tools && tools.getClientRects().length > 0),
+        viewportHeight: window.innerHeight,
+      };
+    });
+    const why = JSON.stringify(geometry);
+    expect(geometry.enhancedCount, why).toBe(0);
+    expect(geometry.overflowY, why).toBe('visible');
+    // Guards the @media (max-width: 860px) twin of the height rule: gating only the
+    // desktop rule leaves the column capped here, so the content clips with no
+    // scroll port to recover it. The mobile project is what makes this meaningful.
+    expect(geometry.conversationClipped, why).toBe(false);
+    expect(geometry.scrollHeight!, why).toBeLessThanOrEqual(geometry.clientHeight! + 1);
+    expect(geometry.toolsInsideScroll, why).toBe(true);
+    expect(geometry.toolsBeforeStream, why).toBe(true);
+    expect(geometry.toolsRendered, why).toBe(true);
+
+    // Native disclosures still operate the tools without script.
+    const watch = page.locator('[data-topic-tools-section="watch"]');
+    await expect(watch).toHaveCount(1);
+
+    // And a real reply still posts through the server-rendered form.
+    const replyForm = page.locator('form[action$="/reply"]').first();
+    await expect(replyForm.locator('input[name="_token"]')).toHaveCount(1);
+    const marker = `no-JS reply ${info.project.name}`;
+    await replyForm.locator('textarea').first().fill(marker);
+    await replyForm.locator('button[type="submit"], input[type="submit"]').first().click();
+    await expect(page.locator('.post-stream')).toContainText(marker);
+
     await expectNoHorizontalOverflow(page);
     expectNoBrowserMessages(messages);
   } finally {

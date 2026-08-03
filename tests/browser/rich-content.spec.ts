@@ -176,3 +176,34 @@ test('rich content remains server-rendered with JavaScript disabled', async ({ b
     await context.close();
   }
 });
+
+test('overflowing code fences are keyboard-operable scroll regions', async ({ page }) => {
+  await installImageFixtures(page);
+  await login(page);
+  await openRichTopic(page);
+
+  const body = page.locator('.post-op .post-body.formatted-content');
+  const codeRegion = body.getByRole('region', { name: 'Scrollable code block' });
+
+  await expect(codeRegion).toHaveAttribute('tabindex', '0');
+  await expect(codeRegion).toHaveAttribute('role', 'region');
+
+  const overflow = await codeRegion.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(overflow.scrollWidth, JSON.stringify(overflow)).toBeGreaterThan(overflow.clientWidth);
+
+  // Axe's scrollable-region-focusable rule: a region that scrolls must be
+  // reachable and operable without a pointer.
+  await codeRegion.focus();
+  await expect(codeRegion).toBeFocused();
+  const start = await codeRegion.evaluate((element) => element.scrollLeft);
+  await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(async () => codeRegion.evaluate((element) => element.scrollLeft))
+    .toBeGreaterThan(start);
+
+  const dimensions = await pageOverflowReport(page);
+  expect(dimensions.scrollWidth, JSON.stringify(dimensions, null, 2)).toBeLessThanOrEqual(dimensions.clientWidth);
+});

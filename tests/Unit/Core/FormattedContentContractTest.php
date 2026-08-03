@@ -44,6 +44,7 @@ final class FormattedContentContractTest extends TestCase
             '.formatted-content .formatted-table',
             '.formatted-content .formatted-table:focus-visible',
             '.formatted-content .formatted-table > table',
+            '.formatted-content pre:focus-visible',
             '.formatted-content li:has(> input[type="checkbox"])',
             '.formatted-content h2',
             '.formatted-content h3',

@@ -92,6 +92,10 @@
     --warning: var(--amber);   --surface-review:  var(--gold-100);  --on-review:  #7E5F22;
     --pending: var(--ink-400); --surface-pending: var(--parchment-200); --on-pending: var(--ink-500);
     --info:    var(--river-500); --surface-info:  var(--river-100);  --on-info:    var(--river-700);
+    /* Staff is an authority mark rather than a status, but it takes the ledger's
+       shape so it flips register with everything else. The ink is one step darker
+       than --on-review so the badge never reads as the Needs answer chip. */
+    --surface-staff: var(--gold-100); --on-staff: var(--gold-800);
     --star:    var(--gold-600); /* the esteem star                              */
     --artifact-link: var(--river-500);
     --presence:      var(--leaf); /* the "online" leaf dot                      */
@@ -149,6 +153,7 @@
     --warning: var(--gold-400);   --surface-review:  rgba(194,154,68,.16); --on-review:  #DCC68A;
     --pending: var(--ink-300);    --surface-pending: var(--twilight-700);  --on-pending: #AEB8B4;
     --info:    var(--river-400);  --surface-info:    rgba(63,110,137,.20); --on-info:    var(--river-200);
+    --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --star:    var(--gold-400);
     --presence: var(--green-400);
     --focus-ring: rgba(210,176,98,.75);
