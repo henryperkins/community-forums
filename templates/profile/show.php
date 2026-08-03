@@ -139,7 +139,10 @@ $profileUrl = '/u/' . $profile['username'];
                 <?php if (($bio_html ?? '') !== ''): ?>
                     <section class="profile-bio">
                         <h2>About</h2>
-                        <div class="prose"><?= $bio_html /* pre-sanitised */ ?></div>
+                        <?php // formatted-content is the shared prose contract — a bio is rendered
+                              // through the same Markdown pipeline as a post, so it must be styled
+                              // by the same rules (lists, code, quotes, tables) rather than UA defaults. ?>
+                        <div class="prose formatted-content"><?= $bio_html /* pre-sanitised */ ?></div>
                     </section>
                 <?php endif; ?>
                 <?php if (!empty($recent_threads)): ?>

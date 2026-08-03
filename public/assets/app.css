@@ -405,26 +405,54 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .post-author { font-weight: 600; color: var(--text); }
 .post-time { color: var(--text-muted); font-size: .82rem; }
 .post-signature { margin-top: .6rem; padding-top: .5rem; border-top: 1px dashed var(--border); font-size: .85rem; }
+/* ── The prose contract ────────────────────────────────────────────────────
+   ONE definition of how sanitised body_html reads, shared by every surface
+   that renders it: thread posts, the composer preview, DM bodies, profile
+   bios. Anything that wants to differ overrides deliberately below and says
+   why — this block is the baseline, so the surfaces can't drift apart again.
+   Reading type is the Imladris book size (--text-size-body, 17px) at generous
+   leading; the surrounding shell chrome is what sits smaller. */
 .formatted-content {
     min-inline-size: 0;
     overflow-wrap: anywhere;
+    font-family: var(--font-body);
+    font-size: var(--text-size-body);
+    line-height: 1.7;
+    color: var(--text-body);
 }
 .formatted-content > :first-child { margin-block-start: 0; }
 .formatted-content > :last-child { margin-block-end: 0; }
-.formatted-content p { margin-block: .75em; }
+/* One-directional margins: the gap between two blocks is stated once, so it
+   can't be halved by collapsing or doubled by a sibling. 1em against 1.7
+   leading makes a paragraph break read as roughly 2.4x an in-paragraph line
+   break — the separation the flat post stream has to carry on its own. */
+.formatted-content p { margin-block: 0 1em; }
+/* The sanitiser clamps every heading into [h2, h3], so these two are the whole
+   hierarchy a post can express. Cormorant is a high-contrast display serif:
+   at weight 500 it carries LESS optical weight than bold body text, which is
+   why headings stopped announcing themselves. Semibold + a real gap above
+   restores the "this belongs to what follows" read. */
 .formatted-content h2,
 .formatted-content h3 {
-    margin-block: 1.15em .45em;
+    /* rem, not em, for the lead-in: em resolves against the heading's OWN size,
+       which makes an h2 open a bigger hole than an h3 and pushes a section break
+       past the gap that separates two posts. A section must stay quieter than a
+       speaker change. Bottom stays em so it hugs its own text. */
+    margin-block: 1.75rem .32em;
+    font-weight: var(--weight-semibold);
+    line-height: 1.25;
+    letter-spacing: 0;
+    color: var(--text-strong);
     overflow-wrap: anywhere;
 }
-.formatted-content h2 { font-size: 1.45em; }
-.formatted-content h3 { font-size: 1.2em; }
+.formatted-content h2 { font-size: 1.5em; }
+.formatted-content h3 { font-size: 1.22em; }
 .formatted-content ul,
 .formatted-content ol {
-    margin-block: .75em;
+    margin-block: 0 1em;
     padding-inline-start: 1.5em;
 }
-.formatted-content li + li { margin-block-start: .2em; }
+.formatted-content li + li { margin-block-start: .35em; }
 .formatted-content li:has(> input[type="checkbox"]) { list-style: none; }
 .formatted-content li > input[type="checkbox"] {
     inline-size: 1em;
@@ -437,7 +465,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     display: block;
     max-inline-size: 100%;
     block-size: auto;
-    margin-block: .85em;
+    margin-block: 0 1em;
     border-radius: var(--radius-md);
 }
 .formatted-content .custom-emoji {
@@ -449,29 +477,48 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     object-fit: contain;
     vertical-align: -.22em;
 }
+/* Code. The sunken fill alone sits at ~1.1:1 against the page in BOTH themes,
+   so the container has to be drawn with a border, not a tint. Block and inline
+   share one size — JetBrains Mono has a much larger x-height than EB Garamond,
+   so mono set at the serif's size reads oversized and breaks the line rhythm. */
 .formatted-content pre {
-    background: var(--surface-3);
-    padding: 10px 12px;
-    border-radius: 6px;
+    margin-block: 0 1em;
+    padding: 12px 14px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    background: var(--surface-sunken);
     overflow-x: auto;
     font-family: var(--font-mono);
+    font-size: .875em;
+    line-height: 1.6;
 }
-.formatted-content code { background: var(--surface-3); padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); }
-.formatted-content pre code { background: none; padding: 0; }
+.formatted-content code {
+    padding: .1em .35em;
+    border: 1px solid var(--border-hair);
+    border-radius: 4px;
+    background: var(--surface-sunken);
+    font-family: var(--font-mono);
+    font-size: .875em;
+}
+.formatted-content pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+/* A quotation is someone else's voice, so it recedes — it must never be set
+   darker or heavier than the prose carrying it. The gold rule and the italic
+   do the marking; the ink stays exactly the prose ink. */
 .formatted-content blockquote {
-    margin: 8px 0;
-    padding: 4px 12px;
-    border-left: 3px solid var(--border);
-    color: var(--text-muted);
+    margin-block: 0 1em;
+    padding: .15em 0 .15em 1em;
+    border-inline-start: 2px solid var(--rule-gold);
+    color: inherit;
+    font-style: italic;
 }
 .formatted-content hr {
-    margin-block: 1.25em;
+    margin-block: 2em;
     border: 0;
-    border-block-start: 1px solid var(--border-hair);
+    border-block-start: 1px solid var(--border);
 }
 .formatted-content .formatted-table {
     max-inline-size: 100%;
-    margin-block: 1em;
+    margin-block: 0 1em;
     overflow-x: auto;
     border: 1px solid var(--border-hair);
     border-radius: var(--radius-md);
@@ -1123,7 +1170,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-count { font-family: var(--font-mono); color: var(--text-muted); font-size: .76rem; white-space: nowrap; }
 .composer-count[hidden] { display: none; }
 .composer-count.over { color: var(--danger); font-weight: var(--weight-semibold); }
+/* The preview re-uses the server's render pipeline, so it must also re-use the
+   published reading measure — otherwise what you proof is not what you post. */
 .composer-preview {
+    max-width: 66ch;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--surface-sunken);
@@ -1568,8 +1618,10 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 .post-author { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.05rem; color: var(--text-strong); }
 .post-time, .post-edited { font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint); }
-.post-body { font-size: 1.0625rem; line-height: 1.62; color: var(--text-body); }
-.post-body blockquote { border-left: 2px solid var(--rule-gold); color: var(--text-strong); font-style: italic; }
+/* .post-body carries the reading MEASURE only — family, size, leading, ink and
+   every block-element rule come from the shared .formatted-content contract so
+   a post, a live preview and a bio can't drift apart. Do not restate type here. */
+.post-body { max-width: 66ch; }
 .post-signature { border-top: 1px dashed var(--border-hair); font-family: var(--font-body); }
 
 /* Composer card + serif inputs with a gold focus ring. */
@@ -2111,15 +2163,17 @@ body[data-route="thread"] .thread-conversation {
 .profile-overview { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 30px; align-items: start; }
 .profile-overview.is-single { grid-template-columns: minmax(0, 1fr); }
 .profile-overview-main { min-width: 0; display: flex; flex-direction: column; gap: 28px; }
-.profile-overview-main h2,
+/* Direct child only: this is the page's own section eyebrow. An unscoped
+   descendant selector reaches into the bio and restyles a member's ## heading
+   as chrome — user prose is never the page's furniture. */
+.profile-overview-main > section > h2,
 .profile-commend-list h2,
 .profile-overview-aside h2 {
     margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em;
     text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);
 }
-.profile-bio .prose { font-size: 1.02rem; line-height: 1.62; color: var(--text-body); }
-.profile-bio .prose > :first-child { margin-top: 0; }
-.profile-bio .prose > :last-child { margin-bottom: 0; }
+/* Type comes from .formatted-content; the bio only states its own measure. */
+.profile-bio .prose { max-width: 66ch; }
 .profile-overview-aside {
     display: flex; flex-direction: column; gap: 18px; padding: 18px;
     background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);
@@ -4099,18 +4153,12 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     gap: 6px;
     position: relative;
 }
-.dm-body {
-    font-family: var(--font-body);
-    font-size: 1.04rem;
-    line-height: 1.6;
-    color: var(--text-body);
-}
-.dm-body p {
-    margin: 0;
-}
-.dm-body p + p {
-    margin-top: .7em;
-}
+/* DM bubbles take the shared .formatted-content contract (family, size, ink,
+   code/quote/list treatment) and deliberately override ONE thing: the paragraph
+   rhythm. A chat bubble is sized to its own text, so the 1em block gap a forum
+   post needs would leave it hollow. This is the only sanctioned divergence. */
+.dm-body p { margin: 0; }
+.dm-body p + p { margin-top: .7em; }
 /* Mine — right-aligned, wearing the one ceremonial gold plate. */
 .dm-group.mine {
     grid-template-columns: minmax(0, 1fr);
@@ -5830,23 +5878,37 @@ span.wf-btn {
     color: var(--text-body);
 }
 .post-stream { gap: 0; }
+/* The Study stream is deliberately flat — no cards. That leaves NOTHING marking
+   where one person stops and the next begins, so the padding and the hairline
+   below have to do it: 18px of air on each side of the rule puts a post break
+   well clear of the 1em gap between two paragraphs inside a post. */
 .post {
     position: relative;
     display: flex;
     gap: 16px;
-    margin: 6px 0;
-    padding: 10px 14px;
+    margin: 0;
+    padding: 18px 14px;
     border: 1px solid transparent;
     border-radius: var(--radius-lg);
     background: transparent;
     box-shadow: none;
 }
+/* Recolouring the existing transparent border keeps this reflow-free. Excluded:
+   a grouped reply (same author continuing — a rule there would undo the
+   grouping) and any post that already draws its own edge. */
+.post-stream > .post + .post:not(.post-grouped):not(.post-accepted):not(.post-deleted) {
+    border-block-start-color: var(--border-hair);
+}
+/* A same-author run reads as one turn: tighten it and never rule it. */
+.post-grouped { margin-block-start: 0; padding-block-start: 0; }
+/* Posts that carry their own card need air around it instead of a shared rule. */
+.post-accepted,
+.post-deleted { margin-block: 10px; }
 .post-accepted { border-color: var(--green-200); background: var(--surface-done); }
 .post-avatar,
 .post-avatar-spacer { width: 48px; flex-basis: 48px; }
 .post-avatar > .monogram,
 .post-avatar > .avatar-wrap > .monogram { width: 44px; height: 44px; font-size: .95rem; }
-.post-body { max-width: 66ch; font-size: 1.02rem; line-height: 1.62; }
 .post-title-chip {
     display: inline-flex;
     padding: 1px 8px;
@@ -6041,7 +6103,7 @@ body.thread-restructure-open { overflow: hidden; }
     .thread-restructure-dialog button,
     .thread-restructure-dialog select,
     .thread-restructure-dialog input { min-height: 44px; }
-    .post { gap: 10px; padding: 10px 4px; }
+    .post { gap: 10px; padding: 16px 4px; }
     [data-thread-enhanced="1"] .post-toolbar {
         position: static;
         opacity: 1;
