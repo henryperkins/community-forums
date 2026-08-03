@@ -75,6 +75,14 @@ test('rich post semantics stay faithful, accessible, and contained', async ({ pa
   await expect(body.getByRole('heading', { level: 3, name: 'Ordered from four' })).toBeVisible();
   await expect(body.locator('ol')).toHaveAttribute('start', '4');
   await expect(body.locator('pre code')).toHaveClass('language-php');
+  const quoteRhythm = await body.locator('blockquote').evaluate((element) => {
+    const lastChild = element.lastElementChild;
+    return {
+      childTag: lastChild?.tagName.toLowerCase() ?? null,
+      childMarginBottom: lastChild ? getComputedStyle(lastChild).marginBottom : null,
+    };
+  });
+  expect(quoteRhythm).toEqual({ childTag: 'p', childMarginBottom: '0px' });
   const taskCheckboxes = body.locator('input[type="checkbox"]');
   await expect(taskCheckboxes).toHaveCount(2);
   expect(await taskCheckboxes.evaluateAll((items) => items.every((item) => (item as HTMLInputElement).disabled))).toBe(true);

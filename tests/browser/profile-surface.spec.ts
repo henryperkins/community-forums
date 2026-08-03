@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,6 +24,34 @@ const credentials = {
 
 type ProjectName = 'desktop' | 'mobile';
 type Theme = 'light' | 'dark';
+
+function contrastRatio(first: string, second: string): number {
+  const luminance = (color: string): number => {
+    const channels = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
+    if (!channels || channels.length !== 3) throw new Error(`Unsupported CSS color: ${color}`);
+    const [red, green, blue] = channels.map((channel) => {
+      const normalized = channel / 255;
+      return normalized <= 0.04045
+        ? normalized / 12.92
+        : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  };
+  const a = luminance(first);
+  const b = luminance(second);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+async function expectVisibleCodeBoundary(code: Locator): Promise<void> {
+  const colors = await code.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { border: style.borderTopColor, fill: style.backgroundColor };
+  });
+  expect(
+    contrastRatio(colors.border, colors.fill),
+    `code border ${colors.border} should remain distinct from fill ${colors.fill}`,
+  ).toBeGreaterThanOrEqual(1.9);
+}
 
 function viewport(info: TestInfo): { width: number; height: number } {
   return info.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1160, height: 900 };
@@ -112,6 +140,22 @@ async function applyTheme(page: Page, theme: Theme): Promise<void> {
   await settle(page);
 }
 
+async function captureScreenshot(page: Page, output: string): Promise<void> {
+  const options = { path: output, fullPage: true, animations: 'disabled' as const };
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.screenshot(options);
+      return;
+    } catch (error) {
+      const isTransientWindowsOpenError = error instanceof Error
+        && error.message.includes('UNKNOWN: unknown error, open');
+      if (!isTransientWindowsOpenError || attempt === 2) throw error;
+      await page.waitForTimeout(100 * (attempt + 1));
+    }
+  }
+}
+
 async function capture(
   page: Page,
   info: TestInfo,
@@ -124,7 +168,7 @@ async function capture(
   if (checkA11y) await expectNoSeriousA11yViolations(page);
   const output = path.join(evidenceRoot, projectName(info), `${state}-${theme}.png`);
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  await page.screenshot({ path: output, fullPage: true, animations: 'disabled' });
+  await captureScreenshot(page, output);
   return output;
 }
 
@@ -135,7 +179,7 @@ async function captureReference(page: Page, info: TestInfo, theme: Theme): Promi
   await applyTheme(page, theme);
   const output = path.join(evidenceRoot, 'reference', projectName(info), `profile-${theme}.png`);
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  await page.screenshot({ path: output, fullPage: true, animations: 'disabled' });
+  await captureScreenshot(page, output);
   return output;
 }
 
@@ -168,7 +212,7 @@ async function captureComparison(
   await page.locator('img').evaluateAll(async (images) => Promise.all(images.map((image) => image.decode())));
   const output = path.join(evidenceRoot, 'comparisons', `${projectName(info)}-${theme}.png`);
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  await page.screenshot({ path: output, fullPage: true, animations: 'disabled' });
+  await captureScreenshot(page, output);
 }
 
 test.beforeAll(() => seedProfileFixture());
@@ -180,13 +224,26 @@ test('profile states match the approved anatomy in light and dark themes', async
   await visit(page, '/u/galadriel');
   await expect(page.locator('.profile-name')).toHaveText(/Galadriel/);
   await expect(page.locator('.profile-tabs .profile-tab')).toHaveCount(5);
+  const bio = page.locator('.profile-bio .formatted-content');
+  await expect(bio.getByRole('heading', { level: 2, name: 'Evidence discipline' })).toBeVisible();
+  await expect(bio.locator('li')).toHaveCount(2);
+  await expect(bio.locator('blockquote')).toContainText('keep the record whole');
+  await expect(bio.locator('code').first()).toHaveText('repair');
+  await expect(bio.locator('pre code')).toContainText('verified profile content');
+  const proseType = await bio.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { fontSize: style.fontSize, lineHeight: style.lineHeight };
+  });
+  expect(proseType).toEqual({ fontSize: '17px', lineHeight: '28.9px' });
   const finalTabBox = await page.getByRole('link', { name: 'Connections', exact: true }).boundingBox();
   expect(finalTabBox, 'Connections tab should be rendered').not.toBeNull();
   expect(finalTabBox!.x + finalTabBox!.width, 'Connections tab should not be clipped initially')
     .toBeLessThanOrEqual(viewport(info).width);
   await expect(page.locator('.profile-rep-value .icon-commend-star')).toBeVisible();
   await capture(page, info, 'guest-populated', 'light');
+  await expectVisibleCodeBoundary(bio.locator('code').first());
   await capture(page, info, 'guest-populated', 'dark');
+  await expectVisibleCodeBoundary(bio.locator('code').first());
   await expect(page.locator('.profile-cover')).toHaveCSS('background-color', 'rgb(30, 39, 48)');
 
   await visit(page, '/u/private-seat');

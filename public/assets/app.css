@@ -477,14 +477,15 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     object-fit: contain;
     vertical-align: -.22em;
 }
-/* Code. The sunken fill alone sits at ~1.1:1 against the page in BOTH themes,
-   so the container has to be drawn with a border, not a tint. Block and inline
-   share one size — JetBrains Mono has a much larger x-height than EB Garamond,
-   so mono set at the serif's size reads oversized and breaks the line rhythm. */
+/* Code. The sunken fill alone sits at only ~1.10:1 by day and ~1.34:1 by night
+   against the page, so the container needs the strong semantic edge as well as
+   the tint. Block and inline share one size — JetBrains Mono has a much larger
+   x-height than EB Garamond, so mono set at the serif's size reads oversized
+   and breaks the line rhythm. */
 .formatted-content pre {
     margin-block: 0 1em;
     padding: 12px 14px;
-    border: 1px solid var(--border-hair);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius-md);
     background: var(--surface-sunken);
     overflow-x: auto;
@@ -494,7 +495,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 .formatted-content code {
     padding: .1em .35em;
-    border: 1px solid var(--border-hair);
+    border: 1px solid var(--border-strong);
     border-radius: 4px;
     background: var(--surface-sunken);
     font-family: var(--font-mono);
@@ -511,6 +512,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     color: inherit;
     font-style: italic;
 }
+.formatted-content blockquote > :last-child { margin-block-end: 0; }
 .formatted-content hr {
     margin-block: 2em;
     border: 0;
@@ -1173,10 +1175,12 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 /* The preview re-uses the server's render pipeline, so it must also re-use the
    published reading measure — otherwise what you proof is not what you post. */
 .composer-preview {
-    max-width: 66ch;
+    /* Global border-box sizing means the preview's 12px inline padding and 1px
+       edges must sit OUTSIDE the same 66ch content measure as a published post. */
+    max-width: calc(66ch + 26px);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    background: var(--surface-sunken);
+    background: var(--surface-page);
     padding: 12px;
     margin-top: 8px;
     overflow-wrap: anywhere;
@@ -5905,6 +5909,15 @@ span.wf-btn {
 .post-accepted,
 .post-deleted { margin-block: 10px; }
 .post-accepted { border-color: var(--green-200); background: var(--surface-done); }
+/* The earlier legacy stub rule is intentionally repeated at the final thread
+   layer: the flat-stream .post reset otherwise erases the staff-only frame. */
+.post-deleted {
+    padding: 8px 12px;
+    border-color: var(--border-strong);
+    border-style: dashed;
+    border-radius: var(--radius);
+    background: var(--surface-sunken);
+}
 .post-avatar,
 .post-avatar-spacer { width: 48px; flex-basis: 48px; }
 .post-avatar > .monogram,
@@ -6104,6 +6117,8 @@ body.thread-restructure-open { overflow: hidden; }
     .thread-restructure-dialog select,
     .thread-restructure-dialog input { min-height: 44px; }
     .post { gap: 10px; padding: 16px 4px; }
+    /* Reassert the semantic same-author state after the mobile padding shorthand. */
+    .post.post-grouped { padding-block-start: 0; }
     [data-thread-enhanced="1"] .post-toolbar {
         position: static;
         opacity: 1;

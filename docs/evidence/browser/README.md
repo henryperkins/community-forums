@@ -14,7 +14,9 @@ preferences, branding, product-tour, API-token, and webhook paths.
 The composer set includes `17-composer-upload` for the visible file picker and
 compact in-box chip, `26-slash-menu` for the floating non-reflowing insert menu,
 `80-thread-study` for the new reply shell in its reading context, and
-`82-composer-emoji` for the accessible server-backed dialog/grid picker. Focused
+`82-composer-emoji` for the accessible server-backed dialog/grid picker. The
+shared-content closeout adds `85`/`86` for grouped and removed reply states and
+`87`/`88` for the real light/dark composer preview. Focused
 coverage spans inline axe scans, JavaScript-disabled and reduced-motion modes,
 source/rich Enter behavior, attach, and the `rich_composer=false` Inbox path.
 

@@ -9,6 +9,23 @@ const TEST_EMAIL = 'alice@retro.test';
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
 
+function contrastRatio(first: string, second: string): number {
+  const luminance = (color: string): number => {
+    const channels = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
+    if (!channels || channels.length !== 3) throw new Error(`Unsupported CSS color: ${color}`);
+    const [red, green, blue] = channels.map((channel) => {
+      const normalized = channel / 255;
+      return normalized <= 0.04045
+        ? normalized / 12.92
+        : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  };
+  const a = luminance(first);
+  const b = luminance(second);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
 function runPhp(code: string): string {
   const php = `
 require 'vendor/autoload.php';
@@ -442,7 +459,7 @@ test('format row toggle persists and icon tooltips work for pointer and keyboard
   await expect.poll(() => bold.evaluate((button) => getComputedStyle(button, '::after').opacity)).toBe('1');
 });
 
-test('draft counter preview and textarea auto-growth stay inside the shell', async ({ page }) => {
+test('draft counter preview and textarea auto-growth stay inside the shell', async ({ page }, info) => {
   setWysiwygComposer(false);
   setComposingPrefs({ showPreview: true });
   await login(page);
@@ -468,8 +485,59 @@ test('draft counter preview and textarea auto-growth stay inside the shell', asy
   const previewToggle = form.getByRole('button', { name: 'Preview' });
   const preview = form.locator('.composer-preview');
   await expect(previewToggle).toHaveAttribute('aria-expanded', 'true');
-  await textarea.fill('**preview shell**');
+  await textarea.fill('**preview shell**\n\n`inline code`\n\n```text\npreview code block\n```');
   await expect(preview.locator('strong')).toHaveText('preview shell', { timeout: 5000 });
+  await expect(preview.locator('pre code')).toContainText('preview code block');
+
+  const previewMeasure = await preview.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;inline-size:66ch;block-size:1px;';
+    element.append(probe);
+    const proseMeasure = probe.getBoundingClientRect().width;
+    probe.remove();
+    const inlineInsets = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+      + parseFloat(style.borderLeftWidth) + parseFloat(style.borderRightWidth);
+    const maxContentWidth = parseFloat(style.maxWidth) - inlineInsets;
+    const box = element.getBoundingClientRect();
+    const parentBox = element.parentElement!.getBoundingClientRect();
+    return {
+      maxContentWidth,
+      proseMeasure,
+      contained: box.left >= parentBox.left - 1 && box.right <= parentBox.right + 1,
+    };
+  });
+  expect(
+    Math.abs(previewMeasure.maxContentWidth - previewMeasure.proseMeasure),
+    JSON.stringify(previewMeasure),
+  ).toBeLessThanOrEqual(1);
+  expect(previewMeasure.contained, JSON.stringify(previewMeasure)).toBe(true);
+
+  for (const theme of ['light', 'dark'] as const) {
+    await page.locator('html').evaluate((element, nextTheme) => element.setAttribute('data-theme', nextTheme), theme);
+    const colors = await preview.evaluate((element) => {
+      const previewStyle = getComputedStyle(element);
+      const preStyle = getComputedStyle(element.querySelector('pre')!);
+      return {
+        previewFill: previewStyle.backgroundColor,
+        codeFill: preStyle.backgroundColor,
+        codeBorder: preStyle.borderTopColor,
+      };
+    });
+    expect(colors.codeFill, `${theme} preview code should not disappear into its container`).not.toBe(colors.previewFill);
+    expect(
+      contrastRatio(colors.codeBorder, colors.codeFill),
+      `${theme} code border ${colors.codeBorder} should remain distinct from ${colors.codeFill}`,
+    ).toBeGreaterThanOrEqual(1.9);
+    await form.screenshot({
+      path: path.join(
+        EVIDENCE_DIR,
+        info.project.name,
+        theme === 'light' ? '87-composer-preview-light.png' : '88-composer-preview-dark.png',
+      ),
+      animations: 'disabled',
+    });
+  }
   await previewToggle.click();
   await expect(preview).toBeHidden();
   expect(await page.evaluate(() => localStorage.getItem('rb-composer:preview'))).toBe('closed');

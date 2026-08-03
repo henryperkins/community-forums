@@ -25,6 +25,10 @@ final class FormattedContentContractTest extends TestCase
             (string) file_get_contents($root . '/templates/partials/living_brief.php'),
         );
         self::assertStringContainsString(
+            'class="prose formatted-content"',
+            (string) file_get_contents($root . '/templates/profile/show.php'),
+        );
+        self::assertStringContainsString(
             "pane.className = 'composer-preview formatted-content';",
             (string) file_get_contents($root . '/public/assets/composer.js'),
         );

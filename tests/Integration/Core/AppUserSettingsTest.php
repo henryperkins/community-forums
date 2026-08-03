@@ -77,6 +77,39 @@ final class AppUserSettingsTest extends TestCase
         $this->assertDontSeeText($response, 'secret@example.test');
     }
 
+    public function test_public_profile_renders_rich_bio_inside_shared_content_contract(): void
+    {
+        $user = $this->makeUser([
+            'username' => 'richbio',
+            'display_name' => 'Rich Bio',
+        ]);
+        $bio = <<<'MARKDOWN'
+## Evidence discipline
+
+- Keep the record whole.
+- Verify the rendered result.
+
+> A rollback note belongs beside the change.
+
+Run `repair` after reconciliation.
+
+```text
+verified profile content
+```
+MARKDOWN;
+        $this->users()->updateProfile((int) $user['id'], 'Rich Bio', $bio, 'The Archive');
+
+        $response = $this->get('/u/richbio');
+
+        $this->assertStatus(200, $response);
+        self::assertStringContainsString('class="prose formatted-content"', $response->body());
+        self::assertStringContainsString('<h2>Evidence discipline</h2>', $response->body());
+        self::assertStringContainsString('<ul>', $response->body());
+        self::assertStringContainsString('<blockquote>', $response->body());
+        self::assertStringContainsString('<code>repair</code>', $response->body());
+        self::assertStringContainsString('<pre><code class="language-text">verified profile content', $response->body());
+    }
+
     public function test_unknown_profile_is_404(): void
     {
         $this->assertStatus(404, $this->get('/u/ghost'));

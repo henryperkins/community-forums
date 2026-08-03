@@ -57,12 +57,15 @@ harness grows. The current branch also captures:
 - `80-thread-study`, `81-thread-tools` (the closed Study reading surface with the new reply shell, and its open desktop drawer/mobile sheet)
 - `82-composer-emoji` (server-backed emoji dialog/grid with remembered insertion in desktop popover and mobile sheet layouts)
 - `83-rich-content`, `84-rich-content-table` (shared semantic Markdown rendering at the top of the post, followed by responsive image containment and the keyboard-scrollable wide-table state)
+- `85-thread-content-states-light`, `86-thread-content-states-dark` (staff-visible removed-reply frame beside a consecutive same-author reply, at both viewports and themes)
+- `87-composer-preview-light`, `88-composer-preview-dark` (the real server-rendered preview with its published `66ch` content measure and distinct nested code container)
 
 Focused acceptance specs that do not write numbered screenshots:
 
 - `wysiwyg-composer.spec.ts` gates the WYSIWYG layer (graduated to default-on 2026-07-02; the seed pins it off so gate-a keeps the textarea baseline): strict CSP asset load with no features override (proving the GA default mounts), textarea fallback, new-topic submit, source-mode round trip, no-op edit preservation, server-preview parity, rich reference chips, internal URL paste normalization, and mobile smoke.
 - `composer-shell.spec.ts` is part of the standard `evidence` command and covers contained anatomy, source/rich Enter semantics, in-flight submission, inline axe scans, preview/counter/drafts, non-reflowing suggestions, emoji, visible attach/chips, reduced motion, and the mobile overflow dock. `community-inbox-theme.spec.ts` adds the JavaScript-disabled reply journey and the `rich_composer=false` in-pane Inbox kill-switch regression.
 - `rich-content.spec.ts` is part of the standard `evidence` command and verifies the shared formatted-content contract at desktop/mobile widths, serious/critical axe results, horizontal table keyboard access, image/custom-emoji geometry, and a narrow JavaScript-disabled thread render.
+- `thread-content-presentation.spec.ts` seeds isolated grouped and soft-deleted reply states, then measures their final cascade, contrast, overflow, and accessibility at desktop/mobile widths.
 
 ## Run it locally
 

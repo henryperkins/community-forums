@@ -72,7 +72,22 @@ $db->run(
          created_at = '2019-03-15 12:00:00'
      WHERE id = ?",
     [
-        "Keeper of the evaluation suite and an unreasonable number of half-finished rollback drills. I care most about the boring parts — the audit trail, the migration you can undo, and the note left for whoever reads it next.\n\nIf I ask you for evidence, it is how we keep the record whole.",
+        <<<'MARKDOWN'
+Keeper of the evaluation suite and an unreasonable number of half-finished rollback drills.
+
+## Evidence discipline
+
+- Preserve the audit trail.
+- Leave a rollback note for the next reader.
+
+> If I ask you for evidence, it is how we keep the record whole.
+
+Run `repair` after reconciliation.
+
+```text
+verified profile content
+```
+MARKDOWN,
         $galadrielId,
     ],
 );
