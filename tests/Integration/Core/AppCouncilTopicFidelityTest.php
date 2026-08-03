@@ -16,7 +16,7 @@ use Tests\Support\TestCase;
  *  - that plinth is suppressed for an anonymous post, so masking a byline never
  *    leaks the real author's reputation (a deanonymisation channel);
  *  - the guest join-bar speaks the council lexicon ("counsel", emphasised);
- *  - the breadcrumb resolves to a two-hop Inbox / #board back-trail.
+ *  - the breadcrumb resolves to a two-hop Forum index / #board back-trail.
  */
 final class AppCouncilTopicFidelityTest extends TestCase
 {
@@ -92,10 +92,10 @@ final class AppCouncilTopicFidelityTest extends TestCase
         $resp = $this->get('/t/' . $t['thread_id'] . '-' . $t['slug']);
 
         $this->assertStatus(200, $resp);
-        // First hop is Home (the board index at /), labelled to match where it
-        // actually goes — not "Inbox", which is the distinct /inbox route.
+        // First hop is the Forum index at /, labelled to match where it actually
+        // goes — not "Forum inbox", which is the distinct /inbox route.
         $this->assertSeeText($resp, 'class="breadcrumb-back" href="/"');
-        $this->assertSeeText($resp, 'Home</a>');
+        $this->assertSeeText($resp, 'Forum index</a>');
         $this->assertSeeText($resp, 'breadcrumb-board');
     }
 }

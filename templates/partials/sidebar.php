@@ -5,9 +5,12 @@ $isDmRoute = $request_path === '/messages'
     || strncmp((string) $request_path, $dmRoutePrefix, strlen($dmRoutePrefix)) === 0;
 ?>
 <aside class="sidebar" id="sidebar-nav" data-sidebar>
-    <a class="sidebar-home<?= $request_path === '/' ? ' active' : '' ?>" href="/">
+    <a class="sidebar-home<?= $request_path === '/' ? ' active' : '' ?>" href="/"<?= $request_path === '/' ? ' aria-current="page"' : '' ?>>
         <svg class="rail-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/></svg>
-        <span>Home</span>
+        <span class="rail-route-copy">
+            <span class="rail-route-label">Forum index</span>
+            <span class="rail-route-detail">Browse boards</span>
+        </span>
     </a>
     <?php if ($current_user !== null): ?>
         <nav class="rail-filters-nav" aria-label="Quick filters">
@@ -18,14 +21,20 @@ $isDmRoute = $request_path === '/messages'
                         <span>Search</span></a></li>
                 <?php endif; ?>
                 <?php if (!empty($features['engagement'])): ?>
-                    <li><a class="rail-filter<?= $request_path === '/inbox' ? ' active' : '' ?>" href="/inbox">
+                    <li><a class="rail-filter<?= $request_path === '/inbox' ? ' active' : '' ?>" href="/inbox"<?= $request_path === '/inbox' ? ' aria-current="page"' : '' ?>>
                         <svg class="rail-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.4-6.5A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.5z"/></svg>
-                        <span>Inbox</span></a></li>
+                        <span class="rail-route-copy">
+                            <span class="rail-route-label">Forum inbox</span>
+                            <span class="rail-route-detail">Your personal queue</span>
+                        </span></a></li>
                 <?php endif; ?>
                 <?php if (!empty($features['dms'])): ?>
-                    <li><a class="rail-filter<?= $isDmRoute ? ' active' : '' ?>" href="/messages">
+                    <li><a class="rail-filter<?= $isDmRoute ? ' active' : '' ?>" href="/messages"<?= $isDmRoute ? ' aria-current="page"' : '' ?>>
                         <svg class="rail-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <span>Messages</span></a></li>
+                        <span class="rail-route-copy">
+                            <span class="rail-route-label">Messages</span>
+                            <span class="rail-route-detail">Private conversations</span>
+                        </span></a></li>
                 <?php endif; ?>
                 <?php if (!empty($features['drafts'])): ?>
                     <li><a class="rail-filter<?= $request_path === '/drafts' ? ' active' : '' ?>" href="/drafts">
