@@ -15,6 +15,7 @@ const prototypeRoot = path.join(
 );
 
 type Surface = 'forum-index' | 'board' | 'thread';
+type CapturedSurface = Surface | 'inbox';
 type Theme = 'light' | 'dark';
 
 const approvedReferences: Record<'desktop' | 'mobile', Record<Surface, string>> = {
@@ -134,14 +135,60 @@ async function expectBoardIdentityContent(page: Page, theme: Theme): Promise<voi
   await expect(board.getByRole('button', { name: 'New topic' }), `${theme} promoted New topic`).toBeVisible();
 }
 
-function productionScreenshot(project: 'desktop' | 'mobile', surface: Surface, theme: Theme): string {
+async function expectInboxContent(page: Page, project: 'desktop' | 'mobile'): Promise<void> {
+  const inbox = page.locator('[data-inbox]');
+  const activeFilter = inbox.locator('.inbox-tabs a.is-active');
+  const topic = inbox.locator('[data-inbox-list] a.thread-title').first();
+  await expect(inbox).toBeVisible();
+  await expect(inbox.locator('[data-inbox-list]')).toBeVisible();
+  await expect(inbox.locator('.inbox-tabs a')).not.toHaveCount(0);
+  await expect(activeFilter).toHaveCount(1);
+  await expect(activeFilter).toHaveText('For You');
+  await expect(activeFilter).toHaveAttribute('aria-current', 'page');
+  await expect(inbox.locator('[data-inbox-list] .thread-row.is-active')).toHaveCount(0);
+  if (project === 'desktop') {
+    await expect(inbox.locator('[data-inbox-reading] .inbox-empty')).toBeVisible();
+  } else {
+    await expect(inbox.locator('[data-inbox-reading]')).toBeHidden();
+  }
+  await expect(topic).toBeVisible();
+  await expect(topic).toHaveAttribute('href', /^\/t\/\d+/);
+  await expect(page.locator('[data-board-identity]')).toHaveCount(0);
+}
+
+async function expectApprovedBoardDensity(page: Page): Promise<void> {
+  const row = page.locator('.board-topics-list .thread-row-board')
+    .filter({ hasText: 'Share your favourite keyboard shortcuts' });
+  const title = row.locator('.thread-title');
+  await expect(row).toHaveCount(1);
+  await expect(title).toBeVisible();
+
+  const geometry = await row.evaluate((element) => {
+    const titleElement = element.querySelector<HTMLElement>('.thread-title');
+    const rowRect = element.getBoundingClientRect();
+    if (!titleElement) throw new Error('seeded row is missing its canonical title link');
+    const titleStyle = getComputedStyle(titleElement);
+    const lineHeight = Number.parseFloat(titleStyle.lineHeight);
+    return {
+      rowHeight: rowRect.height,
+      titleHeight: titleElement.getBoundingClientRect().height,
+      lineHeight,
+    };
+  });
+
+  expect(geometry.titleHeight, JSON.stringify(geometry)).toBeLessThanOrEqual(geometry.lineHeight + 1);
+  expect(geometry.rowHeight, JSON.stringify(geometry)).toBeGreaterThanOrEqual(60);
+  expect(geometry.rowHeight, JSON.stringify(geometry)).toBeLessThanOrEqual(72);
+}
+
+function productionScreenshot(project: 'desktop' | 'mobile', surface: CapturedSurface, theme: Theme): string {
   return path.join(evidenceRoot, project, `${surface}-${theme}.png`);
 }
 
 async function captureSurface(
   page: Page,
   project: 'desktop' | 'mobile',
-  surface: Surface,
+  surface: CapturedSurface,
   theme: Theme,
   assertReady?: () => Promise<void>,
 ): Promise<void> {
@@ -222,6 +269,13 @@ test('forum index, board, and canonical thread satisfy production visual and acc
   const project = info.project.name === 'mobile' ? 'mobile' : 'desktop';
   const viewport = evidenceViewport(info);
 
+  await visit(page, '/inbox');
+  await expectInboxContent(page, project);
+  await expectNoHorizontalOverflow(page);
+  await expectNoSeriousA11yViolations(page, '[data-inbox]');
+  await captureSurface(page, project, 'inbox', 'light', () => expectInboxContent(page, project));
+  await captureSurface(page, project, 'inbox', 'dark', () => expectInboxContent(page, project));
+
   await visit(page, '/');
   await expect(page.locator('.forum-directory__hero')).toBeVisible();
   await expect(page.getByText('personal cross-board queue')).toBeVisible();
@@ -239,6 +293,9 @@ test('forum index, board, and canonical thread satisfy production visual and acc
   await expect(board).toHaveCSS('border-bottom-color', 'rgb(194, 154, 68)');
   await expect(board).toHaveCSS('border-bottom-width', '3px');
   await expect(page.getByText('Pinned first, then last post')).toBeVisible();
+  if (project === 'desktop') {
+    await expectApprovedBoardDensity(page);
+  }
   await expectNoHorizontalOverflow(page);
   await expectNoSeriousA11yViolations(page, '.board-view');
   await captureSurface(page, project, 'board', 'light', () => expectBoardIdentityContent(page, 'light'));
@@ -315,23 +372,17 @@ test('board route does not overflow at the 860px shell transition', async ({ pag
   test.skip(info.project.name !== 'desktop', 'The desktop project owns the intermediate-width regression.');
   const messages = captureBrowserMessages(page);
 
-  await page.setViewportSize({ width: 800, height: 800 });
   await login(page);
-  await visit(page, '/c/general');
 
-  const layout = await page.evaluate(() => {
-    const board = document.querySelector('.board-view');
-    const boardRect = board?.getBoundingClientRect();
-    return {
-      viewportWidth: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-      boardLeft: boardRect ? Math.round(boardRect.left) : null,
-      boardRight: boardRect ? Math.round(boardRect.right) : null,
-    };
-  });
+  for (const width of [800, 681, 680, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    await visit(page, '/c/general');
+    await expectNoHorizontalOverflow(page);
+    const rect = await page.locator('.board-view').evaluate((element) => element.getBoundingClientRect());
+    expect(Math.round(rect.left)).toBeGreaterThanOrEqual(0);
+    expect(Math.round(rect.right)).toBeLessThanOrEqual(width);
+  }
 
-  expect(layout.viewportWidth).toBe(800);
-  expect(layout.scrollWidth, JSON.stringify(layout)).toBe(800);
   expectNoBrowserMessages(messages);
 });
 
