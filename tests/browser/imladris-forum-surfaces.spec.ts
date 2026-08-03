@@ -50,3 +50,25 @@ test('board identity opens the one topic composer and restores focus to its actu
   await expect(opener).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
+
+test('board route does not overflow at the 860px shell transition', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'The desktop project owns the intermediate-width regression.');
+
+  await page.setViewportSize({ width: 800, height: 800 });
+  await login(page);
+  await page.goto('/c/general');
+
+  const layout = await page.evaluate(() => {
+    const board = document.querySelector('.board-view');
+    const boardRect = board?.getBoundingClientRect();
+    return {
+      viewportWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      boardLeft: boardRect ? Math.round(boardRect.left) : null,
+      boardRight: boardRect ? Math.round(boardRect.right) : null,
+    };
+  });
+
+  expect(layout.viewportWidth).toBe(800);
+  expect(layout.scrollWidth, JSON.stringify(layout)).toBe(800);
+});

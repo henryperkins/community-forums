@@ -5355,9 +5355,6 @@ span.wf-btn {
     .main > .read-main {
         margin: -24px -16px -24px;
     }
-    .board-view.read-main {
-        margin-inline: -14px;
-    }
     .tag-card {
         width: 100%;
     }
@@ -5420,6 +5417,10 @@ span.wf-btn {
     .board-view .board-identity-actions { align-items: stretch; flex-direction: column; }
     .board-view .board-identity-actions form,
     .board-view .board-identity-actions .btn { width: 100%; }
+}
+
+@media (max-width: 860px) {
+    .board-view.read-main { margin-inline: -14px; }
 }
 
 .thread-intelligence-admin .ti-attention {
