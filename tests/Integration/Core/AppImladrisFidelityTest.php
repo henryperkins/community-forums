@@ -37,6 +37,8 @@ final class AppImladrisFidelityTest extends TestCase
 
         $res = $this->get('/t/' . $tid . '-' . $thread['slug']);
         $this->assertStatus(200, $res);
+        $this->assertSeeText($res, '<nav class="breadcrumb" aria-label="Breadcrumb">');
+        $this->assertSeeText($res, 'Forum index</a>');
         $this->assertSeeText($res, 'thread-participants');   // two distinct authors → the stack renders
     }
 

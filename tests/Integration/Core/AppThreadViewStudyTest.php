@@ -15,6 +15,25 @@ final class AppThreadViewStudyTest extends TestCase
         $this->makeAdmin();
     }
 
+    public function test_canonical_thread_keeps_a_semantic_forum_index_breadcrumb_without_board_identity(): void
+    {
+        $board = $this->makeBoard($this->makeCategory('Study breadcrumb'), ['slug' => 'study-breadcrumb']);
+        $author = $this->makeUser(['username' => 'study_breadcrumb_author']);
+        $thread = $this->makeThread($board, $author, 'A bounded reading surface', 'Opening record.');
+
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $body = $page->body();
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('<nav class="breadcrumb" aria-label="Breadcrumb">', $body);
+        self::assertStringContainsString('href="/">', $body);
+        self::assertStringContainsString('Forum index</a>', $body);
+        self::assertStringContainsString('href="/c/' . $board['slug'] . '"', $body);
+        self::assertStringContainsString('data-thread-study', $body);
+        self::assertStringNotContainsString('data-board-identity', $body);
+        self::assertStringNotContainsString('board-identity', $body);
+    }
+
     public function test_post_titles_use_the_real_title_service_and_stay_hidden_for_anonymous_posts(): void
     {
         $author = $this->makeUser([

@@ -33,7 +33,7 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
 <article class="thread thread-conversation thread-study" data-thread-study>
     <div class="thread-scroll">
     <header class="thread-head thread-study-head">
-        <p class="breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></p>
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a class="breadcrumb-back" href="/"><svg class="breadcrumb-back-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Forum index</a><span class="breadcrumb-sep" aria-hidden="true">/</span><a class="breadcrumb-board" href="/c/<?= $e($thread['board_slug']) ?>"><span class="hash">#</span><?= $e($thread['board_name']) ?></a></nav>
         <h1 class="thread-study-title">
             <?php if ((int) $thread['is_pinned'] === 1): ?><span class="thread-state-chip is-pinned">Pinned</span><?php endif; ?>
             <?php if ((int) $thread['is_locked'] === 1): ?><span class="thread-state-chip is-locked">Locked</span><?php endif; ?>

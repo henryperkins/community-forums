@@ -83,7 +83,7 @@ final class AppCouncilTopicFidelityTest extends TestCase
         $this->assertSeeText($resp, '<em>log in to add your counsel.</em>');
     }
 
-    public function test_breadcrumb_back_trail_resolves_to_home_and_board(): void
+    public function test_breadcrumb_back_trail_resolves_to_forum_index_and_board(): void
     {
         $board = $this->makeBoard($this->cat, ['slug' => 'audit-trails', 'name' => 'audit-trails']);
         $author = $this->makeUser(['username' => 'cirdan']);
@@ -94,6 +94,7 @@ final class AppCouncilTopicFidelityTest extends TestCase
         $this->assertStatus(200, $resp);
         // First hop is the Forum index at /, labelled to match where it actually
         // goes — not "Forum inbox", which is the distinct /inbox route.
+        $this->assertSeeText($resp, '<nav class="breadcrumb" aria-label="Breadcrumb">');
         $this->assertSeeText($resp, 'class="breadcrumb-back" href="/"');
         $this->assertSeeText($resp, 'Forum index</a>');
         $this->assertSeeText($resp, 'breadcrumb-board');
