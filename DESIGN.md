@@ -121,10 +121,10 @@ A single, full-height application screen with three columns, plus a top bar:
 
 - **Top bar** — brand, global search, help, notifications bell, and the identity area (see §6.6).
 - **Pane 1 — Sidebar (channels):** workspace header, quick filters (Threads, Mentions, Starred, Drafts), categories of boards with unread badges, and a Direct Messages section with presence dots. Sections collapse.
-- **Pane 2 — Thread inbox:** the selected board's threads as scannable rows (avatar, subject, snippet, reply count, time, unread/star), with filter tabs (All / Unread / Starred / Mine) and a New Topic button.
-- **Pane 3 — Conversation:** the open thread as a message stream with a composer (or a guest join-bar) at the bottom.
+- **Pane 2 — Directory / topic list:** `/` is the Forum Index directory; `/inbox` is the personalized thread inbox, with its member filters; and `/c/{slug}` is one board's fixed-order topic list. Topic rows remain scannable (avatar, subject, snippet, reply count, time, unread/star); a board list has its New Topic button, while **Newest** and **Unanswered** are Inbox filters.
+- **Pane 3 — Conversation:** navigating to the canonical `/t/{id}-{slug}` renders that thread as a message stream with a composer (or a guest join-bar) at the bottom.
 
-On screens ≤ 860px the layout collapses to one column: the sidebar becomes a slide-in drawer, and opening a thread slides the conversation over the inbox with a back button.
+On screens ≤ 860px the layout collapses to one column: the sidebar becomes a slide-in drawer, and a canonical conversation supplies a back link to its originating Inbox or board topic list.
 
 ### 5.3 URL structure (server-rendered, SEO-friendly)
 
@@ -970,7 +970,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
-| v0.16 | 2026-08-02 | Clarified the Forum Index, personalized Inbox, board topic-list, and canonical-conversation URL roles. Board topic lists now have a fixed pinned-then-activity order; Newest and Unanswered are Inbox filters. |
+| v0.16 | 2026-08-02 | Clarified the shell and URL roles for the Forum Index, personalized Inbox, board topic list, and canonical conversation. Board topic lists now have a fixed pinned-then-activity order; Newest and Unanswered are Inbox filters. |
 | v0.15 | 2026-07-14 | Adopted the imported Imladris system as a generated, allowlisted runtime foundation beneath the application compatibility layer; documented preview/runtime exclusions, cascade ownership, self-hosted fonts, and the production-baseline drift gate that prevents newer forum/composer surfaces from silently outrunning design parity. |
 | v0.14 | 2026-07-14 | Unified post, DM, preview, revision, and living-brief rendering around canonical Markdown plus a shared responsive presentation contract; documented safe semantic attributes, read-time fallback for missing derived HTML, and the idempotent render-cache repair path. Corrected spoiler syntax to the shipped `||spoiler||` form. |
 | v0.13 | 2026-07-12 | Added §6.19 for the Thread Intelligence member, curator, processor, provenance, retention, failure, and operator contracts; later reconciled the completed evidence package and joint default-on graduation of `community_memory` and `automated_context`, with independent rollback pins. |
