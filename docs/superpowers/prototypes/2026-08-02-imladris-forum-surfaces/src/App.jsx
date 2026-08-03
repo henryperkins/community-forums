@@ -6,7 +6,7 @@ import { ThreadView } from "./screens/ThreadView.jsx";
 
 const routeFromHash = () => {
   const hash = window.location.hash.replace(/^#/, "") || "/";
-  if (hash.startsWith("/t/")) return "thread";
+  if (hash === "/t/184-where-should-ratified-decisions-live" || hash === "/t/184-where-should-ratified-decisions-live/") return "thread";
   if (hash === "/c/the-archive" || hash === "/c/the-archive/") return "board";
   return "home";
 };

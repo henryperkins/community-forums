@@ -59,6 +59,14 @@ The same `#/c/the-archive` parchment-theme route and mock data were captured at 
 
 Focused comparison found no actionable P0, P1, or P2 drift: the implementation uses the Direction A evergreen fill, parchment text, mallorn-gold bottom rule, pale supporting copy, and gold primary action while retaining the approved full board information and action layout. The desktop and mobile captures preserve the target’s typography roles, measured spacing rhythm, palette, supplied iconography, and board copy. The mobile capture has no horizontal overflow and keeps the DOM/visual action order as Following then New topic. `evidence/thread-identity-desktop.png` confirms the canonical thread remains parchment with its existing hairline divider rather than inheriting the board band.
 
+### Iteration 4: exact-head parchment-heading recapture
+
+After the hash-mark repair and exact route-boundary repairs, the board evidence was regenerated from the current source at 1266 × 854 (`evidence/board-identity-desktop.png`) and 390 × 844 (`evidence/board-identity-mobile.png`) CSS px at device scale factor 1. The fresh `.board-hero` element was captured as `evidence/board-identity-board-header.png`, and `evidence/board-identity-comparison.png` was rebuilt from that fresh header and the unchanged Direction A source reference. The reference remains 440 × 143 px; the fresh implementation header is 836 × 188 px and is normalized to 440 × 99 px in the comparison.
+
+The regenerated desktop, mobile, focused-header, and comparison artifacts were opened alongside `evidence/board-identity-direction-a-reference.png` and `evidence/thread-identity-desktop.png`. The entire `#the-archive` heading is visibly parchment in each fresh board artifact. The exact browser computed values for both the heading and its hash child are `rgb(250, 246, 236)`; the board background remains `rgb(46, 74, 58)`. No actionable P0, P1, or P2 difference remains. The canonical thread capture still shows the intended parchment reading surface and is unchanged by this board-only treatment.
+
+The approved board and thread hashes, including exact trailing-slash forms, render their respective prototype screens. Unknown `/c/*` and `/t/*` hashes now return the existing Forum Index fallback rather than displaying hard-coded content. At mobile width, action order remains Following then New topic, no horizontal overflow is present, the Follow control toggles and announces its discovery-feed notice, and focus remains visibly outlined. The fresh browser console reported 0 errors and 0 warnings. No favicon change was made.
+
 ## Design-system fidelity
 
 - Typography: self-hosted Cormorant Garamond, Marcellus, EB Garamond, and JetBrains Mono are used in their source roles.
@@ -72,7 +80,7 @@ Focused comparison found no actionable P0, P1, or P2 drift: the implementation u
 
 Browser checks covered the Forum Index → Board → Thread path; Follow, New Topic, Topic Tools, poll, reply, post-source, skip-link, mobile navigation, and focus-loop states. Two consecutive replies produced unique `post-453` and `post-454` IDs.
 
-For the board-identity pass, the desktop computed style was `rgb(46, 74, 58)` background, `rgb(250, 246, 236)` color, and `3px solid rgb(194, 154, 68)` border bottom. Follow toggled with its discovery-feed notice; New topic opened and closed; partial submission produced the invalid-submit notice; a complete submission produced the prototype-success notice; and the exemplar topic link opened the canonical thread. At mobile width, both actions remained in order and the focused Following action remained visible with a 3 px outline. The final console check found one persistent, unrelated P3 `GET /favicon.ico` 404 from the pre-existing prototype static-asset setup; there were no board identity errors or warnings.
+For the board-identity pass, the desktop computed style was `rgb(46, 74, 58)` background, `rgb(250, 246, 236)` color, and `3px solid rgb(194, 154, 68)` border bottom. Follow toggled with its discovery-feed notice; New topic opened and closed; partial submission produced the invalid-submit notice; a complete submission produced the prototype-success notice; and the exemplar topic link opened the canonical thread. At mobile width, both actions remained in order and the focused Following action remained visible with a 3 px outline. The exact-head recapture is recorded in Iteration 4.
 
 - `npm run build`: passed; 4,575 modules transformed and the Sites bundle prepared.
 - `npm run test:sites`: passed; 4 tests, 0 failures.
