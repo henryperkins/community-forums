@@ -137,10 +137,18 @@ async function expectBoardIdentityContent(page: Page, theme: Theme): Promise<voi
 
 async function expectInboxContent(page: Page): Promise<void> {
   const inbox = page.locator('[data-inbox]');
+  const activeFilter = inbox.locator('.inbox-tabs a.is-active');
+  const topic = inbox.locator('[data-inbox-list] a.thread-title').first();
   await expect(inbox).toBeVisible();
   await expect(inbox.locator('[data-inbox-list]')).toBeVisible();
   await expect(inbox.locator('.inbox-tabs a')).not.toHaveCount(0);
-  await expect(inbox.locator('[data-inbox-list] a.thread-title').first()).toBeVisible();
+  await expect(activeFilter).toHaveCount(1);
+  await expect(activeFilter).toHaveText('For You');
+  await expect(activeFilter).toHaveAttribute('aria-current', 'page');
+  await expect(inbox.locator('[data-inbox-list] .thread-row.is-active')).toHaveCount(0);
+  await expect(inbox.locator('[data-inbox-reading] .inbox-empty')).toBeVisible();
+  await expect(topic).toBeVisible();
+  await expect(topic).toHaveAttribute('href', /^\/t\/\d+/);
   await expect(page.locator('[data-board-identity]')).toHaveCount(0);
 }
 
