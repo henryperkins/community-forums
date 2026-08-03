@@ -17,11 +17,12 @@ use App\Repository\UserProfileFieldRepository;
 use App\Repository\UserRepository;
 use App\Repository\UsernameHistoryRepository;
 use App\Service\TitleService;
+use App\Service\UserModerationService;
 use App\Support\Markdown;
 
 /**
  * Public profile (/u/{username}): identity, cosmetic title/rank, badges, reputation,
- * follower/following counts, activity, and the Follow / Message / Block / Report
+ * follower/following counts, activity, and the Follow / Message / Block
  * actions (COMMUNITY §8). Enforces profile visibility and blocks; email is never
  * shown to anyone. A renamed member's old handle 301-redirects to the new one.
  */
@@ -70,14 +71,56 @@ final class ProfileController extends Controller
             && $this->container->get(FeatureFlags::class)->enabled('dms')
             && $allowDms !== 'none';
 
-        // Profile activity tabs (§5.4): Overview / Threads / Posts / Commends, each
-        // a real ?tab= URL so the view works without JS and is crawlable. Unknown
-        // values fall back to Overview.
+        // Five real GET-backed tabs. Commends and Connections belong to the
+        // community layer and fall back to Overview when that layer is disabled.
         $tabValue = $request->query('tab');
         $tab = is_string($tabValue) ? $tabValue : 'overview';
-        if (!in_array($tab, ['overview', 'threads', 'posts', 'commends'], true)) {
+        if (!in_array($tab, ['overview', 'threads', 'posts', 'commends', 'connections'], true)) {
             $tab = 'overview';
         }
+        if (!$community && ($tab === 'commends' || $tab === 'connections')) {
+            $tab = 'overview';
+        }
+        // Match the existing /followers and /following privacy contract: a
+        // blocked pair cannot use the combined Connections surface as a bypass.
+        if ($tab === 'connections' && $blockedEither) {
+            throw new NotFoundException('That member could not be found.');
+        }
+
+        $rawQuery = $request->query('q');
+        $searchQuery = is_string($rawQuery) ? trim($rawQuery) : '';
+        $sort = $request->query('sort') === 'commends' ? 'commends' : 'newest';
+        $rawPage = $request->query('page');
+        $page = max(1, is_scalar($rawPage) ? (int) $rawPage : 1);
+        $perPage = 20;
+        $listRows = [];
+        $listTotal = 0;
+        if ($tab === 'threads' || $tab === 'posts') {
+            $listRepo = $tab === 'threads' ? $threadRepo : $postRepo;
+            $listTotal = $listRepo->countByUser($profileId, $searchQuery);
+            $page = min($page, max(1, (int) ceil($listTotal / $perPage)));
+            $listRows = $listRepo->listByUser(
+                $profileId,
+                $sort,
+                $searchQuery,
+                $perPage,
+                ($page - 1) * $perPage,
+            );
+        }
+
+        $connMode = $request->query('c') === 'following' ? 'following' : 'followers';
+        $rawConnQuery = $request->query('cq');
+        $connQuery = is_string($rawConnQuery) ? trim($rawConnQuery) : '';
+        $connList = [];
+        if ($tab === 'connections') {
+            $connList = $connMode === 'following'
+                ? $follows->listFollowing($profileId, 100, 0, $connQuery)
+                : $follows->listFollowers($profileId, 100, 0, $connQuery);
+        }
+
+        $canViewMemberRecord = $viewer !== null
+            && !$isSelf
+            && $this->container->get(UserModerationService::class)->canViewPanelFor($viewer, $profileId);
 
         return $this->view('profile/show', [
             'profile' => $profile,
@@ -88,8 +131,20 @@ final class ProfileController extends Controller
             'follower_count' => $follows->followerCount($profileId),
             'following_count' => $follows->followingCount($profileId),
             'solved_count' => $this->container->get(UserRepository::class)->solvedAnswerCount($profileId),
-            'recent_threads' => $threadRepo->recentByUser($profileId, 20),
-            'recent_posts' => $postRepo->recentByUser($profileId, 20),
+            'recent_threads' => $tab === 'overview' ? $threadRepo->recentByUser($profileId, 5) : [],
+            'recent_posts' => $tab === 'overview' ? $postRepo->recentByUser($profileId, 5) : [],
+            'board_activity' => $tab === 'overview' ? $postRepo->boardActivityForUser($profileId, 4) : [],
+            'top_commended' => $tab === 'commends' ? $postRepo->topCommendedByUser($profileId, 5) : [],
+            'list_rows' => $listRows,
+            'list_total' => $listTotal,
+            'search_query' => $searchQuery,
+            'sort' => $sort,
+            'page' => $page,
+            'page_count' => max(1, (int) ceil($listTotal / $perPage)),
+            'conn_mode' => $connMode,
+            'conn_query' => $connQuery,
+            'conn_list' => $connList,
+            'can_remove_followers' => $isSelf && $connMode === 'followers',
             'custom_fields' => $this->container->get(FeatureFlags::class)->enabled('custom_profile_fields')
                 ? $this->container->get(UserProfileFieldRepository::class)->forUser($profileId)
                 : [],
@@ -102,6 +157,9 @@ final class ProfileController extends Controller
             'viewer_blocks_profile' => $viewerBlocksProfile,
             'blocked_either' => $blockedEither,
             'presence_online' => $this->presenceOnline($profile, $isSelf),
+            'can_view_member_record' => $canViewMemberRecord,
+            'profile_status' => (string) ($profile['status'] ?? 'active'),
+            'profile_suspended_until' => $profile['suspended_until'] ?? null,
         ]);
     }
 
