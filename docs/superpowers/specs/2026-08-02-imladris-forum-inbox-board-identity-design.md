@@ -133,6 +133,8 @@ The reading pane repeats the topic's board breadcrumb so the member never loses 
 
 Desktop uses the shared rail plus one primary board column. It does not reproduce the inbox reading pane.
 
+The board identity header restores the approved Direction A treatment from the visual companion: an evergreen `#2E4A3A` field with parchment `#FAF6EC` text and a `3px` mallorn-gold `#C29A44` bottom rule. It sits below the breadcrumb and contains the board name, description, and board-scoped actions. This treatment belongs only to `/c/{slug}`; it does not extend to `/`, `/inbox`, `/messages`, or the canonical topic view. The canonical topic header remains parchment and follows the supplied Thread View source so reading stays visually focused.
+
 The board header emphasizes:
 
 - `#board-name`
