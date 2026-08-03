@@ -9,7 +9,11 @@ $status = (string) ($t['status'] ?? 'open');
 $pinned = (int) ($t['is_pinned'] ?? 0) === 1;
 $locked = (int) ($t['is_locked'] ?? 0) === 1;
 $statusSlug = preg_replace('/[^a-z_]/', '', $status);
-$rowClasses = 'thread-row';
+$presentation = (string) ($presentation ?? 'default');
+$boardPresentation = $presentation === 'board';
+$activityAt = (string) (($t['last_post_at'] ?? null) ?: $t['created_at']);
+$activityLabel = human_datetime($activityAt);
+$rowClasses = 'thread-row' . ($boardPresentation ? ' thread-row-board' : '');
 if ($unread) { $rowClasses .= ' thread-unread'; }
 if ($pinned) { $rowClasses .= ' thread-pinned'; }
 if ($locked) { $rowClasses .= ' thread-locked'; }
@@ -32,8 +36,10 @@ if ($status !== 'open') { $rowClasses .= ' thread-status-' . $statusSlug; }
         <span class="thread-meta">
             <?php if ($showBoard): ?><a class="thread-board" href="/c/<?= $e($t['board_slug']) ?>"><span class="hash">#</span><?= $e($t['board_name'] ?? $t['board_slug']) ?></a> · <?php endif; ?>
             by <?= $e($a['label']) ?>
-            · <?= (int) $t['reply_count'] ?> <?= (int) $t['reply_count'] === 1 ? 'reply' : 'replies' ?>
-            · <?= $e(human_datetime(($t['last_post_at'] ?? null) ?: $t['created_at'])) ?>
+            <?php if (!$boardPresentation): ?>
+                · <?= (int) $t['reply_count'] ?> <?= (int) $t['reply_count'] === 1 ? 'reply' : 'replies' ?>
+                · <?= $e($activityLabel) ?>
+            <?php endif; ?>
             <?php if (!empty($t['assigned_username'])): ?>
                 · assigned to @<?= $e($t['assigned_username']) ?>
             <?php endif; ?>
@@ -45,5 +51,11 @@ if ($status !== 'open') { $rowClasses .= ' thread-status-' . $statusSlug; }
             <?php endif; ?>
         </span>
     </div>
+    <?php if ($boardPresentation): ?>
+        <div class="thread-row-activity">
+            <span><?= (int) $t['reply_count'] ?> <?= (int) $t['reply_count'] === 1 ? 'reply' : 'replies' ?></span>
+            <time datetime="<?= $e($activityAt) ?>"><?= $e($activityLabel) ?></time>
+        </div>
+    <?php endif; ?>
     <?php if ($starred): ?><span class="thread-star" title="Starred" aria-label="Starred">★</span><?php endif; ?>
 </li>

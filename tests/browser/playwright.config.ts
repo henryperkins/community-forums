@@ -24,6 +24,7 @@ const database = process.env.DB_DATABASE ?? 'retroboards_e2e';
 const rateLimitPath = process.env.RATELIMIT_PATH ?? path.join(repoRoot, 'storage', 'ratelimit-e2e');
 const packagesPath = process.env.PACKAGES_STORAGE_PATH ?? path.join(repoRoot, 'storage', 'packages-e2e');
 const skipWebServer = process.env.E2E_SKIP_WEBSERVER === '1';
+const browserChannel = process.env.E2E_BROWSER_CHANNEL?.trim() || undefined;
 const appKey = process.env.APP_KEY?.trim() || '0000000000000000000000000000000000000000000000000000000000000000';
 const openAiApiKey = process.env.OPENAI_API_KEY?.trim() || 'browser-thread-intelligence-dummy-credential';
 
@@ -43,6 +44,7 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     baseURL,
+    channel: browserChannel,
     // The spec writes its own named screenshots; disable Playwright's automatic ones.
     screenshot: 'off',
     trace: 'off',

@@ -809,12 +809,33 @@
     var newTopic = document.querySelector('details.composer-details');
     if (newTopic) {
         var trigger = newTopic.querySelector('summary');
+        var promotedTrigger = document.querySelector('[data-open-topic-composer]');
+        var fabTrigger = document.querySelector('a.fab[href="#new-topic"]');
+        var topicReturnFocus = trigger;
+        var openTopic = function (opener) {
+            topicReturnFocus = opener || trigger;
+            newTopic.open = true;
+        };
+        if (promotedTrigger && trigger) {
+            promotedTrigger.hidden = false;
+            trigger.classList.add('js-native-topic-trigger');
+            promotedTrigger.addEventListener('click', function () { openTopic(promotedTrigger); });
+        }
+        if (fabTrigger) {
+            fabTrigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                openTopic(fabTrigger);
+            });
+        }
         var closeTopic = function () {
             if (!newTopic.open) { return; }
             newTopic.open = false;
-            if (trigger) { trigger.focus(); }   // restore focus to the trigger, not hidden content
+            if (topicReturnFocus) { topicReturnFocus.focus(); }
         };
         newTopic.addEventListener('toggle', function () {
+            if (promotedTrigger) {
+                promotedTrigger.setAttribute('aria-expanded', newTopic.open ? 'true' : 'false');
+            }
             if (newTopic.open) {
                 var title = newTopic.querySelector('input[name="title"]');
                 if (title) { title.focus(); }

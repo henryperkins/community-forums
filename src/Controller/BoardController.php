@@ -62,9 +62,10 @@ final class BoardController extends Controller
         $total = $threadRepo->countByBoard((int) $board['id']);
         $page = $this->pageNumber($request, $total, $perPage);
         $threads = $threadRepo->listByBoard((int) $board['id'], $perPage, ($page - 1) * $perPage);
+        $features = $this->container->get(FeatureFlags::class);
 
         // Annotate unread state for the signed-in reader (P2-01).
-        if ($user !== null && $this->container->get(FeatureFlags::class)->enabled('engagement') && $threads !== []) {
+        if ($user !== null && $features->enabled('engagement') && $threads !== []) {
             $cutover = $this->container->get(SettingRepository::class)
                 ->getString('engagement_cutover_at', ThreadUserRepository::NO_CUTOVER);
             $ids = array_map(static fn (array $t): int => (int) $t['id'], $threads);
@@ -85,9 +86,10 @@ final class BoardController extends Controller
                 ['board_id' => (int) $board['id']],
                 'BoardController::show',
             );
-        $expandedFeeds = $this->container->get(FeatureFlags::class)->enabled('expanded_feeds');
-        $isFollowingBoard = $user !== null
-            && $expandedFeeds
+        $community = $features->enabled('community');
+        $expandedFeeds = $features->enabled('expanded_feeds');
+        $canFollowBoard = $user !== null && $community && $expandedFeeds;
+        $isFollowingBoard = $canFollowBoard
             && $this->container->get(FollowRepository::class)->isFollowingTarget($user->id(), 'board', (int) $board['id']);
 
         return $this->view('board', [
@@ -97,8 +99,8 @@ final class BoardController extends Controller
             'total' => $total,
             'per_page' => $perPage,
             'can_post' => $canPost,
+            'can_follow_board' => $canFollowBoard,
             'is_following_board' => $isFollowingBoard,
-            'expanded_feeds' => $expandedFeeds,
             'show_avatars' => $reading['show_avatars'],
         ]);
     }

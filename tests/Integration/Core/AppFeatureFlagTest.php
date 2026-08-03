@@ -846,15 +846,30 @@ final class AppFeatureFlagTest extends TestCase
         $latest = $this->get('/feed', ['view' => 'latest']);
         $this->assertStatus(200, $latest);
         self::assertStringContainsString('href="/feed?view=latest"', $latest->body());
+        self::assertStringContainsString(
+            'action="/b/' . (int) $board['id'] . '/follow"',
+            $this->get('/c/expanded-feed-board')->body(),
+        );
         $this->assertRedirect($this->post('/b/' . (int) $board['id'] . '/follow'));
         $this->assertRedirect($this->post('/tags/expanded-feed-tag/follow'));
 
-        $this->setFlags(['tags' => true, 'expanded_feeds' => false]);
+        $this->setFlags(['tags' => true, 'community' => true, 'expanded_feeds' => false]);
         $following = $this->get('/feed', ['view' => 'latest']);
         $this->assertStatus(200, $following);
         $this->assertDontSeeText($following, 'Recent visible community activity.');
+        self::assertStringNotContainsString(
+            'action="/b/' . (int) $board['id'] . '/follow"',
+            $this->get('/c/expanded-feed-board')->body(),
+        );
         $this->assertStatus(404, $this->post('/b/' . (int) $board['id'] . '/follow'));
         $this->assertStatus(404, $this->post('/tags/expanded-feed-tag/follow'));
+
+        $this->setFlags(['tags' => true, 'community' => false, 'expanded_feeds' => true]);
+        self::assertStringNotContainsString(
+            'action="/b/' . (int) $board['id'] . '/follow"',
+            $this->get('/c/expanded-feed-board')->body(),
+        );
+        $this->assertStatus(404, $this->post('/b/' . (int) $board['id'] . '/follow'));
     }
 
     public function test_reputation_ledger_is_available_by_default_and_can_be_disabled(): void
