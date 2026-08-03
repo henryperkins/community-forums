@@ -29,11 +29,11 @@
                             <a class="lb-name" href="/u/<?= $e($r['username']) ?>"><?= $e($r['display_name']) ?></a>
                             <span class="lb-handle">@<?= $e($r['username']) ?><?php if (($r['title'] ?? '') !== ''): ?> · <?= $e($r['title']) ?><?php endif; ?></span>
                         </div>
-                        <span class="lb-rep"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $r['reputation']) ?></span>
+                        <span class="lb-rep"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $r['reputation']) ?></span>
                     <?php else: ?>
                         <?php // Lower ranks: a compact scannable row — name + the smaller mono regard. ?>
                         <a class="lb-name" href="/u/<?= $e($r['username']) ?>"><?= $e($r['display_name']) ?></a>
-                        <span class="lb-row-rep"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $r['reputation']) ?></span>
+                        <span class="lb-row-rep"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $r['reputation']) ?></span>
                     <?php endif; ?>
                 </li>
             <?php endforeach; ?>

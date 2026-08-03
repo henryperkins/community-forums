@@ -154,7 +154,7 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
                 <?php foreach (($since_last_read_context['items'] ?? []) as $item): ?>
                     <li>
                         <a href="<?= $e($item['url'] ?? ('#p' . (int) $item['post_id'])) ?>">#<?= (int) $item['post_id'] ?></a>
-                        <strong>@<?= $e($item['author']) ?></strong>
+                        <strong><?= empty($item['author_is_anonymous']) ? '@' : '' ?><?= $e($item['author']) ?></strong>
                         <span class="muted"><?= $e($item['excerpt']) ?></span>
                     </li>
                 <?php endforeach; ?>

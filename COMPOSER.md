@@ -1,24 +1,25 @@
 # RetroBoards — Composer (Unified Input) Design
 
-**Status:** v0.8 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-14
+**Status:** v0.8 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-02
 **Companion to [DESIGN.md](DESIGN.md), [ADMIN.md](ADMIN.md), [USER.md](USER.md).** This doc owns **the composer** — the single text-input component used to write content. Same conventions (P0/P1/P2; `Done (mockup)` / `Planned` / `Live`; PHP/MySQL, server-rendered + progressive enhancement).
 
 ## Scope
 
-One component, three mounts. The composer is used in exactly three places, and **all three expose an identical feature surface**:
+One component, four mounts. The composer has three primary contexts, plus **Edit**, which remounts the same shell over an existing post/message (§9.6) — and **all four expose an identical feature surface** (`composer_shell.php` ships mount types `reply` / `new_thread` / `dm` / `edit`):
 
 1. **New Thread** — start a topic in a board.
 2. **Reply** — post in an existing thread.
 3. **Message User** — write a direct message.
+4. **Edit** — amend an existing post or message in place.
 
-Everything the input can do — formatting, shortcuts, mentions, media, drafts, validation — is **the same in all three**. The only differences are the thin wrapper around the input (a title field for New Thread, a recipient for DM) and a few context-scoped limits. This doc specifies the input itself, exhaustively, and defines that unified contract (§15).
+Everything the input can do — formatting, shortcuts, mentions, media, drafts, validation — is **the same in all four**. The only differences are the thin wrapper around the input (a title field for New Thread, a recipient for DM) and a few context-scoped limits. This doc specifies the input itself, exhaustively, and defines that unified contract (§15).
 
 > **Editing model decision:** **WYSIWYG over canonical Markdown** — the enhanced surface is Milkdown, mounted only when `rich_composer` and `wysiwyg_composer` are both enabled. The server-rendered `<textarea>` remains the submit source, source-mode editor, and no-JS/kill-switch fallback. This resolves DESIGN.md open question #2 and is recorded in ADR 0013.
 
 ## Contents
 
 1. Overview & Principles
-2. The Three Contexts (one component, three mounts)
+2. The Composer Contexts (one component, four mounts)
 3. Editing Model — WYSIWYG over Canonical Markdown
 4. Toolbar & Formatting Controls
 5. Keyboard Shortcuts
@@ -52,7 +53,7 @@ The composer is the most-used surface in the product — every thread, reply, an
 6. **Resilient / progressively enhanced.** Without JS it degrades to a plain `<textarea>` that accepts Markdown and renders server-side; with JS it upgrades to the rich surface.
 7. **Accessible.** Fully keyboard-operable, screen-reader labelled, motion-respecting.
 
-## 2. The Three Contexts (one component, three mounts)
+## 2. The Composer Contexts (one component, four mounts)
 
 A single `Composer` component is mounted with a small **context config**; the input and its entire feature set are identical. Only the wrapper and a few limits vary.
 
@@ -62,11 +63,11 @@ A single `Composer` component is mounted with a small **context config**; the in
 | Wrapper adds | A **Title** field above + **board picker** | Sticky-to-bottom; optional "replying to" / quote chip | **Recipient** (to whom) + conversation header |
 | Placeholder | "Start a new topic in #board…" | "Reply to {thread}…" / "Message #board…" | "Message @user…" |
 | Submit target | `POST /threads` (creates thread; first post = OP) | `POST /t/{id}/reply` | `POST /dm/{conversationId}/messages` |
-| On success | Navigate to the new thread | Optimistic insert into the stream | Optimistic insert into the DM |
+| On success | Navigate to the new thread | Full navigation (optimistic insert **deferred** — ADR 0020) | Full navigation (optimistic insert **deferred** — ADR 0020) |
 | Who can use it | Members (board `post_min_role`); guests see join-bar | Members (thread not locked); guests see join-bar | Members; gated by recipient's "Allow DMs" + block list (USER.md §4.7) |
 | Context-scoped limits | Title required; board-level image/limit settings | Locked thread disables it | DM length cap; no thread-only affordances |
 
-Everything in §3–§13 applies to **all three** unless a row above says otherwise. The same component is also reused for **editing** an existing post/message (§9.6).
+Everything in §3–§13 applies to **all four** unless a row above says otherwise. The fourth mount, **Edit**, is the same shell remounted over an existing post/message (§9.6): submit label "Save changes", no wrapper additions, same feature surface.
 
 ## 3. Editing Model — WYSIWYG over Canonical Markdown
 
@@ -129,7 +130,7 @@ A compact engraved formatting row sits inside the top of the composer box on des
 
 ## 5. Keyboard Shortcuts
 
-Identical in all three contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
+Identical in all four contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 
 | Action | Shortcut |
 |---|---|
@@ -176,7 +177,7 @@ Identical in all three contexts. `Cmd` on macOS = `Ctrl` on Windows/Linux.
 
 ## 7. Attachments, Images & Media
 
-Identical across all three contexts (DMs can attach too); a board may tighten limits.
+Identical across all four contexts (DMs can attach too); a board may tighten limits.
 
 | Capability | Behaviour | Phase |
 |---|---|---|
@@ -211,9 +212,9 @@ Before a send is allowed: non-empty after trim (or has an attachment); within le
 
 `empty` (Send disabled) → `typing` → `sending` (disabled + spinner, **double-submit guarded** via a transient idempotency key) → `success` (clear input, clear draft) or `error` (keep text, surface the reason, offer retry).
 
-### 9.3 Optimistic flow
+### 9.3 Optimistic flow *(target design — deferred; ADR 0020)*
 
-- **Reply / DM:** the message inserts immediately as "sending", reconciles on server ack, and on failure **rolls back with a toast** and restores the text (nothing lost).
+- **Reply / DM (target):** the message inserts immediately as "sending", reconciles on server ack, and on failure **rolls back with a toast** and restores the text (nothing lost). **Shipped behavior is a full navigation** — optimistic insert/reconcile remains a deferred follow-up per ADR 0020.
 - **New Thread:** show progress, then **navigate to the created thread** on success (its first post is the OP).
 
 ### 9.4 Error taxonomy
@@ -279,7 +280,7 @@ Safety notes: the rich surface **never** stores HTML — Markdown only, rendered
 
 ## 14. Architecture & Implementation
 
-### 14.1 One component, three mount configs
+### 14.1 One component, four mount configs
 
 A single `Composer` (client) takes a small config and nothing else changes:
 
@@ -320,7 +321,7 @@ Avoid heavy block-document editors — **the composer is an input system, not a 
 
 ### 14.4 The payoff
 
-Because all three contexts (plus edit) share one component and one server pipeline, there is **one validation module, one sanitiser, one renderer, one test suite**. A feature added to the composer is automatically present, and consistent, everywhere.
+Because all four contexts share one component and one server pipeline, there is **one validation module, one sanitiser, one renderer, one test suite**. A feature added to the composer is automatically present, and consistent, everywhere.
 
 ## 15. Unified Feature-Surface Matrix
 
@@ -336,11 +337,11 @@ The contract: the **input** is identical everywhere. ✓ = present and behaves t
 | Drafts & autosave | ✓ | ✓ | ✓ | ✓ |
 | Preview toggle | ✓ | ✓ | ✓ | ✓ |
 | Validation / limits / filters | ✓ | ✓ | ✓ | ✓ |
-| Optimistic send + rollback | n/a (navigates) | ✓ | ✓ | ✓ |
+| Optimistic send + rollback *(deferred — ADR 0020; shipped: full navigation)* | n/a (navigates) | ✓ (target) | ✓ (target) | ✓ (target) |
 | Accessibility surface | ✓ | ✓ | ✓ | ✓ |
 | **Wrapper differences (not the input)** | + Title + board picker | sticky; quote chip | + recipient | "Save changes" + edit window |
 
-If a future feature can't be offered identically in all three, that's a signal to reconsider it — the unified surface is a deliberate constraint, not an accident.
+If a future feature can't be offered identically in all four, that's a signal to reconsider it — the unified surface is a deliberate constraint, not an accident.
 
 ## 16. Cross-Doc Deltas & Schema
 
@@ -417,3 +418,4 @@ CREATE TABLE attachments (
 | v0.6 | 2026-07-02 | `wysiwyg_composer` graduated to **default-ON** (GA 2026-07-02; reversible via `features` override; `rich_composer` remains the broad kill switch). §17.1 delivery note updated. Browser evidence split recorded: gate-a screenshots keep the textarea baseline via a seed pin; `wysiwyg-composer.spec.ts` proves the GA default mounts with no override. |
 | v0.7 | 2026-07-13 | Slack-style shell closeout: one server-rendered shell now covers all four mount types across the eight `.composer-input` forms; the engraved icon toolbar and contained narrow overflow supersede the earlier sentence-case handoff detail. Desktop Enter-to-send is context-aware, `Cmd/Ctrl+Enter` always sends, touch soft-Enter stays editorial, and an in-flight guard prevents duplicate sends. Preview state follows the composing preference and source-mode initialization contract; every input gains a near-limit counter. Unicode and custom emoji use a server-backed autocomplete plus accessible dialog/grid picker. Image upload has a visible Attach path and compact in-box chips, with rich-mode reorder preserved in canonical Markdown. Inbox fragment replacement now destroys adapter/listener/request state before enhancing the next shell. All shared-shell writes consume the server-rendered idempotency token, and every identity-bearing mount honors `show_avatars`. Optimistic send, global navigation keys, edit-last, and a visual replying-to chip remain engineering follow-ups in ADR 0020. |
 | v0.8 | 2026-07-14 | Corrected spoiler syntax to canonical `||spoiler||` and made preview parity explicitly include the shared responsive formatted-content presentation used by final post, DM, and living-brief renders. |
+| v0.8 (2026-08-02 reconciliation) | 2026-08-02 | Language reconciled to shipped reality: §Scope/§2/§14.1 now say **four mounts** (edit is a first-class mount type in `composer_shell.php`, matching the v0.7 closeout); every "all three contexts" phrase updated; the §2 on-success row, §9.3, and the §15 optimistic-send row are annotated **deferred per ADR 0020** (shipped behavior: full navigation). No contract changes. |

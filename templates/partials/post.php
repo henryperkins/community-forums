@@ -29,7 +29,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                       // byline never leaks the real author's reputation. ?>
                 <?php if (!$isAnon && ($p['author_reputation'] ?? null) !== null): ?>
                     <span class="regard-block">
-                        <span class="regard-n"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $p['author_reputation']) ?></span>
+                        <span class="regard-n"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $p['author_reputation']) ?></span>
                         <span class="regard-label">Commends</span>
                     </span>
                 <?php endif; ?>
@@ -38,7 +38,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
     <?php endif; ?>
     <div class="post-main">
         <?php if ($accepted): ?>
-            <p class="accepted-flag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Marked as the answer<span class="star-marker" aria-hidden="true">✦</span></p>
+            <p class="accepted-flag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Marked as the answer<?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?></p>
         <?php endif; ?>
         <div class="post-head">
             <?php if (!$grouped): ?>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — roles & capabilities" description="The people section of the operator's desk: the role table with resolver posture, a drill-in role record (definition, capability fieldsets, clone, assignments), and the permission simulator that runs can(actor, capability, target, time)" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes apRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — people" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+  </div>
+
+  <div style="max-width: 1100px; margin: 0 auto; padding: 26px 28px 110px;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+      <div>
+        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Operator desk · People</span>
+        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Roles &amp; capabilities</h1>
+      </div>
+      <span style="flex: 0 0 auto; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;">Admin mode</span>
+    </div>
+
+    <nav aria-label="People sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 22px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atRoles }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goRoles }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Roles</button></sc-if>
+      <sc-if value="{{ offRoles }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goRoles }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Roles</button></sc-if>
+      <sc-if value="{{ atSimulator }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goSimulator }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Permission simulator</button></sc-if>
+      <sc-if value="{{ offSimulator }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goSimulator }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Permission simulator</button></sc-if>
+    </nav>
+
+    <!-- ═══ Roles list ═══ -->
+    <sc-if value="{{ showRoles }}" hint-placeholder-val="{{ true }}">
+      <div style="padding-top: 24px;">
+        <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; padding: 13px 16px; background: var(--surface-info); border: 1px solid var(--river-200); border-left: 3px solid var(--info); border-radius: var(--radius-md);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-info)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M12 16v-5M12 8h.01"></path></svg>
+          <p style="margin: 0; max-width: 82ch; font-size: .93rem; line-height: 1.55; color: var(--on-info); text-wrap: pretty;">Resolver posture: <strong>shadow</strong> (<code style="font-family: var(--font-mono); font-size: .84rem;">CAPABILITIES_MODE</code>). Under <code style="font-family: var(--font-mono); font-size: .84rem;">shadow</code> the legacy rules decide and the resolver only shadow-compares; under <code style="font-family: var(--font-mono); font-size: .84rem;">enforce</code> the resolver decides and fails closed. System roles are protected compatibility anchors and cannot be edited — clone one to adapt it. Try changes safely in the <button onClick="{{ goSimulator }}" style="border: 0; padding: 0; background: transparent; font: inherit; color: inherit; text-decoration: underline; cursor: pointer;">permission simulator</button>.</p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <label style="position: relative; flex: 1; min-width: 210px; max-width: 320px; display: block;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+            <input value="{{ roleQuery }}" onInput="{{ onRoleSearch }}" placeholder="Search roles" aria-label="Search roles" style="width: 100%; padding: 8px 12px 8px 33px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: 999px; background: var(--surface-raised); font-family: var(--font-body); font-size: .93rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+          <span style="display: inline-flex; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: 999px;">
+            <sc-if value="{{ kindAll }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setKindAll }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">All</button></sc-if>
+            <sc-if value="{{ notKindAll }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setKindAll }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">All</button></sc-if>
+            <sc-if value="{{ kindSystem }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setKindSystem }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Protected anchors</button></sc-if>
+            <sc-if value="{{ notKindSystem }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setKindSystem }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Protected anchors</button></sc-if>
+            <sc-if value="{{ kindCustom }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setKindCustom }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Custom</button></sc-if>
+            <sc-if value="{{ notKindCustom }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setKindCustom }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Custom</button></sc-if>
+          </span>
+          <span style="margin-left: auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ roleResultLabel }}</span>
+        </div>
+
+        <section style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <table style="width: 100%; border-collapse: collapse; font-size: .92rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 11px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Name</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Key</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Kind</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Version</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Capabilities</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Active assignments</th>
+              <th scope="col" style="padding: 11px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Actions</span></th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ roleRows }}" as="r" hint-placeholder-count="5">
+                <tr>
+                  <td style="padding: 10px 10px 10px 0; color: var(--text-strong); border-bottom: 1px solid var(--border-hair);">{{ r.name }}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-sunken); font-family: var(--font-mono); font-size: .76rem; color: var(--text-body);">{{ r.key }}</code></td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ r.isSystem }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Protected anchor</span></sc-if>
+                    <sc-if value="{{ r.isCustom }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Custom</span></sc-if>
+                  </td>
+                  <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">v{{ r.version }}</td>
+                  <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ r.capCount }}</td>
+                  <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ r.impact }}</td>
+                  <td style="padding: 10px 0 10px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);"><button onClick="{{ r.open }}" style="padding: 4px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">{{ r.action }}</button></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{ noRoles }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 40px 20px; text-align: center;">
+              <h3 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">No roles match this filter</h3>
+              <p style="margin: 6px 0 0; font-size: .93rem; color: var(--text-muted);">Clear the search, or create a custom role below.</p>
+            </div>
+          </sc-if>
+        </section>
+
+        <section style="margin-top: 22px; padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Create a custom role</h2>
+          <p style="margin: 0 0 16px; max-width: 66ch; font-size: .93rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">Only delegable capabilities are offered — protected authority is never on this list. Creating a role is a reauthenticated action.</p>
+          <sc-if value="{{ createError }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="margin-bottom: 14px; padding: 10px 14px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .9rem; color: var(--danger);">{{ createErrorText }}</div>
+          </sc-if>
+          <form onSubmit="{{ createRole }}">
+            <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 14px 18px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+                <input value="{{ newRoleName }}" onInput="{{ onNewRoleName }}" maxlength="190" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Description (optional)</span>
+                <input value="{{ newRoleDescription }}" onInput="{{ onNewRoleDescription }}" maxlength="255" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 18px;">
+              <sc-for list="{{ capGroups }}" as="g" hint-placeholder-count="4">
+                <fieldset style="min-width: 0; margin: 0; padding: 12px 14px 13px; border: 1px solid var(--border-hair); border-radius: var(--radius-md);">
+                  <legend style="padding: 0 6px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-ink);">{{ g.label }}</legend>
+                  <sc-for list="{{ g.caps }}" as="c" hint-placeholder-count="4">
+                    <label style="display: flex; align-items: flex-start; gap: 9px; padding: 4px 0; font-size: .88rem; line-height: 1.4; color: var(--text-body); cursor: pointer;">
+                      <input type="checkbox" checked="{{ c.checked }}" disabled="{{ c.locked }}" onChange="{{ c.toggle }}" style="flex: 0 0 auto; margin-top: 3px; width: 14px; height: 14px; accent-color: var(--accent);">
+                      <span style="min-width: 0;">
+                        <code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong);">{{ c.key }}</code>
+                        <span style="color: var(--text-muted);"> — {{ c.description }}</span>
+                        <sc-if value="{{ c.highRisk }}" hint-placeholder-val="{{ false }}"><span style="margin-left: 6px; padding: 0 7px; border-radius: 999px; background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised)); color: var(--danger); font-family: var(--font-label); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase;">High risk</span></sc-if>
+                        <sc-if value="{{ c.locked }}" hint-placeholder-val="{{ false }}"><span style="margin-left: 6px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; color: var(--text-faint);">(not yet enforceable)</span></sc-if>
+                      </span>
+                    </label>
+                  </sc-for>
+                </fieldset>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: flex-end; gap: 14px; margin-top: 18px;">
+              <label style="flex: 0 1 280px; display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Confirm your password</span>
+                <input type="password" value="{{ newRolePassword }}" onInput="{{ onNewRolePassword }}" autocomplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <button type="submit" style="padding: 9px 20px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Create role</button>
+              <span style="margin-left: auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ selectedCapLabel }}</span>
+            </div>
+          </form>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Role record ═══ -->
+    <sc-if value="{{ showRecord }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 20px;">
+        <button onClick="{{ goRoles }}" style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; padding: 0; border: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>All roles</button>
+
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.9rem; color: var(--text-strong);">{{ recordName }}</h2>
+          <span style="font-family: var(--font-mono); font-size: .9rem; color: var(--text-faint);">v{{ recordVersion }}</span>
+        </div>
+        <p style="margin: 8px 0 20px; max-width: 74ch; font-size: .95rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;"><code style="font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);">{{ recordKey }}</code> — {{ recordKindNote }} Active assignments affected by changes: <strong style="color: var(--text-body);">{{ recordImpact }}</strong>.</p>
+
+        <sc-if value="{{ recordIsSystem }}" hint-placeholder-val="{{ true }}">
+          <section style="margin-bottom: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <h3 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Capabilities held</h3>
+            <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px 18px;">
+              <sc-for list="{{ recordCaps }}" as="c" hint-placeholder-count="8">
+                <li style="display: flex; align-items: baseline; gap: 8px; font-size: .88rem; color: var(--text-muted);"><code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong);">{{ c.key }}</code></li>
+              </sc-for>
+            </ul>
+          </section>
+        </sc-if>
+
+        <sc-if value="{{ recordIsCustom }}" hint-placeholder-val="{{ false }}">
+          <section style="margin-bottom: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <h3 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Edit definition</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 14px 18px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+                <input value="{{ recordName }}" onInput="{{ onRecordName }}" maxlength="190" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Description (optional)</span>
+                <input value="{{ recordDescription }}" onInput="{{ onRecordDescription }}" maxlength="255" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 16px;">
+              <button onClick="{{ saveRecord }}" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Save (bumps version)</button>
+              <sc-if value="{{ recordSaved }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-done);">Saved — now v{{ recordVersion }}.</span></sc-if>
+            </div>
+          </section>
+        </sc-if>
+
+        <section style="margin-bottom: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h3 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Clone into a new custom role</h3>
+          <p style="margin: 0 0 14px; max-width: 64ch; font-size: .92rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">Cloning copies only currently-enforceable capabilities, so the copy is never wider than the anchor.</p>
+          <form onSubmit="{{ cloneRole }}" style="display: flex; align-items: flex-end; gap: 14px;">
+            <label style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">New role name</span>
+              <input value="{{ cloneName }}" onInput="{{ onCloneName }}" maxlength="190" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="flex: 0 1 240px; display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Confirm your password</span>
+              <input type="password" value="{{ clonePassword }}" onInput="{{ onClonePassword }}" autocomplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <button type="submit" style="padding: 9px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Clone</button>
+          </form>
+          <sc-if value="{{ cloneError }}" hint-placeholder-val="{{ false }}">
+            <p role="alert" style="margin: 10px 0 0; font-size: .87rem; color: var(--danger);">Give the clone a name and confirm your password.</p>
+          </sc-if>
+          <sc-if value="{{ cloneDone }}" hint-placeholder-val="{{ false }}">
+            <p role="status" style="margin: 10px 0 0; font-size: .87rem; color: var(--on-done);">Cloned. The new role is in the table, holding only enforceable capabilities.</p>
+          </sc-if>
+        </section>
+
+        <section style="padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Assignments</h3>
+          <sc-if value="{{ hasAssignments }}" hint-placeholder-val="{{ true }}">
+            <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+              <thead><tr>
+                <th scope="col" style="padding: 9px 10px 8px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Member</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Scope</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Window</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+                <th scope="col" style="padding: 9px 0 8px 10px; border-bottom: 1px solid var(--border-soft);"></th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ assignments }}" as="a" hint-placeholder-count="4">
+                  <tr>
+                    <td style="padding: 10px 10px 10px 0; border-bottom: 1px solid var(--border-hair);"><a href="#" style="font-family: var(--font-mono); font-size: .82rem; color: var(--artifact-link);">@{{ a.username }}</a></td>
+                    <td style="padding: 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ a.scope }}</td>
+                    <td style="padding: 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ a.window }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                      <sc-if value="{{ a.isActive }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Active</span></sc-if>
+                      <sc-if value="{{ a.isRevoked }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-pending); color: var(--on-pending); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Revoked</span></sc-if>
+                    </td>
+                    <td style="padding: 10px 0 10px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);">
+                      <sc-if value="{{ a.isActive }}" hint-placeholder-val="{{ true }}"><button onClick="{{ a.revoke }}" style="padding: 4px 11px; border-radius: var(--radius-md); border: 0; background: transparent; color: var(--rust); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Revoke</button></sc-if>
+                    </td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </sc-if>
+          <sc-if value="{{ noAssignments }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0 0 4px; font-size: .95rem; color: var(--text-faint);">No one has been assigned this role yet.</p>
+          </sc-if>
+
+          <h4 style="margin: 22px 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Assign this role</h4>
+          <form onSubmit="{{ assignRole }}" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 16px; align-items: end;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Member username</span>
+              <input value="{{ assignUser }}" onInput="{{ onAssignUser }}" maxlength="32" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Scope</span>
+              <select value="{{ assignScope }}" onChange="{{ onAssignScope }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="site">Site-wide</option>
+                <option value="category">Category</option>
+                <option value="board">Board</option>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Board / category id <span style="text-transform: none; letter-spacing: .02em;">(blank = site-wide)</span></span>
+              <input value="{{ assignScopeId }}" onInput="{{ onAssignScopeId }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Starts (UTC) <span style="text-transform: none; letter-spacing: .02em;">(blank starts now)</span></span>
+              <input value="{{ assignStarts }}" onInput="{{ onAssignStarts }}" placeholder="2026-08-10 09:00" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Ends (UTC) <span style="text-transform: none; letter-spacing: .02em;">(blank never expires)</span></span>
+              <input value="{{ assignEnds }}" onInput="{{ onAssignEnds }}" placeholder="2026-11-01 00:00" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Confirm your password</span>
+              <input type="password" value="{{ assignPassword }}" onInput="{{ onAssignPassword }}" autocomplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 14px;">
+              <button type="submit" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Assign</button>
+              <sc-if value="{{ assignError }}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: .87rem; color: var(--danger);">A username and your password are both required.</span></sc-if>
+            </div>
+          </form>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Permission simulator ═══ -->
+    <sc-if value="{{ showSimulator }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 24px;">
+        <p style="margin: 0 0 20px; max-width: 74ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Runs <code style="font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);">can(actor, capability, target, time)</code> on the real resolver. While capabilities are in shadow, answers predict the post-cutover decision; live requests still use legacy authority.</p>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 16px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Simulate</h2>
+          <form onSubmit="{{ runSim }}" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 18px; align-items: end;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Actor (username, id, or guest)</span>
+              <input value="{{ simActor }}" onInput="{{ onSimActor }}" placeholder="erestor" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Capability</span>
+              <select value="{{ simCapability }}" onChange="{{ onSimCapability }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="">— pick —</option>
+                <sc-for list="{{ allCaps }}" as="c" hint-placeholder-count="8">
+                  <option value="{{ c.key }}">{{ c.key }}</option>
+                </sc-for>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Board id (optional target)</span>
+              <input type="number" min="1" value="{{ simBoard }}" onInput="{{ onSimBoard }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">At (optional, UTC)</span>
+              <input value="{{ simAt }}" onInput="{{ onSimAt }}" placeholder="2026-08-15 12:00" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <div style="grid-column: 1 / -1;"><button type="submit" style="padding: 9px 20px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Simulate</button></div>
+          </form>
+        </section>
+
+        <sc-if value="{{ simError }}" hint-placeholder-val="{{ false }}">
+          <section style="margin-top: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg);">
+            <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">The simulator could not answer</h2>
+            <p style="margin: 0; font-size: .93rem; color: var(--danger);">{{ simErrorText }}</p>
+          </section>
+        </sc-if>
+
+        <sc-if value="{{ simHasResult }}" hint-placeholder-val="{{ false }}">
+          <section style="margin-top: 16px; padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); animation: apRise 180ms var(--ease-calm) both;">
+            <h2 style="margin: 0 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Result</h2>
+            <p style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 0; font-size: 1rem; line-height: 1.5; color: var(--text-body); text-wrap: pretty;">
+              <sc-if value="{{ simAllowed }}" hint-placeholder-val="{{ true }}"><span style="padding: 2px 11px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase;">Allowed</span></sc-if>
+              <sc-if value="{{ simDenied }}" hint-placeholder-val="{{ false }}"><span style="padding: 2px 11px; border-radius: 999px; background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised)); color: var(--danger); font-family: var(--font-label); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase;">Denied</span></sc-if>
+              <span><code style="font-family: var(--font-mono); font-size: .86rem;">{{ simCapability }}</code> for {{ simActorLabel }}{{ simTargetLabel }}</span>
+            </p>
+            <ul style="list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px;">
+              <li style="font-size: .93rem; color: var(--text-muted);">Decisive rule: <code style="font-family: var(--font-mono); font-size: .82rem; color: var(--text-body);">{{ simSource }}</code></li>
+              <li style="font-size: .93rem; color: var(--text-muted);">Reason: {{ simReason }}</li>
+              <li style="font-size: .93rem; color: var(--text-muted);">Via role: <code style="font-family: var(--font-mono); font-size: .82rem; color: var(--text-body);">{{ simRole }}</code></li>
+            </ul>
+          </section>
+        </sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900}}">
+const CATALOGUE = [
+  { key: 'core.board.create', group: 'Board', description: 'Open a new board inside a category.', risk: 'normal', enforceable: true },
+  { key: 'core.board.update', group: 'Board', description: 'Rename a board, change its description or visibility.', risk: 'normal', enforceable: true },
+  { key: 'core.board.archive', group: 'Board', description: 'Hide a board from the rail without deleting it.', risk: 'normal', enforceable: true },
+  { key: 'core.board.delete', group: 'Board', description: 'Remove a board and everything in it.', risk: 'high', enforceable: false },
+  { key: 'core.thread.pin', group: 'Thread', description: 'Hold a topic at the top of its board.', risk: 'normal', enforceable: true },
+  { key: 'core.thread.lock', group: 'Thread', description: 'Close a topic to further replies.', risk: 'normal', enforceable: true },
+  { key: 'core.thread.move', group: 'Thread', description: 'Move a topic to another board.', risk: 'normal', enforceable: true },
+  { key: 'core.thread.merge', group: 'Thread', description: 'Fold one topic into another.', risk: 'high', enforceable: false },
+  { key: 'core.post.edit_any', group: 'Post', description: 'Edit a post written by someone else.', risk: 'high', enforceable: true },
+  { key: 'core.post.remove', group: 'Post', description: 'Remove a post from public view.', risk: 'normal', enforceable: true },
+  { key: 'core.post.restore', group: 'Post', description: 'Restore a removed post.', risk: 'normal', enforceable: true },
+  { key: 'core.tag.create', group: 'Tag', description: 'Add a tag to the catalogue.', risk: 'normal', enforceable: true },
+  { key: 'core.tag.merge', group: 'Tag', description: 'Fold one tag into another. Cannot be undone.', risk: 'high', enforceable: true },
+  { key: 'core.user.suspend', group: 'User', description: 'Suspend a member for a fixed term.', risk: 'high', enforceable: true },
+  { key: 'core.user.grant_badge', group: 'User', description: 'Grant or revoke a mark of esteem.', risk: 'normal', enforceable: true },
+  { key: 'core.user.view_record', group: 'User', description: 'Read a member’s moderation record.', risk: 'normal', enforceable: true },
+  { key: 'core.moderation.claim', group: 'Moderation', description: 'Take a report off the shared pile.', risk: 'normal', enforceable: true },
+  { key: 'core.moderation.resolve', group: 'Moderation', description: 'Resolve or dismiss a report.', risk: 'normal', enforceable: true },
+  { key: 'core.moderation.appeal_review', group: 'Moderation', description: 'Decide an appeal against a moderation action.', risk: 'high', enforceable: true },
+];
+
+const SEED_ROLES = [
+  { id: 1, name: 'Member', key: 'core.role.member', kind: 'system', version: 3, description: 'Everyone with a seat.', caps: ['core.tag.create'], impact: 1204 },
+  { id: 2, name: 'Warden', key: 'core.role.moderator', kind: 'system', version: 4, description: 'The warden’s table.', caps: ['core.thread.pin', 'core.thread.lock', 'core.thread.move', 'core.post.remove', 'core.post.restore', 'core.user.view_record', 'core.moderation.claim', 'core.moderation.resolve'], impact: 6 },
+  { id: 3, name: 'Elder', key: 'core.role.admin', kind: 'system', version: 2, description: 'Full operator authority.', caps: CATALOGUE.filter((c) => c.enforceable).map((c) => c.key), impact: 3 },
+  { id: 4, name: 'Archivist', key: 'custom.archivist', kind: 'custom', version: 5, description: 'Keeps the archive tidy; no authority over people.', caps: ['core.thread.move', 'core.post.restore', 'core.tag.create', 'core.tag.merge'], impact: 4 },
+  { id: 5, name: 'Tag warden', key: 'custom.tag_warden', kind: 'custom', version: 1, description: 'Catalogue only.', caps: ['core.tag.create', 'core.tag.merge'], impact: 2 },
+];
+
+const SEED_ASSIGNMENTS = {
+  2: [
+    { id: 1, username: 'erestor', scope: 'site', window: 'now → no expiry', status: 'active' },
+    { id: 2, username: 'glorfindel', scope: 'board — Practice', window: 'now → 2026-11-01', status: 'active' },
+    { id: 3, username: 'lindir', scope: 'category — The archive', window: '2026-01-04 → 2026-06-30', status: 'revoked' },
+  ],
+  4: [
+    { id: 4, username: 'melian', scope: 'site', window: 'now → no expiry', status: 'active' },
+    { id: 5, username: 'bilbo', scope: 'board — Archive', window: 'now → 2026-09-15', status: 'active' },
+  ],
+  5: [
+    { id: 6, username: 'celebrian', scope: 'site', window: 'now → no expiry', status: 'active' },
+  ],
+};
+
+class Component extends DCLogic {
+  state = {
+    view: 'roles',
+    openRoleId: null,
+    roles: SEED_ROLES.slice(),
+    assignments: JSON.parse(JSON.stringify(SEED_ASSIGNMENTS)),
+    roleQuery: '', kind: 'all',
+    newRoleName: '', newRoleDescription: '', newRolePassword: '', newRoleCaps: [], createError: false, createErrorText: '',
+    recordSaved: false, cloneName: '', clonePassword: '', cloneError: false, cloneDone: false,
+    assignUser: '', assignScope: 'site', assignScopeId: '', assignStarts: '', assignEnds: '', assignPassword: '', assignError: false,
+    simActor: 'erestor', simCapability: '', simBoard: '', simAt: '', sim: null, simError: false, simErrorText: '',
+    nextId: 20,
+  };
+
+  createRole = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    if (!s.newRoleName.trim()) { this.setState({ createError: true, createErrorText: 'A role needs a name.' }); return; }
+    if (s.newRoleCaps.length === 0) { this.setState({ createError: true, createErrorText: 'Pick at least one capability — an empty role grants nothing.' }); return; }
+    if (!s.newRolePassword) { this.setState({ createError: true, createErrorText: 'Confirm your password. Creating a role is a reauthenticated action.' }); return; }
+    this.setState((st) => ({
+      roles: st.roles.concat([{
+        id: st.nextId, name: st.newRoleName.trim(), key: 'custom.' + st.newRoleName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        kind: 'custom', version: 1, description: st.newRoleDescription.trim(), caps: st.newRoleCaps.slice(), impact: 0,
+      }]),
+      nextId: st.nextId + 1,
+      newRoleName: '', newRoleDescription: '', newRolePassword: '', newRoleCaps: [], createError: false,
+    }));
+  };
+
+  cloneRole = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    const src = s.roles.find((r) => r.id === s.openRoleId);
+    if (!s.cloneName.trim() || !s.clonePassword || !src) { this.setState({ cloneError: true, cloneDone: false }); return; }
+    const enforceable = src.caps.filter((k) => (CATALOGUE.find((c) => c.key === k) || {}).enforceable);
+    this.setState((st) => ({
+      roles: st.roles.concat([{
+        id: st.nextId, name: st.cloneName.trim(), key: 'custom.' + st.cloneName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        kind: 'custom', version: 1, description: 'Cloned from ' + src.name + '.', caps: enforceable, impact: 0,
+      }]),
+      nextId: st.nextId + 1, cloneName: '', clonePassword: '', cloneError: false, cloneDone: true,
+    }));
+  };
+
+  assignRole = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    if (!s.assignUser.trim() || !s.assignPassword) { this.setState({ assignError: true }); return; }
+    const scopeLabel = s.assignScope === 'site' ? 'site'
+      : s.assignScope + (s.assignScopeId ? ' — #' + s.assignScopeId : '');
+    this.setState((st) => {
+      const next = { ...st.assignments };
+      const list = (next[st.openRoleId] || []).slice();
+      list.push({
+        id: st.nextId, username: st.assignUser.trim(), scope: scopeLabel,
+        window: (st.assignStarts || 'now') + ' → ' + (st.assignEnds || 'no expiry'), status: 'active',
+      });
+      next[st.openRoleId] = list;
+      return {
+        assignments: next, nextId: st.nextId + 1,
+        assignUser: '', assignScopeId: '', assignStarts: '', assignEnds: '', assignPassword: '', assignError: false,
+      };
+    });
+  };
+
+  runSim = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    if (!s.simActor.trim()) { this.setState({ simError: true, simErrorText: 'Name an actor — a username, an id, or “guest”.', sim: null }); return; }
+    if (!s.simCapability) { this.setState({ simError: true, simErrorText: 'Pick a capability to test.', sim: null }); return; }
+
+    const actor = s.simActor.trim().toLowerCase();
+    const cap = CATALOGUE.find((c) => c.key === s.simCapability) || {};
+    const roleByActor = { erestor: 2, glorfindel: 2, lindir: 2, melian: 4, bilbo: 4, celebrian: 5, elrond: 3, galadriel: 3 };
+    const roleId = actor === 'guest' ? null : roleByActor[actor];
+    const role = this.state.roles.find((r) => r.id === roleId);
+
+    let allowed = false; let source = 'resolver.default_deny'; let reason = 'No role grants this capability to the actor.';
+    if (actor === 'guest') {
+      source = 'resolver.guest'; reason = 'Guests hold no delegable capabilities.';
+    } else if (!role) {
+      source = 'resolver.unknown_actor'; reason = 'No member matches “' + s.simActor.trim() + '”; treated as a guest.';
+    } else if (!cap.enforceable) {
+      source = 'resolver.not_enforceable'; reason = 'This capability is defined but not yet enforceable, so the resolver abstains.';
+    } else if (role.caps.indexOf(s.simCapability) === -1) {
+      source = 'resolver.role_lacks_capability'; reason = role.name + ' does not hold this capability at v' + role.version + '.';
+    } else {
+      allowed = true; source = 'resolver.role_grant';
+      reason = role.name + ' holds this capability at v' + role.version + (s.simBoard ? ', and the assignment covers board #' + s.simBoard + '.' : ', site-wide.');
+    }
+
+    this.setState({
+      simError: false,
+      sim: {
+        allowed, source, reason,
+        role: role ? role.key : 'none',
+        actorLabel: actor === 'guest' ? 'a guest' : '@' + s.simActor.trim(),
+        targetLabel: s.simBoard ? ' on board #' + s.simBoard : '',
+      },
+    });
+  };
+
+  renderVals() {
+    const s = this.state;
+    const q = s.roleQuery.trim().toLowerCase();
+    const filtered = s.roles.filter((r) => {
+      if (s.kind === 'system' && r.kind !== 'system') return false;
+      if (s.kind === 'custom' && r.kind !== 'custom') return false;
+      return !q || r.name.toLowerCase().includes(q) || r.key.toLowerCase().includes(q);
+    });
+
+    const open = s.roles.find((r) => r.id === s.openRoleId) || null;
+    const openAssignments = open ? (s.assignments[open.id] || []) : [];
+
+    const groups = [];
+    CATALOGUE.forEach((c) => {
+      let g = groups.find((x) => x.label === c.group);
+      if (!g) { g = { label: c.group, caps: [] }; groups.push(g); }
+      g.caps.push({
+        key: c.key, description: c.description,
+        highRisk: c.risk === 'high', locked: !c.enforceable,
+        checked: s.newRoleCaps.indexOf(c.key) !== -1,
+        toggle: (e) => this.setState((st) => ({
+          newRoleCaps: e.target.checked ? st.newRoleCaps.concat([c.key]) : st.newRoleCaps.filter((k) => k !== c.key),
+          createError: false,
+        })),
+      });
+    });
+
+    return {
+      atRoles: s.view !== 'simulator', offRoles: s.view === 'simulator',
+      atSimulator: s.view === 'simulator', offSimulator: s.view !== 'simulator',
+      goRoles: () => this.setState({ view: 'roles', openRoleId: null, cloneDone: false, recordSaved: false }),
+      goSimulator: () => this.setState({ view: 'simulator' }),
+      showRoles: s.view === 'roles',
+      showRecord: s.view === 'record',
+      showSimulator: s.view === 'simulator',
+
+      roleQuery: s.roleQuery,
+      onRoleSearch: (e) => this.setState({ roleQuery: e.target.value }),
+      kindAll: s.kind === 'all', notKindAll: s.kind !== 'all',
+      kindSystem: s.kind === 'system', notKindSystem: s.kind !== 'system',
+      kindCustom: s.kind === 'custom', notKindCustom: s.kind !== 'custom',
+      setKindAll: () => this.setState({ kind: 'all' }),
+      setKindSystem: () => this.setState({ kind: 'system' }),
+      setKindCustom: () => this.setState({ kind: 'custom' }),
+      roleResultLabel: filtered.length === 1 ? '1 role' : filtered.length + ' roles',
+      noRoles: filtered.length === 0,
+      roleRows: filtered.map((r) => ({
+        name: r.name, key: r.key, version: r.version, capCount: r.caps.length, impact: r.impact,
+        isSystem: r.kind === 'system', isCustom: r.kind === 'custom',
+        action: r.kind === 'system' ? 'View / clone' : 'Edit',
+        open: () => this.setState({ view: 'record', openRoleId: r.id, cloneDone: false, recordSaved: false, assignError: false }),
+      })),
+
+      capGroups: groups,
+      selectedCapLabel: s.newRoleCaps.length + (s.newRoleCaps.length === 1 ? ' capability selected' : ' capabilities selected'),
+      newRoleName: s.newRoleName, onNewRoleName: (e) => this.setState({ newRoleName: e.target.value, createError: false }),
+      newRoleDescription: s.newRoleDescription, onNewRoleDescription: (e) => this.setState({ newRoleDescription: e.target.value }),
+      newRolePassword: s.newRolePassword, onNewRolePassword: (e) => this.setState({ newRolePassword: e.target.value, createError: false }),
+      createRole: this.createRole,
+      createError: s.createError, createErrorText: s.createErrorText,
+
+      recordName: open ? open.name : '',
+      recordKey: open ? open.key : '',
+      recordVersion: open ? open.version : '',
+      recordImpact: open ? open.impact : 0,
+      recordDescription: open ? open.description : '',
+      recordIsSystem: !!open && open.kind === 'system',
+      recordIsCustom: !!open && open.kind === 'custom',
+      recordKindNote: open && open.kind === 'system' ? 'Protected system anchor, read-only.' : 'Custom role.',
+      recordCaps: open ? open.caps.map((k) => ({ key: k })) : [],
+      recordSaved: s.recordSaved,
+      onRecordName: (e) => {
+        const v = e.target.value;
+        this.setState((st) => ({ roles: st.roles.map((r) => (r.id === st.openRoleId ? { ...r, name: v } : r)), recordSaved: false }));
+      },
+      onRecordDescription: (e) => {
+        const v = e.target.value;
+        this.setState((st) => ({ roles: st.roles.map((r) => (r.id === st.openRoleId ? { ...r, description: v } : r)), recordSaved: false }));
+      },
+      saveRecord: () => this.setState((st) => ({
+        roles: st.roles.map((r) => (r.id === st.openRoleId ? { ...r, version: r.version + 1 } : r)),
+        recordSaved: true,
+      })),
+
+      cloneName: s.cloneName, onCloneName: (e) => this.setState({ cloneName: e.target.value, cloneError: false, cloneDone: false }),
+      clonePassword: s.clonePassword, onClonePassword: (e) => this.setState({ clonePassword: e.target.value, cloneError: false }),
+      cloneRole: this.cloneRole, cloneError: s.cloneError, cloneDone: s.cloneDone,
+
+      hasAssignments: openAssignments.length > 0,
+      noAssignments: openAssignments.length === 0,
+      assignments: openAssignments.map((a) => ({
+        username: a.username, scope: a.scope, window: a.window,
+        isActive: a.status === 'active', isRevoked: a.status === 'revoked',
+        revoke: () => this.setState((st) => {
+          const next = { ...st.assignments };
+          next[st.openRoleId] = (next[st.openRoleId] || []).map((x) => (x.id === a.id ? { ...x, status: 'revoked' } : x));
+          return { assignments: next };
+        }),
+      })),
+      assignUser: s.assignUser, onAssignUser: (e) => this.setState({ assignUser: e.target.value, assignError: false }),
+      assignScope: s.assignScope, onAssignScope: (e) => this.setState({ assignScope: e.target.value }),
+      assignScopeId: s.assignScopeId, onAssignScopeId: (e) => this.setState({ assignScopeId: e.target.value }),
+      assignStarts: s.assignStarts, onAssignStarts: (e) => this.setState({ assignStarts: e.target.value }),
+      assignEnds: s.assignEnds, onAssignEnds: (e) => this.setState({ assignEnds: e.target.value }),
+      assignPassword: s.assignPassword, onAssignPassword: (e) => this.setState({ assignPassword: e.target.value, assignError: false }),
+      assignRole: this.assignRole, assignError: s.assignError,
+
+      allCaps: CATALOGUE.map((c) => ({ key: c.key })),
+      simActor: s.simActor, onSimActor: (e) => this.setState({ simActor: e.target.value, simError: false }),
+      simCapability: s.simCapability, onSimCapability: (e) => this.setState({ simCapability: e.target.value, simError: false }),
+      simBoard: s.simBoard, onSimBoard: (e) => this.setState({ simBoard: e.target.value }),
+      simAt: s.simAt, onSimAt: (e) => this.setState({ simAt: e.target.value }),
+      runSim: this.runSim,
+      simError: s.simError, simErrorText: s.simErrorText,
+      simHasResult: !!s.sim,
+      simAllowed: !!s.sim && s.sim.allowed,
+      simDenied: !!s.sim && !s.sim.allowed,
+      simSource: s.sim ? s.sim.source : '',
+      simReason: s.sim ? s.sim.reason : '',
+      simRole: s.sim ? s.sim.role : '',
+      simActorLabel: s.sim ? s.sim.actorLabel : '',
+      simTargetLabel: s.sim ? s.sim.targetLabel : '',
+    };
+  }
+}
+</script>
+</body>
+</html>

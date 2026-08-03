@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<!-- @template name="Thread view" description="A council topic in the Study register: a quiet reading surface — star + Topic tools only — with status, watch, tags, brief curation, and wardens' tools in a slide-in drawer" -->
+<!-- @template name="Council topic" description="The full council topic reading surface — status, watch, tags, living brief, poll, catch-me-up, reference and link cards, the reply composer, and wardens’ tools in a slide-in drawer" -->
 <helmet>
 <script src="./ds-base.js"></script>
 <style>
@@ -161,6 +161,35 @@
       </section>
     </sc-if>
 
+    <!-- ── Catch me up (community_memory) ── -->
+    <sc-if value="{{ memoryOn }}" hint-placeholder-val="{{ false }}">
+      <section style="margin-top: 14px; padding: 14px 17px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rule-gold); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); animation: rbFade 200ms;">
+        <div style="display: flex; align-items: center; gap: 11px;">
+          <span style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: var(--radius-md); background: var(--gold-soft); color: var(--gold-ink);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l3 2"></path></svg></span>
+          <span style="flex: 1; min-width: 0;">
+            <span style="display: block; font-family: var(--font-display); font-weight: 500; font-size: 1.12rem; line-height: 1.1; color: var(--text-strong);">Catch me up</span>
+            <span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .72rem; color: var(--text-muted);">{{ memorySince }}</span>
+          </span>
+          <button onClick="{{ toggleMemory }}" style="flex: 0 0 auto; padding: 6px 13px; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">{{ memoryToggleLabel }}</button>
+        </div>
+        <sc-if value="{{ memoryOpen }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top: 13px; animation: rbFade 180ms;">
+            <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px;">
+              <sc-for list="{{ memoryPoints }}" as="m" hint-placeholder-count="3">
+                <li style="position: relative; padding-left: 20px; font-size: .99rem; line-height: 1.52; color: var(--text-body); text-wrap: pretty;"><span style="position: absolute; left: 4px; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-500);"></span><sc-if value="{{ m.isAnswer }}" hint-placeholder-val="{{ false }}"><span style="font-weight: 600; color: var(--success);">Now the answer: </span></sc-if><span style="font-weight: 600; color: var(--text-strong);">{{ m.who }}</span> {{ m.what }}</li>
+              </sc-for>
+            </ul>
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--border-hair);">
+              <span style="font-family: var(--font-label); font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-muted);">Related</span>
+              <sc-for list="{{ memoryRelated }}" as="rel" hint-placeholder-count="2">
+                <a href="#" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--border-hair); border-radius: 999px; background: var(--surface-sunken); font-size: .88rem; color: var(--text-body); text-decoration: none; transition: border-color 150ms ease, background 150ms ease;" style-hover="border-color: var(--green-200); background: var(--brand-subtle);"><span style="color: var(--gold-ink);">#</span>{{ rel.label }}</a>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+    </sc-if>
+
     <!-- ── Post stream ── -->
     <div style="padding-bottom: 8px;">
       <sc-for list="{{ posts }}" as="p" hint-placeholder-count="4">
@@ -170,6 +199,13 @@
               <span style="flex: 1; height: 1px; background: var(--border-hair);"></span>
               <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint); white-space: nowrap;">{{ p.day }}</span>
               <span style="flex: 1; height: 1px; background: var(--border-hair);"></span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ p.firstUnread }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 14px; margin: 20px 2px 10px;">
+              <span style="flex: 0 0 14px; height: 1px; background: var(--gold-500); opacity: .55;"></span>
+              <span style="display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); white-space: nowrap;"><span style="width: 7px; height: 7px; border-radius: 50%; background: var(--gold-500);"></span>{{ unreadLabel }}</span>
+              <span style="flex: 1; height: 1px; background: var(--gold-500); opacity: .55;"></span>
             </div>
           </sc-if>
           <div id="p{{ p.id }}" onMouseEnter="{{ p.enter }}" onMouseLeave="{{ p.leave }}" style="position: relative; z-index: 0; display: flex; gap: 16px; padding: 10px 14px; margin: 6px 0; border-radius: var(--radius-lg);">
@@ -226,6 +262,27 @@
                   <sc-for list="{{ p.paras }}" as="para" hint-placeholder-count="1">
                     <p style="margin: 0 0 9px;">{{ para }}</p>
                   </sc-for>
+                  <sc-if value="{{ p.hasRef }}" hint-placeholder-val="{{ false }}">
+                    <a href="#" style="display: flex; gap: 12px; align-items: flex-start; margin: 13px 0; padding: 12px 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-left: 3px solid var(--gold-500); border-radius: var(--radius-md); text-decoration: none; transition: border-color 150ms ease, box-shadow 150ms ease;" style-hover="border-color: var(--green-200); box-shadow: var(--shadow-xs);">
+                      <span style="flex: 0 0 auto; margin-top: 2px; color: var(--gold-ink);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h4v6a4 4 0 0 1-4 4"></path><path d="M15 7h4v6a4 4 0 0 1-4 4"></path></svg></span>
+                      <span style="flex: 1; min-width: 0;">
+                        <span style="display: block; font-family: var(--font-label); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink);">#{{ p.refBoard }} · referenced</span>
+                        <span style="display: block; margin: 3px 0 2px; font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; line-height: 1.2; color: var(--text-strong);">{{ p.refTitle }}</span>
+                        <span style="display: block; font-style: italic; font-size: .92rem; line-height: 1.45; color: var(--text-muted);">“{{ p.refSnippet }}”</span>
+                        <span style="display: block; margin-top: 5px; font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint);">{{ p.refBy }}</span>
+                      </span>
+                    </a>
+                  </sc-if>
+                  <sc-if value="{{ p.hasLink }}" hint-placeholder-val="{{ false }}">
+                    <a href="#" style="display: flex; margin: 13px 0; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-md); overflow: hidden; text-decoration: none; transition: border-color 150ms ease, box-shadow 150ms ease;" style-hover="border-color: var(--green-200); box-shadow: var(--shadow-xs);">
+                      <span style="flex: 0 0 110px; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-sunken); border-right: 1px solid var(--border-hair); color: var(--text-faint);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></span>
+                      <span style="flex: 1; min-width: 0; padding: 12px 15px;">
+                        <span style="display: flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: .7rem; color: var(--text-muted);"><span style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 4px; background: var(--brand); color: var(--accent-contrast); font-family: var(--font-display); font-weight: 700; font-size: .6rem;">I</span>{{ p.linkSource }}</span>
+                        <span style="display: block; margin: 4px 0 3px; font-family: var(--font-display); font-weight: 600; font-size: 1.02rem; line-height: 1.2; color: var(--text-strong);">{{ p.linkTitle }}</span>
+                        <span style="display: block; font-size: .89rem; line-height: 1.45; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ p.linkDesc }}</span>
+                      </span>
+                    </a>
+                  </sc-if>
                   <sc-if value="{{ p.hasList }}" hint-placeholder-val="{{ false }}">
                     <ul style="margin: 0 0 9px; padding-left: 22px;">
                       <sc-for list="{{ p.list }}" as="li" hint-placeholder-count="2">
@@ -313,53 +370,62 @@
     <!-- ── Composer dock ── -->
     <div style="position: sticky; bottom: 0; z-index: 45; padding: 14px 0 18px; background: linear-gradient(to top, var(--surface-page) 72%, transparent);">
       <sc-if value="{{ composerOn }}" hint-placeholder-val="{{ false }}">
-        <div style="background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
-          <div role="toolbar" aria-label="Formatting" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap; padding: 6px 8px 5px; border-bottom: 1px solid var(--border-hair);">
-            <button onClick="{{ markBold }}" aria-label="Bold (Ctrl+B)" title="Bold · Ctrl+B" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5h5a3 3 0 0 1 0 6H8z"></path><path d="M8 11h6a4 4 0 0 1 0 8H8z"></path></svg></button>
-            <button onClick="{{ markItalic }}" aria-label="Italic (Ctrl+I)" title="Italic · Ctrl+I" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5h7"></path><path d="M7 19h7"></path><path d="M14 5 10 19"></path></svg></button>
-            <button onClick="{{ markStrike }}" aria-label="Strike" title="Strike" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h10"></path><path d="M5 12h14"></path><path d="M8 17h8"></path></svg></button>
-            <button onClick="{{ markCode }}" aria-label="Inline code (Ctrl+E)" title="Inline code · Ctrl+E" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 8-4 4 4 4"></path><path d="m15 8 4 4-4 4"></path></svg></button>
-            <span style="width: 1px; height: 16px; background: var(--border-hair); margin: 0 5px;"></span>
-            <button onClick="{{ markQuote }}" aria-label="Quote" title="Quote" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h5v5H7v5"></path><path d="M14 7h5v5h-4v5"></path></svg></button>
-            <button aria-label="Heading" title="Heading" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6v12"></path><path d="M13 6v12"></path><path d="M5 12h8"></path><path d="M16 10c0-2 4-2 4 0 0 2-4 3-4 6h5"></path></svg></button>
-            <button aria-label="Bullet list" title="Bullet list" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7h10"></path><path d="M9 12h10"></path><path d="M9 17h10"></path><path d="M5 7h.01"></path><path d="M5 12h.01"></path><path d="M5 17h.01"></path></svg></button>
-            <button aria-label="Numbered list" title="Numbered list" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h1v3"></path><path d="M5 13c2-1 2 2 0 3h2"></path><path d="M10 7h9"></path><path d="M10 12h9"></path><path d="M10 17h9"></path></svg></button>
-            <button aria-label="Code block" title="Code block" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14v12H5z"></path><path d="m9 10-2 2 2 2"></path><path d="m15 10 2 2-2 2"></path></svg></button>
-            <button aria-label="Spoiler" title="Spoiler" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12s3-5 9-5 9 5 9 5-3 5-9 5-9-5-9-5"></path><path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4"></path></svg></button>
-            <span style="width: 1px; height: 16px; background: var(--border-hair); margin: 0 5px;"></span>
-            <button aria-label="Link (Ctrl+K)" title="Link · Ctrl+K" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14 8.5 15.5a3 3 0 0 1-4-4L7 9a3 3 0 0 1 4 0"></path><path d="m14 10 1.5-1.5a3 3 0 0 1 4 4L17 15a3 3 0 0 1-4 0"></path><path d="m9 15 6-6"></path></svg></button>
+        <div style="position: relative; margin-bottom: 8px;">
+          <sc-if value="{{ attachRefOn }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; padding: 11px 13px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-left: 3px solid var(--gold-500); border-radius: var(--radius-md); animation: rbFade 180ms;">
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: block; font-family: var(--font-label); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink);">Reference attached</span>
+                <span style="display: block; margin-top: 3px; font-family: var(--font-display); font-weight: 600; font-size: .99rem; line-height: 1.2; color: var(--text-strong);">{{ attachRefTitle }}</span>
+                <span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint);">{{ attachRefMeta }}</span>
+              </span>
+              <button onClick="{{ clearRef }}" aria-label="Remove reference" style="flex: 0 0 auto; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-hair); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-muted); cursor: pointer;" style-hover="color: var(--danger);">✕</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ linkResolving }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 13px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-md);">
+              <span style="flex: 0 0 40px; height: 30px; border-radius: var(--radius-sm); background: var(--surface-raised);"></span>
+              <span style="flex: 1;"><span style="display: block; width: 45%; height: 9px; border-radius: 5px; background: var(--surface-raised);"></span><span style="display: block; margin-top: 7px; width: 78%; height: 9px; border-radius: 5px; background: var(--surface-raised);"></span></span>
+              <span style="font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint);">reading link…</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ linkResolved }}" hint-placeholder-val="{{ false }}">
+            <div style="position: relative; display: flex; margin-bottom: 8px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-md); overflow: hidden; animation: rbFade 180ms;">
+              <span style="flex: 0 0 96px; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-sunken); border-right: 1px solid var(--border-hair); color: var(--text-faint);"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></span>
+              <span style="flex: 1; min-width: 0; padding: 11px 14px;">
+                <span style="display: block; font-family: var(--font-mono); font-size: .7rem; color: var(--text-muted);">imladris.council · the-charter</span>
+                <span style="display: block; margin: 3px 0 2px; font-family: var(--font-display); font-weight: 600; font-size: 1rem; line-height: 1.2; color: var(--text-strong);">A charter for keeping counsel</span>
+                <span style="display: block; font-size: .88rem; line-height: 1.45; color: var(--text-muted);">Status is verified, not asserted. Outcomes resolve into artifacts.</span>
+              </span>
+              <button onClick="{{ clearLink }}" aria-label="Remove preview" style="position: absolute; top: 7px; right: 7px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border-hair); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-muted); cursor: pointer;" style-hover="color: var(--danger);">✕</button>
+            </div>
+          </sc-if>
+          <div style="display: flex; align-items: center; gap: 7px;">
+            <button onClick="{{ togglePicker }}" style="display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h4v6a4 4 0 0 1-4 4"></path><path d="M15 7h4v6a4 4 0 0 1-4 4"></path></svg>Reference a post</button>
+            <button onClick="{{ pasteLink }}" style="display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border: 1px solid var(--border-hair); border-radius: var(--radius-sm); background: var(--surface-raised); color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Paste a link</button>
           </div>
-          <textarea placeholder="Reply to “Where should ratified decisions live once the council has spoken?”…" value="{{ draft }}" onInput="{{ setDraft }}" style="display: block; width: 100%; box-sizing: border-box; min-height: 82px; max-height: min(42dvh, 360px); padding: 10px 12px; border: none; outline: none; background: transparent; resize: vertical; font-family: var(--font-body); font-size: 1.02rem; line-height: 1.55; color: var(--text-body);"></textarea>
-          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 8px; border-top: 1px solid var(--border-hair);">
-            <button aria-label="Formatting" aria-expanded="true" style="display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 28px; border: none; border-radius: 6px; background: var(--surface-sunken); color: var(--text-strong); font-family: var(--font-label); font-size: .76rem; letter-spacing: .02em; cursor: pointer;">Aa</button>
-            <button aria-label="Attach images" title="Attach images" style="display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); font-size: 1rem; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">＋</button>
-            <button aria-label="Emoji" aria-haspopup="dialog" style="display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 28px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); font-size: .92rem; cursor: pointer;" style-hover="background: var(--surface-sunken);">😊</button>
-            <span style="display: inline-flex; align-items: center; gap: 7px; margin-left: 4px;">
-              <span style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--green-700); color: var(--parchment-50); font-family: var(--font-label); font-size: .58rem;" aria-hidden="true">{{ viewerInitials }}</span>
-              <span style="font-family: var(--font-body); font-size: .82rem; color: var(--text-muted);">as <strong style="color: var(--text-strong); font-weight: 600;">{{ viewerName }}</strong></span>
-            </span>
-            <sc-if value="{{ anonOn }}" hint-placeholder-val="{{ false }}">
-              <button onClick="{{ toggleAnon }}" aria-pressed="true" style="display: inline-flex; align-items: center; height: 26px; padding: 0 11px; margin-left: 6px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--gold-200); background: var(--gold-soft); color: var(--gold-ink); font-family: var(--font-label); font-size: .7rem; letter-spacing: .03em; cursor: pointer;">Anonymous</button>
-            </sc-if>
-            <sc-if value="{{ anonOff }}" hint-placeholder-val="{{ true }}">
-              <button onClick="{{ toggleAnon }}" aria-pressed="false" style="display: inline-flex; align-items: center; height: 26px; padding: 0 11px; margin-left: 6px; white-space: nowrap; border-radius: 999px; border: 1px solid var(--border-hair); background: var(--surface-raised); color: var(--text-muted); font-family: var(--font-label); font-size: .7rem; letter-spacing: .03em; cursor: pointer;" style-hover="border-color: var(--gold-200); color: var(--gold-ink);">Anonymous</button>
-            </sc-if>
-            <span style="flex: 1;"></span>
-            <button aria-label="Preview" aria-expanded="false" style="display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-strong);">Preview</button>
-            <sc-if value="{{ sendOn }}" hint-placeholder-val="{{ false }}">
-              <button onClick="{{ send }}" aria-label="Reply" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; border-radius: 999px; background: var(--accent); color: var(--accent-contrast); font-size: 1.02rem; cursor: pointer; box-shadow: var(--shadow-sm);" style-hover="background: var(--brand-hover);"><span aria-hidden="true">✒</span></button>
-            </sc-if>
-            <sc-if value="{{ sendOff }}" hint-placeholder-val="{{ true }}">
-              <button disabled="true" aria-label="Reply" style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; border-radius: 999px; background: var(--accent); color: var(--accent-contrast); font-size: 1.02rem; opacity: .48; cursor: default;"><span aria-hidden="true">✒</span></button>
-            </sc-if>
-          </div>
+          <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+            <div role="dialog" aria-label="Reference a post" style="position: absolute; left: 0; bottom: 40px; z-index: 60; width: 350px; max-width: 100%; background: var(--surface-raised); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; animation: rbFade 150ms;">
+              <div style="display: flex; align-items: center; gap: 9px; padding: 10px 14px; border-bottom: 1px solid var(--border-hair);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+                <input onInput="{{ onPickQuery }}" value="{{ pickQuery }}" placeholder="Search topics to reference…" style="flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: inherit; font-size: .95rem; color: var(--text-strong);">
+              </div>
+              <div style="max-height: 230px; overflow-y: auto; padding: 6px;">
+                <sc-for list="{{ pickResults }}" as="pk" hint-placeholder-count="3">
+                  <button onClick="{{ pk.pick }}" style="display: block; width: 100%; padding: 9px 11px; text-align: left; border: 0; border-radius: var(--radius-sm); background: none; cursor: pointer;" style-hover="background: var(--surface-sunken);">
+                    <span style="display: block; font-family: var(--font-display); font-weight: 600; font-size: .95rem; color: var(--text-strong);">{{ pk.title }}</span>
+                    <span style="display: block; margin-top: 1px; font-family: var(--font-mono); font-size: .7rem; color: var(--text-muted);">{{ pk.meta }}</span>
+                  </button>
+                </sc-for>
+                <sc-if value="{{ noPickResults }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin: 0; padding: 22px; text-align: center; font-style: italic; font-size: .9rem; color: var(--text-muted);">No topics match that.</p>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px; margin-top: 5px; padding: 0 4px;">
-          <sc-if value="{{ draftSaved }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint); animation: rbFade 300ms;">Draft saved · <button onClick="{{ discardDraft }}" aria-label="Discard draft" style="border: none; background: transparent; padding: 0; font-family: var(--font-mono); font-size: .64rem; color: var(--text-faint); text-decoration: underline; cursor: pointer;">Discard</button></span></sc-if>
-          <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .02em; color: var(--text-faint);">Your name is hidden from other members; moderators can still see it.</span>
-          <span style="flex: 1;"></span>
-          <span style="font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint);">{{ draftCount }}</span>
-        </div>
+      </sc-if>
+      <sc-if value="{{ composerOn }}" hint-placeholder-val="{{ false }}">
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Composer" context="reply" submit-label="Reply" placeholder="Reply to “Where should ratified decisions live once the council has spoken?”…" identity="{{ viewerName }}" toolbar-open="true" allow-anonymous="true" anonymous-checked="{{ anonOn }}" anonymous-disclosure="Your name is hidden from other members; moderators can still see it." max-length="{{ postLimit }}" value="{{ draft }}" onChange="{{ setDraft }}" onSubmit="{{ send }}" error="{{ composerError }}" draft-saved="{{ draftSaved }}" count="{{ draftCount }}" count-over="{{ draftOver }}" hint-size="100%,250px"></x-import>
       </sc-if>
       <sc-if value="{{ guestBar }}" hint-placeholder-val="{{ false }}">
         <div style="display: flex; align-items: center; gap: 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); padding: 12px 16px;">
@@ -629,9 +695,11 @@
 </div>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;staff&quot;,&quot;member&quot;,&quot;guest&quot;],&quot;default&quot;:&quot;staff&quot;,&quot;tsType&quot;:&quot;'staff' | 'member' | 'guest'&quot;,&quot;section&quot;:&quot;Viewer&quot;},&quot;showPoll&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Feature flags&quot;},&quot;showBrief&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Feature flags&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;staff&quot;,&quot;member&quot;,&quot;guest&quot;],&quot;default&quot;:&quot;member&quot;,&quot;tsType&quot;:&quot;'staff' | 'member' | 'guest'&quot;,&quot;section&quot;:&quot;Viewer&quot;},&quot;showPoll&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Feature flags&quot;},&quot;showBrief&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Feature flags&quot;}}">
 class Component extends DCLogic {
-  state = { data: false, roleOverride: null, toast: null, drawerOpen: false, section: 'watch' };
+  state = { data: false, roleOverride: null, toast: null, drawerOpen: false, section: 'watch',
+    memoryOpen: true, memoryDismissed: false,
+    pickerOpen: false, pickQuery: '', attachRef: null, linkState: 'empty', composerError: '' };
 
   componentDidMount() {
     import(new URL('./thread-data.js', window.location.href).href).then((m) => {
@@ -729,14 +797,15 @@ class Component extends DCLogic {
 
   send() {
     const body = this.state.draft.trim();
-    if (!body || this.state.locked) return;
+    if (this.state.locked) return;
+    if (!body) { this.setState({ composerError: 'Write your counsel before you post it.' }); return; }
     const v = this.D.VIEWERS[this.role()];
     // An anonymous reply carries only the constant masked identity; the real
     // username feeds the audited reveal flash and nothing else (mask_author).
     const p = this.state.anonOn
       ? { id: (this._nextId = (this._nextId || 200) + 1), author: 'Anonymous', seed: '', anon: true, revealUsername: v.seed, time: 'Just now', paras: body.split(/\n{2,}/), counts: {}, mine: [] }
       : { id: (this._nextId = (this._nextId || 200) + 1), author: v.name, seed: v.seed, title: v.title, rep: v.rep, staff: this.role() === 'staff', time: 'Just now', paras: body.split(/\n{2,}/), counts: {}, mine: [] };
-    this.setState({ posts: [...this.state.posts, p], draft: '' });
+    this.setState({ posts: [...this.state.posts, p], draft: '', composerError: '', attachRef: null, linkState: 'empty' });
     this.showToast('Your counsel is added to the record.');
   }
 
@@ -749,6 +818,19 @@ class Component extends DCLogic {
     const signedIn = !isGuest;
     const viewer = ready ? D.VIEWERS[role] : { name: '', seed: '' };
     const closeAll = () => this.setState({ postMenu: null, reactMenu: null });
+    const REF_TOPICS = [
+      { id: 1, title: 'Reading attention as a map, not a verdict', board: 'interpretability', by: 'Arwen · 17 replies' },
+      { id: 2, title: 'Who changed what — prove the rollback?', board: 'audit-trails', by: 'Erestor · 41 replies' },
+      { id: 3, title: 'On exposing capability before we are asked', board: 'capability-disclosure', by: 'Elrond · 12 replies' },
+      { id: 4, title: 'The hall reopens — read this first', board: 'announcements', by: 'Elrond · 8 replies' },
+    ];
+    const pq = String(s.pickQuery || '').toLowerCase();
+    const pickResults = REF_TOPICS.filter((t) => (t.title + ' ' + t.board).toLowerCase().indexOf(pq) >= 0);
+    const allIds = (s.posts || []).map((x) => x.id);
+    const unreadCount = allIds.length > 2 ? 2 : 0;
+    const unreadFromId = unreadCount ? allIds[allIds.length - 2] : null;
+    const refPostId = allIds.length > 1 ? allIds[1] : null;
+    const linkPostId = allIds.length > 0 ? allIds[0] : null;
     const sec = (k) => () => this.setState({ section: this.state.section === k ? null : k });
 
     const roles = ['guest', 'member', 'staff'].map(r => ({
@@ -821,6 +903,16 @@ class Component extends DCLogic {
         toggleMenu: () => this.setState({ postMenu: menuOpen ? null : raw.id, reactMenu: null }),
         canAccept: isStaff && !raw.op && !accepted,
         canQuote: signedIn && !s.locked,
+        firstUnread: signedIn && !s.memoryDismissed && raw.id === unreadFromId,
+        hasRef: raw.id === refPostId,
+        refBoard: 'interpretability',
+        refTitle: 'Reading attention as a map, not a verdict',
+        refSnippet: 'Attention tells you where the model looked, not what it concluded.',
+        refBy: 'Arwen · 17 replies',
+        hasLink: raw.id === linkPostId,
+        linkSource: 'imladris.council · the-charter',
+        linkTitle: 'A charter for keeping counsel',
+        linkDesc: 'Status is verified, not asserted. Outcomes resolve into artifacts. Testimony never outranks the work.',
         accept: () => this.accept(raw),
         quote: () => { const first = (raw.paras && raw.paras[0]) || ''; this.setState({ draft: (this.state.draft ? this.state.draft + '\n\n' : '') + '> ' + first.slice(0, 120) + (first.length > 120 ? '…' : '') + '\n\n' }); this.showToast('Quoted into your reply.'); },
         copyLink: () => { this.setState({ postMenu: null }); this.showToast('Link copied — /t/214-ratified-decisions#p' + raw.id); },
@@ -940,14 +1032,53 @@ class Component extends DCLogic {
       saveEdit: () => { const id = this.state.editingId; const body = this.state.editDraft.trim(); this.setState({ posts: this.state.posts.map(x => x.id === id ? { ...x, paras: body.split(/\n{2,}/), list: null, after: null, quote: null, edited: true } : x), editingId: null }); this.showToast('Reply amended.'); },
       cancelEdit: () => this.setState({ editingId: null }),
 
+      memoryOn: ready && signedIn && !s.memoryDismissed && unreadCount > 0,
+      memoryOpen: s.memoryOpen !== false,
+      memoryToggleLabel: s.memoryOpen ? 'Hide summary' : 'Show summary',
+      toggleMemory: () => this.setState({ memoryOpen: !this.state.memoryOpen }),
+      memorySince: unreadCount + ' new replies since you last read · 2 days ago',
+      unreadLabel: 'New since you last read · ' + unreadCount + ' replies',
+      memoryPoints: [
+        { who: 'Glorfindel', what: 'reframed the scattering as a missing rule, not a filing problem.', isAnswer: false },
+        { who: 'Elrond', what: 'seconded, drawing the line between “still arguing” and “already decided”.', isAnswer: false },
+        { who: 'Arwen', what: 'proposed a warden marks the decision, pins the brief, and locks the topic.', isAnswer: true },
+      ],
+      memoryRelated: [{ label: 'reading attention as a map' }, { label: 'prove the rollback' }],
+
+      pickerOpen: s.pickerOpen,
+      togglePicker: () => this.setState({ pickerOpen: !this.state.pickerOpen, pickQuery: '' }),
+      pickQuery: s.pickQuery,
+      onPickQuery: (e) => this.setState({ pickQuery: e.target.value }),
+      pickResults: pickResults.map((t) => ({
+        title: t.title, meta: '#' + t.board + ' · ' + t.by,
+        pick: () => this.setState({ attachRef: t, pickerOpen: false, pickQuery: '' }),
+      })),
+      noPickResults: pickResults.length === 0,
+      attachRefOn: !!s.attachRef,
+      attachRefTitle: s.attachRef ? s.attachRef.title : '',
+      attachRefMeta: s.attachRef ? ('#' + s.attachRef.board + ' · ' + s.attachRef.by) : '',
+      clearRef: () => this.setState({ attachRef: null }),
+      linkResolving: s.linkState === 'resolving',
+      linkResolved: s.linkState === 'resolved',
+      pasteLink: () => {
+        if (this.state.linkState !== 'empty') return;
+        this.setState({ linkState: 'resolving' });
+        clearTimeout(this._lp);
+        this._lp = setTimeout(() => this.setState({ linkState: 'resolved' }), 1000);
+      },
+      clearLink: () => { clearTimeout(this._lp); this.setState({ linkState: 'empty' }); },
+
       composerOn: ready && signedIn && !s.locked, guestBar: ready && isGuest && !s.locked, lockedBar: ready && !!s.locked,
       anonOn: ready && !!s.anonOn, anonOff: ready && !s.anonOn,
       toggleAnon: () => this.setState({ anonOn: !this.state.anonOn }),
-      draft: s.draft || '', setDraft: (e) => this.setState({ draft: e.target.value }), discardDraft: () => this.setState({ draft: '' }),
+      draft: s.draft || '', setDraft: (e) => this.setState({ draft: e.target.value, composerError: '' }),
+      composerError: s.composerError || '', discardDraft: () => this.setState({ draft: '' }),
       draftSaved: (s.draft || '').length > 0,
-      draftCount: (s.draft || '').length + ' / 20000',
+      postLimit: 20000,
+      draftCount: (s.draft || '').length >= 18000 ? (s.draft || '').length.toLocaleString() + ' / 20,000' : '',
+      draftOver: (s.draft || '').length > 20000,
       sendOn: !!(s.draft || '').trim(), sendOff: !(s.draft || '').trim(),
-      send: () => this.send(),
+      send: (e) => { if (e && e.preventDefault) e.preventDefault(); this.send(); },
       markBold: () => this.setState({ draft: (this.state.draft || '') + '**bold**' }),
       markItalic: () => this.setState({ draft: (this.state.draft || '') + '*italic*' }),
       markStrike: () => this.setState({ draft: (this.state.draft || '') + '~~struck~~' }),

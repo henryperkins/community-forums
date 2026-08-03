@@ -141,32 +141,50 @@ final class FollowRepository
     }
 
     /** @return array<int,array<string,mixed>> follower user rows, newest first */
-    public function listFollowers(int $targetId, int $limit = 50, int $offset = 0): array
+    public function listFollowers(int $targetId, int $limit = 50, int $offset = 0, string $query = ''): array
     {
-        $limit = max(1, $limit);
-        $offset = max(0, $offset);
+        $limit = max(1, min(100, $limit));
+        $offset = max(0, min(1_000_000, $offset));
+        [$filter, $params] = $this->nameFilter($query);
+        array_unshift($params, $targetId);
+
         return $this->db->fetchAll(
             "SELECT u.id, u.username, u.display_name, u.title, u.reputation, f.created_at
              FROM follows f JOIN users u ON u.id = f.user_id
-             WHERE f.target_type = 'user' AND f.target_id = ?
+             WHERE f.target_type = 'user' AND f.target_id = ?$filter
              ORDER BY f.created_at DESC, f.user_id DESC
              LIMIT " . $limit . ' OFFSET ' . $offset,
-            [$targetId],
+            $params,
         );
     }
 
     /** @return array<int,array<string,mixed>> followed user rows, newest first */
-    public function listFollowing(int $userId, int $limit = 50, int $offset = 0): array
+    public function listFollowing(int $userId, int $limit = 50, int $offset = 0, string $query = ''): array
     {
-        $limit = max(1, $limit);
-        $offset = max(0, $offset);
+        $limit = max(1, min(100, $limit));
+        $offset = max(0, min(1_000_000, $offset));
+        [$filter, $params] = $this->nameFilter($query);
+        array_unshift($params, $userId);
+
         return $this->db->fetchAll(
             "SELECT u.id, u.username, u.display_name, u.title, u.reputation, f.created_at
              FROM follows f JOIN users u ON u.id = f.target_id
-             WHERE f.user_id = ? AND f.target_type = 'user'
+             WHERE f.user_id = ? AND f.target_type = 'user'$filter
              ORDER BY f.created_at DESC, f.target_id DESC
              LIMIT " . $limit . ' OFFSET ' . $offset,
-            [$userId],
+            $params,
         );
+    }
+
+    /** @return array{0:string,1:list<mixed>} */
+    private function nameFilter(string $query): array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return ['', []];
+        }
+        $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query) . '%';
+
+        return [' AND (u.username LIKE ? OR u.display_name LIKE ?)', [$like, $like]];
     }
 }

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — settings & thread intelligence" description="The settings section of the operator's desk: community name and registration mode with its invite-flag warning, plus the Thread Intelligence console — heartbeat cards, recovery controls, daily budget meters, queue states, generation contract, and recent evidence" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes asRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — settings" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+  </div>
+
+  <div style="max-width: 1100px; margin: 0 auto; padding: 26px 28px 110px;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+      <div>
+        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Operator desk · Settings</span>
+        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">General &amp; intelligence</h1>
+      </div>
+      <span style="flex: 0 0 auto; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;">Admin mode</span>
+    </div>
+
+    <nav aria-label="Settings sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 22px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atGeneral }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goGeneral }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">General &amp; registration</button></sc-if>
+      <sc-if value="{{ offGeneral }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goGeneral }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">General &amp; registration</button></sc-if>
+      <sc-if value="{{ atIntel }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goIntel }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Thread Intelligence</button></sc-if>
+      <sc-if value="{{ offIntel }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goIntel }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Thread Intelligence</button></sc-if>
+    </nav>
+
+    <!-- ═══ General & registration ═══ -->
+    <sc-if value="{{ showGeneral }}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding-top: 24px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Identity</h2>
+          <p style="margin: 0 0 16px; max-width: 48ch; font-size: .93rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">The name the council goes by — in the topbar, in every email, and on the sign-in page.</p>
+          <form onSubmit="{{ saveName }}">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Community name</span>
+              <input value="{{ siteName }}" onInput="{{ onSiteName }}" maxlength="80" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .95rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 16px;">
+              <button type="submit" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Save name</button>
+              <sc-if value="{{ nameSaved }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-done);">Saved.</span></sc-if>
+              <sc-if value="{{ nameError }}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: .87rem; color: var(--danger);">The council needs a name.</span></sc-if>
+            </div>
+          </form>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Registration</h2>
+          <p style="margin: 0 0 16px; max-width: 48ch; font-size: .93rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">Choose whether new members can join directly, need an invitation, or cannot register.</p>
+          <form onSubmit="{{ saveRegistration }}">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Registration mode</span>
+              <select value="{{ regMode }}" onChange="{{ onRegMode }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .95rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="open">Open — anyone can register</option>
+                <option value="invite">Invite only (invitation required)</option>
+                <option value="closed">Closed (no new sign-ups)</option>
+              </select>
+              <span style="font-size: .87rem; line-height: 1.45; color: var(--text-faint); text-wrap: pretty;">Existing members can continue signing in in every mode.</span>
+            </label>
+            <sc-if value="{{ inviteConflict }}" hint-placeholder-val="{{ false }}">
+              <p role="alert" style="margin: 12px 0 0; padding: 10px 14px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .89rem; line-height: 1.45; color: var(--danger); text-wrap: pretty;">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</p>
+            </sc-if>
+            <label style="display: flex; align-items: center; gap: 9px; margin-top: 14px; font-size: .92rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ invitesOn }}" onChange="{{ onInvitesOn }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Invitations feature is enabled</label>
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 16px;">
+              <button type="submit" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Save registration mode</button>
+              <sc-if value="{{ regSaved }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-done);">Saved.</span></sc-if>
+            </div>
+          </form>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Thread Intelligence ═══ -->
+    <sc-if value="{{ showIntel }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 24px;">
+        <p style="margin: 0 0 22px; max-width: 70ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Automated context for long topics. The council approves; the model proposes. Everything it writes is evidenced below, and the egress brake is one button away.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 3px; padding: 16px 17px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--success); border-radius: var(--radius-lg);">
+            <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Provider</span>
+            <strong style="font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; line-height: 1.15; color: var(--text-strong);">Healthy</strong>
+            <span style="font-size: .84rem; color: var(--text-faint);">No latch set</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px; padding: 16px 17px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--info); border-radius: var(--radius-lg);">
+            <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Heartbeat</span>
+            <strong style="font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; line-height: 1.15; color: var(--text-strong);">Nominal</strong>
+            <span style="font-size: .84rem; color: var(--text-faint);">Last run 6 minutes ago</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 3px; padding: 16px 17px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--warning); border-radius: var(--radius-lg);">
+            <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Generation</span>
+            <strong style="font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; line-height: 1.15; color: var(--text-strong);">{{ generationState }}</strong>
+            <span style="font-size: .84rem; color: var(--text-faint);">Global provider egress brake</span>
+          </div>
+        </div>
+
+        <section style="margin-bottom: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Recovery controls</h2>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+            <button onClick="{{ togglePause }}" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">{{ pauseAction }}</button>
+            <button onClick="{{ retryProvider }}" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Retry provider configuration</button>
+            <sc-if value="{{ retried }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-done);">Health latch cleared.</span></sc-if>
+          </div>
+          <p style="margin: 12px 0 0; max-width: 62ch; font-size: .88rem; line-height: 1.5; color: var(--text-faint); text-wrap: pretty;">Provider retry clears only the current health latch. Configure credentials outside this page.</p>
+        </section>
+
+        <section style="margin-bottom: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Daily budget</h2>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
+                <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Calls</span>
+                <span style="font-family: var(--font-mono); font-size: .84rem; color: var(--text-body);">{{ callsLabel }}</span>
+              </div>
+              <div style="height: 8px; border-radius: 999px; background: var(--surface-sunken); overflow: hidden;"><div style="height: 100%; width: 67%; border-radius: 999px; background: var(--accent);"></div></div>
+            </div>
+            <div>
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px;">
+                <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Input tokens</span>
+                <span style="font-family: var(--font-mono); font-size: .84rem; color: var(--text-body);">{{ tokensLabel }}</span>
+              </div>
+              <div style="height: 8px; border-radius: 999px; background: var(--surface-sunken); overflow: hidden;"><div style="height: 100%; width: 68%; border-radius: 999px; background: var(--gold-500);"></div></div>
+            </div>
+          </div>
+          <p style="margin: 14px 0 0; font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint);">Resets 2026-08-03 00:00 UTC</p>
+        </section>
+
+        <section style="margin-bottom: 16px;">
+          <h2 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Queue states</h2>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+            <sc-for list="{{ queueStates }}" as="q" hint-placeholder-count="5">
+              <div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+                <span style="font-family: var(--font-mono); font-size: 1.45rem; line-height: 1.1; color: var(--text-strong);">{{ q.count }}</span>
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .08em; color: var(--text-faint);">{{ q.label }}</span>
+                <span style="font-size: .78rem; color: var(--text-faint);">{{ q.unit }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <div style="display: grid; grid-template-columns: 330px 1fr; gap: 16px; align-items: start;">
+          <section style="padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <h2 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Generation contract</h2>
+            <dl style="display: flex; flex-direction: column; gap: 11px; margin: 0;">
+              <div><dt style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint);">Model</dt><dd style="margin: 3px 0 0;"><code style="font-family: var(--font-mono); font-size: .84rem; color: var(--text-body);">claude-sonnet-4-6</code></dd></div>
+              <div><dt style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint);">Reasoning effort</dt><dd style="margin: 3px 0 0; font-size: .92rem; color: var(--text-body);">medium</dd></div>
+              <div><dt style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint);">Prompt version</dt><dd style="margin: 3px 0 0;"><code style="font-family: var(--font-mono); font-size: .84rem; color: var(--text-body);">ti.summary.v7</code></dd></div>
+            </dl>
+          </section>
+
+          <section style="padding: 18px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <h2 style="margin: 0; flex: 0 0 auto; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Recent generation evidence</h2>
+              <span style="display: inline-flex; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: 999px;">
+                <sc-if value="{{ evAll }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setEvAll }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">All</button></sc-if>
+                <sc-if value="{{ notEvAll }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setEvAll }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">All</button></sc-if>
+                <sc-if value="{{ evFailed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setEvFailed }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Failed only</button></sc-if>
+                <sc-if value="{{ notEvFailed }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setEvFailed }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Failed only</button></sc-if>
+              </span>
+              <span style="margin-left: auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ evidenceLabel }}</span>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: .89rem;">
+              <thead><tr>
+                <th scope="col" style="padding: 9px 10px 8px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">When</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Topic</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Outcome</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Input tokens</th>
+                <th scope="col" style="padding: 9px 0 8px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Digest</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ evidence }}" as="e" hint-placeholder-count="6">
+                  <tr>
+                    <td style="padding: 10px 10px 10px 0; white-space: nowrap; font-family: var(--font-mono); font-size: .77rem; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ e.when }}</td>
+                    <td style="padding: 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair); text-wrap: pretty;">{{ e.topic }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                      <sc-if value="{{ e.ok }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ e.outcome }}</span></sc-if>
+                      <sc-if value="{{ e.bad }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised)); color: var(--danger); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ e.outcome }}</span></sc-if>
+                    </td>
+                    <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ e.tokens }}</td>
+                    <td style="padding: 10px 0 10px 10px; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ e.digest }}</code></td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+            <sc-if value="{{ noEvidence }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 34px 20px; text-align: center;">
+                <h3 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; color: var(--text-strong);">Nothing has failed</h3>
+                <p style="margin: 6px 0 0; font-size: .92rem; color: var(--text-muted);">Every generation in the retained window completed.</p>
+              </div>
+            </sc-if>
+          </section>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900}}">
+const EVIDENCE = [
+  { when: '2 Aug 09:12', topic: 'The migration that could not be undone — a postmortem', outcome: 'Summarised', tokens: '18,204', digest: 'sha256:4b1e…c802', ok: true },
+  { when: '2 Aug 08:47', topic: 'Against the heroic on-call rotation', outcome: 'Summarised', tokens: '14,880', digest: 'sha256:9d33…0a17', ok: true },
+  { when: '2 Aug 07:59', topic: 'Who changed what — and can you prove the rollback?', outcome: 'Refused — low signal', tokens: '2,140', digest: 'sha256:11cc…9fd0', ok: false },
+  { when: '1 Aug 23:31', topic: 'Evaluations as ritual, not gate', outcome: 'Summarised', tokens: '11,502', digest: 'sha256:7a20…4b6c', ok: true },
+  { when: '1 Aug 21:08', topic: 'What belongs in the audit trail, and what does not', outcome: 'Summarised', tokens: '9,776', digest: 'sha256:2f88…dd41', ok: true },
+  { when: '1 Aug 18:22', topic: 'A smaller composer', outcome: 'Failed — provider timeout', tokens: '0', digest: '—', ok: false },
+  { when: '1 Aug 15:04', topic: 'Reading the archive backwards', outcome: 'Summarised', tokens: '7,431', digest: 'sha256:6e5a…b923', ok: true },
+  { when: '1 Aug 12:40', topic: 'Naming things so the next reader is not lost', outcome: 'Summarised', tokens: '6,118', digest: 'sha256:0c74…31af', ok: true },
+];
+
+class Component extends DCLogic {
+  state = {
+    view: 'general',
+    siteName: 'Imladris', nameSaved: false, nameError: false,
+    regMode: 'invite', invitesOn: false, regSaved: false,
+    paused: false, retried: false,
+    evFilter: 'all',
+  };
+
+  renderVals() {
+    const s = this.state;
+    const callLimit = 400; const callsUsed = 268;
+    const tokenLimit = 900000; const tokensUsed = 612480;
+
+    const evidence = s.evFilter === 'failed' ? EVIDENCE.filter((e) => !e.ok) : EVIDENCE;
+
+    return {
+      atGeneral: s.view === 'general', offGeneral: s.view !== 'general',
+      atIntel: s.view === 'intel', offIntel: s.view !== 'intel',
+      goGeneral: () => this.setState({ view: 'general' }),
+      goIntel: () => this.setState({ view: 'intel' }),
+      showGeneral: s.view === 'general',
+      showIntel: s.view === 'intel',
+
+      siteName: s.siteName,
+      onSiteName: (e) => this.setState({ siteName: e.target.value, nameSaved: false, nameError: false }),
+      saveName: (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (!this.state.siteName.trim()) { this.setState({ nameError: true, nameSaved: false }); return; }
+        this.setState({ nameSaved: true, nameError: false });
+      },
+      nameSaved: s.nameSaved, nameError: s.nameError,
+
+      regMode: s.regMode,
+      onRegMode: (e) => this.setState({ regMode: e.target.value, regSaved: false }),
+      invitesOn: s.invitesOn,
+      onInvitesOn: (e) => this.setState({ invitesOn: e.target.checked, regSaved: false }),
+      inviteConflict: s.regMode === 'invite' && !s.invitesOn,
+      saveRegistration: (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ regSaved: true }); },
+      regSaved: s.regSaved,
+
+      generationState: s.paused ? 'Paused' : 'Running',
+      pauseAction: s.paused ? 'Resume generation' : 'Pause generation',
+      togglePause: () => this.setState((st) => ({ paused: !st.paused })),
+      retryProvider: () => this.setState({ retried: true }),
+      retried: s.retried,
+
+      callsLabel: callsUsed + ' of ' + callLimit,
+      tokensLabel: tokensUsed.toLocaleString() + ' of ' + tokenLimit.toLocaleString(),
+
+      queueStates: [
+        { label: 'Pending', count: 12, unit: 'threads' },
+        { label: 'In flight', count: 3, unit: 'threads' },
+        { label: 'Summarised', count: 486, unit: 'threads' },
+        { label: 'Refused', count: 24, unit: 'threads' },
+        { label: 'Failed', count: 2, unit: 'threads' },
+      ],
+
+      evAll: s.evFilter === 'all', notEvAll: s.evFilter !== 'all',
+      evFailed: s.evFilter === 'failed', notEvFailed: s.evFilter !== 'failed',
+      setEvAll: () => this.setState({ evFilter: 'all' }),
+      setEvFailed: () => this.setState({ evFilter: 'failed' }),
+      evidence: evidence.map((e) => ({ ...e, bad: !e.ok })),
+      evidenceLabel: evidence.length === 1 ? '1 run' : evidence.length + ' runs',
+      noEvidence: evidence.length === 0,
+    };
+  }
+}
+</script>
+</body>
+</html>

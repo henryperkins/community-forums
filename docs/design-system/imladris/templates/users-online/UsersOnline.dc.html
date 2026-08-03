@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Users online" description="Presence in context: the sidebar roster beside a full member directory — filters, working search and pagination, and the loading / empty / privacy states the real presence feed has" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes uoRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Users online" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <!-- ── Topbar ── -->
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 4px 11px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em;">
+      <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--presence);" aria-hidden="true"></span>{{ onlineLabel }}
+    </span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 268px 1fr; gap: 30px; max-width: 1240px; margin: 0 auto; padding: 26px 28px 110px; align-items: start;">
+
+    <!-- ── Rail: the roster where it actually lives ── -->
+    <aside style="position: sticky; top: 84px; display: flex; flex-direction: column; gap: 22px;">
+      <nav aria-label="Boards" style="display: flex; flex-direction: column; gap: 2px;">
+        <span style="padding: 0 8px 6px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Boards</span>
+        <a href="#" style="padding: 6px 9px; border-radius: var(--radius-md); font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="background: var(--surface-sunken);"><span style="color: var(--gold-ink);">#</span>counsel</a>
+        <a href="#" style="padding: 6px 9px; border-radius: var(--radius-md); font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="background: var(--surface-sunken);"><span style="color: var(--gold-ink);">#</span>practice</a>
+        <a href="#" style="padding: 6px 9px; border-radius: var(--radius-md); font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="background: var(--surface-sunken);"><span style="color: var(--gold-ink);">#</span>archive</a>
+        <a href="#" style="padding: 6px 9px; border-radius: var(--radius-md); font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="background: var(--surface-sunken);"><span style="color: var(--gold-ink);">#</span>lore</a>
+        <a href="#" style="padding: 6px 9px; border-radius: var(--radius-md); font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="background: var(--surface-sunken);"><span style="color: var(--gold-ink);">#</span>welcome</a>
+      </nav>
+
+      <div style="padding: 14px 8px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.PresenceList" people="{{ railPeople }}" count="{{ onlineCount }}" max="{{ railMax }}" loading="{{ isLoading }}" hint-size="100%,232px"></x-import>
+        <div style="margin-top: 10px; padding: 0 8px;">
+          <a href="#" style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);">See everyone →</a>
+        </div>
+      </div>
+
+      <p style="margin: 0; padding: 0 8px; font-size: .8rem; line-height: 1.5; color: var(--text-faint); text-wrap: pretty;">Presence is shown only for members who have chosen to share it. The roster is never the whole council.</p>
+    </aside>
+
+    <!-- ── Directory ── -->
+    <main style="min-width: 0;">
+      <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Presence</span>
+      <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Who is at the council</h1>
+      <p style="margin: 8px 0 0; max-width: 62ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Members active in the last fifteen minutes, and everyone who has taken a seat. A leaf means here now; amber means stepped away.</p>
+
+      <!-- Filters -->
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0 6px;">
+        <span style="display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: 999px;">
+          <sc-if value="{{ atAll }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goAll }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Everyone</button></sc-if>
+          <sc-if value="{{ offAll }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goAll }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Everyone</button></sc-if>
+          <sc-if value="{{ atHere }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goHere }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Here now</button></sc-if>
+          <sc-if value="{{ offHere }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goHere }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Here now</button></sc-if>
+          <sc-if value="{{ atAway }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goAway }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Away</button></sc-if>
+          <sc-if value="{{ offAway }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goAway }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Away</button></sc-if>
+          <sc-if value="{{ atStaff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goStaff }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Wardens</button></sc-if>
+          <sc-if value="{{ offStaff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goStaff }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Wardens</button></sc-if>
+          <sc-if value="{{ atNew }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goNew }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">New this week</button></sc-if>
+          <sc-if value="{{ offNew }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goNew }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">New this week</button></sc-if>
+        </span>
+        <label style="position: relative; flex: 1; min-width: 210px; max-width: 320px; display: block;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+          <input value="{{ query }}" onInput="{{ onSearch }}" placeholder="Find a member" aria-label="Find a member" style="width: 100%; padding: 8px 12px 8px 33px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: 999px; background: var(--surface-raised); font-family: var(--font-body); font-size: .93rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+        </label>
+        <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ resultLabel }}</span>
+      </div>
+
+      <!-- Error -->
+      <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 20px; padding: 30px 26px; text-align: center; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Presence is not answering</h2>
+          <p style="margin: 7px auto 0; max-width: 46ch; font-size: .95rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">The council is still here — we simply cannot see who. The roll will return on its own.</p>
+          <button onClick="{{ retry }}" style="margin-top: 18px; padding: 8px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Try again</button>
+        </div>
+      </sc-if>
+
+      <!-- Directory grid — the same component, laid out wide -->
+      <sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 14px; padding: 16px 10px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.PresenceList" people="{{ pageItems }}" title="{{ gridTitle }}" show-count="{{ showCountFalse }}" max="{{ gridMax }}" layout="grid" loading="{{ isLoading }}" empty-label="{{ emptyLabel }}" hint-size="100%,320px"></x-import>
+        </div>
+
+        <sc-if value="{{ showPager }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px;">
+            <button onClick="{{ prevPage }}" disabled="{{ atFirstPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Previous</button>
+            <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint);">{{ pageLabel }}</span>
+            <button onClick="{{ nextPage }}" disabled="{{ atLastPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Next</button>
+          </div>
+        </sc-if>
+
+        <!-- Guidance strip — how presence behaves -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 30px;">
+          <div style="padding: 15px 16px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <span style="display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .06em; color: var(--text-strong);"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--presence);" aria-hidden="true"></span>Here now</span>
+            <p style="margin: 6px 0 0; font-size: .88rem; line-height: 1.45; color: var(--text-muted); text-wrap: pretty;">Seen in the last fifteen minutes. The leaf is the only mark presence gets.</p>
+          </div>
+          <div style="padding: 15px 16px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <span style="display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .06em; color: var(--text-strong);"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--amber);" aria-hidden="true"></span>Stepped away</span>
+            <p style="margin: 6px 0 0; font-size: .88rem; line-height: 1.45; color: var(--text-muted); text-wrap: pretty;">Idle for a while but still signed in. No one is chased off the roll for being quiet.</p>
+          </div>
+          <div style="padding: 15px 16px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <span style="display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .06em; color: var(--text-strong);"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ink-300);" aria-hidden="true"></span>Not shown</span>
+            <p style="margin: 6px 0 0; font-size: .88rem; line-height: 1.45; color: var(--text-muted); text-wrap: pretty;">Members can turn presence off in their privacy settings. They are here; you simply are not told.</p>
+          </div>
+        </div>
+      </sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:900},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'loading' | 'empty' | 'error'&quot;,&quot;section&quot;:&quot;Roster state&quot;}}">
+const MEMBERS = [
+  { name: 'Elrond', username: 'elrond', where: 'counsel', gilt: true, staff: true, presence: 'online', joined: 'old' },
+  { name: 'Galadriel', username: 'galadriel', where: 'lore', gilt: true, presence: 'online', joined: 'old' },
+  { name: 'Erestor', username: 'erestor', where: 'archive', gilt: true, staff: true, presence: 'away', joined: 'old' },
+  { name: 'Glorfindel', username: 'glorfindel', where: 'practice', presence: 'online', joined: 'old' },
+  { name: 'Arwen Undómiel', username: 'arwen', where: 'welcome', presence: 'online', joined: 'old' },
+  { name: 'Lindir', username: 'lindir', title: 'Veteran', presence: 'away', joined: 'old' },
+  { name: 'Círdan', username: 'cirdan', where: 'counsel', gilt: true, presence: 'online', joined: 'old' },
+  { name: 'Melian', username: 'melian', where: 'lore', presence: 'online', joined: 'old' },
+  { name: 'Haldir', username: 'haldir', title: 'Veteran', presence: 'away', joined: 'old' },
+  { name: 'Bilbo Baggins', username: 'bilbo', where: 'archive', presence: 'online', joined: 'old' },
+  { name: 'Gildor Inglorion', username: 'gildor', title: 'Member', presence: 'offline', joined: 'old' },
+  { name: 'Nimrodel', username: 'nimrodel', where: 'welcome', presence: 'online', joined: 'new' },
+  { name: 'Rúmil', username: 'rumil', title: 'Member', presence: 'away', joined: 'new' },
+  { name: 'Orophin', username: 'orophin', where: 'practice', presence: 'online', joined: 'new' },
+  { name: 'Elladan', username: 'elladan', where: 'counsel', staff: true, presence: 'online', joined: 'old' },
+  { name: 'Elrohir', username: 'elrohir', where: 'counsel', staff: true, presence: 'away', joined: 'old' },
+  { name: 'Celebrían', username: 'celebrian', title: 'Loremaster', presence: 'offline', joined: 'old' },
+  { name: 'Ecthelion', username: 'ecthelion', where: 'archive', presence: 'online', joined: 'old' },
+  { name: 'Voronwë', username: 'voronwe', title: 'Member', presence: 'offline', joined: 'new' },
+  { name: 'Aegnor', username: 'aegnor', where: 'lore', presence: 'online', joined: 'old' },
+  { name: 'Finduilas', username: 'finduilas', title: 'Veteran', presence: 'away', joined: 'old' },
+  { name: 'Mablung', username: 'mablung', where: 'practice', presence: 'online', joined: 'new' },
+  { name: 'Beleg Cúthalion', username: 'beleg', title: 'Loremaster', presence: 'offline', joined: 'old' },
+  { name: 'Idril', username: 'idril', where: 'welcome', presence: 'online', joined: 'old' },
+];
+
+const PAGE_SIZE = 12;
+
+class Component extends DCLogic {
+  state = { filter: 'all', query: '', page: 1, recovered: false };
+
+  setFilter = (filter) => () => this.setState({ filter, page: 1 });
+
+  renderVals() {
+    const s = this.state;
+    const dataState = s.recovered ? 'live' : (this.props.dataState || 'live');
+    const isEmpty = dataState === 'empty';
+    const pool = isEmpty ? [] : MEMBERS;
+
+    const byFilter = pool.filter((m) => {
+      if (s.filter === 'here') return m.presence === 'online';
+      if (s.filter === 'away') return m.presence === 'away';
+      if (s.filter === 'staff') return !!m.staff;
+      if (s.filter === 'new') return m.joined === 'new';
+      return true;
+    });
+    const q = s.query.trim().toLowerCase();
+    const filtered = q ? byFilter.filter((m) => m.name.toLowerCase().includes(q) || m.username.includes(q)) : byFilter;
+
+    const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const page = Math.min(s.page, pages);
+    const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((m) => ({ ...m, href: '#' }));
+
+    const onlineCount = pool.filter((m) => m.presence === 'online').length;
+    const railPeople = pool.filter((m) => m.presence !== 'offline').slice(0, 6).map((m) => ({ ...m, href: '#' }));
+
+    const titles = { all: 'Everyone', here: 'Here now', away: 'Stepped away', staff: 'Wardens', new: 'New this week' };
+    const empties = {
+      all: 'No members to show yet. The council is newly founded.',
+      here: 'No one is at the council right now. It will fill again this evening.',
+      away: 'No one has stepped away.',
+      staff: 'No wardens are listed.',
+      new: 'No one has joined this week.',
+    };
+
+    return {
+      onlineCount,
+      onlineLabel: onlineCount + ' here now',
+      railPeople,
+      railMax: 6,
+      gridMax: 0,
+      gridTitle: titles[s.filter],
+      showCountFalse: false,
+      emptyLabel: q ? 'No member matches “' + s.query + '”.' : empties[s.filter],
+
+      isLoading: dataState === 'loading',
+      isError: dataState === 'error',
+      isReady: dataState !== 'error',
+      retry: () => this.setState({ recovered: true }),
+
+      atAll: s.filter === 'all', offAll: s.filter !== 'all',
+      atHere: s.filter === 'here', offHere: s.filter !== 'here',
+      atAway: s.filter === 'away', offAway: s.filter !== 'away',
+      atStaff: s.filter === 'staff', offStaff: s.filter !== 'staff',
+      atNew: s.filter === 'new', offNew: s.filter !== 'new',
+      goAll: this.setFilter('all'), goHere: this.setFilter('here'), goAway: this.setFilter('away'),
+      goStaff: this.setFilter('staff'), goNew: this.setFilter('new'),
+
+      query: s.query,
+      onSearch: (e) => this.setState({ query: e.target.value, page: 1 }),
+      resultLabel: dataState === 'loading' ? 'reading the roll…' : (filtered.length === 1 ? '1 member' : filtered.length + ' members'),
+
+      pageItems,
+      showPager: filtered.length > PAGE_SIZE,
+      pageLabel: 'Page ' + page + ' of ' + pages,
+      atFirstPage: page <= 1,
+      atLastPage: page >= pages,
+      prevPage: () => this.setState((st) => ({ page: Math.max(1, st.page - 1) })),
+      nextPage: () => this.setState({ page: Math.min(pages, page + 1) }),
+    };
+  }
+}
+</script>
+</body>
+</html>

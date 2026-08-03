@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Account settings" description="A member's full account console: grouped rail, engraved forms, a live two-factor flow, theme that actually flips the page, sessions, connections, boards, blocks, and a guarded delete" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes acRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes acFade { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</helmet>
+
+<div data-screen-label="Account settings" data-theme="{{ themeAttr }}" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <!-- ── Topbar ── -->
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+    <span style="margin-left: auto; display: inline-flex; align-items: center; gap: 10px;">
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .72rem;">{{ initials }}</span>
+      <span style="font-family: var(--font-label); font-size: .8rem; color: var(--text-body);">{{ memberName }}</span>
+      <button style="margin-left: 6px; padding: 6px 13px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Log out</button>
+    </span>
+  </div>
+
+  <div style="max-width: 1064px; margin: 0 auto; padding: 30px 28px 132px;">
+
+    <!-- ── Page head ── -->
+    <div style="margin-bottom: 24px;">
+      <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Your seat at the council</span>
+      <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Account settings</h1>
+      <p style="margin: 8px 0 0; max-width: 62ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Everything the council knows about you, and everything it does on your behalf. Changes are held until you save them.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 232px 1fr; gap: 30px; align-items: start;">
+
+      <!-- ── Rail ── -->
+      <nav aria-label="Settings sections" style="position: sticky; top: 84px; display: flex; flex-direction: column; gap: 2px;">
+        <span style="padding: 0 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Account</span>
+        <sc-if value="{{ atProfile }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goProfile }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Profile</button></sc-if>
+        <sc-if value="{{ offProfile }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goProfile }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Profile</button></sc-if>
+        <sc-if value="{{ atSecurity }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goSecurity }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Security</button></sc-if>
+        <sc-if value="{{ offSecurity }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goSecurity }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>Security</button></sc-if>
+        <sc-if value="{{ atPrivacy }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goPrivacy }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>Privacy</button></sc-if>
+        <sc-if value="{{ offPrivacy }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goPrivacy }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>Privacy</button></sc-if>
+        <sc-if value="{{ atRegard }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goRegard }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>Regard</button></sc-if>
+        <sc-if value="{{ offRegard }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goRegard }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>Regard</button></sc-if>
+
+        <span style="padding: 14px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Reading &amp; writing</span>
+        <sc-if value="{{ atAppearance }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goAppearance }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.6"></circle><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"></path></svg>Appearance</button></sc-if>
+        <sc-if value="{{ offAppearance }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goAppearance }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.6"></circle><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"></path></svg>Appearance</button></sc-if>
+        <sc-if value="{{ atReading }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goReading }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>Reading</button></sc-if>
+        <sc-if value="{{ offReading }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goReading }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>Reading</button></sc-if>
+        <sc-if value="{{ atDrafts }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goDrafts }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Drafts</button></sc-if>
+        <sc-if value="{{ offDrafts }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goDrafts }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Drafts</button></sc-if>
+
+        <sc-if value="{{ atBoards }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goBoards }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"></path></svg>Boards</button></sc-if>
+        <sc-if value="{{ offBoards }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goBoards }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"></path></svg>Boards</button></sc-if>
+
+        <span style="padding: 14px 0 6px 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Council</span>
+        <sc-if value="{{ atNotifications }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goNotifications }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Notifications</button></sc-if>
+        <sc-if value="{{ offNotifications }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goNotifications }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>Notifications</button></sc-if>
+        <sc-if value="{{ atConnections }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goConnections }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Connections</button></sc-if>
+        <sc-if value="{{ offConnections }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goConnections }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>Connections</button></sc-if>
+        <sc-if value="{{ atBlocks }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goBlocks }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M5.6 5.6l12.8 12.8"></path></svg>Blocks</button></sc-if>
+        <sc-if value="{{ offBlocks }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goBlocks }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M5.6 5.6l12.8 12.8"></path></svg>Blocks</button></sc-if>
+        <sc-if value="{{ atSessions }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goSessions }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="14" rx="1.5"></rect><path d="M8 21h8M12 17v4"></path></svg>Sessions</button></sc-if>
+        <sc-if value="{{ offSessions }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goSessions }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="14" rx="1.5"></rect><path d="M8 21h8M12 17v4"></path></svg>Sessions</button></sc-if>
+        <sc-if value="{{ atLifecycle }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goLifecycle }}" aria-current="page" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid var(--gold-500); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"></path></svg>Account</button></sc-if>
+        <sc-if value="{{ offLifecycle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goLifecycle }}" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; border: 0; border-left: 2px solid transparent; border-radius: 0 var(--radius-md) var(--radius-md) 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"></path></svg>Account</button></sc-if>
+      </nav>
+
+      <!-- ── Panes ── -->
+      <div style="min-width: 0;">
+
+        <!-- Profile -->
+        <sc-if value="{{ atProfile }}" hint-placeholder-val="{{ true }}">
+        <div style="animation: acRise 220ms ease-out;">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px;">
+            <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px;">
+              <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Profile details</span>
+              <span style="flex: 1;"></span>
+              <span style="font-style: italic; font-size: .86rem; color: var(--text-faint);">Fields defined by the wardens</span>
+            </div>
+            <p style="margin: 0 0 16px; max-width: 62ch; font-size: .9rem; color: var(--text-muted);">These read as a tidy Details block on your profile. The wardens choose which fields exist; you choose what goes in them.</p>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+              <label style="display: block;"><span style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted);">Pronouns</span><span style="padding: 2px 8px; border-radius: 999px; background: var(--surface-sunken); font-family: var(--font-mono); font-size: .62rem; color: var(--text-faint);">text</span></span><input onInput="{{ touch }}" value="she / her" maxlength="32" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+              <label style="display: block;"><span style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted);">Location</span><span style="padding: 2px 8px; border-radius: 999px; background: var(--surface-sunken); font-family: var(--font-mono); font-size: .62rem; color: var(--text-faint);">text</span></span><input onInput="{{ touch }}" value="Rivendell" maxlength="64" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+              <label style="display: block;"><span style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted);">Field of study</span><span style="padding: 2px 8px; border-radius: 999px; background: var(--surface-sunken); font-family: var(--font-mono); font-size: .62rem; color: var(--text-faint);">select</span></span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>Audit trails</option><option>Interpretability</option><option>Evaluations</option><option>Capability disclosure</option></select></label>
+              <label style="display: block;"><span style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><span style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted);">Homepage</span><span style="padding: 2px 8px; border-radius: 999px; background: var(--surface-sunken); font-family: var(--font-mono); font-size: .62rem; color: var(--text-faint);">url</span></span><span style="display: flex; align-items: center; gap: 0;"><span style="flex: 0 0 auto; padding: 10px 4px 10px 13px; font-family: var(--font-mono); font-size: .86rem; color: var(--text-faint); background: var(--surface-sunken); box-shadow: var(--shadow-inset);">https://</span><input onInput="{{ touch }}" placeholder="example.com" style="flex: 1; min-width: 0; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></span><span style="display: block; margin-top: 5px; font-size: .84rem; color: var(--text-faint);">Shown as a link on your profile.</span></label>
+            </div>
+          </section>
+        </div>
+        </sc-if>
+
+        <!-- Security -->
+        <sc-if value="{{ atSecurity }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: acRise 220ms ease-out;">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px; margin-bottom: 16px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 15px;">Password</span>
+            <label style="display: block; max-width: 340px; margin-bottom: 15px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Current password</span><input type="password" autocomplete="current-password" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); transition: box-shadow 150ms ease, background 150ms ease; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 16px;">
+              <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">New password</span><input onInput="{{ onNewPw }}" type="password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); transition: box-shadow 150ms ease, background 150ms ease; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+              <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Confirm new password</span><input onInput="{{ onConfirmPw }}" type="password" autocomplete="new-password" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); transition: box-shadow 150ms ease, background 150ms ease; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+            </div>
+            <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 14px;">
+              <span style="flex: 0 0 96px; height: 5px; border-radius: 3px; background: var(--surface-sunken); overflow: hidden;">
+                <sc-if value="{{ pwWeak }}" hint-placeholder-val="{{ false }}"><span style="display: block; height: 100%; width: 25%; background: var(--danger);"></span></sc-if>
+                <sc-if value="{{ pwFair }}" hint-placeholder-val="{{ false }}"><span style="display: block; height: 100%; width: 55%; background: var(--gold-500);"></span></sc-if>
+                <sc-if value="{{ pwStrong }}" hint-placeholder-val="{{ false }}"><span style="display: block; height: 100%; width: 80%; background: var(--green-500);"></span></sc-if>
+                <sc-if value="{{ pwBest }}" hint-placeholder-val="{{ false }}"><span style="display: block; height: 100%; width: 100%; background: var(--green-600);"></span></sc-if>
+              </span>
+              <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; color: var(--text-muted);">{{ pwLabel }}</span>
+            </div>
+            <sc-if value="{{ pwMismatch }}" hint-placeholder-val="{{ false }}"><p style="margin: 0 0 12px; font-size: .86rem; color: var(--danger);">The two new passwords don’t match yet.</p></sc-if>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" onClick="{{ save }}" hint-size="170px,40px">Change password</x-import>
+          </section>
+
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 12px;">Two-factor authentication</span>
+            <sc-if value="{{ tfaOff }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <p style="margin: 0 0 14px; max-width: 62ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted);">Not enabled. A second factor keeps your seat at the council secure even if your password is lost.</p>
+                <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" onClick="{{ start2fa }}" hint-size="130px,40px">Start setup</x-import>
+              </div>
+            </sc-if>
+            <sc-if value="{{ tfaSetup }}" hint-placeholder-val="{{ false }}">
+              <div style="animation: acFade 200ms;">
+                <p style="margin: 0 0 14px; font-size: .95rem; color: var(--text-muted);">Scan the cipher with your authenticator, then enter the six digits it shows.</p>
+                <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 88px; height: 88px; background: var(--surface-page); color: var(--text-faint); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200);"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><path d="M14 14h3v3h-3zM20 14v7M14 20h3"></path></svg></span>
+                  <label style="flex: 1; min-width: 200px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Authenticator secret</span><input readonly="readonly" value="IMLA DRIS 7K2F 9QD4 H1PB" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font-family: var(--font-mono); font-size: .84rem; letter-spacing: .06em; color: var(--text-body); border: 0; outline: 0; background: var(--surface-sunken); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--border-hair); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);"></label>
+                </div>
+                <label style="display: block; max-width: 170px; margin-bottom: 16px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Six-digit code</span><input onInput="{{ onOtp }}" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font-family: var(--font-mono); font-size: 1.05rem; letter-spacing: .3em; text-align: center; color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); transition: box-shadow 150ms ease, background 150ms ease; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" onClick="{{ verify2fa }}" disabled="{{ otpIncomplete }}" hint-size="170px,40px">Verify and enable</x-import>
+                  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="ghost" onClick="{{ cancel2fa }}" hint-size="90px,40px">Cancel</x-import>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ tfaOn }}" hint-placeholder-val="{{ false }}">
+              <div style="animation: acFade 200ms;">
+                <p style="display: flex; align-items: center; gap: 9px; margin: 0 0 6px;"><span style="display: inline-flex; padding: 2px 11px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Enabled</span><span style="font-size: .92rem; color: var(--text-muted);">{{ codeCount }} recovery codes remaining — each works once.</span></p>
+                <p style="margin: 12px 0 9px; font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; color: var(--text-body);">Recovery codes</p>
+                <ul style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 16px; padding: 0; list-style: none;">
+                  <sc-for list="{{ codes }}" as="c" hint-placeholder-count="6">
+                    <li style="padding: 7px 11px; background: var(--surface-sunken); box-shadow: var(--shadow-inset); font-family: var(--font-mono); font-size: .8rem; color: var(--text-body); text-align: center;">{{ c.code }}</li>
+                  </sc-for>
+                </ul>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" onClick="{{ rotateCodes }}" hint-size="190px,32px">Rotate recovery codes</x-import>
+                  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="danger" size="sm" onClick="{{ disable2fa }}" hint-size="160px,32px">Disable two-factor</x-import>
+                </div>
+              </div>
+            </sc-if>
+          </section>
+        </div>
+        </sc-if>
+
+        <!-- Regard — the reputation ledger -->
+        <sc-if value="{{ atRegard }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: acRise 220ms ease-out;">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 0; overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 17px 22px; background: var(--surface-sunken); border-bottom: 1px solid var(--border-hair);">
+              <span style="display: flex; align-items: baseline; gap: 9px;">
+                <span style="align-self: center; color: var(--star);"><svg viewBox="0 0 100 100" width="19" height="19" aria-hidden="true"><path fill="currentColor" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg></span>
+                <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; font-variant-numeric: tabular-nums; color: var(--text-strong);">{{ regardTotal }}</span>
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted);">Commends</span>
+              </span>
+              <span style="padding: 3px 11px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-mono); font-size: .74rem;">{{ regardTrend }}</span>
+              <span style="flex: 1;"></span>
+              <span style="display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-raised); border-radius: var(--radius-md);">
+                <sc-for list="{{ ledgerFilters }}" as="lf" hint-placeholder-count="3">
+                  <sc-if value="{{ lf.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ lf.pick }}" aria-pressed="true" style="padding: 5px 13px; border: 0; border-radius: var(--radius-sm); background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;">{{ lf.label }}</button></sc-if>
+                  <sc-if value="{{ lf.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ lf.pick }}" aria-pressed="false" style="padding: 5px 13px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-body);">{{ lf.label }}</button></sc-if>
+                </sc-for>
+              </span>
+            </div>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+              <sc-for list="{{ ledger }}" as="e" hint-placeholder-count="5">
+                <li style="position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-bottom: 1px solid var(--border-hair);">
+                  <sc-if value="{{ e.isMilestone }}" hint-placeholder-val="{{ false }}"><span style="position: absolute; inset: 0; background: var(--gold-soft); opacity: .45; pointer-events: none;"></span></sc-if>
+                  <span style="position: relative; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-sunken); color: var(--gold-ink);">{{ e.glyph }}</span>
+                  <span style="position: relative; flex: 1; min-width: 0;">
+                    <span style="display: block; font-size: .98rem; line-height: 1.35; color: var(--text-body);">{{ e.desc }} <span style="font-weight: 600; color: var(--text-strong);">{{ e.title }}</span></span>
+                    <span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .72rem; color: var(--text-faint);">{{ e.sub }}</span>
+                  </span>
+                  <span style="position: relative; flex: 0 0 auto; text-align: right;">
+                    <sc-if value="{{ e.hasDelta }}" hint-placeholder-val="{{ true }}"><span style="display: block; font-family: var(--font-mono); font-weight: 600; font-size: .88rem; font-variant-numeric: tabular-nums; color: var(--success);">{{ e.delta }}</span></sc-if>
+                    <sc-if value="{{ e.noDelta }}" hint-placeholder-val="{{ false }}"><span style="display: block; font-family: var(--font-mono); font-size: .88rem; color: var(--text-faint);">—</span></sc-if>
+                    <span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint); white-space: nowrap;">{{ e.time }}</span>
+                  </span>
+                </li>
+              </sc-for>
+            </ul>
+            <p style="margin: 0; padding: 14px 22px; font-size: .86rem; color: var(--text-faint);">Regard is earned, never granted. Only you can see this ledger; others see the total.</p>
+          </section>
+        </div>
+        </sc-if>
+
+        <!-- Drafts — kept on your account -->
+        <sc-if value="{{ atDrafts }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: acRise 220ms ease-out;">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 0; overflow: hidden; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 16px 22px; border-bottom: 1px solid var(--border-hair);">
+              <span style="flex: 1; min-width: 0;">
+                <span style="display: block; display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Drafts</span>
+                <span style="display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; font-family: var(--font-mono); font-size: .73rem; color: var(--success);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Saved to your account · syncs across devices</span>
+              </span>
+              <span style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted);">{{ draftCount }}</span>
+            </div>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+              <sc-for list="{{ drafts }}" as="d" hint-placeholder-count="3">
+                <li style="display: flex; align-items: flex-start; gap: 14px; padding: 15px 22px; border-bottom: 1px solid var(--border-hair); transition: background 140ms ease;" style-hover="background: var(--surface-sunken);">
+                  <span style="flex: 1; min-width: 0;">
+                    <span style="display: block; font-family: var(--font-mono); font-size: .71rem; color: var(--text-faint);">{{ d.dest }} <span style="color: var(--gold-ink);">{{ d.board }}</span></span>
+                    <span style="display: block; margin: 4px 0 3px; font-family: var(--font-display); font-weight: 500; font-size: 1.12rem; line-height: 1.2; color: var(--text-strong);">{{ d.title }}</span>
+                    <span style="display: block; max-width: 66ch; font-size: .94rem; line-height: 1.5; color: var(--text-body); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ d.snippet }}</span>
+                    <span style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+                      <span style="font-family: var(--font-mono); font-size: .71rem; color: var(--text-muted);">saved {{ d.saved }}</span>
+                      <span style="padding: 2px 9px; border-radius: 999px; border: 1px solid var(--river-200); background: var(--surface-info); color: var(--on-info); font-family: var(--font-label); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase;">{{ d.device }}</span>
+                    </span>
+                  </span>
+                  <span style="display: flex; align-items: center; gap: 10px; flex: 0 0 auto;">
+                    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" hint-size="90px,32px">Resume</x-import>
+                    <button onClick="{{ d.discard }}" style="border: 0; background: none; padding: 0; font: inherit; font-size: .86rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--danger);">Discard</button>
+                  </span>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{ noDrafts }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0; padding: 40px 22px; text-align: center; font-style: italic; font-size: .98rem; color: var(--text-muted);">No drafts. Anything you start writing is kept here automatically.</p>
+            </sc-if>
+          </section>
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 16px 20px 15px;">
+            <span style="display: block; display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 11px;">Autosave</span>
+            <textarea onInput="{{ onDraftType }}" rows="3" style="width: 100%; box-sizing: border-box; padding: 11px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); line-height: 1.6; resize: vertical; color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);">The rite framing lands for me. One worry: if every run must resolve into a written verdict, who keeps the verdicts readable a year on?</textarea>
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--border-hair);">
+              <sc-if value="{{ draftSaved }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: .73rem; color: var(--success);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Draft saved · on your account</span></sc-if>
+              <sc-if value="{{ draftSaving }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-mono); font-size: .73rem; color: var(--text-faint);">Saving…</span></sc-if>
+              <span style="flex: 1;"></span>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" hint-size="110px,32px">Post reply</x-import>
+            </div>
+          </section>
+        </div>
+        </sc-if>
+
+        <!-- Privacy -->
+        <sc-if value="{{ atPrivacy }}" hint-placeholder-val="{{ false }}">
+        <section style="animation: acRise 220ms ease-out; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px;">
+          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 15px;">Who can see you</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Profile visibility</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>Public — anyone can view</option><option>Members only — signed-in members</option><option>Hidden — wardens only</option></select></label>
+            <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Direct messages from</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>Everyone</option><option>Members I have replied to</option><option>No one</option></select></label>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 15px; padding-top: 18px; border-top: 1px solid var(--border-hair);">
+            <div><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Show when I’m online" checked="{{ prefOnline }}" onChange="{{ toggleOnline }}" hint-size="230px,24px"></x-import><p style="margin: 4px 0 0 53px; font-size: .86rem; color: var(--text-faint);">A leaf marks your presence beside your name.</p></div>
+            <div><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Hide me from leaderboards" checked="{{ prefHideRank }}" onChange="{{ toggleHideRank }}" hint-size="260px,24px"></x-import><p style="margin: 4px 0 0 53px; font-size: .86rem; color: var(--text-faint);">You still earn regard; you just won’t be ranked publicly.</p></div>
+            <div><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Let others find me by email" checked="{{ prefFindEmail }}" onChange="{{ toggleFindEmail }}" hint-size="260px,24px"></x-import></div>
+          </div>
+        </section>
+        </sc-if>
+
+        <!-- Appearance -->
+        <sc-if value="{{ atAppearance }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: acRise 220ms ease-out;">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px; margin-bottom: 16px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 6px;">Theme</span>
+            <p style="margin: 0 0 14px; font-size: .9rem; color: var(--text-muted);">Applies the moment you choose it — the rest of this page follows.</p>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-bottom: 22px;">
+              <sc-if value="{{ thParchment }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setParchment }}" aria-pressed="true" style="display: block; text-align: left; padding: 13px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--gold-500); background: var(--gold-soft); cursor: pointer; box-shadow: var(--shadow-xs);"><span style="display: flex; gap: 3px; margin-bottom: 10px;"><span style="width: 22px; height: 26px; border-radius: 3px; background: #F5EFE1;"></span><span style="width: 22px; height: 26px; border-radius: 3px; background: #FAF6EC;"></span><span style="width: 10px; height: 26px; border-radius: 3px; background: #2E4A3A;"></span></span><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Parchment</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">Warm paper — daylight</span></button></sc-if>
+              <sc-if value="{{ thParchmentOff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setParchment }}" aria-pressed="false" style="display: block; text-align: left; padding: 13px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-hair); background: var(--surface-page); cursor: pointer;" style-hover="border-color: var(--border-strong);"><span style="display: flex; gap: 3px; margin-bottom: 10px;"><span style="width: 22px; height: 26px; border-radius: 3px; background: #F5EFE1;"></span><span style="width: 22px; height: 26px; border-radius: 3px; background: #FAF6EC;"></span><span style="width: 10px; height: 26px; border-radius: 3px; background: #2E4A3A;"></span></span><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Parchment</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">Warm paper — daylight</span></button></sc-if>
+              <sc-if value="{{ thTwilight }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setTwilight }}" aria-pressed="true" style="display: block; text-align: left; padding: 13px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--gold-500); background: var(--gold-soft); cursor: pointer; box-shadow: var(--shadow-xs);"><span style="display: flex; gap: 3px; margin-bottom: 10px;"><span style="width: 22px; height: 26px; border-radius: 3px; background: #161D24;"></span><span style="width: 22px; height: 26px; border-radius: 3px; background: #1F2932;"></span><span style="width: 10px; height: 26px; border-radius: 3px; background: #D2B062;"></span></span><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Twilight</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">Evergreen night</span></button></sc-if>
+              <sc-if value="{{ thTwilightOff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setTwilight }}" aria-pressed="false" style="display: block; text-align: left; padding: 13px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-hair); background: var(--surface-page); cursor: pointer;" style-hover="border-color: var(--border-strong);"><span style="display: flex; gap: 3px; margin-bottom: 10px;"><span style="width: 22px; height: 26px; border-radius: 3px; background: #161D24;"></span><span style="width: 22px; height: 26px; border-radius: 3px; background: #1F2932;"></span><span style="width: 10px; height: 26px; border-radius: 3px; background: #D2B062;"></span></span><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Twilight</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">Evergreen night</span></button></sc-if>
+              <sc-if value="{{ thSystem }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setSystem }}" aria-pressed="true" style="display: block; text-align: left; padding: 13px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--gold-500); background: var(--gold-soft); cursor: pointer; box-shadow: var(--shadow-xs);"><span style="display: flex; gap: 3px; margin-bottom: 10px;"><span style="width: 22px; height: 26px; border-radius: 3px; background: #F5EFE1;"></span><span style="width: 22px; height: 26px; border-radius: 3px; background: #161D24;"></span><span style="width: 10px; height: 26px; border-radius: 3px; background: #C29A44;"></span></span><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">System</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">Match your device</span></button></sc-if>
+              <sc-if value="{{ thSystemOff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setSystem }}" aria-pressed="false" style="display: block; text-align: left; padding: 13px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-hair); background: var(--surface-page); cursor: pointer;" style-hover="border-color: var(--border-strong);"><span style="display: flex; gap: 3px; margin-bottom: 10px;"><span style="width: 22px; height: 26px; border-radius: 3px; background: #F5EFE1;"></span><span style="width: 22px; height: 26px; border-radius: 3px; background: #161D24;"></span><span style="width: 10px; height: 26px; border-radius: 3px; background: #C29A44;"></span></span><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">System</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">Match your device</span></button></sc-if>
+            </div>
+
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 11px;">Density</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 20px;">
+              <sc-if value="{{ dnComfy }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setComfy }}" aria-pressed="true" style="display: block; text-align: left; padding: 12px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--gold-500); background: var(--gold-soft); cursor: pointer;"><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Comfortable</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">A card per topic — for reading</span></button></sc-if>
+              <sc-if value="{{ dnComfyOff }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setComfy }}" aria-pressed="false" style="display: block; text-align: left; padding: 12px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-hair); background: var(--surface-page); cursor: pointer;" style-hover="border-color: var(--border-strong);"><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Comfortable</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">A card per topic — for reading</span></button></sc-if>
+              <sc-if value="{{ dnCompact }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setCompact }}" aria-pressed="true" style="display: block; text-align: left; padding: 12px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--gold-500); background: var(--gold-soft); cursor: pointer;"><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Compact</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">One line per topic — for triage</span></button></sc-if>
+              <sc-if value="{{ dnCompactOff }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setCompact }}" aria-pressed="false" style="display: block; text-align: left; padding: 12px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-hair); background: var(--surface-page); cursor: pointer;" style-hover="border-color: var(--border-strong);"><span style="display: block; font-family: var(--font-label); font-size: .9rem; color: var(--text-strong);">Compact</span><span style="display: block; margin-top: 2px; font-size: .82rem; color: var(--text-muted);">One line per topic — for triage</span></button></sc-if>
+            </div>
+
+            <label style="display: block; max-width: 200px; margin-bottom: 18px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Font size</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>Small</option><option selected="selected">Medium</option><option>Large</option></select></label>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Reduce motion and animations" checked="{{ prefReduceMotion }}" onChange="{{ toggleReduceMotion }}" hint-size="280px,24px"></x-import>
+          </section>
+          <section style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 18px 22px;">
+            <p style="margin: 0; max-width: 44ch; font-size: .92rem; color: var(--text-muted);">Download a copy of your appearance, reading, and composing preferences, or reset them to defaults.</p>
+            <div style="display: flex; gap: 10px;">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" hint-size="160px,32px">Export preferences</x-import>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="ghost" size="sm" hint-size="140px,32px">Reset to defaults</x-import>
+            </div>
+          </section>
+        </div>
+        </sc-if>
+
+        <!-- Boards — favourite and mute -->
+        <sc-if value="{{ atBoards }}" hint-placeholder-val="{{ false }}">
+        <section style="animation: acRise 220ms ease-out; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 16px;">
+          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 6px;">Organize your boards</span>
+          <p style="margin: 0; max-width: 62ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted);">Favourited boards rise to the top of your rail. Muted boards are hidden from it, and their threads stop counting towards your unread.</p>
+          <sc-for list="{{ boardCats }}" as="c" hint-placeholder-count="2">
+            <div>
+              <span style="display: block; margin: 20px 0 2px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">{{ c.cat }}</span>
+              <ul style="margin: 0; padding: 0; list-style: none;">
+                <sc-for list="{{ c.items }}" as="b" hint-placeholder-count="3">
+                  <li style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border-hair);">
+                    <span style="flex: 1; min-width: 0; font-size: 1rem; color: var(--text-strong);"><span style="color: var(--gold-600);">#</span>{{ b.name }}</span>
+                    <sc-if value="{{ b.fav }}" hint-placeholder-val="{{ false }}"><button onClick="{{ b.toggleFav }}" style="display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 0; font: inherit; font-size: .86rem; color: var(--gold-700); cursor: pointer;"><span style="color: var(--star);">★</span>Favourited</button></sc-if>
+                    <sc-if value="{{ b.notFav }}" hint-placeholder-val="{{ true }}"><button onClick="{{ b.toggleFav }}" style="display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 0; font: inherit; font-size: .86rem; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--gold-700);"><span>☆</span>Favourite</button></sc-if>
+                    <sc-if value="{{ b.muted }}" hint-placeholder-val="{{ false }}"><button onClick="{{ b.toggleMute }}" style="border: 0; padding: 3px 11px; border-radius: 999px; background: var(--surface-sunken); font: inherit; font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-body);">Muted</button></sc-if>
+                    <sc-if value="{{ b.notMuted }}" hint-placeholder-val="{{ true }}"><button onClick="{{ b.toggleMute }}" style="border: 0; padding: 3px 11px; border-radius: 999px; background: none; font: inherit; font-family: var(--font-label); font-size: .78rem; letter-spacing: .02em; color: var(--text-faint); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Mute</button></sc-if>
+                  </li>
+                </sc-for>
+              </ul>
+            </div>
+          </sc-for>
+        </section>
+        </sc-if>
+
+        <!-- Reading -->
+        <sc-if value="{{ atReading }}" hint-placeholder-val="{{ false }}">
+        <section style="animation: acRise 220ms ease-out; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px;">
+          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 15px;">Pagination</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Threads per page</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>20</option><option selected="selected">25</option><option>50</option><option>100</option></select></label>
+            <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Posts per page</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>10</option><option selected="selected">20</option><option>40</option></select></label>
+            <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Default sort</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>Last post</option><option>Newest</option><option>Most replies</option></select></label>
+          </div>
+          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 13px; padding-top: 18px; border-top: 1px solid var(--border-hair);">What appears in a thread</span>
+          <div style="display: flex; flex-direction: column; gap: 13px; margin-bottom: 22px;">
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Show signatures" checked="{{ prefSigs }}" onChange="{{ toggleSigs }}" hint-size="200px,24px"></x-import>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Show avatars" checked="{{ prefAvatars }}" onChange="{{ toggleAvatars }}" hint-size="200px,24px"></x-import>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Show reactions" checked="{{ prefReactions }}" onChange="{{ toggleReactions }}" hint-size="200px,24px"></x-import>
+          </div>
+          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 13px; padding-top: 18px; border-top: 1px solid var(--border-hair);">Composing</span>
+          <div style="display: flex; flex-direction: column; gap: 13px;">
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Press Enter to send — Shift+Enter for a new line" checked="{{ prefEnterSend }}" onChange="{{ toggleEnterSend }}" hint-size="330px,24px"></x-import>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Show a live preview while composing" checked="{{ prefPreview }}" onChange="{{ togglePreview }}" hint-size="300px,24px"></x-import>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Continue lists and quotes on the next line" checked="{{ prefContLists }}" onChange="{{ toggleContLists }}" hint-size="320px,24px"></x-import>
+          </div>
+        </section>
+        </sc-if>
+
+        <!-- Notifications -->
+        <sc-if value="{{ atNotifications }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: acRise 220ms ease-out;">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px; margin-bottom: 16px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 15px;">Daily digest</span>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+              <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Timezone</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>UTC</option><option selected="selected">Europe / Rivendell</option><option>America / New York</option></select></label>
+              <label style="display: block;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Digest hour, local</span><select onChange="{{ touch }}" style="width: 100%; box-sizing: border-box; padding: 10px 32px 10px 13px; font: inherit; font-size: 1rem; font-family: var(--font-body); color: var(--text); border: 0; outline: 0; appearance: none; -webkit-appearance: none; cursor: pointer; background-color: var(--surface-page); background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2211%22%20height=%227%22%20viewBox=%220%200%2011%207%22%3E%3Cpath%20d=%22M1%201l4.5%204.5L10%201%22%20fill=%22none%22%20stroke=%22%23B08A3A%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 13px center; box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px); transition: box-shadow 150ms ease, background-color 150ms ease;" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background-color: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"><option>Off</option><option selected="selected">08:00</option><option>18:00</option></select></label>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 13px; padding-top: 18px; border-top: 1px solid var(--border-hair);">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Email me when someone @mentions me" checked="{{ prefMentionEmail }}" onChange="{{ toggleMentionEmail }}" hint-size="310px,24px"></x-import>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Email me replies to threads I opened" checked="{{ prefReplyEmail }}" onChange="{{ toggleReplyEmail }}" hint-size="310px,24px"></x-import>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Email me the weekly council summary" checked="{{ prefDigestEmail }}" onChange="{{ toggleDigestEmail }}" hint-size="310px,24px"></x-import>
+            </div>
+          </section>
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 8px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 4px;">Your subscriptions</span>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+              <sc-for list="{{ subs }}" as="s" hint-placeholder-count="3">
+                <li style="display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--border-hair);">
+                  <span style="flex: 1; min-width: 0;"><a href="#" style="display: block; font-size: 1rem; color: var(--accent); text-decoration: none;" style-hover="text-decoration: underline;">{{ s.label }}</a><span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ s.meta }}</span></span>
+                  <button onClick="{{ s.unsub }}" style="border: 0; background: none; padding: 0; font: inherit; font-size: .86rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--danger);">Unsubscribe</button>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{ noSubs }}" hint-placeholder-val="{{ false }}"><p style="margin: 8px 0 18px; font-size: .92rem; color: var(--text-faint);">No subscriptions. Watch a thread and it will appear here.</p></sc-if>
+          </section>
+        </div>
+        </sc-if>
+
+        <!-- Connections -->
+        <sc-if value="{{ atConnections }}" hint-placeholder-val="{{ false }}">
+        <section style="animation: acRise 220ms ease-out; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 8px;">
+          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 6px;">Connected accounts</span>
+          <p style="margin: 0 0 6px; max-width: 60ch; font-size: .92rem; color: var(--text-muted);">Link a provider to sign in faster. Email and password always stay available.</p>
+          <ul style="margin: 0; padding: 0; list-style: none;">
+            <sc-for list="{{ providers }}" as="p" hint-placeholder-count="3">
+              <li style="display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .95rem;">{{ p.mark }}</span>
+                <span style="flex: 1; min-width: 0;"><span style="display: block; font-family: var(--font-label); font-size: .96rem; color: var(--text-strong);">{{ p.name }}</span><span style="display: block; margin-top: 1px; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ p.sub }}</span></span>
+                <sc-if value="{{ p.isLinked }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 12px;"><span style="display: inline-flex; padding: 2px 11px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;">Connected</span><button onClick="{{ p.act }}" style="border: 0; background: none; padding: 0; font: inherit; font-size: .86rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--danger);">Disconnect</button></span></sc-if>
+                <sc-if value="{{ p.canConnect }}" hint-placeholder-val="{{ true }}"><button onClick="{{ p.act }}" style="padding: 6px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: var(--surface-raised); color: var(--text); font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; cursor: pointer;" style-hover="background: var(--surface-sunken); border-color: var(--border-strong);">Connect</button></sc-if>
+                <sc-if value="{{ p.unavailable }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .8rem; color: var(--text-faint);">Not available</span></sc-if>
+              </li>
+            </sc-for>
+          </ul>
+          <p style="margin: 14px 0 18px; font-size: .86rem; color: var(--text-faint);">Disconnecting a provider does not delete anything — it only removes that sign-in route.</p>
+        </section>
+        </sc-if>
+
+        <!-- Sessions -->
+        <sc-if value="{{ atSessions }}" hint-placeholder-val="{{ false }}">
+        <section style="animation: acRise 220ms ease-out; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 8px;">
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 6px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Active sessions &amp; devices</span>
+            <span style="flex: 1;"></span>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" size="sm" onClick="{{ signOutAll }}" hint-size="230px,32px">Log out of all other devices</x-import>
+          </div>
+          <ul style="margin: 0; padding: 0; list-style: none;">
+            <sc-for list="{{ sessions }}" as="s" hint-placeholder-count="3">
+              <li style="display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="flex: 1; min-width: 0;"><span style="display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-label); font-size: .96rem; color: var(--text-strong);">{{ s.ua }}<sc-if value="{{ s.isCurrent }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--green-200); background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;">This device</span></sc-if></span><span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ s.meta }}</span></span>
+                <sc-if value="{{ s.notCurrent }}" hint-placeholder-val="{{ true }}"><button onClick="{{ s.signOut }}" style="border: 0; background: none; padding: 0; font: inherit; font-size: .86rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--danger);">Sign out</button></sc-if>
+              </li>
+            </sc-for>
+          </ul>
+          <p style="margin: 14px 0 18px; font-size: .86rem; color: var(--text-faint);">Sessions expire after 30 days of inactivity. Signing out a device revokes its token immediately.</p>
+        </section>
+        </sc-if>
+
+        <!-- Blocked members -->
+        <sc-if value="{{ atBlocks }}" hint-placeholder-val="{{ false }}">
+        <section style="animation: acRise 220ms ease-out; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 16px;">
+          <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 6px;">Blocked members</span>
+          <p style="margin: 0 0 6px; max-width: 62ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted);">A blocked member cannot open a conversation with you or @mention you, and their notifications to you are suppressed. Their public counsel stays readable — blocking is not moderation.</p>
+          <ul style="margin: 0; padding: 0; list-style: none;">
+            <sc-for list="{{ blocks }}" as="b" hint-placeholder-count="2">
+              <li style="display: flex; align-items: center; gap: 13px; padding: 13px 0; border-bottom: 1px solid var(--border-hair);">
+                <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ b.name }}" username="{{ b.username }}" size="sm" hint-size="30px,30px"></x-import>
+                <span style="flex: 1; min-width: 0;"><a href="#" style="display: block; font-size: 1rem; color: var(--accent); text-decoration: none;" style-hover="text-decoration: underline;">{{ b.name }}</a><span style="display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">@{{ b.username }} · blocked {{ b.when }}</span></span>
+                <button onClick="{{ b.unblock }}" style="border: 0; background: none; padding: 0; font: inherit; font-size: .86rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);">Unblock</button>
+              </li>
+            </sc-for>
+          </ul>
+          <sc-if value="{{ noBlocks }}" hint-placeholder-val="{{ false }}"><p style="margin: 12px 0 8px; font-size: .92rem; color: var(--text-faint);">You have not blocked anyone.</p></sc-if>
+        </section>
+        </sc-if>
+
+        <!-- Account lifecycle -->
+        <sc-if value="{{ atLifecycle }}" hint-placeholder-val="{{ false }}">
+        <div style="animation: acRise 220ms ease-out;">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px; margin-bottom: 16px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 6px;">Export account data</span>
+            <p style="margin: 0 0 14px; max-width: 62ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted);">A JSON archive of your profile, preferences, subscriptions, notifications, posts, direct messages, and the audit rows attached to them.</p>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" hint-size="220px,40px">Download account export</x-import>
+          </section>
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px; margin-bottom: 16px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); margin-bottom: 6px;">Deactivate account</span>
+            <p style="margin: 0 0 14px; max-width: 62ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted);">Reversible. Your seat stays sign-in capable, but counsel and posting are blocked until you reactivate.</p>
+            <label style="display: block; max-width: 320px; margin-bottom: 15px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Current password</span><input type="password" autocomplete="current-password" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font: inherit; font-size: 1rem; color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); transition: box-shadow 150ms ease, background 150ms ease; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="secondary" hint-size="180px,40px">Deactivate account</x-import>
+          </section>
+          <sc-if value="{{ showDanger }}" hint-placeholder-val="{{ true }}">
+          <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--danger); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 20px 22px 22px;">
+            <span style="display: block; font-family: var(--font-label); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--danger); margin-bottom: 6px;">Delete account</span>
+            <p style="margin: 0 0 14px; max-width: 62ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted);">Deletion opens a 30-day grace period. Your account is write-blocked and you can cancel at any point. Public counsel is preserved under a deleted-member identity; everything that identifies you is purged.</p>
+            <label style="display: block; max-width: 320px; margin-bottom: 13px;"><span style="display: block; font-family: var(--font-label); font-size: .8rem; letter-spacing: .02em; color: var(--text-muted); margin-bottom: 6px;">Type <span style="font-family: var(--font-mono); color: var(--text-body);">DELETE</span> to confirm</span><input onInput="{{ onDeleteConfirm }}" placeholder="DELETE" style="width: 100%; box-sizing: border-box; padding: 10px 13px; font-family: var(--font-mono); font-size: .9rem; letter-spacing: .08em; color: var(--text); caret-color: var(--gold-600); border: 0; outline: 0; background: var(--surface-page); box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-200); transition: box-shadow 150ms ease, background 150ms ease; clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);" style-hover="box-shadow: var(--shadow-inset), inset 0 0 0 1.5px var(--gold-400);" style-focus="background: var(--surface-raised); box-shadow: var(--shadow-inset), inset 0 0 0 2px var(--gold-500), inset 0 0 0 5px color-mix(in srgb, var(--gold-100) 60%, transparent);"></label>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" variant="danger" disabled="{{ deleteBlocked }}" hint-size="220px,40px">Request account deletion</x-import>
+          </section>
+          </sc-if>
+        </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Unsaved-changes bar ── -->
+  <sc-if value="{{ dirty }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; align-items: center; gap: 16px; padding: 14px 30px; background: color-mix(in srgb, var(--surface-raised) 94%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--border-hair); box-shadow: var(--shadow-lg); animation: acRise 200ms ease-out;">
+      <span style="display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-label); font-size: .86rem; letter-spacing: .02em; color: var(--text-body);"><svg width="13" height="13" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z" fill="var(--gold-600)"></path></svg>You have unsaved changes.</span>
+      <span style="flex: 1;"></span>
+      <button onClick="{{ discard }}" style="padding: 8px 16px; border-radius: var(--radius-md); border: 1.5px solid transparent; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Discard</button>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" onClick="{{ save }}" hint-size="140px,40px">Save changes</x-import>
+    </div>
+  </sc-if>
+
+  <!-- ── Saved confirmation ── -->
+  <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: fixed; left: 50%; bottom: 34px; z-index: 40; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px; padding: 11px 20px; border-radius: 999px; background: var(--green-800); color: var(--parchment-50); box-shadow: var(--shadow-lg); animation: acRise 220ms ease-out;">
+      <svg width="13" height="13" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z" fill="var(--gold-400)"></path></svg>
+      <span style="font-family: var(--font-label); font-size: .86rem; letter-spacing: .03em;">Saved to your seat.</span>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;memberName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Erestor&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Member&quot;},&quot;memberEmail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;erestor@imladris.council&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Member&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;parchment&quot;,&quot;twilight&quot;,&quot;system&quot;],&quot;default&quot;:&quot;parchment&quot;,&quot;tsType&quot;:&quot;'parchment' | 'twilight' | 'system'&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;twoFactor&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;off&quot;,&quot;setup&quot;,&quot;on&quot;],&quot;default&quot;:&quot;setup&quot;,&quot;tsType&quot;:&quot;'off' | 'setup' | 'on'&quot;,&quot;section&quot;:&quot;Security&quot;},&quot;showDangerZone&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Security&quot;}}">
+const LEDGER = [
+  { id: 1, kind: 'commend', delta: 5, glyph: '✦', desc: 'Commended on', title: 'Reading attention as a map, not a verdict', sub: 'from Arwen · #interpretability', time: '2h ago', milestone: false },
+  { id: 2, kind: 'accepted', delta: 15, glyph: '✓', desc: 'Answer accepted on', title: 'Evaluations as ritual, not gate', sub: 'marked by Galadriel · #evaluations', time: 'yesterday', milestone: false },
+  { id: 3, kind: 'commend', delta: 2, glyph: '✦', desc: 'Called illuminating on', title: 'Who changed what — prove the rollback?', sub: 'from Glorfindel · #audit-trails', time: '2 days ago', milestone: false },
+  { id: 4, kind: 'milestone', delta: 0, glyph: '◆', desc: 'Reached', title: 'Loremaster', sub: 'crossed 3,500 commends', time: '3 days ago', milestone: true },
+  { id: 5, kind: 'accepted', delta: 10, glyph: '✓', desc: 'Credited on the decision', title: 'Adopt written verdicts for eval runs', sub: 'resolved from your proposal · #evaluations', time: '4 days ago', milestone: false },
+  { id: 6, kind: 'commend', delta: 5, glyph: '✦', desc: 'Commended on', title: 'On the precedence of edits', sub: 'from Elrond · #audit-trails', time: '5 days ago', milestone: false },
+];
+
+const DRAFTS = [
+  { id: 1, dest: 'Reply to', board: '#evaluations', title: 'Re: Evaluations as ritual, not gate', saved: '2 minutes ago', device: 'this device', snippet: 'The rite framing lands for me. One worry: if every run must resolve into a written verdict, who keeps the verdicts readable a year on?' },
+  { id: 2, dest: 'New topic in', board: '#audit-trails', title: 'Untitled topic', saved: 'yesterday', device: 'on your phone', snippet: 'Proposal: a weekly rollback drill, logged and signed, so the trail proves itself before we need it in anger.' },
+  { id: 3, dest: 'Reply to', board: '#interpretability', title: 'Re: Reading attention as a map, not a verdict', saved: '3 days ago', device: 'this device', snippet: 'Annotating the heatmap so the caveat travels with the image — here is a sketch of how the overlay could read.' },
+];
+
+class Component extends DCLogic {
+  state = {
+    active: 'profile',
+    theme: (this.props || {}).theme || 'parchment',
+    density: 'comfortable',
+    tfa: (this.props || {}).twoFactor || 'off',
+    dirty: false,
+    saved: false,
+    otp: '',
+    newPw: '',
+    confirmPw: '',
+    deleteWord: '',
+    ledgerFilter: 'All',
+    drafts: DRAFTS.map((d) => Object.assign({}, d)),
+    draftSaving: false,
+    prefs: { online: true, hideRank: false, findEmail: true, sigs: true, avatars: true, reactions: true, reduceMotion: false, enterSend: false, preview: true, contLists: true, mentionEmail: true, replyEmail: false, digestEmail: true },
+    sessions: [
+      { id: 's1', ua: 'Firefox 128 · macOS', meta: 'IP 10.0.4.18 · active just now', current: true },
+      { id: 's2', ua: 'Safari · iPhone', meta: 'IP 10.0.4.91 · active 3 hours ago', current: false },
+      { id: 's3', ua: 'Chrome 126 · Windows', meta: 'IP 198.51.100.7 · active yesterday', current: false },
+    ],
+    providers: [
+      { id: 'google', name: 'Google', mark: 'G', linked: true, configured: true },
+      { id: 'github', name: 'GitHub', mark: 'GH', linked: false, configured: true },
+      { id: 'apple', name: 'Apple', mark: 'A', linked: false, configured: false },
+    ],
+    subs: [
+      { id: 'u1', label: 'Evaluations as ritual, not gate', meta: 'thread · watching · email on' },
+      { id: 'u2', label: '#audit-trails', meta: 'board · tracking' },
+      { id: 'u3', label: 'Where should ratified decisions live?', meta: 'thread · watching' },
+    ],
+    codes: ['imla-3kf9-2a', 'imla-77qd-h1', 'imla-pb42-9c', 'imla-x8mn-4t', 'imla-5rty-0v', 'imla-9wlk-6e'],
+    blocks: [
+      { username: 'saruman', name: 'Saruman', when: 'in March' },
+      { username: 'grima', name: 'Gríma', when: 'last week' },
+    ],
+    boards: [
+      { cat: 'The Commons', items: [
+        { name: 'announcements', fav: true, muted: false },
+        { name: 'introductions', fav: false, muted: false },
+        { name: 'the-valley', fav: false, muted: true },
+      ] },
+      { cat: 'Vilya · Expose', items: [
+        { name: 'interpretability', fav: true, muted: false },
+        { name: 'evaluations', fav: true, muted: false },
+        { name: 'audit-trails', fav: false, muted: false },
+      ] },
+    ],
+  };
+
+  componentDidUpdate(prev) {
+    const p = this.props || {}, q = prev || {};
+    if (q.theme !== p.theme && p.theme) this.setState({ theme: p.theme });
+    if (q.twoFactor !== p.twoFactor && p.twoFactor) this.setState({ tfa: p.twoFactor });
+  }
+
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._d); }
+
+  go(k) { return () => this.setState({ active: k }); }
+  flipBoard(ci, bi, key) {
+    this.setState((s) => ({
+      boards: s.boards.map((c, x) => x !== ci ? c : Object.assign({}, c, {
+        items: c.items.map((b, y) => y !== bi ? b : Object.assign({}, b, { [key]: !b[key] })),
+      })),
+    }));
+  }
+  toggle(k) { return () => this.setState((s) => ({ prefs: Object.assign({}, s.prefs, { [k]: !s.prefs[k] }), dirty: true })); }
+  touch = () => { if (!this.state.dirty) this.setState({ dirty: true }); };
+  save = () => {
+    this.setState({ dirty: false, saved: true });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ saved: false }), 2400);
+  };
+  discard = () => this.setState({ dirty: false });
+
+  newCodes() {
+    const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+    const chunk = (n) => Array.from({ length: n }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+    return Array.from({ length: 6 }, () => 'imla-' + chunk(4) + '-' + chunk(2));
+  }
+
+  pwGrade(pw) {
+    if (!pw) return { tier: 0, label: 'Not set' };
+    let n = 0;
+    if (pw.length >= 8) n++;
+    if (pw.length >= 14) n++;
+    if (/[^a-zA-Z0-9]/.test(pw)) n++;
+    if (/[0-9]/.test(pw) && /[a-zA-Z]/.test(pw)) n++;
+    if (n <= 1) return { tier: 1, label: 'Too easily guessed' };
+    if (n === 2) return { tier: 2, label: 'Passable' };
+    if (n === 3) return { tier: 3, label: 'Strong' };
+    return { tier: 4, label: 'Worthy of the council' };
+  }
+
+  renderVals() {
+    const s = this.state, p = s.prefs, a = s.active;
+    const props = this.props || {};
+    const name = props.memberName || 'Erestor';
+    const parts = String(name).trim().split(/\s+/).filter(Boolean);
+    const initials = (parts.length > 1 ? parts[0][0] + parts[1][0] : String(name).slice(0, 2)).toUpperCase();
+    const grade = this.pwGrade(s.newPw);
+
+    return {
+      memberName: name,
+      memberEmail: props.memberEmail || 'erestor@imladris.council',
+      initials,
+      themeAttr: s.theme === 'twilight' ? 'dark' : '',
+
+      atProfile: a === 'profile', offProfile: a !== 'profile',
+      atSecurity: a === 'security', offSecurity: a !== 'security',
+      atPrivacy: a === 'privacy', offPrivacy: a !== 'privacy',
+      atAppearance: a === 'appearance', offAppearance: a !== 'appearance',
+      atReading: a === 'reading', offReading: a !== 'reading',
+      atNotifications: a === 'notifications', offNotifications: a !== 'notifications',
+      atConnections: a === 'connections', offConnections: a !== 'connections',
+      atSessions: a === 'sessions', offSessions: a !== 'sessions',
+      atLifecycle: a === 'lifecycle', offLifecycle: a !== 'lifecycle',
+
+      goProfile: this.go('profile'), goSecurity: this.go('security'), goPrivacy: this.go('privacy'),
+      goAppearance: this.go('appearance'), goReading: this.go('reading'),
+      goNotifications: this.go('notifications'), goConnections: this.go('connections'),
+      goSessions: this.go('sessions'), goLifecycle: this.go('lifecycle'),
+
+      dirty: s.dirty, saved: s.saved, touch: this.touch, save: this.save, discard: this.discard,
+
+      pwLabel: grade.label,
+      pwWeak: grade.tier === 1, pwFair: grade.tier === 2, pwStrong: grade.tier === 3, pwBest: grade.tier === 4,
+      pwMismatch: !!s.newPw && !!s.confirmPw && s.newPw !== s.confirmPw,
+      onNewPw: (e) => this.setState({ newPw: e.target.value }),
+      onConfirmPw: (e) => this.setState({ confirmPw: e.target.value }),
+
+      tfaOff: s.tfa === 'off', tfaSetup: s.tfa === 'setup', tfaOn: s.tfa === 'on',
+      otpIncomplete: s.otp.replace(/\D/g, '').length !== 6,
+      onOtp: (e) => this.setState({ otp: e.target.value }),
+      start2fa: () => this.setState({ tfa: 'setup', otp: '' }),
+      cancel2fa: () => this.setState({ tfa: 'off', otp: '' }),
+      verify2fa: () => this.setState({ tfa: 'on', otp: '', saved: true }, () => {
+        clearTimeout(this._t);
+        this._t = setTimeout(() => this.setState({ saved: false }), 2400);
+      }),
+      disable2fa: () => this.setState({ tfa: 'off', otp: '' }),
+      rotateCodes: () => this.setState({ codes: this.newCodes() }),
+      codes: s.codes.map((c) => ({ code: c })),
+      codeCount: s.codes.length,
+
+      thParchment: s.theme === 'parchment', thParchmentOff: s.theme !== 'parchment',
+      thTwilight: s.theme === 'twilight', thTwilightOff: s.theme !== 'twilight',
+      thSystem: s.theme === 'system', thSystemOff: s.theme !== 'system',
+      setParchment: () => this.setState({ theme: 'parchment' }),
+      setTwilight: () => this.setState({ theme: 'twilight' }),
+      setSystem: () => this.setState({ theme: 'system' }),
+      dnComfy: s.density === 'comfortable', dnComfyOff: s.density !== 'comfortable',
+      dnCompact: s.density === 'compact', dnCompactOff: s.density !== 'compact',
+      setComfy: () => this.setState({ density: 'comfortable', dirty: true }),
+      setCompact: () => this.setState({ density: 'compact', dirty: true }),
+
+      prefOnline: p.online, toggleOnline: this.toggle('online'),
+      prefHideRank: p.hideRank, toggleHideRank: this.toggle('hideRank'),
+      prefFindEmail: p.findEmail, toggleFindEmail: this.toggle('findEmail'),
+      prefSigs: p.sigs, toggleSigs: this.toggle('sigs'),
+      prefAvatars: p.avatars, toggleAvatars: this.toggle('avatars'),
+      prefReactions: p.reactions, toggleReactions: this.toggle('reactions'),
+      prefReduceMotion: p.reduceMotion, toggleReduceMotion: this.toggle('reduceMotion'),
+      prefEnterSend: p.enterSend, toggleEnterSend: this.toggle('enterSend'),
+      prefPreview: p.preview, togglePreview: this.toggle('preview'),
+      prefContLists: p.contLists, toggleContLists: this.toggle('contLists'),
+      prefMentionEmail: p.mentionEmail, toggleMentionEmail: this.toggle('mentionEmail'),
+      prefReplyEmail: p.replyEmail, toggleReplyEmail: this.toggle('replyEmail'),
+      prefDigestEmail: p.digestEmail, toggleDigestEmail: this.toggle('digestEmail'),
+
+      subs: s.subs.map((x) => ({
+        label: x.label, meta: x.meta,
+        unsub: () => this.setState((st) => ({ subs: st.subs.filter((y) => y.id !== x.id) })),
+      })),
+      noSubs: s.subs.length === 0,
+
+      providers: s.providers.map((x) => ({
+        name: x.name, mark: x.mark,
+        sub: x.linked ? (props.memberEmail || 'erestor@imladris.council') : x.configured ? 'Not connected' : 'Provider not configured',
+        isLinked: x.linked,
+        canConnect: !x.linked && x.configured,
+        unavailable: !x.linked && !x.configured,
+        act: () => this.setState((st) => ({ providers: st.providers.map((y) => y.id === x.id ? Object.assign({}, y, { linked: !y.linked }) : y) })),
+      })),
+
+      sessions: s.sessions.map((x) => ({
+        ua: x.ua, meta: x.meta, isCurrent: x.current, notCurrent: !x.current,
+        signOut: () => this.setState((st) => ({ sessions: st.sessions.filter((y) => y.id !== x.id) })),
+      })),
+      signOutAll: () => this.setState((st) => ({ sessions: st.sessions.filter((y) => y.current) })),
+
+      atRegard: a === 'regard', offRegard: a !== 'regard', goRegard: this.go('regard'),
+      atDrafts: a === 'drafts', offDrafts: a !== 'drafts', goDrafts: this.go('drafts'),
+      atBoards: a === 'boards', offBoards: a !== 'boards', goBoards: this.go('boards'),
+      atBlocks: a === 'blocks', offBlocks: a !== 'blocks', goBlocks: this.go('blocks'),
+
+      noBlocks: s.blocks.length === 0,
+      blocks: s.blocks.map((b) => Object.assign({}, b, {
+        unblock: () => this.setState((st) => ({ blocks: st.blocks.filter((x) => x.username !== b.username) })),
+      })),
+
+      boardCats: s.boards.map((c, ci) => ({
+        cat: c.cat,
+        items: c.items.map((b, bi) => ({
+          name: b.name,
+          fav: b.fav, notFav: !b.fav,
+          muted: b.muted, notMuted: !b.muted,
+          toggleFav: () => this.flipBoard(ci, bi, 'fav'),
+          toggleMute: () => this.flipBoard(ci, bi, 'muted'),
+        })),
+      })),
+
+      regardTotal: '3,985',
+      regardTrend: '+37 this week',
+      ledgerFilters: ['All', 'Commends', 'Milestones'].map((lbl) => ({
+        label: lbl, on: s.ledgerFilter === lbl, off: s.ledgerFilter !== lbl,
+        pick: () => this.setState({ ledgerFilter: lbl }),
+      })),
+      ledger: LEDGER.filter((e) => s.ledgerFilter === 'All' ? true : s.ledgerFilter === 'Milestones' ? e.milestone : e.kind === 'commend').map((e) => ({
+        glyph: e.glyph, desc: e.desc, title: e.title, sub: e.sub, time: e.time,
+        isMilestone: e.milestone,
+        delta: '+' + e.delta, hasDelta: e.delta > 0, noDelta: e.delta === 0,
+      })),
+
+      drafts: s.drafts.map((d) => ({
+        dest: d.dest, board: d.board, title: d.title, snippet: d.snippet, saved: d.saved, device: d.device,
+        discard: () => this.setState((st) => ({ drafts: st.drafts.filter((x) => x.id !== d.id) })),
+      })),
+      draftCount: s.drafts.length,
+      noDrafts: s.drafts.length === 0,
+      draftSaved: !s.draftSaving, draftSaving: s.draftSaving,
+      onDraftType: () => {
+        if (!this.state.draftSaving) this.setState({ draftSaving: true });
+        clearTimeout(this._d);
+        this._d = setTimeout(() => this.setState({ draftSaving: false }), 900);
+      },
+
+      showDanger: props.showDangerZone !== false,
+      deleteBlocked: s.deleteWord.trim().toUpperCase() !== 'DELETE',
+      onDeleteConfirm: (e) => this.setState({ deleteWord: e.target.value }),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

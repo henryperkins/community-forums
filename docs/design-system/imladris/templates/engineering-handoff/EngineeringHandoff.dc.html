@@ -47,7 +47,7 @@
     <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.DocCover"
       kicker="Engineering Handoff · Design Reference"
       title="RetroBoards"
-      subtitle="The Community Inbox — information architecture and key flows."
+      subtitle="The Community Inbox — information architecture, key flows, and what ships today."
       lede="The reference an engineer reads before touching the screens: how the product is organised, how a person moves through it, and what each surface owes the next. The figures are the high-fidelity mock; the structure, routes, and data they illustrate are the real product."
       meta="{{ coverMeta }}"
       contents="{{ coverContents }}"
@@ -62,40 +62,43 @@
       hint-size="100%,170px"></x-import>
 
     <div class="doc-prose seclead">
-      <p>RetroBoards is self-hostable forum software that presents classic message-board depth through an interface people already use daily. The default authenticated home is not a forum homepage; it is a <strong>personalized forum inbox</strong>, and the durable unit is the <strong>topic</strong>. That sentence is the lens for every decision in this document.</p>
+      <p>RetroBoards is self-hostable forum software that presents classic message-board depth through an interface people already use daily. The durable unit is the <strong>topic</strong>; the surface a member lives in is the <strong>inbox</strong>. Those two sentences are the lens for every decision in this document.</p>
+      <p>Two landings, and they are easy to confuse: <span class="doc-code">/</span> is the <strong>contents page</strong> — categories, then the boards inside each one, filtered by what the viewer may see. <span class="doc-code">/inbox</span> is the <strong>Community Inbox</strong>, the personal three-pane shell. A board directory is the way in; the inbox is where the work happens.</p>
       <p>Three lineages combine, and naming them is the fastest way to predict how any screen should behave:</p>
     </div>
 
     <div class="grid-3" style="margin:6px 0 20px">
-      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="note" label="Discourse bones" hint-size="100%,130px">Durable topics, categories, tags, search, solved answers, moderation — canonical knowledge that outlives the session.</x-import>
-      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="info" label="Slack polish" hint-size="100%,130px">Immediacy, mentions, reactions, lightweight replies, a rich composer — conversational warmth at the point of writing.</x-import>
-      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="warn" label="Outlook discipline" hint-size="100%,130px">Triage, split-pane reading, unread state, focused filters, keyboard-driven density — catch up without opening everything.</x-import>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="note" label="Forum permanence" hint-size="100%,130px">Durable topics, boards, tags, FULLTEXT search, accepted answers, moderation — canonical knowledge that outlives the session.</x-import>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="info" label="Chat immediacy" hint-size="100%,130px">Mentions, reactions, quoted replies, presence, and one shared rich composer — conversational warmth at the point of writing.</x-import>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="warn" label="Mail-style triage" hint-size="100%,130px">Split-pane reading, unread and starred state, focused filters, snooze and assignment — catch up without opening everything.</x-import>
     </div>
 
-    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" tone="note" label="Status, stated plainly" hint-size="100%,120px">The product is at <strong>Phase 4 engineering closeout</strong> — 456 tests / 1,635 assertions green on PHP 8.5. Large rich-composer surfaces (previews, polls, custom emoji) are explicitly deferred. Where a surface is mock-only or planned, this document says so rather than implying it ships.</x-import>
+    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" tone="note" label="Status, stated plainly" hint-size="100%,140px">The product is in <strong>Phase 5 — Gate A accepted and default-on, Gate B reserved</strong>. The closeout evidence records <strong>1,831 tests / 9,396 assertions</strong> green across fresh and reused-schema runs. Thread Intelligence has been default-on since 2026-07-12. Three surfaces remain dark by default — <span class="doc-code">link_previews</span>, <span class="doc-code">expanded_files</span>, <span class="doc-code">custom_css</span> — and every graduated flag stays operator-reversible with <span class="doc-code">features.&lt;flag&gt;=false</span>. Where a screen here is mock-only, this document says so rather than implying it ships.</x-import>
   </section>
 
   <!-- ───────────────────────── §2 INFORMATION ARCHITECTURE ───────────────────────── -->
   <section class="section pbreak">
     <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.SectionHeader"
-      number="§2" kicker="Information architecture" title="Five surfaces, one spine"
+      number="§2" kicker="Information architecture" title="Surfaces on one spine"
       dek="A category has many boards; a board has many threads; a thread has many posts. Every route hangs off a user and that spine."
       hint-size="100%,170px"></x-import>
 
     <div class="doc-prose seclead">
-      <p>The shell is three panes — a channel rail, the inbox, and the conversation — and every surface is a route into that spine. The map below is the set an engineer wires first.</p>
+      <p>The shell is three panes — a channel rail, the inbox, and the conversation — and every member-facing surface is a route into that spine. The map below is the set an engineer wires first; operator and moderation consoles hang off <span class="doc-code">/admin</span> and the report queues.</p>
     </div>
 
     <div class="spacer-14"></div>
     <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.SpecTable"
       caption="Routes and the surfaces they render"
       columns="{{ iaColumns }}" rows="{{ iaRows }}"
-      hint-size="100%,280px"></x-import>
+      hint-size="100%,380px"></x-import>
 
-    <div class="spacer-20"></div>
-    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Figure"
-      label="FIG 1" caption="The three-pane shell — channel rail · inbox · conversation. Drop a screenshot of the desktop layout here."
-      hint-size="100%,380px"><image-slot id="eh-fig-shell" placeholder="Drop the three-pane shell" style="display:block;width:100%;aspect-ratio:16/9" shape="rect"></image-slot></x-import>
+    <sc-if value="{{ showFigures }}" hint-placeholder-val="{{ true }}">
+      <div class="spacer-20"></div>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Figure"
+        label="FIG 1" caption="The three-pane shell at /inbox — channel rail · thread list · conversation. Drop a screenshot of the desktop layout here."
+        hint-size="100%,380px"><image-slot id="eh-fig-shell" placeholder="Drop the three-pane shell" style="display:block;width:100%;aspect-ratio:16/9" shape="rect"></image-slot></x-import>
+    </sc-if>
   </section>
 
   <!-- ───────────────────────── §3 SCREENS & FLOWS ───────────────────────── -->
@@ -112,19 +115,67 @@
         hint-size="100%,150px"></x-import>
     </div>
 
-    <div class="spacer-14"></div>
-    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Figure"
-      label="FIG 2" caption="Route /t/{id}-{slug}, signed in. The OP carries the OP badge; the shared composer shell reads “as …”. Reaction counts under each post sum into regard."
-      hint-size="100%,380px"><image-slot id="eh-fig-thread" placeholder="Drop the open thread" style="display:block;width:100%;aspect-ratio:16/9" shape="rect"></image-slot></x-import>
+    <div class="doc-prose seclead">
+      <p>Section order inside the thread is fixed: head (title, status chip, participants), the post stream with day dividers, the <strong>poll</strong> if one exists, the <strong>living brief</strong> slot, then the composer or the join-bar. Grouping breaks whenever a post gains state — accepted, OP, staff, or wiki posts always carry a full header.</p>
+    </div>
+
+    <sc-if value="{{ showFigures }}" hint-placeholder-val="{{ true }}">
+      <div class="spacer-14"></div>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Figure"
+        label="FIG 2" caption="Route /t/{id}-{slug}, signed in. The OP carries the OP badge; the shared composer shell reads “as …”. Reaction pills read {emoji} {count} and sum into regard."
+        hint-size="100%,380px"><image-slot id="eh-fig-thread" placeholder="Drop the open thread" style="display:block;width:100%;aspect-ratio:16/9" shape="rect"></image-slot></x-import>
+    </sc-if>
 
     <div class="spacer-20"></div>
-    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="note" label="Flow — reply with a quote" hint-size="100%,120px">Hover a post → <strong>Quote</strong> → the composer pre-fills a quote block referencing that post (<span class="doc-code">parent_post_id</span>) → <strong>Enter</strong> sends; the reply appends optimistically and the count increments.</x-import>
+    <div class="grid-2">
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="note" label="Flow — reply with a quote" hint-size="100%,140px">Hover a post → <strong>Quote</strong> → the composer pre-fills a quote block referencing that post (<span class="doc-code">parent_post_id</span>) → <strong>Enter</strong> sends; the reply appends optimistically and the count increments. Quote is gated on <span class="doc-code">can_reply</span>, so it disappears on a locked thread.</x-import>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="note" label="Flow — post anonymously" hint-size="100%,140px">Composer → <strong>Anonymous</strong> chip → the post renders under a constant masked identity for everyone; <span class="doc-code">posts.user_id</span> still holds the real author, so the author keeps Edit and Delete. A moderator reveal is a stateless, <strong>audited</strong> action — it flashes the author once and logs it.</x-import>
+    </div>
+
+    <div class="seclead" style="margin-top:26px">
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.SectionHeader"
+        level="sub" number="3.2" kicker="One box, four jobs" title="The shared composer"
+        dek="Reply, new topic, direct message, and edit are the same shell — the canonical body is Markdown in a plain textarea, and every enhancement mounts over it."
+        hint-size="100%,150px"></x-import>
+    </div>
+
+    <div class="doc-prose seclead">
+      <p>The textarea posts without JavaScript; the toolbar, the WYSIWYG layer, server preview, upload tray, drafts, and slash inserts are progressive enhancements over the same field. Treat anything that cannot degrade to “type Markdown and press send” as a bug in the enhancement, not a missing feature in the shell.</p>
+    </div>
   </section>
 
-  <!-- ───────────────────────── §4 DATA MODEL ───────────────────────── -->
+  <!-- ───────────────────────── §4 THREAD INTELLIGENCE ───────────────────────── -->
   <section class="section pbreak">
     <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.SectionHeader"
-      number="§4" kicker="Data model" title="What the screens are made of"
+      number="§4" kicker="Thread intelligence" title="The living brief"
+      dek="A generated summary of where a discussion stands, bound to the posts it was drawn from — default-on since 2026-07-12 behind two independently reversible flags."
+      hint-size="100%,170px"></x-import>
+
+    <div class="doc-prose seclead">
+      <p><span class="doc-code">community_memory</span> owns summaries, related topics, and wiki revisions; <span class="doc-code">automated_context</span> owns since-last-read context and suggested related topics. A bounded worker draws the brief (<span class="doc-code">worker:thread-intelligence</span>, scheduled at least minutely); curators publish, retire, restore, and refresh it through <span class="doc-code">POST /t/{id}/summary*</span>.</p>
+      <p>The design carries <strong>three provenance postures</strong>, and every one of them is a visible state in the UI rather than a silent failure:</p>
+    </div>
+
+    <div class="grid-3" style="margin:6px 0 20px">
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="info" label="Published" hint-size="100%,130px">Eyebrow reads “AI-generated living brief”, privacy-linked; it flips to “AI-generated · curator edited” once a curator publishes over it.</x-import>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="warn" label="Last verified" hint-size="100%,130px">A refresh that could not be checked against its sources is not published. The previous brief stands and says so; nothing is overwritten.</x-import>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="note" label="Automation paused" hint-size="100%,130px">Refresh is off for this topic; the brief stands as published until someone resumes automation.</x-import>
+    </div>
+
+    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" tone="warn" label="The boundary that cannot move" hint-size="100%,120px">The worker reads <strong>public posts only</strong>. Every claim in a brief cites the posts it came from, and a brief never invents a decision the thread did not make. If a surface would show a brief drawn from private material, that surface is wrong.</x-import>
+
+    <sc-if value="{{ showFigures }}" hint-placeholder-val="{{ true }}">
+      <div class="spacer-20"></div>
+      <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Figure"
+        label="FIG 3" caption="The brief card in the thread — “Where the discussion stands”, its version and published time, and the Sources list naming each post it was drawn from."
+        hint-size="100%,340px"><image-slot id="eh-fig-brief" placeholder="Drop the living brief card" style="display:block;width:100%;aspect-ratio:16/10" shape="rect"></image-slot></x-import>
+    </sc-if>
+  </section>
+
+  <!-- ───────────────────────── §5 DATA MODEL ───────────────────────── -->
+  <section class="section pbreak">
+    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.SectionHeader"
+      number="§5" kicker="Data model" title="What the screens are made of"
       dek="InnoDB, utf8mb4, BIGINT surrogate keys, UTC datetimes, soft-deletes wherever history matters. Read-side counters are denormalised and maintained on write."
       hint-size="100%,170px"></x-import>
 
@@ -140,29 +191,33 @@
 threads(
   id, board_id, user_id,
   title, slug,
-  is_pinned, is_locked, is_deleted,
-  <span class="tok-gold">reply_count</span>,        <span class="tok-dim">-- denormalised</span>
-  <span class="tok-gold">last_post_id</span>,       <span class="tok-dim">-- drives unread</span>
-  last_post_at, created_at )
+  is_pinned, is_locked,
+  is_pending, is_deleted,
+  <span class="tok-gold">accepted_answer_post_id</span>,
+  <span class="tok-gold">reply_count</span>, view_count,  <span class="tok-dim">-- denormalised</span>
+  <span class="tok-gold">last_post_id</span>,             <span class="tok-dim">-- drives unread</span>
+  last_post_user_id, last_post_at )
 
 <span class="tok-dim">-- a post is one message</span>
 posts(
-  id, thread_id, user_id,
-  parent_post_id,        <span class="tok-dim">-- quote target</span>
-  body, body_html,       <span class="tok-dim">-- raw + sanitised</span>
-  is_op, is_deleted,
+  id, thread_id, user_id,   <span class="tok-dim">-- always real</span>
+  parent_post_id,           <span class="tok-dim">-- quote target</span>
+  body, body_html,          <span class="tok-dim">-- md + sanitised</span>
+  is_op, is_anonymous,
+  is_pending, is_deleted,
   edited_at, edited_by )</pre>
       <div class="stackgap">
         <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="info" label="Unread is derived" hint-size="100%,110px">A thread is unread when <span class="doc-code">thread.last_post_id &gt; thread_user.last_read_post_id</span> — no per-post read rows.</x-import>
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="info" label="Reactions are a fixed set" hint-size="100%,110px">Nine allowed emoji, one row per <span class="doc-code">(post, user, emoji)</span>. Self-reactions are excluded from reputation in application logic, not by a constraint.</x-import>
         <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" variant="panel" tone="info" label="Sessions, not cookies-as-truth" hint-size="100%,110px">Opaque tokens in a <span class="doc-code">sessions</span> table; cookies are <span class="doc-code">HttpOnly · Secure · SameSite=Lax</span>. A guest is simply a request with no valid session.</x-import>
       </div>
     </div>
   </section>
 
-  <!-- ───────────────────────── §5 STATUS & PERMISSIONS ───────────────────────── -->
+  <!-- ───────────────────────── §6 STATUS & PERMISSIONS ───────────────────────── -->
   <section class="section pbreak">
     <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.SectionHeader"
-      number="§5" kicker="Status and permissions" title="State you can read at a glance"
+      number="§6" kicker="Status and permissions" title="State you can read at a glance"
       dek="Status is never carried by colour alone — every state pairs a hue with a word — and capability accumulates: Admin ⊇ Moderator ⊇ User ⊇ Guest."
       hint-size="100%,170px"></x-import>
 
@@ -177,18 +232,21 @@ posts(
     </div>
 
     <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.SpecTable"
-      caption="Capability matrix — four roles, cumulative"
+      caption="Capability matrix — the four built-in roles, cumulative"
       columns="{{ permColumns }}" rows="{{ permRows }}"
-      hint-size="100%,260px"></x-import>
+      hint-size="100%,300px"></x-import>
 
     <div class="spacer-20"></div>
-    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" tone="note" label="Where to look next" hint-size="100%,120px"><strong>DECISIONS.md</strong> wins on any conflict; <strong>DESIGN.md</strong> is the product and technical source of truth; <strong>SCHEMA.md</strong> holds final table shapes. This document is the map, not the territory.</x-import>
+    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" tone="warn" label="Read this before you gate anything on a role" hint-size="100%,140px">The database-backed capability resolver (custom roles and scoped grants at <span class="doc-code">/admin/roles</span>) ships, but it runs in <strong>shadow</strong> by default: the legacy role ladder above still decides every live answer while the resolver only reports mismatches. It decides for real once an operator sets <span class="doc-code">CAPABILITIES_MODE=enforce</span>, where it fails closed. Design both postures; never assume a role name is the whole answer.</x-import>
+
+    <div class="spacer-20"></div>
+    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Callout" tone="note" label="Where to look next" hint-size="100%,120px"><strong>DECISIONS.md</strong> wins on any conflict; <strong>DESIGN.md</strong> is the product and technical source of truth; <strong>SCHEMA.md</strong> holds final table shapes; <strong>COMPOSER.md</strong> owns the shared composer contract. This document is the map, not the territory.</x-import>
   </section>
 
 </main>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;parchment&quot;,&quot;twilight&quot;],&quot;default&quot;:&quot;parchment&quot;,&quot;tsType&quot;:&quot;'parchment' | 'twilight'&quot;,&quot;section&quot;:&quot;Theme&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;parchment&quot;,&quot;twilight&quot;],&quot;default&quot;:&quot;parchment&quot;,&quot;tsType&quot;:&quot;'parchment' | 'twilight'&quot;,&quot;section&quot;:&quot;Theme&quot;},&quot;figures&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Document&quot;,&quot;label&quot;:&quot;Show figure slots&quot;}}">
 class Component extends DCLogic {
   applyTheme() {
     if (typeof document === 'undefined') return;
@@ -207,15 +265,17 @@ class Component extends DCLogic {
     const scoped = () => React.createElement('span', { className: 'doc-scoped' }, 'scoped');
 
     return {
+      showFigures: this.props.figures !== false,
+
       coverMeta: [
-        { label: 'Source of truth', value: 'DESIGN.md · v0.11' },
-        { label: 'Stack', value: 'PHP 8 + MySQL · server-rendered' },
-        { label: 'Build status', value: 'Phase 4 closeout · 456 tests green' },
+        { label: 'Source of truth', value: 'DECISIONS · DESIGN · SCHEMA' },
+        { label: 'Stack', value: 'PHP 8.2+ · MySQL 8 · server-rendered' },
+        { label: 'Build status', value: 'Phase 5 Gate A default-on · 1,831 tests green' },
         { label: 'Prepared for', value: 'Engineering · lakefrontdigital.io' },
       ],
       coverContents: [
         '01 Overview', '02 Information architecture', '03 Screens & flows',
-        '04 Data model', '05 Status & permissions',
+        '04 Thread intelligence', '05 Data model', '06 Status & permissions',
       ],
 
       iaColumns: [
@@ -224,11 +284,16 @@ class Component extends DCLogic {
         { key: 'made', label: 'Made of' },
       ],
       iaRows: [
-        { route: code('/'), surface: 'The inbox', made: 'Channel rail · thread list · conversation' },
+        { route: code('/'), surface: 'Contents', made: 'Categories → the boards inside each' },
+        { route: code('/inbox'), surface: 'The Community Inbox', made: 'Channel rail · thread list · conversation' },
         { route: code('/c/{slug}'), surface: 'A board', made: 'Filtered thread list, New topic' },
-        { route: code('/t/{id}-{slug}'), surface: 'A topic', made: 'Post stream · composer / join-bar' },
-        { route: code('/u/{username}'), surface: 'A profile', made: 'Identity header · activity feed' },
+        { route: code('/t/{id}-{slug}'), surface: 'A topic', made: 'Post stream · poll · brief · composer / join-bar' },
+        { route: code('/u/{username}'), surface: 'A profile', made: 'Identity header · activity · follows' },
+        { route: code('/messages'), surface: 'Direct messages', made: 'Conversation list · thread · details rail' },
+        { route: code('/notifications'), surface: 'The bell', made: 'Grouped notifications, read-all' },
+        { route: code('/search'), surface: 'Search', made: 'FULLTEXT over topic titles and post bodies' },
         { route: code('/settings'), surface: 'Account', made: 'Left-rail of preference pages' },
+        { route: code('/admin'), surface: 'Operator console', made: 'Settings, roles, themes, packages, audit' },
       ],
 
       modelColumns: [
@@ -238,10 +303,11 @@ class Component extends DCLogic {
       ],
       modelRows: [
         { table: code('users'), holds: 'Account, role, denormalised post_count + reputation', powers: 'Top bar, profile, leaderboard' },
-        { table: code('boards'), holds: 'The tree; slug, post_min_role, counts', powers: 'Channel rail, board inbox' },
-        { table: code('threads'), holds: 'Title, slug, pinned / locked, reply_count, last_post_*', powers: 'Inbox rows, thread header' },
-        { table: code('posts'), holds: 'Raw + sanitised body, parent_post_id, is_op', powers: 'Conversation, search' },
-        { table: code('reactions'), holds: 'One per (user, post, emoji) — the unit of regard', powers: 'Reactions, leaderboard' },
+        { table: code('boards'), holds: 'The tree; slug, post_min_role, counts', powers: 'Contents page, channel rail, board inbox' },
+        { table: code('threads'), holds: 'Title, slug, pinned / locked, accepted answer, counters', powers: 'Inbox rows, thread header' },
+        { table: code('posts'), holds: 'Raw + sanitised body, parent_post_id, is_op, is_anonymous', powers: 'Conversation, search' },
+        { table: code('thread_user'), holds: 'Read position + star, one row per (user, thread)', powers: 'Unread state, Starred filter' },
+        { table: code('reactions'), holds: 'One per (user, post, emoji) — the unit of regard', powers: 'Reaction pills, leaderboard' },
         { table: code('sessions'), holds: 'Opaque-token sessions, per-session CSRF', powers: 'Login state, log-out-everywhere' },
       ],
 
@@ -256,12 +322,15 @@ class Component extends DCLogic {
         { can: 'Read all public content', guest: yes(), user: yes(), mod: yes(), admin: yes() },
         { can: 'Post, reply, react, star, DM', guest: no(), user: yes(), mod: yes(), admin: yes() },
         { can: 'Edit / delete own posts', guest: no(), user: yes(), mod: yes(), admin: yes() },
-        { can: 'Pin / lock / move / delete any', guest: no(), user: no(), mod: scoped(), admin: yes() },
-        { can: 'Manage boards, roles, branding', guest: no(), user: no(), mod: no(), admin: yes() },
+        { can: 'Curate a living brief', guest: no(), user: no(), mod: scoped(), admin: yes() },
+        { can: 'Pin / lock / move / split / delete any', guest: no(), user: no(), mod: scoped(), admin: yes() },
+        { can: 'Reveal an anonymous author (audited)', guest: no(), user: no(), mod: scoped(), admin: yes() },
+        { can: 'Manage boards, roles, branding, packages', guest: no(), user: no(), mod: no(), admin: yes() },
       ],
     };
   }
 }
+
 </script>
 </body>
 </html>

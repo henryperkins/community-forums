@@ -152,6 +152,19 @@ final class UserModerationService
         );
     }
 
+    /** Non-throwing read check used by public profiles before linking a member record. */
+    public function canViewPanelFor(User $actor, int $subjectId): bool
+    {
+        if ($actor->id() === $subjectId) {
+            return false;
+        }
+        if ($actor->isAdmin()) {
+            return true;
+        }
+
+        return $this->moderatorOverlap($actor, $subjectId) !== [];
+    }
+
     /**
      * Actor-aware staff-panel model (spec §2). Admin → identity + the full
      * history + site-wide warn options. Non-admin staff → a board-scoped

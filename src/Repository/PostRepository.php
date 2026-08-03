@@ -268,19 +268,126 @@ final class PostRepository
      */
     public function recentByUser(int $userId, int $limit): array
     {
-        $limit = max(1, $limit);
+        return $this->listByUser($userId, 'newest', '', $limit, 0);
+    }
+
+    /**
+     * Profile Posts tab: public attributable posts with a bounded page,
+     * literal-wildcard search, and newest/commend ordering.
+     *
+     * @param 'newest'|'commends' $sort
+     * @return array<int,array<string,mixed>>
+     */
+    public function listByUser(
+        int $userId,
+        string $sort = 'newest',
+        string $query = '',
+        int $limit = 20,
+        int $offset = 0,
+    ): array {
+        $limit = max(1, min(100, $limit));
+        $offset = max(0, min(1_000_000, $offset));
+        [$where, $params] = $this->profileFilter($userId, $query);
+        $order = $sort === 'commends'
+            ? 'commend_count DESC, p.created_at DESC, p.id DESC'
+            : 'p.created_at DESC, p.id DESC';
+
         return $this->db->fetchAll(
             "SELECT p.id, p.thread_id, p.body, p.created_at, p.is_op,
-                    t.title AS thread_title, t.slug AS thread_slug, b.slug AS board_slug
+                    t.title AS thread_title, t.slug AS thread_slug,
+                    t.reply_count AS thread_reply_count,
+                    b.slug AS board_slug, b.name AS board_name,
+                    (SELECT COUNT(*) FROM reactions r
+                      WHERE r.post_id = p.id AND r.user_id <> p.user_id) AS commend_count
              FROM posts p
              JOIN threads t ON t.id = p.thread_id
              JOIN boards b ON b.id = t.board_id
-             WHERE p.user_id = ? AND p.is_deleted = 0 AND p.is_anonymous = 0 AND p.is_pending = 0
-               AND t.is_deleted = 0 AND b.visibility = 'public'
-             ORDER BY p.created_at DESC, p.id DESC
-             LIMIT " . $limit,
-            [$userId],
+             WHERE $where
+             ORDER BY $order
+             LIMIT " . $limit . ' OFFSET ' . $offset,
+            $params,
         );
+    }
+
+    public function countByUser(int $userId, string $query = ''): int
+    {
+        [$where, $params] = $this->profileFilter($userId, $query);
+
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*)
+             FROM posts p
+             JOIN threads t ON t.id = p.thread_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE $where",
+            $params,
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function topCommendedByUser(int $userId, int $limit = 5): array
+    {
+        $limit = max(1, min(20, $limit));
+        [$where, $params] = $this->profileFilter($userId, '');
+
+        return $this->db->fetchAll(
+            "SELECT p.id, p.thread_id, p.body, p.created_at,
+                    t.title AS thread_title, t.slug AS thread_slug,
+                    b.slug AS board_slug, b.name AS board_name,
+                    (SELECT COUNT(*) FROM reactions r
+                      WHERE r.post_id = p.id AND r.user_id <> p.user_id) AS commend_count
+             FROM posts p
+             JOIN threads t ON t.id = p.thread_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE $where
+               AND EXISTS (
+                    SELECT 1 FROM reactions external_reaction
+                    WHERE external_reaction.post_id = p.id
+                      AND external_reaction.user_id <> p.user_id
+               )
+             ORDER BY commend_count DESC, p.created_at DESC, p.id DESC
+             LIMIT " . $limit,
+            $params,
+        );
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function boardActivityForUser(int $userId, int $limit = 4): array
+    {
+        $limit = max(1, min(20, $limit));
+        [$where, $params] = $this->profileFilter($userId, '');
+
+        return $this->db->fetchAll(
+            "SELECT b.slug, b.name, COUNT(*) AS post_count
+             FROM posts p
+             JOIN threads t ON t.id = p.thread_id
+             JOIN boards b ON b.id = t.board_id
+             WHERE $where
+             GROUP BY b.id, b.slug, b.name
+             ORDER BY post_count DESC, b.name ASC
+             LIMIT " . $limit,
+            $params,
+        );
+    }
+
+    /** @return array{0:string,1:list<mixed>} */
+    private function profileFilter(int $userId, string $query): array
+    {
+        $where = "p.user_id = ? AND p.is_deleted = 0 AND p.is_pending = 0 AND p.is_anonymous = 0
+               AND t.is_deleted = 0 AND t.is_pending = 0 AND b.visibility = 'public'";
+        $params = [$userId];
+        $query = trim($query);
+        if ($query !== '') {
+            $like = $this->literalLike($query);
+            $where .= ' AND (t.title LIKE ? OR p.body LIKE ? OR b.slug LIKE ? OR b.name LIKE ?)';
+            array_push($params, $like, $like, $like, $like);
+        }
+
+        return [$where, $params];
+    }
+
+    private function literalLike(string $query): string
+    {
+        return '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $query) . '%';
     }
 
     public function update(int $id, string $body, string $bodyHtml, int $editedBy): void

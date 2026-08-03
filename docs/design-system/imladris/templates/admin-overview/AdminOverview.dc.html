@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — dashboard & audit" description="The operator's desk: queue-health cards, the triage list, community pulse, and the append-only audit log with working filters, pagination, and empty / loading / error states" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes adRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes adPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — overview" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <!-- ── Topbar ── -->
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+  </div>
+
+  <div style="max-width: 1160px; margin: 0 auto; padding: 26px 28px 110px;">
+
+    <!-- ── Head ── -->
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+      <div>
+        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Operator desk</span>
+        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Admin console</h1>
+      </div>
+      <span style="flex: 0 0 auto; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;">Admin mode</span>
+    </div>
+
+    <!-- ── Section subnav ── -->
+    <nav aria-label="Admin sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 22px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atDashboard }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goDashboard }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Dashboard</button></sc-if>
+      <sc-if value="{{ offDashboard }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goDashboard }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Dashboard</button></sc-if>
+      <sc-if value="{{ atAudit }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goAudit }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Audit log</button></sc-if>
+      <sc-if value="{{ offAudit }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goAudit }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Audit log</button></sc-if>
+      <span style="margin-left: auto; align-self: center; padding-bottom: 6px; font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-faint);">Moderation · Content · People · Appearance · Notifications · Integrations · Settings</span>
+    </nav>
+
+    <!-- ═══ Dashboard ═══ -->
+    <sc-if value="{{ showDashboard }}" hint-placeholder-val="{{ true }}">
+      <div style="padding-top: 24px;">
+        <p style="margin: 0 0 26px; max-width: 66ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Start with the live queues and health signals, then review what has changed across the council.</p>
+
+        <section style="margin-bottom: 30px;">
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 12px;">
+            <div>
+              <span style="display: block; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Live operations</span>
+              <h2 style="margin: 4px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; color: var(--text-strong);">Queue health</h2>
+            </div>
+            <span style="display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .06em; color: var(--text-faint);"><span style="width: 7px; height: 7px; border-radius: 50%; background: var(--presence);" aria-hidden="true"></span>Live</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+            <a href="#" style="display: flex; flex-direction: column; gap: 3px; padding: 16px 17px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); text-decoration: none;" style-hover="box-shadow: var(--shadow-md);">
+              <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Reports open</span>
+              <strong style="font-family: var(--font-mono); font-weight: 400; font-size: 1.9rem; line-height: 1.1; color: var(--text-strong);">{{ qReports }}</strong>
+              <span style="font-size: .84rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;">3 unclaimed · 1 harassment</span>
+              <span style="margin-top: 6px; font-family: var(--font-label); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--rust);">Needs review</span>
+            </a>
+            <a href="#" style="display: flex; flex-direction: column; gap: 3px; padding: 16px 17px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--amber); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); text-decoration: none;" style-hover="box-shadow: var(--shadow-md);">
+              <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Approval hold</span>
+              <strong style="font-family: var(--font-mono); font-weight: 400; font-size: 1.9rem; line-height: 1.1; color: var(--text-strong);">{{ qHold }}</strong>
+              <span style="font-size: .84rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;">2 topics · 2 replies</span>
+              <span style="margin-top: 6px; font-family: var(--font-label); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--amber);">Waiting</span>
+            </a>
+            <a href="#" style="display: flex; flex-direction: column; gap: 3px; padding: 16px 17px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--amber); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); text-decoration: none;" style-hover="box-shadow: var(--shadow-md);">
+              <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Appeals</span>
+              <strong style="font-family: var(--font-mono); font-weight: 400; font-size: 1.9rem; line-height: 1.1; color: var(--text-strong);">{{ qAppeals }}</strong>
+              <span style="font-size: .84rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;">1 past the 72-hour promise</span>
+              <span style="margin-top: 6px; font-family: var(--font-label); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--amber);">Waiting</span>
+            </a>
+            <a href="#" style="display: flex; flex-direction: column; gap: 3px; padding: 16px 17px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--success); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); text-decoration: none;" style-hover="box-shadow: var(--shadow-md);">
+              <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .05em; color: var(--text-muted);">Email queue</span>
+              <strong style="font-family: var(--font-mono); font-weight: 400; font-size: 1.9rem; line-height: 1.1; color: var(--text-strong);">{{ qEmail }}</strong>
+              <span style="font-size: .84rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;">Last run 11 minutes ago</span>
+              <span style="margin-top: 6px; font-family: var(--font-label); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--success);">Clear</span>
+            </a>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 30px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 10px;">
+            <div>
+              <span style="display: block; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Triage</span>
+              <h2 style="margin: 4px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Needs attention</h2>
+            </div>
+            <span style="padding: 2px 10px; border-radius: 999px; background: var(--surface-sunken); font-family: var(--font-mono); font-size: .82rem; color: var(--text-body);">{{ attentionCount }}</span>
+          </div>
+          <ul style="list-style: none; margin: 0; padding: 0;">
+            <sc-for list="{{ attention }}" as="a" hint-placeholder-count="4">
+              <li style="display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+                <a href="#" style="flex: 1; font-size: .97rem; color: var(--text-body); text-decoration: none;" style-hover="color: var(--accent);">{{ a.label }}</a>
+                <span style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-faint);">{{ a.age }}</span>
+              </li>
+            </sc-for>
+          </ul>
+          <sc-if value="{{ attentionEmpty }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 6px 0 0; font-size: .95rem; color: var(--text-faint);">No pending operator work right now. The queues are clear.</p>
+          </sc-if>
+        </section>
+
+        <section style="margin-bottom: 30px;">
+          <span style="display: block; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Community pulse</span>
+          <h2 style="margin: 4px 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; color: var(--text-strong);">Community today</h2>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;">
+            <sc-for list="{{ activityCards }}" as="c" hint-placeholder-count="4">
+              <a href="#" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 17px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); text-decoration: none;" style-hover="box-shadow: var(--shadow-sm);">
+                <span style="min-width: 0;">
+                  <span style="display: block; font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; color: var(--text-body);">{{ c.title }}</span>
+                  <span style="display: block; margin-top: 3px; font-size: .82rem; color: var(--text-faint);">{{ c.detail }}</span>
+                </span>
+                <strong style="font-family: var(--font-mono); font-weight: 400; font-size: 1.35rem; color: var(--text-strong);">{{ c.count }}</strong>
+              </a>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="padding: 18px 20px 8px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 12px;">
+            <div>
+              <span style="display: block; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Audit trail</span>
+              <h2 style="margin: 4px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Recent activity</h2>
+            </div>
+            <button onClick="{{ goAudit }}" style="border: 0; background: transparent; padding: 0; font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">View full audit log →</button>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 7px 10px 7px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">When</th>
+              <th scope="col" style="padding: 7px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Actor</th>
+              <th scope="col" style="padding: 7px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Action</th>
+              <th scope="col" style="padding: 7px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Target</th>
+              <th scope="col" style="padding: 7px 0 7px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Reason</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ recentAudit }}" as="r" hint-placeholder-count="6">
+                <tr>
+                  <td style="padding: 9px 10px 9px 0; white-space: nowrap; font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ r.when }}</td>
+                  <td style="padding: 9px 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ r.actor }}</td>
+                  <td style="padding: 9px 10px; border-bottom: 1px solid var(--border-hair);"><code style="padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-sunken); font-family: var(--font-mono); font-size: .76rem; color: var(--text-body);">{{ r.action }}</code></td>
+                  <td style="padding: 9px 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ r.target }}</td>
+                  <td style="padding: 9px 0 9px 10px; color: var(--text-muted); border-bottom: 1px solid var(--border-hair); text-wrap: pretty;">{{ r.reason }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Audit log ═══ -->
+    <sc-if value="{{ showAudit }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 24px;">
+        <p style="margin: 0 0 20px; max-width: 68ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Every moderation and admin action, append-only. Filter it, page through it, and follow a target's whole trail from its own record.</p>
+
+        <form onSubmit="{{ onSubmit }}" style="padding: 18px 20px; margin-bottom: 18px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 16px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Actor</span>
+              <input value="{{ fActor }}" onInput="{{ onActor }}" placeholder="Username or display name" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Action</span>
+              <input value="{{ fAction }}" onInput="{{ onAction }}" placeholder="e.g. suspend, update_board" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Target type</span>
+              <select value="{{ fType }}" onChange="{{ onType }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="">Any target</option>
+                <option value="user">User</option>
+                <option value="board">Board</option>
+                <option value="category">Category</option>
+                <option value="thread">Thread</option>
+                <option value="post">Post</option>
+                <option value="setting">Setting</option>
+                <option value="webhook">Webhook</option>
+                <option value="tag">Tag</option>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Target #</span>
+              <input type="number" min="1" value="{{ fTarget }}" onInput="{{ onTarget }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">From</span>
+              <input type="date" value="{{ fFrom }}" onInput="{{ onFrom }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">To</span>
+              <input type="date" value="{{ fTo }}" onInput="{{ onTo }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 16px;">
+            <button type="submit" style="padding: 8px 17px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Apply filters</button>
+            <button type="button" onClick="{{ resetFilters }}" style="padding: 8px 17px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Reset</button>
+            <span style="margin-left: auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ resultLabel }}</span>
+          </div>
+        </form>
+
+        <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 4px 0;">
+            <div style="height: 13px; width: 96%; margin: 14px 0; border-radius: 999px; background: var(--surface-sunken); animation: adPulse 1.6s var(--ease-calm) infinite;"></div>
+            <div style="height: 13px; width: 88%; margin: 14px 0; border-radius: 999px; background: var(--surface-sunken); animation: adPulse 1.6s var(--ease-calm) infinite;"></div>
+            <div style="height: 13px; width: 92%; margin: 14px 0; border-radius: 999px; background: var(--surface-sunken); animation: adPulse 1.6s var(--ease-calm) infinite;"></div>
+            <div style="height: 13px; width: 84%; margin: 14px 0; border-radius: 999px; background: var(--surface-sunken); animation: adPulse 1.6s var(--ease-calm) infinite;"></div>
+            <div style="height: 13px; width: 90%; margin: 14px 0; border-radius: 999px; background: var(--surface-sunken); animation: adPulse 1.6s var(--ease-calm) infinite;"></div>
+            <div style="height: 13px; width: 78%; margin: 14px 0; border-radius: 999px; background: var(--surface-sunken); animation: adPulse 1.6s var(--ease-calm) infinite;"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 30px 26px; text-align: center; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg);">
+            <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">The log could not be read</h2>
+            <p style="margin: 7px auto 0; max-width: 48ch; font-size: .95rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">The audit trail is append-only and intact — this is a read failure, not a gap in the record.</p>
+            <button onClick="{{ retry }}" style="margin-top: 18px; padding: 8px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Try again</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+          <div style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+            <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+              <thead><tr>
+                <th scope="col" style="padding: 11px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">When</th>
+                <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Actor</th>
+                <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Action</th>
+                <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Target</th>
+                <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Reason</th>
+                <th scope="col" style="padding: 11px 0 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Change</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ pageRows }}" as="r" hint-placeholder-count="10">
+                  <tr>
+                    <td style="padding: 10px 10px 10px 0; white-space: nowrap; font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ r.when }}</td>
+                    <td style="padding: 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ r.actor }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-sunken); font-family: var(--font-mono); font-size: .76rem; color: var(--text-body);">{{ r.action }}</code></td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><a href="#" style="font-family: var(--font-mono); font-size: .78rem; color: var(--artifact-link);">{{ r.target }}</a></td>
+                    <td style="padding: 10px; color: var(--text-muted); border-bottom: 1px solid var(--border-hair); text-wrap: pretty;">{{ r.reason }}</td>
+                    <td style="padding: 10px 0 10px 10px; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ r.change }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+            <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 40px 20px; text-align: center;">
+                <h3 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">Nothing matches these filters</h3>
+                <p style="margin: 6px 0 0; font-size: .93rem; color: var(--text-muted);">The record is complete; this slice of it is simply empty.</p>
+                <button onClick="{{ resetFilters }}" style="margin-top: 15px; padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Reset filters</button>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ showPager }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px;">
+              <button onClick="{{ prevPage }}" disabled="{{ atFirstPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Previous</button>
+              <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint);">{{ pageLabel }}</span>
+              <button onClick="{{ nextPage }}" disabled="{{ atLastPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Next</button>
+            </div>
+          </sc-if>
+        </sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'loading' | 'empty' | 'error'&quot;,&quot;section&quot;:&quot;Console state&quot;}}">
+const AUDIT = [
+  { when: '2 Aug 09:14', actor: 'erestor', action: 'resolve_report', type: 'post', id: 8841, reason: 'Off-topic, moved to #lore', change: 'status → resolved', date: '2026-08-02' },
+  { when: '2 Aug 08:52', actor: 'elrond', action: 'update_board', type: 'board', id: 12, reason: 'Renamed to Practice', change: 'name, slug', date: '2026-08-02' },
+  { when: '2 Aug 08:31', actor: 'system', action: 'hold_post', type: 'post', id: 8839, reason: 'Anti-abuse: first post', change: 'state → held', date: '2026-08-02' },
+  { when: '1 Aug 21:07', actor: 'glorfindel', action: 'suspend', type: 'user', id: 431, reason: 'Repeated harassment after warning', change: 'until 8 Aug', date: '2026-08-01' },
+  { when: '1 Aug 18:44', actor: 'erestor', action: 'dismiss_report', type: 'post', id: 8802, reason: 'No breach found', change: 'status → dismissed', date: '2026-08-01' },
+  { when: '1 Aug 16:20', actor: 'elrond', action: 'update_setting', type: 'setting', id: 4, reason: 'Registration set to invite-only', change: 'registration_mode', date: '2026-08-01' },
+  { when: '1 Aug 14:03', actor: 'melian', action: 'merge_tag', type: 'tag', id: 77, reason: '#evaluation folded into #eval', change: 'alias added', date: '2026-08-01' },
+  { when: '1 Aug 11:38', actor: 'system', action: 'retry_webhook', type: 'webhook', id: 3, reason: 'Endpoint returned 502 twice', change: 'attempt 3 of 5', date: '2026-08-01' },
+  { when: '31 Jul 22:15', actor: 'glorfindel', action: 'approve_topic', type: 'thread', id: 2291, reason: 'Held by board rule, reviewed', change: 'state → published', date: '2026-07-31' },
+  { when: '31 Jul 19:02', actor: 'elrond', action: 'grant_badge', type: 'user', id: 88, reason: 'Keeper of the record — 100 accepted', change: 'badge granted', date: '2026-07-31' },
+  { when: '31 Jul 17:49', actor: 'erestor', action: 'lock_thread', type: 'thread', id: 2244, reason: 'Decision recorded; discussion closed', change: 'locked → true', date: '2026-07-31' },
+  { when: '31 Jul 15:26', actor: 'celebrian', action: 'update_role', type: 'setting', id: 9, reason: 'Wardens may now merge tags', change: 'capability added', date: '2026-07-31' },
+  { when: '31 Jul 12:11', actor: 'system', action: 'block_word', type: 'setting', id: 6, reason: 'Blocked-word list updated', change: '+3 entries', date: '2026-07-31' },
+  { when: '30 Jul 20:55', actor: 'glorfindel', action: 'reject_reply', type: 'post', id: 8710, reason: 'Link spam', change: 'state → removed', date: '2026-07-30' },
+  { when: '30 Jul 16:32', actor: 'elrond', action: 'publish_announcement', type: 'setting', id: 11, reason: 'Maintenance window Saturday', change: 'banner live', date: '2026-07-30' },
+  { when: '30 Jul 14:08', actor: 'melian', action: 'update_category', type: 'category', id: 3, reason: 'Reordered above Archive', change: 'position 2', date: '2026-07-30' },
+  { when: '30 Jul 09:41', actor: 'erestor', action: 'resolve_appeal', type: 'user', id: 402, reason: 'Modified — suspension shortened', change: 'outcome → modified', date: '2026-07-30' },
+  { when: '29 Jul 23:19', actor: 'system', action: 'queue_email', type: 'setting', id: 2, reason: 'Digest run for 1,204 members', change: 'queued', date: '2026-07-29' },
+  { when: '29 Jul 18:07', actor: 'elrond', action: 'create_board', type: 'board', id: 14, reason: 'New board: Welcome', change: 'created', date: '2026-07-29' },
+  { when: '29 Jul 15:44', actor: 'glorfindel', action: 'unsuspend', type: 'user', id: 388, reason: 'Term served', change: 'state → active', date: '2026-07-29' },
+  { when: '29 Jul 11:22', actor: 'celebrian', action: 'revoke_token', type: 'webhook', id: 7, reason: 'Rotated after handover', change: 'token revoked', date: '2026-07-29' },
+  { when: '28 Jul 19:50', actor: 'erestor', action: 'claim_report', type: 'post', id: 8688, reason: 'Taken from the shared pile', change: 'claimed_by set', date: '2026-07-28' },
+  { when: '28 Jul 16:14', actor: 'elrond', action: 'update_branding', type: 'setting', id: 1, reason: 'Accent adjusted for contrast', change: 'accent_hex', date: '2026-07-28' },
+  { when: '28 Jul 10:03', actor: 'system', action: 'prune_sessions', type: 'setting', id: 8, reason: 'Expired sessions cleared', change: '412 removed', date: '2026-07-28' },
+];
+
+const PAGE_SIZE = 10;
+
+class Component extends DCLogic {
+  state = {
+    view: 'dashboard',
+    fActor: '', fAction: '', fType: '', fTarget: '', fFrom: '', fTo: '',
+    applied: { actor: '', action: '', type: '', target: '', from: '', to: '' },
+    page: 1, recovered: false,
+  };
+
+  field = (key) => (e) => this.setState({ [key]: e.target.value });
+
+  apply = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    this.setState({
+      applied: { actor: s.fActor, action: s.fAction, type: s.fType, target: s.fTarget, from: s.fFrom, to: s.fTo },
+      page: 1,
+    });
+  };
+
+  reset = () => this.setState({
+    fActor: '', fAction: '', fType: '', fTarget: '', fFrom: '', fTo: '',
+    applied: { actor: '', action: '', type: '', target: '', from: '', to: '' }, page: 1,
+  });
+
+  renderVals() {
+    const s = this.state;
+    const dataState = s.recovered ? 'live' : (this.props.dataState || 'live');
+    const isEmpty = dataState === 'empty';
+    const a = s.applied;
+    const pool = isEmpty ? [] : AUDIT;
+
+    const rows = pool.filter((r) => {
+      if (a.actor && !r.actor.toLowerCase().includes(a.actor.trim().toLowerCase())) return false;
+      if (a.action && !r.action.toLowerCase().includes(a.action.trim().toLowerCase())) return false;
+      if (a.type && r.type !== a.type) return false;
+      if (a.target && String(r.id) !== String(a.target).trim()) return false;
+      if (a.from && r.date < a.from) return false;
+      if (a.to && r.date > a.to) return false;
+      return true;
+    });
+
+    const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    const page = Math.min(s.page, pages);
+    const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+      .map((r) => ({ ...r, target: r.type + ' #' + r.id }));
+
+    const attention = isEmpty ? [] : [
+      { label: '3 reports unclaimed in the shared pile', age: 'oldest 4h' },
+      { label: '2 topics held by anti-abuse awaiting review', age: 'oldest 9h' },
+      { label: '1 appeal past its 72-hour promise', age: '3d' },
+      { label: 'Webhook “ledger-sync” failing since Tuesday', age: '2d' },
+    ];
+
+    return {
+      atDashboard: s.view === 'dashboard', offDashboard: s.view !== 'dashboard',
+      atAudit: s.view === 'audit', offAudit: s.view !== 'audit',
+      goDashboard: () => this.setState({ view: 'dashboard' }),
+      goAudit: () => this.setState({ view: 'audit' }),
+      showDashboard: s.view === 'dashboard',
+      showAudit: s.view === 'audit',
+
+      qReports: isEmpty ? 0 : 7,
+      qHold: isEmpty ? 0 : 4,
+      qAppeals: isEmpty ? 0 : 2,
+      qEmail: 0,
+      attention,
+      attentionCount: attention.length,
+      attentionEmpty: attention.length === 0,
+      activityCards: isEmpty ? [] : [
+        { title: 'New topics', detail: 'Across 5 boards', count: 18 },
+        { title: 'Replies', detail: 'Down 4% on last week', count: 142 },
+        { title: 'New members', detail: '3 awaiting verification', count: 11 },
+        { title: 'Commends given', detail: 'Steady', count: 96 },
+      ],
+      recentAudit: (isEmpty ? [] : AUDIT.slice(0, 6)).map((r) => ({ ...r, target: r.type + ' #' + r.id })),
+
+      fActor: s.fActor, fAction: s.fAction, fType: s.fType, fTarget: s.fTarget, fFrom: s.fFrom, fTo: s.fTo,
+      onActor: this.field('fActor'), onAction: this.field('fAction'), onType: this.field('fType'),
+      onTarget: this.field('fTarget'), onFrom: this.field('fFrom'), onTo: this.field('fTo'),
+      onSubmit: this.apply, resetFilters: this.reset,
+
+      isLoading: dataState === 'loading',
+      isError: dataState === 'error',
+      showTable: dataState !== 'loading' && dataState !== 'error',
+      retry: () => this.setState({ recovered: true }),
+
+      resultLabel: rows.length === 1 ? '1 entry' : rows.length + ' entries',
+      pageRows,
+      noRows: rows.length === 0,
+      showPager: rows.length > PAGE_SIZE,
+      pageLabel: 'Page ' + page + ' of ' + pages,
+      atFirstPage: page <= 1,
+      atLastPage: page >= pages,
+      prevPage: () => this.setState((st) => ({ page: Math.max(1, st.page - 1) })),
+      nextPage: () => this.setState({ page: Math.min(pages, page + 1) }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -34,12 +34,16 @@ $iconStroke = [
     'arrow-up'        => '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>',
     'chevron-left'    => '<path d="M15 18l-6-6 6-6"/>',
     'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
+    // Copied from the Imladris user-profile moderator strip.
+    'shield'          => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
 ];
 $iconFilled = [
     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',
 ];
 $iconCustomFilled = [
     'eight-point-star' => '<path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"/>',
+    // Supplied verbatim by ImladrisDesignSystem/assets/commend-star.svg.
+    'commend-star' => '<path d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"/>',
 ];
 ?>
 <?php if (isset($iconCustomFilled[$iconName])): ?>

@@ -37,8 +37,9 @@ final class SinceLastReadContextService
         }
 
         $posts = $this->db->fetchAll(
-            'SELECT p.id, p.body, p.body_html, p.created_at,
-                    u.username AS author_username, u.display_name AS author_display_name
+            'SELECT p.id, p.body, p.body_html, p.created_at, p.is_anonymous,
+                    u.username AS author_username, u.display_name AS author_display_name,
+                    u.role AS author_role
              FROM posts p
              JOIN users u ON u.id = p.user_id
              WHERE p.thread_id = ? AND p.id > ? AND p.is_deleted = 0 AND p.is_pending = 0
@@ -49,17 +50,24 @@ final class SinceLastReadContextService
 
         $items = [];
         foreach ($posts as $post) {
-            $author = (string) (($post['author_display_name'] ?? '') !== '' ? $post['author_display_name'] : $post['author_username']);
+            $isAnonymous = (int) ($post['is_anonymous'] ?? 0) === 1;
+            $author = \mask_author(
+                $post['author_display_name'] ?? null,
+                $post['author_username'] ?? null,
+                $post['author_role'] ?? 'user',
+                $isAnonymous,
+            );
             $items[] = [
                 'post_id' => (int) $post['id'],
-                'author' => $author,
+                'author' => $author['label'],
+                'author_is_anonymous' => $isAnonymous,
                 'excerpt' => $this->excerpt((string) (($post['body_html'] ?? '') !== '' ? $post['body_html'] : $post['body'])),
             ];
         }
 
         $toPostId = (int) ($window['to_post_id'] ?? 0);
         $contextText = implode("\n", array_map(
-            static fn (array $item): string => '@' . $item['author'] . ': ' . $item['excerpt'],
+            static fn (array $item): string => ($item['author_is_anonymous'] ? '' : '@') . $item['author'] . ': ' . $item['excerpt'],
             $items,
         ));
 

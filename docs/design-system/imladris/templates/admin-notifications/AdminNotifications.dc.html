@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — email & announcements" description="The notifications section of the operator's desk: sending-domain health, queue stat cards, a filterable delivery log with requeue, suppressed addresses, and the banner publisher with its broadcast channels and history" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes anRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — notifications" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+  </div>
+
+  <div style="max-width: 1140px; margin: 0 auto; padding: 26px 28px 110px;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+      <div>
+        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Operator desk · Notifications</span>
+        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Email &amp; announcements</h1>
+      </div>
+      <span style="flex: 0 0 auto; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;">Admin mode</span>
+    </div>
+
+    <nav aria-label="Notification sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 22px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atEmail }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goEmail }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Email</button></sc-if>
+      <sc-if value="{{ offEmail }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goEmail }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Email</button></sc-if>
+      <sc-if value="{{ atAnnouncements }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goAnnouncements }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Announcements</button></sc-if>
+      <sc-if value="{{ offAnnouncements }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goAnnouncements }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Announcements</button></sc-if>
+    </nav>
+
+    <!-- ═══ Email ═══ -->
+    <sc-if value="{{ showEmail }}" hint-placeholder-val="{{ true }}">
+      <div style="padding-top: 24px;">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <section style="padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <h2 style="margin: 0 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Sending domain</h2>
+            <p style="margin: 0; font-size: 1rem; color: var(--text-body);"><strong style="font-weight: 500;">council.imladris.example</strong> <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; color: var(--text-faint);">selector <code style="font-family: var(--font-mono); font-size: .8rem;">rb2026</code></span></p>
+            <p style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 0;">
+              <span style="display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .7rem; letter-spacing: .05em;">SPF pass</span>
+              <span style="display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .7rem; letter-spacing: .05em;">DKIM pending</span>
+              <span style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">checked {{ domainChecked }}</span>
+            </p>
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 14px;">
+              <button onClick="{{ refreshDomain }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Refresh SPF/DKIM status</button>
+              <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-faint);">Verified-domain send blocking is enabled.</span>
+            </div>
+          </section>
+
+          <section style="padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <h2 style="margin: 0 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Send a test email</h2>
+            <p style="margin: 0 0 14px; max-width: 46ch; font-size: .92rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">Sends a one-off message to your own account address and records it in the log below.</p>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button onClick="{{ sendTest }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Send test email</button>
+              <sc-if value="{{ testSent }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-done);">Queued — it is at the top of the log.</span></sc-if>
+            </div>
+          </section>
+        </div>
+
+        <section style="margin-bottom: 16px;">
+          <h2 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Queue status</h2>
+          <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;">
+            <sc-for list="{{ statCards }}" as="c" hint-placeholder-count="6">
+              <li style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+                <span style="font-family: var(--font-mono); font-size: 1.5rem; line-height: 1.1; color: var(--text-strong);">{{ c.count }}</span>
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">{{ c.label }}</span>
+              </li>
+            </sc-for>
+          </ul>
+        </section>
+
+        <section style="padding: 18px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Delivery log</h2>
+          <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 14px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Status</span>
+              <select value="{{ fStatus }}" onChange="{{ onStatus }}" style="padding: 7px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .9rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="">Any</option>
+                <option value="queued">queued</option>
+                <option value="sent">sent</option>
+                <option value="failed">failed</option>
+                <option value="suppressed">suppressed</option>
+                <option value="bounced">bounced</option>
+                <option value="complained">complained</option>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Kind</span>
+              <select value="{{ fKind }}" onChange="{{ onKind }}" style="padding: 7px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .9rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="">Any</option>
+                <option value="verify">verify</option>
+                <option value="reset">reset</option>
+                <option value="digest">digest</option>
+                <option value="mention">mention</option>
+                <option value="broadcast">broadcast</option>
+                <option value="test">test</option>
+              </select>
+            </label>
+            <label style="flex: 1; min-width: 190px; display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Email</span>
+              <input value="{{ fEmail }}" onInput="{{ onEmail }}" placeholder="address@example.com" style="padding: 7px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <button onClick="{{ resetFilters }}" style="padding: 8px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Reset</button>
+            <span style="margin-left: auto; padding-bottom: 8px; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ logResultLabel }}</span>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 9px 10px 8px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">When</th>
+              <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">To</th>
+              <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Kind</th>
+              <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+              <th scope="col" style="padding: 9px 10px 8px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Attempts</th>
+              <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Subject</th>
+              <th scope="col" style="padding: 9px 0 8px 10px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Action</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ logPage }}" as="r" hint-placeholder-count="10">
+                <tr>
+                  <td style="padding: 10px 10px 10px 0; white-space: nowrap; font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ r.when }}</td>
+                  <td style="padding: 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ r.to }}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-sunken); font-family: var(--font-mono); font-size: .74rem; color: var(--text-body);">{{ r.kind }}</code></td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ r.isSent }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Sent</span></sc-if>
+                    <sc-if value="{{ r.isQueued }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-info); color: var(--on-info); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Queued</span></sc-if>
+                    <sc-if value="{{ r.isBad }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised)); color: var(--danger); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ r.statusLabel }}</span></sc-if>
+                    <sc-if value="{{ r.isHeld }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-pending); color: var(--on-pending); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ r.statusLabel }}</span></sc-if>
+                  </td>
+                  <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ r.attempts }}</td>
+                  <td style="padding: 10px; color: var(--text-muted); border-bottom: 1px solid var(--border-hair); text-wrap: pretty;">{{ r.subject }}</td>
+                  <td style="padding: 10px 0 10px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ r.canRequeue }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.requeue }}" style="padding: 4px 11px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Requeue</button></sc-if>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+
+          <sc-if value="{{ noLogRows }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 38px 20px; text-align: center;">
+              <h3 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">Nothing matches these filters</h3>
+              <p style="margin: 6px 0 0; font-size: .93rem; color: var(--text-muted);">The log keeps thirty days. Widen the filters to see more of it.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showLogPager }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; padding-bottom: 8px;">
+              <button onClick="{{ prevPage }}" disabled="{{ atFirstPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Previous</button>
+              <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint);">{{ pageLabel }}</span>
+              <button onClick="{{ nextPage }}" disabled="{{ atLastPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Next</button>
+            </div>
+          </sc-if>
+        </section>
+
+        <section style="margin-top: 16px; padding: 18px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Suppressed addresses</h2>
+          <form onSubmit="{{ addSuppression }}" style="display: flex; align-items: flex-end; gap: 12px; margin-bottom: 14px;">
+            <label style="flex: 1; max-width: 340px; display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Email</span>
+              <input type="email" value="{{ suppressEmail }}" onInput="{{ onSuppressEmail }}" placeholder="address@example.com" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <button type="submit" style="padding: 9px 17px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Suppress</button>
+            <sc-if value="{{ suppressError }}" hint-placeholder-val="{{ false }}"><span role="alert" style="padding-bottom: 9px; font-size: .87rem; color: var(--danger);">Enter a full email address.</span></sc-if>
+          </form>
+          <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 9px 10px 8px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Email</th>
+              <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Reason</th>
+              <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Since</th>
+              <th scope="col" style="padding: 9px 0 8px 10px; border-bottom: 1px solid var(--border-soft);"></th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ suppressions }}" as="s" hint-placeholder-count="3">
+                <tr>
+                  <td style="padding: 10px 10px 10px 0; font-family: var(--font-mono); font-size: .8rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ s.email }}</td>
+                  <td style="padding: 10px; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ s.reason }}</td>
+                  <td style="padding: 10px; font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ s.since }}</td>
+                  <td style="padding: 10px 0 10px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);"><button onClick="{{ s.release }}" style="padding: 4px 11px; border-radius: var(--radius-md); border: 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Release</button></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{ noSuppressions }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 16px 0 12px; font-size: .93rem; color: var(--text-faint);">No addresses are suppressed. Bounces and complaints land here automatically.</p>
+          </sc-if>
+        </section>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Announcements ═══ -->
+    <sc-if value="{{ showAnnouncements }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 24px;">
+        <section style="margin-bottom: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 10px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Current banner</h2>
+          <sc-if value="{{ hasBanner }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <p style="margin: 0; padding: 12px 16px; background: var(--surface-review); border-left: 3px solid var(--warning); border-radius: var(--radius-md); font-size: 1rem; line-height: 1.5; color: var(--on-review); text-wrap: pretty;">{{ bannerMessage }}</p>
+              <p style="margin: 10px 0 0; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ bannerDismissLabel }} · version {{ bannerVersion }}</p>
+              <button onClick="{{ clearBanner }}" style="margin-top: 12px; padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--rust); font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Clear banner</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noBanner }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; font-size: .95rem; color: var(--text-faint);">No banner is currently shown.</p>
+          </sc-if>
+        </section>
+
+        <section style="margin-bottom: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Publish a banner</h2>
+          <form onSubmit="{{ publishBanner }}">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Message</span>
+              <textarea value="{{ draftMessage }}" onInput="{{ onDraftMessage }}" rows="3" maxlength="500" style="width: 100%; padding: 10px 12px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .96rem; line-height: 1.5; color: var(--text-body); resize: vertical;" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);"></textarea>
+            </label>
+            <p style="margin: 5px 0 0; text-align: right; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ draftCount }} / 500</p>
+            <div style="display: flex; flex-direction: column; gap: 9px; margin-top: 12px;">
+              <label style="display: flex; align-items: center; gap: 9px; font-size: .93rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ draftDismissible }}" onChange="{{ onDraftDismissible }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Members can dismiss this banner</label>
+              <label style="display: flex; align-items: center; gap: 9px; font-size: .93rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ draftBroadcast }}" onChange="{{ onDraftBroadcast }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Also send an in-app broadcast notification to all members</label>
+              <label style="display: flex; align-items: center; gap: 9px; font-size: .93rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ draftBroadcastEmail }}" onChange="{{ onDraftBroadcastEmail }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Also queue an email broadcast to active members</label>
+            </div>
+            <sc-if value="{{ broadcastWarning }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 12px 0 0; padding: 10px 14px; background: var(--surface-review); border-left: 3px solid var(--warning); border-radius: var(--radius-md); font-size: .9rem; line-height: 1.45; color: var(--on-review); text-wrap: pretty;">This will reach {{ broadcastReach }} by email. Broadcasts cannot be recalled once the queue starts.</p>
+            </sc-if>
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 16px;">
+              <button type="submit" style="padding: 9px 20px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Publish banner</button>
+              <sc-if value="{{ publishError }}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: .87rem; color: var(--danger);">A banner needs a message.</span></sc-if>
+            </div>
+          </form>
+        </section>
+
+        <section style="padding: 18px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Recent history</h2>
+          <sc-if value="{{ hasHistory }}" hint-placeholder-val="{{ true }}">
+            <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+              <thead><tr>
+                <th scope="col" style="padding: 9px 10px 8px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">When</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">By</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Event</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Message</th>
+                <th scope="col" style="padding: 9px 0 8px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Channels</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+                  <tr>
+                    <td style="padding: 10px 10px 10px 0; white-space: nowrap; font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ h.when }}</td>
+                    <td style="padding: 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ h.by }}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-sunken); font-family: var(--font-mono); font-size: .74rem; color: var(--text-body);">{{ h.event }}</code></td>
+                    <td style="padding: 10px; color: var(--text-muted); border-bottom: 1px solid var(--border-hair); text-wrap: pretty;">{{ h.message }}</td>
+                    <td style="padding: 10px 0 10px 10px; font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-faint); border-bottom: 1px solid var(--border-hair);">{{ h.channels }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </sc-if>
+          <sc-if value="{{ noHistory }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0 0 10px; font-size: .95rem; color: var(--text-faint);">No announcements have been published yet.</p>
+          </sc-if>
+        </section>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1140,&quot;height&quot;:900}}">
+const SEED_LOG = [
+  { id: 1, when: '2 Aug 09:41', to: 'erestor@imladris.example', kind: 'digest', status: 'sent', attempts: 1, subject: 'Your weekly council digest' },
+  { id: 2, when: '2 Aug 09:40', to: 'lindir@imladris.example', kind: 'digest', status: 'sent', attempts: 1, subject: 'Your weekly council digest' },
+  { id: 3, when: '2 Aug 09:38', to: 'gildor@old.example', kind: 'digest', status: 'bounced', attempts: 3, subject: 'Your weekly council digest' },
+  { id: 4, when: '2 Aug 08:12', to: 'nimrodel@imladris.example', kind: 'verify', status: 'sent', attempts: 1, subject: 'Confirm your seat at the council' },
+  { id: 5, when: '2 Aug 07:55', to: 'rumil@imladris.example', kind: 'mention', status: 'queued', attempts: 0, subject: 'Galadriel mentioned you in #practice' },
+  { id: 6, when: '1 Aug 22:04', to: 'voronwe@imladris.example', kind: 'reset', status: 'sent', attempts: 1, subject: 'Reset your password' },
+  { id: 7, when: '1 Aug 21:30', to: 'haldir@imladris.example', kind: 'digest', status: 'failed', attempts: 5, subject: 'Your weekly council digest' },
+  { id: 8, when: '1 Aug 19:17', to: 'melian@imladris.example', kind: 'broadcast', status: 'sent', attempts: 1, subject: 'Maintenance window on Saturday' },
+  { id: 9, when: '1 Aug 19:17', to: 'orophin@imladris.example', kind: 'broadcast', status: 'sent', attempts: 1, subject: 'Maintenance window on Saturday' },
+  { id: 10, when: '1 Aug 19:17', to: 'spam-trap@example.net', kind: 'broadcast', status: 'suppressed', attempts: 0, subject: 'Maintenance window on Saturday' },
+  { id: 11, when: '1 Aug 16:02', to: 'idril@imladris.example', kind: 'mention', status: 'sent', attempts: 1, subject: 'Erestor replied to your topic' },
+  { id: 12, when: '1 Aug 14:48', to: 'aegnor@imladris.example', kind: 'verify', status: 'sent', attempts: 1, subject: 'Confirm your seat at the council' },
+  { id: 13, when: '31 Jul 23:11', to: 'complaint@example.org', kind: 'digest', status: 'complained', attempts: 1, subject: 'Your weekly council digest' },
+  { id: 14, when: '31 Jul 20:36', to: 'beleg@imladris.example', kind: 'digest', status: 'sent', attempts: 1, subject: 'Your weekly council digest' },
+  { id: 15, when: '31 Jul 18:20', to: 'elrond@imladris.example', kind: 'test', status: 'sent', attempts: 1, subject: 'Test message from the operator desk' },
+];
+
+const SEED_SUPPRESSIONS = [
+  { email: 'gildor@old.example', reason: 'Hard bounce — mailbox does not exist', since: '2 Aug 2026' },
+  { email: 'complaint@example.org', reason: 'Spam complaint', since: '31 Jul 2026' },
+  { email: 'spam-trap@example.net', reason: 'Listed by the provider', since: '18 Jul 2026' },
+];
+
+const SEED_HISTORY = [
+  { when: '1 Aug 19:15', by: 'elrond', event: 'publish', message: 'Maintenance window on Saturday, 09:00–11:00 UTC.', channels: 'Banner · in-app · email' },
+  { when: '18 Jul 11:02', by: 'erestor', event: 'clear', message: 'Search reindex complete.', channels: 'Banner' },
+  { when: '18 Jul 08:44', by: 'erestor', event: 'publish', message: 'Search is reindexing; results may be incomplete for an hour.', channels: 'Banner' },
+  { when: '2 Jun 15:20', by: 'elrond', event: 'publish', message: 'The lexicon has moved to #lore. Old links still resolve.', channels: 'Banner · in-app' },
+];
+
+const BAD = ['failed', 'bounced', 'complained'];
+const PAGE = 10;
+
+class Component extends DCLogic {
+  state = {
+    view: 'email',
+    log: SEED_LOG.slice(),
+    suppressions: SEED_SUPPRESSIONS.slice(),
+    fStatus: '', fKind: '', fEmail: '', page: 1,
+    testSent: false, domainChecked: '2 Aug 2026, 06:00',
+    suppressEmail: '', suppressError: false,
+    banner: { message: 'Maintenance window on Saturday, 09:00–11:00 UTC. The council stays readable throughout.', dismissible: true, version: 4 },
+    history: SEED_HISTORY.slice(),
+    draftMessage: '', draftDismissible: true, draftBroadcast: false, draftBroadcastEmail: false, publishError: false,
+  };
+
+  publishBanner = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    const msg = s.draftMessage.trim();
+    if (!msg) { this.setState({ publishError: true }); return; }
+    const channels = ['Banner']
+      .concat(s.draftBroadcast ? ['in-app'] : [])
+      .concat(s.draftBroadcastEmail ? ['email'] : [])
+      .join(' · ');
+    this.setState((st) => ({
+      banner: { message: msg, dismissible: st.draftDismissible, version: (st.banner ? st.banner.version : 0) + 1 },
+      history: [{ when: 'Just now', by: 'elrond', event: 'publish', message: msg, channels }].concat(st.history),
+      draftMessage: '', draftBroadcast: false, draftBroadcastEmail: false, publishError: false,
+    }));
+  };
+
+  addSuppression = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const email = this.state.suppressEmail.trim();
+    if (!email || email.indexOf('@') < 1) { this.setState({ suppressError: true }); return; }
+    this.setState((st) => ({
+      suppressions: [{ email, reason: 'Added by an operator', since: 'Just now' }].concat(st.suppressions),
+      suppressEmail: '', suppressError: false,
+    }));
+  };
+
+  renderVals() {
+    const s = this.state;
+    const filtered = s.log.filter((r) => {
+      if (s.fStatus && r.status !== s.fStatus) return false;
+      if (s.fKind && r.kind !== s.fKind) return false;
+      if (s.fEmail && r.to.toLowerCase().indexOf(s.fEmail.trim().toLowerCase()) === -1) return false;
+      return true;
+    });
+    const pages = Math.max(1, Math.ceil(filtered.length / PAGE));
+    const page = Math.min(s.page, pages);
+    const counts = {};
+    ['queued', 'sent', 'failed', 'suppressed', 'bounced', 'complained'].forEach((k) => {
+      counts[k] = s.log.filter((r) => r.status === k).length;
+    });
+
+    return {
+      atEmail: s.view === 'email', offEmail: s.view !== 'email',
+      atAnnouncements: s.view === 'announcements', offAnnouncements: s.view !== 'announcements',
+      goEmail: () => this.setState({ view: 'email' }),
+      goAnnouncements: () => this.setState({ view: 'announcements' }),
+      showEmail: s.view === 'email',
+      showAnnouncements: s.view === 'announcements',
+
+      domainChecked: s.domainChecked,
+      refreshDomain: () => this.setState({ domainChecked: 'just now' }),
+      sendTest: () => this.setState((st) => ({
+        testSent: true,
+        log: [{ id: 900 + st.log.length, when: 'Just now', to: 'elrond@imladris.example', kind: 'test', status: 'queued', attempts: 0, subject: 'Test message from the operator desk' }].concat(st.log),
+        page: 1,
+      })),
+      testSent: s.testSent,
+
+      statCards: ['queued', 'sent', 'failed', 'suppressed', 'bounced', 'complained'].map((k) => ({ label: k, count: counts[k] })),
+
+      fStatus: s.fStatus, onStatus: (e) => this.setState({ fStatus: e.target.value, page: 1 }),
+      fKind: s.fKind, onKind: (e) => this.setState({ fKind: e.target.value, page: 1 }),
+      fEmail: s.fEmail, onEmail: (e) => this.setState({ fEmail: e.target.value, page: 1 }),
+      resetFilters: () => this.setState({ fStatus: '', fKind: '', fEmail: '', page: 1 }),
+      logResultLabel: filtered.length === 1 ? '1 message' : filtered.length + ' messages',
+      logPage: filtered.slice((page - 1) * PAGE, page * PAGE).map((r) => ({
+        when: r.when, to: r.to, kind: r.kind, attempts: r.attempts, subject: r.subject,
+        statusLabel: r.status.charAt(0).toUpperCase() + r.status.slice(1),
+        isSent: r.status === 'sent',
+        isQueued: r.status === 'queued',
+        isBad: BAD.indexOf(r.status) !== -1,
+        isHeld: r.status === 'suppressed',
+        canRequeue: BAD.indexOf(r.status) !== -1,
+        requeue: () => this.setState((st) => ({
+          log: st.log.map((x) => (x.id === r.id ? { ...x, status: 'queued', attempts: x.attempts + 1 } : x)),
+        })),
+      })),
+      noLogRows: filtered.length === 0,
+      showLogPager: filtered.length > PAGE,
+      pageLabel: 'Page ' + page + ' of ' + pages,
+      atFirstPage: page <= 1,
+      atLastPage: page >= pages,
+      prevPage: () => this.setState((st) => ({ page: Math.max(1, st.page - 1) })),
+      nextPage: () => this.setState({ page: Math.min(pages, page + 1) }),
+
+      suppressEmail: s.suppressEmail,
+      onSuppressEmail: (e) => this.setState({ suppressEmail: e.target.value, suppressError: false }),
+      addSuppression: this.addSuppression,
+      suppressError: s.suppressError,
+      suppressions: s.suppressions.map((x) => ({
+        email: x.email, reason: x.reason, since: x.since,
+        release: () => this.setState((st) => ({ suppressions: st.suppressions.filter((y) => y.email !== x.email) })),
+      })),
+      noSuppressions: s.suppressions.length === 0,
+
+      hasBanner: !!s.banner,
+      noBanner: !s.banner,
+      bannerMessage: s.banner ? s.banner.message : '',
+      bannerVersion: s.banner ? s.banner.version : 0,
+      bannerDismissLabel: s.banner && s.banner.dismissible ? 'Dismissible' : 'Not dismissible',
+      clearBanner: () => this.setState((st) => ({
+        banner: null,
+        history: [{ when: 'Just now', by: 'elrond', event: 'clear', message: st.banner ? st.banner.message : '', channels: 'Banner' }].concat(st.history),
+      })),
+
+      draftMessage: s.draftMessage,
+      draftCount: s.draftMessage.length,
+      onDraftMessage: (e) => this.setState({ draftMessage: e.target.value, publishError: false }),
+      draftDismissible: s.draftDismissible, onDraftDismissible: (e) => this.setState({ draftDismissible: e.target.checked }),
+      draftBroadcast: s.draftBroadcast, onDraftBroadcast: (e) => this.setState({ draftBroadcast: e.target.checked }),
+      draftBroadcastEmail: s.draftBroadcastEmail, onDraftBroadcastEmail: (e) => this.setState({ draftBroadcastEmail: e.target.checked }),
+      broadcastWarning: s.draftBroadcastEmail,
+      broadcastReach: '1,204 active members',
+      publishBanner: this.publishBanner,
+      publishError: s.publishError,
+
+      history: s.history,
+      hasHistory: s.history.length > 0,
+      noHistory: s.history.length === 0,
+    };
+  }
+}
+</script>
+</body>
+</html>

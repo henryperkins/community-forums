@@ -3,10 +3,9 @@
     <p class="profile-badges-label">Marks of esteem</p>
     <ul class="badge-row">
         <?php foreach ($badges as $b): ?>
-            <?php // Brand dot, never an emoji — the design system forbids emoji in UI;
-                  // a mark's identity is carried by its name in lapidary caps. ?>
+            <?php // The supplied Imladris Commend Star replaces seed emoji. ?>
             <li class="badge-chip" title="<?= $e($b['name']) ?> — <?= $e($b['description']) ?>">
-                <span class="b-dot" aria-hidden="true"></span>
+                <?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'badge-star']) ?>
                 <span class="badge-name"><?= $e($b['name']) ?></span>
             </li>
         <?php endforeach; ?>

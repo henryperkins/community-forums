@@ -1365,7 +1365,7 @@ test('phase 4 custom profile fields: member self-edit and public display', async
 
   // Public profile (Overview tab) renders the saved facts.
   await visit(page, '/u/carol');
-  const publicFields = page.locator('.profile-fields');
+  const publicFields = page.locator('.profile-custom-fields');
   await expect(publicFields).toBeVisible();
   await expect(publicFields).toContainText('Favourite editor');
   await expect(publicFields).toContainText('Vim');

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="User profile" description="A member's public seat at the council: gilt identity cover, regard and marks of esteem, activity tabs with working search and pagination, connections, and the gated / empty / loading / error states" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes upRise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+  @keyframes upPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+</style>
+</helmet>
+
+<div data-screen-label="User profile" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <!-- ── Topbar ── -->
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+  </div>
+
+  <!-- ── Gated: this member keeps their seat private ── -->
+  <sc-if value="{{ isGated }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width: 560px; margin: 0 auto; padding: 96px 28px;">
+      <div style="padding: 40px 34px; text-align: center; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2"></rect><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"></path></svg>
+        <h1 style="margin: 14px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 1.8rem; color: var(--text-strong);">This seat is kept private</h1>
+        <p style="margin: 9px auto 0; max-width: 44ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">{{ memberName }} has asked that their activity be shown only to members they have accepted. You can still send them a message.</p>
+        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 22px;">
+          <button style="padding: 8px 18px; border-radius: var(--radius-md); border: 0; background: var(--brand); color: var(--accent-contrast); font-family: var(--font-label); font-size: .82rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Send a message</button>
+          <button style="padding: 8px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .82rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Request access</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isOpen }}" hint-placeholder-val="{{ true }}">
+  <div style="max-width: 1000px; margin: 0 auto; padding: 26px 28px 120px;">
+
+    <!-- ── Identity cover ── -->
+    <header style="position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: start; padding: 26px 28px 24px; background: linear-gradient(160deg, var(--parchment-100) 0%, var(--surface-raised) 62%); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+      <svg viewBox="0 0 100 100" width="230" height="230" fill="none" aria-hidden="true" style="position: absolute; right: -46px; top: -58px; color: var(--gold-500); opacity: .11; pointer-events: none;"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"></circle></g></svg>
+
+      <span style="position: relative; display: inline-flex;">
+        <span style="display: inline-flex; align-items: center; justify-content: center; width: 84px; height: 84px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: 1.9rem; box-shadow: var(--gilt);">{{ initials }}</span>
+        <sc-if value="{{ isOnline }}" hint-placeholder-val="{{ true }}"><span title="Active recently" aria-label="Online" style="position: absolute; right: 3px; bottom: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--presence); box-shadow: 0 0 0 3px var(--surface-raised);"></span></sc-if>
+      </span>
+
+      <div style="min-width: 0; position: relative;">
+        <h1 style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin: 2px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.25rem; line-height: 1.08; letter-spacing: -0.01em; color: var(--text-strong);">
+          {{ memberName }}
+          <span title="Cosmetic rank" style="padding: 2px 9px; border-radius: 999px; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;">Loremaster</span>
+        </h1>
+        <p style="margin: 6px 0 0; font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted);">@{{ handle }} · she / her</p>
+        <p style="margin: 5px 0 0; font-size: .92rem; color: var(--text-faint);">Member since March 2019 · Lothlórien</p>
+        <p style="margin: 4px 0 0; font-size: .92rem;"><a href="#" style="color: var(--artifact-link);">galadriel.lothlorien.example</a></p>
+        <dl style="display: flex; flex-wrap: wrap; gap: 22px; margin: 16px 0 0;">
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Posts</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">1,284</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Followers</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">312</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Following</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">96</dd></div>
+          <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint);">Solved</dt><dd style="margin: 3px 0 0; font-family: var(--font-mono); font-size: 1.05rem; color: var(--text-strong);">47</dd></div>
+        </dl>
+      </div>
+
+      <div style="position: relative; display: flex; flex-direction: column; align-items: flex-end; gap: 14px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 18px; background: var(--surface-raised); border: 1px solid var(--gold-200); border-radius: var(--radius-lg);">
+          <span style="display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-mono); font-size: 1.35rem; color: var(--text-strong);"><svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true" style="align-self: center;"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>5,140</span>
+          <span style="font-family: var(--font-label); font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Regard</span>
+        </div>
+
+        <sc-if value="{{ viewerIsSelf }}" hint-placeholder-val="{{ false }}">
+          <a href="#" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; text-decoration: none;" style-hover="background: var(--surface-sunken);">Edit profile</a>
+        </sc-if>
+        <sc-if value="{{ viewerIsGuest }}" hint-placeholder-val="{{ false }}">
+          <p style="max-width: 21ch; margin: 0; text-align: right; font-size: .84rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;">Join the council to follow {{ firstName }} or send a message.</p>
+        </sc-if>
+        <sc-if value="{{ viewerCanAct }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <sc-if value="{{ isFollowing }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleFollow }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--green-200); background: var(--brand-subtle); color: var(--on-brand-subtle); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="border-color: var(--rust); color: var(--rust);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>Following</button></sc-if>
+            <sc-if value="{{ notFollowing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleFollow }}" style="padding: 7px 16px; border-radius: var(--radius-md); border: 0; background: var(--brand); color: var(--accent-contrast); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Follow</button></sc-if>
+            <a href="#" style="padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; text-decoration: none;" style-hover="background: var(--surface-sunken);">Message</a>
+            <button onClick="{{ toggleMenu }}" aria-label="More actions" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+          <div role="menu" style="position: absolute; top: 100%; right: 0; z-index: 30; min-width: 186px; margin-top: 6px; padding: 5px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-md); box-shadow: var(--shadow-md); animation: upRise 160ms var(--ease-calm) both;">
+            <button style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; font-family: var(--font-body); font-size: .88rem; color: var(--text-body); cursor: pointer;" style-hover="background: var(--surface-sunken);">Copy link to profile</button>
+            <button style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; font-family: var(--font-body); font-size: .88rem; color: var(--text-body); cursor: pointer;" style-hover="background: var(--surface-sunken);">Report to the wardens</button>
+            <button onClick="{{ toggleBlock }}" style="display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; text-align: left; font-family: var(--font-body); font-size: .88rem; color: var(--rust); cursor: pointer;" style-hover="background: var(--surface-sunken);">{{ blockLabel }}</button>
+          </div>
+        </sc-if>
+      </div>
+    </header>
+
+    <!-- ── Moderator strip ── -->
+    <sc-if value="{{ viewerIsMod }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 11px 16px; background: var(--surface-info); border: 1px solid var(--river-200); border-left: 3px solid var(--info); border-radius: var(--radius-md);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-info)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <span style="flex: 1; font-size: .9rem; color: var(--on-info);">You are seeing this seat as a warden. Two resolved reports, no active sanctions.</span>
+        <a href="#" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-info);">Open the member record</a>
+      </div>
+    </sc-if>
+
+    <!-- ── Marks of esteem ── -->
+    <sc-if value="{{ showBadgeRow }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px;">
+        <span style="margin-right: 4px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: var(--text-faint);">Marks of esteem</span>
+        <sc-for list="{{ badges }}" as="badge" hint-placeholder-count="4">
+          <span title="{{ badge.note }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: 999px; font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-body);"><svg width="11" height="11" viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ badge.name }}</span>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <!-- ── Activity tabs ── -->
+    <nav aria-label="Profile activity" style="display: flex; gap: 2px; margin: 26px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atOverview }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goOverview }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Overview</button></sc-if>
+      <sc-if value="{{ offOverview }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goOverview }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Overview</button></sc-if>
+      <sc-if value="{{ atTopics }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goTopics }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Topics</button></sc-if>
+      <sc-if value="{{ offTopics }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goTopics }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Topics</button></sc-if>
+      <sc-if value="{{ atPosts }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goPosts }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Posts</button></sc-if>
+      <sc-if value="{{ offPosts }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goPosts }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Posts</button></sc-if>
+      <sc-if value="{{ atCommends }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goCommends }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Commends</button></sc-if>
+      <sc-if value="{{ offCommends }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goCommends }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Commends</button></sc-if>
+      <sc-if value="{{ atConnections }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goConnections }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Connections</button></sc-if>
+      <sc-if value="{{ offConnections }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goConnections }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Connections</button></sc-if>
+    </nav>
+
+    <!-- ── Loading ── -->
+    <sc-if value="{{ panelLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 26px 0 0;">
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 1px solid var(--border-hair);"><span style="height: 12px; width: 62%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span><span style="height: 9px; width: 38%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span></div>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 1px solid var(--border-hair);"><span style="height: 12px; width: 74%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span><span style="height: 9px; width: 30%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span></div>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 1px solid var(--border-hair);"><span style="height: 12px; width: 55%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span><span style="height: 9px; width: 44%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span></div>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 15px 0; border-bottom: 1px solid var(--border-hair);"><span style="height: 12px; width: 68%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span><span style="height: 9px; width: 35%; border-radius: 999px; background: var(--surface-sunken); animation: upPulse 1.6s var(--ease-calm) infinite;"></span></div>
+      </div>
+    </sc-if>
+
+    <!-- ── Error ── -->
+    <sc-if value="{{ panelError }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top: 26px; padding: 30px 26px; text-align: center; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg);">
+        <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">This record could not be read</h2>
+        <p style="margin: 7px auto 0; max-width: 46ch; font-size: .95rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">The archive did not answer in time. Nothing has been lost — try again in a moment.</p>
+        <button onClick="{{ retry }}" style="margin-top: 18px; padding: 8px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Try again</button>
+      </div>
+    </sc-if>
+
+    <!-- ── Overview ── -->
+    <sc-if value="{{ showOverview }}" hint-placeholder-val="{{ true }}">
+      <div style="display: grid; grid-template-columns: 1fr 292px; gap: 30px; align-items: start; padding-top: 26px;">
+        <div style="display: flex; flex-direction: column; gap: 28px; min-width: 0;">
+          <sc-if value="{{ hasBio }}" hint-placeholder-val="{{ true }}">
+            <section>
+              <h2 style="margin: 0 0 9px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">About</h2>
+              <p style="margin: 0; font-size: 1.02rem; line-height: 1.62; color: var(--text-body); text-wrap: pretty;">Keeper of the eval suite and an unreasonable number of half-finished rollback drills. I care most about the boring parts — the audit trail, the migration you can undo, the note someone leaves for whoever reads it next.</p>
+              <p style="margin: 12px 0 0; font-size: 1.02rem; line-height: 1.62; color: var(--text-body); text-wrap: pretty;">If I have asked you for evidence, it is not suspicion. It is how we keep the record whole.</p>
+            </section>
+          </sc-if>
+          <sc-if value="{{ hasTopics }}" hint-placeholder-val="{{ true }}">
+            <section>
+              <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Recent topics</h2>
+              <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
+                <sc-for list="{{ recentTopics }}" as="t" hint-placeholder-count="4">
+                  <li style="padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+                    <a href="#" style="font-size: 1rem; line-height: 1.4; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ t.title }}</a>
+                    <p style="display: flex; flex-wrap: wrap; gap: 12px; margin: 5px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);"><span>#{{ t.board }}</span><span>{{ t.replies }} replies</span><span>{{ t.time }}</span></p>
+                  </li>
+                </sc-for>
+              </ul>
+            </section>
+          </sc-if>
+          <sc-if value="{{ hasPosts }}" hint-placeholder-val="{{ true }}">
+            <section>
+              <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Recent posts</h2>
+              <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;">
+                <sc-for list="{{ recentPosts }}" as="p" hint-placeholder-count="3">
+                  <li style="padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+                    <a href="#" style="font-size: 1rem; line-height: 1.4; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ p.thread }}</a>
+                    <p style="margin: 5px 0 0; font-size: .93rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">{{ p.excerpt }}</p>
+                    <p style="display: flex; gap: 12px; margin: 5px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);"><span>{{ p.time }}</span><span>{{ p.commends }} commends</span></p>
+                  </li>
+                </sc-for>
+              </ul>
+            </section>
+          </sc-if>
+          <sc-if value="{{ overviewEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 46px 26px; text-align: center; background: var(--surface-raised); border: 1px dashed var(--border-soft); border-radius: var(--radius-lg);">
+              <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">No public activity yet</h2>
+              <p style="margin: 7px auto 0; max-width: 42ch; font-size: .95rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">{{ firstName }} has taken a seat but not yet spoken. Their first topic will appear here.</p>
+            </div>
+          </sc-if>
+        </div>
+
+        <aside style="display: flex; flex-direction: column; gap: 18px; padding: 18px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <div>
+            <h2 style="margin: 0 0 10px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Profile details</h2>
+            <dl style="display: flex; flex-direction: column; gap: 10px; margin: 0;">
+              <sc-for list="{{ customFields }}" as="f" hint-placeholder-count="4">
+                <div><dt style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .06em; color: var(--text-faint);">{{ f.label }}</dt><dd style="margin: 2px 0 0; font-size: .93rem; color: var(--text-body);">{{ f.value }}</dd></div>
+              </sc-for>
+            </dl>
+          </div>
+          <div style="height: 1px; background: var(--border-hair);"></div>
+          <div>
+            <h2 style="margin: 0 0 10px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Most active in</h2>
+            <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px;">
+              <sc-for list="{{ activeBoards }}" as="b" hint-placeholder-count="3">
+                <li style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;"><a href="#" style="font-size: .93rem; color: var(--text-body); text-decoration: none;" style-hover="color: var(--accent);"><span style="color: var(--gold-ink);">#</span>{{ b.slug }}</a><span style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">{{ b.count }}</span></li>
+              </sc-for>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
+
+    <!-- ── Topics / Posts (searchable, paged) ── -->
+    <sc-if value="{{ showList }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 22px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+          <label style="position: relative; flex: 1; max-width: 380px; display: block;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+            <input value="{{ query }}" onInput="{{ onSearch }}" placeholder="Search this member's activity" aria-label="Search this member's activity" style="width: 100%; padding: 8px 12px 8px 33px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: 999px; background: var(--surface-raised); font-family: var(--font-body); font-size: .93rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+          <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ resultLabel }}</span>
+          <span style="margin-left: auto; display: inline-flex; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: 999px;">
+            <sc-if value="{{ sortNewest }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setNewest }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Newest</button></sc-if>
+            <sc-if value="{{ notSortNewest }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setNewest }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Newest</button></sc-if>
+            <sc-if value="{{ sortRegard }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setRegard }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Most commended</button></sc-if>
+            <sc-if value="{{ notSortRegard }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setRegard }}" style="padding: 5px 13px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Most commended</button></sc-if>
+          </span>
+        </div>
+
+        <ul style="list-style: none; margin: 0; padding: 0;">
+          <sc-for list="{{ pageItems }}" as="row" hint-placeholder-count="5">
+            <li style="display: flex; align-items: baseline; gap: 16px; padding: 13px 2px; border-bottom: 1px solid var(--border-hair);">
+              <div style="flex: 1; min-width: 0;">
+                <a href="#" style="font-size: 1.02rem; line-height: 1.35; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ row.title }}</a>
+                <p style="margin: 5px 0 0; font-size: .92rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">{{ row.excerpt }}</p>
+                <p style="display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);"><span>#{{ row.board }}</span><span>{{ row.time }}</span><span>{{ row.replies }} replies</span></p>
+              </div>
+              <span style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);"><svg width="11" height="11" viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ row.commends }}</span>
+            </li>
+          </sc-for>
+        </ul>
+
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 44px 26px; text-align: center;">
+            <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Nothing matches “{{ query }}”</h2>
+            <p style="margin: 7px 0 0; font-size: .95rem; color: var(--text-muted);">Try a shorter phrase, or clear the search to see everything.</p>
+            <button onClick="{{ clearSearch }}" style="margin-top: 16px; padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Clear search</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showPager }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 18px;">
+            <button onClick="{{ prevPage }}" disabled="{{ atFirstPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Previous</button>
+            <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint);">{{ pageLabel }}</span>
+            <button onClick="{{ nextPage }}" disabled="{{ atLastPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Next</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ── Commends ── -->
+    <sc-if value="{{ showCommends }}" hint-placeholder-val="{{ false }}">
+      <div style="display: grid; grid-template-columns: 320px 1fr; gap: 30px; align-items: start; padding-top: 26px;">
+        <div style="padding: 24px; text-align: center; background: linear-gradient(160deg, var(--gold-100) 0%, var(--surface-raised) 70%); border: 1px solid var(--gold-200); border-radius: var(--radius-lg);">
+          <span style="display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 2rem; color: var(--text-strong);"><svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>5,140</span>
+          <p style="margin: 4px 0 0; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Regard</p>
+          <p style="margin: 14px 0 0; font-size: .93rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Regard is the sum of the reactions {{ firstName }}'s posts have received, with a small bonus for accepted answers. It recognises contribution — it grants no powers.</p>
+        </div>
+        <div>
+          <h2 style="margin: 0 0 11px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Most commended</h2>
+          <ul style="list-style: none; margin: 0; padding: 0;">
+            <sc-for list="{{ topCommended }}" as="c" hint-placeholder-count="5">
+              <li style="display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; min-width: 58px; font-family: var(--font-mono); font-size: .9rem; color: var(--gold-700);"><svg width="11" height="11" viewBox="0 0 100 100" aria-hidden="true"><path fill="var(--star)" d="M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z"></path></svg>{{ c.commends }}</span>
+                <div style="min-width: 0;"><a href="#" style="font-size: 1rem; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);">{{ c.title }}</a><p style="margin: 4px 0 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-faint);">#{{ c.board }} · {{ c.time }}</p></div>
+              </li>
+            </sc-for>
+          </ul>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ── Connections ── -->
+    <sc-if value="{{ showConnections }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 22px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+          <span style="display: inline-flex; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: 999px;">
+            <sc-if value="{{ connFollowers }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setFollowers }}" style="padding: 6px 15px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Followers · 312</button></sc-if>
+            <sc-if value="{{ notConnFollowers }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setFollowers }}" style="padding: 6px 15px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Followers · 312</button></sc-if>
+            <sc-if value="{{ connFollowing }}" hint-placeholder-val="{{ false }}"><button onClick="{{ setFollowing }}" style="padding: 6px 15px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Following · 96</button></sc-if>
+            <sc-if value="{{ notConnFollowing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ setFollowing }}" style="padding: 6px 15px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Following · 96</button></sc-if>
+          </span>
+          <label style="position: relative; flex: 1; max-width: 300px; display: block;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+            <input value="{{ connQuery }}" onInput="{{ onConnSearch }}" placeholder="Find a member" aria-label="Find a member" style="width: 100%; padding: 7px 12px 7px 33px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: 999px; background: var(--surface-raised); font-family: var(--font-body); font-size: .9rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+        </div>
+        <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px;">
+          <sc-for list="{{ connList }}" as="m" hint-placeholder-count="6">
+            <li style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+              <span style="display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .82rem;">{{ m.initials }}</span>
+              <div style="min-width: 0; flex: 1;">
+                <a href="#" style="display: block; font-size: .96rem; color: var(--text-strong); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" style-hover="color: var(--accent);">{{ m.name }}</a>
+                <p style="margin: 2px 0 0; font-family: var(--font-label); font-size: .7rem; letter-spacing: .03em; color: var(--text-faint);">{{ m.meta }}</p>
+              </div>
+              <button style="flex: 0 0 auto; padding: 5px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Follow</button>
+            </li>
+          </sc-for>
+        </ul>
+        <sc-if value="{{ noConnections }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 44px 26px; text-align: center;">
+            <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">No one here yet</h2>
+            <p style="margin: 7px 0 0; font-size: .95rem; color: var(--text-muted);">When members follow {{ firstName }}, they will be listed here.</p>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1160,&quot;height&quot;:900},&quot;viewer&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;guest&quot;,&quot;member&quot;,&quot;self&quot;,&quot;moderator&quot;],&quot;default&quot;:&quot;member&quot;,&quot;tsType&quot;:&quot;'guest' | 'member' | 'self' | 'moderator'&quot;,&quot;section&quot;:&quot;Who is looking&quot;},&quot;gated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Who is looking&quot;},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;loading&quot;,&quot;error&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'loading' | 'error' | 'empty'&quot;,&quot;section&quot;:&quot;Panel state&quot;},&quot;showBadges&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panel state&quot;},&quot;online&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Panel state&quot;}}">
+const TOPICS = [
+  { title: 'Evaluations as ritual, not gate', board: 'counsel', time: '2h', replies: 23, commends: 31, excerpt: 'We keep treating the eval suite as a turnstile. What if it were a rite the whole council kept?' },
+  { title: 'A rollback drill you can actually run on a Tuesday', board: 'practice', time: '5h', replies: 41, commends: 54, excerpt: 'Fifteen minutes, one migration, and a written record at the end. Here is the script we use.' },
+  { title: 'On exposing capability before we are asked', board: 'counsel', time: '1d', replies: 12, commends: 47, excerpt: 'A decision, recorded: we publish the capability notes the same day we brief the council.' },
+  { title: 'The migration that could not be undone — a postmortem', board: 'archive', time: '3d', replies: 68, commends: 92, excerpt: 'No blame in this one. Only the four places we could have stopped and did not.' },
+  { title: 'Naming things so the next reader is not lost', board: 'lore', time: '5d', replies: 19, commends: 26, excerpt: 'Half our confusion is vocabulary drift. A short proposal for keeping the lexicon honest.' },
+  { title: 'What belongs in the audit trail, and what does not', board: 'practice', time: '1w', replies: 33, commends: 38, excerpt: 'Everything that changes state. Nothing that merely reads. The line is simpler than we make it.' },
+  { title: 'Quiet hours for the notification worker', board: 'practice', time: '2w', replies: 8, commends: 14, excerpt: 'The queue does not need to wake anyone at three in the morning to tell them about a typo fix.' },
+  { title: 'Reading the archive backwards', board: 'lore', time: '3w', replies: 15, commends: 22, excerpt: 'A habit worth keeping: start from the last decision and walk back until the reasoning appears.' },
+  { title: 'Against the heroic on-call rotation', board: 'counsel', time: '1mo', replies: 52, commends: 61, excerpt: 'If one person is the reason it stays up, the system is not up. It is being held.' },
+  { title: 'Evidence, not assurance', board: 'archive', time: '1mo', replies: 27, commends: 44, excerpt: 'When I ask for the artefact, I am not doubting you. I am making the record survive both of us.' },
+  { title: 'A smaller composer', board: 'practice', time: '2mo', replies: 11, commends: 17, excerpt: 'Every affordance we added cost us a line of the draft. Proposing we take four of them back.' },
+  { title: 'The welcome that actually welcomes', board: 'welcome', time: '2mo', replies: 36, commends: 39, excerpt: 'New members read exactly one thing. We have written eleven. A proposal to cut it to one.' },
+];
+
+const POSTS = [
+  { title: 'Re: Who changed what — and can you prove the rollback?', board: 'practice', time: '1h', replies: 41, commends: 28, excerpt: 'The diff is small; the audit trail must be whole. Here is the drill we ran on Tuesday, in full.' },
+  { title: 'Re: Should anti-abuse hold first posts?', board: 'counsel', time: '4h', replies: 17, commends: 19, excerpt: 'Hold them, but tell the author plainly that it is a hold and not a rejection. The wording matters.' },
+  { title: 'Re: Tag merge proposal — #eval and #evaluation', board: 'lore', time: '1d', replies: 9, commends: 12, excerpt: 'Merge, and keep the older slug as the alias. Breaking inbound links to prove a point is not a point.' },
+  { title: 'Re: The migration that could not be undone', board: 'archive', time: '2d', replies: 68, commends: 55, excerpt: 'Four stopping points, and the last one was a person who felt rushed. That is a design problem.' },
+  { title: 'Re: Do we need a second moderator queue?', board: 'counsel', time: '4d', replies: 22, commends: 16, excerpt: 'Not a second queue. A second pair of eyes on the same queue, with a claim that expires.' },
+  { title: 'Re: Custom emoji policy', board: 'welcome', time: '1w', replies: 31, commends: 9, excerpt: 'Authored posts, yes. Chrome, no. The distinction has held up well for a year now.' },
+  { title: 'Re: Presence is a privacy setting, not a feature flag', board: 'practice', time: '2w', replies: 14, commends: 33, excerpt: 'Whoever chose the default chose it for everyone. Let us choose it deliberately and write it down.' },
+  { title: 'Re: Why is the leaderboard so quiet this month?', board: 'lore', time: '3w', replies: 6, commends: 7, excerpt: 'Because we stopped rewarding volume. This is the outcome we asked for, arriving on schedule.' },
+];
+
+const FOLLOWERS = [
+  { name: 'Elrond', meta: 'Legend · followed you 2 years ago' },
+  { name: 'Erestor', meta: 'Legend · followed you 18 months ago' },
+  { name: 'Glorfindel', meta: 'Loremaster · followed you 1 year ago' },
+  { name: 'Arwen Undómiel', meta: 'Veteran · followed you 11 months ago' },
+  { name: 'Lindir', meta: 'Veteran · followed you 8 months ago' },
+  { name: 'Bilbo Baggins', meta: 'Member · followed you 6 months ago' },
+  { name: 'Gildor Inglorion', meta: 'Member · followed you 4 months ago' },
+  { name: 'Melian', meta: 'Loremaster · followed you 2 months ago' },
+  { name: 'Círdan', meta: 'Legend · followed you 5 weeks ago' },
+];
+
+const FOLLOWING = [
+  { name: 'Elrond', meta: 'Legend · since 2019' },
+  { name: 'Círdan', meta: 'Legend · since 2020' },
+  { name: 'Melian', meta: 'Loremaster · since 2021' },
+  { name: 'Lindir', meta: 'Veteran · since 2023' },
+  { name: 'Nimrodel', meta: 'Member · since 2024' },
+  { name: 'Haldir', meta: 'Veteran · since 2024' },
+];
+
+function initialsOf(label) {
+  const parts = String(label || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+const PAGE_SIZE = 5;
+
+class Component extends DCLogic {
+  state = {
+    tab: 'overview',
+    query: '',
+    sort: 'newest',
+    page: 1,
+    conn: 'followers',
+    connQuery: '',
+    following: false,
+    blocked: false,
+    menuOpen: false,
+    recovered: false,
+  };
+
+  go = (tab) => () => this.setState({ tab, query: '', page: 1, menuOpen: false });
+
+  renderVals() {
+    const s = this.state;
+    const p = this.props;
+    const viewer = p.viewer || 'member';
+    const dataState = s.recovered ? 'live' : (p.dataState || 'live');
+    const memberName = 'Galadriel';
+    const firstName = memberName.split(' ')[0];
+
+    const isEmpty = dataState === 'empty';
+    const source = s.tab === 'posts' ? POSTS : TOPICS;
+    const pool = isEmpty ? [] : source;
+    const q = s.query.trim().toLowerCase();
+    const filtered = q
+      ? pool.filter((r) => (r.title + ' ' + r.excerpt + ' ' + r.board).toLowerCase().includes(q))
+      : pool.slice();
+    if (s.sort === 'regard') filtered.sort((a, b) => b.commends - a.commends);
+
+    const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const page = Math.min(s.page, pages);
+    const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const connSource = s.conn === 'following' ? FOLLOWING : FOLLOWERS;
+    const cq = s.connQuery.trim().toLowerCase();
+    const connList = (isEmpty ? [] : connSource)
+      .filter((m) => !cq || m.name.toLowerCase().includes(cq))
+      .map((m) => ({ ...m, initials: initialsOf(m.name) }));
+
+    const isList = s.tab === 'topics' || s.tab === 'posts';
+    const ready = dataState === 'live' || dataState === 'empty';
+    const overviewTopics = isEmpty ? [] : TOPICS.slice(0, 4);
+    const overviewPosts = isEmpty ? [] : POSTS.slice(0, 3);
+
+    return {
+      memberName, firstName, handle: 'galadriel', initials: 'GA',
+      isGated: !!p.gated,
+      isOpen: !p.gated,
+      isOnline: p.online !== false,
+      showBadgeRow: p.showBadges !== false && !isEmpty,
+
+      viewerIsSelf: viewer === 'self',
+      viewerIsGuest: viewer === 'guest',
+      viewerIsMod: viewer === 'moderator',
+      viewerCanAct: viewer === 'member' || viewer === 'moderator',
+      isFollowing: s.following,
+      notFollowing: !s.following,
+      menuOpen: s.menuOpen,
+      blockLabel: s.blocked ? 'Unblock this member' : 'Block this member',
+      toggleFollow: () => this.setState((st) => ({ following: !st.following })),
+      toggleBlock: () => this.setState((st) => ({ blocked: !st.blocked, menuOpen: false })),
+      toggleMenu: () => this.setState((st) => ({ menuOpen: !st.menuOpen })),
+
+      atOverview: s.tab === 'overview', offOverview: s.tab !== 'overview',
+      atTopics: s.tab === 'topics', offTopics: s.tab !== 'topics',
+      atPosts: s.tab === 'posts', offPosts: s.tab !== 'posts',
+      atCommends: s.tab === 'commends', offCommends: s.tab !== 'commends',
+      atConnections: s.tab === 'connections', offConnections: s.tab !== 'connections',
+      goOverview: this.go('overview'), goTopics: this.go('topics'), goPosts: this.go('posts'),
+      goCommends: this.go('commends'), goConnections: this.go('connections'),
+
+      panelLoading: dataState === 'loading',
+      panelError: dataState === 'error',
+      retry: () => this.setState({ recovered: true }),
+      skeletons: [{ wide: '62%', thin: '38%' }, { wide: '74%', thin: '30%' }, { wide: '55%', thin: '44%' }, { wide: '68%', thin: '35%' }],
+
+      showOverview: ready && s.tab === 'overview',
+      showList: ready && isList,
+      showCommends: ready && s.tab === 'commends',
+      showConnections: ready && s.tab === 'connections',
+
+      hasBio: !isEmpty,
+      hasTopics: overviewTopics.length > 0,
+      hasPosts: overviewPosts.length > 0,
+      overviewEmpty: isEmpty,
+      recentTopics: overviewTopics,
+      recentPosts: overviewPosts.map((r) => ({ thread: r.title, excerpt: r.excerpt, time: r.time, commends: r.commends })),
+      customFields: isEmpty ? [] : [
+        { label: 'Pronouns', value: 'she / her' },
+        { label: 'Timezone', value: 'UTC+1 · Lothlórien' },
+        { label: 'Works on', value: 'Evaluation, archive integrity' },
+        { label: 'Ask me about', value: 'Rollback drills, the lexicon' },
+      ],
+      activeBoards: isEmpty ? [] : [
+        { slug: 'counsel', count: 412 }, { slug: 'practice', count: 388 },
+        { slug: 'archive', count: 241 }, { slug: 'lore', count: 163 },
+      ],
+      badges: [
+        { name: 'First light', note: 'Among the first hundred members' },
+        { name: 'Keeper of the record', note: '100 accepted answers' },
+        { name: 'Patient counsel', note: 'Commended by 50 different members' },
+        { name: 'Warden emerita', note: 'Served two terms at the warden’s table' },
+      ],
+
+      query: s.query,
+      onSearch: (e) => this.setState({ query: e.target.value, page: 1 }),
+      clearSearch: () => this.setState({ query: '', page: 1 }),
+      sortNewest: s.sort === 'newest', notSortNewest: s.sort !== 'newest',
+      sortRegard: s.sort === 'regard', notSortRegard: s.sort !== 'regard',
+      setNewest: () => this.setState({ sort: 'newest', page: 1 }),
+      setRegard: () => this.setState({ sort: 'regard', page: 1 }),
+      resultLabel: filtered.length === 1 ? '1 entry' : filtered.length + ' entries',
+      pageItems,
+      noResults: filtered.length === 0,
+      showPager: filtered.length > PAGE_SIZE,
+      pageLabel: 'Page ' + page + ' of ' + pages,
+      atFirstPage: page <= 1,
+      atLastPage: page >= pages,
+      prevPage: () => this.setState((st) => ({ page: Math.max(1, st.page - 1) })),
+      nextPage: () => this.setState({ page: Math.min(pages, page + 1) }),
+
+      topCommended: isEmpty ? [] : TOPICS.slice().sort((a, b) => b.commends - a.commends).slice(0, 5),
+
+      connFollowers: s.conn === 'followers', notConnFollowers: s.conn !== 'followers',
+      connFollowing: s.conn === 'following', notConnFollowing: s.conn !== 'following',
+      setFollowers: () => this.setState({ conn: 'followers', connQuery: '' }),
+      setFollowing: () => this.setState({ conn: 'following', connQuery: '' }),
+      connQuery: s.connQuery,
+      onConnSearch: (e) => this.setState({ connQuery: e.target.value }),
+      connList,
+      noConnections: connList.length === 0,
+    };
+  }
+}
+</script>
+</body>
+</html>

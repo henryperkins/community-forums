@@ -9,7 +9,7 @@ use Tests\Support\TestCase;
 /**
  * Top-contributors (leaderboard) visual-fidelity pass against the Imladris UI kit
  * (ui_kits/retroboards Leaderboard). Asserts observable render behaviour:
- *  - regard uses the brand commend star (✦), never a generic ★;
+ *  - regard uses the supplied Imladris Commend Star path, never a text symbol;
  *  - the header carries the "The council" eyebrow and a sentence-case title;
  *  - the top three render as identity cards with a "@handle · title" sub-line;
  *  - lower ranks render as compact rows with the smaller mono regard.
@@ -36,13 +36,15 @@ final class AppLeaderboardFidelityTest extends TestCase
         }
     }
 
-    public function test_regard_uses_the_brand_commend_star_not_a_generic_star(): void
+    public function test_regard_uses_the_supplied_commend_star_not_a_text_symbol(): void
     {
         $this->seedRankedCouncil();
         $res = $this->get('/leaderboard');
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'star-marker" aria-hidden="true">✦');
-        $this->assertDontSeeText($res, 'star-marker" aria-hidden="true">★');
+        $this->assertSeeText($res, 'icon-commend-star star-marker');
+        $this->assertSeeText($res, 'M50 16 58.5 41.5 84 50 58.5 58.5 50 84 41.5 58.5 16 50 41.5 41.5Z');
+        $this->assertDontSeeText($res, '✦');
+        $this->assertDontSeeText($res, '★');
     }
 
     public function test_header_has_the_council_eyebrow_and_a_sentence_case_title(): void
