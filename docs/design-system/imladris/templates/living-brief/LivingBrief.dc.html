@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Living brief" description="The evidence-bound Thread Intelligence brief — where the discussion stands, the counsels it was drawn from, and the curator's tools. Parchment register, three provenance postures." -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes lbFade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  a { color: var(--accent); }
+  a:hover { color: var(--gold-700); }
+</style>
+</helmet>
+
+<div data-screen-label="Living brief" style="min-height: 100vh; font-family: var(--font-body); color: var(--text-body);">
+
+  <div style="max-width: 812px; margin: 0 auto; padding: 34px 28px 90px;">
+
+    <!-- ── The topic this brief belongs to ── -->
+    <p style="display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-mono); font-size: .74rem; color: var(--text-muted);">
+      <a href="#" style="color: var(--text-muted); text-decoration: none;">Home</a>
+      <span style="color: var(--text-faint);">/</span>
+      <a href="#" style="color: var(--accent); text-decoration: none;"><span style="color: var(--gold-600);">#</span>the-archive</a>
+      <span style="color: var(--text-faint);">/</span>
+      <span style="color: var(--text-faint);">brief</span>
+    </p>
+    <h1 style="margin: 11px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 1.62rem; line-height: 1.2; letter-spacing: -0.005em; color: var(--text-muted); text-wrap: balance; max-width: 34ch;">Where should ratified decisions live once the council has spoken?</h1>
+    <p style="margin: 7px 0 0; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">Opened by Erestor · 26 counsels · the-archive</p>
+
+    <!-- ══ EMPTY — no brief drawn yet ══ -->
+    <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+      <section style="margin-top: 26px; padding: 30px 28px; border: 1px dashed var(--border-hair); border-radius: var(--radius-lg); background: var(--surface-sunken); text-align: center;">
+        <p style="margin: 0 0 6px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">No brief yet</p>
+        <p style="margin: 0 auto; max-width: 48ch; font-size: 1rem; line-height: 1.6; color: var(--text-muted);">The archive draws a brief once a topic carries six eligible public counsels. This one carries four.</p>
+      </section>
+    </sc-if>
+
+    <!-- ══ THE BRIEF ══ -->
+    <sc-if value="{{ hasBrief }}" hint-placeholder-val="{{ true }}">
+    <section style="margin-top: 26px; padding: 24px 28px 26px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rule-gold); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); animation: lbFade 240ms var(--ease-calm);">
+
+      <!-- Last-good fallback band -->
+      <sc-if value="{{ isLastGood }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; align-items: flex-start; gap: 11px; margin: -6px 0 20px; padding: 11px 14px; background: var(--surface-review); border: 1px solid var(--gold-200); border-radius: var(--radius-md);">
+          <span style="flex: 0 0 auto; margin-top: 1px; color: var(--gold-700);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16h.01"></path></svg></span>
+          <div>
+            <p style="margin: 0; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--on-review);">Showing the last verified brief</p>
+            <p style="margin: 3px 0 0; font-size: .9rem; line-height: 1.55; color: var(--text-muted);">Yesterday's refresh could not be checked against its sources, so it was not published. Nothing was overwritten.</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Automation paused band -->
+      <sc-if value="{{ isPaused }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; align-items: center; gap: 11px; margin: -6px 0 20px; padding: 11px 14px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-md);">
+          <span style="flex: 0 0 auto; color: var(--text-muted);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></span>
+          <p style="margin: 0; font-size: .92rem; color: var(--text-muted);">Automatic refresh is paused for this topic. The brief stands as published.</p>
+        </div>
+      </sc-if>
+
+      <!-- Head -->
+      <div style="display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap;">
+        <div style="flex: 1 1 300px; min-width: 0;">
+          <p style="display: flex; align-items: center; gap: 7px; margin: 0 0 5px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">
+            <span style="color: var(--star); letter-spacing: 0;">✦</span>Living brief
+          </p>
+          <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.94rem; line-height: 1.14; letter-spacing: -0.01em; color: var(--text-strong); text-wrap: balance;">Where the discussion stands</h2>
+        </div>
+        <p style="display: flex; align-items: center; gap: 10px; margin: 4px 0 0; font-family: var(--font-mono); font-size: .7rem; color: var(--text-faint); white-space: nowrap;">
+          <span style="color: var(--gold-700);">{{ versionLabel }}</span>
+          <span>·</span>
+          <span>{{ publishedLabel }}</span>
+        </p>
+      </div>
+
+      <!-- Provenance line — posture: approved -->
+      <sc-if value="{{ postureApprove }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ approved }}" hint-placeholder-val="{{ true }}">
+          <p style="display: flex; align-items: center; gap: 8px; margin: 13px 0 0; padding: 7px 12px; background: var(--brand-subtle); border-radius: var(--radius-sm); font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--green-800);">
+            <span style="flex: 0 0 auto;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span>
+            Drafted by the archive · approved by <a href="#" style="color: var(--green-800);">Galadriel</a> two days ago
+          </p>
+        </sc-if>
+        <sc-if value="{{ awaiting }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 13px 0 0; padding: 9px 12px; background: var(--surface-review); border: 1px solid var(--gold-200); border-radius: var(--radius-sm);">
+            <p style="margin: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--on-review);">Proposed by the archive · awaiting a curator</p>
+            <span style="flex: 1;"></span>
+            <button onClick="{{ approve }}" style="padding: 5px 14px; border: none; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; cursor: pointer;" style-hover="background: var(--green-800);">Approve</button>
+            <button onClick="{{ startAmend }}" style="padding: 5px 10px; border: none; background: transparent; font-family: var(--font-label); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--gold-700);">Amend first</button>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <!-- Provenance line — posture: quiet -->
+      <sc-if value="{{ postureQuiet }}" hint-placeholder-val="{{ false }}">
+        <p style="margin: 11px 0 0; font-family: var(--font-mono); font-size: .68rem; color: var(--text-faint);">Drawn from the counsels below. <a href="#" style="color: var(--text-muted);">How this is made</a></p>
+      </sc-if>
+
+      <!-- Body -->
+      <sc-if value="{{ amending }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 18px;">
+          <textarea value="{{ draft }}" onInput="{{ setDraft }}" style="display: block; width: 100%; box-sizing: border-box; min-height: 132px; padding: 12px 14px; background: var(--surface-sunken); border: 1px solid var(--border-strong); border-radius: var(--radius-md); box-shadow: var(--shadow-inset); font-family: var(--font-body); font-size: 1rem; line-height: 1.62; color: var(--text-body); resize: vertical;"></textarea>
+          <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+            <button onClick="{{ saveAmend }}" style="padding: 6px 16px; border: none; border-radius: var(--radius-md); background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; cursor: pointer;" style-hover="background: var(--green-800);">Publish amendment</button>
+            <button onClick="{{ cancelAmend }}" style="padding: 6px 10px; border: none; background: transparent; font-family: var(--font-label); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Cancel</button>
+            <span style="flex: 1;"></span>
+            <span style="font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint);">Curation is recorded against your name.</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ reading }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 18px; max-width: 64ch; font-size: 1.0625rem; line-height: 1.62; color: var(--text-body);">
+          <p style="margin: 0 0 13px;">{{ para1 }}<sup onClick="{{ mark1 }}" style="margin-left: 2px; font-family: var(--font-mono); font-size: .6em; color: var(--gold-700); cursor: pointer;" style-hover="color: var(--accent);">1</sup><sup onClick="{{ mark2 }}" style="margin-left: 3px; font-family: var(--font-mono); font-size: .6em; color: var(--gold-700); cursor: pointer;" style-hover="color: var(--accent);">2</sup></p>
+          <p style="margin: 0 0 13px;">Two mechanisms are on the table. A decision register that mirrors the topic and keeps a back-link to it; or a status promotion that freezes the topic, so the counsel itself becomes the artifact.<sup onClick="{{ mark3 }}" style="margin-left: 2px; font-family: var(--font-mono); font-size: .6em; color: var(--gold-700); cursor: pointer;" style-hover="color: var(--accent);">3</sup></p>
+          <p style="margin: 0;">Unsettled: who may retire a ratified decision once it is entered, and whether a superseded decision stays readable or is sealed.<sup onClick="{{ mark4 }}" style="margin-left: 2px; font-family: var(--font-mono); font-size: .6em; color: var(--gold-700); cursor: pointer;" style-hover="color: var(--accent);">4</sup><sup onClick="{{ mark5 }}" style="margin-left: 3px; font-family: var(--font-mono); font-size: .6em; color: var(--gold-700); cursor: pointer;" style-hover="color: var(--accent);">5</sup></p>
+        </div>
+      </sc-if>
+
+      <!-- ── Evidence ledger ── -->
+      <div style="margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--border-hair);">
+        <p style="margin: 0 0 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Drawn from</p>
+        <sc-for list="{{ sources }}" as="src" hint-placeholder-count="5">
+          <div onClick="{{ src.select }}" style="position: relative; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 0 10px; padding: 9px 11px 10px; margin: 0 -11px; border-radius: var(--radius-md); cursor: pointer;" style-hover="background: var(--surface-sunken);">
+            <sc-if value="{{ src.on }}" hint-placeholder-val="{{ false }}">
+              <span style="position: absolute; inset: 0; border-radius: var(--radius-md); background: var(--gold-soft); box-shadow: inset 3px 0 0 var(--gold-500); pointer-events: none;"></span>
+            </sc-if>
+            <span style="position: relative; grid-row: 1 / span 2; font-family: var(--font-mono); font-size: .72rem; color: var(--gold-700); padding-top: 2px;">{{ src.n }}</span>
+            <p style="position: relative; margin: 0 0 3px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+              <span style="font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1rem; color: var(--text-strong);">{{ src.who }}</span>
+              <span style="font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint);">{{ src.ref }}</span>
+              <sc-if value="{{ src.masked }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); border: 1px solid var(--border-hair); border-radius: 999px; padding: 1px 7px;">Name withheld</span></sc-if>
+            </p>
+            <p style="position: relative; margin: 0; font-size: .93rem; line-height: 1.5; color: var(--text-muted); font-style: italic;">{{ src.quote }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- ── Related topics ── -->
+      <sc-if value="{{ relatedOn }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border-hair);">
+          <p style="margin: 0 0 12px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Related counsel</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+            <sc-for list="{{ related }}" as="rel" hint-placeholder-count="2">
+              <a href="#" style="display: grid; gap: 3px; padding: 11px 14px; border: 1px solid var(--border-hair); border-left: 3px solid var(--artifact-link); border-radius: var(--radius-sm); background: var(--surface-raised); text-decoration: none;" style-hover="border-color: var(--green-200); box-shadow: var(--shadow-xs);">
+                <strong style="font-family: var(--font-display); font-weight: var(--weight-medium); font-size: 1rem; line-height: 1.2; color: var(--text-strong);">{{ rel.title }}</strong>
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .03em; color: var(--text-muted);">{{ rel.reason }}</span>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ── Full provenance panel ── -->
+      <sc-if value="{{ postureFull }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 22px; padding: 15px 17px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-md);">
+          <p style="margin: 0 0 10px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">How this brief was made</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 20px;">
+            <p style="margin: 0;"><span style="display: block; font-family: var(--font-mono); font-size: .95rem; color: var(--text-strong);">24 counsels</span><span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .04em; color: var(--text-muted);">eligible and public, through #126</span></p>
+            <p style="margin: 0;"><span style="display: block; font-family: var(--font-mono); font-size: .95rem; color: var(--text-strong);">31 July, 04:12 UTC</span><span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .04em; color: var(--text-muted);">last read of the record</span></p>
+            <p style="margin: 0;"><span style="display: block; font-family: var(--font-mono); font-size: .95rem; color: var(--text-strong);">v4 · curator-approved</span><span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .04em; color: var(--text-muted);">nothing publishes unreviewed</span></p>
+          </div>
+          <p style="margin: 12px 0 0; padding-top: 11px; border-top: 1px solid var(--border-hair); font-size: .89rem; line-height: 1.55; color: var(--text-muted);">Private, hidden, and held counsel is excluded, and account details are never sent. Every claim above resolves to a post you can open. <a href="#">How thread intelligence works →</a></p>
+        </div>
+      </sc-if>
+
+    </section>
+    </sc-if>
+
+    <!-- ══ CURATOR'S TOOLS ══ -->
+    <sc-if value="{{ isCurator }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top: 14px; padding: 13px 18px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <p style="margin: 0; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Curate</p>
+          <button onClick="{{ refresh }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; color: var(--accent); cursor: pointer;" style-hover="color: var(--gold-700);">{{ refreshLabel }}</button>
+          <button onClick="{{ startAmend }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; color: var(--accent); cursor: pointer;" style-hover="color: var(--gold-700);">Amend</button>
+          <button onClick="{{ togglePanel }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; color: var(--accent); cursor: pointer;" style-hover="color: var(--gold-700);">{{ historyLabel }}</button>
+          <button onClick="{{ toggleAutomation }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">{{ automationLabel }}</button>
+          <span style="flex: 1;"></span>
+          <button onClick="{{ retire }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; color: var(--danger); cursor: pointer; opacity: .8;" style-hover="opacity: 1;">{{ retireLabel }}</button>
+        </div>
+
+        <sc-if value="{{ panelOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--border-hair); animation: lbFade 180ms var(--ease-calm);">
+            <p style="margin: 0 0 9px; font-family: var(--font-label); font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint);">Earlier versions</p>
+            <sc-for list="{{ history }}" as="h" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border-hair);">
+                <span style="font-family: var(--font-mono); font-size: .72rem; color: var(--gold-700); min-width: 24px;">{{ h.v }}</span>
+                <span style="font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-body);">{{ h.who }}</span>
+                <span style="font-family: var(--font-mono); font-size: .66rem; color: var(--text-faint);">{{ h.when }}</span>
+                <span style="flex: 1;"></span>
+                <button onClick="{{ h.restore }}" style="border: none; background: transparent; padding: 0; font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); cursor: pointer;" style-hover="color: var(--gold-700);">Restore</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <p style="margin: 22px 0 0; font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-faint); text-align: center;">The archive proposes; the council approves.</p>
+
+  </div>
+
+  <!-- Toast -->
+  <sc-if value="{{ toastOn }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); z-index: 60; padding: 10px 20px; background: var(--green-900); color: var(--parchment-50); border-radius: var(--radius-pill); box-shadow: var(--shadow-lg); font-family: var(--font-label); font-size: .76rem; letter-spacing: .03em; animation: lbFade 180ms var(--ease-calm);">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;posture&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;approve&quot;,&quot;quiet&quot;,&quot;full&quot;],&quot;default&quot;:&quot;approve&quot;,&quot;tsType&quot;:&quot;'approve' | 'quiet' | 'full'&quot;,&quot;section&quot;:&quot;Provenance&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;curator&quot;,&quot;member&quot;],&quot;default&quot;:&quot;curator&quot;,&quot;tsType&quot;:&quot;'curator' | 'member'&quot;,&quot;section&quot;:&quot;Viewer&quot;},&quot;state&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;published&quot;,&quot;awaiting&quot;,&quot;lastGood&quot;,&quot;paused&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;published&quot;,&quot;tsType&quot;:&quot;'published' | 'awaiting' | 'lastGood' | 'paused' | 'empty'&quot;,&quot;section&quot;:&quot;Viewer&quot;},&quot;showRelated&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Viewer&quot;}}">
+const SOURCES = [
+  { n: '1', who: 'Erestor', ref: '#102 · 4 days ago', masked: false,
+    quote: 'A decision that lives only in the topic that produced it is a decision you must re-litigate to find.' },
+  { n: '2', who: 'Galadriel', ref: '#108 · 4 days ago', masked: false,
+    quote: 'The register should mirror, not replace. Break the back-link and you have made an orphan.' },
+  { n: '3', who: 'Elrond', ref: '#114 · 3 days ago', masked: false,
+    quote: 'Freezing the topic is the honest form: the artifact is the counsel, not a summary of it.' },
+  { n: '4', who: 'Celebrían', ref: '#121 · 2 days ago', masked: false,
+    quote: 'Retirement needs a warden. Whoever may enter a decision should not also be able to erase it.' },
+  { n: '5', who: 'Anonymous', ref: '#126 · 2 days ago', masked: true,
+    quote: 'A sealed decision is still a decision. Seal the edits, not the reading.' },
+];
+
+const RELATED = [
+  { title: 'On exposing capability before we are asked', reason: 'Cites the same register proposal' },
+  { title: 'Who changed what — and can you prove the rollback?', reason: 'Shares the precedence-log question' },
+];
+
+const HISTORY = [
+  { v: 'v3', who: 'Amended by Galadriel', when: '5 days ago' },
+  { v: 'v2', who: 'Drafted by the archive', when: '8 days ago' },
+  { v: 'v1', who: 'Drafted by the archive', when: '11 days ago' },
+];
+
+const PARA1 = 'The council is converging on one durable home for ratified decisions, rather than leaving each where it was made.';
+
+class Component extends DCLogic {
+  state = {
+    version: 4, published: 'two days ago', selected: null, amending: false, draft: '',
+    para1: PARA1, refreshing: false, panelOpen: false, approvedOverride: null,
+    pausedOverride: null, retired: false, toast: null,
+  };
+
+  showToast(msg) {
+    clearTimeout(this._t);
+    this.setState({ toast: msg });
+    this._t = setTimeout(() => this.setState({ toast: null }), 2600);
+  }
+
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._r); }
+
+  renderVals() {
+    const s = this.state;
+    const posture = this.props.posture ?? 'approve';
+    const role = this.props.role ?? 'curator';
+    const stateProp = this.props.state ?? 'published';
+
+    const isCurator = role === 'curator';
+    const paused = s.pausedOverride ?? (stateProp === 'paused');
+    const isEmpty = stateProp === 'empty' || s.retired;
+    const approved = s.approvedOverride ?? (stateProp !== 'awaiting');
+
+    const select = (n) => () =>
+      this.setState((p) => ({ selected: p.selected === n ? null : n }));
+
+    return {
+      isEmpty,
+      hasBrief: !isEmpty,
+      isCurator,
+      isLastGood: !isEmpty && stateProp === 'lastGood',
+      isPaused: !isEmpty && paused,
+
+      postureApprove: posture === 'approve',
+      postureQuiet: posture === 'quiet',
+      postureFull: posture === 'full',
+      approved: posture === 'approve' && approved,
+      awaiting: posture === 'approve' && !approved,
+      approve: () => { this.setState({ approvedOverride: true }); this.showToast('Approved — the brief is published to the topic.'); },
+
+      versionLabel: 'v' + s.version,
+      publishedLabel: 'published ' + s.published,
+      para1: s.para1,
+
+      amending: s.amending,
+      reading: !s.amending,
+      draft: s.draft,
+      setDraft: (e) => this.setState({ draft: e.target.value }),
+      startAmend: () => this.setState({ amending: true, draft: this.state.para1 }),
+      cancelAmend: () => this.setState({ amending: false }),
+      saveAmend: () => {
+        const next = (this.state.draft || '').trim() || this.state.para1;
+        this.setState((p) => ({ amending: false, para1: next, version: p.version + 1, published: 'just now', approvedOverride: true }));
+        this.showToast('Amendment published — curation is logged against your name.');
+      },
+
+      sources: SOURCES.map((src) => ({
+        ...src,
+        select: select(src.n),
+        on: s.selected === src.n,
+      })),
+
+      relatedOn: this.props.showRelated ?? true,
+      related: RELATED,
+
+      refreshLabel: s.refreshing ? 'Weighing the record…' : 'Refresh',
+      refresh: () => {
+        if (this.state.refreshing) return;
+        this.setState({ refreshing: true });
+        clearTimeout(this._r);
+        this._r = setTimeout(() => {
+          this.setState((p) => ({ refreshing: false, version: p.version + 1, published: 'just now' }));
+          this.showToast('Refreshed against 2 new counsels — sources rechecked.');
+        }, 1400);
+      },
+
+      panelOpen: s.panelOpen,
+      historyLabel: s.panelOpen ? 'Hide versions' : 'Versions',
+      togglePanel: () => this.setState((p) => ({ panelOpen: !p.panelOpen })),
+      history: HISTORY.map((h) => ({
+        ...h,
+        restore: () => this.showToast('Restored ' + h.v + ' — the earlier text is live again.'),
+      })),
+
+      automationLabel: paused ? 'Resume automatic refresh' : 'Pause automatic refresh',
+      toggleAutomation: () => {
+        const next = !paused;
+        this.setState({ pausedOverride: next });
+        this.showToast(next ? 'Automatic refresh paused for this topic.' : 'Automatic refresh resumed.');
+      },
+
+      retireLabel: s.retired ? 'Restore brief' : 'Retire brief',
+      retire: () => {
+        const next = !this.state.retired;
+        this.setState({ retired: next });
+        this.showToast(next ? 'Brief retired — earlier versions are kept.' : 'Brief restored to the topic.');
+      },
+
+      toastOn: !!s.toast,
+      toast: s.toast || '',
+    };
+  }
+}
+</script>
+</body>
+</html>

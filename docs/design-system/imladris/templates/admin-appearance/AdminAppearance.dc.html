@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — branding & themes" description="The appearance section of the operator's desk: branding fields with a live preview that updates as you type, custom CSS behind an acknowledgement, the typed RESET guard, and the theme-package table with safe mode, activation, and session preview" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes aaRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — appearance" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+  </div>
+
+  <div style="max-width: 1100px; margin: 0 auto; padding: 26px 28px 110px;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+      <div>
+        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Operator desk · Appearance</span>
+        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Branding &amp; themes</h1>
+      </div>
+      <span style="flex: 0 0 auto; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;">Admin mode</span>
+    </div>
+
+    <nav aria-label="Appearance sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 22px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atBranding }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goBranding }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Branding</button></sc-if>
+      <sc-if value="{{ offBranding }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goBranding }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Branding</button></sc-if>
+      <sc-if value="{{ atThemes }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goThemes }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Themes</button></sc-if>
+      <sc-if value="{{ offThemes }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goThemes }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Themes</button></sc-if>
+    </nav>
+
+    <!-- ═══ Branding ═══ -->
+    <sc-if value="{{ showBranding }}" hint-placeholder-val="{{ true }}">
+      <div style="padding-top: 24px;">
+        <p style="margin: 0 0 22px; max-width: 68ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">The chrome the council wears. Colours are stored as hex and resolved into the theme; the preview beside the form updates as you type.</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 380px; gap: 28px; align-items: start;">
+          <form onSubmit="{{ saveBranding }}" style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px;">
+              <label style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Site name</span>
+                <input value="{{ siteName }}" onInput="{{ onSiteName }}" maxlength="80" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Primary colour (hex)</span>
+                <input value="{{ colorPrimary }}" onInput="{{ onColorPrimary }}" maxlength="7" placeholder="#2F5D46" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Accent colour (hex)</span>
+                <input value="{{ colorAccent }}" onInput="{{ onColorAccent }}" maxlength="7" placeholder="#C29A44" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Default theme for signed-out visitors</span>
+                <select value="{{ themeDefault }}" onChange="{{ onThemeDefault }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <option value="system">System</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Theme preset</span>
+                <select value="{{ themePreset }}" onChange="{{ onThemePreset }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <option value="classic">Classic</option>
+                  <option value="retro">Retro</option>
+                </select>
+              </label>
+            </div>
+
+            <h3 style="margin: 22px 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Marks</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px dashed var(--border-soft); border-radius: var(--radius-md);"><span style="font-size: .9rem; color: var(--text-body);">Logo <span style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-faint);">(current set)</span></span><button type="button" style="padding: 5px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Replace</button></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px dashed var(--border-soft); border-radius: var(--radius-md);"><span style="font-size: .9rem; color: var(--text-body);">Favicon <span style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; color: var(--text-faint);">(current set)</span></span><button type="button" style="padding: 5px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Replace</button></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px dashed var(--border-soft); border-radius: var(--radius-md);"><span style="font-size: .9rem; color: var(--text-body);">Light theme logo</span><button type="button" style="padding: 5px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Upload</button></div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px dashed var(--border-soft); border-radius: var(--radius-md);"><span style="font-size: .9rem; color: var(--text-body);">Dark theme logo</span><button type="button" style="padding: 5px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Upload</button></div>
+            </div>
+
+            <h3 style="margin: 22px 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 400; color: var(--text-faint);">Custom CSS</h3>
+            <label style="display: flex; align-items: center; gap: 9px; margin-bottom: 10px; font-size: .92rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ cssEnabled }}" onChange="{{ onCssEnabled }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Enable custom CSS</label>
+            <sc-if value="{{ cssEnabled }}" hint-placeholder-val="{{ false }}">
+              <div>
+                <textarea value="{{ customCss }}" onInput="{{ onCustomCss }}" rows="7" spellcheck="false" maxlength="12000" aria-label="Custom CSS" style="width: 100%; padding: 10px 12px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .82rem; line-height: 1.6; color: var(--text-body); resize: vertical;" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);"></textarea>
+                <label style="display: flex; align-items: flex-start; gap: 9px; margin-top: 10px; font-size: .9rem; line-height: 1.45; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ cssAck }}" onChange="{{ onCssAck }}" style="flex: 0 0 auto; margin-top: 3px; width: 15px; height: 15px; accent-color: var(--accent);">I understand this CSS applies site-wide and can affect usability.</label>
+              </div>
+            </sc-if>
+
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 20px;">
+              <button type="submit" style="padding: 9px 20px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Save branding</button>
+              <sc-if value="{{ brandSaved }}" hint-placeholder-val="{{ false }}"><span role="status" style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; color: var(--on-done);">Saved. The chrome is live for everyone.</span></sc-if>
+              <sc-if value="{{ brandError }}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: .87rem; color: var(--danger);">{{ brandErrorText }}</span></sc-if>
+            </div>
+          </form>
+
+          <aside style="position: sticky; top: 84px; display: flex; flex-direction: column; gap: 18px;">
+            <section aria-live="polite">
+              <p style="margin: 0 0 9px; font-family: var(--font-label); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink);">Live preview</p>
+              <div ref="{{ previewRef }}" style="--bp-primary: var(--brand); --bp-accent: var(--gold-500); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; background: var(--bp-primary); color: var(--parchment-50);">
+                  <strong style="font-family: var(--font-display); font-weight: 600; font-size: 1.05rem;">{{ siteName }}</strong>
+                  <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; opacity: .85;">{{ themeLabel }}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px 14px; background: var(--surface-raised);">
+                  <a href="#" style="font-size: .95rem; color: var(--bp-primary);">Sample link</a>
+                  <button type="button" style="align-self: flex-start; padding: 7px 16px; border-radius: var(--radius-md); border: 0; background: var(--bp-primary); color: var(--parchment-50); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;">Primary button</button>
+                  <span style="align-self: flex-start; padding: 3px 11px; border-radius: 999px; background: var(--bp-accent); color: var(--ink-900); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em;">Accent marker</span>
+                </div>
+              </div>
+              <p style="margin: 10px 0 0; font-size: .84rem; line-height: 1.5; color: var(--text-faint); text-wrap: pretty;">Light and dark logo variants are used when the resolved theme explicitly matches that variant; system theme falls back to the base logo.</p>
+            </section>
+
+            <section style="padding: 16px 18px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg);">
+              <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; color: var(--text-strong);">Reset to defaults</h2>
+              <p style="margin: 0 0 12px; font-size: .87rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">Clears every stored colour, logo, favicon, theme preset, and custom CSS, restoring the built-in chrome. It cannot be undone.</p>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Type RESET to confirm</span>
+                <input value="{{ resetConfirm }}" onInput="{{ onResetConfirm }}" autocomplete="off" spellcheck="false" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; letter-spacing: .1em; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <button onClick="{{ doReset }}" disabled="{{ resetLocked }}" style="margin-top: 12px; padding: 8px 16px; border-radius: var(--radius-md); border: 0; background: var(--rust); color: var(--parchment-50); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Reset to defaults</button>
+              <sc-if value="{{ resetDone }}" hint-placeholder-val="{{ false }}"><p role="status" style="margin: 10px 0 0; font-size: .87rem; color: var(--on-done);">Reset. The built-in chrome is back.</p></sc-if>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Themes ═══ -->
+    <sc-if value="{{ showThemes }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 24px;">
+        <p style="margin: 0 0 22px; max-width: 68ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Package themes are installed from the registry and built before they can serve. Safe mode drops the council back to the built-in chrome without uninstalling anything.</p>
+
+        <section style="margin-bottom: 16px; padding: 16px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="flex: 1;">
+              <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Safe mode</h2>
+              <sc-if value="{{ safeModeOff }}" hint-placeholder-val="{{ true }}"><p style="margin: 4px 0 0; font-size: .92rem; color: var(--text-muted);">Safe mode is off. Active package themes are eligible to serve.</p></sc-if>
+              <sc-if value="{{ safeModeOn }}" hint-placeholder-val="{{ false }}"><p style="margin: 4px 0 0; font-size: .92rem; color: var(--on-review);">Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.</p></sc-if>
+            </div>
+            <button onClick="{{ toggleSafeMode }}" style="flex: 0 0 auto; padding: 7px 16px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">{{ safeModeAction }}</button>
+          </div>
+        </section>
+
+        <section style="margin-bottom: 16px; padding: 16px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 8px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Active theme</h2>
+          <sc-if value="{{ hasActive }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <p style="margin: 0; font-size: .95rem; color: var(--text-body);">Serving <strong>{{ activeName }}</strong> <code style="font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);">{{ activeVersion }}</code></p>
+              <p style="margin: 5px 0 0; font-size: .88rem; color: var(--text-faint);">Last-known-good: <code style="font-family: var(--font-mono); font-size: .8rem;">{{ lkgDigest }}</code> from {{ lkgPackage }}.</p>
+              <button onClick="{{ deactivate }}" style="margin-top: 12px; padding: 6px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--rust); font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Roll back to last-known-good</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noActive }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; font-size: .95rem; color: var(--text-faint);">No package theme is active. The council wears the built-in chrome.</p>
+          </sc-if>
+        </section>
+
+        <section style="padding: 16px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Installed theme packages</h2>
+          <sc-if value="{{ hasInstalls }}" hint-placeholder-val="{{ true }}">
+            <table style="width: 100%; border-collapse: collapse; font-size: .92rem;">
+              <thead><tr>
+                <th scope="col" style="padding: 9px 10px 8px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Package</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Version</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">State</th>
+                <th scope="col" style="padding: 9px 10px 8px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Latest build</th>
+                <th scope="col" style="padding: 9px 0 8px 10px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Actions</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{ installs }}" as="p" hint-placeholder-count="4">
+                  <tr>
+                    <td style="padding: 11px 10px 11px 0; border-bottom: 1px solid var(--border-hair);"><strong style="display: block; font-weight: 500; color: var(--text-strong);">{{ p.name }}</strong><code style="font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ p.uid }}</code></td>
+                    <td style="padding: 11px 10px; font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ p.version }}</td>
+                    <td style="padding: 11px 10px; border-bottom: 1px solid var(--border-hair);">
+                      <sc-if value="{{ p.isEnabled }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Enabled</span></sc-if>
+                      <sc-if value="{{ p.isDisabled }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-pending); color: var(--on-pending); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Disabled</span></sc-if>
+                    </td>
+                    <td style="padding: 11px 10px; border-bottom: 1px solid var(--border-hair);">
+                      <sc-if value="{{ p.isBuilt }}" hint-placeholder-val="{{ true }}"><code style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-muted);">{{ p.digest }}</code></sc-if>
+                      <sc-if value="{{ p.notBuilt }}" hint-placeholder-val="{{ false }}"><span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-faint);">not built</span></sc-if>
+                    </td>
+                    <td style="padding: 11px 0 11px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);">
+                      <sc-if value="{{ p.isEnabled }}" hint-placeholder-val="{{ true }}">
+                        <span style="display: inline-flex; gap: 6px;">
+                          <button onClick="{{ p.preview }}" style="padding: 4px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Preview</button>
+                          <button onClick="{{ p.activate }}" style="padding: 4px 12px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Activate</button>
+                        </span>
+                      </sc-if>
+                      <sc-if value="{{ p.isDisabled }}" hint-placeholder-val="{{ false }}"><a href="#" style="font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--artifact-link);">Enable it from Packages first</a></sc-if>
+                    </td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </sc-if>
+          <sc-if value="{{ noInstalls }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0 0 8px; font-size: .95rem; color: var(--text-faint);">No theme packages are installed.</p>
+          </sc-if>
+        </section>
+
+        <sc-if value="{{ activateArmed }}" hint-placeholder-val="{{ false }}">
+          <section style="margin-top: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--warning); border-radius: var(--radius-lg); animation: aaRise 180ms var(--ease-calm) both;">
+            <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">Activate {{ activateName }}?</h2>
+            <p style="margin: 0 0 14px; max-width: 62ch; font-size: .92rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">Every visitor sees this theme on their next page. The current build is kept as last-known-good, so safe mode can always bring the council home.</p>
+            <div style="display: flex; align-items: flex-end; gap: 12px;">
+              <label style="flex: 0 1 260px; display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Current password</span>
+                <input type="password" value="{{ activatePassword }}" onInput="{{ onActivatePassword }}" autocomplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <button onClick="{{ confirmActivate }}" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Activate</button>
+              <button onClick="{{ cancelActivate }}" style="padding: 9px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="color: var(--text-body); background: var(--surface-sunken);">Cancel</button>
+            </div>
+            <sc-if value="{{ activateError }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 10px 0 0; font-size: .87rem; color: var(--danger);">Confirm your password to activate a theme.</p></sc-if>
+          </section>
+        </sc-if>
+
+        <section style="margin-top: 16px; padding: 16px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 8px; font-family: var(--font-display); font-weight: 500; font-size: 1.25rem; color: var(--text-strong);">Preview</h2>
+          <sc-if value="{{ hasPreview }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <p style="flex: 1; margin: 0; font-size: .95rem; color: var(--text-body);">Previewing <strong>{{ previewName }}</strong> <code style="font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);">{{ previewDigest }}</code> in this admin session only.</p>
+              <button onClick="{{ endPreview }}" style="flex: 0 0 auto; padding: 6px 14px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">End preview</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ noPreview }}" hint-placeholder-val="{{ true }}">
+            <p style="margin: 0; font-size: .95rem; color: var(--text-faint);">No session preview is active.</p>
+          </sc-if>
+        </section>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900}}">
+const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+const SEED_INSTALLS = [
+  { id: 1, name: 'Imladris Classic', uid: 'rb.theme.imladris-classic', version: '2.4.0', state: 'enabled', digest: 'sha256:9f1c…a03e' },
+  { id: 2, name: 'Twilight Hall', uid: 'rb.theme.twilight-hall', version: '1.1.2', state: 'enabled', digest: 'sha256:41bd…77c9' },
+  { id: 3, name: 'Mallorn', uid: 'rb.theme.mallorn', version: '0.9.0', state: 'enabled', digest: null },
+  { id: 4, name: 'Greyhavens', uid: 'rb.theme.greyhavens', version: '3.0.1', state: 'disabled', digest: 'sha256:c07a…1e55' },
+];
+
+class Component extends DCLogic {
+  state = {
+    view: 'branding',
+    siteName: 'Imladris', colorPrimary: '#2F5D46', colorAccent: '#C29A44',
+    themeDefault: 'system', themePreset: 'classic',
+    cssEnabled: false, cssAck: false,
+    customCss: '.thread-row { border-radius: 10px; }',
+    brandSaved: false, brandError: false, brandErrorText: '',
+    resetConfirm: '', resetDone: false,
+    safeMode: false,
+    installs: SEED_INSTALLS.slice(),
+    activeId: 1,
+    activateId: null, activatePassword: '', activateError: false,
+    previewId: null,
+  };
+
+  previewRef = React.createRef();
+
+  // The preview's two colours are whatever the operator has typed this keystroke,
+  // so they are set imperatively rather than held in the template.
+  paintPreview() {
+    const el = this.previewRef.current;
+    if (!el) return;
+    el.style.setProperty('--bp-primary', HEX.test(this.state.colorPrimary) ? this.state.colorPrimary : 'var(--brand)');
+    el.style.setProperty('--bp-accent', HEX.test(this.state.colorAccent) ? this.state.colorAccent : 'var(--gold-500)');
+  }
+
+  componentDidMount() { this.paintPreview(); }
+
+  componentDidUpdate() { this.paintPreview(); }
+
+  saveBranding = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    if (!s.siteName.trim()) { this.setState({ brandError: true, brandErrorText: 'The council needs a name.', brandSaved: false }); return; }
+    if (!HEX.test(s.colorPrimary)) { this.setState({ brandError: true, brandErrorText: 'Primary colour must be a hex value, e.g. #2F5D46.', brandSaved: false }); return; }
+    if (!HEX.test(s.colorAccent)) { this.setState({ brandError: true, brandErrorText: 'Accent colour must be a hex value, e.g. #C29A44.', brandSaved: false }); return; }
+    if (s.cssEnabled && !s.cssAck) { this.setState({ brandError: true, brandErrorText: 'Acknowledge that custom CSS applies site-wide before saving it.', brandSaved: false }); return; }
+    this.setState({ brandSaved: true, brandError: false });
+  };
+
+  renderVals() {
+    const s = this.state;
+    const active = s.installs.find((p) => p.id === s.activeId) || null;
+    const preview = s.installs.find((p) => p.id === s.previewId) || null;
+    const armed = s.installs.find((p) => p.id === s.activateId) || null;
+    const themeLabel = s.themeDefault.charAt(0).toUpperCase() + s.themeDefault.slice(1);
+
+    return {
+      atBranding: s.view === 'branding', offBranding: s.view !== 'branding',
+      atThemes: s.view === 'themes', offThemes: s.view !== 'themes',
+      goBranding: () => this.setState({ view: 'branding' }),
+      goThemes: () => this.setState({ view: 'themes' }),
+      showBranding: s.view === 'branding',
+      showThemes: s.view === 'themes',
+
+      siteName: s.siteName, onSiteName: (e) => this.setState({ siteName: e.target.value, brandSaved: false, brandError: false }),
+      colorPrimary: s.colorPrimary, onColorPrimary: (e) => this.setState({ colorPrimary: e.target.value, brandSaved: false, brandError: false }),
+      colorAccent: s.colorAccent, onColorAccent: (e) => this.setState({ colorAccent: e.target.value, brandSaved: false, brandError: false }),
+      themeDefault: s.themeDefault, onThemeDefault: (e) => this.setState({ themeDefault: e.target.value, brandSaved: false }),
+      themePreset: s.themePreset, onThemePreset: (e) => this.setState({ themePreset: e.target.value, brandSaved: false }),
+      themeLabel,
+      previewRef: this.previewRef,
+
+      cssEnabled: s.cssEnabled, onCssEnabled: (e) => this.setState({ cssEnabled: e.target.checked, brandSaved: false, brandError: false }),
+      customCss: s.customCss, onCustomCss: (e) => this.setState({ customCss: e.target.value, brandSaved: false }),
+      cssAck: s.cssAck, onCssAck: (e) => this.setState({ cssAck: e.target.checked, brandError: false }),
+
+      saveBranding: this.saveBranding,
+      brandSaved: s.brandSaved, brandError: s.brandError, brandErrorText: s.brandErrorText,
+
+      resetConfirm: s.resetConfirm,
+      onResetConfirm: (e) => this.setState({ resetConfirm: e.target.value, resetDone: false }),
+      resetLocked: s.resetConfirm !== 'RESET',
+      resetDone: s.resetDone,
+      doReset: () => {
+        if (this.state.resetConfirm !== 'RESET') return;
+        this.setState({
+          siteName: 'RetroBoards', colorPrimary: '#2F5D46', colorAccent: '#C29A44',
+          themeDefault: 'system', themePreset: 'classic', cssEnabled: false, cssAck: false,
+          resetConfirm: '', resetDone: true, brandSaved: false,
+        });
+      },
+
+      safeMode: s.safeMode,
+      safeModeOn: s.safeMode, safeModeOff: !s.safeMode,
+      safeModeAction: s.safeMode ? 'Turn safe mode off' : 'Turn safe mode on',
+      toggleSafeMode: () => this.setState((st) => ({ safeMode: !st.safeMode })),
+
+      hasActive: !!active && !s.safeMode,
+      noActive: !active || s.safeMode,
+      activeName: active ? active.name : '',
+      activeVersion: active ? active.version : '',
+      lkgDigest: 'sha256:9f1c…a03e',
+      lkgPackage: 'rb.theme.imladris-classic 2.3.4',
+      deactivate: () => this.setState({ activeId: null }),
+
+      hasInstalls: s.installs.length > 0,
+      noInstalls: s.installs.length === 0,
+      installs: s.installs.map((p) => ({
+        name: p.name, uid: p.uid, version: p.version, digest: p.digest || '',
+        isEnabled: p.state === 'enabled', isDisabled: p.state !== 'enabled',
+        isBuilt: !!p.digest, notBuilt: !p.digest,
+        preview: () => this.setState({ previewId: p.id }),
+        activate: () => this.setState({ activateId: p.id, activatePassword: '', activateError: false }),
+      })),
+
+      activateArmed: !!armed,
+      activateName: armed ? armed.name : '',
+      activatePassword: s.activatePassword,
+      onActivatePassword: (e) => this.setState({ activatePassword: e.target.value, activateError: false }),
+      activateError: s.activateError,
+      confirmActivate: () => {
+        if (!this.state.activatePassword) { this.setState({ activateError: true }); return; }
+        this.setState((st) => ({ activeId: st.activateId, activateId: null, activatePassword: '', activateError: false }));
+      },
+      cancelActivate: () => this.setState({ activateId: null, activatePassword: '', activateError: false }),
+
+      hasPreview: !!preview,
+      noPreview: !preview,
+      previewName: preview ? preview.name : '',
+      previewDigest: preview ? (preview.digest || 'not built') : '',
+      endPreview: () => this.setState({ previewId: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — boards & tags" description="The content section of the operator's desk: inline category rename and reorder, board rows with visibility and archive, the full add-board form, and a tag catalogue of inline editors with search, pagination, and the guarded merge confirmation" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes acRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — content" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <div style="position: sticky; top: 0; z-index: 20; height: 58px; display: flex; align-items: center; gap: 16px; padding: 0 26px; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); box-sizing: border-box;">
+    <span style="display: inline-flex; align-items: center; gap: 10px;">
+      <svg width="24" height="24" viewBox="0 0 100 100" aria-hidden="true"><g fill="var(--accent)"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z" opacity=".2"></path><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"></path></g></svg>
+      <span style="font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em;">Imladris</span>
+    </span>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 5px; margin-left: 14px; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to the council</a>
+  </div>
+
+  <div style="max-width: 1100px; margin: 0 auto; padding: 26px 28px 110px;">
+
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;">
+      <div>
+        <span style="display: block; font-family: var(--font-label); font-size: .68rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-ink);">Operator desk · Content</span>
+        <h1 style="margin: 7px 0 0; font-family: var(--font-display); font-weight: 500; font-size: 2.4rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Boards &amp; tags</h1>
+      </div>
+      <span style="flex: 0 0 auto; margin-top: 8px; padding: 4px 12px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;">Admin mode</span>
+    </div>
+
+    <nav aria-label="Content sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 22px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atStructure }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goStructure }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Boards &amp; categories</button></sc-if>
+      <sc-if value="{{ offStructure }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goStructure }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Boards &amp; categories</button></sc-if>
+      <sc-if value="{{ atTags }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goTags }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Tags</button></sc-if>
+      <sc-if value="{{ offTags }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goTags }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Tags</button></sc-if>
+    </nav>
+
+    <!-- ═══ Boards & categories ═══ -->
+    <sc-if value="{{ showStructure }}" hint-placeholder-val="{{ true }}">
+      <div style="padding-top: 24px;">
+        <p style="margin: 0 0 20px; max-width: 68ch; font-size: 1rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Categories order the council's rooms; boards are the rooms themselves. Renaming is safe — the old slug keeps working. Archiving hides a board without losing a word of it.</p>
+
+        <sc-if value="{{ reorderError }}" hint-placeholder-val="{{ false }}">
+          <div role="alert" style="margin-bottom: 16px; padding: 11px 15px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border: 1px solid var(--rust); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .93rem; color: var(--danger);">That category is already first in the order.</div>
+        </sc-if>
+
+        <sc-if value="{{ structureEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 52px 26px; text-align: center; background: var(--surface-raised); border: 1px dashed var(--border-soft); border-radius: var(--radius-lg);">
+            <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: var(--text-strong);">No categories yet</h2>
+            <p style="margin: 8px auto 0; max-width: 44ch; font-size: .95rem; line-height: 1.5; color: var(--text-muted); text-wrap: pretty;">A council needs at least one room. Add a category below, then put a board inside it.</p>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="3">
+            <section style="background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-bottom: 1px solid var(--border-hair); background: linear-gradient(180deg, var(--parchment-100) 0%, var(--surface-raised) 100%);">
+                <input value="{{ cat.draft }}" onInput="{{ cat.onDraft }}" maxlength="64" aria-label="Rename this category" style="flex: 1; min-width: 0; padding: 7px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-raised); font-family: var(--font-display); font-size: 1.15rem; color: var(--text-strong);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <button onClick="{{ cat.save }}" style="flex: 0 0 auto; padding: 7px 15px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .76rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Save</button>
+                <button onClick="{{ cat.moveUp }}" aria-label="Move category up" style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button>
+                <button onClick="{{ cat.moveDown }}" aria-label="Move category down" style="flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg></button>
+                <button onClick="{{ cat.remove }}" style="flex: 0 0 auto; padding: 7px 13px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--rust); font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Delete category</button>
+              </div>
+              <sc-if value="{{ cat.saved }}" hint-placeholder-val="{{ false }}">
+                <p role="status" style="margin: 0; padding: 8px 18px; background: var(--surface-done); font-size: .87rem; color: var(--on-done);">Saved. The old slug keeps working.</p>
+              </sc-if>
+              <sc-if value="{{ cat.nameError }}" hint-placeholder-val="{{ false }}">
+                <p role="alert" style="margin: 0; padding: 8px 18px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); font-size: .87rem; color: var(--danger);">A category needs a name.</p>
+              </sc-if>
+
+              <ul style="list-style: none; margin: 0; padding: 0;">
+                <sc-for list="{{ cat.boards }}" as="b" hint-placeholder-count="3">
+                  <li style="display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-bottom: 1px solid var(--border-hair);">
+                    <div style="flex: 1; min-width: 0;">
+                      <span style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px;">
+                        <a href="#" style="font-size: 1rem; color: var(--text-strong); text-decoration: none;" style-hover="color: var(--accent);"><span style="color: var(--gold-ink);">#</span>{{ b.name }}</a>
+                        <span style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">/c/{{ b.slug }}</span>
+                        <sc-if value="{{ b.isHidden }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 8px; border-radius: 999px; background: var(--surface-pending); color: var(--on-pending); font-family: var(--font-label); font-size: .64rem; letter-spacing: .08em; text-transform: uppercase;">Hidden</span></sc-if>
+                        <sc-if value="{{ b.isPrivate }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 8px; border-radius: 999px; background: var(--surface-info); color: var(--on-info); font-family: var(--font-label); font-size: .64rem; letter-spacing: .08em; text-transform: uppercase;">Private</span></sc-if>
+                        <sc-if value="{{ b.isArchived }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 8px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .64rem; letter-spacing: .08em; text-transform: uppercase;">Archived</span></sc-if>
+                        <span style="font-family: var(--font-mono); font-size: .76rem; color: var(--text-faint);">· {{ b.threadLabel }}</span>
+                      </span>
+                      <p style="margin: 3px 0 0; font-size: .88rem; line-height: 1.4; color: var(--text-muted); text-wrap: pretty;">{{ b.description }}</p>
+                    </div>
+                    <span style="flex: 0 0 auto; display: flex; align-items: center; gap: 6px;">
+                      <button onClick="{{ b.moveUp }}" aria-label="Move board up" style="display: inline-flex; align-items: center; justify-content: center; width: 27px; height: 27px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button>
+                      <button onClick="{{ b.moveDown }}" aria-label="Move board down" style="display: inline-flex; align-items: center; justify-content: center; width: 27px; height: 27px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg></button>
+                      <a href="#" style="padding: 5px 11px; border-radius: var(--radius-md); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; color: var(--text-muted); text-decoration: none;" style-hover="background: var(--surface-sunken); color: var(--text-body);">Edit</a>
+                      <button onClick="{{ b.archive }}" style="padding: 5px 11px; border-radius: var(--radius-md); border: 0; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken); color: var(--text-body);">{{ b.archiveLabel }}</button>
+                      <button onClick="{{ b.remove }}" style="padding: 5px 11px; border-radius: var(--radius-md); border: 0; background: transparent; color: var(--rust); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Delete</button>
+                    </span>
+                  </li>
+                </sc-for>
+              </ul>
+            </section>
+          </sc-for>
+        </div>
+
+        <!-- Add a category -->
+        <section style="margin-top: 22px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Add a category</h2>
+          <sc-if value="{{ categoryError }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="margin-bottom: 12px; padding: 10px 14px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .9rem; color: var(--danger);">Give the category a name before adding it.</div>
+          </sc-if>
+          <form onSubmit="{{ addCategory }}" style="display: flex; align-items: center; gap: 12px;">
+            <input value="{{ newCategory }}" onInput="{{ onNewCategory }}" placeholder="Category name" maxlength="64" aria-label="Category name" style="flex: 1; padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            <button type="submit" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Add category</button>
+          </form>
+        </section>
+
+        <!-- Add a board -->
+        <sc-if value="{{ canAddBoard }}" hint-placeholder-val="{{ true }}">
+          <section style="margin-top: 16px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+            <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Add a board</h2>
+            <sc-if value="{{ boardError }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" style="margin-bottom: 14px; padding: 10px 14px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .9rem; color: var(--danger);">Please fix the highlighted fields.</div>
+            </sc-if>
+            <form onSubmit="{{ addBoard }}" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Category</span>
+                <select value="{{ bCategory }}" onChange="{{ onBCategory }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <sc-for list="{{ categoryOptions }}" as="opt" hint-placeholder-count="3">
+                    <option value="{{ opt.id }}">{{ opt.label }}</option>
+                  </sc-for>
+                </select>
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+                <input value="{{ bName }}" onInput="{{ onBName }}" maxlength="80" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Slug <span style="text-transform: none; letter-spacing: .02em; color: var(--text-faint);">(optional — derived from name)</span></span>
+                <input value="{{ bSlug }}" onInput="{{ onBSlug }}" maxlength="64" placeholder="{{ bSlugHint }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Description</span>
+                <input value="{{ bDescription }}" onInput="{{ onBDescription }}" maxlength="255" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Visibility</span>
+                <select value="{{ bVisibility }}" onChange="{{ onBVisibility }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <option value="public">Public</option>
+                  <option value="hidden">Hidden (unlisted)</option>
+                  <option value="private">Private (members only)</option>
+                </select>
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Who can post</span>
+                <select value="{{ bPostRole }}" onChange="{{ onBPostRole }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <option value="user">All members</option>
+                  <option value="moderator">Moderators and admins</option>
+                  <option value="admin">Admins only (announcements)</option>
+                </select>
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Edit window (minutes, 0 = no limit)</span>
+                <input type="number" min="0" max="10080" value="{{ bEditWindow }}" onInput="{{ onBEditWindow }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Assignment mode</span>
+                <select value="{{ bAssignment }}" onChange="{{ onBAssignment }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <option value="off">Off</option>
+                  <option value="self">Members can assign themselves</option>
+                  <option value="staff">Staff can assign members</option>
+                </select>
+              </label>
+              <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; margin-top: 2px;">
+                <label style="display: flex; align-items: center; gap: 9px; font-size: .92rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ bAnonymous }}" onChange="{{ onBAnonymous }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Allow anonymous posting</label>
+                <label style="display: flex; align-items: center; gap: 9px; font-size: .92rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ bApproval }}" onChange="{{ onBApproval }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Require approval before posts appear</label>
+                <label style="display: flex; align-items: center; gap: 9px; font-size: .92rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ bTags }}" onChange="{{ onBTags }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Allow approved tags</label>
+                <label style="display: flex; align-items: center; gap: 9px; font-size: .92rem; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{ bWiki }}" onChange="{{ onBWiki }}" style="width: 15px; height: 15px; accent-color: var(--accent);">Allow wiki-style post editing</label>
+              </div>
+              <div style="grid-column: 1 / -1;">
+                <button type="submit" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Add board</button>
+              </div>
+            </form>
+          </section>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Tags ═══ -->
+    <sc-if value="{{ showTags }}" hint-placeholder-val="{{ false }}">
+      <div style="padding-top: 24px;">
+
+        <!-- Merge confirmation -->
+        <sc-if value="{{ mergeArmed }}" hint-placeholder-val="{{ false }}">
+          <section style="margin-bottom: 20px; padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-left: 3px solid var(--rust); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); animation: acRise 180ms var(--ease-calm) both;">
+            <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.4rem; color: var(--text-strong);">Merge “{{ mergeSourceName }}” into “{{ mergeTargetName }}”?</h2>
+            <p style="margin: 8px 0 0; max-width: 66ch; font-size: .97rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Every thread tagged <strong style="color: var(--text-body);">{{ mergeSourceName }}</strong> is retagged as <strong style="color: var(--text-body);">{{ mergeTargetName }}</strong>, follows move across, and the source tag is removed. This cannot be undone.</p>
+            <dl style="display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 16px 0 0;">
+              <dt style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint);">Source tag</dt>
+              <dd style="margin: 0; font-size: .93rem; color: var(--text-body);">{{ mergeSourceName }} (<code style="font-family: var(--font-mono); font-size: .84rem; color: var(--text-muted);">{{ mergeSourceSlug }}</code>)</dd>
+              <dt style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint);">Merges into</dt>
+              <dd style="margin: 0; font-size: .93rem; color: var(--text-body);">{{ mergeTargetName }} (<code style="font-family: var(--font-mono); font-size: .84rem; color: var(--text-muted);">{{ mergeTargetSlug }}</code>)</dd>
+              <dt style="font-family: var(--font-label); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint);">Impact</dt>
+              <dd style="margin: 0; font-size: .93rem; color: var(--text-body);">{{ mergeImpact }} (includes hidden, held, and deleted threads)</dd>
+            </dl>
+            <div style="display: flex; align-items: center; gap: 12px; margin-top: 18px;">
+              <button onClick="{{ confirmMerge }}" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--rust); color: var(--parchment-50); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Merge and remove “{{ mergeSourceName }}”</button>
+              <button onClick="{{ cancelMerge }}" style="padding: 9px 18px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="color: var(--text-body); background: var(--surface-sunken);">Cancel</button>
+            </div>
+          </section>
+        </sc-if>
+
+        <!-- Add a tag -->
+        <section style="margin-bottom: 20px; padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+          <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Add a tag</h2>
+          <sc-if value="{{ tagError }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="margin-bottom: 12px; padding: 10px 14px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .9rem; color: var(--danger);">{{ tagErrorText }}</div>
+          </sc-if>
+          <form onSubmit="{{ addTag }}" style="display: grid; grid-template-columns: 1fr 1fr 1.4fr auto; gap: 14px; align-items: end;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+              <input value="{{ newTag }}" onInput="{{ onNewTag }}" maxlength="80" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Slug</span>
+              <input value="{{ newTagSlug }}" onInput="{{ onNewTagSlug }}" maxlength="64" placeholder="{{ newTagSlugHint }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Description</span>
+              <input value="{{ newTagDescription }}" onInput="{{ onNewTagDescription }}" maxlength="255" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <button type="submit" style="padding: 9px 18px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .8rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Add tag</button>
+          </form>
+        </section>
+
+        <!-- Catalogue -->
+        <section style="padding: 18px 20px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 14px;">
+            <h2 style="margin: 0; flex: 0 0 auto; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Catalogue</h2>
+            <label style="position: relative; flex: 1; min-width: 200px; max-width: 300px; display: block;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-faint)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+              <input value="{{ tagQuery }}" onInput="{{ onTagSearch }}" placeholder="Search the catalogue" aria-label="Search the catalogue" style="width: 100%; padding: 7px 12px 7px 33px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: 999px; background: var(--surface-page); font-family: var(--font-body); font-size: .9rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <span style="display: inline-flex; gap: 4px; padding: 3px; background: var(--surface-sunken); border-radius: 999px;">
+              <sc-if value="{{ tagSortUse }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortByUse }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">Most used</button></sc-if>
+              <sc-if value="{{ notTagSortUse }}" hint-placeholder-val="{{ false }}"><button onClick="{{ sortByUse }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">Most used</button></sc-if>
+              <sc-if value="{{ tagSortName }}" hint-placeholder-val="{{ false }}"><button onClick="{{ sortByName }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: var(--surface-raised); color: var(--text-strong); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; box-shadow: var(--shadow-sm); cursor: pointer;">A–Z</button></sc-if>
+              <sc-if value="{{ notTagSortName }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortByName }}" style="padding: 6px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; cursor: pointer;" style-hover="color: var(--text-strong);">A–Z</button></sc-if>
+            </span>
+            <span style="margin-left: auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ tagResultLabel }}</span>
+          </div>
+
+          <ul style="list-style: none; margin: 0; padding: 0;">
+            <sc-for list="{{ tagPage }}" as="t" hint-placeholder-count="8">
+              <li style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+                <input value="{{ t.name }}" onInput="{{ t.onName }}" maxlength="80" aria-label="Tag name" style="flex: 1 1 140px; min-width: 0; padding: 6px 10px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .9rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <input value="{{ t.slug }}" onInput="{{ t.onSlug }}" maxlength="64" aria-label="Tag slug" style="flex: 1 1 130px; min-width: 0; padding: 6px 10px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <input value="{{ t.description }}" onInput="{{ t.onDescription }}" maxlength="255" placeholder="Description" aria-label="Tag description" style="flex: 2 1 200px; min-width: 0; padding: 6px 10px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .9rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <select value="{{ t.visibility }}" onChange="{{ t.onVisibility }}" aria-label="Tag visibility" style="flex: 0 0 auto; padding: 6px 9px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .86rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <option value="public">Public</option>
+                  <option value="hidden">Hidden</option>
+                </select>
+                <label style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-label); font-size: .74rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;"><input type="checkbox" checked="{{ t.enabled }}" onChange="{{ t.onEnabled }}" style="width: 14px; height: 14px; accent-color: var(--accent);">Enabled</label>
+                <span style="flex: 0 0 auto; min-width: 62px; text-align: right; font-family: var(--font-mono); font-size: .78rem; color: var(--text-faint);">{{ t.uses }} uses</span>
+                <button onClick="{{ t.save }}" style="flex: 0 0 auto; padding: 5px 12px; border-radius: var(--radius-md); border: 0; background: var(--accent); color: var(--accent-contrast); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="filter: brightness(1.08);">Save</button>
+                <sc-if value="{{ t.canMerge }}" hint-placeholder-val="{{ true }}">
+                  <span style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;">
+                    <select value="{{ t.mergeTarget }}" onChange="{{ t.onMergeTarget }}" aria-label="Merge into" style="padding: 5px 8px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .82rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                      <sc-for list="{{ t.mergeOptions }}" as="opt" hint-placeholder-count="3">
+                        <option value="{{ opt.name }}">{{ opt.name }}</option>
+                      </sc-for>
+                    </select>
+                    <button onClick="{{ t.merge }}" style="padding: 5px 11px; border-radius: var(--radius-md); border: 0; background: transparent; color: var(--rust); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Merge…</button>
+                  </span>
+                </sc-if>
+                <sc-if value="{{ t.saved }}" hint-placeholder-val="{{ false }}">
+                  <span role="status" style="flex: 0 0 auto; font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; color: var(--on-done);">Saved</span>
+                </sc-if>
+              </li>
+            </sc-for>
+          </ul>
+
+          <sc-if value="{{ noTags }}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 40px 20px; text-align: center;">
+              <h3 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">{{ tagEmptyTitle }}</h3>
+              <p style="margin: 6px 0 0; font-size: .93rem; color: var(--text-muted);">{{ tagEmptyBody }}</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showTagPager }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px;">
+              <button onClick="{{ prevPage }}" disabled="{{ atFirstPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Previous</button>
+              <span style="font-family: var(--font-label); font-size: .76rem; letter-spacing: .06em; color: var(--text-faint);">{{ pageLabel }}</span>
+              <button onClick="{{ nextPage }}" disabled="{{ atLastPage }}" style="padding: 7px 15px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .78rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">Next</button>
+            </div>
+          </sc-if>
+        </section>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900},&quot;dataState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;live&quot;,&quot;empty&quot;],&quot;default&quot;:&quot;live&quot;,&quot;tsType&quot;:&quot;'live' | 'empty'&quot;,&quot;section&quot;:&quot;Console state&quot;}}">
+const SEED_CATEGORIES = [
+  { id: 1, name: 'The council', boards: [
+    { id: 11, name: 'Counsel', slug: 'counsel', description: 'Decisions that bind us, and the reasoning behind them.', visibility: 'public', threads: 412, archived: false },
+    { id: 12, name: 'Practice', slug: 'practice', description: 'How we actually work: drills, reviews, and the boring parts.', visibility: 'public', threads: 388, archived: false },
+  ] },
+  { id: 2, name: 'The archive', boards: [
+    { id: 21, name: 'Archive', slug: 'archive', description: 'Postmortems, migrations, and everything we promised to remember.', visibility: 'public', threads: 241, archived: false },
+    { id: 22, name: 'Lore', slug: 'lore', description: 'Vocabulary, naming, and keeping the lexicon honest.', visibility: 'private', threads: 163, archived: false },
+    { id: 23, name: 'Old business', slug: 'old-business', description: 'Kept for the record; no longer listed in the rail.', visibility: 'hidden', threads: 58, archived: true },
+  ] },
+  { id: 3, name: 'Wardens', boards: [
+    { id: 31, name: 'Wardens', slug: 'wardens', description: 'The warden’s table. Staff only.', visibility: 'private', threads: 87, archived: false },
+    { id: 32, name: 'Welcome', slug: 'welcome', description: 'New members, first questions, and the one page we ask people to read.', visibility: 'public', threads: 96, archived: false },
+  ] },
+];
+
+const SEED_TAGS = [
+  { name: 'eval', slug: 'eval', description: 'Evaluation suites, rubrics, and what counts as passing.', visibility: 'public', enabled: true, uses: 214 },
+  { name: 'rollback', slug: 'rollback', description: 'Undoing a change safely, and proving you can.', visibility: 'public', enabled: true, uses: 186 },
+  { name: 'postmortem', slug: 'postmortem', description: 'Blameless write-ups after an incident.', visibility: 'public', enabled: true, uses: 173 },
+  { name: 'migration', slug: 'migration', description: 'Schema and data moves.', visibility: 'public', enabled: true, uses: 158 },
+  { name: 'audit', slug: 'audit', description: 'The append-only record of who changed what.', visibility: 'public', enabled: true, uses: 141 },
+  { name: 'naming', slug: 'naming', description: 'Vocabulary and the council lexicon.', visibility: 'public', enabled: true, uses: 122 },
+  { name: 'onboarding', slug: 'onboarding', description: 'The first hour of a new member.', visibility: 'public', enabled: true, uses: 108 },
+  { name: 'moderation', slug: 'moderation', description: 'Queues, holds, and the warden’s table.', visibility: 'public', enabled: true, uses: 97 },
+  { name: 'privacy', slug: 'privacy', description: 'What we show, and to whom.', visibility: 'public', enabled: true, uses: 88 },
+  { name: 'presence', slug: 'presence', description: 'Who is here, and who chose not to say.', visibility: 'public', enabled: true, uses: 74 },
+  { name: 'notifications', slug: 'notifications', description: 'Email, digests, and quiet hours.', visibility: 'public', enabled: true, uses: 66 },
+  { name: 'composer', slug: 'composer', description: 'Writing, drafts, and the reply box.', visibility: 'public', enabled: true, uses: 61 },
+  { name: 'search', slug: 'search', description: 'Finding things in the archive.', visibility: 'public', enabled: true, uses: 54 },
+  { name: 'webhooks', slug: 'webhooks', description: 'Outbound events to other systems.', visibility: 'hidden', enabled: true, uses: 47 },
+  { name: 'theming', slug: 'theming', description: 'Tokens, registers, and the twilight theme.', visibility: 'public', enabled: true, uses: 39 },
+  { name: 'evaluation', slug: 'evaluation', description: 'Older twin of #eval — merge candidate.', visibility: 'public', enabled: true, uses: 22 },
+];
+
+function slugify(s) {
+  return String(s).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+const TAG_PAGE = 8;
+
+class Component extends DCLogic {
+  state = {
+    view: 'structure',
+    categories: SEED_CATEGORIES.map((c) => ({ ...c, draft: c.name, saved: false, nameError: false, boards: c.boards.slice() })),
+    tags: SEED_TAGS.map((t) => ({ ...t, saved: false, mergeTarget: '' })),
+    newCategory: '', categoryError: false, reorderError: false,
+    bCategory: '1', bName: '', bSlug: '', bDescription: '', bVisibility: 'public',
+    bPostRole: 'user', bEditWindow: '0', bAssignment: 'off',
+    bAnonymous: false, bApproval: false, bTags: true, bWiki: false, boardError: false,
+    newTag: '', newTagSlug: '', newTagDescription: '', tagError: false, tagErrorText: '',
+    tagQuery: '', tagSort: 'uses', page: 1,
+    mergeSource: null,
+    nextId: 100,
+  };
+
+  patchCat = (id, patch) => this.setState((s) => ({
+    categories: s.categories.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+  }));
+
+  patchTag = (slug, patch) => this.setState((s) => ({
+    tags: s.tags.map((t) => (t.slug === slug ? { ...t, ...patch } : t)),
+  }));
+
+  moveCat = (idx, dir) => () => this.setState((s) => {
+    const next = s.categories.slice();
+    const j = idx + dir;
+    if (j < 0 || j >= next.length) return { reorderError: true };
+    const [row] = next.splice(idx, 1);
+    next.splice(j, 0, row);
+    return { categories: next, reorderError: false };
+  });
+
+  moveBoard = (cid, idx, dir) => () => this.setState((s) => ({
+    categories: s.categories.map((c) => {
+      if (c.id !== cid) return c;
+      const boards = c.boards.slice();
+      const j = idx + dir;
+      if (j < 0 || j >= boards.length) return c;
+      const [row] = boards.splice(idx, 1);
+      boards.splice(j, 0, row);
+      return { ...c, boards };
+    }),
+  }));
+
+  addCategory = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const name = this.state.newCategory.trim();
+    if (!name) { this.setState({ categoryError: true }); return; }
+    this.setState((s) => ({
+      categories: s.categories.concat([{ id: s.nextId, name, draft: name, saved: false, nameError: false, boards: [] }]),
+      nextId: s.nextId + 1, newCategory: '', categoryError: false,
+    }));
+  };
+
+  addBoard = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    const name = s.bName.trim();
+    if (!name) { this.setState({ boardError: true }); return; }
+    const slug = s.bSlug.trim() ? slugify(s.bSlug) : slugify(name);
+    const cid = Number(s.bCategory);
+    this.setState((st) => ({
+      categories: st.categories.map((c) => (c.id === cid
+        ? { ...c, boards: c.boards.concat([{
+            id: st.nextId, name, slug,
+            description: st.bDescription.trim() || 'No description yet.',
+            visibility: st.bVisibility, threads: 0, archived: false,
+          }]) }
+        : c)),
+      nextId: st.nextId + 1,
+      bName: '', bSlug: '', bDescription: '', boardError: false,
+    }));
+  };
+
+  addTag = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const s = this.state;
+    const name = s.newTag.trim();
+    if (!name) { this.setState({ tagError: true, tagErrorText: 'Give the tag a name before adding it.' }); return; }
+    const slug = s.newTagSlug.trim() ? slugify(s.newTagSlug) : slugify(name);
+    if (s.tags.some((t) => t.slug === slug)) {
+      this.setState({ tagError: true, tagErrorText: 'A tag with the slug “' + slug + '” already exists. Merge into it rather than adding a twin.' });
+      return;
+    }
+    this.setState((st) => ({
+      tags: [{ name, slug, description: st.newTagDescription.trim(), visibility: 'public', enabled: true, uses: 0, saved: false, mergeTarget: '' }].concat(st.tags),
+      newTag: '', newTagSlug: '', newTagDescription: '', tagError: false, page: 1,
+    }));
+  };
+
+  renderVals() {
+    const s = this.state;
+    const isEmpty = (this.props.dataState || 'live') === 'empty';
+
+    const cats = isEmpty ? [] : s.categories;
+    const categories = cats.map((c, i) => ({
+      id: c.id, draft: c.draft, saved: c.saved, nameError: c.nameError,
+      onDraft: (e) => this.patchCat(c.id, { draft: e.target.value, saved: false, nameError: false }),
+      save: () => {
+        const name = String(c.draft || '').trim();
+        if (!name) { this.patchCat(c.id, { nameError: true, saved: false }); return; }
+        this.patchCat(c.id, { name, saved: true, nameError: false });
+      },
+      moveUp: this.moveCat(i, -1),
+      moveDown: this.moveCat(i, 1),
+      remove: () => this.setState((st) => ({ categories: st.categories.filter((x) => x.id !== c.id) })),
+      boards: c.boards.map((b, bi) => ({
+        name: b.name, slug: b.slug, description: b.description,
+        isHidden: b.visibility === 'hidden',
+        isPrivate: b.visibility === 'private',
+        isArchived: b.archived,
+        threadLabel: b.threads + (b.threads === 1 ? ' thread' : ' threads'),
+        archiveLabel: b.archived ? 'Unarchive' : 'Archive',
+        moveUp: this.moveBoard(c.id, bi, -1),
+        moveDown: this.moveBoard(c.id, bi, 1),
+        archive: () => this.setState((st) => ({
+          categories: st.categories.map((x) => (x.id === c.id
+            ? { ...x, boards: x.boards.map((y) => (y.id === b.id ? { ...y, archived: !y.archived } : y)) }
+            : x)),
+        })),
+        remove: () => this.setState((st) => ({
+          categories: st.categories.map((x) => (x.id === c.id ? { ...x, boards: x.boards.filter((y) => y.id !== b.id) } : x)),
+        })),
+      })),
+    }));
+
+    const pool = isEmpty ? [] : s.tags;
+    const q = s.tagQuery.trim().toLowerCase();
+    const filtered = pool.filter((t) => !q || t.name.toLowerCase().includes(q) || t.slug.includes(q));
+    const sorted = filtered.slice().sort((a, b) => (s.tagSort === 'name' ? a.name.localeCompare(b.name) : b.uses - a.uses));
+    const pages = Math.max(1, Math.ceil(sorted.length / TAG_PAGE));
+    const page = Math.min(s.page, pages);
+    const enabledCount = pool.filter((t) => t.enabled).length;
+
+    const tagPage = sorted.slice((page - 1) * TAG_PAGE, page * TAG_PAGE).map((t) => {
+      const options = pool.filter((o) => o.enabled && o.slug !== t.slug);
+      return {
+        name: t.name, slug: t.slug, description: t.description, visibility: t.visibility,
+        enabled: t.enabled, uses: t.uses, saved: t.saved,
+        onName: (e) => this.patchTag(t.slug, { name: e.target.value, saved: false }),
+        onSlug: (e) => this.patchTag(t.slug, { slug: e.target.value, saved: false }),
+        onDescription: (e) => this.patchTag(t.slug, { description: e.target.value, saved: false }),
+        onVisibility: (e) => this.patchTag(t.slug, { visibility: e.target.value, saved: false }),
+        onEnabled: (e) => this.patchTag(t.slug, { enabled: e.target.checked, saved: false }),
+        save: () => this.patchTag(t.slug, { saved: true }),
+        canMerge: t.enabled && enabledCount > 1,
+        mergeOptions: options,
+        mergeTarget: t.mergeTarget || (options[0] ? options[0].name : ''),
+        onMergeTarget: (e) => this.patchTag(t.slug, { mergeTarget: e.target.value }),
+        merge: () => this.setState({ mergeSource: t.slug }),
+      };
+    });
+
+    const src = s.tags.find((t) => t.slug === s.mergeSource) || null;
+    const tgtName = src ? (src.mergeTarget || (s.tags.find((o) => o.enabled && o.slug !== src.slug) || {}).name) : '';
+    const tgt = s.tags.find((t) => t.name === tgtName) || null;
+
+    return {
+      atStructure: s.view === 'structure', offStructure: s.view !== 'structure',
+      atTags: s.view === 'tags', offTags: s.view !== 'tags',
+      goStructure: () => this.setState({ view: 'structure' }),
+      goTags: () => this.setState({ view: 'tags' }),
+      showStructure: s.view === 'structure',
+      showTags: s.view === 'tags',
+
+      categories,
+      structureEmpty: categories.length === 0,
+      reorderError: s.reorderError,
+      newCategory: s.newCategory,
+      onNewCategory: (e) => this.setState({ newCategory: e.target.value, categoryError: false }),
+      addCategory: this.addCategory,
+      categoryError: s.categoryError,
+
+      canAddBoard: categories.length > 0,
+      categoryOptions: cats.map((c) => ({ id: String(c.id), label: '#' + c.name })),
+      bCategory: s.bCategory, onBCategory: (e) => this.setState({ bCategory: e.target.value }),
+      bName: s.bName, onBName: (e) => this.setState({ bName: e.target.value, boardError: false }),
+      bSlug: s.bSlug, onBSlug: (e) => this.setState({ bSlug: e.target.value }),
+      bSlugHint: s.bName.trim() ? slugify(s.bName) : 'derived from the name',
+      bDescription: s.bDescription, onBDescription: (e) => this.setState({ bDescription: e.target.value }),
+      bVisibility: s.bVisibility, onBVisibility: (e) => this.setState({ bVisibility: e.target.value }),
+      bPostRole: s.bPostRole, onBPostRole: (e) => this.setState({ bPostRole: e.target.value }),
+      bEditWindow: s.bEditWindow, onBEditWindow: (e) => this.setState({ bEditWindow: e.target.value }),
+      bAssignment: s.bAssignment, onBAssignment: (e) => this.setState({ bAssignment: e.target.value }),
+      bAnonymous: s.bAnonymous, onBAnonymous: (e) => this.setState({ bAnonymous: e.target.checked }),
+      bApproval: s.bApproval, onBApproval: (e) => this.setState({ bApproval: e.target.checked }),
+      bTags: s.bTags, onBTags: (e) => this.setState({ bTags: e.target.checked }),
+      bWiki: s.bWiki, onBWiki: (e) => this.setState({ bWiki: e.target.checked }),
+      boardError: s.boardError,
+      addBoard: this.addBoard,
+
+      newTag: s.newTag, onNewTag: (e) => this.setState({ newTag: e.target.value, tagError: false }),
+      newTagSlug: s.newTagSlug, onNewTagSlug: (e) => this.setState({ newTagSlug: e.target.value }),
+      newTagSlugHint: s.newTag.trim() ? slugify(s.newTag) : 'derived from the name',
+      newTagDescription: s.newTagDescription, onNewTagDescription: (e) => this.setState({ newTagDescription: e.target.value }),
+      addTag: this.addTag,
+      tagError: s.tagError, tagErrorText: s.tagErrorText,
+
+      tagQuery: s.tagQuery,
+      onTagSearch: (e) => this.setState({ tagQuery: e.target.value, page: 1 }),
+      tagSortUse: s.tagSort === 'uses', notTagSortUse: s.tagSort !== 'uses',
+      tagSortName: s.tagSort === 'name', notTagSortName: s.tagSort !== 'name',
+      sortByUse: () => this.setState({ tagSort: 'uses', page: 1 }),
+      sortByName: () => this.setState({ tagSort: 'name', page: 1 }),
+      tagResultLabel: sorted.length === 1 ? '1 tag' : sorted.length + ' tags',
+      tagPage,
+      noTags: sorted.length === 0,
+      tagEmptyTitle: q ? 'Nothing matches “' + s.tagQuery + '”' : 'No tags yet',
+      tagEmptyBody: q ? 'Try a shorter phrase, or add it as a new tag above.' : 'Add the first tag above. Fewer, sharper tags beat many vague ones.',
+      showTagPager: sorted.length > TAG_PAGE,
+      pageLabel: 'Page ' + page + ' of ' + pages,
+      atFirstPage: page <= 1,
+      atLastPage: page >= pages,
+      prevPage: () => this.setState((st) => ({ page: Math.max(1, st.page - 1) })),
+      nextPage: () => this.setState({ page: Math.min(pages, page + 1) }),
+
+      mergeArmed: !!src && !!tgt,
+      mergeSourceName: src ? src.name : '',
+      mergeSourceSlug: src ? src.slug : '',
+      mergeTargetName: tgt ? tgt.name : '',
+      mergeTargetSlug: tgt ? tgt.slug : '',
+      mergeImpact: src ? (src.uses + (src.uses === 1 ? ' tag association' : ' tag associations')) : '',
+      confirmMerge: () => this.setState((st) => ({
+        tags: st.tags
+          .filter((t) => t.slug !== st.mergeSource)
+          .map((t) => (t.name === tgtName ? { ...t, uses: t.uses + (src ? src.uses : 0) } : t)),
+        mergeSource: null,
+      })),
+      cancelMerge: () => this.setState({ mergeSource: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>
