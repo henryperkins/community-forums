@@ -119,6 +119,24 @@ final class ApiReadEndpointsTest extends TestCase
         self::assertLessThanOrEqual(50, count(json_decode($big->body(), true)['threads']));
     }
 
+    public function test_board_threads_api_keeps_newest_creation_order(): void
+    {
+        $board = $this->makeBoard($this->makeCategory(), ['visibility' => 'public']);
+        $author = $this->makeUser();
+        $older = $this->makeThread($board, $author, 'API older topic');
+        $newer = $this->makeThread($board, $author, 'API newer topic');
+        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ? WHERE id = ?', ['2024-01-01 00:00:00', '2024-04-01 00:00:00', $older['thread_id']]);
+        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ? WHERE id = ?', ['2024-03-01 00:00:00', '2024-02-01 00:00:00', $newer['thread_id']]);
+
+        $response = $this->apiGet('/api/v1/boards/' . $board['id'] . '/threads', $this->mintToken(['read:threads']));
+
+        self::assertSame(200, $response->status());
+        self::assertSame(
+            [(int) $newer['thread_id'], (int) $older['thread_id']],
+            array_column(json_decode($response->body(), true)['threads'], 'id'),
+        );
+    }
+
     public function test_revoke_and_expiry_and_flag_dark(): void
     {
         $token = $this->mintToken(['read:boards']);

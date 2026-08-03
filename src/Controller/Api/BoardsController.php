@@ -42,7 +42,7 @@ final class BoardsController extends ApiController
                 return Response::json(['error' => 'not_found'], 404);
             }
             $limit = min(50, max(1, $request->int('limit', 20)));
-            $rows = $this->container->get(ThreadRepository::class)->listByBoard($boardId, $limit, 0, 'newest');
+            $rows = $this->container->get(ThreadRepository::class)->listNewestByBoard($boardId, $limit, 0);
             return Response::json(['threads' => array_map(static fn (array $t): array => [
                 'id' => (int) $t['id'],
                 'slug' => (string) $t['slug'],

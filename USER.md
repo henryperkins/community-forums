@@ -1,6 +1,6 @@
 # RetroBoards — User Account, Preferences & Profile Design
 
-**Status:** v0.11 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-12
+**Status:** v0.12 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-02
 **Companion to [DESIGN.md](DESIGN.md) and [ADMIN.md](ADMIN.md).** DESIGN.md is the source of truth; ADMIN.md owns the operator surface; **this doc owns the member's own surface** — how a person signs in, configures their account, tailors their experience, and presents themselves. Same conventions (P0/P1/P2/P3; `Done (mockup)` / `Planned` / `Live`; InnoDB / `utf8mb4`).
 
 ## Scope
@@ -186,7 +186,7 @@ Appearance prefs are **client-applied** (instant) and override the site default 
 |---|---|
 | **Threads per page** | 25 · 50 · 100 |
 | **Posts per page** | 10 · 20 · 40 |
-| Default thread sort | Last post · Newest · Most replies |
+| Board topic order | Fixed: pinned first, then latest activity. Newest and Unanswered are Inbox filters. |
 | Open threads at | Last-read position · Top |
 | Timezone & time format | Auto-detect; 12h/24h; relative ("2m ago") vs absolute |
 | Show signatures | On · Off |
@@ -195,7 +195,7 @@ Appearance prefs are **client-applied** (instant) and override the site default 
 | Media | Autoplay off by default; lazy-load; expand inline vs click |
 | Links | Open external links in a new tab (on/off) |
 
-Pagination and sort are **server-enforced** (they shape queries); the rest are display toggles.
+Pagination and the fixed board topic order are **server-enforced** (they shape queries); the rest are display toggles.
 
 ### 4.3 Board organization
 
@@ -493,6 +493,7 @@ Mapped onto DESIGN.md §13 (whose strategic "Phase 3" and "Later (P2)" buckets s
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.12 | 2026-08-02 | Removed the Default thread sort/Most replies preference. Board topic lists are fixed to pinned then latest activity; Newest and Unanswered are Inbox filters. |
 | v0.11 | 2026-07-12 | Added §4.9 with Living Brief reading, processor disclosure, access-gated provenance, retention, and last-good behavior; reconciled the joint default-on graduation of both Thread Intelligence flags and their independent rollback pins. |
 | v0.10 | 2026-06-26 | Wording/citation pass: dropped digest **"weekly"** cadence (§4.6 — daily-only per SCHEMA `subscriptions.frequency`); dropped **"optional"** from the Phase-1 `sessions` table (§3.3); fixed SCHEMA citations **§7.7 → §7 #7** (§7.3, §9 row 9); settled §4.5 default post format to **Markdown-canonical** (DECISIONS §3 #2, dropped the BBCode either/or); §5.5 title/rank now **reputation/post-count thresholds, admin-overridable** (COMMUNITY §8, DECISIONS §8). |
 | v0.9 | 2026-06-26 | **Status-truth pass (nothing is built yet):** reworded §8 Phase 1 from "auth is live / now live" to planned, and "monogram shipped Phase 1" → "monogram in Phase 1"; reworded the v0.5 entry below from "Shipped" to "Specified (design only — not built)". No scope changes. |

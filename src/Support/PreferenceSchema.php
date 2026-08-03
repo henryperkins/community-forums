@@ -27,7 +27,7 @@ final class PreferenceSchema
      * validated independently against its own spec, so older blobs stay readable
      * without an explicit migration; `__v` is a forward-compat marker only.
      */
-    public const VERSION = 2;
+    public const VERSION = 3;
 
     public const THREADS_PER_PAGE = [20, 25, 50, 100];
     public const POSTS_PER_PAGE = [10, 20, 40];
@@ -47,7 +47,6 @@ final class PreferenceSchema
         'reading' => [
             'threads_per_page' => ['type' => 'enumint', 'values' => self::THREADS_PER_PAGE, 'default' => null],
             'posts_per_page'   => ['type' => 'enumint', 'values' => self::POSTS_PER_PAGE, 'default' => null],
-            'thread_sort'      => ['type' => 'enum', 'values' => ['last_post', 'newest', 'replies'], 'default' => 'last_post'],
             'show_signatures'  => ['type' => 'bool', 'default' => true],
             'show_avatars'     => ['type' => 'bool', 'default' => true],
             'show_reactions'   => ['type' => 'bool', 'default' => true],
@@ -139,10 +138,12 @@ final class PreferenceSchema
      * (`__v` > VERSION) are returned untouched.
      *
      * v1 → v2 was purely additive (the reading-display + composing toggles were
-     * introduced at v2), so it needs no value transform yet — {@see transformTo}
-     * is the home for a future breaking change (e.g. a renamed enum value) so old
-     * blobs keep working across a schema bump. resolve() runs this on every read;
-     * a save (updateSection) re-stamps the version, so storage converges.
+     * introduced at v2). v3 retires thread_sort from the managed schema without
+     * transforming it, so legacy blobs preserve it as unknown data. {@see
+     * transformTo} remains the home for a future breaking change (e.g. a renamed
+     * enum value) so old blobs keep working across a schema bump. resolve() runs
+     * this on every read; a save (updateSection) re-stamps the version, so storage
+     * converges.
      *
      * @param array<string,mixed> $stored
      * @return array<string,mixed>
@@ -176,8 +177,9 @@ final class PreferenceSchema
 
     /**
      * Per-version value transform applied when upgrading across a schema bump.
-     * No version has needed one yet (v2 was additive); add a match arm here when
-     * a future VERSION renames or retypes a key so old blobs keep working.
+     * No version has needed one yet: v2 was additive and v3 retires thread_sort
+     * through the unknown-key path. Add a match arm when a future VERSION renames
+     * or retypes a key so old blobs keep working.
      *
      * @param array<string,mixed> $stored
      * @return array<string,mixed>

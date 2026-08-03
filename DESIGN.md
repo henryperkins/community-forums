@@ -1,6 +1,6 @@
 # RetroBoards — Product & Technical Design Document
 
-**Status:** v0.15 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-07-14
+**Status:** v0.16 · **Owner:** Henry (lakefrontdigital.io) · **Last updated:** 2026-08-02
 **Stack:** PHP + MySQL (server-rendered) with progressive-enhancement JavaScript
 **This document is the source of truth.** When a decision changes, update it here first. Code, tickets, and mockups defer to this file.
 
@@ -131,10 +131,11 @@ On screens ≤ 860px the layout collapses to one column: the sidebar becomes a s
 Even though the UI feels like a single-page app, every view has a real, shareable, crawlable URL rendered by the server. JavaScript enhances navigation but is not required.
 
 ```
-/                          Home (board index / first board)
-/c/{board-slug}            A board's thread inbox          e.g. /c/playstation-2
-/c/{board-slug}?page=2     Pagination
-/t/{thread-id}-{slug}      A thread (conversation)         e.g. /t/1042-vice-city-impressions
+/                          Forum Index directory
+/inbox                     Personalized thread inbox
+/c/{slug}                  One board's topic list          e.g. /c/playstation-2
+/c/{slug}?page=2           Pagination
+/t/{id}-{slug}             Canonical conversation          e.g. /t/1042-vice-city-impressions
 /u/{username}              A user profile
 /dm/{conversation-id}      A direct-message conversation (auth only)
 /search?q=...              Search results
@@ -186,7 +187,7 @@ Legend: **Priority** = P0 / P1 / P2 / P3 (MoSCoW tiers, not delivery phases — 
 | Unread dot per thread | P1 | Planned | From `last_read_post_id` (§8). |
 | New Topic (compose thread) | P0 | Planned | Button present; needs editor + persistence. Hidden for guests. |
 | Pagination / infinite scroll | P0 | Planned | Threads list and posts list both paginate. |
-| Sort tabs: Newest / Active (+ Unanswered) | P1 | Planned | **Newest** = `created_at` desc; **Active** = `last_post_at` desc; **Unanswered** toggle = `reply_count = 0`. Default: Active. Selected sort persisted in the URL (`?sort=active`). On `/` ("All boards") the tabs span all boards; on a board they're scoped to it. |
+| Board topic order and Inbox filters | P1 | Planned | Board topic lists are fixed: pinned first, then `last_post_at` descending, then `id` descending. **Newest** (`created_at` descending) and **Unanswered** (`reply_count = 0`) are Inbox filters. |
 
 ### 6.4 Conversation & Posts
 
@@ -969,6 +970,7 @@ Features adopted from the adjacent project, mapped onto our phases (translated t
 
 | Version | Date | Notes |
 |---|---|---|
+| v0.16 | 2026-08-02 | Clarified the Forum Index, personalized Inbox, board topic-list, and canonical-conversation URL roles. Board topic lists now have a fixed pinned-then-activity order; Newest and Unanswered are Inbox filters. |
 | v0.15 | 2026-07-14 | Adopted the imported Imladris system as a generated, allowlisted runtime foundation beneath the application compatibility layer; documented preview/runtime exclusions, cascade ownership, self-hosted fonts, and the production-baseline drift gate that prevents newer forum/composer surfaces from silently outrunning design parity. |
 | v0.14 | 2026-07-14 | Unified post, DM, preview, revision, and living-brief rendering around canonical Markdown plus a shared responsive presentation contract; documented safe semantic attributes, read-time fallback for missing derived HTML, and the idempotent render-cache repair path. Corrected spoiler syntax to the shipped `||spoiler||` form. |
 | v0.13 | 2026-07-12 | Added §6.19 for the Thread Intelligence member, curator, processor, provenance, retention, failure, and operator contracts; later reconciled the completed evidence package and joint default-on graduation of `community_memory` and `automated_context`, with independent rollback pins. |

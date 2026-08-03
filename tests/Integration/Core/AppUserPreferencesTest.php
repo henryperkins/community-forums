@@ -222,10 +222,11 @@ final class AppUserPreferencesTest extends TestCase
         self::assertSame('dark', $data['preferences']['appearance']['theme']);
         self::assertSame('compact', $data['preferences']['appearance']['density']);
         self::assertTrue($data['preferences']['appearance']['reduced_motion']);
-        self::assertSame('last_post', $data['preferences']['reading']['thread_sort']);
+        self::assertArrayNotHasKey('thread_sort', $data['preferences']['reading']);
         self::assertArrayHasKey('composing', $data['preferences']);
         // Non-schema blob keys are not leaked into the export.
         self::assertArrayNotHasKey('hide_from_leaderboard', $data['preferences']);
+        self::assertStringNotContainsString('Default thread sort', $this->get('/settings/preferences')->body());
     }
 
     public function test_corrupt_preference_blob_recovers_to_defaults(): void

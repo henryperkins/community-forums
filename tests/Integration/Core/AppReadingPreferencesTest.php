@@ -8,8 +8,9 @@ use Tests\Support\TestCase;
 
 /**
  * P3-01: the reading-display preferences are server-enforced, not write-only.
- * `thread_sort` reorders the board listing, and show_avatars / show_signatures /
- * show_reactions actually hide their elements in the rendered thread + listing.
+ * Board order is fixed to pinned then last activity; show_avatars /
+ * show_signatures / show_reactions hide their elements in the rendered thread +
+ * listing.
  * Closes the Gate A "reading toggles do nothing" finding (docs/history/PHASE_1-4_HISTORY.md#phase-3-status §11).
  *
  * The signed-in topbar always renders exactly one monogram, so avatar assertions
@@ -49,7 +50,7 @@ final class AppReadingPreferencesTest extends TestCase
         self::assertGreaterThanOrEqual(2, substr_count($on, 'class="monogram'));
 
         // Avatars off (other toggles on): only the topbar monogram survives.
-        $this->setReading(['show_signatures' => '1', 'show_reactions' => '1', 'thread_sort' => 'last_post']);
+        $this->setReading(['show_signatures' => '1', 'show_reactions' => '1']);
         $off = $this->get($url)->body();
         self::assertSame(1, substr_count($off, 'class="monogram'), 'Only the topbar monogram should remain on the thread.');
 
@@ -69,7 +70,7 @@ final class AppReadingPreferencesTest extends TestCase
 
         $this->assertSeeText($this->get($url), 'class="reactions"');
 
-        $this->setReading(['show_signatures' => '1', 'show_avatars' => '1', 'thread_sort' => 'last_post']);
+        $this->setReading(['show_signatures' => '1', 'show_avatars' => '1']);
         $this->assertDontSeeText($this->get($url), 'class="reactions"');
     }
 
@@ -85,40 +86,33 @@ final class AppReadingPreferencesTest extends TestCase
 
         $this->assertSeeText($this->get($url), 'SIGMARKER_XYZ');
 
-        $this->setReading(['show_avatars' => '1', 'show_reactions' => '1', 'thread_sort' => 'last_post']);
+        $this->setReading(['show_avatars' => '1', 'show_reactions' => '1']);
         $this->assertDontSeeText($this->get($url), 'SIGMARKER_XYZ');
     }
 
-    public function test_thread_sort_preference_orders_the_board_list(): void
+    public function test_board_order_is_pinned_then_last_post_for_every_legacy_sort_value(): void
     {
         $cat = $this->makeCategory();
-        $board = $this->makeBoard($cat, ['slug' => 'sort-board']);
-        $user = $this->makeUser(['username' => 'sorter']);
+        $board = $this->makeBoard($cat, ['slug' => 'fixed-order-board']);
+        $user = $this->makeUser(['username' => 'fixed_order_reader']);
+        $pinned = $this->makeThread($board, $user, 'ZZPINNED');
+        $active = $this->makeThread($board, $user, 'ZZACTIVE');
+        $tieHigh = $this->makeThread($board, $user, 'ZZTIEHIGH');
+        $tieLow = $this->makeThread($board, $user, 'ZZTIELOW');
 
-        $a = $this->makeThread($board, $user, 'ZZALPHA');
-        $b = $this->makeThread($board, $user, 'ZZBRAVO');
-        $c = $this->makeThread($board, $user, 'ZZCHARLIE');
-        // Distinct created_at / last_post_at / reply_count so each sort yields a
-        // different leader (none pinned, so is_pinned DESC is neutral).
-        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ?, reply_count = ? WHERE id = ?', ['2024-01-01 00:00:00', '2024-03-01 00:00:00', 1, $a['thread_id']]);
-        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ?, reply_count = ? WHERE id = ?', ['2024-02-01 00:00:00', '2024-01-15 00:00:00', 9, $b['thread_id']]);
-        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ?, reply_count = ? WHERE id = ?', ['2024-03-01 00:00:00', '2024-02-01 00:00:00', 3, $c['thread_id']]);
-
+        $this->db->run('UPDATE threads SET is_pinned = 1, created_at = ?, last_post_at = ?, reply_count = ? WHERE id = ?', ['2024-01-01 00:00:00', '2024-01-01 00:00:00', 0, $pinned['thread_id']]);
+        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ?, reply_count = ? WHERE id = ?', ['2024-01-01 00:00:00', '2024-04-01 00:00:00', 1, $active['thread_id']]);
+        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ?, reply_count = ? WHERE id = ?', ['2024-04-01 00:00:00', '2024-03-01 00:00:00', 2, $tieHigh['thread_id']]);
+        $this->db->run('UPDATE threads SET created_at = ?, last_post_at = ?, reply_count = ? WHERE id = ?', ['2024-03-01 00:00:00', '2024-03-01 00:00:00', 99, $tieLow['thread_id']]);
         $this->actingAs($user);
-        $boardUrl = '/c/' . $board['slug'];
-        $keep = ['show_avatars' => '1', 'show_signatures' => '1', 'show_reactions' => '1'];
 
-        // last_post (default): A (Mar) > C (Feb) > B (Jan).
-        $this->setReading(['thread_sort' => 'last_post'] + $keep);
-        $this->assertOrder($this->get($boardUrl)->body(), ['ZZALPHA', 'ZZCHARLIE', 'ZZBRAVO']);
-
-        // newest (created_at desc): C (Mar) > B (Feb) > A (Jan).
-        $this->setReading(['thread_sort' => 'newest'] + $keep);
-        $this->assertOrder($this->get($boardUrl)->body(), ['ZZCHARLIE', 'ZZBRAVO', 'ZZALPHA']);
-
-        // replies (reply_count desc): B (9) > C (3) > A (1).
-        $this->setReading(['thread_sort' => 'replies'] + $keep);
-        $this->assertOrder($this->get($boardUrl)->body(), ['ZZBRAVO', 'ZZCHARLIE', 'ZZALPHA']);
+        foreach (['last_post', 'newest', 'replies'] as $legacySort) {
+            $this->db->run(
+                'INSERT INTO user_preferences (user_id, prefs, updated_at) VALUES (?, ?, UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE prefs = VALUES(prefs), updated_at = UTC_TIMESTAMP()',
+                [$user['id'], json_encode(['__v' => 2, 'thread_sort' => $legacySort], JSON_THROW_ON_ERROR)],
+            );
+            $this->assertOrder($this->get('/c/fixed-order-board')->body(), ['ZZPINNED', 'ZZACTIVE', 'ZZTIELOW', 'ZZTIEHIGH']);
+        }
     }
 
     public function test_guest_sees_default_reading_surface(): void

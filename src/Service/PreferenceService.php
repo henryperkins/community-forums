@@ -11,7 +11,7 @@ use App\Support\PreferenceSchema;
  * Appearance / reading / composing preferences (USER §4, P3-01). Stored in the
  * per-user JSON blob and validated against {@see PreferenceSchema} so a tampered
  * or stale document can never inject SQL, an out-of-range page size, or break
- * rendering. Server-enforced prefs (pagination, sort) are read back here and
+ * rendering. Server-enforced pagination is read back here and
  * shape queries so they hold across devices; client prefs (theme, density,
  * font size, reduced motion, composing toggles) are persisted server-side too,
  * so the experience is consistent on every device.
@@ -60,11 +60,11 @@ final class PreferenceService
     }
 
     /**
-     * The reading-display subset (thread_sort + show_signatures/avatars/reactions)
-     * the thread/board render paths consult so the toggles actually take effect
-     * (P3-01). Values are already validated by {@see PreferenceSchema}.
+     * The reading-display subset (show_signatures/avatars/reactions) the thread/
+     * board render paths consult so the toggles actually take effect (P3-01).
+     * Values are already validated by {@see PreferenceSchema}.
      *
-     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     * @return array{show_signatures:bool,show_avatars:bool,show_reactions:bool}
      */
     public function reading(int $userId): array
     {
@@ -75,7 +75,7 @@ final class PreferenceService
      * The same reading subset at schema defaults — used for guests, who have no
      * stored prefs but should still get the default (everything shown).
      *
-     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     * @return array{show_signatures:bool,show_avatars:bool,show_reactions:bool}
      */
     public function readingDefaults(): array
     {
@@ -84,12 +84,11 @@ final class PreferenceService
 
     /**
      * @param array<string,mixed> $r
-     * @return array{thread_sort:string,show_signatures:bool,show_avatars:bool,show_reactions:bool}
+     * @return array{show_signatures:bool,show_avatars:bool,show_reactions:bool}
      */
     private function pickReading(array $r): array
     {
         return [
-            'thread_sort' => (string) ($r['thread_sort'] ?? 'last_post'),
             'show_signatures' => (bool) ($r['show_signatures'] ?? true),
             'show_avatars' => (bool) ($r['show_avatars'] ?? true),
             'show_reactions' => (bool) ($r['show_reactions'] ?? true),

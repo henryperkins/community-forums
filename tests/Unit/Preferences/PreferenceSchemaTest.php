@@ -31,8 +31,16 @@ final class PreferenceSchemaTest extends TestCase
     {
         $r = PreferenceSchema::resolve([]);
         self::assertSame('system', $r['theme']);
-        self::assertSame('last_post', $r['thread_sort']);
+        self::assertArrayNotHasKey('thread_sort', $r);
         self::assertTrue($r['show_avatars']);
+    }
+
+    public function test_retired_thread_sort_is_preserved_as_legacy_unknown_data(): void
+    {
+        self::assertSame(3, PreferenceSchema::VERSION);
+        self::assertArrayNotHasKey('thread_sort', PreferenceSchema::fields('reading'));
+        $legacy = PreferenceSchema::resolve(['__v' => 2, 'thread_sort' => 'replies']);
+        self::assertSame('replies', $legacy['thread_sort']);
     }
 
     public function test_resolve_drops_invalid_enum_and_falls_back_to_default(): void
@@ -141,7 +149,7 @@ final class PreferenceSchemaTest extends TestCase
         $r = PreferenceSchema::resolve(['__v' => 1, 'theme' => 'dark']);
         self::assertSame(PreferenceSchema::VERSION, $r['__v']);
         self::assertSame('dark', $r['theme']);
-        self::assertSame('last_post', $r['thread_sort']); // new-in-v2 default
+        self::assertArrayNotHasKey('thread_sort', $r);
         self::assertTrue($r['show_reactions']);
     }
 }

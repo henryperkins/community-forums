@@ -56,12 +56,12 @@ final class BoardController extends Controller
         $perPage = $user !== null
             ? $prefSvc->threadsPerPage($user->id())
             : (int) $this->config()->get('pagination.threads_per_page', 20);
-        // Reading prefs (P3-01): thread-sort order + avatar visibility in the list.
+        // Reading prefs (P3-01): avatar visibility in the list.
         $reading = $user !== null ? $prefSvc->reading($user->id()) : $prefSvc->readingDefaults();
         $threadRepo = $this->container->get(ThreadRepository::class);
         $total = $threadRepo->countByBoard((int) $board['id']);
         $page = $this->pageNumber($request, $total, $perPage);
-        $threads = $threadRepo->listByBoard((int) $board['id'], $perPage, ($page - 1) * $perPage, $reading['thread_sort']);
+        $threads = $threadRepo->listByBoard((int) $board['id'], $perPage, ($page - 1) * $perPage);
 
         // Annotate unread state for the signed-in reader (P2-01).
         if ($user !== null && $this->container->get(FeatureFlags::class)->enabled('engagement') && $threads !== []) {

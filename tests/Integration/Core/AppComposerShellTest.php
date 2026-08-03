@@ -240,7 +240,6 @@ final class AppComposerShellTest extends TestCase
         $this->post('/settings/preferences', [
             'show_signatures' => '1',
             'show_reactions' => '1',
-            'thread_sort' => 'last_post',
         ]);
 
         $threadId = (int) $fixture['thread']['thread_id'];
