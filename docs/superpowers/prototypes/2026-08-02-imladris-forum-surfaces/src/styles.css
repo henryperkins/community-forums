@@ -702,7 +702,7 @@ a {
 
 .board-hero h1 > span {
   margin-right: 2px;
-  color: var(--gold-600);
+  color: inherit;
 }
 
 .board-hero-copy > p {
