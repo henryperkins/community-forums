@@ -141,9 +141,15 @@ async function visit(page: Page, url: string): Promise<void> {
   expect(response!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
+async function openEnhancedBoardComposer(page: Page): Promise<void> {
+  const promotedTrigger = page.locator('[data-open-topic-composer]');
+  await expect(promotedTrigger).toBeVisible();
+  await promotedTrigger.click();
+}
+
 async function openBoardComposer(page: Page): Promise<Locator> {
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openEnhancedBoardComposer(page);
   const form = page.locator('form.composer-shell[data-composer-instance^="new-thread-board-"]').first();
   await expect(form).toBeVisible();
   return form;
@@ -419,7 +425,7 @@ test('format row toggle persists and icon tooltips work for pointer and keyboard
   expect(await page.evaluate(() => localStorage.getItem('rb-composer:format-row'))).toBe('closed');
 
   await page.reload();
-  await page.locator('details.composer-details > summary').click();
+  await openEnhancedBoardComposer(page);
   form = page.locator('form.composer-shell[data-composer-instance^="new-thread-board-"]').first();
   toggle = form.getByRole('button', { name: 'Formatting' });
   toolbar = form.locator('.composer-toolbar');

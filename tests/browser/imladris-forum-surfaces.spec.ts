@@ -121,6 +121,19 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.viewportWidth);
 }
 
+async function expectBoardIdentityContent(page: Page, theme: Theme): Promise<void> {
+  const board = page.locator('[data-board-identity]');
+  await expect(board.locator('.eyebrow'), `${theme} board eyebrow`).toBeVisible();
+  await expect(board.locator('h1'), `${theme} board title`).toBeVisible();
+  await expect(board.locator('h1'), `${theme} board title text`).toContainText('#General');
+  await expect(board.getByText('Talk about anything.'), `${theme} board description`).toBeVisible();
+  await expect(board.locator('[data-board-fact]'), `${theme} board facts`).toHaveCount(3);
+  for (const fact of await board.locator('[data-board-fact]').all()) {
+    await expect(fact, `${theme} board fact`).toBeVisible();
+  }
+  await expect(board.getByRole('button', { name: 'New topic' }), `${theme} promoted New topic`).toBeVisible();
+}
+
 function productionScreenshot(project: 'desktop' | 'mobile', surface: Surface, theme: Theme): string {
   return path.join(evidenceRoot, project, `${surface}-${theme}.png`);
 }
@@ -130,12 +143,25 @@ async function captureSurface(
   project: 'desktop' | 'mobile',
   surface: Surface,
   theme: Theme,
+  assertReady?: () => Promise<void>,
 ): Promise<void> {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.evaluate((nextTheme) => {
     document.documentElement.setAttribute('data-theme', nextTheme);
   }, theme);
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  });
+  if (assertReady) {
+    await assertReady();
+  }
+  await page.screenshot({ fullPage: true, animations: 'disabled' });
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
+  if (assertReady) {
+    await assertReady();
+  }
   const output = productionScreenshot(project, surface, theme);
   fs.mkdirSync(path.dirname(output), { recursive: true });
   await page.screenshot({ path: output, fullPage: true, animations: 'disabled' });
@@ -179,6 +205,11 @@ async function captureComparison(
         </main>
       </body>
     </html>`, { waitUntil: 'load' });
+  await page.locator('img').evaluateAll(async (images) => {
+    await Promise.all(images.map((image) => image.decode()));
+  });
+  await page.screenshot({ fullPage: true, animations: 'disabled' });
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
   const output = path.join(evidenceRoot, 'comparisons', comparisonName(project, surface));
   fs.mkdirSync(path.dirname(output), { recursive: true });
   await page.screenshot({ path: output, fullPage: true, animations: 'disabled' });
@@ -210,8 +241,8 @@ test('forum index, board, and canonical thread satisfy production visual and acc
   await expect(page.getByText('Pinned first, then last post')).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await expectNoSeriousA11yViolations(page, '.board-view');
-  await captureSurface(page, project, 'board', 'light');
-  await captureSurface(page, project, 'board', 'dark');
+  await captureSurface(page, project, 'board', 'light', () => expectBoardIdentityContent(page, 'light'));
+  await captureSurface(page, project, 'board', 'dark', () => expectBoardIdentityContent(page, 'dark'));
 
   await openSeedThread(page);
   await expect(page.locator('[data-thread-study]')).toBeVisible();

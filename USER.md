@@ -255,7 +255,7 @@ Plus: **email digest cadence** (off / daily), **quiet hours**, **per-thread mute
 
 ### 4.8 Storage & application
 
-Preferences live in `user_preferences` (§7) with defaults inherited from site settings. Client-only prefs (theme, density, font) apply immediately in the browser; server-side prefs (pagination, sorts, privacy, DMs, blocks) are enforced server-side so they hold across devices and can't be bypassed.
+Preferences live in `user_preferences` (§7) with defaults inherited from site settings. Client-only prefs (theme, density, font) apply immediately in the browser; server-side prefs (pagination, privacy, DMs, blocks) are enforced server-side so they hold across devices and can't be bypassed.
 
 ### 4.9 Thread Intelligence disclosure and member workflow
 

@@ -9,7 +9,7 @@ use App\Core\Database;
 /**
  * Per-user preference blob (USER §4, §7). Stored as a single JSON document so
  * new client/reading/privacy keys can be added without migrations. Server-side
- * prefs (pagination, sort, leaderboard opt-out) are read back here and enforced;
+ * prefs (pagination and leaderboard opt-out) are read back here and enforced;
  * client-only prefs (theme, density) are merely persisted for the browser.
  */
 final class UserPreferenceRepository
