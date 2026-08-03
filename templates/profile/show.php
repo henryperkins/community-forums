@@ -10,7 +10,7 @@ $profileUrl = '/u/' . $profile['username'];
         <svg class="profile-cover-star" viewBox="0 0 100 100" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 63.8 16.7 83.2 16.8 83.3 36.2 97 50 83.3 63.8 83.2 83.2 63.8 83.3 50 97 36.2 83.3 16.8 83.2 16.7 63.8 3 50 16.7 36.2 16.8 16.8 36.2 16.7Z"/><path d="M50 21 57.5 42.5 79 50 57.5 57.5 50 79 42.5 57.5 21 50 42.5 42.5Z"/><circle cx="50" cy="50" r="5" fill="currentColor" stroke="none"/></g></svg>
         <span class="profile-avatar">
             <?= $this->partial('partials/monogram', ['name' => $display, 'username' => $profile['username'], 'avatar_path' => $profile['avatar_path'] ?? null, 'gilt' => true]) ?>
-            <?php if (!empty($presence_online)): ?><span class="presence-dot" title="Active recently" aria-label="Online"></span><?php endif; ?>
+            <?php if (!empty($presence_online)): ?><span class="presence-dot" title="Active recently" role="img" aria-label="Online"></span><?php endif; ?>
         </span>
         <div class="profile-id">
             <h1 class="profile-name">
@@ -35,7 +35,7 @@ $profileUrl = '/u/' . $profile['username'];
         </div>
         <div class="profile-aside">
             <div class="profile-rep">
-                <span class="profile-rep-value"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $profile['reputation']) ?></span>
+                <span class="profile-rep-value"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $profile['reputation']) ?></span>
                 <span class="profile-rep-label">Regard</span>
             </div>
             <?php if (($current_user !== null) && empty($is_self)): ?>
@@ -56,7 +56,10 @@ $profileUrl = '/u/' . $profile['username'];
                               // reusing the DM popover — native <details>, so no-JS still works. ?>
                         <details class="dm-menu">
                             <summary class="dm-iconbtn" aria-label="More actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
-                            <div class="dm-menu-pop" role="menu">
+                            <div class="dm-menu-pop">
+                                <a class="dm-menu-item" href="<?= $e($profileUrl) ?>" data-copy-link>
+                                    <?= $this->partial('partials/icon', ['name' => 'copy']) ?><span>Copy link</span>
+                                </a>
                                 <form method="post" action="<?= $e($profileUrl) ?>/block">
                                     <?= $this->csrfField() ?>
                                     <input type="hidden" name="return" value="<?= $e($profileUrl) ?>">
@@ -81,6 +84,7 @@ $profileUrl = '/u/' . $profile['username'];
 
     <?php if (!empty($can_view_member_record)): ?>
         <section class="profile-moderator" aria-label="Moderator context">
+            <?= $this->partial('partials/icon', ['name' => 'shield', 'class' => 'profile-moderator-icon']) ?>
             <div class="profile-moderator-copy">
                 <strong>Moderator context</strong>
                 <span><?= ($profile_status ?? 'active') === 'active' ? 'No active sanctions.' : (($profile_status ?? '') === 'suspended' ? 'This member is suspended.' : 'This member has an active sanction.') ?></span>
@@ -232,7 +236,7 @@ $profileUrl = '/u/' . $profile['username'];
                                 <?php if ($rowBody !== ''): ?><p class="profile-row-excerpt"><?= $e(mb_strimwidth($rowBody, 0, 140, '…')) ?></p><?php endif; ?>
                                 <p class="profile-row-meta"><span>#<?= $e($row['board_slug']) ?></span><span><?= $e(human_datetime($row['created_at'])) ?></span></p>
                             </div>
-                            <span class="profile-row-commends"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) ($row['commend_count'] ?? 0)) ?></span>
+                            <span class="profile-row-commends"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) ($row['commend_count'] ?? 0)) ?></span>
                         </li>
                     <?php endforeach; ?>
                 </ul>
@@ -258,7 +262,7 @@ $profileUrl = '/u/' . $profile['username'];
     <?php elseif ($activeTab === 'commends'): ?>
         <div class="profile-commends">
             <section class="profile-regard-card">
-                <span class="profile-regard-value"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $profile['reputation']) ?></span>
+                <span class="profile-regard-value"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $profile['reputation']) ?></span>
                 <p class="profile-regard-label">Regard</p>
                 <p class="profile-regard-note">Regard recognises contribution; it grants no powers.</p>
             </section>
@@ -268,7 +272,7 @@ $profileUrl = '/u/' . $profile['username'];
                     <ul class="profile-commend-rows">
                         <?php foreach ($top_commended as $post): ?>
                             <li>
-                                <span class="profile-commend-count"><span class="star-marker" aria-hidden="true">✦</span><?= number_format((int) $post['commend_count']) ?></span>
+                                <span class="profile-commend-count"><?= $this->partial('partials/icon', ['name' => 'commend-star', 'class' => 'star-marker']) ?><?= number_format((int) $post['commend_count']) ?></span>
                                 <span class="profile-commend-body"><a href="/t/<?= (int) $post['thread_id'] ?>-<?= $e($post['thread_slug']) ?>#p<?= (int) $post['id'] ?>"><?= $e($post['thread_title']) ?></a></span>
                             </li>
                         <?php endforeach; ?>

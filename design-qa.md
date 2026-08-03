@@ -4,9 +4,13 @@
 
 `docs/superpowers/prototypes/2026-08-02-imladris-forum-surfaces/evidence/`
 
+Profile source: `docs/design-system/imladris/templates/user-profile/UserProfile.dc.html` plus `docs/design-system/imladris/imladris-spec.md`.
+
 **Rendered implementation**
 
 `docs/evidence/imladris-forum-surfaces-production/`
+
+Profile evidence: `docs/evidence/imladris-profile-production/`.
 
 **Viewport and normalization**
 
@@ -35,17 +39,32 @@ Native Windows Chrome covered promoted-composer keyboard open/focus/Escape/focus
 - P2 thread participant semantics: participant container/items changed to `ul`/`li`; post-fix PHP semantics and Axe serious/critical checks passed.
 - P2 mobile dark-board evidence artifact: the first full capture omitted the identity copy and New topic control despite visible DOM. Capture synchronization now disables transitions before theme mutation, settles one disposable raster, and reasserts all identity content; the recaptured artifact and subsequent full-suite capture were visually inspected and contain the complete band.
 
+**Profile completion addendum**
+
+- Viewports: desktop 1160×900 and mobile 390×844; full-page captures preserve natural document height. Guest populated, guest gated, guest empty, signed-in member, self Connections, and moderator-context states were captured in light and dark themes.
+- Source/production comparisons: `docs/evidence/imladris-profile-production/comparisons/desktop-light.png`, `desktop-dark.png`, `mobile-light.png`, and `mobile-dark.png`. Each sheet was inspected with both images together at original resolution.
+- Approved source conflict: the standalone HTML's light cover uses parchment semantic tokens, while the written Imladris contract specifies a twilight profile cover and the approved production direction retained it. Production therefore keeps the twilight cover in both themes; this is documented in the profile evidence ledger.
+- Scope vocabulary: Regard and moderator/member-record language remain authoritative. Source-only profile Report, gated Message, and Request access actions were not introduced.
+- P2 interaction/accessibility fixes found during browser QA: Copy link was unreachable outside Thread Study because its progressive-enhancement handler followed a thread-only guard; the handler is now page-generic. The presence dot now has valid image semantics. The native action disclosure no longer claims an invalid ARIA menu structure.
+- P2 mobile tab clipping: the final Connections label initially extended 5.14px past the 390px viewport. Small-screen padding was tightened, a bounding-box assertion was added, and regenerated light/dark comparisons show all five tabs.
+- Profile Playwright result: 6 passed across desktop/mobile. The suite covers keyboard focus, Clipboard enhancement with safe-link fallback, no-JavaScript navigation/forms, search, sorting, paging, stable legacy connection routes, Remove follower, overflow, console/page/HTTP errors, and serious/critical Axe findings.
+- Focused profile/privacy PHP result: 55 tests, 331 assertions.
+
 **Findings**
 
-No actionable P0/P1/P2 visual finding remains in the inspected evidence. Intentional fixture-data and shared-shell differences are documented in the full evidence report.
+No actionable P0/P1/P2 visual finding remains in the inspected forum or profile evidence. Intentional fixture-data, shared-shell, and approved cover differences are documented in their evidence reports.
 
 **Verification summary**
 
-- Full PHPUnit: 2,416 tests, 17,159 assertions, 2 skipped.
+- Full PHPUnit: 2,431 tests, 17,317 assertions, 2 skipped.
 - Imladris runtime: 11 tests, 66 assertions.
+- Profile Chromium suite: 6 passed across desktop/mobile, including per-state Axe and no-JavaScript coverage.
+- Existing profile-media/custom-field browser compatibility: 4 Gate A cases and 4 Axe cases passed across desktop/mobile.
 - Combined native-Chrome forum/composer/Thread Study gate: 48 passed, 20 intentionally skipped.
+- Additive upgrade rehearsal through migration 0078: 17/17 checks passed.
+- WYSIWYG generated assets: deterministic rebuild current.
 - Console warnings/errors, page errors, and HTTP responses with status 400 or higher: none in the focused surface run.
-- Final application-surface digest: `9c35a46cdb8381644c043e50eacefc8fd83d49242b942ede80a4edc8a49dd43f`.
+- Final application-surface digest: `70c29b65f98373fb6bcfa7f268d9e9147460c62b5d0b01fd13ed9f770ee9c66a`.
 
 **Final result**
 

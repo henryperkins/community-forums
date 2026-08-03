@@ -320,6 +320,20 @@
         var clickedMenu = target.closest('[data-post-menu]');
         closePostMenus(clickedMenu);
 
+        var copy = target.closest('[data-copy-post], [data-copy-link]');
+        if (copy && navigator.clipboard && navigator.clipboard.writeText) {
+            event.preventDefault();
+            var fallback = function () { window.location.href = copy.href; };
+            try {
+                navigator.clipboard.writeText(copy.href).then(function () {
+                    if (clickedMenu) { clickedMenu.open = false; }
+                }).catch(fallback);
+            } catch (error) {
+                fallback();
+            }
+            return;
+        }
+
         var opener = target.closest('[data-topic-tools-open]');
         if (opener) {
             var openRoot = opener.closest('[data-thread-study]');
@@ -389,18 +403,6 @@
                 }
             }
             return;
-        }
-        var copy = target.closest('[data-copy-post]');
-        if (copy && navigator.clipboard && navigator.clipboard.writeText) {
-            event.preventDefault();
-            var fallback = function () { window.location.href = copy.href; };
-            try {
-                navigator.clipboard.writeText(copy.href).then(function () {
-                    if (clickedMenu) { clickedMenu.open = false; }
-                }).catch(fallback);
-            } catch (error) {
-                fallback();
-            }
         }
     });
 
