@@ -135,7 +135,7 @@ async function expectBoardIdentityContent(page: Page, theme: Theme): Promise<voi
   await expect(board.getByRole('button', { name: 'New topic' }), `${theme} promoted New topic`).toBeVisible();
 }
 
-async function expectInboxContent(page: Page): Promise<void> {
+async function expectInboxContent(page: Page, project: 'desktop' | 'mobile'): Promise<void> {
   const inbox = page.locator('[data-inbox]');
   const activeFilter = inbox.locator('.inbox-tabs a.is-active');
   const topic = inbox.locator('[data-inbox-list] a.thread-title').first();
@@ -146,7 +146,11 @@ async function expectInboxContent(page: Page): Promise<void> {
   await expect(activeFilter).toHaveText('For You');
   await expect(activeFilter).toHaveAttribute('aria-current', 'page');
   await expect(inbox.locator('[data-inbox-list] .thread-row.is-active')).toHaveCount(0);
-  await expect(inbox.locator('[data-inbox-reading] .inbox-empty')).toBeVisible();
+  if (project === 'desktop') {
+    await expect(inbox.locator('[data-inbox-reading] .inbox-empty')).toBeVisible();
+  } else {
+    await expect(inbox.locator('[data-inbox-reading]')).toBeHidden();
+  }
   await expect(topic).toBeVisible();
   await expect(topic).toHaveAttribute('href', /^\/t\/\d+/);
   await expect(page.locator('[data-board-identity]')).toHaveCount(0);
@@ -266,11 +270,11 @@ test('forum index, board, and canonical thread satisfy production visual and acc
   const viewport = evidenceViewport(info);
 
   await visit(page, '/inbox');
-  await expectInboxContent(page);
+  await expectInboxContent(page, project);
   await expectNoHorizontalOverflow(page);
   await expectNoSeriousA11yViolations(page, '[data-inbox]');
-  await captureSurface(page, project, 'inbox', 'light', () => expectInboxContent(page));
-  await captureSurface(page, project, 'inbox', 'dark', () => expectInboxContent(page));
+  await captureSurface(page, project, 'inbox', 'light', () => expectInboxContent(page, project));
+  await captureSurface(page, project, 'inbox', 'dark', () => expectInboxContent(page, project));
 
   await visit(page, '/');
   await expect(page.locator('.forum-directory__hero')).toBeVisible();

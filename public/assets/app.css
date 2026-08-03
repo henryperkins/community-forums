@@ -4655,7 +4655,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .board-view [data-open-topic-composer][hidden] { display: none; }
 .has-js .board-view .js-native-topic-trigger { display: none; }
 
-.board-view .board-topics { margin-top: 32px; }
+.board-view .board-topics { margin-top: 22px; }
 .board-view .board-topics-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 9px; }
 .board-view .board-topics-heading .eyebrow { margin: 0; }
 .board-view .board-topics-heading h2 { margin: 2px 0 0; font-size: 1.82rem; }
@@ -4664,14 +4664,15 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .board-view .board-topics-list > .thread-row-board + .thread-row-board { border-top: 0; }
 .board-view .thread-row-board {
     align-items: center;
-    min-height: 91px;
-    padding: 14px 14px 14px 12px;
+    min-height: 64px;
+    padding: 8px 8px 8px 6px;
     border-bottom: 1px solid var(--border-hair);
     border-radius: 0;
     background: none;
     box-shadow: none;
     overflow: hidden;
 }
+.board-view .thread-row-board > .monogram { width: 32px; height: 32px; font-size: .6rem; }
 .board-view .thread-row-board:hover,
 .board-view .thread-row-board:focus-within { background: var(--surface-raised); }
 .board-view .thread-row-board .thread-row-main { min-width: 0; }
@@ -5399,15 +5400,15 @@ span.wf-btn {
     .board-view .board-identity-follow-note { text-align: left; }
     .board-view .board-topics-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
     .board-view .board-topics-heading > p { margin: 0; }
-    .board-view .thread-row-board { flex-wrap: wrap; min-height: 84px; gap: 10px; padding: 13px 4px; }
-    .board-view .thread-row-board > .monogram { width: 34px; height: 34px; font-size: .62rem; }
+    .board-view .thread-row-board { flex-wrap: wrap; min-height: 72px; gap: 8px; padding: 9px 4px; }
+    .board-view .thread-row-board > .monogram { width: 32px; height: 32px; font-size: .6rem; }
     .board-view .thread-row-activity {
         width: auto;
-        flex: 1 0 calc(100% - 47px);
+        flex: 1 0 calc(100% - 40px);
         flex-direction: row;
         align-items: baseline;
-        gap: 7px;
-        margin-left: 47px;
+        gap: 6px;
+        margin-left: 40px;
         text-align: left;
     }
     .board-view .thread-row-activity span::after { margin-left: 7px; color: var(--border-strong); content: "·"; }
