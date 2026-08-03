@@ -55,7 +55,7 @@ The paired desktop/mobile inspection confirms that Board retains the dark-green 
 - Focused native-Chrome Board/Inbox visual contract: **8 passed, 2 intentionally skipped**; exact desktop seeded Board row: **64 CSS px**.
 - Inbox behavior suite (filters, selected-topic reading pane, mobile Back, no-JavaScript fallback, and canonical navigation): **18 passed, 10 intentionally skipped**, exit 0.
 - Native Chrome combined forum/composer/Thread Study gate: **48 passed, 20 intentionally skipped**, exit 0.
-- Application-surface digest: `9c35a46cdb8381644c043e50eacefc8fd83d49242b942ede80a4edc8a49dd43f`. Only the baseline hash and its matching generated-manifest metadata changed; generated Imladris CSS, fonts, tokens, and licenses retained identical content.
+- Application-surface digest: `89f210a80401973d214101f5e676d75ba99fe951d1e570e18f65703e90a33192`. Only the baseline hash and its matching generated-manifest metadata changed; generated Imladris CSS, fonts, tokens, and licenses retained identical content.
 - `git diff --check`: clean.
 
 The Thread Study suite refreshed its existing desktop/mobile evidence images after the Forum index label and participant-list semantics changed; those browser-rendered artifacts were opened and inspected with no remaining visual defect.
