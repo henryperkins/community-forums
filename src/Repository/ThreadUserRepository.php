@@ -122,7 +122,7 @@ final class ThreadUserRepository
     }
 
     /** Total unread threads for the bell/inbox badge, read-gated by board visibility. */
-    public function unreadCount(int $userId, bool $isAdmin, string $cutover): int
+    public function unreadCount(int $userId, bool $isAdmin, string $cutover, bool $workflowEnabled = true): int
     {
         [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
         return (int) $this->db->fetchValue(
@@ -130,16 +130,12 @@ final class ThreadUserRepository
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
              WHERE t.is_deleted = 0
                AND t.is_pending = 0
                AND ($visSql)
-               AND (
-                 CASE
-                   WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
-                   ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
-                 END
-               )",
-            array_merge([$userId], $visParams, [$cutover]),
+               " . $this->unreadQueueFragment($workflowEnabled),
+            array_merge([$userId, $userId], $visParams, [$cutover]),
         );
     }
 
@@ -148,19 +144,37 @@ final class ThreadUserRepository
      * preserving the same board-visibility gate. Normal filters exclude active
      * snoozes; the snoozed filter is the explicit personal recovery view.
      *
-     * @return array<int,array<string,mixed>> threads + is_unread/is_starred flags
+     * @return array<int,array<string,mixed>> threads + unread/star/queue flags
      */
-    public function inbox(int $userId, string $filter, bool $isAdmin, string $cutover, int $limit, int $offset): array
+    public function inbox(
+        int $userId,
+        string $filter,
+        bool $isAdmin,
+        string $cutover,
+        int $limit,
+        int $offset,
+        bool $workflowEnabled = true,
+        bool $mentionsEnabled = true,
+    ): array
     {
         $limit = max(1, $limit);
         $offset = max(0, $offset);
-        // Param order follows SQL text order: SELECT CASE (cutover), JOIN (userId), WHERE visibility, then filter.
-        $params = [$cutover, $userId];
+        // Param order follows SQL text order: SELECT unread cases (two cutovers),
+        // JOIN (userId for thread state + board preference), WHERE visibility,
+        // then filter.
+        $params = [$cutover, $cutover, $userId, $userId];
         [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
         foreach ($visParams as $p) {
             $params[] = $p;
         }
-        [$where, $order] = $this->filterFragment($filter, $userId, $cutover, $params);
+        [$where, $order] = $this->filterFragment(
+            $filter,
+            $userId,
+            $cutover,
+            $params,
+            $workflowEnabled,
+            $mentionsEnabled,
+        );
 
         $rows = $this->db->fetchAll(
             "SELECT t.*, b.slug AS board_slug, b.name AS board_name, b.visibility AS board_visibility,
@@ -174,12 +188,14 @@ final class ThreadUserRepository
                     CASE
                       WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
                       ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
-                    END AS is_unread
+                    END AS is_unread,
+                    " . $this->inboxUnreadStateSql($workflowEnabled) . " AS is_inbox_unread
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              JOIN users au ON au.id = t.user_id
              LEFT JOIN posts op ON op.thread_id = t.id AND op.is_op = 1
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
              LEFT JOIN thread_assignments ta ON ta.thread_id = t.id
              LEFT JOIN users assignee ON assignee.id = ta.assigned_user_id
              WHERE t.is_deleted = 0
@@ -191,26 +207,55 @@ final class ThreadUserRepository
             $params,
         );
 
+        if (!$workflowEnabled) {
+            // A rollback must suppress retained workflow state from every Inbox
+            // presentation, not merely remove its filters. Accepted answers and
+            // pin/lock remain core topic state and intentionally survive it.
+            foreach ($rows as &$row) {
+                $row['status'] = $row['accepted_answer_post_id'] !== null ? 'solved' : 'open';
+                $row['snoozed_until'] = null;
+                $row['assigned_user_id'] = null;
+                $row['assigned_username'] = null;
+                $row['assigned_display_name'] = null;
+            }
+            unset($row);
+        }
+
         if ($filter === 'for_you') {
-            $rows = $this->annotateForYouReasons($userId, $rows);
+            $rows = $this->annotateForYouReasons($userId, $rows, $workflowEnabled, $mentionsEnabled);
         }
 
         return $rows;
     }
 
-    public function countInbox(int $userId, string $filter, bool $isAdmin, string $cutover): int
+    public function countInbox(
+        int $userId,
+        string $filter,
+        bool $isAdmin,
+        string $cutover,
+        bool $workflowEnabled = true,
+        bool $mentionsEnabled = true,
+    ): int
     {
-        $params = [$userId]; // JOIN
+        $params = [$userId, $userId]; // thread-state + board-preference JOINs
         [$visSql, $visParams] = $this->visibility($isAdmin, $userId);
         foreach ($visParams as $p) {
             $params[] = $p;
         }
-        [$where] = $this->filterFragment($filter, $userId, $cutover, $params);
+        [$where] = $this->filterFragment(
+            $filter,
+            $userId,
+            $cutover,
+            $params,
+            $workflowEnabled,
+            $mentionsEnabled,
+        );
         return (int) $this->db->fetchValue(
             "SELECT COUNT(*)
              FROM threads t
              JOIN boards b ON b.id = t.board_id
              LEFT JOIN thread_user tu ON tu.thread_id = t.id AND tu.user_id = ?
+             LEFT JOIN user_board_prefs ubp ON ubp.user_id = ? AND ubp.board_id = t.board_id
              WHERE t.is_deleted = 0
                AND t.is_pending = 0
                AND ($visSql)
@@ -226,64 +271,78 @@ final class ThreadUserRepository
      * @param list<mixed> $params
      * @return array{0:string,1:string}
      */
-    private function filterFragment(string $filter, int $userId, string $cutover, array &$params): array
+    private function filterFragment(
+        string $filter,
+        int $userId,
+        string $cutover,
+        array &$params,
+        bool $workflowEnabled,
+        bool $mentionsEnabled,
+    ): array
     {
-        $visible = 'AND (tu.snoozed_until IS NULL OR tu.snoozed_until <= UTC_TIMESTAMP())';
+        $visible = $this->normalInboxVisibility($workflowEnabled);
         switch ($filter) {
             case 'for_you':
-                $params[] = $userId;
-                $params[] = $userId;
-                $params[] = $userId;
-                $params[] = $userId;
+                $signals = [];
+                if ($workflowEnabled) {
+                    $signals[] = 'EXISTS (SELECT 1 FROM thread_assignments xa WHERE xa.thread_id = t.id AND xa.assigned_user_id = ' . (int) $userId . ')';
+                }
+                if ($mentionsEnabled) {
+                    $signals[] = $this->notificationSignal($userId, 'mention');
+                }
+                $signals[] = $this->notificationSignal($userId, 'reply');
+                $signals[] = $this->threadSubscriptionSignal($userId);
+                $signals[] = $this->boardSubscriptionSignal($userId);
+                $signals[] = 'COALESCE(tu.is_starred, 0) = 1';
+                $signals[] = 'EXISTS (SELECT 1 FROM follows fb WHERE fb.user_id = ' . (int) $userId . " AND fb.target_type = 'board' AND fb.target_id = t.board_id)";
+                $signals[] = 'EXISTS (SELECT 1 FROM follows ft JOIN thread_tags tt ON tt.tag_id = ft.target_id
+                                   WHERE ft.user_id = ' . (int) $userId . " AND ft.target_type = 'tag' AND tt.thread_id = t.id)";
                 return [
-                    $visible . ' AND (
-                        EXISTS (SELECT 1 FROM thread_assignments xa WHERE xa.thread_id = t.id AND xa.assigned_user_id = ?)
-                        OR EXISTS (SELECT 1 FROM posts mp WHERE mp.thread_id = t.id AND mp.is_deleted = 0 AND mp.is_pending = 0
-                                   AND mp.user_id <> ? AND mp.body LIKE CONCAT(\'%@\', (SELECT username FROM users WHERE id = ?), \'%\'))
-                        OR (t.user_id = ? AND t.reply_count > 0)
-                        OR EXISTS (SELECT 1 FROM subscriptions st WHERE st.user_id = ' . (int) $userId . " AND st.target_type = 'thread' AND st.target_id = t.id AND st.frequency <> 'off')
-                        OR EXISTS (SELECT 1 FROM subscriptions sb WHERE sb.user_id = " . (int) $userId . " AND sb.target_type = 'board' AND sb.target_id = t.board_id AND sb.frequency <> 'off')
-                        OR COALESCE(tu.is_starred, 0) = 1
-                        OR EXISTS (SELECT 1 FROM follows fb WHERE fb.user_id = " . (int) $userId . " AND fb.target_type = 'board' AND fb.target_id = t.board_id)
-                        OR EXISTS (SELECT 1 FROM follows ft JOIN thread_tags tt ON tt.tag_id = ft.target_id
-                                   WHERE ft.user_id = " . (int) $userId . " AND ft.target_type = 'tag' AND tt.thread_id = t.id)
-                    )",
-                    $this->forYouOrder($userId),
+                    $visible . ' AND (' . implode("\n                        OR ", $signals) . ')',
+                    $this->forYouOrder($userId, $workflowEnabled, $mentionsEnabled),
                 ];
             case 'mentions':
-                $params[] = $userId;
-                $params[] = $userId;
+                if (!$mentionsEnabled) {
+                    return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
+                }
                 return [
-                    $visible . ' AND EXISTS (
-                        SELECT 1 FROM posts mp
-                        WHERE mp.thread_id = t.id AND mp.is_deleted = 0 AND mp.is_pending = 0
-                          AND mp.user_id <> ? AND mp.body LIKE CONCAT(\'%@\', (SELECT username FROM users WHERE id = ?), \'%\')
-                    )',
+                    $visible . ' AND ' . $this->notificationSignal($userId, 'mention'),
                     't.last_post_at DESC, t.id DESC',
                 ];
             case 'replies':
-                $params[] = $userId;
-                return [$visible . ' AND t.user_id = ? AND t.reply_count > 0', 't.last_post_at DESC, t.id DESC'];
+                return [$visible . ' AND ' . $this->notificationSignal($userId, 'reply'), 't.last_post_at DESC, t.id DESC'];
             case 'watching':
                 return [
-                    $visible . ' AND (
-                        EXISTS (SELECT 1 FROM subscriptions st WHERE st.user_id = ' . (int) $userId . " AND st.target_type = 'thread' AND st.target_id = t.id AND st.frequency <> 'off')
-                        OR EXISTS (SELECT 1 FROM subscriptions sb WHERE sb.user_id = " . (int) $userId . " AND sb.target_type = 'board' AND sb.target_id = t.board_id AND sb.frequency <> 'off')
-                    )",
+                    $visible . ' AND ' . $this->effectiveSubscriptionSignal($userId),
                     't.last_post_at DESC, t.id DESC',
                 ];
             case 'needs_answer':
+                if (!$workflowEnabled) {
+                    return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
+                }
                 return [$visible . " AND (t.status = 'needs_answer' OR t.reply_count = 0)", 't.last_post_at DESC, t.id DESC'];
             case 'assigned':
+                if (!$workflowEnabled) {
+                    return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
+                }
                 return [
                     $visible . ' AND EXISTS (SELECT 1 FROM thread_assignments xa WHERE xa.thread_id = t.id AND xa.assigned_user_id = ' . (int) $userId . ')',
                     't.last_post_at DESC, t.id DESC',
                 ];
             case 'decisions':
+                if (!$workflowEnabled) {
+                    return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
+                }
                 return [$visible . " AND t.status = 'decision_made'", 't.status_changed_at DESC, t.id DESC'];
             case 'solved':
+                if (!$workflowEnabled) {
+                    return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
+                }
                 return [$visible . " AND t.status = 'solved'", 't.status_changed_at DESC, t.id DESC'];
             case 'snoozed':
+                if (!$workflowEnabled) {
+                    return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
+                }
                 return ['AND tu.snoozed_until > UTC_TIMESTAMP()', 'tu.snoozed_until ASC, t.last_post_at DESC, t.id DESC'];
             case 'drafts':
                 return ['AND 1 = 0', 't.last_post_at DESC, t.id DESC'];
@@ -299,10 +358,7 @@ final class ThreadUserRepository
             case 'unread':
                 $params[] = $cutover;
                 return [
-                    $visible . ' AND (CASE
-                            WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
-                            ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
-                          END)',
+                    $this->unreadQueueFragment($workflowEnabled),
                     't.last_post_at DESC, t.id DESC',
                 ];
             default: // active
@@ -310,20 +366,24 @@ final class ThreadUserRepository
         }
     }
 
-    private function forYouOrder(int $userId): string
+    private function forYouOrder(int $userId, bool $workflowEnabled, bool $mentionsEnabled): string
     {
         $uid = (int) $userId;
-        return "(CASE WHEN EXISTS (SELECT 1 FROM thread_assignments xa WHERE xa.thread_id = t.id AND xa.assigned_user_id = $uid) THEN 90 ELSE 0 END
-                + CASE WHEN EXISTS (SELECT 1 FROM posts mp WHERE mp.thread_id = t.id AND mp.is_deleted = 0 AND mp.is_pending = 0
-                                      AND mp.user_id <> $uid AND mp.body LIKE CONCAT('%@', (SELECT username FROM users WHERE id = $uid), '%')) THEN 80 ELSE 0 END
-                + CASE WHEN t.user_id = $uid AND t.reply_count > 0 THEN 70 ELSE 0 END
-                + CASE WHEN EXISTS (SELECT 1 FROM subscriptions st WHERE st.user_id = $uid AND st.target_type = 'thread' AND st.target_id = t.id AND st.frequency <> 'off') THEN 60 ELSE 0 END
-                + CASE WHEN EXISTS (SELECT 1 FROM subscriptions sb WHERE sb.user_id = $uid AND sb.target_type = 'board' AND sb.target_id = t.board_id AND sb.frequency <> 'off') THEN 50 ELSE 0 END
-                + CASE WHEN COALESCE(tu.is_starred, 0) = 1 THEN 40 ELSE 0 END
-                + CASE WHEN EXISTS (SELECT 1 FROM follows fb WHERE fb.user_id = $uid AND fb.target_type = 'board' AND fb.target_id = t.board_id) THEN 30 ELSE 0 END
-                + CASE WHEN EXISTS (SELECT 1 FROM follows ft JOIN thread_tags tt ON tt.tag_id = ft.target_id
-                                    WHERE ft.user_id = $uid AND ft.target_type = 'tag' AND tt.thread_id = t.id) THEN 20 ELSE 0 END) DESC,
-                t.last_post_at DESC, t.id DESC";
+        $weights = [];
+        if ($workflowEnabled) {
+            $weights[] = "CASE WHEN EXISTS (SELECT 1 FROM thread_assignments xa WHERE xa.thread_id = t.id AND xa.assigned_user_id = $uid) THEN 90 ELSE 0 END";
+        }
+        if ($mentionsEnabled) {
+            $weights[] = 'CASE WHEN ' . $this->notificationSignal($userId, 'mention') . ' THEN 80 ELSE 0 END';
+        }
+        $weights[] = 'CASE WHEN ' . $this->notificationSignal($userId, 'reply') . ' THEN 70 ELSE 0 END';
+        $weights[] = 'CASE WHEN ' . $this->threadSubscriptionSignal($userId) . ' THEN 60 ELSE 0 END';
+        $weights[] = 'CASE WHEN ' . $this->boardSubscriptionSignal($userId) . ' THEN 50 ELSE 0 END';
+        $weights[] = 'CASE WHEN COALESCE(tu.is_starred, 0) = 1 THEN 40 ELSE 0 END';
+        $weights[] = "CASE WHEN EXISTS (SELECT 1 FROM follows fb WHERE fb.user_id = $uid AND fb.target_type = 'board' AND fb.target_id = t.board_id) THEN 30 ELSE 0 END";
+        $weights[] = "CASE WHEN EXISTS (SELECT 1 FROM follows ft JOIN thread_tags tt ON tt.tag_id = ft.target_id
+                                    WHERE ft.user_id = $uid AND ft.target_type = 'tag' AND tt.thread_id = t.id) THEN 20 ELSE 0 END";
+        return '(' . implode("\n                + ", $weights) . ') DESC, t.last_post_at DESC, t.id DESC';
     }
 
     /**
@@ -333,37 +393,27 @@ final class ThreadUserRepository
      * @param array<int,array<string,mixed>> $rows
      * @return array<int,array<string,mixed>>
      */
-    private function annotateForYouReasons(int $userId, array $rows): array
+    private function annotateForYouReasons(int $userId, array $rows, bool $workflowEnabled, bool $mentionsEnabled): array
     {
-        $username = (string) ($this->db->fetchValue('SELECT username FROM users WHERE id = ?', [$userId]) ?: '');
         foreach ($rows as &$row) {
             $threadId = (int) $row['id'];
-            if ((int) ($row['assigned_user_id'] ?? 0) === $userId) {
+            if ($workflowEnabled && (int) ($row['assigned_user_id'] ?? 0) === $userId) {
                 $row['for_you_reason'] = 'Assigned to you';
                 continue;
             }
-            if ($username !== '' && $this->db->fetchValue(
-                'SELECT 1 FROM posts WHERE thread_id = ? AND is_deleted = 0 AND is_pending = 0 AND user_id <> ? AND body LIKE ? LIMIT 1',
-                [$threadId, $userId, '%@' . $username . '%'],
-            ) !== false) {
+            if ($mentionsEnabled && $this->hasNotificationSignal($userId, $threadId, 'mention')) {
                 $row['for_you_reason'] = 'Mentioned you';
                 continue;
             }
-            if ((int) $row['user_id'] === $userId && (int) $row['reply_count'] > 0) {
+            if ($this->hasNotificationSignal($userId, $threadId, 'reply')) {
                 $row['for_you_reason'] = 'Replies to your topic';
                 continue;
             }
-            if ($this->db->fetchValue(
-                "SELECT 1 FROM subscriptions WHERE user_id = ? AND target_type = 'thread' AND target_id = ? AND frequency <> 'off' LIMIT 1",
-                [$userId, $threadId],
-            ) !== false) {
+            if ($this->hasThreadSubscription($userId, $threadId)) {
                 $row['for_you_reason'] = 'Watched topic';
                 continue;
             }
-            if ($this->db->fetchValue(
-                "SELECT 1 FROM subscriptions WHERE user_id = ? AND target_type = 'board' AND target_id = ? AND frequency <> 'off' LIMIT 1",
-                [$userId, (int) $row['board_id']],
-            ) !== false) {
+            if ($this->hasBoardSubscription($userId, $threadId, (int) $row['board_id'])) {
                 $row['for_you_reason'] = 'Watched board';
                 continue;
             }
@@ -383,6 +433,135 @@ final class ThreadUserRepository
         unset($row);
 
         return $rows;
+    }
+
+    /** Normal personal views honor a future snooze only while workflow is live. */
+    private function normalInboxVisibility(bool $workflowEnabled): string
+    {
+        return $workflowEnabled ? 'AND (tu.snoozed_until IS NULL OR tu.snoozed_until <= UTC_TIMESTAMP())' : '';
+    }
+
+    /** The one unread predicate shared by the Unread queue and its badge. */
+    private function unreadQueueFragment(bool $workflowEnabled): string
+    {
+        return $this->normalInboxVisibility($workflowEnabled) . '
+               AND COALESCE(ubp.is_muted, 0) = 0
+               AND (' . $this->unreadStateSql() . ')';
+    }
+
+    private function unreadStateSql(): string
+    {
+        return 'CASE
+                  WHEN tu.thread_id IS NULL THEN (t.last_post_at IS NOT NULL AND t.last_post_at > ?)
+                  ELSE (t.last_post_id IS NOT NULL AND (tu.last_read_post_id IS NULL OR t.last_post_id > tu.last_read_post_id))
+                END';
+    }
+
+    /** Per-row queue membership mirrors the badge and Unread-filter predicate. */
+    private function inboxUnreadStateSql(bool $workflowEnabled): string
+    {
+        return 'CASE
+                  WHEN COALESCE(ubp.is_muted, 0) = 0
+                    ' . $this->normalInboxVisibility($workflowEnabled) . '
+                    AND (' . $this->unreadStateSql() . ')
+                  THEN 1 ELSE 0
+                END';
+    }
+
+    /** A delivery-backed mention or reply signal, not a raw body-text approximation. */
+    private function notificationSignal(int $userId, string $type): string
+    {
+        $uid = (int) $userId;
+        return "EXISTS (
+                    SELECT 1
+                    FROM notifications n
+                    JOIN posts np ON np.id = n.post_id
+                    WHERE n.user_id = $uid
+                      AND n.thread_id = t.id
+                      AND n.type = '$type'
+                      AND n.actor_id <> $uid
+                      AND np.thread_id = t.id
+                      AND np.is_deleted = 0
+                      AND np.is_pending = 0
+                )";
+    }
+
+    /** An active thread row is the first half of subscription precedence. */
+    private function threadSubscriptionSignal(int $userId): string
+    {
+        $uid = (int) $userId;
+        return "EXISTS (SELECT 1 FROM subscriptions st
+                        WHERE st.user_id = $uid
+                          AND st.target_type = 'thread'
+                          AND st.target_id = t.id
+                          AND st.frequency <> 'off')";
+    }
+
+    /** A board row applies only when there is no thread-level override at all. */
+    private function boardSubscriptionSignal(int $userId): string
+    {
+        $uid = (int) $userId;
+        return "EXISTS (SELECT 1 FROM subscriptions sb
+                        WHERE sb.user_id = $uid
+                          AND sb.target_type = 'board'
+                          AND sb.target_id = t.board_id
+                          AND sb.frequency <> 'off'
+                          AND NOT EXISTS (
+                              SELECT 1 FROM subscriptions st
+                              WHERE st.user_id = $uid
+                                AND st.target_type = 'thread'
+                                AND st.target_id = t.id
+                          ))";
+    }
+
+    private function effectiveSubscriptionSignal(int $userId): string
+    {
+        return '(' . $this->threadSubscriptionSignal($userId) . ' OR ' . $this->boardSubscriptionSignal($userId) . ')';
+    }
+
+    private function hasNotificationSignal(int $userId, int $threadId, string $type): bool
+    {
+        return $this->db->fetchValue(
+            'SELECT 1
+             FROM notifications n
+             JOIN posts np ON np.id = n.post_id
+             WHERE n.user_id = ?
+               AND n.thread_id = ?
+               AND n.type = ?
+               AND n.actor_id <> ?
+               AND np.thread_id = ?
+               AND np.is_deleted = 0
+               AND np.is_pending = 0
+             LIMIT 1',
+            [$userId, $threadId, $type, $userId, $threadId],
+        ) !== false;
+    }
+
+    private function hasThreadSubscription(int $userId, int $threadId): bool
+    {
+        return $this->db->fetchValue(
+            "SELECT 1 FROM subscriptions
+             WHERE user_id = ? AND target_type = 'thread' AND target_id = ? AND frequency <> 'off'
+             LIMIT 1",
+            [$userId, $threadId],
+        ) !== false;
+    }
+
+    private function hasBoardSubscription(int $userId, int $threadId, int $boardId): bool
+    {
+        return $this->db->fetchValue(
+            "SELECT 1 FROM subscriptions sb
+             WHERE sb.user_id = ?
+               AND sb.target_type = 'board'
+               AND sb.target_id = ?
+               AND sb.frequency <> 'off'
+               AND NOT EXISTS (
+                   SELECT 1 FROM subscriptions st
+                   WHERE st.user_id = ? AND st.target_type = 'thread' AND st.target_id = ?
+               )
+             LIMIT 1",
+            [$userId, $boardId, $userId, $threadId],
+        ) !== false;
     }
 
     /**

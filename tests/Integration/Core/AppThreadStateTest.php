@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\ThreadUserRepository;
+use App\Repository\UserBoardPrefRepository;
 use Tests\Support\TestCase;
 
 /**
@@ -137,6 +140,121 @@ final class AppThreadStateTest extends TestCase
         (new SettingRepository($this->db))->set('engagement_cutover_at', '2000-01-01 00:00:00');
         $cutover = '2000-01-01 00:00:00';
         self::assertSame(1, $this->tu()->unreadCount((int) $me['id'], false, $cutover));
+    }
+
+    public function testUnreadCountAndQueueBothExcludeActiveSnoozesAndMutedBoards(): void
+    {
+        $author = $this->makeUser();
+        $me = $this->makeUser();
+        $visibleBoard = $this->makeBoard($this->makeCategory());
+        $mutedBoard = $this->makeBoard($this->makeCategory());
+        $snoozed = $this->makeThread($visibleBoard, $author, 'Snoozed unread', 'x');
+        $muted = $this->makeThread($mutedBoard, $author, 'Muted unread', 'y');
+        $cutover = '2000-01-01 00:00:00';
+
+        $this->tu()->setSnooze((int) $me['id'], (int) $snoozed['thread_id'], '2999-01-01 00:00:00');
+        (new UserBoardPrefRepository($this->db))->setMuted((int) $me['id'], (int) $mutedBoard['id'], true);
+
+        $rows = $this->tu()->inbox((int) $me['id'], 'unread', false, $cutover, 20, 0);
+        self::assertSame([], array_column($rows, 'title'));
+        self::assertSame(0, $this->tu()->unreadCount((int) $me['id'], false, $cutover));
+
+        // A muted row remains available in non-Unread Inbox views, but its raw
+        // unread decoration must not claim a place in the queue/badge.
+        $active = $this->tu()->inbox((int) $me['id'], 'active', false, $cutover, 20, 0);
+        $mutedRow = array_values(array_filter(
+            $active,
+            static fn (array $row): bool => $row['title'] === 'Muted unread',
+        ));
+        self::assertCount(1, $mutedRow);
+        self::assertSame(1, (int) $mutedRow[0]['is_unread']);
+        self::assertSame(0, (int) $mutedRow[0]['is_inbox_unread']);
+    }
+
+    public function testMentionFiltersUseCanonicalDeliveredMentionSignals(): void
+    {
+        $me = $this->makeUser(['username' => 'signal_member']);
+        $actor = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $falseMention = $this->makeThread($board, $actor, 'Prefix is not a mention', 'Opening.');
+        $canonicalMention = $this->makeThread($board, $actor, 'Canonical delivered mention', 'Opening.');
+
+        $this->posting()->reply($this->userEntity($actor), (int) $falseMention['thread_id'], [
+            'body' => '@signal_membership is a different handle.',
+        ]);
+        $postId = $this->posting()->reply($this->userEntity($actor), (int) $canonicalMention['thread_id'], [
+            'body' => 'The delivery record, rather than the body text, is canonical.',
+        ]);
+        (new NotificationRepository($this->db))->create([
+            'user_id' => (int) $me['id'],
+            'type' => 'mention',
+            'actor_id' => (int) $actor['id'],
+            'thread_id' => (int) $canonicalMention['thread_id'],
+            'post_id' => $postId,
+        ]);
+
+        $mentions = $this->tu()->inbox((int) $me['id'], 'mentions', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        self::assertContains('Canonical delivered mention', array_column($mentions, 'title'));
+        self::assertNotContains('Prefix is not a mention', array_column($mentions, 'title'));
+
+        $forYou = $this->tu()->inbox((int) $me['id'], 'for_you', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        $rows = array_values(array_filter($forYou, static fn (array $row): bool => $row['title'] === 'Canonical delivered mention'));
+        self::assertCount(1, $rows);
+        self::assertSame('Mentioned you', $rows[0]['for_you_reason']);
+    }
+
+    public function testReplyFiltersUseCanonicalDeliveredReplySignals(): void
+    {
+        $me = $this->makeUser();
+        $actor = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $me, 'Reply delivery is canonical', 'Opening.');
+        $threadId = (int) $thread['thread_id'];
+
+        $this->posting()->reply($this->userEntity($me), $threadId, ['body' => 'My own clarification.']);
+        self::assertNotContains(
+            'Reply delivery is canonical',
+            array_column($this->tu()->inbox((int) $me['id'], 'replies', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
+            'A member must not receive a reply cue for their own post.',
+        );
+
+        $postId = $this->posting()->reply($this->userEntity($actor), $threadId, ['body' => 'A delivered reply.']);
+        (new NotificationRepository($this->db))->create([
+            'user_id' => (int) $me['id'],
+            'type' => 'reply',
+            'actor_id' => (int) $actor['id'],
+            'thread_id' => $threadId,
+            'post_id' => $postId,
+        ]);
+
+        $replies = $this->tu()->inbox((int) $me['id'], 'replies', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        self::assertContains('Reply delivery is canonical', array_column($replies, 'title'));
+        $forYou = $this->tu()->inbox((int) $me['id'], 'for_you', false, ThreadUserRepository::NO_CUTOVER, 20, 0);
+        $rows = array_values(array_filter($forYou, static fn (array $row): bool => $row['title'] === 'Reply delivery is canonical'));
+        self::assertCount(1, $rows);
+        self::assertSame('Replies to your topic', $rows[0]['for_you_reason']);
+    }
+
+    public function testWatchingAndForYouHonorThreadSubscriptionOffOverBoardWatch(): void
+    {
+        $me = $this->makeUser();
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $thread = $this->makeThread($board, $author, 'Thread override is off', 'Opening.');
+        $threadId = (int) $thread['thread_id'];
+        $subs = new SubscriptionRepository($this->db);
+
+        $subs->set((int) $me['id'], 'board', (int) $board['id'], true, true, 'instant');
+        $subs->set((int) $me['id'], 'thread', $threadId, false, false, 'off');
+
+        self::assertNotContains(
+            'Thread override is off',
+            array_column($this->tu()->inbox((int) $me['id'], 'watching', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
+        );
+        self::assertNotContains(
+            'Thread override is off',
+            array_column($this->tu()->inbox((int) $me['id'], 'for_you', false, ThreadUserRepository::NO_CUTOVER, 20, 0), 'title'),
+        );
     }
 
     public function testInboxRouteRequiresLogin(): void

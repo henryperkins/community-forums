@@ -518,7 +518,22 @@
         var inboxBack = inbox.querySelector('[data-inbox-back]');
         var emptyHtml = readingContent ? readingContent.innerHTML : '';
         var selectedLink = null;
+        var inboxRequest = null;
+        var inboxRequestGeneration = 0;
         var idOf = function (href) { var m = href && href.match(/\/t\/(\d+)/); return m ? m[1] : null; };
+        var cancelInboxRequest = function () {
+            inboxRequestGeneration++;
+            if (inboxRequest && typeof inboxRequest.abort === 'function') {
+                inboxRequest.abort();
+            }
+            inboxRequest = null;
+            return inboxRequestGeneration;
+        };
+        var clearInboxRequest = function (generation, request) {
+            if (generation === inboxRequestGeneration && inboxRequest === request) {
+                inboxRequest = null;
+            }
+        };
         var markActive = function (href) {
             var rows = inboxList.querySelectorAll('.thread-row');
             for (var i = 0; i < rows.length; i++) {
@@ -531,6 +546,7 @@
             reading.classList.toggle('is-open', open);
         };
         var showEmpty = function (restoreFocus) {
+            cancelInboxRequest();
             if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
                 window.RetroBoardsComposer.destroyWithin(readingContent);
             }
@@ -541,23 +557,63 @@
             setReadingOpen(false);
             if (restoreFocus && selectedLink && document.documentElement.contains(selectedLink)) {
                 selectedLink.focus();
+            } else if (restoreFocus) {
+                var fallbackLink = inboxList.querySelector('a.thread-title');
+                if (fallbackLink) { fallbackLink.focus(); }
+                else { inboxList.setAttribute('tabindex', '-1'); inboxList.focus(); }
             }
         };
         var canonicalFallback = function (href) { window.location.href = href; };
+        var reconcileReadRow = function (sourceLink) {
+            var row = sourceLink && sourceLink.closest ? sourceLink.closest('.thread-row') : null;
+            if (!row || !row.classList.contains('thread-unread')) { return; }
+            var queueUnread = row.getAttribute('data-inbox-unread') === '1';
+
+            row.classList.remove('thread-unread');
+            row.removeAttribute('data-inbox-unread');
+            var dot = row.querySelector('.unread-dot');
+            if (dot) { dot.remove(); }
+
+            var badge = inbox.querySelector('[data-inbox-unread-count]');
+            if (queueUnread && badge) {
+                var count = parseInt(badge.getAttribute('data-inbox-unread-count') || '', 10);
+                if (!isNaN(count) && count > 0) {
+                    count--;
+                    if (count === 0) { badge.remove(); }
+                    else {
+                        badge.setAttribute('data-inbox-unread-count', String(count));
+                        badge.textContent = count + ' unread';
+                    }
+                }
+            }
+
+            if (queueUnread && new URL(window.location.href).searchParams.get('filter') === 'unread') {
+                row.remove();
+                if (selectedLink === sourceLink) {
+                    selectedLink = inboxList.querySelector('a.thread-title');
+                }
+            }
+        };
         var loadThread = function (href, push, focus, sourceLink) {
+            var generation = cancelInboxRequest();
+            var request = window.AbortController ? new window.AbortController() : null;
+            inboxRequest = request;
             reading.setAttribute('aria-busy', 'true');
-            fetch(href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            var options = { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' };
+            if (request) { options.signal = request.signal; }
+            fetch(href, options)
                 .then(function (r) {
-                    if (r.redirected) { canonicalFallback(r.url); return null; }
-                    if (!r.ok) { canonicalFallback(href); return null; }
+                    if (generation !== inboxRequestGeneration) { return null; }
+                    if (r.redirected) { clearInboxRequest(generation, request); canonicalFallback(r.url); return null; }
+                    if (!r.ok) { clearInboxRequest(generation, request); canonicalFallback(href); return null; }
                     return r.text();
                 })
                 .then(function (html) {
-                    if (html === null) { return; }
+                    if (generation !== inboxRequestGeneration || html === null) { return; }
                     var doc = new DOMParser().parseFromString(html, 'text/html');
                     var main = doc.querySelector('#main');
                     if (!main || !main.querySelector('.thread-view, .post-stream, .thread-head')) {
-                        canonicalFallback(href); return;
+                        clearInboxRequest(generation, request); canonicalFallback(href); return;
                     }
                     if (window.RetroBoardsComposer && typeof window.RetroBoardsComposer.destroyWithin === 'function') {
                         window.RetroBoardsComposer.destroyWithin(readingContent);
@@ -570,6 +626,7 @@
                     reading.removeAttribute('aria-busy');
                     reading.scrollTop = 0;
                     selectedLink = sourceLink || inboxList.querySelector(rowSelector(idOf(href)));
+                    reconcileReadRow(selectedLink);
                     markActive(href);
                     setReadingOpen(true);
                     if (push) {
@@ -584,7 +641,12 @@
                         if (h) { h.setAttribute('tabindex', '-1'); h.focus(); }
                         else { reading.focus(); }
                     }
-                }).catch(function () { canonicalFallback(href); });
+                    clearInboxRequest(generation, request);
+                }).catch(function (error) {
+                    if (generation !== inboxRequestGeneration || (error && error.name === 'AbortError')) { return; }
+                    clearInboxRequest(generation, request);
+                    canonicalFallback(href);
+                });
         };
         var rowSelector = function (id) {
             return 'a.thread-title[href^="/t/' + id + '-"], a.thread-title[href="/t/' + id + '"]';
@@ -605,6 +667,7 @@
             if (inboxBack) {
                 inboxBack.addEventListener('click', function () {
                     if (history.state && history.state.rbInboxTopic) {
+                        cancelInboxRequest();
                         history.back();
                         return;
                     }
@@ -618,9 +681,13 @@
                 var id = new URL(window.location.href).searchParams.get('t');
                 if (!id) { showEmpty(true); return; }
                 var a = inboxList.querySelector(rowSelector(id));
-                if (a) {
-                    selectedLink = a;
-                    loadThread(a.getAttribute('href'), false, false, a);
+                var state = history.state || {};
+                var href = a ? a.getAttribute('href') : (
+                    state.rbInboxTopic && typeof state.href === 'string' ? state.href : null
+                );
+                if (href) {
+                    selectedLink = a || null;
+                    loadThread(href, false, true, a);
                 } else {
                     canonicalFallback('/t/' + encodeURIComponent(id));
                 }
@@ -630,7 +697,7 @@
                 var initA = inboxList.querySelector(rowSelector(initId));
                 if (initA) {
                     selectedLink = initA;
-                    loadThread(initA.getAttribute('href'), false, false, initA);
+                    loadThread(initA.getAttribute('href'), false, true, initA);
                 } else {
                     canonicalFallback('/t/' + encodeURIComponent(initId));
                 }

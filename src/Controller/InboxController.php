@@ -36,14 +36,32 @@ final class InboxController extends Controller
         'unanswered',
     ];
 
+    private const WORKFLOW_FILTERS = [
+        'needs_answer',
+        'assigned',
+        'decisions',
+        'solved',
+        'snoozed',
+    ];
+
     public function index(Request $request): Response
     {
-        if (!$this->container->get(FeatureFlags::class)->enabled('engagement')) {
+        $flags = $this->container->get(FeatureFlags::class);
+        if (!$flags->enabled('engagement')) {
             throw new NotFoundException('Not found.');
         }
         $user = $this->requireUser();
+        $workflowEnabled = $flags->enabled('topic_workflow');
+        $mentionsEnabled = $flags->enabled('mentions');
+        $filters = self::FILTERS;
+        if (!$workflowEnabled) {
+            $filters = array_values(array_diff($filters, self::WORKFLOW_FILTERS));
+        }
+        if (!$mentionsEnabled) {
+            $filters = array_values(array_diff($filters, ['mentions']));
+        }
         $filter = (string) $request->query('filter', 'for_you');
-        if (!in_array($filter, self::FILTERS, true)) {
+        if (!in_array($filter, $filters, true)) {
             $filter = 'unread';
         }
 
@@ -52,16 +70,25 @@ final class InboxController extends Controller
         $isAdmin = $user->isAdmin();
 
         $perPage = (int) $this->config()->get('pagination.threads_per_page', 20);
-        $total = $repo->countInbox($user->id(), $filter, $isAdmin, $cutover);
+        $total = $repo->countInbox($user->id(), $filter, $isAdmin, $cutover, $workflowEnabled, $mentionsEnabled);
         $pages = max(1, (int) ceil(max(1, $total) / $perPage));
         $page = min($pages, max(1, $request->int('page', 1)));
 
-        $threads = $repo->inbox($user->id(), $filter, $isAdmin, $cutover, $perPage, ($page - 1) * $perPage);
-        $unreadCount = $repo->unreadCount($user->id(), $isAdmin, $cutover);
+        $threads = $repo->inbox(
+            $user->id(),
+            $filter,
+            $isAdmin,
+            $cutover,
+            $perPage,
+            ($page - 1) * $perPage,
+            $workflowEnabled,
+            $mentionsEnabled,
+        );
+        $unreadCount = $repo->unreadCount($user->id(), $isAdmin, $cutover, $workflowEnabled);
 
         return $this->view('inbox', [
             'filter' => $filter,
-            'filters' => self::FILTERS,
+            'filters' => $filters,
             'threads' => $threads,
             'total' => $total,
             'page' => $page,

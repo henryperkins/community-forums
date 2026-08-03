@@ -24,7 +24,7 @@ $labels = [
         <header class="board-header inbox-list-head">
             <p class="eyebrow">For you</p>
             <h1>Community Inbox
-                <?php if ((int) $unread_count > 0): ?><span class="badge"><?= (int) $unread_count ?> unread</span><?php endif; ?>
+                <?php if ((int) $unread_count > 0): ?><span class="badge" data-inbox-unread-count="<?= (int) $unread_count ?>"><?= (int) $unread_count ?> unread</span><?php endif; ?>
             </h1>
             <p class="muted">Your triage view — topics that want your attention.</p>
         </header>

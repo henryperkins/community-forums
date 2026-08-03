@@ -19,17 +19,25 @@ declare(strict_types=1);
 use App\Core\Config;
 use App\Core\Database;
 use App\Core\Env;
+use App\Core\FeatureFlags;
+use App\Mail\ArrayMailer;
+use App\Repository\BlockRepository;
 use App\Repository\BoardMemberRepository;
 use App\Repository\BoardModeratorRepository;
 use App\Repository\BoardRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\EmailDeliveryRepository;
+use App\Repository\EmailSuppressionRepository;
+use App\Repository\NotificationRepository;
 use App\Repository\PostRepository;
 use App\Repository\SettingRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\ThreadRepository;
 use App\Repository\UserRepository;
 use App\Security\BoardPolicy;
 use App\Security\PasswordHasher;
 use App\Security\WriteGate;
+use App\Service\NotificationService;
 use App\Service\PostingService;
 use App\Support\HtmlSanitizer;
 use App\Support\Markdown;
@@ -499,6 +507,17 @@ $categories = new CategoryRepository($db);
 $boards = new BoardRepository($db);
 $mods = new BoardModeratorRepository($db);
 $members = new BoardMemberRepository($db);
+$notifications = new NotificationService(
+    $db,
+    new NotificationRepository($db),
+    new SubscriptionRepository($db),
+    new EmailDeliveryRepository($db),
+    new EmailSuppressionRepository($db),
+    new BlockRepository($db),
+    $users,
+    new FeatureFlags($settings),
+    new ArrayMailer(),
+);
 
 $posting = new PostingService(
     $db,
@@ -510,6 +529,7 @@ $posting = new PostingService(
     new WriteGate(),
     new BoardPolicy(),
     $config,
+    $notifications,
 );
 
 $makeUser = static function (string $username, string $display, string $role) use ($users, $hasher): int {

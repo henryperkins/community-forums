@@ -6,8 +6,11 @@ namespace Tests\Integration\Core;
 
 use App\Core\FeatureFlags;
 use App\Repository\BoardMemberRepository;
+use App\Repository\NotificationRepository;
 use App\Repository\SettingRepository;
 use App\Repository\TagRepository;
+use App\Repository\ThreadAssignmentRepository;
+use App\Repository\ThreadUserRepository;
 use App\Worker\RelatedTopicRefreshWorker;
 use Tests\Support\TestCase;
 
@@ -939,6 +942,68 @@ final class AppFeatureFlagTest extends TestCase
         $this->actingAs($user);
         $this->setFlags(['engagement' => false]);
         $this->assertStatus(404, $this->post('/t/' . $t['thread_id'] . '/star'));
+    }
+
+    public function test_inbox_rollbacks_hide_disabled_filters_and_ignore_retained_state(): void
+    {
+        $viewer = $this->makeUser(['username' => 'inboxrollback']);
+        $author = $this->makeUser();
+        $board = $this->makeBoard($this->makeCategory());
+        $snoozed = $this->makeThread($board, $author, 'Workflow state must not hide this topic', 'Opening post.');
+        $mention = $this->makeThread($board, $author, 'Retained mention must not rank', 'Opening post.');
+        $solved = $this->makeThread($board, $author, 'Accepted answer stays solved', 'Opening post.');
+        $acceptedPostId = $this->posting()->reply($this->userEntity($author), (int) $solved['thread_id'], [
+            'body' => 'Accepted answer.',
+        ]);
+        $this->db->run(
+            "UPDATE threads SET status = 'solved', accepted_answer_post_id = ? WHERE id = ?",
+            [$acceptedPostId, (int) $solved['thread_id']],
+        );
+        $mentionPostId = $this->posting()->reply($this->userEntity($author), (int) $mention['thread_id'], [
+            'body' => '@inboxrollback remains stored for rollback coverage.',
+        ]);
+        (new ThreadUserRepository($this->db))->setSnooze(
+            (int) $viewer['id'],
+            (int) $snoozed['thread_id'],
+            '2999-01-01 00:00:00',
+        );
+        $this->db->run("UPDATE threads SET status = 'needs_answer' WHERE id = ?", [(int) $snoozed['thread_id']]);
+        (new ThreadAssignmentRepository($this->db))->assign(
+            (int) $snoozed['thread_id'],
+            (int) $viewer['id'],
+            (int) $author['id'],
+        );
+        (new NotificationRepository($this->db))->create([
+            'user_id' => (int) $viewer['id'],
+            'type' => 'mention',
+            'actor_id' => (int) $author['id'],
+            'thread_id' => (int) $mention['thread_id'],
+            'post_id' => $mentionPostId,
+        ]);
+
+        $this->setFlags(['topic_workflow' => false, 'mentions' => false]);
+        $this->actingAs($viewer);
+
+        $active = $this->get('/inbox', ['filter' => 'active']);
+        $this->assertStatus(200, $active);
+        $this->assertSeeText($active, 'Workflow state must not hide this topic');
+        $this->assertDontSeeText($active, 'Needs answer');
+        $this->assertDontSeeText($active, 'assigned to @inboxrollback');
+        $this->assertDontSeeText($active, 'snoozed until');
+        self::assertStringNotContainsString('thread-status-needs_answer', $active->body());
+        $this->assertSeeText($active, 'Accepted answer stays solved');
+        self::assertStringContainsString('thread-status-solved', $active->body());
+        foreach (['mentions', 'needs_answer', 'assigned', 'decisions', 'solved', 'snoozed'] as $disabled) {
+            self::assertStringNotContainsString('href="/inbox?filter=' . $disabled . '"', $active->body());
+        }
+
+        $forYou = $this->get('/inbox', ['filter' => 'for_you']);
+        $this->assertStatus(200, $forYou);
+        $this->assertDontSeeText($forYou, 'Retained mention must not rank');
+
+        $disabledFilter = $this->get('/inbox', ['filter' => 'snoozed']);
+        $this->assertStatus(200, $disabledFilter);
+        self::assertStringNotContainsString('href="/inbox?filter=snoozed"', $disabledFilter->body());
     }
 
     public function test_oauth_off_hides_connections(): void

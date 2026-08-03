@@ -51,6 +51,54 @@ echo json_encode($previous);
   }).toString().trim()) as boolean | null;
 }
 
+function markInboxTopicUnreadForAlice(title: string, promoteInActiveList = false): void {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$thread = $db->fetch(
+    'SELECT t.id, p.id AS op_id FROM threads t JOIN posts p ON p.thread_id = t.id AND p.is_op = 1 WHERE t.title = ? AND t.is_deleted = 0 ORDER BY t.id DESC LIMIT 1',
+    [${JSON.stringify(title)}],
+);
+$aliceId = $db->fetchValue('SELECT id FROM users WHERE email = ?', ['alice@retro.test']);
+if ($thread === null || $aliceId === false) {
+    throw new RuntimeException('Missing Inbox unread fixture.');
+}
+$db->run(
+    'INSERT INTO thread_user (user_id, thread_id, last_read_post_id, is_starred) VALUES (?, ?, ?, 0) ON DUPLICATE KEY UPDATE last_read_post_id = VALUES(last_read_post_id), snoozed_until = NULL',
+    [(int) $aliceId, (int) $thread['id'], (int) $thread['op_id']],
+);
+${promoteInActiveList ? "$db->run('UPDATE threads SET last_post_at = UTC_TIMESTAMP() WHERE id = ?', [(int) $thread['id']]);" : ''}
+`;
+  execFileSync('php', ['-r', php], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  });
+}
+
+function setInboxBoardMutedForAlice(slug: string, muted: boolean): void {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+$aliceId = $db->fetchValue('SELECT id FROM users WHERE email = ?', ['alice@retro.test']);
+$boardId = $db->fetchValue('SELECT id FROM boards WHERE slug = ?', [${JSON.stringify(slug)}]);
+if ($aliceId === false || $boardId === false) {
+    throw new RuntimeException('Missing Inbox mute fixture.');
+}
+$db->run(
+    'INSERT INTO user_board_prefs (user_id, board_id, is_muted) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE is_muted = VALUES(is_muted)',
+    [(int) $aliceId, (int) $boardId, ${muted ? 1 : 0}],
+);
+`;
+  execFileSync('php', ['-r', php], {
+    cwd: repoRoot,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  });
+}
+
 async function dismissTour(page: Page): Promise<void> {
   const skip = page.getByRole('button', { name: 'Skip' });
   if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -159,10 +207,138 @@ test('responsive Inbox opens a topic in place and mobile Back restores its link'
     await expect(page).toHaveURL(/\/inbox\?.*t=\d+/);
     await expect(list).toBeHidden();
     await expect(reading.locator('.thread')).toBeVisible();
+    await expect(reading.locator('h1').first()).toBeFocused();
   } else {
     await expect(list).toBeVisible();
     await expect(reading).toBeVisible();
   }
+});
+
+test('Inbox preserves the latest selection when an older topic fetch finishes late', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'request ordering is verified once');
+  await login(page);
+
+  const links = page.locator('[data-inbox-list] a.thread-title');
+  const first = links.nth(0);
+  const second = links.nth(1);
+  const firstHref = await first.getAttribute('href');
+  const secondHref = await second.getAttribute('href');
+  const secondTitle = (await second.textContent())?.trim();
+  const secondId = secondHref?.match(/^\/t\/(\d+)/)?.[1];
+  expect(firstHref).toMatch(/^\/t\/\d+/);
+  expect(secondHref).toMatch(/^\/t\/\d+/);
+  expect(secondTitle).toBeTruthy();
+  expect(secondId).toBeTruthy();
+
+  let firstRequestHeld = false;
+  let firstResponseReleased = false;
+  let releaseFirst: (() => void) | undefined;
+  await page.route('**/t/**', async (route) => {
+    const request = route.request();
+    if (
+      request.headers()['x-requested-with'] === 'XMLHttpRequest'
+      && new URL(request.url()).pathname === firstHref
+      && !firstRequestHeld
+    ) {
+      const response = await route.fetch();
+      firstRequestHeld = true;
+      await new Promise<void>((resolve) => { releaseFirst = resolve; });
+      await route.fulfill({ response }).catch(() => {});
+      firstResponseReleased = true;
+      return;
+    }
+    await route.continue();
+  });
+
+  await first.click();
+  await expect.poll(() => firstRequestHeld).toBe(true);
+  await second.click();
+  await expect(page.locator('[data-inbox-reading] h1').filter({ hasText: secondTitle! }).first()).toBeVisible();
+  expect(new URL(page.url()).searchParams.get('t')).toBe(secondId);
+
+  releaseFirst?.();
+  await expect.poll(() => firstResponseReleased).toBe(true);
+  await page.waitForTimeout(100);
+  await expect(page.locator('[data-inbox-reading] h1').filter({ hasText: secondTitle! }).first()).toBeVisible();
+  await expect.poll(() => new URL(page.url()).searchParams.get('t')).toBe(secondId);
+});
+
+test('Inbox opening reconciles an unread row and its count', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'read reconciliation is verified once');
+  const title = 'Share your favourite keyboard shortcuts';
+  markInboxTopicUnreadForAlice(title);
+  await login(page);
+  await page.goto('/inbox?filter=unread');
+
+  const row = page.locator('[data-inbox-list] .thread-row').filter({ hasText: title });
+  const badge = page.locator('[data-inbox-unread-count]');
+  await expect(row).toHaveCount(1);
+  await expect(row).toHaveClass(/\bthread-unread\b/);
+  await expect(row.locator('.unread-dot')).toHaveCount(1);
+  const before = Number(await badge.getAttribute('data-inbox-unread-count'));
+  expect(before).toBeGreaterThan(0);
+
+  await row.locator('a.thread-title').click();
+  await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
+  await expect(row).toHaveCount(0);
+  if (before === 1) {
+    await expect(badge).toHaveCount(0);
+  } else {
+    await expect(badge).toHaveAttribute('data-inbox-unread-count', String(before - 1));
+  }
+});
+
+test('Inbox opening a muted unread row leaves the queue badge unchanged', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'read reconciliation is verified once');
+  const title = 'Share your favourite keyboard shortcuts';
+  markInboxTopicUnreadForAlice('Welcome to RetroBoards');
+  markInboxTopicUnreadForAlice(title, true);
+  setInboxBoardMutedForAlice('general', true);
+
+  try {
+    await login(page);
+    await page.goto('/inbox?filter=active');
+
+    const row = page.locator('[data-inbox-list] .thread-row').filter({ hasText: title });
+    const badge = page.locator('[data-inbox-unread-count]');
+    await expect(row).toHaveCount(1);
+    await expect(row).toHaveClass(/\bthread-unread\b/);
+    await expect(row).not.toHaveAttribute('data-inbox-unread', '1');
+    const before = Number(await badge.getAttribute('data-inbox-unread-count'));
+    expect(before).toBeGreaterThan(0);
+
+    await row.locator('a.thread-title').click();
+    await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
+    await expect(row).not.toHaveClass(/\bthread-unread\b/);
+    await expect(row.locator('.unread-dot')).toHaveCount(0);
+    await expect(badge).toHaveAttribute('data-inbox-unread-count', String(before));
+  } finally {
+    setInboxBoardMutedForAlice('general', false);
+  }
+});
+
+test('Inbox Forward reloads a read queue topic in the reading pane', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'history fallback is verified once');
+  const title = 'Share your favourite keyboard shortcuts';
+  markInboxTopicUnreadForAlice(title);
+  await login(page);
+  await page.goto('/inbox?filter=unread');
+
+  const row = page.locator('[data-inbox-list] .thread-row').filter({ hasText: title });
+  await expect(row).toHaveCount(1);
+  await row.locator('a.thread-title').click();
+  await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
+  await expect(row).toHaveCount(0);
+
+  await page.goBack();
+  await expect(page).toHaveURL(/\/inbox\?filter=unread$/);
+  await expect(page.locator('[data-inbox-list]')).toBeVisible();
+
+  await page.goForward();
+  await expect(page).toHaveURL(/\/inbox\?filter=unread&t=\d+$/);
+  const reading = page.locator('[data-inbox-reading]');
+  await expect(reading.locator('.thread')).toBeVisible();
+  await expect(reading.locator('h1').first()).toBeFocused();
 });
 
 test('Inbox fragments receive one complete composer enhancement', async ({ page }) => {
@@ -368,6 +544,7 @@ test('direct mobile Inbox URLs open the conversation state', async ({ page }, in
   await page.goto(`/inbox?t=${id}`);
   await expect(page.locator('[data-inbox-list]')).toBeHidden();
   await expect(page.locator('[data-inbox-reading] .thread')).toBeVisible();
+  await expect(page.locator('[data-inbox-reading] h1').first()).toBeFocused();
   await expect(page.getByRole('button', { name: 'Back to topics' })).toBeVisible();
 });
 
