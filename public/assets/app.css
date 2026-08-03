@@ -2021,7 +2021,7 @@ body[data-route="thread"] .thread-conversation {
 
 /* — Participant avatar stack on the topic header (§5.1) — */
 .thread-participants-label { display: block; font-family: var(--font-label); text-transform: uppercase; letter-spacing: .1em; font-size: .58rem; color: var(--text-faint); margin: 10px 0 5px; }
-.thread-participants { display: inline-flex; align-items: center; margin: 0; }
+.thread-participants { display: inline-flex; align-items: center; margin: 0; padding: 0; list-style: none; }
 .thread-participants .participant { display: inline-flex; margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface-page); }
 .thread-participants .participant:first-child { margin-left: 0; }
 .thread-participants .monogram { width: 28px; height: 28px; font-size: .68rem; }
@@ -4652,6 +4652,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 .board-view .board-identity-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; white-space: nowrap; }
 .board-view .board-identity-actions .btn-secondary { border-color: #DCE8DD; }
 .board-view .board-identity-follow-note { margin: 10px 0 0; color: var(--text-faint); font-family: var(--font-mono); font-size: .68rem; line-height: 1.45; text-align: right; }
+.board-view [data-open-topic-composer][hidden] { display: none; }
 .has-js .board-view .js-native-topic-trigger { display: none; }
 
 .board-view .board-topics { margin-top: 32px; }
@@ -5420,6 +5421,7 @@ span.wf-btn {
 }
 
 @media (max-width: 860px) {
+    .board-index.read-main,
     .board-view.read-main { margin-inline: -14px; }
 }
 

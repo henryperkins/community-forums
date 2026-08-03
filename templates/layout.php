@@ -36,6 +36,8 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
     <?php if ($ogImage !== ''): ?><meta property="og:image" content="<?= $e($ogImage) ?>"><?php endif; ?>
     <?php if (!empty($brand['favicon_path'])): ?>
         <link rel="icon" href="<?= $e($brand['favicon_path']) ?>">
+    <?php else: ?>
+        <link rel="icon" href="data:,">
     <?php endif; ?>
     <link rel="stylesheet" href="/assets/imladris.css">
     <link rel="stylesheet" href="/assets/app.css">

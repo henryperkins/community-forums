@@ -34,6 +34,23 @@ final class AppThreadViewStudyTest extends TestCase
         self::assertStringNotContainsString('board-identity', $body);
     }
 
+    public function test_participants_render_as_a_semantic_named_list(): void
+    {
+        $author = $this->makeUser(['username' => 'study_participant_author']);
+        $replier = $this->makeUser(['username' => 'study_participant_replier']);
+        $board = $this->makeBoard($this->makeCategory('Study participants'));
+        $thread = $this->makeThread($board, $author, 'Participants form a list', 'Opening record.');
+        $this->posting()->reply($this->userEntity($replier), (int) $thread['thread_id'], ['body' => 'A second voice.']);
+
+        $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
+        $body = $page->body();
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('<ul class="thread-participants" aria-label="Participants">', $body);
+        self::assertSame(2, substr_count($body, '<li class="participant"'));
+        self::assertStringNotContainsString('<div class="thread-participants"', $body);
+    }
+
     public function test_post_titles_use_the_real_title_service_and_stay_hidden_for_anonymous_posts(): void
     {
         $author = $this->makeUser([

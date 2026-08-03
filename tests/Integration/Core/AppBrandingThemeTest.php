@@ -13,6 +13,17 @@ use Tests\Support\TestCase;
  */
 final class AppBrandingThemeTest extends TestCase
 {
+    public function test_default_shell_declares_a_non_fetching_favicon_fallback(): void
+    {
+        $this->makeAdmin();
+
+        $home = $this->get('/');
+
+        $this->assertStatus(200, $home);
+        self::assertStringContainsString('<link rel="icon" href="data:,">', $home->body());
+        self::assertSame(1, substr_count($home->body(), '<link rel="icon"'));
+    }
+
     public function test_admin_branding_recolours_via_brand_css(): void
     {
         $admin = $this->makeAdmin(['username' => 'brandadmin']);

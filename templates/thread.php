@@ -55,15 +55,15 @@ $statusLabel = $status !== null ? ($status_labels[$status] ?? ucwords(str_replac
         <?php // Participant avatar stack (§5.1): distinct non-anonymous authors, +N overflow. ?>
         <?php if (($participant_count ?? 0) >= 2 && !empty($participants)): ?>
             <span class="thread-participants-label">In council</span>
-            <div class="thread-participants" aria-label="Participants">
+            <ul class="thread-participants" aria-label="Participants">
                 <?php foreach ($participants as $pp): ?>
                     <?php $pa = mask_author($pp['author_display_name'] ?? null, $pp['author_username'] ?? null, $pp['author_role'] ?? 'user', false); ?>
-                    <span class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed']]) ?></span>
+                    <li class="participant" title="<?= $e($pa['label']) ?>"><?= $this->partial('partials/monogram', ['name' => $pa['mono_name'], 'username' => $pa['mono_seed']]) ?></li>
                 <?php endforeach; ?>
                 <?php $shownParticipants = count($participants); if ((int) ($participant_count ?? 0) > $shownParticipants): ?>
-                    <span class="participant-more">+<?= (int) $participant_count - $shownParticipants ?></span>
+                    <li class="participant-more">+<?= (int) $participant_count - $shownParticipants ?></li>
                 <?php endif; ?>
-            </div>
+            </ul>
         <?php endif; ?>
         <?php if (($engagement ?? false) && $current_user !== null && !empty($can_write)): ?>
             <form class="inline star-form" method="post" action="/t/<?= (int) $thread['id'] ?>/star">
