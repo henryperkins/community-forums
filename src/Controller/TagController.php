@@ -24,6 +24,8 @@ use App\Support\Str;
 
 final class TagController extends Controller
 {
+    private const ADMIN_PAGE_SIZE = 8;
+
     public function index(Request $request): Response
     {
         $this->requireTags();
@@ -86,20 +88,30 @@ final class TagController extends Controller
     {
         $this->requireTags();
         $this->requireAdmin();
-        return $this->renderAdminTags();
+        return $this->renderAdminTags($request);
     }
 
     public function create(Request $request): Response
     {
         $this->requireTags();
         $admin = $this->requireAdmin();
+        $slug = '';
         try {
             [$slug, $name, $description] = $this->validateTag($request);
             $this->container->get(TagRepository::class)->create($slug, $name, $description, $admin->id());
         } catch (ValidationException $e) {
-            return $this->renderAdminTags(422, $e->errors, $this->oldTagInput($request), 'create');
-        } catch (\PDOException) {
-            return $this->renderAdminTags(422, ['slug' => 'That tag slug is already in use.'], $this->oldTagInput($request), 'create');
+            return $this->renderAdminTags($request, 422, $e->errors, $this->oldTagInput($request), 'create');
+        } catch (\PDOException $e) {
+            if ((string) $e->getCode() !== '23000') {
+                throw $e;
+            }
+            return $this->renderAdminTags(
+                $request,
+                422,
+                ['slug' => $this->duplicateSlugMessage($slug)],
+                $this->oldTagInput($request),
+                'create',
+            );
         }
         return $this->redirectWithFlash('/admin/tags', 'Tag created.');
     }
@@ -113,15 +125,25 @@ final class TagController extends Controller
         if ($this->container->get(TagRepository::class)->find($id) === null) {
             throw new NotFoundException('Tag not found.');
         }
+        $slug = '';
         try {
             [$slug, $name, $description] = $this->validateTag($request);
             $enabled = $request->post('enabled') !== null;
             $visibility = (string) $request->post('visibility', 'public');
             $this->container->get(TagRepository::class)->update($id, $slug, $name, $description, $enabled, $visibility);
         } catch (ValidationException $e) {
-            return $this->renderAdminTags(422, $e->errors, $this->oldTagInput($request, $id), 'update');
-        } catch (\PDOException) {
-            return $this->renderAdminTags(422, ['slug' => 'That tag slug is already in use.'], $this->oldTagInput($request, $id), 'update');
+            return $this->renderAdminTags($request, 422, $e->errors, $this->oldTagInput($request, $id), 'update');
+        } catch (\PDOException $e) {
+            if ((string) $e->getCode() !== '23000') {
+                throw $e;
+            }
+            return $this->renderAdminTags(
+                $request,
+                422,
+                ['slug' => $this->duplicateSlugMessage($slug)],
+                $this->oldTagInput($request, $id),
+                'update',
+            );
         }
         return $this->redirectWithFlash('/admin/tags', 'Tag updated.');
     }
@@ -224,14 +246,39 @@ final class TagController extends Controller
      * @param array<string,string> $errors
      * @param array<string,mixed> $old
      */
-    private function renderAdminTags(int $status = 200, array $errors = [], array $old = [], ?string $errorForm = null): Response
+    private function renderAdminTags(Request $request, int $status = 200, array $errors = [], array $old = [], ?string $errorForm = null): Response
     {
+        $query = $request->str('q');
+        $sort = $request->str('sort', 'usage');
+        $sort = in_array($sort, ['usage', 'name'], true) ? $sort : 'usage';
+        $requestedPage = max(1, $request->int('page', 1));
+        $repo = $this->container->get(TagRepository::class);
+        $total = $repo->countForAdmin($query);
+        $pageCount = max(1, (int) ceil($total / self::ADMIN_PAGE_SIZE));
+        $page = min($requestedPage, $pageCount);
+
         return $this->view('admin/tags', [
-            'tags' => $this->container->get(TagRepository::class)->allForAdmin(),
+            'tags' => $repo->allForAdmin($query, $sort, self::ADMIN_PAGE_SIZE, ($page - 1) * self::ADMIN_PAGE_SIZE),
+            'merge_targets' => $repo->allEnabledForAdmin(),
+            'q' => $query,
+            'sort' => $sort,
+            'page' => $page,
+            'page_count' => $pageCount,
+            'per_page' => self::ADMIN_PAGE_SIZE,
+            'total' => $total,
+            'base_query' => array_filter(
+                ['q' => $query, 'sort' => $sort],
+                static fn (string $value): bool => $value !== '',
+            ),
             'errors' => $errors,
             'old' => $old,
             'error_form' => $errorForm,
         ], $status);
+    }
+
+    private function duplicateSlugMessage(string $slug): string
+    {
+        return 'A tag with the slug “' . $slug . '” already exists. Merge into it rather than adding a twin.';
     }
 
     /** @return array<string,mixed> */

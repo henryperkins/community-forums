@@ -354,10 +354,16 @@ final class AdminController extends Controller
     {
         $admin = $this->requireAdmin();
         $board = $this->boardOrFail((int) ($params['id'] ?? 0));
-        if (trim((string) $request->post('confirm', '')) !== (string) $board['slug']) {
-            return $this->confirmBoardView($board, 'delete', 'Enter the board slug exactly to confirm deletion.', 422);
-        }
         $moveTo = $request->int('move_to_board_id', 0);
+        if (trim((string) $request->post('confirm', '')) !== (string) $board['slug']) {
+            return $this->confirmBoardView(
+                $board,
+                'delete',
+                'Enter the board slug exactly to confirm deletion.',
+                422,
+                $moveTo,
+            );
+        }
         try {
             $moved = $this->container->get(AdminService::class)->deleteBoard($admin, (int) $board['id'], $moveTo > 0 ? $moveTo : null);
         } catch (ValidationException $e) {

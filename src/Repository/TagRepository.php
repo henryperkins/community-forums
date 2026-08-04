@@ -100,10 +100,46 @@ final class TagRepository
     }
 
     /** @return array<int,array<string,mixed>> */
-    public function allForAdmin(): array
+    public function allForAdmin(string $query = '', string $sort = 'usage', int $limit = 8, int $offset = 0): array
+    {
+        $limit = max(1, min(200, $limit));
+        $offset = max(0, $offset);
+        [$where, $params] = $this->adminSearch($query);
+        $order = $sort === 'name'
+            ? 't.name ASC, t.id ASC'
+            : 'usage_count DESC, t.name ASC, t.id ASC';
+
+        $rows = $this->db->fetchAll(
+            "SELECT t.*, COALESCE(c.usage_count, 0) AS usage_count
+             FROM tags t
+             LEFT JOIN (
+                 SELECT tag_id, COUNT(*) AS usage_count
+                 FROM thread_tags
+                 GROUP BY tag_id
+             ) c ON c.tag_id = t.id
+             WHERE $where
+             ORDER BY $order
+             LIMIT $limit OFFSET $offset",
+            $params,
+        );
+        foreach ($rows as &$row) {
+            $row['usage_count'] = (int) $row['usage_count'];
+        }
+        unset($row);
+        return $rows;
+    }
+
+    public function countForAdmin(string $query = ''): int
+    {
+        [$where, $params] = $this->adminSearch($query);
+        return (int) $this->db->fetchValue("SELECT COUNT(*) FROM tags t WHERE $where", $params);
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    public function allEnabledForAdmin(): array
     {
         return $this->db->fetchAll(
-            'SELECT * FROM tags ORDER BY is_enabled DESC, name ASC, id ASC',
+            'SELECT * FROM tags WHERE is_enabled = 1 ORDER BY name ASC, id ASC',
         );
     }
 
@@ -270,6 +306,19 @@ final class TagRepository
               OR (b.visibility = 'private'
                   AND EXISTS (SELECT 1 FROM board_members bm WHERE bm.board_id = b.id AND bm.user_id = ?)))",
             [$viewerId],
+        ];
+    }
+
+    /** @return array{0:string,1:list<string>} */
+    private function adminSearch(string $query): array
+    {
+        $query = mb_strtolower(trim($query));
+        if ($query === '') {
+            return ['1=1', []];
+        }
+        return [
+            '(LOCATE(?, LOWER(t.name)) > 0 OR LOCATE(?, LOWER(t.slug)) > 0)',
+            [$query, $query],
         ];
     }
 }
