@@ -350,11 +350,65 @@ test('webhook pause/resume flashes say which happened and delete is reauthed', a
 test('general settings site-name 422 keeps the typed value on both viewports', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
   await page.goto('/admin/settings');
+  await expect(page.getByRole('heading', { level: 1, name: 'General & intelligence' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('General & registration');
+  await expect(page.locator('.settings-general-grid > .settings-general-card')).toHaveCount(2);
+  await expect(page.getByRole('heading', { level: 2, name: 'Identity' })).toBeVisible();
+  await expect(page.getByText('The name this community goes by — in the topbar, in every email, and on the sign-in page.')).toBeVisible();
+  await expect(page.locator('.admin-pane > .pane-intro')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Save name', exact: true })).toBeVisible();
+  await expect(page.locator('.settings-field-label')).toHaveCount(2);
+  await expect(page.locator('.settings-actions')).toHaveCount(2);
+  await expect(page.getByText('Invitations feature is enabled')).toHaveCount(0);
+
   // Model the stale-form threat the server contract exists for (PR #44 §5): a
   // cached page carries no maxlength guarantee, so lift the client cap and let
   // the SERVER refuse. PHPUnit pins the same 422 at the HTTP layer.
   const siteForm = page.locator('form[action="/admin/site"]');
+  const registrationMode = page.locator('form[action="/admin/settings/registration"] select[name="registration_mode"]');
+  const persistedMode = await registrationMode.inputValue();
+  const injectedMode = persistedMode === 'closed' ? 'open' : 'closed';
+  await siteForm.evaluate((form, mode) => {
+    const sibling = document.createElement('input');
+    sibling.type = 'hidden';
+    sibling.name = 'registration_mode';
+    sibling.value = mode;
+    form.appendChild(sibling);
+  }, injectedMode);
   const nameInput = siteForm.locator('input[name="site_name"]');
+  await expect(nameInput).toHaveAttribute('maxlength', '80');
+  await expect(nameInput).toHaveAttribute('required', '');
+  await expect(nameInput).toHaveAttribute('aria-describedby', 'site-name-help');
+  expect(await nameInput.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      padding: style.padding,
+      fontSize: style.fontSize,
+      rootFontSize: getComputedStyle(document.documentElement).fontSize,
+      borderRadius: style.borderRadius,
+      boxShadow: style.boxShadow,
+    };
+  })).toMatchObject({ padding: '8px 11px', borderRadius: '7px', boxShadow: 'none' });
+  const controlType = await nameInput.evaluate((element) => ({
+    fontSize: parseFloat(getComputedStyle(element).fontSize),
+    rootFontSize: parseFloat(getComputedStyle(document.documentElement).fontSize),
+  }));
+  expect(controlType.fontSize).toBeCloseTo(controlType.rootFontSize * .95, 1);
+  const buttonType = await siteForm.getByRole('button', { name: 'Save name', exact: true }).evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      padding: style.padding,
+      fontSize: parseFloat(style.fontSize),
+      rootFontSize: parseFloat(getComputedStyle(document.documentElement).fontSize),
+      boxShadow: style.boxShadow,
+    };
+  });
+  expect(buttonType).toMatchObject({ padding: '9px 18px', boxShadow: 'none' });
+  expect(buttonType.fontSize).toBeCloseTo(buttonType.rootFontSize * .8, 1);
+  expect(await registrationMode.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { appearance: style.appearance, paddingRight: style.paddingRight, backgroundImage: style.backgroundImage };
+  })).toEqual({ appearance: 'auto', paddingRight: '11px', backgroundImage: 'none' });
   await nameInput.evaluate((el) => el.removeAttribute('maxlength'));
   const typed = 'Overlong site name draft — '.repeat(4).trim();
   await nameInput.fill(typed);
@@ -365,7 +419,58 @@ test('general settings site-name 422 keeps the typed value on both viewports', a
   expect(response.status()).toBe(422);
   await expect(page.locator('body')).toContainText('Site name must be 1–80 characters.');
   await expect(page.locator('form[action="/admin/site"] input[name="site_name"]')).toHaveValue(typed);
+  await expect(page.locator('form[action="/admin/site"] input[name="site_name"]')).toBeFocused();
+  await expect(registrationMode).toHaveValue(persistedMode);
   await shot(page, info, 'remediation-settings-422-draft');
+});
+
+test('no-JS general settings forms remain native and isolated', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one explicit no-JS 390px journey is sufficient');
+  const context = await (browser as Browser).newContext({
+    baseURL: baseURL!,
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+    await page.goto('/admin/settings');
+    await expect(page.locator('html')).not.toHaveClass(/has-js/);
+
+    const siteForm = page.locator('form[action="/admin/site"]');
+    const registrationForm = page.locator('form[action="/admin/settings/registration"]');
+    await expect(siteForm).toHaveAttribute('method', 'post');
+    await expect(registrationForm).toHaveAttribute('method', 'post');
+    await expect(siteForm.locator('input[name="_token"]')).toHaveCount(1);
+    await expect(registrationForm.locator('input[name="_token"]')).toHaveCount(1);
+    await expect(siteForm.locator('[name="registration_mode"]')).toHaveCount(0);
+    await expect(registrationForm.locator('[name="site_name"]')).toHaveCount(0);
+
+    const siteName = await siteForm.locator('input[name="site_name"]').inputValue();
+    await siteForm.locator('input[name="site_name"]').fill(siteName);
+    const [siteResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/admin/site') && response.request().method() === 'POST'),
+      siteForm.getByRole('button', { name: 'Save name', exact: true }).click(),
+    ]);
+    expect(siteResponse.status()).toBe(303);
+    await expect(page.getByRole('status')).toContainText('Site name updated.');
+
+    const registrationMode = await registrationForm.locator('select[name="registration_mode"]').inputValue();
+    await registrationForm.locator('select[name="registration_mode"]').selectOption(registrationMode);
+    const [registrationResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/admin/settings/registration') && response.request().method() === 'POST'),
+      registrationForm.getByRole('button', { name: 'Save registration mode', exact: true }).click(),
+    ]);
+    expect(registrationResponse.status()).toBe(303);
+    await expect(page.getByRole('status')).toContainText('Registration settings updated.');
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'mobile', '12-admin-settings-no-js.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+  } finally {
+    await context.close();
+  }
 });
 
 test('scoped moderator panel: overlap select, no global history, out-of-scope 404', async ({ page }, info) => {

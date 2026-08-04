@@ -183,13 +183,13 @@ $disabledNote = 'Disabled until the feature flag is enabled';
         <h1 class="admin-title"><?= $e($current['h1']) ?></h1>
         <nav class="admin-tabs" aria-label="<?= $e($current['aria']) ?>">
             <?php foreach ($current['tabs'] as $key => $item): ?>
-                <?php if ($key === $tab): ?>
-                    <span class="admin-tab is-active" aria-current="page"><?= $e($item['label']) ?></span>
-                <?php elseif (!$tabEnabled($item)): ?>
+                <?php if (!$tabEnabled($item)): ?>
                     <span class="admin-tab is-disabled" aria-disabled="true" data-destination="<?= $e($item['href']) ?>">
                         <span class="subnav-item-label"><?= $e($item['label']) ?></span>
                         <span class="subnav-item-note"><?= $e($disabledNote) ?></span>
                     </span>
+                <?php elseif ($key === $tab): ?>
+                    <span class="admin-tab is-active" aria-current="page"><?= $e($item['label']) ?></span>
                 <?php else: ?>
                     <a class="admin-tab" href="<?= $e($item['href']) ?>"><?= $e($item['label']) ?></a>
                 <?php endif; ?>

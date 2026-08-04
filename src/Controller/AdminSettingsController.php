@@ -30,7 +30,7 @@ final class AdminSettingsController extends Controller
         } catch (ValidationException $e) {
             return $this->generalView([
                 'settings_errors' => $e->errors,
-                'settings_old' => array_replace($request->allInput(), $e->old),
+                'settings_old' => array_intersect_key($e->old, ['site_name' => true]),
             ], 422);
         }
 
@@ -47,7 +47,7 @@ final class AdminSettingsController extends Controller
         } catch (ValidationException $e) {
             return $this->generalView([
                 'settings_errors' => $e->errors,
-                'settings_old' => array_replace($request->allInput(), $e->old),
+                'settings_old' => array_intersect_key($e->old, ['registration_mode' => true]),
             ], 422);
         }
 

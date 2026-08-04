@@ -201,6 +201,117 @@ final class AppAdminDashboardRemediationTest extends TestCase
         self::assertSame(['registration_mode' => 'invite'], json_decode((string) $audit['after_json'], true));
     }
 
+    public function test_general_settings_uses_the_design_anatomy_without_merging_form_ownership(): void
+    {
+        $this->settings()->set('registration_mode', 'invite');
+        $this->settings()->set('features', ['invitations' => false]);
+        $this->actingAs($this->admin);
+
+        $response = $this->get('/admin/settings');
+        $this->assertStatus(200, $response);
+        $body = $response->body();
+
+        self::assertStringContainsString('<h1 class="admin-title">General &amp; intelligence</h1>', $body);
+        self::assertStringContainsString(
+            '<span class="admin-tab is-active" aria-current="page">General &amp; registration</span>',
+            $body,
+        );
+        self::assertStringContainsString('<div class="settings-general-grid">', $body);
+        self::assertSame(2, substr_count($body, 'settings-general-card'));
+        self::assertSame(2, substr_count($body, 'settings-card-intro'));
+        self::assertSame(2, substr_count($body, 'settings-field-label'));
+        self::assertSame(2, substr_count($body, 'settings-actions'));
+        self::assertStringContainsString('<h2 id="site-name-heading">Identity</h2>', $body);
+        self::assertStringContainsString(
+            'The name this community goes by — in the topbar, in every email, and on the sign-in page.',
+            $body,
+        );
+        self::assertStringContainsString('>Save name</button>', $body);
+        self::assertStringNotContainsString('class="pane-intro"', $body);
+
+        self::assertSame(
+            1,
+            preg_match('~<form[^>]*action="/admin/site"[^>]*>(?<form>.*?)</form>~s', $body, $siteMatch),
+            'Missing the site-name owner form',
+        );
+        self::assertSame(
+            1,
+            preg_match('~<form[^>]*action="/admin/settings/registration"[^>]*>(?<form>.*?)</form>~s', $body, $registrationMatch),
+            'Missing the registration owner form',
+        );
+        self::assertSame(1, substr_count($body, 'action="/admin/site"'));
+        self::assertSame(1, substr_count($body, 'action="/admin/settings/registration"'));
+        self::assertStringNotContainsString('action="/admin/settings"', $body);
+
+        preg_match_all('~\bname="([^"]+)"~', $siteMatch['form'], $siteNames);
+        preg_match_all('~\bname="([^"]+)"~', $registrationMatch['form'], $registrationNames);
+        self::assertSame(['_token', 'site_name'], $siteNames[1]);
+        self::assertSame(['_token', 'registration_mode'], $registrationNames[1]);
+        self::assertMatchesRegularExpression(
+            '~<input(?=[^>]*name="site_name")(?=[^>]*maxlength="80")(?=[^>]*aria-describedby="site-name-help")(?=[^>]*\srequired(?:\s|>))[^>]*>~',
+            $siteMatch['form'],
+        );
+        self::assertMatchesRegularExpression(
+            '~<select(?=[^>]*name="registration_mode")(?=[^>]*aria-describedby="registration-help")[^>]*>~',
+            $registrationMatch['form'],
+        );
+
+        $conflict = '<p class="settings-invite-conflict" role="alert">Registration mode is “invite” but the invitations feature is off — registration is effectively closed.</p>';
+        self::assertStringContainsString($conflict, $body);
+        $registrationLabel = strpos($body, 'for="admin-registration-mode"');
+        self::assertNotFalse($registrationLabel);
+        $registrationLabelEnd = strpos($body, '</label>', $registrationLabel);
+        self::assertNotFalse($registrationLabelEnd);
+        $conflictPosition = strpos($body, $conflict);
+        self::assertNotFalse($conflictPosition);
+        self::assertGreaterThan($registrationLabelEnd, $conflictPosition);
+        self::assertStringNotContainsString('Invitations feature is enabled', $body);
+        self::assertStringNotContainsString('type="checkbox"', $siteMatch['form'] . $registrationMatch['form']);
+    }
+
+    public function test_general_settings_validation_draft_cannot_repaint_the_sibling_form(): void
+    {
+        $this->settings()->set('site_name', 'Owner site');
+        $this->settings()->set('registration_mode', 'invite');
+        $this->settings()->set('features', ['invitations' => false]);
+        $this->actingAs($this->admin);
+
+        $siteDraft = str_repeat('N', 81);
+        $site = $this->post('/admin/site', [
+            'site_name' => $siteDraft,
+            'registration_mode' => 'closed',
+        ]);
+        $this->assertStatus(422, $site);
+        self::assertStringContainsString('value="' . $siteDraft . '"', $site->body());
+        self::assertMatchesRegularExpression(
+            '~<input(?=[^>]*name="site_name")(?=[^>]*aria-invalid="true")(?=[^>]*autofocus)[^>]*>~',
+            $site->body(),
+        );
+        self::assertStringContainsString('<option value="invite" selected>', $site->body());
+        self::assertStringNotContainsString('<option value="closed" selected>', $site->body());
+        self::assertStringContainsString('class="settings-invite-conflict" role="alert"', $site->body());
+        self::assertSame('Owner site', $this->settings()->getString('site_name'));
+        self::assertSame('invite', $this->settings()->getString('registration_mode'));
+
+        $registration = $this->post('/admin/settings/registration', [
+            'registration_mode' => 'banana',
+            'site_name' => 'Injected sibling site',
+        ]);
+        $this->assertStatus(422, $registration);
+        self::assertMatchesRegularExpression(
+            '~<input(?=[^>]*name="site_name")(?=[^>]*value="Owner site")[^>]*>~',
+            $registration->body(),
+        );
+        self::assertStringNotContainsString('Injected sibling site', $registration->body());
+        self::assertStringContainsString('<option value="banana" selected>', $registration->body());
+        self::assertMatchesRegularExpression(
+            '~<select(?=[^>]*name="registration_mode")(?=[^>]*aria-invalid="true")(?=[^>]*autofocus)[^>]*>~',
+            $registration->body(),
+        );
+        self::assertSame('Owner site', $this->settings()->getString('site_name'));
+        self::assertSame('invite', $this->settings()->getString('registration_mode'));
+    }
+
     public function test_anti_abuse_write_changes_only_anti_abuse_and_has_precise_audit(): void
     {
         $this->settings()->set('site_name', 'Sentinel site');

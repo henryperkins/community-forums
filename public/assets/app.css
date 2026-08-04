@@ -6,7 +6,10 @@
 
 * { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+}
 
 body {
     margin: 0;
@@ -3521,6 +3524,108 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .settings-card {
     max-width: 720px;
 }
+.settings-general-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+}
+.admin-console .settings-general-grid .settings-general-card {
+    max-width: none;
+    margin: 0;
+    padding: 20px 22px;
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .settings-general-card > h2:first-child {
+    margin: 0 0 6px;
+    font-size: 1.3rem;
+}
+.admin-console .settings-general-card .settings-card-intro {
+    max-width: 48ch;
+    margin: 0 0 16px;
+    color: var(--text-muted);
+    font-size: .93rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.admin-console .settings-general-card .stacked .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: none;
+    margin-bottom: 0;
+}
+.admin-console .settings-general-card .settings-field-label {
+    margin-bottom: 0;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    font-weight: 400;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-console .settings-general-card .input {
+    box-sizing: border-box;
+    padding: 8px 11px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-page);
+    box-shadow: none;
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: .95rem;
+}
+.admin-console .settings-general-card .input:focus {
+    outline: none;
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.admin-console .settings-general-card select.input {
+    appearance: auto;
+    padding-right: 11px;
+    background-image: none;
+}
+.admin-console .settings-general-card .field > .muted {
+    margin-bottom: 0;
+    color: var(--text-faint);
+    font-size: .87rem;
+    font-weight: 400;
+    line-height: 1.45;
+    text-wrap: pretty;
+}
+.admin-console .settings-general-card .settings-actions {
+    margin-top: 16px;
+}
+.admin-console .settings-general-card .settings-actions .btn {
+    padding: 9px 18px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    box-shadow: none;
+    font-family: var(--font-label);
+    font-size: .8rem;
+    letter-spacing: .04em;
+    transition: filter var(--dur-fast) var(--ease-calm);
+}
+.admin-console .settings-general-card .settings-actions .btn:hover {
+    background: var(--accent);
+    filter: brightness(1.08);
+}
+.admin-console .settings-general-card .settings-actions .btn:active {
+    transform: none;
+}
+.admin-console .settings-general-card .settings-invite-conflict {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--rust);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised));
+    color: var(--danger);
+    font-size: .89rem;
+    line-height: 1.45;
+    text-wrap: pretty;
+}
 .record-list {
     list-style: none;
     margin: 8px 0 18px;
@@ -5437,6 +5542,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     .admin-console { max-width: none; padding: 18px 16px 56px; }
     .admin-console[data-area] { max-width: none; }
     .admin-title { font-size: 1.65rem; }
+    .settings-general-grid { grid-template-columns: minmax(0, 1fr); }
     .admin-console .admin-roles .role-table,
     .admin-console .admin-role-record .role-assignment-table {
         min-width: 760px;
@@ -9093,39 +9199,315 @@ span.wf-btn {
 }
 
 .thread-intelligence-admin .ti-attention {
-    border-color: var(--warning);
-    background: var(--surface-review);
+    margin: 0;
+    border-color: color-mix(in srgb, var(--rust) 35%, transparent);
+    border-left: 3px solid var(--rust);
+    background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised));
+}
+.admin-pane.thread-intelligence-admin {
+    gap: 16px;
+}
+.thread-intelligence-admin .ti-attention h2 {
+    margin: 0 0 10px;
+}
+.thread-intelligence-admin .ti-attention ul {
+    margin: 0;
+    padding-left: 20px;
+}
+.thread-intelligence-admin .ti-intro {
+    max-width: 70ch;
+    margin: 0 0 6px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.thread-intelligence-admin .ti-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+.admin-console .thread-intelligence-admin .ti-status-card {
+    gap: 3px;
+    min-height: 0;
+    margin: 0;
+    padding: 16px 17px 14px;
+    box-shadow: none;
+}
+.admin-console .thread-intelligence-admin .ti-status-card:hover {
+    border-color: var(--border-hair);
+    box-shadow: none;
+}
+.thread-intelligence-admin .ti-status-label {
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .05em;
+}
+.thread-intelligence-admin .ti-status-value {
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.15;
+}
+.thread-intelligence-admin .ti-status-detail {
+    color: var(--text-faint);
+    font-size: .84rem;
 }
 .thread-intelligence-admin .ti-controls {
+    display: block;
+    margin: 0;
+    padding: 18px 20px;
+    box-shadow: none;
+}
+.thread-intelligence-admin .ti-controls h2 {
+    margin: 0 0 12px;
+}
+.thread-intelligence-admin .ti-controls-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
+    gap: 10px;
 }
-.thread-intelligence-admin .ti-controls h2,
-.thread-intelligence-admin .ti-controls .muted { flex-basis: 100%; }
-.thread-intelligence-admin .ti-budget {
-    display: grid;
-    gap: var(--space-3);
-}
-.thread-intelligence-admin .ti-budget label { display: grid; gap: var(--space-1); }
-.thread-intelligence-admin .ti-budget progress { width: min(100%, 44rem); }
-.thread-intelligence-admin .ti-metadata {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
+.thread-intelligence-admin .ti-controls-actions form {
     margin: 0;
 }
-.thread-intelligence-admin .ti-metadata div { min-width: 12rem; }
-.thread-intelligence-admin .ti-metadata dt { color: var(--text-muted); }
-.thread-intelligence-admin .ti-metadata dd { margin: var(--space-1) 0 0; }
+.thread-intelligence-admin .ti-controls-actions .btn {
+    min-height: 36px;
+    padding: 7px 16px;
+    border-color: var(--border-soft);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .78rem;
+    letter-spacing: .04em;
+}
+.thread-intelligence-admin .ti-controls .muted {
+    max-width: 62ch;
+    margin: 12px 0 0;
+    color: var(--text-faint);
+    font-size: .88rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.thread-intelligence-admin .ti-budget {
+    display: block;
+    margin: 0;
+    padding: 18px 20px;
+    box-shadow: none;
+}
+.thread-intelligence-admin .ti-budget h2 {
+    margin: 0 0 14px;
+}
+.thread-intelligence-admin .ti-budget-row {
+    display: block;
+}
+.thread-intelligence-admin .ti-budget-row + .ti-budget-row {
+    margin-top: 16px;
+}
+.thread-intelligence-admin .ti-budget-row-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+.thread-intelligence-admin .ti-budget-label {
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .05em;
+}
+.thread-intelligence-admin .ti-budget-value {
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .84rem;
+    font-variant-numeric: tabular-nums;
+}
+.thread-intelligence-admin .ti-budget progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    overflow: hidden;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+}
+.thread-intelligence-admin .ti-budget progress::-webkit-progress-bar {
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+}
+.thread-intelligence-admin .ti-budget progress::-webkit-progress-value {
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+}
+.thread-intelligence-admin .ti-budget progress::-moz-progress-bar {
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+}
+.thread-intelligence-admin .ti-budget-tokens progress::-webkit-progress-value {
+    background: var(--gold-500);
+}
+.thread-intelligence-admin .ti-budget-tokens progress::-moz-progress-bar {
+    background: var(--gold-500);
+}
+.thread-intelligence-admin .ti-budget-reset {
+    margin: 14px 0 0;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.thread-intelligence-admin .ti-queue-section {
+    margin: 0;
+}
+.thread-intelligence-admin .ti-queue-section > h2 {
+    margin: 0 0 12px;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    font-weight: 400;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+.thread-intelligence-admin .ti-queue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+}
+.admin-console .thread-intelligence-admin .ti-queue-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    margin: 0;
+    padding: 14px 16px;
+    box-shadow: none;
+}
+.thread-intelligence-admin .ti-queue-count {
+    color: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: 1.45rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+.thread-intelligence-admin .ti-queue-label {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .08em;
+}
+.thread-intelligence-admin .ti-queue-unit {
+    color: var(--text-faint);
+    font-size: .78rem;
+}
+.thread-intelligence-admin .ti-contract-grid {
+    display: grid;
+    grid-template-columns: 330px minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+}
+.admin-console .thread-intelligence-admin .ti-contract-card,
+.admin-console .thread-intelligence-admin .ti-evidence-card {
+    margin: 0;
+    padding: 18px 20px;
+}
+.admin-console .thread-intelligence-admin .ti-contract-card {
+    box-shadow: none;
+}
+.admin-console .thread-intelligence-admin .ti-evidence-card {
+    padding-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+}
+.thread-intelligence-admin .ti-contract-card > h2 {
+    margin: 0 0 12px;
+}
+.thread-intelligence-admin .ti-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    margin: 0;
+}
+.thread-intelligence-admin .ti-metadata div {
+    min-width: 0;
+}
+.thread-intelligence-admin .ti-metadata dt {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.thread-intelligence-admin .ti-metadata dd {
+    margin: 3px 0 0;
+    color: var(--text-body);
+    font-size: .92rem;
+    overflow-wrap: anywhere;
+}
+.thread-intelligence-admin .ti-metadata code {
+    font-family: var(--font-mono);
+    font-size: .84rem;
+}
+.thread-intelligence-admin .ti-evidence-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.thread-intelligence-admin .ti-evidence-head h2 {
+    margin: 0;
+}
+.thread-intelligence-admin .ti-evidence-count {
+    margin-left: auto;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .04em;
+}
+.thread-intelligence-admin .ti-evidence-empty {
+    padding: 34px 20px;
+}
+.thread-intelligence-admin .ti-evidence-empty h3 {
+    font-size: 1.15rem;
+}
+.thread-intelligence-admin .ti-evidence-empty p {
+    margin-top: 6px;
+    font-size: .92rem;
+}
+.thread-intelligence-admin .ti-evidence-time {
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .77rem;
+    white-space: nowrap;
+}
 .thread-intelligence-admin .ti-evidence {
     min-width: 14rem;
     max-width: 38rem;
     overflow-wrap: anywhere;
 }
+.thread-intelligence-admin .ti-evidence summary {
+    color: var(--accent);
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: .76rem;
+}
 .thread-intelligence-admin .ti-actions { min-width: 8rem; }
 .thread-intelligence-admin .ti-actions form { margin-bottom: var(--space-1); }
+
+@media (max-width: 860px) {
+    .thread-intelligence-admin .ti-status-grid,
+    .thread-intelligence-admin .ti-contract-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .thread-intelligence-admin .ti-controls-actions .btn {
+        min-height: 44px;
+    }
+}
 
 /* ── Messages reading room — responsive: rail column → drawer → overlay ───── */
 @media (min-width: 1400px) {

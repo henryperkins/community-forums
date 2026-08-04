@@ -204,6 +204,11 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Dashboard');
   await expectNoSeriousA11yViolations(page, info);
 
+  await visit(page, '/admin/settings');
+  await expect(page.getByRole('heading', { level: 1, name: 'General & intelligence' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('General & registration');
+  await expectNoSeriousA11yViolations(page, info);
+
   await visit(page, '/admin/email');
   await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Email');
