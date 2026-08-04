@@ -15,11 +15,21 @@ composer.lock
 /storage/local-server.log
 /storage/cache/*
 /storage/ratelimit/*
-/storage/ratelimit-e2e/
 /storage/packages/*
-/storage/packages-e2e/
 !/storage/cache/.gitkeep
 !/storage/ratelimit/.gitkeep
+# Per-run private package/ratelimit stacks. Parallel sessions each need their own
+# (see the audit runbooks), so the suffix is arbitrary — match the whole family.
+/storage/ratelimit-e2e*/
+/storage/ratelimit-*-e2e/
+/storage/packages-e2e*/
+/storage/packages-*-e2e/
+/storage/ratelimit-inbox-*/
+/storage/ratelimit-mdpaste/
+/storage/packages-inbox-*/
+/storage/packages-mdpaste/
+/storage/packages-console-e2e/
+/storage/ratelimit-console-e2e/
 
 # Test / coverage
 /.phpunit.cache/
@@ -42,6 +52,13 @@ Thumbs.db
 
 # transient browser-evidence scratch
 .playwright-mcp/
+.playwright-cli/
+
+# agent tooling installed into the checkout, not part of the repo
+.superpowers/
+
+# wrangler local state (the deployment worktree writes this on every deploy)
+.wrangler/
 
 # design-pull tooling output (extracted design-system bundles; not used at runtime)
 .design-pull/
