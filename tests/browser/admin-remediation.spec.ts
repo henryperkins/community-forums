@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Browser, type Page, type TestInfo } from '@playwright/test';
 import path from 'node:path';
 
 /**
@@ -16,7 +16,8 @@ import path from 'node:path';
  * deleted again (threads moved back), the banner is cleared, the webhook is
  * deleted, and no seeded account changes state beyond warnings.
  */
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
 
 async function shot(page: Page, info: TestInfo, name: string): Promise<void> {
   await page.screenshot({ path: path.join(EVIDENCE_DIR, info.project.name, `${name}.png`), fullPage: true });
@@ -117,11 +118,90 @@ test('audit log lists actions and filters by action key', async ({ page }, info)
   desktopOnly(info);
   await login(page, 'admin@retro.test');
   await page.goto('/admin/audit');
+  await expect(page.locator('.audit-filter-card')).toBeVisible();
+  await expect(page.locator('.audit-table-card')).toBeVisible();
   await expect(page.locator('.table-scroll table tbody tr').first()).toBeVisible();
   await page.locator('input[name="action"]').fill('warn');
-  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page.locator('body')).toContainText('warn');
+  await expect(page.locator('.audit-result-count')).toContainText(/\d+ entr(?:y|ies)/);
   await shot(page, info, 'remediation-audit-log');
+});
+
+test('no-JS audit filters, reset, and one-based pager preserve their server-rendered contract', async ({ browser, baseURL }, info) => {
+  test.setTimeout(180_000);
+  test.skip(info.project.name !== 'desktop', 'one explicit no-JS 390px journey is sufficient');
+  const context = await (browser as Browser).newContext({
+    baseURL: baseURL!,
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+
+    // Use real authenticated POST forms to create a uniquely filterable set
+    // larger than the production page size; prepare.php remains untouched.
+    await page.goto('/admin/users');
+    const targetPath = await page.locator('a.user-link', { hasText: 'bob' }).first().getAttribute('href');
+    expect(targetPath).toMatch(/^\/admin\/users\/\d+$/);
+    await page.goto(targetPath ?? '/admin/users');
+    for (let i = 0; i < 51; i++) {
+      const warnForm = page.locator(`form[action="${targetPath}/warn"]`);
+      await warnForm.locator('input[name="reason"]').fill(`Slice 5 no-JS pager evidence ${i}`);
+      await warnForm.getByRole('button', { name: 'Record warning' }).click();
+      await expect(page.getByRole('status')).toContainText('Warning recorded');
+    }
+
+    await page.goto('/admin/audit');
+    await expect(page.locator('html')).not.toHaveClass(/has-js/);
+    await page.locator('input[name="actor"]').fill('admin');
+    await page.locator('input[name="action"]').fill('warn');
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page.locator('input[name="actor"]')).toHaveValue('admin');
+    await expect(page.locator('input[name="action"]')).toHaveValue('warn');
+    await expect(page.locator('.pager-label')).toHaveText(/Page 1 of [2-9]\d*/);
+
+    const next = page.getByRole('link', { name: 'Next', exact: true });
+    const nextHref = await next.getAttribute('href');
+    expect(nextHref).not.toBeNull();
+    const nextUrl = new URL(nextHref!, baseURL!);
+    expect(nextUrl.searchParams.get('actor')).toBe('admin');
+    expect(nextUrl.searchParams.get('action')).toBe('warn');
+    expect(nextUrl.searchParams.get('page')).toBe('2');
+    expect(nextHref).not.toContain('page=0');
+    await next.click();
+    await expect(page).toHaveURL(/\/admin\/audit\?.*page=2/);
+    await expect(page.locator('input[name="actor"]')).toHaveValue('admin');
+    await expect(page.locator('input[name="action"]')).toHaveValue('warn');
+
+    const pagerHrefs = await page.locator('.pager a').evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''));
+    expect(pagerHrefs.length).toBeGreaterThan(0);
+    for (const href of pagerHrefs) {
+      const url = new URL(href, baseURL!);
+      expect(url.searchParams.get('actor')).toBe('admin');
+      expect(url.searchParams.get('action')).toBe('warn');
+      expect(url.searchParams.get('page')).not.toBe('0');
+    }
+    await page.screenshot({
+      path: path.join(EVIDENCE_DIR, 'mobile', '05-admin-audit-no-js-page-2.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+
+    await page.getByRole('link', { name: 'Reset', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/audit$/);
+    await expect(page.locator('input[name="actor"]')).toHaveValue('');
+    await expect(page.locator('input[name="action"]')).toHaveValue('');
+
+    await page.locator('input[name="action"]').fill('slice5_no_such_action');
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page.getByRole('heading', { name: 'Nothing matches these filters' })).toBeVisible();
+    await page.getByRole('link', { name: 'Reset filters', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/audit$/);
+  } finally {
+    await context.close();
+  }
 });
 
 test('member record reveals PII only on audited demand and ban needs the typed username', async ({ page }, info) => {
@@ -141,7 +221,7 @@ test('member record reveals PII only on audited demand and ban needs the typed u
   // The reveal itself is auditable evidence.
   await page.goto('/admin/audit');
   await page.locator('input[name="action"]').fill('view_pii');
-  await page.getByRole('button', { name: 'Filter' }).click();
+  await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page.locator('body')).toContainText('view_pii');
 
   // A ban attempt without the exact username 422s and keeps the rationale.

@@ -299,11 +299,54 @@ final class AppAdminDashboardRemediationTest extends TestCase
         self::assertStringContainsString('Active now', $body);
         self::assertStringNotContainsString('queue-card-head">Users', $body);
         self::assertStringNotContainsString('queue-card-head">Audit', $body);
-        self::assertStringContainsString('href="/admin/audit">View full audit log</a>', $body);
+        self::assertMatchesRegularExpression(
+            '~href="/admin/audit">View full audit log\s*<span aria-hidden="true">→</span></a>~',
+            $body,
+        );
         self::assertStringNotContainsString('action="/admin/site"', $body);
         self::assertStringNotContainsString('action="/admin/settings"', $body);
         self::assertStringNotContainsString('name="shortcode"', $body);
         self::assertStringContainsString('Scroll for Target and Reason', $body);
+    }
+
+    public function test_admin_overview_body_uses_the_approved_audit_register(): void
+    {
+        $this->actingAs($this->admin);
+        for ($i = 0; $i < 8; $i++) {
+            $this->db->run(
+                "INSERT INTO moderation_log
+                    (actor_id, action, target_type, target_id, reason, before_json, after_json, created_at)
+                 VALUES (?, ?, 'setting', ?, ?, NULL, NULL, ?)",
+                [
+                    (int) $this->admin['id'],
+                    'overview_marker_' . $i,
+                    $i + 1,
+                    'overview reason ' . $i,
+                    sprintf('2026-08-04 12:%02d:00', $i),
+                ],
+            );
+        }
+
+        $body = $this->get('/admin')->body();
+
+        self::assertStringContainsString(
+            'Start with the live queues and health signals, then review what has changed across the community.',
+            $body,
+        );
+        self::assertStringContainsString('queue-card-head">Reports open</span>', $body);
+        self::assertSame(2, substr_count($body, 'class="card activity-card"'));
+        self::assertSame(6, substr_count($body, 'overview_marker_'));
+        self::assertStringContainsString('overview_marker_7', $body);
+        self::assertStringContainsString('overview_marker_2', $body);
+        self::assertStringNotContainsString('overview_marker_1', $body);
+        self::assertStringNotContainsString('overview_marker_0', $body);
+        self::assertStringContainsString(
+            '<td class="audit-time nowrap"><time datetime="2026-08-04T12:07:00Z">Aug 4, 2026 at 12:07 UTC</time></td>',
+            $body,
+        );
+        self::assertStringNotContainsString('>Waiting<', $body);
+        self::assertStringNotContainsString('72-hour promise', $body);
+        self::assertStringNotContainsString('oldest ', $body);
     }
 
     public function test_dashboard_queue_cards_expose_attention_clear_and_unavailable_states(): void

@@ -121,8 +121,9 @@ Every row names its constraint. Any row that could not name one was dropped as a
 | C-35 · admin-settings | Content-column geometry | constraint | One centred 1100px column with `padding: 22px 28px 110px` beneath a full-bleed 101px sticky bar. | Cannot be adopted without the IA amendment in C-01: production's `.admin` is a `224px minmax(0,1fr)` grid at `max-width: 1260px` (`app.css:2800-2812`). Downstream of ADR 0024. |
 | C-36 · account-settings | Silent feature-flag omission in the account rail | constraint | The reference renders a fixed set of account destinations and has no unavailable state. | Production availability is authoritative. Omit Drafts, Connections, Account, Appeals, and Replay tour entirely when `drafts`, `oauth`, `account_lifecycle`, `appeals`, or `product_tour` is dark; do not leave a disabled row, placeholder, lock, explanation, or spacing hole. |
 | C-37 · account-settings | Responsive account rail | constraint | The reference supplies a fixed 232px desktop rail and no responsive state. | Below 720px, keep one static server-rendered grouped rail above the pane, wrap its destinations, preserve 44px touch targets, and prevent document-level horizontal overflow without a drawer, disclosure, or JavaScript dependency. |
+| C-38 · admin-overview | Audit target-link colour in twilight/system-dark | constraint | The design assigns `--artifact-link` to the `.78rem` audit target link (`AdminOverview.dc.html:234`). In the shipped system-dark register that resolves to `#3F6E89` on `#283440`, measured by the named Playwright axe pass at **2.29:1**. | **WCAG 2.1 AA.** Keep the design's river-blue semantic family but use the existing foreground token `--on-info` for this small text link (`--river-700` in light, `--river-200` in twilight/system-dark). Do not add or override a semantic token; the application-scoped rule belongs in `app.css`. |
 
-**37 constraint rows.**
+**38 constraint rows.**
 
 ### 1.2 `feature-added` — production has it, the design never modelled it → keep it and style it
 

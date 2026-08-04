@@ -3225,6 +3225,334 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .table-scroll-cue {
     display: none;
 }
+/* Admin overview body adoption. Shared console chrome and primitives live
+   above; these rules only compose the dashboard and audit routes. */
+.admin-overview-dashboard,
+.admin-overview-audit {
+    gap: 0;
+}
+.admin-overview-dashboard .pane-intro {
+    max-width: 66ch;
+    margin: 0 0 26px;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.admin-overview-dashboard .admin-dashboard-section {
+    gap: 12px;
+    margin-bottom: 30px;
+}
+.admin-overview-dashboard .eyebrow {
+    color: var(--gold-ink);
+    font-size: .64rem;
+    letter-spacing: .16em;
+}
+.admin-overview-dashboard .admin-dashboard-section > h2 {
+    margin: 4px 0 0;
+    font-size: 1.5rem;
+}
+.admin-overview-dashboard .section-heading-row h2 {
+    margin: 4px 0 0;
+    font-size: 1.5rem;
+}
+.admin-overview-dashboard .attention-panel h2,
+.admin-overview-dashboard .recent-activity-card h2 {
+    font-size: 1.35rem;
+}
+.admin-overview-dashboard .status-legend {
+    font-size: .72rem;
+    letter-spacing: .06em;
+    color: var(--text-faint);
+}
+.admin-overview-dashboard .status-legend i {
+    background: var(--presence);
+    box-shadow: none;
+}
+.admin-overview-dashboard .admin-dashboard-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+.admin-console .admin-overview-dashboard .queue-card {
+    gap: 3px;
+    min-height: 0;
+    padding: 16px 17px 14px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+.admin-console .admin-overview-dashboard .queue-card:hover {
+    border-color: var(--border-hair);
+    box-shadow: var(--shadow-md);
+}
+.admin-console .admin-overview-dashboard .queue-card.is-static:hover {
+    box-shadow: var(--shadow-sm);
+}
+.admin-overview-dashboard .queue-card-head {
+    font-size: .74rem;
+    letter-spacing: .05em;
+    text-transform: none;
+}
+.admin-overview-dashboard .queue-card-count {
+    font-family: var(--font-mono);
+    font-size: 1.9rem;
+    font-weight: 400;
+    line-height: 1.1;
+}
+.admin-overview-dashboard .queue-card-detail {
+    color: var(--text-faint);
+    font-size: .84rem;
+    line-height: 1.4;
+    text-wrap: pretty;
+}
+.admin-overview-dashboard .queue-card-state {
+    margin-top: 6px;
+    font-size: .66rem;
+    letter-spacing: .1em;
+}
+.admin-console .admin-overview-dashboard .attention-panel {
+    margin-bottom: 30px;
+    padding: 18px 20px;
+    border-left: 1px solid var(--border-hair);
+    box-shadow: var(--shadow-sm);
+    overflow: visible;
+}
+.admin-overview-dashboard .attention-panel .section-heading-row {
+    margin-bottom: 10px;
+}
+.admin-overview-dashboard .attention-total {
+    min-width: 0;
+    height: auto;
+    padding: 2px 10px;
+    background: var(--surface-sunken);
+    color: var(--text-body);
+}
+.admin-overview-dashboard .attention-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.admin-overview-dashboard .attention-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.admin-overview-dashboard .attention-list a,
+.admin-overview-dashboard .attention-list span {
+    flex: 1;
+    font-size: .97rem;
+}
+.admin-overview-dashboard .attention-empty {
+    margin: 6px 0 0;
+    color: var(--text-faint);
+    font-size: .95rem;
+}
+.admin-overview-dashboard .activity-card-grid {
+    gap: 14px;
+}
+.admin-overview-dashboard .community-section {
+    gap: 0;
+}
+.admin-overview-dashboard .community-section > h2 {
+    margin: 4px 0 12px;
+}
+.admin-console .admin-overview-dashboard .activity-card {
+    gap: 12px;
+    padding: 15px 17px;
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+    overflow: visible;
+}
+.admin-console .admin-overview-dashboard .activity-card:hover {
+    border-color: var(--border-hair);
+    box-shadow: var(--shadow-sm);
+}
+.admin-overview-dashboard .activity-card-copy {
+    gap: 0;
+    min-width: 0;
+}
+.admin-overview-dashboard .activity-card-title {
+    color: var(--text-body);
+    font-size: .78rem;
+    letter-spacing: .04em;
+}
+.admin-overview-dashboard .activity-card .queue-card-detail {
+    display: block;
+    margin-top: 3px;
+    font-size: .82rem;
+}
+.admin-overview-dashboard .activity-card-count {
+    font-family: var(--font-mono);
+    font-size: 1.35rem;
+    font-weight: 400;
+}
+.admin-console .admin-overview-dashboard .recent-activity-card {
+    padding: 18px 20px 8px;
+    box-shadow: var(--shadow-sm);
+    overflow: visible;
+}
+.admin-overview-dashboard .recent-activity-heading {
+    margin-bottom: 12px;
+}
+.admin-overview-dashboard .recent-activity-heading > a {
+    color: var(--accent);
+    letter-spacing: .04em;
+}
+.admin-overview-dashboard .audit-empty-row p {
+    margin: 0;
+    padding: 30px 20px;
+    color: var(--text-muted);
+    text-align: center;
+}
+.admin-overview-audit .pane-intro {
+    max-width: 68ch;
+    margin: 0 0 20px;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.admin-console .admin-overview-audit .audit-filter-card {
+    margin-bottom: 18px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+    overflow: visible;
+}
+.admin-overview-audit .filter-form {
+    margin: 0;
+}
+.admin-console .admin-overview-audit .filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 16px;
+    align-items: start;
+}
+.admin-overview-audit .filter-grid .field > span:first-child {
+    color: var(--text-faint);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-overview-audit .input {
+    padding: 8px 11px;
+    border-color: var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+    font-size: .92rem;
+}
+.admin-overview-audit .input:focus-visible {
+    border-color: var(--gold-500);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.admin-console .admin-overview-audit .filter-actions {
+    gap: 10px;
+    margin-top: 16px;
+}
+.admin-console .admin-overview-audit .filter-actions .btn {
+    padding: 8px 17px;
+    font-size: .8rem;
+    letter-spacing: .04em;
+    box-shadow: none;
+}
+.admin-console .admin-overview-audit .filter-actions button.btn {
+    border: 0;
+}
+.admin-console .admin-overview-audit .filter-actions .btn-ghost {
+    border: 1.5px solid var(--border-soft);
+    color: var(--text-muted);
+}
+.admin-console .admin-overview-audit .filter-actions .btn-ghost:hover {
+    color: var(--text-body);
+}
+.admin-overview-audit input[name="target_id"] {
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+.admin-overview-audit input[type="date"] {
+    font-family: var(--font-mono);
+    font-size: .86rem;
+}
+.admin-console .admin-overview-audit .audit-table-card {
+    padding: 6px 20px 10px;
+    box-shadow: var(--shadow-sm);
+    overflow: visible;
+}
+.admin-overview-audit .audit-table-card .state-empty {
+    padding: 40px 20px;
+}
+.admin-overview-audit .audit-table-card .state-empty p {
+    margin: 6px 0 0;
+    font-size: .93rem;
+}
+.admin-overview-audit .audit-table-card .state-empty a {
+    margin-top: 15px;
+    padding: 7px 16px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .78rem;
+    letter-spacing: .04em;
+    text-decoration: none;
+}
+.admin-overview-audit .audit-table-card .state-empty a:hover {
+    background: var(--surface-sunken);
+    text-decoration: none;
+}
+.admin-console .audit-time,
+.admin-console .audit-target,
+.admin-console .audit-target-link {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    white-space: nowrap;
+}
+.admin-console .audit td.audit-time {
+    color: var(--text-faint);
+}
+.admin-console .audit .audit-target {
+    color: var(--text-muted);
+}
+.admin-console .audit-target-link {
+    color: var(--on-info);
+}
+.admin-console .audit td.audit-reason {
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.admin-console .audit-change summary {
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .74rem;
+}
+.admin-console .admin-overview-dashboard .audit,
+.admin-console .admin-overview-audit .audit {
+    font-size: .9rem;
+}
+.admin-console .admin-overview-dashboard .audit th {
+    padding: 7px 10px;
+}
+.admin-console .admin-overview-dashboard .audit td {
+    padding: 9px 10px;
+}
+.admin-console .admin-overview-audit .audit th {
+    padding: 11px 10px 9px;
+}
+.admin-console .admin-overview-audit .audit td {
+    padding: 10px;
+}
+.admin-overview-audit .audit th:first-child,
+.admin-overview-audit .audit td:first-child,
+.admin-overview-dashboard .audit th:first-child,
+.admin-overview-dashboard .audit td:first-child {
+    padding-left: 0;
+}
+.admin-overview-audit .audit th:last-child,
+.admin-overview-audit .audit td:last-child,
+.admin-overview-dashboard .audit th:last-child,
+.admin-overview-dashboard .audit td:last-child {
+    padding-right: 0;
+}
+.admin-console .admin-overview-audit .pager {
+    margin-top: 18px;
+}
 .settings-card {
     max-width: 720px;
 }
@@ -3649,10 +3977,24 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     .admin-console[data-area] { max-width: none; }
     .admin-title { font-size: 1.65rem; }
     .admin-dashboard-grid,
+    .admin-overview-dashboard .admin-dashboard-grid,
     .activity-card-grid {
         grid-template-columns: 1fr;
     }
     .queue-card { min-height: 142px; }
+    .admin-overview-dashboard .queue-card { min-height: 0; }
+    .admin-console .admin-overview-audit .filter-grid { grid-template-columns: 1fr; }
+    .admin-overview-audit .filter-result-count {
+        width: 100%;
+        margin-left: 0;
+    }
+    .admin-overview-audit .filter-actions .btn,
+    .admin-overview-audit .pager-control,
+    .admin-overview-audit .state-empty a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
     .section-heading-row { align-items: center; }
     .recent-activity-heading {
         align-items: flex-start;
