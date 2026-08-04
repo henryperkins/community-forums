@@ -2,20 +2,19 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Bulk moderation');
+$this->section('variant', 'admin');
 $action = (string) ($action ?? 'warn');
 $isSuspend = $action === 'suspend';
 $errors = $errors ?? [];
 $old = $old ?? [];
 $count = count($subjects ?? []);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $isSuspend ? 'Suspend' : 'Warn' ?> <?= $count ?> member<?= $count === 1 ? '' : 's' ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'users', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'members', 'tab' => 'users']) ?>
+        <a class="admin-back" href="/admin/users">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            All members
+        </a>
+        <h2 class="admin-record-title"><?= $isSuspend ? 'Suspend' : 'Warn' ?> <?= $count ?> member<?= $count === 1 ? '' : 's' ?></h2>
         <section class="card confirm-card">
             <h2>Review before applying</h2>
             <p class="muted">
@@ -63,5 +62,4 @@ $count = count($subjects ?? []);
                 </div>
             </form>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -6,11 +6,20 @@ $this->section('variant', 'plain');
 $this->section('robots', 'noindex, nofollow');
 ?>
 <div class="container">
-    <header class="admin-head">
+    <?php /*
+       Recovery pages stay chrome-less on purpose (variant=plain, ADR 0024 §C-21):
+       this is the page you reach when a theme package has broken the site, so it
+       must not depend on the console chrome it might be used to repair. A single
+       link back to Themes replaces the area tier.
+    */ ?>
+    <header class="safe-mode-head">
         <h1>Theme safe mode</h1>
         <span class="pill pill-admin">Recovery</span>
     </header>
-    <?= $this->partial('admin/_nav', ['active' => 'themes', 'features' => $features ?? []]) ?>
+    <a class="admin-back" href="/admin/themes">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Themes
+    </a>
 
     <?php foreach (($errors ?? []) as $err): ?>
         <p class="field-error"><?= $e($err) ?></p>

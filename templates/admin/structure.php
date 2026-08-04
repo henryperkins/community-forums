@@ -1,18 +1,11 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Boards & categories'); ?>
+<?php $this->layout('layout'); $this->section('title', 'Boards & categories'); $this->section('variant', 'admin'); ?>
 <?php
     $boardOld = $create_board_old ?? [];
     $boardErr = $create_board_errors ?? [];
     $boardChecked = static fn (string $key, bool $default): bool => $boardOld === [] ? $default : !empty($boardOld[$key]);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Boards &amp; categories</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'structure', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'content', 'tab' => 'structure']) ?>
     <?php if (!empty($reorder_error ?? null)): ?>
         <div class="flash flash-error" role="alert"><?= $e($reorder_error) ?></div>
     <?php endif; ?>
@@ -156,5 +149,4 @@
             </form>
         </section>
     <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

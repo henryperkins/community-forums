@@ -321,6 +321,26 @@
 .text-tab:hover { color: var(--text-strong); }
 .text-tab.is-active { color: var(--text-strong); font-weight: var(--weight-semibold); box-shadow: inset 0 -2px 0 var(--accent-2); }
 
+/* ── Admin chrome — the unifying bar across every Admin template ───────────
+   Two rows in one sticky block. The area tier deliberately uses the PILL
+   register (as the forum topbar does for primary nav) so it never reads as a
+   duplicate of a page's own underline sub-tabs one heading below it. */
+.admin-bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); }
+.admin-bar-id { display: flex; align-items: center; gap: 16px; height: 58px; padding: 0 26px; box-sizing: border-box; }
+.admin-bar-brand { display: inline-flex; align-items: center; gap: 10px; flex: none; color: var(--accent); }
+.admin-bar-wordmark { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em; }
+.admin-bar-exit { display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none; }
+.admin-bar-exit:hover { color: var(--accent); }
+.admin-bar-mode { margin-left: auto; flex: none; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+/* Overflow stays visible on purpose: below ~900px the tier scrolls, and a thin
+   scrollbar is the only honest signal that Settings is off-edge. */
+.admin-tier { display: flex; gap: 4px; padding: 0 26px 9px; overflow-x: auto; scrollbar-width: thin; }
+.admin-tier::-webkit-scrollbar { height: 4px; }
+.admin-tier::-webkit-scrollbar-thumb { background: var(--border-hair); border-radius: 999px; }
+.admin-tier-item { flex: none; white-space: nowrap; padding: 6px 10px; border: 0; border-radius: var(--radius-md); background: transparent; font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none; cursor: pointer; }
+.admin-tier-item:hover { color: var(--text-strong); background: var(--surface-sunken); }
+.admin-tier-item.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); font-weight: var(--weight-medium); cursor: default; }
+
 /* ── Identity decorations — tier pill, regard stat, author byline ─────────────
    The person is a first-class object in the council: every byline pairs a
    gilt-ringed avatar with a name, a tier, and a regard (commends earned). */
@@ -409,6 +429,37 @@
 .thread-list.is-compact .thread-meta-author { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); }
 .thread-list.is-compact .thread-row > .monogram, .thread-list.is-compact .thread-row > .avatar-wrap > .monogram { width: 26px; height: 26px; font-size: .68rem; }
 
+/* Board presentation (/c/{slug}) — the canonical index. Every member sees this
+   list in the same order (pinned first, then last post), so the row stops being
+   a card and becomes a ruled entry on a 64px floor: no snippet, no board label
+   (a board does not label itself), and activity in a right-hand rail so the
+   titles form one scannable column. A long title wraps and the row grows past
+   the floor — 64px is the minimum, not a crop. Viewer state stays — quietly.
+   Mirrors presentation:'board' on the app's partials/thread_row.php. */
+.thread-list.is-board { gap: 0; }
+.thread-list.is-board .thread-row, .thread-row-board {
+    align-items: center; gap: 14px; min-height: 64px; padding: 8px 4px;
+    border: 0; border-bottom: 1px solid var(--border-hair); border-radius: 0;
+    background: transparent; box-shadow: none;
+}
+.thread-list.is-board .thread-row:hover { box-shadow: none; transform: none; background: var(--surface-sunken); }
+.thread-list.is-board .thread-row::before { left: -4px; width: 2px; }
+.thread-list.is-board .thread-row > .monogram, .thread-list.is-board .thread-row > .avatar-wrap > .monogram { width: 32px; height: 32px; font-size: .74rem; }
+.thread-list.is-board .thread-byline, .thread-list.is-board .thread-snippet { display: none; }
+.thread-list.is-board .thread-row-main { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 9px; }
+.thread-list.is-board .thread-title { order: 1; flex: 0 1 auto; font-size: 1.04rem; line-height: 1.3; }
+.thread-list.is-board .thread-row-chips { order: 2; flex: 0 0 auto; margin-bottom: 0; }
+.thread-list.is-board .thread-row-chips .chip { white-space: nowrap; }
+.thread-list.is-board .thread-meta { order: 3; flex-basis: 100%; margin-top: 0; font-family: var(--font-body); font-size: .88rem; }
+.thread-list.is-board .thread-meta-author { display: inline-flex; color: var(--text-muted); }
+.thread-list.is-board .thread-star { margin-left: 0; align-self: center; }
+.thread-row-activity {
+    flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+    font-family: var(--font-mono); font-size: .68rem; text-align: right; white-space: nowrap;
+}
+.thread-row-activity > span { color: var(--text-muted); }
+.thread-row-activity > time { color: var(--text-faint); }
+
 /* ── Post (message card) ──────────────────────────────────────────────────── */
 .post {
     display: flex; gap: 16px; background: var(--surface-raised);
@@ -455,7 +506,7 @@
    attach · 😊 emoji · identity "as …" · Anonymous chip | Preview · circular
    ✒ send). Below the box: draft state · anonymous disclosure · counter.
    Values verbatim from the app's composer shell CSS at the inspected commit
-   (_archive/app-snapshots/2026-07-14-4efe4e33/app.css). The former "Posting
+   (community-forums public/assets/app.css @ 4efe4e33). The former "Posting
    as" strip / text-button toolbar / standalone textarea anatomy is superseded
    and removed. */
 .composer { margin-top: 16px; }
@@ -910,6 +961,66 @@
 .participant-stack .avatar-wrap, .participant-stack .monogram { margin-left: -8px; box-shadow: 0 0 0 2px var(--surface-page); border-radius: 50%; }
 .participant-stack > :first-child { margin-left: 0; }
 .participant-more { margin-left: 7px; font-family: var(--font-label); font-size: .72rem; letter-spacing: .03em; color: var(--text-muted); }
+
+/* ── Presence widget ("Online") ───────────────────────────────────────────── */
+.presence-widget { display: block; }
+.presence-title {
+    display: flex; align-items: center; gap: 8px; margin: 0 0 8px;
+    font-family: var(--font-label); font-size: .68rem; letter-spacing: .16em;
+    text-transform: uppercase; font-weight: var(--weight-regular); color: var(--text-faint);
+}
+.presence-count {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 20px;
+    padding: 1px 6px; border-radius: 999px; background: var(--surface-done);
+    color: var(--on-done); font-family: var(--font-mono); font-size: .66rem; letter-spacing: 0;
+}
+.presence-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.presence-row { margin: 0; }
+.presence-person {
+    display: flex; align-items: center; gap: 9px; padding: 5px 8px; min-width: 0;
+    border-radius: var(--radius-md); color: var(--text-body); text-decoration: none;
+    transition: background var(--dur-fast) var(--ease-calm), color var(--dur-fast) var(--ease-calm);
+}
+a.presence-person:hover { background: var(--surface-sunken); color: var(--text-strong); }
+.presence-person .monogram-sm { width: 24px; height: 24px; font-size: .62rem; }
+.presence-person .avatar-wrap .presence-dot { width: 8px; height: 8px; right: -1px; bottom: -1px; }
+.presence-person-id { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.presence-name {
+    display: flex; align-items: center; gap: 6px; min-width: 0;
+    font-size: .86rem; line-height: 1.25; color: inherit;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Local correction, same grounds as .badge-staff above (LOCAL_RECONCILIATION.md):
+   the authoring bundle paints this from the numbered ramp (--gold-700 on
+   --gold-100), which measures 3.55:1 against a 4.5:1 requirement and never flips,
+   because the twilight register remaps only the semantic gold tokens. The
+   semantic pair clears AA in both registers and flips. Raised upstream. */
+.presence-staff {
+    flex: 0 0 auto; padding: 0 5px; border-radius: var(--radius-sm);
+    background: var(--surface-staff); color: var(--on-staff);
+    font-family: var(--font-label); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase;
+}
+.presence-sub {
+    font-family: var(--font-label); font-size: .7rem; letter-spacing: .02em; color: var(--text-faint);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.presence-where::before { content: '#'; color: var(--gold-ink); }
+.presence-empty, .presence-more {
+    margin: 6px 0 0; padding: 0 8px;
+    font-size: .78rem; line-height: 1.4; color: var(--text-faint); text-wrap: pretty;
+}
+.presence-more { font-family: var(--font-label); letter-spacing: .03em; }
+.presence-foot { margin-top: 10px; padding: 0 8px; }
+.presence-row.is-loading .presence-person { pointer-events: none; }
+.presence-skeleton-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-sunken); animation: presencePulse 1.6s var(--ease-calm) infinite; }
+.presence-skeleton-bar { height: 9px; border-radius: 999px; background: var(--surface-sunken); animation: presencePulse 1.6s var(--ease-calm) infinite; }
+@keyframes presencePulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+
+/* Directory grid — the same rows, laid out wide (members page). */
+.presence-grid {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 2px 10px;
+}
 
 /* ── Shared bits ──────────────────────────────────────────────────────────── */
 .hash { color: var(--gold-ink); font-weight: var(--weight-medium); }

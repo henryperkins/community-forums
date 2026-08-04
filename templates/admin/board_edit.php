@@ -1,13 +1,11 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Edit board'); $errors = $errors ?? []; $old = $old ?? []; ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Edit board</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'structure', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?php $this->layout('layout'); $this->section('title', 'Edit board'); $this->section('variant', 'admin'); $errors = $errors ?? []; $old = $old ?? []; ?>
+<?= $this->partial('admin/_console', ['area' => 'content', 'tab' => 'structure']) ?>
+    <a class="admin-back" href="/admin/structure">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        All boards
+    </a>
+    <h2 class="admin-record-title">Edit board</h2>
     <?php if (!empty($roster_error ?? null)): ?>
         <div class="flash flash-error" role="alert"><?= $e($roster_error) ?></div>
     <?php endif; ?>
@@ -146,5 +144,4 @@
             <button class="btn btn-small" type="submit">Add member</button>
         </form>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

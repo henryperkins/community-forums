@@ -4,7 +4,7 @@
     "application_baseline": {
         "reconciled_through_commit": "6d81da590a12bd09bb8d0e282c042aa03d755a94",
         "composer_contract": "COMPOSER.md v0.8",
-        "surface_sha256": "d72909ddb825a0f7a3fc465ab04ae1b883e94cfce39f8a5057ece0bb0b0d17ed"
+        "surface_sha256": "749c0de1287d5e7f4feeafb7ee86290528ba6ebc469459b8f4edd293b92d737e"
     },
     "design_contract": {
         "source": "docs/design-system/imladris/production-contract.json",
@@ -22,7 +22,7 @@
         "tokens/colors.css": "ab5cccce021fa46473f8f127eafc47d113476e957f123a86a53f047b613c1519",
         "tokens/typography.css": "68ab2f7135f5f980e0ca5201147524eb98a52281e8ab5ee0c21405e533bbd4ac",
         "tokens/spacing.css": "f54a93af0359eb1d0561740a98cfb40eade5ebd1bdd558be6bfc5fbc0cf630bd",
-        "components.css": "0b6722727a622584731b2752a174aa04a17a5663932aef86753a07331d1ca140"
+        "components.css": "d43a323de15142d1d4196a97364d1ce7161fa3fdc3f998ad8b124961ccb2ca21"
     },
     "font_files": [
         "LICENSES/OFL-cormorant-garamond.txt",

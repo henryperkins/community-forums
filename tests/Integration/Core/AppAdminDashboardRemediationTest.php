@@ -34,7 +34,7 @@ final class AppAdminDashboardRemediationTest extends TestCase
         $this->actingAs($this->admin);
         $response = $this->get('/admin/settings');
         $this->assertStatus(200, $response);
-        $this->assertSeeText($response, 'General & registration');
+        $this->assertSeeText($response, 'General &amp; registration');
     }
 
     public function test_moderation_settings_page_requires_admin_and_respects_anti_abuse_gate(): void
@@ -74,49 +74,60 @@ final class AppAdminDashboardRemediationTest extends TestCase
         $this->assertStatus(404, $response);
     }
 
-    public function test_shared_admin_navigation_has_approved_groups_destinations_and_active_state(): void
+    public function test_shared_admin_navigation_has_approved_areas_destinations_and_active_state(): void
     {
         $this->actingAs($this->admin);
         $response = $this->get('/admin/settings');
         $body = $response->body();
 
-        $groups = [
-            'Dashboard',
+        // ADR 0024: the console nav is two ranks, so one page no longer carries
+        // every destination. It carries the eleven areas plus the active area's
+        // own tabs. Each area links its first reachable tab.
+        $areas = [
+            'Overview',
             'Moderation',
             'Content',
             'People',
+            'Members',
             'Appearance',
             'Notifications',
             'Integrations',
+            'Packages',
+            'Features',
             'Settings',
         ];
+        self::assertSame(
+            1,
+            preg_match('~<nav class="admin-tier"[^>]*>(?<tier>.*?)</nav>~s', $body, $matches),
+            'Missing the admin area tier',
+        );
+        $tier = $matches['tier'];
+
         $cursor = -1;
-        foreach ($groups as $group) {
-            $next = strpos($body, 'class="admin-nav-group-title">' . $group . '<');
-            self::assertNotFalse($next, 'Missing navigation group ' . $group);
-            self::assertGreaterThan($cursor, $next, 'Navigation group order drifted at ' . $group);
+        foreach ($areas as $area) {
+            $next = strpos($tier, '>' . $area . '<');
+            self::assertNotFalse($next, 'Missing navigation area ' . $area);
+            self::assertGreaterThan($cursor, $next, 'Navigation area order drifted at ' . $area);
             $cursor = $next;
         }
 
         foreach ([
-            '/admin', '/mod/reports', '/mod/approvals', '/mod/appeals', '/admin/audit', '/admin/moderation',
-            '/admin/structure', '/admin/tags', '/admin/users', '/admin/roles', '/admin/invitations',
-            '/admin/badge-rules', '/admin/branding', '/admin/themes', '/admin/custom-emoji',
-            '/admin/email', '/admin/announcements', '/admin/packages', '/admin/registries',
-            '/admin/webhooks', '/admin/api-tokens', '/admin/providers', '/admin/extensions',
-            '/admin/settings', '/admin/features', '/admin/thread-intelligence',
+            '/admin', '/mod/reports', '/admin/structure', '/admin/roles', '/admin/users',
+            '/admin/branding', '/admin/email', '/admin/api-tokens', '/admin/packages',
+            '/admin/features',
         ] as $destination) {
             self::assertMatchesRegularExpression(
                 '~(?:href|data-destination)="' . preg_quote($destination, '~') . '"~',
-                $body,
-                'Missing admin destination ' . $destination,
+                $tier,
+                'Missing area destination ' . $destination,
             );
         }
 
-        self::assertMatchesRegularExpression(
-            '~<a[^>]*href="/admin/settings"[^>]*class="[^"]*active[^"]*"[^>]*aria-current="page"~',
-            $body,
-        );
+        // Settings is the active area, so it is a span and its two tabs render.
+        self::assertStringContainsString('<span class="admin-tier-item is-active" aria-current="page">Settings</span>', $tier);
+        self::assertStringContainsString('aria-label="Settings sections"', $body);
+        self::assertStringContainsString('<span class="admin-tab is-active" aria-current="page">General &amp; registration</span>', $body);
+        self::assertStringContainsString('href="/admin/thread-intelligence"', $body);
     }
 
     public function test_shared_navigation_explains_feature_disabled_destinations(): void
@@ -130,14 +141,25 @@ final class AppAdminDashboardRemediationTest extends TestCase
         ]);
         $this->actingAs($this->admin);
 
-        $body = $this->get('/admin')->body();
+        $disabled = static fn (string $label): string =>
+            '~<span[^>]*aria-disabled="true"[^>]*>.*?' . preg_quote($label, '~')
+            . '.*?Disabled until the feature flag is enabled.*?</span>~s';
 
-        foreach (['Reports', 'Approvals', 'Appeals', 'Anti-abuse', 'Custom emoji', 'Extensions'] as $label) {
-            self::assertMatchesRegularExpression(
-                '~<span[^>]*aria-disabled="true"[^>]*>.*?' . preg_quote($label, '~') . '.*?Disabled until the feature flag is enabled.*?</span>~s',
-                $body,
-            );
-        }
+        // Rank one: an area whose every tab is dark goes disabled in the tier —
+        // explained, never silently removed. Moderation has no reachable tab left.
+        $overview = $this->get('/admin')->body();
+        self::assertMatchesRegularExpression($disabled('Moderation'), $overview);
+        self::assertStringNotContainsString('href="/mod/reports"', $overview);
+
+        // Rank two: an area that keeps at least one reachable tab stays a live
+        // link, and explains the dark tabs inside its own strip.
+        $features = $this->get('/admin/features')->body();
+        self::assertMatchesRegularExpression($disabled('Custom emoji'), $features);
+        self::assertStringNotContainsString('href="/admin/custom-emoji"', $features);
+
+        $packages = $this->get('/admin/packages')->body();
+        self::assertMatchesRegularExpression($disabled('Extensions'), $packages);
+        self::assertStringNotContainsString('href="/admin/extensions"', $packages);
     }
 
     public function test_site_name_write_redirects_to_owner_and_changes_only_site_name(): void
@@ -217,7 +239,7 @@ final class AppAdminDashboardRemediationTest extends TestCase
         $siteDraft = str_repeat('N', 81);
         $site = $this->post('/admin/site', ['site_name' => $siteDraft]);
         $this->assertStatus(422, $site);
-        $this->assertSeeText($site, 'General & registration');
+        $this->assertSeeText($site, 'General &amp; registration');
         $this->assertSeeText($site, 'Site name must be 1–80 characters.');
         $this->assertSeeText($site, $siteDraft);
 

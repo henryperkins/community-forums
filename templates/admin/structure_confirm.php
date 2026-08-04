@@ -1,13 +1,11 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', $page_title); ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $e($page_title) ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'structure', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?php $this->layout('layout'); $this->section('title', $page_title); $this->section('variant', 'admin'); ?>
+<?= $this->partial('admin/_console', ['area' => 'content', 'tab' => 'structure']) ?>
+        <a class="admin-back" href="/admin/structure">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            All boards
+        </a>
+        <h2 class="admin-record-title"><?= $e($page_title) ?></h2>
         <section class="card confirm-card">
             <h2><?= $e($heading) ?></h2>
             <p><?= $e($intro) ?></p>
@@ -54,5 +52,4 @@
                 </form>
             <?php endif; ?>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

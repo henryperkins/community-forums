@@ -5,19 +5,9 @@ $this->section('title', 'Custom emoji');
 $errors = $emoji_errors ?? [];
 $old = $emoji_old ?? [];
 $mime = (string) ($old['mime'] ?? 'image/webp');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Appearance</span>
-            <h1>Custom emoji</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-
-    <?= $this->partial('admin/_nav', ['active' => 'custom_emoji', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'features', 'tab' => 'custom_emoji']) ?>
         <p class="pane-intro">Add approved static assets to the post renderer and optionally make them available as reactions.</p>
 
         <div class="custom-emoji-panel">
@@ -92,5 +82,4 @@ $mime = (string) ($old['mime'] ?? 'image/webp');
             <?php endif; ?>
             </section>
         </div>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

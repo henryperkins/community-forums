@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Roles');
+$this->section('variant', 'admin');
 // Group the flat capability catalogue by its middle namespace token
 // (core.board.* → Board, core.user.* → User, …) so the checkbox run scans as
 // tiers instead of one undifferentiated list.
@@ -12,14 +13,7 @@ foreach ($catalogue as $capKey => $capMeta) {
 }
 ksort($groupedCatalogue);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Roles &amp; capabilities</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'roles', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles']) ?>
     <p class="muted">Resolver posture: <strong><?= $e($mode ?? 'shadow') ?></strong>
     (<code>CAPABILITIES_MODE</code>). Under <code>shadow</code> the legacy rules decide and the
     resolver only shadow-compares; under <code>enforce</code> the resolver decides and fails
@@ -89,5 +83,4 @@ ksort($groupedCatalogue);
             <div class="form-actions"><button class="btn" type="submit">Create role</button></div>
         </form>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

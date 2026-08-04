@@ -597,7 +597,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .link-list li { padding: 6px 0; border-bottom: 1px solid var(--border); }
 
 /* Admin */
-.admin-head { display: flex; align-items: center; gap: 12px; }
 .admin-cat { }
 /* Category card header: rename form left, reorder/delete actions pushed right. */
 .admin-cat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
@@ -2798,138 +2797,150 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 	    color: var(--text-muted);
 	}
 
-	/* — Admin: dense operator register over existing server-rendered screens. — */
-.admin {
-    display: grid;
-    grid-template-columns: 224px minmax(0, 1fr);
-    grid-template-areas:
-        "head head"
-        "nav pane";
-    column-gap: 28px;
-    align-items: start;
-    max-width: 1260px;
-    margin: 0 auto;
-    width: 100%;
-    padding: 24px 28px 64px;
-}
-.admin-head {
-    grid-area: head;
+	/* — Admin console: the operator's own shell (ADMIN.md §9.2, ADR 0024). —
+	   Two ranks of navigation, kept apart on purpose: the area tier is a pill row
+	   (.admin-bar/.admin-tier ship from the design system via imladris.css), the
+	   page's own sections are underline tabs, and the heading sits between them.
+	   Everything here is the application's complement — the parts the design
+	   screens carry as inline style attributes, which CSP forbids. */
+.admin-bar-right {
+    margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 13px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-hair);
-}
-.admin-head .eyebrow {
-    display: block;
-}
-.admin-head h1 {
-    font-size: 1.9rem;
-    margin: 0;
-}
-.admin-head > span:first-child {
+    gap: 12px;
     min-width: 0;
 }
-.admin-head .pill-admin {
-    margin-left: auto;
-}
-.admin-sections-toggle,
-.admin-nav-scrim {
-    display: none;
-}
-.admin .subnav {
-    grid-area: nav;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    gap: 18px;
-    position: sticky;
-    top: calc(var(--topbar-h) + 20px);
-    max-height: calc(100vh - var(--topbar-h) - 40px);
-    margin: 0;
-    padding: 16px 12px;
-    overflow-y: auto;
-    border: 1px solid var(--border-hair);
-    border-radius: var(--radius-lg);
-    background: var(--surface-raised);
-    box-shadow: var(--shadow-xs);
-}
-.admin-nav-drawer-head {
-    display: none;
-}
-.admin-nav-group {
-    margin: 0;
-}
-.admin-nav-group-title {
-    margin: 0 8px 5px;
+.admin-bar-right .admin-bar-mode { margin-left: 0; }
+.admin-bar-star { width: 24px; height: 24px; color: var(--accent); }
+.admin-bar-logo { display: block; max-height: 24px; width: auto; }
+.admin-bar-brand { text-decoration: none; }
+.admin-bar-brand:hover { text-decoration: none; }
+.admin-bar-search .input-small { min-width: 0; width: clamp(120px, 18vw, 220px); }
+.admin-bar-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    color: var(--text-muted);
+    text-decoration: none;
     font-family: var(--font-label);
-    font-size: .61rem;
-    line-height: 1.3;
-    letter-spacing: .11em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-}
-.admin-nav-group-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.admin .subnav .admin-nav-link {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    min-height: 34px;
-    width: 100%;
-    font-family: var(--font-label);
-    letter-spacing: .015em;
     font-size: .78rem;
-    line-height: 1.25;
-    color: var(--text-muted);
-    padding: 7px 9px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    white-space: normal;
+    letter-spacing: .02em;
 }
-.admin .subnav .subnav-item-note {
-    font-family: var(--font-body);
-    font-size: .64rem;
-    letter-spacing: 0;
-    line-height: 1.3;
-    text-transform: none;
+.admin-bar-user:hover { color: var(--text-strong); text-decoration: none; }
+.admin-bar-username { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-bar-action-label { font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; }
+/* Disabled areas keep the note the nav contract has always carried; it is read
+   out but never occupies a line of its own in the pill row. */
+.admin-tier-item.is-disabled {
     color: var(--text-faint);
-    margin-top: 2px;
+    cursor: default;
+    opacity: .55;
 }
-.admin .subnav a.admin-nav-link:hover {
+.admin-tier-item.is-disabled .subnav-item-note {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.admin-console {
+    display: block;
+    width: 100%;
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 22px 28px 110px;
+}
+.admin-console[data-area="content"],
+.admin-console[data-area="people"],
+.admin-console[data-area="appearance"],
+.admin-console[data-area="settings"] { max-width: 1100px; }
+.admin-console[data-area="notifications"] { max-width: 1140px; }
+.admin-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 2.1rem;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
     color: var(--text-strong);
-    background: var(--surface-sunken);
+}
+.admin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 16px 0 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.admin-tab {
+    padding: 9px 15px;
+    margin-bottom: -1px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font-family: var(--font-label);
+    font-size: .84rem;
+    letter-spacing: .03em;
+    color: var(--text-muted);
+    text-decoration: none;
+    cursor: pointer;
+}
+.admin-tab:hover { color: var(--text-strong); text-decoration: none; }
+.admin-tab.is-active {
+    border-bottom-color: var(--gold-500);
+    color: var(--text-strong);
+    cursor: default;
+}
+.admin-tab.is-disabled { color: var(--text-faint); cursor: default; }
+.admin-tab.is-disabled .subnav-item-note {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+/* A drill-in — a board, a role, a member record, a package, a confirmation —
+   keeps its parent tab lit and never renders a second <h1>: the area already
+   supplies one. It gets a back link and an <h2> instead. */
+/* Theme safe mode is variant=plain and carries no console chrome (ADR 0024 C-21). */
+.safe-mode-head { display: flex; align-items: center; gap: 12px; }
+.admin-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-label);
+    font-size: .78rem;
+    letter-spacing: .03em;
+    color: var(--text-muted);
     text-decoration: none;
 }
-.admin .subnav .admin-nav-link.active {
-    color: var(--on-brand-subtle);
-    background: var(--brand-subtle);
-    box-shadow: inset 3px 0 0 var(--accent-2);
-}
-.admin .subnav .admin-nav-link.is-disabled {
-    cursor: default;
-    opacity: .72;
-}
-.admin .subnav .admin-nav-link.is-disabled .subnav-item-label {
-    color: var(--text-muted);
+.admin-back:hover { color: var(--accent); text-decoration: none; }
+.admin-record-title {
+    margin: 6px 0 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.9rem;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--text-strong);
 }
 .admin-pane {
-    grid-area: pane;
     width: 100%;
     max-width: 100%;
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 22px;
+    padding-top: 24px;
 }
 .admin-pane > * {
     min-width: 0;
@@ -3180,19 +3191,19 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     opacity: .65;
 }
 .admin-pane h2,
-.admin .card > h2:first-child {
+.admin-console .card > h2:first-child {
     font-size: 1.25rem;
     margin-top: 0;
 }
-.admin .stacked .field,
-.admin .stacked label.field {
+.admin-console .stacked .field,
+.admin-console .stacked label.field {
     width: 100%;
     max-width: 480px;
 }
-.admin .inline-form {
+.admin-console .inline-form {
     gap: 9px;
 }
-.admin .field > span:first-child,
+.admin-console .field > span:first-child,
 .settings-pane .field > span:first-child {
     display: block;
     font-family: var(--font-label);
@@ -3201,7 +3212,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     color: var(--text-muted);
     margin-bottom: 5px;
 }
-.admin select.input,
+.admin-console select.input,
 .settings-pane select.input {
     appearance: none;
     -webkit-appearance: none;
@@ -3210,13 +3221,13 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     background-position: right 12px center;
     padding-right: 32px;
 }
-.admin .audit {
+.admin-console .audit {
     width: 100%;
     border-collapse: collapse;
     font-size: .88rem;
     table-layout: auto;
 }
-.admin .table-scroll {
+.admin-console .table-scroll {
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -3228,17 +3239,17 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
        mobile Chrome then zooms the whole layout viewport out. */
     position: relative;
 }
-.admin .table-scroll:focus-visible {
+.admin-console .table-scroll:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
-.admin .table-scroll > .audit {
+.admin-console .table-scroll > .audit {
     min-width: 760px;
 }
-.admin .table-scroll.table-scroll-wide > .audit {
+.admin-console .table-scroll.table-scroll-wide > .audit {
     min-width: 940px;
 }
-.admin .audit th {
+.admin-console .audit th {
     text-align: left;
     padding: 8px 10px;
     border-bottom: 1.5px solid var(--border-strong);
@@ -3250,7 +3261,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     font-weight: var(--weight-medium);
     white-space: nowrap;
 }
-.admin .audit td {
+.admin-console .audit td {
     text-align: left;
     padding: 9px 10px;
     border-bottom: 1px solid var(--border-hair);
@@ -3258,18 +3269,18 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     color: var(--text-body);
     overflow-wrap: anywhere;
 }
-.admin .audit .nowrap,
-.admin .audit .action-cell {
+.admin-console .audit .nowrap,
+.admin-console .audit .action-cell {
     white-space: nowrap;
     overflow-wrap: normal;
 }
-.admin .audit .form-cell {
+.admin-console .audit .form-cell {
     min-width: 360px;
 }
-.admin .audit tr:hover td {
+.admin-console .audit tr:hover td {
     background: var(--surface-sunken);
 }
-.admin .audit code {
+.admin-console .audit code {
     font-family: var(--font-mono);
     font-size: .82em;
     background: var(--surface-sunken);
@@ -3278,116 +3289,22 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     border-radius: 4px;
 }
 @media (max-width: 860px) {
-    .admin {
-        display: flex;
-        flex-direction: column;
-        max-width: none;
-        padding: 18px 16px 56px;
-    }
-    .admin-head {
-        margin-bottom: 12px;
-        padding-bottom: 12px;
-    }
-    .admin-head h1 { font-size: 1.65rem; }
-
-    /* Without JS the grouped directory stays expanded above the page. */
-    .admin .admin-subnav {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px 12px;
-        position: static;
-        order: 2;
-        max-height: none;
-        width: 100%;
-        margin: 0 0 22px;
-        padding: 14px 10px;
-        overflow: visible;
-    }
-    .admin-pane { order: 3; }
-    .admin .subnav .admin-nav-link {
-        min-height: 44px;
-        padding: 8px 9px;
-    }
-
-    .has-js .admin-sections-toggle {
-        order: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        min-height: 44px;
-        margin: 0 0 18px;
-        padding: 0 13px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        background: var(--surface-raised);
-        color: var(--text-strong);
-        font: inherit;
-        font-family: var(--font-label);
-        cursor: pointer;
-    }
-    .has-js .admin .admin-subnav {
-        display: block;
-        position: fixed;
-        inset: var(--topbar-h) auto 0 0;
-        z-index: 72;
-        width: 320px;
-        max-width: 86vw;
-        max-height: none;
-        margin: 0;
-        padding: 14px 12px 28px;
-        overflow-y: auto;
-        border: 0;
-        border-right: 1px solid var(--border);
-        border-radius: 0;
-        box-shadow: var(--shadow-xl);
-        transform: translateX(-102%);
-        transition: transform var(--dur-base) var(--ease-calm);
-    }
-    .has-js body.admin-nav-open .admin-subnav { transform: none; }
-    .has-js .admin-nav-drawer-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        min-height: 48px;
-        margin: -2px 2px 12px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--border-hair);
-        color: var(--text-strong);
-        font-family: var(--font-label);
-    }
-    .has-js .admin-nav-close {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 44px;
-        height: 44px;
-        padding: 0;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        background: transparent;
-        color: var(--text-strong);
-        font-size: 1.45rem;
-        cursor: pointer;
-    }
-    .has-js .admin-nav-group { margin-bottom: 17px; }
-    .has-js .admin-nav-group:last-child { margin-bottom: 0; }
-    .has-js .admin-nav-scrim:not([hidden]) {
-        display: block;
-        position: fixed;
-        inset: var(--topbar-h) 0 0;
-        z-index: 70;
-        width: auto;
-        min-height: 0;
-        padding: 0;
-        border: 0;
-        border-radius: 0;
-        background: rgba(22, 29, 36, .54);
-        cursor: default;
-    }
-    body.admin-nav-open { overflow: hidden; }
-
+    /* The console collapses to one column; the area tier scrolls horizontally
+       (its own thin scrollbar is the honest signal that areas sit off-edge) and
+       the section tabs wrap. No drawer, no focus trap, no JavaScript — the
+       console nav behaves identically with scripting disabled.
+       ADMIN.md §9.4, amended by ADR 0024. */
+    .admin-bar-id { height: auto; flex-wrap: wrap; gap: 10px; padding: 10px 16px; }
+    .admin-bar-right { gap: 10px; }
+    .admin-bar-search { display: none; }
+    .admin-bar-action-label, .admin-bar-username { display: none; }
+    .admin-tier { padding: 0 16px 9px; }
+    /* Urgent actions have to work on a phone: 44px minimum target. */
+    .admin-tier-item { min-height: 44px; display: inline-flex; align-items: center; padding: 8px 12px; }
+    .admin-tab { min-height: 44px; display: inline-flex; align-items: center; }
+    .admin-console { max-width: none; padding: 18px 16px 56px; }
+    .admin-console[data-area] { max-width: none; }
+    .admin-title { font-size: 1.65rem; }
     .admin-dashboard-grid,
     .activity-card-grid {
         grid-template-columns: 1fr;
@@ -3433,7 +3350,6 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     }
 }
 @media (max-width: 520px) {
-    .admin .admin-subnav { grid-template-columns: 1fr; }
 }
 .stat-cards {
     list-style: none;
@@ -5765,11 +5681,11 @@ span.wf-btn {
     .admin {
         padding: 20px 14px 56px;
     }
-    .admin .audit {
+    .admin-console .audit {
         font-size: .8rem;
     }
-    .admin .audit th,
-    .admin .audit td {
+    .admin-console .audit th,
+    .admin-console .audit td {
         padding: 7px 6px;
     }
     .mod {

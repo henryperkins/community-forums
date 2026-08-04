@@ -2,17 +2,11 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Announcements');
+$this->section('variant', 'admin');
 $ann = $announcement ?? [];
 $active = is_array($ann) && !empty($ann['active']);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Announcements</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'announcements', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'notifications', 'tab' => 'announcements']) ?>
     <section class="card">
         <h2>Current banner</h2>
         <?php if ($active): ?>
@@ -77,5 +71,4 @@ $active = is_array($ann) && !empty($ann['active']);
             </div>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

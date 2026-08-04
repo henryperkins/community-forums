@@ -78,7 +78,7 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/admin');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'admin-subnav');
+        $this->assertSeeText($res, 'admin-tier');
         $this->assertSeeText($res, 'admin-pane');
         $this->assertSeeText($res, 'pane-intro');
         $this->assertSeeText($res, 'Recent activity');   // the audit register section renders (empty-state here)
@@ -92,7 +92,7 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/admin/branding');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'admin-head');
+        $this->assertSeeText($res, 'admin-tier');
         $this->assertSeeText($res, 'admin-pane');
         $this->assertSeeText($res, 'brand-cols');
         $this->assertSeeText($res, 'brand-preview');

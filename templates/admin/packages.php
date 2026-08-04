@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Package catalogue');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Package catalogue</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages']) ?>
     <p class="muted">Staff browse of signed registry metadata. A signature proves byte provenance under a pinned key; install and enable still require review, consent, and local policy checks. Emergency controls live in the <a href="/admin/packages/security">package security console</a>.</p>
 
     <?php foreach ($data['registries'] as $registry): ?>
@@ -66,5 +60,4 @@ $this->section('title', 'Package catalogue');
         </div>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

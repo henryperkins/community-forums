@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Registry trust');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Registry trust &amp; security response</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'registries', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'registries']) ?>
     <p class="muted">The private signing root lives offline with the operator; this console pins, rotates, and revokes public keys only. Trust changes require your password. The local blocklist works regardless of registry state.</p>
 
     <?php if (empty($registries)): ?>
@@ -200,5 +194,4 @@ $this->section('title', 'Registry trust');
         </div>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

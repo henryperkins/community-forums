@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Badge rules');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Badge rules</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'badge_rules', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'features', 'tab' => 'badge_rules']) ?>
     <section class="card">
         <h2>Create rule</h2>
         <form method="post" action="/admin/badge-rules" class="stacked">
@@ -78,5 +72,4 @@ $this->section('title', 'Badge rules');
             </ul>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

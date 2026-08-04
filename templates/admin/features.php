@@ -1,17 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Feature flags'); ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Runtime controls</span>
-            <h1>Feature flags</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-
-    <?= $this->partial('admin/_nav', ['active' => 'features', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?php $this->layout('layout'); $this->section('title', 'Feature flags'); $this->section('variant', 'admin'); ?>
+<?= $this->partial('admin/_console', ['area' => 'features', 'tab' => 'features']) ?>
         <p class="pane-intro">Read-only view of the declared feature flags from <code>src/Core/FeatureFlags.php</code>, their configured overrides in <code>settings.features</code>, and the effective runtime state. The readiness column distinguishes the rows that are not simply shipped — <strong>Missing user UI</strong>, <strong>Missing admin operations</strong>, <strong>Safety-blocked</strong>, <strong>Operational configuration required</strong> (computed live from posture/config, so it clears once the step is done), and <strong>Reserved (ADR 0018)</strong> — and links each actionable row to its operations surface. Enablement stays a deliberate <code>settings.features</code> write (<code>docs/runbooks/operations.md</code> §2); there are intentionally no toggles here.</p>
 
         <?php if (!empty($features_corrupt)): ?>
@@ -107,5 +96,4 @@
                 </div>
             <?php endif; ?>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

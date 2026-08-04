@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Email delivery');
+$this->section('variant', 'admin');
 $pagerBase = array_filter([
     'status' => $f_status ?? '',
     'kind' => $f_kind ?? '',
@@ -9,14 +10,7 @@ $pagerBase = array_filter([
 ], static fn ($v): bool => $v !== '');
 $page = (int) ($page ?? 1);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Email delivery</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'email', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'notifications', 'tab' => 'email']) ?>
     <?php // F24: one status line per independent fact — transport, From, domain.
           // The old combined copy could claim "Sending is configured" while email
           // fails closed with no From (round-2 audit, 2026-07-18). ?>
@@ -197,5 +191,4 @@ $page = (int) ($page ?? 1);
         </table>
         </div>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Anti-abuse');
+$this->section('variant', 'admin');
 $errors = $settings_errors ?? [];
 $old = $settings_old ?? [];
 $selected = (string) ($old['antiabuse_mode'] ?? $antiabuse_mode ?? 'observe');
@@ -10,18 +11,7 @@ $wordsValue = isset($old['antiabuse_blocked_words']) && is_string($old['antiabus
     ? $old['antiabuse_blocked_words']
     : implode("\n", $antiabuse_blocked_words ?? []);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Moderation</span>
-            <h1>Anti-abuse</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-
-    <?= $this->partial('admin/_nav', ['active' => 'moderation', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'moderation', 'tab' => 'antiabuse']) ?>
         <p class="pane-intro">Set the enforced content-scoring posture and maintain blocked phrases. Moderator exemptions and audit logging remain unchanged.</p>
 
         <section class="card settings-card" aria-labelledby="anti-abuse-heading">
@@ -52,5 +42,4 @@ $wordsValue = isset($old['antiabuse_blocked_words']) && is_string($old['antiabus
                 <div class="form-actions"><button class="btn" type="submit">Save anti-abuse settings</button></div>
             </form>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

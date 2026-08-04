@@ -2,16 +2,10 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'API tokens');
+$this->section('variant', 'admin');
 $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_string'));
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>API tokens</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'api_tokens', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'integrations', 'tab' => 'api_tokens']) ?>
     <?php if (!empty($conflict)): ?>
         <div class="flash flash-error" role="alert">
             That token request was already processed. No new token was minted — the original was shown once. Start again if you still need one.
@@ -87,5 +81,4 @@ $selectedScopes = array_values(array_filter((array) ($old['scopes'] ?? []), 'is_
         </table>
         </div>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -6,15 +6,14 @@ $base = '/admin/packages/' . (int) $package['id'];
 $isUpdate = $staged_plan !== null;
 $target = $isUpdate ? $staged_plan['target'] : null;
 $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Consent: ' . $package['name']);
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $isUpdate ? 'Approve update to ' . $e($target['version']) : 'Consent to permissions' ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages']) ?>
+    <a class="admin-back" href="/admin/packages">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Package catalogue
+    </a>
+    <h2 class="admin-record-title"><?= $isUpdate ? 'Approve update to ' . $e($target['version']) : 'Consent to permissions' ?></h2>
     <?php foreach (($errors ?? []) as $err): ?>
         <p class="field-error"><?= $e($err) ?></p>
     <?php endforeach; ?>
@@ -102,5 +101,4 @@ $this->section('title', $isUpdate ? 'Approve update: ' . $package['name'] : 'Con
             </div>
         </form>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

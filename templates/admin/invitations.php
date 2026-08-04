@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Invitations');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Invitations</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'invitations', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'members', 'tab' => 'invitations']) ?>
     <?php if (!empty($new_invitation)): ?>
         <div class="flash" role="status">
             <strong>Copy this invitation link now — it will not be shown again:</strong>
@@ -98,5 +92,4 @@ $this->section('title', 'Invitations');
             </div>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

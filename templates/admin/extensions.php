@@ -1,13 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Server extensions'); ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Server extensions</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'extensions', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?php $this->layout('layout'); $this->section('title', 'Server extensions'); $this->section('variant', 'admin'); ?>
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'extensions']) ?>
     <section class="card">
         <h2>Sandbox probe</h2>
         <p>
@@ -61,5 +54,4 @@
         </table>
         </div>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Role: ' . ($row['role']['name'] ?? ''));
+$this->section('variant', 'admin');
 $role = $row['role'];
 $isSystem = ((string) $role['kind']) === 'system';
 $checked = (array) ($old['capabilities'] ?? $current_keys);
@@ -25,14 +26,12 @@ foreach ($catalogue as $capKey => $capMeta) {
 }
 ksort($groupedCatalogue);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $e($role['name']) ?> <small>v<?= (int) $role['version'] ?></small></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'roles', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'roles']) ?>
+    <a class="admin-back" href="/admin/roles">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        All roles
+    </a>
+    <h2 class="admin-record-title"><?= $e($role['name']) ?> <small>v<?= (int) $role['version'] ?></small></h2>
     <p class="muted">
         <code><?= $e($role['role_key']) ?></code> -
         <?= $isSystem ? 'Protected system anchor (decision #18), read-only.' : 'Custom role.' ?>
@@ -219,5 +218,4 @@ ksort($groupedCatalogue);
         </form>
     </section>
     <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

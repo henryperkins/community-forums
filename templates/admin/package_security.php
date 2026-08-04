@@ -2,15 +2,14 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Package security response');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Package security response</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages']) ?>
+    <a class="admin-back" href="/admin/packages">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Package catalogue
+    </a>
+    <h2 class="admin-record-title">Package security response</h2>
     <p class="muted">The emergency brake applies regardless of the package flag. Advisory ingest, acknowledgement, and the local blocklist live on the <a href="/admin/registries">registry trust console</a>.</p>
 
     <section class="card">
@@ -69,5 +68,4 @@ $this->section('title', 'Package security response');
         </table>
         </div>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -2,20 +2,14 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Tags');
+$this->section('variant', 'admin');
 $errors = $errors ?? [];
 $old = $old ?? [];
 $errorForm = $error_form ?? null;
 $createOld = $errorForm === 'create' ? $old : [];
 $createErrors = $errorForm === 'create' ? $errors : [];
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Tags</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'tags', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'content', 'tab' => 'tags']) ?>
     <section class="card">
         <h2>Add a tag</h2>
         <form method="post" action="/admin/tags" class="stacked">
@@ -88,5 +82,4 @@ $createErrors = $errorForm === 'create' ? $errors : [];
             </ul>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

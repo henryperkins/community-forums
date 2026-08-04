@@ -2,15 +2,14 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Disable ' . ($row['display_name'] ?? 'provider'));
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Disable <?= $e($row['display_name']) ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'providers', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'integrations', 'tab' => 'providers']) ?>
+    <a class="admin-back" href="/admin/providers">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        All providers
+    </a>
+    <h2 class="admin-record-title">Disable <?= $e($row['display_name']) ?></h2>
     <section class="card">
         <h2>Before you disable</h2>
         <p>Disabling removes <strong><?= $e($row['display_name']) ?></strong> from sign-in and
@@ -53,5 +52,4 @@ $this->section('title', 'Disable ' . ($row['display_name'] ?? 'provider'));
             <a class="btn btn-secondary" href="/admin/providers">Cancel</a>
         </form>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Package: ' . $package['name']);
+$this->section('variant', 'admin');
 $base = '/admin/packages/' . (int) $package['id'];
 $releaseById = [];
 foreach ($releases as $release) {
@@ -29,14 +30,12 @@ foreach ($installed_permissions as $permission) {
     }
 }
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $e($package['name']) ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages']) ?>
+    <a class="admin-back" href="/admin/packages">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Package catalogue
+    </a>
+    <h2 class="admin-record-title"><?= $e($package['name']) ?></h2>
     <?php foreach (($errors ?? []) as $err): ?>
         <p class="field-error"><?= $e($err) ?></p>
     <?php endforeach; ?>
@@ -294,5 +293,4 @@ foreach ($installed_permissions as $permission) {
             'base' => $base,
         ]) ?>
     <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

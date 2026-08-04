@@ -1,17 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Thread Intelligence'); ?>
-<div class="admin thread-intelligence-admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Operations</span>
-            <h1>Thread Intelligence</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-
-    <?= $this->partial('admin/_nav', ['active' => 'thread_intelligence', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?php $this->layout('layout'); $this->section('title', 'Thread Intelligence'); $this->section('variant', 'admin'); ?>
+<?= $this->partial('admin/_console', ['area' => 'settings', 'tab' => 'thread_intelligence', 'pane_class' => 'thread-intelligence-admin']) ?>
         <?php if (!empty($dashboard['warnings'])): ?>
             <section class="card ti-attention" aria-labelledby="ti-warnings-heading">
                 <h2 id="ti-warnings-heading">Needs attention</h2>
@@ -162,5 +151,4 @@
                 </div>
             <?php endif; ?>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

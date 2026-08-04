@@ -2,15 +2,11 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Badge rule preview');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Badge rule preview</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'badge_rules', 'features' => $features ?? []]) ?>
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'features', 'tab' => 'badge_rules']) ?>
     <p><a href="/admin/badge-rules">Back to badge rules</a></p>
+    <h2 class="admin-record-title">Badge rule preview</h2>
     <section class="card">
         <h2><?= $e($rule['badge_name']) ?></h2>
         <p class="muted"><?= $e($rule['rule_type']) ?> &ge; <?= (int) $rule['threshold'] ?><?= !empty($rule['board_name']) ? ' · ' . $e($rule['board_name']) : '' ?></p>
@@ -27,5 +23,4 @@ $this->section('title', 'Badge rule preview');
             </ul>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

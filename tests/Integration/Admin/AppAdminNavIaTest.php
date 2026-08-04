@@ -9,11 +9,13 @@ use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
 /**
- * Console IA per ADMIN.md §9.2 (round-2 audit findings 12-13): the admin nav is
- * grouped (Dashboard · Moderation · Content · People · Appearance ·
- * Notifications · Integrations · Settings) with real Moderation entries, the
- * dashboard carries an Appeals card, and the two previously orphaned consoles
- * (/admin/roles/simulator, /admin/packages/security) have inbound links.
+ * Console IA per ADMIN.md §9.2 as amended by ADR 0024: the grouped 224px rail is
+ * replaced by an eleven-area horizontal tier (Overview · Moderation · Content ·
+ * People · Members · Appearance · Notifications · Integrations · Packages ·
+ * Features · Settings) over a per-area tab strip. ADR 0023's round-2 findings
+ * other than the IA clause survive the change and are still asserted here: real
+ * Moderation entries, the Appeals dashboard card, and inbound links for the two
+ * previously orphaned consoles (/admin/roles/simulator, /admin/packages/security).
  */
 final class AppAdminNavIaTest extends TestCase
 {
@@ -23,26 +25,72 @@ final class AppAdminNavIaTest extends TestCase
         $this->makeAdmin();
     }
 
-    public function test_admin_nav_is_grouped_per_spec_with_moderation_entries(): void
+    public function test_admin_tier_lists_every_area_in_console_order(): void
     {
         $this->actingAs($this->makeAdmin(['username' => 'ia_admin']));
         $body = $this->get('/admin')->body();
 
-        foreach (['Moderation', 'Content', 'People', 'Appearance', 'Notifications', 'Integrations', 'Settings'] as $label) {
-            self::assertStringContainsString('class="admin-nav-group-title">' . $label, $body, "nav group '$label' missing");
+        self::assertSame(
+            1,
+            preg_match('~<nav class="admin-tier"[^>]*>(?<tier>.*?)</nav>~s', $body, $matches),
+            'the area tier is missing',
+        );
+        $tier = $matches['tier'];
+
+        $cursor = -1;
+        foreach ([
+            'Overview', 'Moderation', 'Content', 'People', 'Members', 'Appearance',
+            'Notifications', 'Integrations', 'Packages', 'Features', 'Settings',
+        ] as $label) {
+            $next = strpos($tier, '>' . $label . '<');
+            self::assertNotFalse($next, "tier area '$label' missing");
+            self::assertGreaterThan($cursor, $next, "tier order drifted at '$label'");
+            $cursor = $next;
         }
+
+        self::assertStringContainsString('aria-label="Admin areas"', $body);
+        // The active area is a span, not an hrefless anchor: an <a> without href
+        // is not focusable and reads as a generic element to assistive tech.
+        self::assertMatchesRegularExpression(
+            '~<span class="admin-tier-item is-active" aria-current="page">Overview</span>~',
+            $tier,
+        );
+    }
+
+    public function test_moderation_area_carries_the_queue_tabs(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'ia_admin_mod']));
+        $body = $this->get('/admin/moderation')->body();
+
+        self::assertStringContainsString('aria-label="Moderation sections"', $body);
         self::assertStringContainsString('href="/mod/reports"', $body);
         self::assertStringContainsString('href="/mod/approvals"', $body);
         self::assertStringContainsString('href="/mod/appeals"', $body);
     }
 
-    public function test_appeals_nav_entry_goes_disabled_when_the_flag_is_off(): void
+    public function test_appeals_tab_goes_disabled_when_the_flag_is_off(): void
     {
         (new SettingRepository($this->db))->set('features', ['appeals' => false]);
         $this->actingAs($this->makeAdmin(['username' => 'ia_admin_flags']));
-        $body = $this->get('/admin')->body();
+        $body = $this->get('/admin/moderation')->body();
         self::assertStringNotContainsString('href="/mod/appeals"', $body);
-        self::assertStringContainsString('Appeals', $body); // disabled span, not removed
+        // Disabled span, not removed: the operator still learns the surface exists.
+        self::assertStringContainsString('Appeals', $body);
+        self::assertStringContainsString('Disabled until the feature flag is enabled', $body);
+    }
+
+    public function test_a_tier_area_goes_disabled_only_when_every_tab_is_dark(): void
+    {
+        (new SettingRepository($this->db))->set('features', [
+            'package_registry' => false,
+            'server_extensions' => false,
+        ]);
+        $this->actingAs($this->makeAdmin(['username' => 'ia_admin_area_dark']));
+        $body = $this->get('/admin')->body();
+
+        // Every Packages tab is dark, so the area itself must not link anywhere.
+        self::assertStringNotContainsString('href="/admin/packages"', $body);
+        self::assertStringContainsString('data-destination="/admin/packages"', $body);
     }
 
     public function test_appeals_dashboard_card_counts_open_appeals_and_follows_the_flag(): void

@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Webhooks');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Webhooks</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'webhooks', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'integrations', 'tab' => 'webhooks']) ?>
     <?php if (!empty($new_secret)): ?>
         <div class="flash" role="status">
             <strong>Copy this signing secret now - it will not be shown again:</strong>
@@ -78,5 +72,4 @@ $this->section('title', 'Webhooks');
         </table>
         </div>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

@@ -2,18 +2,17 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Webhook: ' . $webhook['name']);
+$this->section('variant', 'admin');
 $id = (int) $webhook['id'];
 $selected = isset($old['events']) ? (array) $old['events'] : (json_decode((string) $webhook['events'], true) ?: []);
 $errorContext = $error_context ?? null;
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Webhook: <?= $e($webhook['name']) ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'webhooks', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'integrations', 'tab' => 'webhooks']) ?>
+    <a class="admin-back" href="/admin/webhooks">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        All endpoints
+    </a>
+    <h2 class="admin-record-title">Webhook: <?= $e($webhook['name']) ?></h2>
     <?php if (!empty($new_secret)): ?>
         <div class="flash" role="status">
             <strong>Copy this signing secret now - it will not be shown again:</strong>
@@ -108,5 +107,4 @@ $errorContext = $error_context ?? null;
         </table>
         </div>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

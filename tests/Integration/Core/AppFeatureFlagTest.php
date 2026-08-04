@@ -1070,10 +1070,21 @@ final class AppFeatureFlagTest extends TestCase
         $this->assertStatus(404, $this->post('/admin/email/suppressions', ['email' => 'x@example.test']));
         $this->assertStatus(404, $this->post('/admin/email/suppressions/remove', ['email' => 'x@example.test']));
 
+        // A dark destination is explained, not hidden. Under ADR 0024's two-rank
+        // console that explanation lives in the owning area's tab strip: the
+        // Notifications area still opens (Announcements is on) and its Email tab
+        // renders disabled rather than linking a route that 404s.
         $dashboard = $this->get('/admin');
         $this->assertStatus(200, $dashboard);
         self::assertStringNotContainsString('href="/admin/email"', $dashboard->body());
-        self::assertStringContainsString('aria-disabled="true"', $dashboard->body());
+
+        $notifications = $this->get('/admin/announcements');
+        $this->assertStatus(200, $notifications);
+        self::assertStringNotContainsString('href="/admin/email"', $notifications->body());
+        self::assertMatchesRegularExpression(
+            '~<span[^>]*aria-disabled="true"[^>]*>.*?Email.*?Disabled until the feature flag is enabled.*?</span>~s',
+            $notifications->body(),
+        );
     }
 
     public function test_core_forum_survives_with_every_feature_flag_disabled(): void

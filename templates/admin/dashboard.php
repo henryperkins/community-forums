@@ -1,17 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
-<?php $this->layout('layout'); $this->section('title', 'Admin'); ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Operator desk</span>
-            <h1>Admin console</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-
-    <?= $this->partial('admin/_nav', ['active' => 'dashboard', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?php $this->layout('layout'); $this->section('title', 'Admin'); $this->section('variant', 'admin'); ?>
+<?= $this->partial('admin/_console', ['area' => 'overview', 'tab' => 'dashboard']) ?>
         <p class="pane-intro">Start with live queues and health signals, then review what has changed across the community.</p>
 
         <section class="admin-dashboard-section" aria-labelledby="queue-health-heading">
@@ -114,5 +103,4 @@
                 </div>
             </div>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

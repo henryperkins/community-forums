@@ -148,10 +148,18 @@ final class AppAdminThreadIntelligenceTest extends TestCase
         (new SettingRepository($this->db))->set('features', ['community_memory' => false, 'automated_context' => true]);
         $this->actingAs($this->admin);
 
+        // The flag rows link out to the console they govern. Under ADR 0024 the
+        // nav no longer also links it from here — Thread Intelligence is a tab of
+        // the Settings area, and /admin/features sits in Features — so the row
+        // link is the only occurrence and is the one that matters.
         $features = $this->get('/admin/features');
         $this->assertStatus(200, $features);
         self::assertStringContainsString('href="/admin/thread-intelligence"', $features->body());
-        self::assertGreaterThanOrEqual(2, substr_count($features->body(), '/admin/thread-intelligence'));
+
+        // …and it is reachable in the Settings area's own tab strip.
+        $settings = $this->get('/admin/settings');
+        $this->assertStatus(200, $settings);
+        self::assertStringContainsString('href="/admin/thread-intelligence"', $settings->body());
 
         $dashboard = $this->get('/admin');
         $this->assertStatus(200, $dashboard);

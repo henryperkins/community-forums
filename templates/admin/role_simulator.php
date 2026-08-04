@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Permission simulator');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Permission simulator</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'roles', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'people', 'tab' => 'simulator']) ?>
     <p class="muted">Runs <code>can(actor, capability, target, time)</code> on the <strong>real resolver</strong>.
     While <code>capabilities</code> is in shadow, answers predict the post-cutover decision; live requests still use legacy authority.</p>
 
@@ -59,5 +53,4 @@ $this->section('title', 'Permission simulator');
         <?php endif; ?>
     </section>
     <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

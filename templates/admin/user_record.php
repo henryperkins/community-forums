@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'User · ' . ($subject['username'] ?? ''));
+$this->section('variant', 'admin');
 $display = ($subject['display_name'] ?? '') !== '' ? $subject['display_name'] : ($subject['username'] ?? '');
 $uid = (int) $subject['id'];
 $status = (string) ($subject['status'] ?? 'active');
@@ -23,14 +24,12 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
     return $ctx === $context ? (string) ($old[$field] ?? '') : '';
 };
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $e($display) ?> <span class="muted">@<?= $e($subject['username']) ?></span></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'users', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'members', 'tab' => 'users']) ?>
+    <a class="admin-back" href="/admin/users">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        All members
+    </a>
+    <h2 class="admin-record-title"><?= $e($display) ?> <span class="muted">@<?= $e($subject['username']) ?></span></h2>
     <section class="card">
         <h2>Status</h2>
         <dl class="profile-stats">
@@ -333,5 +332,4 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             <p class="muted"><a href="/admin/audit?target_type=user&amp;target_id=<?= $uid ?>">Full trail in the audit log</a></p>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

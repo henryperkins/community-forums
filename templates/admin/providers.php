@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Sign-in providers');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Sign-in providers</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'providers', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'integrations', 'tab' => 'providers']) ?>
     <p class="muted">Generic OIDC providers are configuration, not code: a pinned HTTPS issuer,
     a client id, and a client secret stored only in the encrypted vault. New providers land
     <strong>disabled</strong> — run “Test connection”, then enable. Builtin providers
@@ -127,5 +121,4 @@ $this->section('title', 'Sign-in providers');
             <button class="btn" type="submit">Add provider</button>
         </form>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

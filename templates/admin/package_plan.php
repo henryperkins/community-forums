@@ -5,15 +5,14 @@ $package = $plan['package'];
 $release = $plan['release'];
 $base = '/admin/packages/' . (int) $package['id'];
 $this->section('title', 'Install plan: ' . $package['name']);
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Install plan - <?= $e($package['name']) ?> <?= $e($release['version']) ?></h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'packages', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages']) ?>
+    <a class="admin-back" href="/admin/packages">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Package catalogue
+    </a>
+    <h2 class="admin-record-title">Install plan - <?= $e($package['name']) ?> <?= $e($release['version']) ?></h2>
     <?php foreach (($errors ?? []) as $err): ?>
         <p class="field-error"><?= $e($err) ?></p>
     <?php endforeach; ?>
@@ -80,5 +79,4 @@ $this->section('title', 'Install plan: ' . $package['name']);
             </form>
         </section>
     <?php endif; ?>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

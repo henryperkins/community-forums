@@ -182,9 +182,16 @@ final class AppThemePackageTest extends TestCase
         self::assertSame('noindex', $index->getHeader('x-robots-tag'));
         self::assertStringContainsString('Midnight Theme', $index->body());
 
+        // Themes moved into the Appearance area under ADR 0024, so the packages
+        // catalogue reaches it through the tier rather than through a rail that
+        // listed every destination on every page.
         $packages = $this->get('/admin/packages');
         $this->assertStatus(200, $packages);
-        self::assertStringContainsString('/admin/themes', $packages->body());
+        self::assertStringContainsString('>Appearance<', $packages->body());
+
+        $appearance = $this->get('/admin/branding');
+        $this->assertStatus(200, $appearance);
+        self::assertStringContainsString('href="/admin/themes"', $appearance->body());
     }
 
     public function test_preview_is_isolated_per_admin_session(): void

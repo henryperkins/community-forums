@@ -160,6 +160,11 @@ final class AppAdminFeaturesTest extends TestCase
 
         $this->assertStatus(200, $page);
         self::assertStringContainsString('Feature flags', $page->body());
-        self::assertStringContainsString('href="/admin/features"', $page->body());
+        // The console renders the active tab as a span, not an hrefless anchor
+        // (ADR 0024), so the page's own destination is no longer a self-link.
+        self::assertStringContainsString(
+            '<span class="admin-tab is-active" aria-current="page">Feature flags</span>',
+            $page->body(),
+        );
     }
 }

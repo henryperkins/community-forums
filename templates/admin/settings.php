@@ -2,24 +2,14 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'General & registration');
+$this->section('variant', 'admin');
 $errors = $settings_errors ?? [];
 $old = $settings_old ?? [];
 $siteValue = (string) ($old['site_name'] ?? $site_name ?? '');
 $registrationSelected = (string) ($old['registration_mode'] ?? $registration_mode ?? 'open');
 $modes = $registration_modes ?? \App\Security\RegistrationPolicy::MODES;
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Operator desk</span>
-            <h1>General & registration</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-
-    <?= $this->partial('admin/_nav', ['active' => 'settings', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'settings', 'tab' => 'settings']) ?>
         <p class="pane-intro">Manage the community name and who can create an account. Each form saves only its own setting.</p>
 
         <section class="card settings-card" aria-labelledby="site-name-heading">
@@ -62,5 +52,4 @@ $modes = $registration_modes ?? \App\Security\RegistrationPolicy::MODES;
                 <div class="form-actions"><button class="btn" type="submit">Save registration mode</button></div>
             </form>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

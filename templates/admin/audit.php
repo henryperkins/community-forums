@@ -2,21 +2,12 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Audit log');
+$this->section('variant', 'admin');
 $filters = $filters ?? [];
 $base = $base_query ?? [];
 $page = (int) ($page ?? 0);
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Accountability</span>
-            <h1>Audit log</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'audit', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'overview', 'tab' => 'audit']) ?>
     <section class="card">
         <p class="pane-intro">Every moderation and admin action, append-only (ADMIN §3.6). Filter, page, and follow a target's trail from its own record screen.</p>
         <form method="get" action="/admin/audit" class="filter-form">
@@ -120,5 +111,4 @@ $page = (int) ($page ?? 0);
             <?php endif; ?>
         </nav>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

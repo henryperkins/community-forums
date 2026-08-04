@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Users');
+$this->section('variant', 'admin');
 $filters = $filters ?? [];
 $sort = $filters['sort'] ?? 'created_at';
 $dir = ($filters['direction'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
@@ -21,14 +22,7 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
         . $e($label) . $arrow . '</a></th>';
 };
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Users</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'users', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'members', 'tab' => 'users']) ?>
     <section class="card">
         <form method="get" action="/admin/users" class="filter-form">
             <div class="filter-grid">
@@ -171,5 +165,4 @@ $sortHeader = function (string $key, string $label) use ($filters, $sort, $dir, 
             <?php endif; ?>
         </nav>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

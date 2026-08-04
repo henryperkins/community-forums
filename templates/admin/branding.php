@@ -3,20 +3,10 @@
 $this->layout('layout');
 $this->section('title', 'Branding');
 $this->section('robots', 'noindex, nofollow');
+$this->section('variant', 'admin');
 $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' : '';
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <span>
-            <span class="eyebrow">Operator desk</span>
-            <h1>Branding</h1>
-        </span>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-
-    <?= $this->partial('admin/_nav', ['active' => 'branding', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'appearance', 'tab' => 'branding']) ?>
         <p class="pane-intro">Tune the public name, colour accents, assets, and preview before the council sees the updated hall.</p>
 
         <section class="card brand-cols">
@@ -123,5 +113,4 @@ $sel = static fn (string $v, string $cur): string => $v === $cur ? ' selected' :
             <?= field_error($errors ?? [], 'reset_confirm') ?>
             <div class="form-actions"><button class="btn danger" type="submit">Reset to defaults</button></div>
         </form>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

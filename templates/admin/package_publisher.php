@@ -2,18 +2,17 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Publisher trust');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1><?= $e($publisher['display_name']) ?>
-            <span class="pill"><?= $e($publisher['status']) ?></span>
-            <?= $publisher['verified_at'] !== null ? '<span class="pill">verified</span>' : '' ?>
-        </h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'registries', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'packages', 'tab' => 'packages']) ?>
+    <a class="admin-back" href="/admin/packages/security">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        Security response
+    </a>
+    <h2 class="admin-record-title"><?= $e($publisher['display_name']) ?>
+        <span class="pill"><?= $e($publisher['status']) ?></span>
+        <?= $publisher['verified_at'] !== null ? '<span class="pill">verified</span>' : '' ?>
+    </h2>
     <p class="muted"><code><?= $e($publisher['publisher_uid']) ?></code>. Trust changes require your password. Suspension force-disables every install of this publisher's packages; reinstatement never silently re-enables them.</p>
 
     <section class="card">
@@ -116,5 +115,4 @@ $this->section('title', 'Publisher trust');
         <?php endforeach; ?>
         <?php if ($packages === []): ?><p class="muted">This publisher owns no packages.</p><?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

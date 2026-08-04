@@ -2,15 +2,9 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Themes');
+$this->section('variant', 'admin');
 ?>
-<div class="admin">
-    <header class="admin-head">
-        <h1>Themes</h1>
-        <span class="pill pill-admin">Admin mode</span>
-    </header>
-    <?= $this->partial('admin/_nav', ['active' => 'themes', 'features' => $features ?? []]) ?>
-
-    <div class="admin-pane">
+<?= $this->partial('admin/_console', ['area' => 'appearance', 'tab' => 'themes']) ?>
     <?php foreach (($errors ?? []) as $err): ?>
         <p class="field-error"><?= $e($err) ?></p>
     <?php endforeach; ?>
@@ -107,5 +101,4 @@ $this->section('title', 'Themes');
             </form>
         <?php endif; ?>
     </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>
