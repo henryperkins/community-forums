@@ -50,8 +50,10 @@ final class CloudflareDeploymentContractTest extends TestCase
 
         self::assertStringContainsString('s3fs', $dockerfile);
         self::assertStringContainsString('EXPOSE 8080', $dockerfile);
-        self::assertStringContainsString('ErrorLog /proc/self/fd/1', $apacheVhost);
-        self::assertStringContainsString("sed -ri 's!^ErrorLog .*!ErrorLog /proc/self/fd/1!'", $dockerfile);
+        self::assertStringContainsString('ErrorLog /var/log/apache2/error.log', $apacheVhost);
+        self::assertStringContainsString('CustomLog /var/log/apache2/access.log combined', $apacheVhost);
+        self::assertStringContainsString('rm -f /var/log/apache2/error.log', $dockerfile);
+        self::assertStringContainsString('tail -n 0 -F /var/log/apache2/error.log', $entrypoint);
         self::assertStringContainsString(': "${R2_ACCESS_KEY_ID:', $entrypoint);
         self::assertStringContainsString(': "${R2_SECRET_ACCESS_KEY:', $entrypoint);
         self::assertStringContainsString('php /var/www/html/bin/console migrate', $entrypoint);

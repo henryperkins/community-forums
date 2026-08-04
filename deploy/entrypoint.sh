@@ -74,4 +74,9 @@ if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     php /var/www/html/bin/console migrate
 fi
 
+# Cloudflare Containers capture the entrypoint's stdout, but reject Apache's
+# usual /dev/stdout and /proc/self/fd/1 log targets. Apache writes ordinary
+# files and this inherited tail forwards them to the platform log stream.
+tail -n 0 -F /var/log/apache2/error.log /var/log/apache2/access.log /var/log/apache2/other_vhosts_access.log &
+
 exec docker-php-entrypoint "$@"

@@ -64,7 +64,9 @@ FROM phpbase
 RUN apt-get update \
     && apt-get install -y --no-install-recommends s3fs fuse3 \
     && echo 'user_allow_other' >> /etc/fuse.conf \
-    && sed -ri 's!^ErrorLog .*!ErrorLog /proc/self/fd/1!' /etc/apache2/apache2.conf \
+    && rm -f /var/log/apache2/error.log /var/log/apache2/access.log /var/log/apache2/other_vhosts_access.log \
+    && touch /var/log/apache2/error.log /var/log/apache2/access.log /var/log/apache2/other_vhosts_access.log \
+    && chown www-data:www-data /var/log/apache2/error.log /var/log/apache2/access.log /var/log/apache2/other_vhosts_access.log \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
