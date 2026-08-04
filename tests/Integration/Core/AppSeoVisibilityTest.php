@@ -26,6 +26,7 @@ final class AppSeoVisibilityTest extends TestCase
         $res = $this->get('/robots.txt');
         $this->assertStatus(200, $res);
         self::assertStringContainsString('text/plain', (string) $res->getHeader('content-type'));
+        self::assertSame([], $res->cookieHeaders());
         $this->assertSeeText($res, 'Disallow: /settings');
         $this->assertSeeText($res, 'Disallow: /admin');
         $this->assertSeeText($res, 'Disallow: /messages');
@@ -52,6 +53,7 @@ final class AppSeoVisibilityTest extends TestCase
         $res = $this->get('/sitemap.xml');
         $this->assertStatus(200, $res);
         self::assertStringContainsString('application/xml', (string) $res->getHeader('content-type'));
+        self::assertSame([], $res->cookieHeaders());
 
         $this->assertSeeText($res, '/c/public-board');
         $this->assertSeeText($res, '/t/' . $visible['thread_id'] . '-' . $visible['slug']);
@@ -81,10 +83,14 @@ final class AppSeoVisibilityTest extends TestCase
     public function test_seo_subsystem_can_be_disabled(): void
     {
         (new \App\Repository\SettingRepository($this->db))->set('features', ['seo' => false]);
-        $this->assertStatus(404, $this->get('/sitemap.xml'));
+        $sitemap = $this->get('/sitemap.xml');
+        $this->assertStatus(404, $sitemap);
+        self::assertStringContainsString('text/plain', (string) $sitemap->getHeader('content-type'));
+        self::assertSame([], $sitemap->cookieHeaders());
         // robots still serves, but no longer advertises the (now 404) sitemap.
         $robots = $this->get('/robots.txt');
         $this->assertStatus(200, $robots);
+        self::assertSame([], $robots->cookieHeaders());
         $this->assertDontSeeText($robots, 'Sitemap:');
     }
 

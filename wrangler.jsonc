@@ -24,9 +24,11 @@
       // leaves little headroom for Apache + PHP under concurrent renders.
       "instance_type": "standard-1"
       // Placement: pin the container near your managed MySQL, or every page
-      // render pays cross-region latency on multiple round trips. Verify the
-      // exact key against the current Containers placement docs before adding:
+      // render pays cross-region latency on multiple round trips. Confirm the
+      // database region first, then add the current Containers syntax:
+      // "constraints": {
       //   "regions": ["ENAM"]
+      // }
     }
   ],
 
@@ -53,6 +55,10 @@
     "APP_URL": "https://forum.candidary.online",
     "SESSION_SECURE": "true",
     "SECURITY_HSTS": "true",
+    "MAIL_DRIVER": "cloudflare_smtp",
+    "MAIL_FROM": "noreply@candidary.online",
+    "MAIL_FROM_NAME": "",
+    "MAIL_TIMEOUT_SECONDS": "30",
 
     // PlanetScale, reached over the public internet. Only DB_PASSWORD is a
     // secret. PlanetScale serves a publicly-trusted certificate, so the trust

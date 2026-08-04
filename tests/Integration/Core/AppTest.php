@@ -17,10 +17,13 @@ final class AppTest extends TestCase
 {
     public function test_healthz_reports_ok_with_database_status(): void
     {
+        $this->db->resetMetrics();
         $response = $this->get('/healthz');
         $this->assertStatus(200, $response);
         self::assertSame('application/json; charset=UTF-8', $response->getHeader('content-type'));
         self::assertSame('{"status":"ok","database":"ok"}', $response->body());
+        self::assertSame(1, $this->db->metrics()['queries']);
+        self::assertSame([], $response->cookieHeaders());
     }
 
     public function test_healthz_reports_down_when_database_unreachable(): void
@@ -93,6 +96,53 @@ final class AppTest extends TestCase
         $this->assertSeeText($threadPage, "You're browsing as a guest");
         $this->assertSeeText($threadPage, 'Log in</a>');
         $this->assertDontSeeText($threadPage, 'name="body"');
+    }
+
+    public function test_guest_home_database_round_trips_stay_bounded(): void
+    {
+        $this->makeAdmin();
+        $categoryId = $this->makeCategory('Performance');
+        $this->makeBoard($categoryId, ['slug' => 'performance', 'name' => 'Performance']);
+
+        $this->db->resetMetrics();
+        $response = $this->get('/');
+
+        $this->assertStatus(200, $response);
+        self::assertLessThanOrEqual(8, $this->db->metrics()['queries']);
+    }
+
+    public function test_layout_versions_core_assets_for_edge_caching(): void
+    {
+        $this->makeAdmin();
+        $response = $this->get('/');
+
+        self::assertMatchesRegularExpression(
+            '#/assets/app\.css\?v=([a-f0-9]{16})#',
+            $response->body(),
+        );
+        preg_match('#/assets/app\.css\?v=([a-f0-9]{16})#', $response->body(), $match);
+        $version = $match[1] ?? '';
+        self::assertNotSame('', $version);
+        self::assertStringContainsString('/assets/imladris.css?v=' . $version, $response->body());
+        self::assertStringContainsString('/assets/app.js?v=' . $version, $response->body());
+    }
+
+    public function test_post_route_dispatches_exactly_once(): void
+    {
+        $this->makeAdmin();
+        $actor = $this->makeUser(['username' => 'single_dispatch_actor']);
+        $target = $this->makeUser(['username' => 'single_dispatch_target']);
+        $this->actingAs($actor);
+
+        $this->assertRedirect($this->post('/u/single_dispatch_target/follow'));
+        self::assertSame(
+            1,
+            (int) $this->db->fetchValue(
+                "SELECT COUNT(*) FROM follows
+                 WHERE user_id = ? AND target_type = 'user' AND target_id = ?",
+                [(int) $actor['id'], (int) $target['id']],
+            ),
+        );
     }
 
     public function test_thread_canonicalises_id_only_url(): void

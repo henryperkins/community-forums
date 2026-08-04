@@ -15,6 +15,10 @@ use Throwable;
 final class Database
 {
     private ?PDO $pdo = null;
+    private int $connectionCount = 0;
+    private float $connectionDurationMs = 0.0;
+    private int $queryCount = 0;
+    private float $queryDurationMs = 0.0;
 
     /** @param array<string,mixed> $config db config block */
     public function __construct(private array $config)
@@ -43,12 +47,18 @@ final class Database
             PDO::ATTR_TIMEOUT => 5,
         ];
 
-        $this->pdo = new PDO(
-            $dsn,
-            (string) $this->config['username'],
-            (string) $this->config['password'],
-            $options + $this->tlsOptions(),
-        );
+        $startedAt = hrtime(true);
+        $this->connectionCount++;
+        try {
+            $this->pdo = new PDO(
+                $dsn,
+                (string) $this->config['username'],
+                (string) $this->config['password'],
+                $options + $this->tlsOptions(),
+            );
+        } finally {
+            $this->connectionDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
+        }
 
         return $this->pdo;
     }
@@ -101,9 +111,16 @@ final class Database
      */
     public function run(string $sql, array $params = []): \PDOStatement
     {
-        $stmt = $this->pdo()->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
+        $pdo = $this->pdo();
+        $startedAt = hrtime(true);
+        $this->queryCount++;
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } finally {
+            $this->queryDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
+        }
     }
 
     /** @param array<string,mixed>|list<mixed> $params */
@@ -164,10 +181,40 @@ final class Database
 
     public function ping(): bool
     {
+        $pdo = null;
         try {
-            return (int) $this->pdo()->query('SELECT 1')->fetchColumn() === 1;
+            $pdo = $this->pdo();
         } catch (PDOException) {
             return false;
         }
+
+        $startedAt = hrtime(true);
+        $this->queryCount++;
+        try {
+            return (int) $pdo->query('SELECT 1')->fetchColumn() === 1;
+        } catch (PDOException) {
+            return false;
+        } finally {
+            $this->queryDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
+        }
+    }
+
+    /** @return array{connections:int,connection_ms:float,queries:int,query_ms:float} */
+    public function metrics(): array
+    {
+        return [
+            'connections' => $this->connectionCount,
+            'connection_ms' => round($this->connectionDurationMs, 3),
+            'queries' => $this->queryCount,
+            'query_ms' => round($this->queryDurationMs, 3),
+        ];
+    }
+
+    public function resetMetrics(): void
+    {
+        $this->connectionCount = 0;
+        $this->connectionDurationMs = 0.0;
+        $this->queryCount = 0;
+        $this->queryDurationMs = 0.0;
     }
 }

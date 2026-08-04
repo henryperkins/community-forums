@@ -50,7 +50,7 @@ question that could have invalidated the whole approach. It has now been
 measured from inside the running production container:
 
 ```
-DNS  gcp.connect.psdb.cloud -> 35.215.9.6   0.00s
+DNS  gcp.connect.psdb.cloud -> provider-managed GCP address (rotates)
 TCP  gcp.connect.psdb.cloud:3306            OPEN in 0.02s
 PDO  connect + SELECT VERSION()             0.33s, server 8.4.9-Vitess
 ```
@@ -145,12 +145,14 @@ npx wrangler secret put DB_PASSWORD
 npx wrangler secret put DB_SSL_CA_PEM   # paste the provider's CA bundle (PEM)
 npx wrangler secret put R2_ACCESS_KEY_ID
 npx wrangler secret put R2_SECRET_ACCESS_KEY
+npx wrangler secret put CLOUDFLARE_EMAIL_API_TOKEN
 ```
 
 `DB_SSL_CA_PEM` is written to `/run/db-ca.pem` by the entrypoint and picked up
 via `DB_SSL_CA`. Without a CA the connection is encrypted but unauthenticated —
 `Database::tlsOptions()` will not assert certificate verification it cannot
-perform.
+perform. The email token needs **Email Sending: Edit** on the account that owns
+the already-onboarded `candidary.online` sending domain.
 
 ## 6. Deploy
 
@@ -296,12 +298,19 @@ currently work.
 
 Zone settings, all of which matter to this app specifically:
 
-- **Cache** `/assets/*` and `/brand.css` aggressively. Leave everything else on
-  **respect origin**. Do **not** create a "Cache Everything" rule: HTML carries
-  session state, and `/media/{id}` already emits the correct headers per object —
-  `public, max-age=31536000, immutable` when the attachment is public,
-  `private, no-store` otherwise (`MediaController.php:126`). Overriding that
-  serves private-board attachments from the edge.
+- **Cache** is source-controlled in `worker/index.js`, not a zone Cache Rule.
+  Successful versioned `GET /assets/*?v=...` and `GET /brand.css` responses are
+  stored through `caches.default` for one hour (`s-maxage=3600`) with a
+  five-minute browser TTL. Unversioned sub-assets such as fonts bypass this
+  cache. `Set-Cookie` is stripped before storage, cache keys retain the query
+  string, and responses expose `X-RetroBoards-Cache: MISS|HIT`. Core CSS/JS URLs
+  carry a content-derived `?v=` value so a deployment cannot pair new HTML with
+  stale JS/CSS. Leave everything else uncached. Do **not** create a "Cache
+  Everything" rule: HTML carries session state, and `/media/{id}` already emits
+  the correct headers per object — `public, max-age=31536000, immutable` when
+  the attachment is public, `private, no-store` otherwise
+  (`MediaController.php:126`). Overriding that serves private-board attachments
+  from the edge.
 - **Leave Bot Fight Mode off.** It force-enables JavaScript Detections, which
   injects an *inline* script. `SecurityHeaders::csp()` sends
   `script-src 'self'` with no nonce (`src/Security/SecurityHeaders.php:41`), so
@@ -310,11 +319,13 @@ Zone settings, all of which matter to this app specifically:
 - **Leave Rocket Loader off** for the same class of reason. Email Address
   Obfuscation is fine — it loads from `/cdn-cgi/`, which is same-origin and
   allowed by `script-src 'self'`.
-- **WAF rate limiting on `POST /login`** as a second layer. This matters more
-  here than on a VPS: `RATELIMIT_PATH` lives on the R2 mount, and the file-based
-  limiter is far weaker than a local disk one. Note that the tiered pattern which
-  counts only `401`/`403` responses requires a **Business plan**; Free and Pro get
-  IP-based counting.
+- **Login edge rate limiting is deferred until a plan upgrade.** The zone is on
+  Free, where rate-limiting expressions cannot use the HTTP method and the only
+  counting period is 10 seconds. A path-only `/login` rule would also count GETs
+  and cannot reproduce the requested `POST /login` guard. The application-level
+  limiter remains 10 attempts per 15 minutes. After upgrading, add a
+  method-aware WAF rule as the second layer; response-code counting still
+  requires Business or above.
 - **Smart Tiered Cache** — free on all plans, worth enabling with a
   single-region origin.
 - Optionally **Access** in front of `/admin` for an identity-provider gate ahead
@@ -407,25 +418,78 @@ Every page render is dominated by database round trips, not by PHP:
 | 20 trivial `SELECT 1` round trips | 0.90s (**~45ms each**) |
 | `SELECT COUNT(*) FROM users` | 0.06s |
 | `GET /ping.txt` (static, no PHP) | ~0.00s |
-| `GET /healthz` | ~2.6s |
-| `GET /setup` | ~2.5s |
+| `GET /healthz` | ~2.8–4.8s |
+| `GET /` | ~3.0–5.6s |
 
-The container runs in `ENAM` (observed node `ewr14`, Newark);
-`gcp.connect.psdb.cloud` resolves to `35.215.9.6`, a GCP address that is not
-near it. At ~45ms per query, a page issuing dozens of queries spends seconds
-waiting on the network, which is exactly what the ~3s public timings show.
+The container currently runs in `ENAM` (observed node `ewr14`, Newark), but
+placement is unconstrained (`placement: {}` in the deployed Worker settings).
+The PlanetScale hostname uses rotating GCP addresses, so an address lookup is
+not a reliable region inventory. The Hyperdrive configuration created during
+the deployment investigation does expose the origin hostname:
+`gcp-us-central1.connect.psdb.cloud`, placing the database in GCP `us-central1`
+(Iowa). At ~45ms per query, a page issuing dozens of queries spends seconds
+waiting on the network, which is exactly what the public and container timings
+show.
+
+The dashboard-added `HYPERDRIVE_VARIABLE` binding does not change this PHP
+topology. The active Worker script etag is unchanged, `worker/index.js` never
+reads the binding, and the container still receives the original `DB_*`
+variables and connects with PDO. Hyperdrive's documented connection object is a
+Workers-runtime binding for compatible Worker database drivers; it is not a
+TCP endpoint that PHP PDO inside the container can consume.
 
 This is the cost the `wrangler.jsonc` placement comment warns about, and it is
 **not** fixed by container sizing — the CPU is idle. The levers, in rough order
 of effect:
 
-1. **Move the database next to the container** (or pin the container to the
-   database's region via `regions`). A same-region managed MySQL should put
-   round trips in the low single-digit milliseconds.
-2. **Reduce queries per render.** `docs/runbooks/render_cache.md` covers the
-   render cache; the three-pane shell issues a lot of small lookups per page.
+1. **Move the database next to the container.** Pinning `ENAM` alone does not
+   improve the current `ewr14` → `us-central1` path because the container is
+   already in ENAM. Migrate the database to an eastern region near the
+   container, or move to a managed MySQL provider there. After that, constrain
+   the container so restarts cannot move it away. Current Wrangler syntax nests
+   placement under the container entry:
+   `"constraints": {"regions": ["ENAM"]}`. Do not add this until the database
+   migration target is confirmed. A same-region managed MySQL should put round
+   trips in the low single-digit milliseconds.
+2. **Reduce queries per render.** There is no page/fragment render cache.
+   `docs/runbooks/render_cache.md` only rebuilds derived Markdown `body_html`
+   and does not reduce shell queries. The verified application-side targets are:
+   request-level query count/timing, a bulk settings read for the global shell,
+   avoiding the duplicate category/board reads in `shareViewGlobals()` and
+   `HomeController`, and bypassing shell-global reads for `/healthz`.
 3. Persistent connections would save the 0.20s connect, but not the per-query
    cost, which is the dominant term.
+
+### PlanetScale east-region migration
+
+The selected target is `gcp-us-east4` (Ashburn, Virginia), near the current
+ENAM container placement. PlanetScale does not move an existing production
+branch in place. Its documented region-change procedure is:
+
+1. Install/authenticate the PlanetScale CLI and create a new branch in the
+   target region:
+   `pscale branch create imladris-db production-east --region gcp-us-east4`.
+2. Schedule a maintenance window and block application writes before the final
+   dump. The documented dump/restore path requires downtime to avoid lost
+   writes.
+3. Dump the current production branch:
+   `pscale database dump imladris-db main`.
+4. Restore the dump to `production-east`:
+   `pscale database restore-dump imladris-db production-east`.
+5. Validate migration status, authoritative row counts/checksums, foreign-key
+   enforcement, FULLTEXT indexes, and a health check using temporary credentials
+   for the new branch.
+6. Promote `production-east`:
+   `pscale branch promote imladris-db production-east`.
+7. Issue branch credentials, update `DB_HOST`/`DB_USERNAME` and the
+   `DB_PASSWORD` Worker secret, then deploy from this worktree. Add
+   `"constraints": {"regions": ["ENAM"]}` only after the target is live.
+8. Verify `/healthz`, representative reads/writes, cron workers, and latency
+   before reopening writes.
+
+Keep the old branch and credentials available for the rollback window. A
+rollback restores the prior `DB_*` values and known-good Worker version; do not
+delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
 
@@ -434,19 +498,33 @@ As of 2026-08-04 the deployment serves traffic:
 - `https://forum.candidary.online/healthz` → `200 {"status":"ok","database":"ok"}`
 - PlanetScale `8.4.9-Vitess`, all **78** migrations applied
 - R2 bucket `retroboards-data` mounted at `/data` via s3fs
-- Secrets set: `APP_KEY`, `DB_PASSWORD`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
-
-**First-run setup has not been completed.** `SetupService::isInitialized()` is
-`adminCount() > 0`, so with no admin row every path still redirects to `/setup`,
-and the wizard is reachable by anyone who loads the site. Completing it is the
-next step, and until then the deployment should be treated as unprotected.
+- Secrets set: `APP_KEY`, `DB_PASSWORD`, `R2_ACCESS_KEY_ID`,
+  `R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_EMAIL_API_TOKEN`
+- Four Cron Triggers are registered. Live tailing observed the `*/5` schedule
+  complete at 13:40 and 13:45 UTC with both `runConsole` RPC calls reporting
+  `outcome: ok` and no error logs. This proves command execution; a non-empty
+  email/webhook delivery still needs separate evidence.
+- First-run setup is complete: `/` returns `200` and `/setup` redirects to `/`.
+- A dashboard/API change deployed Worker version `097ca243` with an additional
+  `HYPERDRIVE_VARIABLE` binding. Its script etag is identical to the prior
+  source-built version, the binding is unused, and health remains green. The
+  binding is not in `wrangler.jsonc`, so the next source deployment will remove
+  it unless it is deliberately added.
 
 Not yet done, tracked here so it is not lost:
 
-- §8 edge configuration (cache rules, Bot Fight Mode off, WAF on `POST /login`)
-  has not been applied to the zone.
-- The deployed code is the `deploy/cloudflare-production-20260804` branch, based
-  on `c79d0d5`. It does **not** include the Imladris admin/account work on
-  `feat/imladris-admin-account`.
+- The source branch now carries the §8 Worker Cache API implementation and
+  content-versioned core asset URLs. Production verification must observe one
+  `MISS` followed by `HIT` with the same `?v=` URL after deployment. Live HTML
+  has no Rocket Loader or Bot Fight script markers; method-aware login WAF is
+  deferred until the Free plan is upgraded.
+- The deployed code is the published `deploy/cloudflare-production-20260804`
+  branch, based on `c79d0d5` plus nine deployment commits. It deliberately does
+  **not** include the eight feature-only Imladris admin/account commits on the
+  separately published `feat/imladris-admin-account` branch.
+- The throwaway Workers `rb-nginx-test` and `rb-egress-probe`, and their
+  corresponding container apps, were deleted after confirming they had no
+  custom domains, routes, or Cron Triggers. Only
+  `retroboards-forumcontainer` remains provisioned.
 - `SendmailMailer` still has no deliverability path from the container, so email
   fails closed (§10).

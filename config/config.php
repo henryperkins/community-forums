@@ -62,12 +62,14 @@ return [
     ],
 
     'mail' => [
-        // 'sendmail' uses PHP mail(); swap to an SMTP/provider adapter behind the
-        // App\Mail\Mailer interface later. Empty `from` ⇒ not configured ⇒ email
-        // fails closed (in-app notifications still deliver).
+        // 'sendmail' uses PHP mail(); 'cloudflare_smtp' submits transactional
+        // email over authenticated SMTPS. Empty credentials keep email
+        // fail-closed while in-app notifications continue.
         'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
         'from' => Env::get('MAIL_FROM', ''),
         'from_name' => Env::get('MAIL_FROM_NAME', ''),
+        'cloudflare_api_token' => Env::get('CLOUDFLARE_EMAIL_API_TOKEN', ''),
+        'timeout_seconds' => (int) Env::get('MAIL_TIMEOUT_SECONDS', '30'),
     ],
 
     'paths' => [

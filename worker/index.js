@@ -15,6 +15,7 @@ import { Container, getContainer } from "@cloudflare/containers";
 const CONTAINER_ID = "main";
 
 const CONSOLE = "/var/www/html/bin/console";
+const EDGE_CACHE_CONTROL = "public, max-age=300, s-maxage=3600";
 
 /** Cron expression -> `bin/console` commands, in run order. */
 const CRON_JOBS = {
@@ -23,6 +24,45 @@ const CRON_JOBS = {
 	"10 3 * * *": ["worker:purge-ips", "worker:attachments", "worker:packages"],
 	"0 7 * * *": ["worker:digest"],
 };
+
+function isPublicAssetRequest(request) {
+	if (request.method !== "GET") {
+		return false;
+	}
+	const url = new URL(request.url);
+	return url.pathname === "/brand.css"
+		|| (url.pathname.startsWith("/assets/") && url.searchParams.has("v"));
+}
+
+function withCacheStatus(response, status) {
+	const headers = new Headers(response.headers);
+	headers.set("X-RetroBoards-Cache", status);
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers,
+	});
+}
+
+async function fetchForum(request, env) {
+	// The app resolves the client IP from X-Forwarded-For, honouring it only
+	// when the immediate peer is a configured trusted proxy
+	// (src/Security/ClientIdentifier.php). Inside Containers that peer is
+	// Cloudflare infrastructure, and the container is not addressable from
+	// the internet -- it is only reachable through this Worker. That makes
+	// overwriting the header here the security boundary: whatever the client
+	// sent is discarded, and CF-Connecting-IP (which the edge sets and a
+	// client cannot forge) becomes the single hop the app sees.
+	const forwarded = new Request(request);
+	const clientIp = request.headers.get("CF-Connecting-IP");
+	if (clientIp) {
+		forwarded.headers.set("X-Forwarded-For", clientIp);
+	} else {
+		forwarded.headers.delete("X-Forwarded-For");
+	}
+
+	return getContainer(env.FORUM, CONTAINER_ID).fetch(forwarded);
+}
 
 export class ForumContainer extends Container {
 	defaultPort = 8080; // deploy/apache-vhost.conf listens on 8080
@@ -62,6 +102,11 @@ export class ForumContainer extends Container {
 			SESSION_SECURE: env.SESSION_SECURE,
 			SECURITY_HSTS: env.SECURITY_HSTS,
 			TRUSTED_PROXIES: env.TRUSTED_PROXIES,
+			MAIL_DRIVER: env.MAIL_DRIVER,
+			MAIL_FROM: env.MAIL_FROM,
+			MAIL_FROM_NAME: env.MAIL_FROM_NAME,
+			MAIL_TIMEOUT_SECONDS: env.MAIL_TIMEOUT_SECONDS,
+			CLOUDFLARE_EMAIL_API_TOKEN: env.CLOUDFLARE_EMAIL_API_TOKEN,
 
 			DB_HOST: env.DB_HOST,
 			DB_PORT: env.DB_PORT,
@@ -155,24 +200,38 @@ export class ForumContainer extends Container {
 }
 
 export default {
-	async fetch(request, env) {
-		// The app resolves the client IP from X-Forwarded-For, honouring it only
-		// when the immediate peer is a configured trusted proxy
-		// (src/Security/ClientIdentifier.php). Inside Containers that peer is
-		// Cloudflare infrastructure, and the container is not addressable from
-		// the internet -- it is only reachable through this Worker. That makes
-		// overwriting the header here the security boundary: whatever the client
-		// sent is discarded, and CF-Connecting-IP (which the edge sets and a
-		// client cannot forge) becomes the single hop the app sees.
-		const forwarded = new Request(request);
-		const clientIp = request.headers.get("CF-Connecting-IP");
-		if (clientIp) {
-			forwarded.headers.set("X-Forwarded-For", clientIp);
-		} else {
-			forwarded.headers.delete("X-Forwarded-For");
+	async fetch(request, env, ctx) {
+		if (!isPublicAssetRequest(request)) {
+			return fetchForum(request, env);
 		}
 
-		return getContainer(env.FORUM, CONTAINER_ID).fetch(forwarded);
+		const cache = caches.default;
+		const cacheKey = new Request(request.url, { method: "GET" });
+		const cached = await cache.match(cacheKey);
+		if (cached) {
+			return withCacheStatus(cached, "HIT");
+		}
+
+		const response = await fetchForum(request, env);
+		if (response.status !== 200) {
+			return response;
+		}
+
+		const headers = new Headers(response.headers);
+		headers.delete("Set-Cookie");
+		headers.set("Cache-Control", EDGE_CACHE_CONTROL);
+		const cacheable = new Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers,
+		});
+		ctx.waitUntil(
+			cache.put(cacheKey, cacheable.clone()).catch((err) => {
+				console.error(`asset cache put failed: ${err}`);
+			}),
+		);
+
+		return withCacheStatus(cacheable, "MISS");
 	},
 
 	async scheduled(controller, env, ctx) {
