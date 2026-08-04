@@ -27,6 +27,14 @@ return [
         'username' => Env::get('DB_USERNAME', 'retro'),
         'password' => Env::get('DB_PASSWORD', 'retropw'),
         'charset' => 'utf8mb4',
+        // TLS for the MySQL connection. Off by default (same-host or private
+        // network). Required when the database is reached over the public
+        // internet — see docs/runbooks/deployment-cloudflare.md.
+        'ssl' => [
+            'enabled' => Env::bool('DB_SSL', false),
+            'ca' => Env::get('DB_SSL_CA', ''),
+            'verify' => Env::bool('DB_SSL_VERIFY', true),
+        ],
     ],
 
     'session' => [
@@ -54,12 +62,22 @@ return [
     ],
 
     'mail' => [
-        // 'sendmail' uses PHP mail(); swap to an SMTP/provider adapter behind the
-        // App\Mail\Mailer interface later. Empty `from` ⇒ not configured ⇒ email
-        // fails closed (in-app notifications still deliver).
+        // 'sendmail' uses PHP mail() and needs a local MTA; 'cloudflare' uses the
+        // Cloudflare Email Sending REST API (the right choice on Containers,
+        // which have no MTA and no Workers bindings); 'array' captures messages
+        // in memory for tests. Empty `from` ⇒ not configured ⇒ email fails closed
+        // (in-app notifications still deliver).
         'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
         'from' => Env::get('MAIL_FROM', ''),
         'from_name' => Env::get('MAIL_FROM_NAME', ''),
+        'cloudflare' => [
+            // The sending domain must be onboarded first
+            // (`wrangler email sending enable <domain>`), and the API token needs
+            // the email sending permission. Both are secrets, never `vars`.
+            'account_id' => Env::get('MAIL_CLOUDFLARE_ACCOUNT_ID', ''),
+            'api_token' => Env::get('MAIL_CLOUDFLARE_API_TOKEN', ''),
+            'timeout' => (int) Env::get('MAIL_TIMEOUT_SECONDS', '10'),
+        ],
     ],
 
     'paths' => [
