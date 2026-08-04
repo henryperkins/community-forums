@@ -43,6 +43,33 @@ $permalink = '/t/' . (int) $thread['id'] . '-' . (string) $thread['slug']
     <details class="post-menu" data-post-menu>
         <summary class="post-toolbar-button" aria-label="More post actions"><?= $this->partial('partials/icon', ['name' => 'more-horizontal']) ?></summary>
         <div class="post-menu-pop">
+            <?php // Coarse pointers collapse the toolbar to this one disclosure: there is
+                  // no hover to reveal the reference's floating pill, and four in-flow 44px
+                  // targets cost a whole band under every post. React / quote / accept are
+                  // rendered a second time here; CSS shows exactly one set per pointer type,
+                  // so only one is ever in the accessibility tree. ?>
+            <div class="post-menu-touch">
+                <?php if ($canReact): ?>
+                    <div class="post-menu-reactions" role="group" aria-label="Add a reaction">
+                        <?php foreach ($allowed as $emoji): ?>
+                            <form class="reaction-form inline" method="post" action="/posts/<?= (int) $p['id'] ?>/react">
+                                <?= $this->csrfField() ?>
+                                <input type="hidden" name="emoji" value="<?= $e($emoji) ?>">
+                                <button type="submit" class="reaction"><?= $e($emoji) ?></button>
+                            </form>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($canReply): ?>
+                    <button type="button" data-quote-post hidden><?= $this->partial('partials/icon', ['name' => 'quote']) ?><span>Quote in your reply</span></button>
+                <?php endif; ?>
+                <?php if ($canAccept): ?>
+                    <form method="post" action="/posts/<?= (int) $p['id'] ?>/accept">
+                        <?= $this->csrfField() ?>
+                        <button type="submit"><?= $this->partial('partials/icon', ['name' => 'check']) ?><span>Accept as answer</span></button>
+                    </form>
+                <?php endif; ?>
+            </div>
             <a href="<?= $e($permalink) ?>" data-copy-post><?= $this->partial('partials/icon', ['name' => 'copy']) ?><span>Copy link</span></a>
             <?php if ($canOwnerWrite): ?>
                 <button type="button" data-post-disclosure-open="post-edit-<?= (int) $p['id'] ?>" hidden><?= $this->partial('partials/icon', ['name' => 'edit-3']) ?><span>Edit</span></button>

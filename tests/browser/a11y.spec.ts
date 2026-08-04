@@ -505,7 +505,15 @@ test('phase 4 custom emoji surfaces have no serious axe violations', async ({ pa
   await post.hover();
   const toolbar = post.locator('[data-post-toolbar]');
   await expect(toolbar).toBeVisible();
-  await toolbar.locator('.reaction-add > summary').click();
+  // A fine pointer picks a reaction straight from the toolbar; a coarse pointer
+  // collapses the toolbar to its overflow disclosure, so the picker is in the
+  // menu there. Axe checks whichever set the pointer type actually exposes.
+  const picker = toolbar.locator('.reaction-add > summary');
+  if (await picker.isVisible()) {
+    await picker.click();
+  } else {
+    await toolbar.locator('[data-post-menu] > summary').click();
+  }
   await expect(toolbar.getByRole('button', { name: token })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '[data-post-toolbar]');
 });

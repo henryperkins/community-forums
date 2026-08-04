@@ -5950,6 +5950,16 @@ span.wf-btn {
     letter-spacing: .1em;
     text-transform: uppercase;
 }
+/* The reference keeps the post time inline in the byline in the label face, not
+   the mono metadata face used by the breadcrumb and reference cards
+   (ThreadView.dc.html:240-241). Mono is ~25% wider per character, which is what
+   pushes an already-long stamp onto its own line on a narrow screen. */
+.post-head .post-time,
+.post-head .post-edited { font-family: var(--font-label); font-size: .7rem; letter-spacing: .04em; }
+/* Reference value (ThreadView.dc.html:222). The local layer had drifted to
+   .53rem, which renders "Commends" wider than the 48px rail it sits in — on
+   desktop the page gutter absorbs the spill, on mobile it reached the card edge. */
+.regard-block .regard-label { font-size: .5rem; }
 .post-day-divider { display: flex; align-items: center; gap: 14px; margin: 26px 0 12px; }
 .post-day-divider span { flex: 1; height: 1px; background: var(--border-hair); }
 .post-day-divider time { color: var(--text-faint); font: .66rem var(--font-label); letter-spacing: .18em; text-transform: uppercase; }
@@ -6072,6 +6082,11 @@ body.thread-restructure-open { overflow: hidden; }
     background: var(--surface-raised);
     box-shadow: var(--shadow-lg);
 }
+/* Fine-pointer default: the toolbar itself carries react/quote/accept, so the
+   menu's touch duplicates stay out of the DOM's accessibility tree entirely. */
+.post-menu-touch { display: none; }
+.post-menu-reactions { display: flex; flex-wrap: wrap; gap: 4px; padding: 2px 6px 6px; }
+.post-menu-touch + a { border-top: 1px solid var(--border-hair); }
 [data-thread-enhanced="1"] .post-native-disclosure > summary { display: none; }
 .post-disclosure-close { min-width: 44px; margin: 0 0 8px auto; }
 .thread-restructure-scrim:not([hidden]) {
@@ -6133,18 +6148,31 @@ body.thread-restructure-open { overflow: hidden; }
     .thread-restructure-dialog button,
     .thread-restructure-dialog select,
     .thread-restructure-dialog input { min-height: 44px; }
-    .post { gap: 10px; padding: 16px 4px; }
+    /* 4px of inline padding left the 48px identity rail no gutter, so the
+       "Commends" label reached the card edge. 10px restores it at a cost of
+       12px of measure; the reference's own value is 14px. */
+    .post { gap: 10px; padding: 12px 10px; }
     /* Reassert the semantic same-author state after the mobile padding shorthand. */
     .post.post-grouped { padding-block-start: 0; }
-    [data-thread-enhanced="1"] .post-toolbar {
-        position: static;
+    .post-head { min-height: 44px; padding-inline-end: 48px; }
+    .post-head .post-time { margin-left: 0; }
+    [data-thread-enhanced="1"] .post-toolbar,
+    .post-toolbar {
+        top: 12px;
+        right: 10px;
+        gap: 0;
+        padding: 0;
         opacity: 1;
         pointer-events: auto;
-        margin-top: 8px;
         border: 0;
         box-shadow: none;
         background: transparent;
     }
+    .post-grouped .post-toolbar { top: 0; }
+    .post-toolbar > .post-toolbar-reactions,
+    .post-toolbar > [data-quote-post],
+    .post-toolbar > form { display: none; }
+    .post-menu-touch { display: block; }
     .post-toolbar-button,
     .post-toolbar > form > button,
     .post-toolbar > details > summary { width: 44px; height: 44px; }
@@ -6160,16 +6188,38 @@ body.thread-restructure-open { overflow: hidden; }
 }
 @keyframes study-sheet-in { from { transform: translateY(104%); } to { transform: translateY(0); } }
 
+/* — Coarse-pointer post actions.
+   The reference stream is a desktop artboard: the action pill floats on hover and
+   costs zero layout height (ThreadView.dc.html:318). A touch surface has no hover
+   and the 44px tap target is not negotiable, so the previous static row put a
+   ~52px band under every post — roughly half the reference's whole per-post
+   height, paid again on every reply. Collapse to the overflow disclosure and park
+   it at the byline's trailing edge, where the head's reserved 44px min-height
+   already accounts for it; react / quote / accept move into the menu.
+   This block must stay identical to its max-width twin above — a coarse pointer
+   is not always a narrow one, and the 820px tablet case matches only this one. */
 @media (hover: none), (pointer: coarse) {
-    [data-thread-enhanced="1"] .post-toolbar {
-        position: static;
+    .post { gap: 10px; padding: 12px 10px; }
+    .post.post-grouped { padding-block-start: 0; }
+    .post-head { min-height: 44px; padding-inline-end: 48px; }
+    .post-head .post-time { margin-left: 0; }
+    [data-thread-enhanced="1"] .post-toolbar,
+    .post-toolbar {
+        top: 12px;
+        right: 10px;
+        gap: 0;
+        padding: 0;
         opacity: 1;
         pointer-events: auto;
-        margin-top: 8px;
         border: 0;
         box-shadow: none;
         background: transparent;
     }
+    .post-grouped .post-toolbar { top: 0; }
+    .post-toolbar > .post-toolbar-reactions,
+    .post-toolbar > [data-quote-post],
+    .post-toolbar > form { display: none; }
+    .post-menu-touch { display: block; }
     .post-toolbar-button,
     .post-toolbar > form > button,
     .post-toolbar > details > summary { width: 44px; height: 44px; }

@@ -75,6 +75,44 @@ if (!function_exists('human_datetime')) {
     }
 }
 
+if (!function_exists('iso_datetime')) {
+    /**
+     * Machine-readable UTC stamp for a <time datetime> attribute. Pairs with
+     * {@see post_datetime}, which abbreviates the same instant for display.
+     */
+    function iso_datetime(?string $utcDateTime): string
+    {
+        if ($utcDateTime === null || $utcDateTime === '') {
+            return '';
+        }
+        $ts = strtotime($utcDateTime . ' UTC');
+        return $ts === false ? '' : gmdate('c', $ts);
+    }
+}
+
+if (!function_exists('post_datetime')) {
+    /**
+     * Compact byline stamp for the thread stream. The Imladris thread-view
+     * reference renders the post time inline in the byline ("Jul 10 at 09:14"),
+     * not a full absolute stamp — at 390px the long form plus an author title,
+     * OP and Staff wraps the byline onto a second line. The year is appended only
+     * when it is not the current one, so an ordinary reading day stays on one
+     * line without ever mislabelling an old post. The unabbreviated UTC value
+     * remains available through the element's datetime/title attributes.
+     */
+    function post_datetime(?string $utcDateTime): string
+    {
+        if ($utcDateTime === null || $utcDateTime === '') {
+            return '';
+        }
+        $ts = strtotime($utcDateTime . ' UTC');
+        if ($ts === false) {
+            return '';
+        }
+        return gmdate(gmdate('Y', $ts) === gmdate('Y') ? 'M j \a\t H:i' : 'M j, Y \a\t H:i', $ts);
+    }
+}
+
 if (!function_exists('human_date')) {
     function human_date(?string $utcDateTime): string
     {

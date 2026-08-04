@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
+import { expect, test, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -49,6 +49,24 @@ async function openSeedTopic(page: Page): Promise<void> {
   await page.goto('/c/general');
   await page.getByRole('link', { name: 'Share your favourite keyboard shortcuts' }).click();
   await expect(page.locator('[data-thread-study]')).toBeVisible();
+}
+
+/**
+ * Quote a post the way the viewer's pointer type actually presents the control.
+ * A fine pointer gets the reference's floating toolbar pill; a coarse pointer
+ * collapses that toolbar to its overflow disclosure (there is no hover to reveal
+ * it, and four in-flow 44px targets cost a whole band under every post), so
+ * quote lives in the menu there. Same user-facing outcome either way.
+ */
+async function quotePost(post: Locator): Promise<void> {
+  await post.hover();
+  const inToolbar = post.locator('[data-post-toolbar] > [data-quote-post]');
+  if (await inToolbar.isVisible()) {
+    await inToolbar.click();
+    return;
+  }
+  await post.locator('[data-post-menu] > summary').click();
+  await post.locator('.post-menu-touch [data-quote-post]').click();
 }
 
 async function openManagement(page: Page): Promise<void> {
@@ -313,8 +331,7 @@ test('Inbox-inserted topics get idempotent drawer, quote, and keyboard enhanceme
     await reading.getByRole('button', { name: 'Close Topic tools' }).click();
 
     const reply = reading.locator('#reply textarea[name="body"]');
-    await reading.locator('article[data-post]').nth(1).hover();
-    await reading.locator('article[data-post]').nth(1).getByRole('button', { name: 'Quote in your reply' }).click();
+    await quotePost(reading.locator('article[data-post]').nth(1));
     const quotedValue = await reply.inputValue();
     expect(quotedValue.match(/^> /gm) ?? []).toHaveLength(1);
     expect(quotedValue).toMatch(/^> [^\n]+\n\n$/);
@@ -436,7 +453,8 @@ test('coarse pointers keep post actions visible and reachable above the mobile b
 
   expect(page.viewportSize()!.width).toBeGreaterThan(768);
   expect(await page.evaluate(() => matchMedia('(hover: none), (pointer: coarse)').matches)).toBe(true);
-  const toolbar = page.locator('article[data-post]').first().locator('[data-post-toolbar]');
+  const post = page.locator('article[data-post]').first();
+  const toolbar = post.locator('[data-post-toolbar]');
   await expect(toolbar).toBeVisible();
   await expect(toolbar).toHaveCSS('opacity', '1');
   const targetBoxes = await toolbar.locator('button:visible, summary:visible').evaluateAll((items) => items.map((item) => {
@@ -445,6 +463,32 @@ test('coarse pointers keep post actions visible and reachable above the mobile b
   }));
   expect(targetBoxes.length).toBeGreaterThan(0);
   expect(targetBoxes.every((item) => item.width >= 44 && item.height >= 44)).toBe(true);
+
+  // The toolbar collapses to exactly one control here, and it is out of flow —
+  // the reference stream's actions cost zero layout height, and an in-flow row
+  // of 44px targets was adding ~52px under every post.
+  expect(targetBoxes).toHaveLength(1);
+  await expect(toolbar).toHaveCSS('position', 'absolute');
+  // Out of flow is only safe if it does not land on the prose. The byline row
+  // reserves the control's own height and trailing edge for exactly this.
+  const overlap = await post.evaluate((element) => {
+    const bar = element.querySelector('[data-post-toolbar]')!.getBoundingClientRect();
+    const body = element.querySelector('.post-body')!.getBoundingClientRect();
+    const head = element.querySelector('.post-head')!.getBoundingClientRect();
+    return {
+      body: bar.bottom > body.top && bar.top < body.bottom && bar.right > body.left && bar.left < body.right,
+      withinHead: bar.top >= head.top - 1 && bar.bottom <= head.bottom + 1,
+    };
+  });
+  expect(overlap.body).toBe(false);
+  expect(overlap.withinHead).toBe(true);
+
+  // What left the toolbar has to still be reachable, so the menu carries it.
+  await toolbar.locator('[data-post-menu] > summary').click();
+  const touch = post.locator('.post-menu-touch');
+  await expect(touch).toBeVisible();
+  await expect(touch.locator('[data-quote-post]')).toBeVisible();
+  await expect(touch.locator('.post-menu-reactions .reaction').first()).toBeVisible();
 });
 
 test('reduced motion removes Study animations', async ({ page }) => {

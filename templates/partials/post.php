@@ -54,7 +54,9 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
                 <?php if (!empty($p['is_wiki'])): ?><span class="badge">Wiki</span><?php endif; ?>
                 <?php if ($a['is_staff']): ?><span class="badge badge-staff">Staff</span><?php endif; ?>
             <?php endif; ?>
-            <span class="post-time"><?= $e(human_datetime($p['created_at'])) ?></span>
+            <?php // Abbreviated inline stamp per the thread-view reference; the full
+                  // UTC value stays machine-readable and on hover/long-press. ?>
+            <time class="post-time" datetime="<?= $e(iso_datetime($p['created_at'])) ?>" title="<?= $e(human_datetime($p['created_at'])) ?>"><?= $e(post_datetime($p['created_at'])) ?></time>
             <?php if (!empty($p['edited_at'])): ?><span class="muted post-edited">(edited)</span><?php endif; ?>
         </div>
         <div class="post-body formatted-content">
