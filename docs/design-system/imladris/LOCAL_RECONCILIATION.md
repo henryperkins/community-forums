@@ -36,3 +36,35 @@ the `USER.md`, `ADMIN.md`, `COMMUNITY.md`, and `COMPOSER.md` surface specs, and
 `FeatureFlags.php`. `composer verify:imladris` fails if that surface changes
 after this reconciliation. Refreshing the digest is an explicit design-contract
 review step, not an automatic part of the asset build.
+
+## 2026-08-03 — refresh from the live design project (ADR 0024)
+
+The mirror was one sync behind project `c3e02753-607c-40b6-994c-9ba1a65bb367`. It was
+refreshed for the admin/account adoption: the four missing admin screens
+(`admin-features`, `admin-integrations`, `admin-members`, `admin-packages`),
+`components/admin/AdminNav`, `PRODUCTION.md`, `REDUNDANCY-AUDIT.md`, `github.md`,
+and the six admin screens + `AccountSettings.dc.html`, whose per-screen topbar and
+`Operator desk · <Area>` eyebrow were replaced upstream by a shared `AdminNav` import.
+`ui_kits/admin/` and `feature-ui/{polls,tags,moderation}/` were deleted upstream and
+are retained here as reference only — see `RETIRED.md`.
+
+Three upstream states were **deliberately not taken**, because the mirror is ahead:
+
+- **`tokens/colors.css`** — the semantic `--surface-staff` / `--on-staff` pair above
+  stays. Upstream still paints `.badge-staff` from the numbered ramp (3.55:1, does not
+  flip). Upstream's new `.presence-staff` rule reintroduces the identical numbered-ramp
+  pairing; it is patched here on the same grounds and **raised upstream** rather than
+  silently corrected a second time.
+- **`production-contract.json`** — upstream regressed `group_dms` to `implemented_dark`
+  (it graduated default-on 2026-07-18, ADR 0022) and dropped
+  `reconciled_through_commit`, which `ImladrisRuntimeAssetTest` pins to the literal
+  `6d81da590a12bd09bb8d0e282c042aa03d755a94`. Never bump that value.
+- **`manifest.json`** — upstream correctly re-files the ADR 0021/0023 remediation gaps
+  from the retired `ui_kits/admin` against `templates/admin-*`, but a non-empty
+  `unresolved_gaps` makes `check:imladris` red. Those gaps are what ADR 0024 closes; the
+  manifest adopts the upstream form at closeout, not before.
+
+`components.css` gained three upstream sections (`.admin-bar`/`.admin-tier`,
+`.thread-list.is-board`, `.presence-widget`). Taking it requires
+`composer build:imladris`, which regenerates production assets, so it lands with the
+console-chrome slice rather than with the documentation refresh.

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — features & badges" description="The read-only feature-flag ledger with activation stats, readiness column and the corrupt-overrides recovery path; badge rules with preview and backfill; and the custom emoji catalogue" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes afRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — features" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="features" hint-size="100%,101px"></x-import>
+
+  <div style="max-width: 1160px; margin: 0 auto; padding: 22px 28px 110px;">
+
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Features &amp; badges</h1>
+
+    <nav aria-label="Capability sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 16px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atFlags }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goFlags }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Feature flags</button></sc-if>
+      <sc-if value="{{ offFlags }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goFlags }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Feature flags</button></sc-if>
+      <sc-if value="{{ atBadges }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goBadges }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Badge rules</button></sc-if>
+      <sc-if value="{{ offBadges }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goBadges }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Badge rules</button></sc-if>
+      <sc-if value="{{ atEmoji }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goEmoji }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Custom emoji</button></sc-if>
+      <sc-if value="{{ offEmoji }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goEmoji }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Custom emoji</button></sc-if>
+    </nav>
+
+    <sc-if value="{{ flash }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; align-items: flex-start; gap: 11px; margin-top: 20px; padding: 12px 16px; background: var(--surface-done); border: 1px solid var(--green-200); border-left: 3px solid var(--success); border-radius: var(--radius-md); animation: afRise 200ms ease-out;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-done)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.4l2.4 2.4 4.6-5"></path></svg>
+        <p style="margin: 0; font-size: .93rem; line-height: 1.5; color: var(--on-done);">{{ flashText }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Feature flags ═══ -->
+    <sc-if value="{{ showFlags }}" hint-placeholder-val="{{ true }}">
+    <div style="padding-top: 24px;">
+      <p style="margin: 0 0 18px; max-width: 92ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">A read-only view of the declared flags, their configured overrides in <code style="font-family: var(--font-mono); font-size: .84rem;">settings.features</code>, and the effective runtime state. Readiness distinguishes rows that are not simply shipped. Enablement stays a deliberate <code style="font-family: var(--font-mono); font-size: .84rem;">settings.features</code> write — there are intentionally no toggles here.</p>
+
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; padding: 10px 15px; background: var(--surface-sunken); border: 1px dashed var(--border-soft); border-radius: var(--radius-md);">
+        <span style="font-family: var(--font-label); font-size: .72rem; letter-spacing: .05em; color: var(--text-faint);">Recovery drill —</span>
+        <button onClick="{{ toggleCorrupt }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; color: var(--accent); text-decoration: underline; cursor: pointer;">{{ corruptLabel }}</button>
+      </div>
+
+      <sc-if value="{{ corrupt }}" hint-placeholder-val="{{ false }}">
+        <p role="alert" style="margin: 0 0 18px; padding: 12px 16px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .92rem; line-height: 1.55; color: var(--danger);">The <code style="font-family: var(--font-mono); font-size: .84rem;">settings.features</code> value is not a JSON object, so all stored feature overrides are being ignored and code defaults are in effect. Rewrite it as a JSON object (see <code style="font-family: var(--font-mono); font-size: .84rem;">docs/runbooks/operations.md</code> §2) to restore your overrides.</p>
+      </sc-if>
+
+      <section aria-label="Feature flag summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 22px;">
+        <sc-for list="{{ stats }}" as="st" hint-placeholder-count="4">
+          <div style="padding: 16px 18px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+            <span style="display: block; font-family: var(--font-label); font-size: .64rem; letter-spacing: .13em; text-transform: uppercase; color: var(--text-faint);">{{ st.head }}</span>
+            <strong style="display: block; margin: 7px 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 2rem; line-height: 1; color: var(--text-strong);">{{ st.count }}</strong>
+            <span style="display: block; font-size: .86rem; color: var(--text-muted);">{{ st.detail }}</span>
+          </div>
+        </sc-for>
+      </section>
+
+      <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+        <section style="margin-bottom: 18px; padding: 6px 20px 12px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+          <h2 style="margin: 14px 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">{{ g.group }}</h2>
+          <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: .9rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 11px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Flag</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Effective</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Default</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Override</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Rollback / enablement note</th>
+              <sc-if value="{{ readinessOn }}" hint-placeholder-val="{{ true }}"><th scope="col" style="padding: 11px 0 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Readiness / next step</th></sc-if>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+                <tr>
+                  <td style="padding: 11px 10px 11px 0; vertical-align: top; border-bottom: 1px solid var(--border-hair);"><code style="padding: 1px 6px; border-radius: var(--radius-sm); background: var(--surface-sunken); font-family: var(--font-mono); font-size: .78rem; color: var(--text-strong);">{{ r.flag }}</code></td>
+                  <td style="padding: 11px 10px; vertical-align: top; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ r.on }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--success);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--leaf);"></span>on</span></sc-if>
+                    <sc-if value="{{ r.off }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--text-muted);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ink-300);"></span>off</span></sc-if>
+                  </td>
+                  <td style="padding: 11px 10px; vertical-align: top; font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ r.defaultText }}</td>
+                  <td style="padding: 11px 10px; vertical-align: top; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ r.hasOverride }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ r.overrideText }}</span></sc-if>
+                    <sc-if value="{{ r.noOverride }}" hint-placeholder-val="{{ true }}"><span style="color: var(--text-faint); font-size: .86rem;">none</span></sc-if>
+                  </td>
+                  <td style="padding: 11px 10px; vertical-align: top; max-width: 34ch; font-size: .88rem; line-height: 1.5; color: var(--text-body); border-bottom: 1px solid var(--border-hair); text-wrap: pretty;">{{ r.rollback }}</td>
+                  <sc-if value="{{ readinessOn }}" hint-placeholder-val="{{ true }}">
+                  <td style="padding: 11px 0 11px 10px; vertical-align: top; max-width: 30ch; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ r.ready }}" hint-placeholder-val="{{ false }}">
+                      <span style="display: inline-block; padding: 1px 9px; border-radius: 999px; background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .66rem; letter-spacing: .05em;">{{ r.readyStatus }}</span>
+                      <p style="margin: 5px 0 0; font-size: .84rem; line-height: 1.45; color: var(--text-muted); text-wrap: pretty;">{{ r.readyNote }}</p>
+                    </sc-if>
+                    <sc-if value="{{ r.notReady }}" hint-placeholder-val="{{ true }}"><span style="color: var(--text-faint); font-size: .86rem;">—</span></sc-if>
+                  </td>
+                  </sc-if>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </sc-for>
+
+      <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; color: var(--text-strong);">Unknown overrides</h2>
+        <p style="margin: 0 0 14px; max-width: 78ch; font-size: .9rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">These keys are present in <code style="font-family: var(--font-mono); font-size: .82rem;">settings.features</code> but are not declared in <code style="font-family: var(--font-mono); font-size: .82rem;">FeatureFlags::DEFAULTS</code>. Remove them unless they are part of an in-progress local patch.</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: .9rem;">
+          <thead><tr>
+            <th scope="col" style="padding: 9px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Key</th>
+            <th scope="col" style="padding: 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Cast value</th>
+            <th scope="col" style="padding: 9px 0 9px 10px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Raw value</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ unknownRows }}" as="k" hint-placeholder-count="1">
+              <tr>
+                <td style="padding: 10px 10px 10px 0; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-strong);">{{ k.flag }}</code></td>
+                <td style="padding: 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ k.valueText }}</td>
+                <td style="padding: 10px 0 10px 10px; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted);">{{ k.rawValue }}</code></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Badge rules ═══ -->
+    <sc-if value="{{ showBadges }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px;">
+      <div style="display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Create rule</h2>
+          <p style="margin: 0 0 16px; font-size: .92rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Rules award automatically once the metric crosses the threshold. Scope to a board to count only what happened there.</p>
+          <sc-if value="{{ ruleErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ ruleErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Badge</span>
+              <select value="{{ newBadge }}" onChange="{{ onNewBadge }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <sc-for list="{{ catalogue }}" as="c" hint-placeholder-count="5"><option value="{{ c.name }}">{{ c.name }}</option></sc-for>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Rule</span>
+              <select value="{{ newRule }}" onChange="{{ onNewRule }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="post_count">post_count</option><option value="thread_count">thread_count</option><option value="reputation">reputation</option><option value="solved_count">solved_count</option>
+              </select>
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Threshold</span>
+                <input type="number" min="1" value="{{ newThreshold }}" onInput="{{ onNewThreshold }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Board scope</span>
+                <select value="{{ newBoard }}" onChange="{{ onNewBoard }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                  <option value="">All boards</option><option value="evaluations">evaluations</option><option value="audit-trails">audit-trails</option><option value="interpretability">interpretability</option><option value="introductions">introductions</option>
+                </select>
+              </label>
+            </div>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ createRule }}" hint-size="110px,32px">Create rule</x-import></span>
+          </div>
+        </section>
+
+        <sc-if value="{{ noPreview }}" hint-placeholder-val="{{ true }}">
+        <section style="padding: 6px 22px 14px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 15px 0 12px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Rules</h2>
+          <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+            <sc-for list="{{ rules }}" as="r" hint-placeholder-count="3">
+              <li style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 13px 0; border-bottom: 1px solid var(--border-hair);">
+                <span aria-hidden="true" style="color: var(--star); font-size: 1rem;">✦</span>
+                <strong style="font-size: 1rem; color: var(--text-strong);">{{ r.badge }}</strong>
+                <span style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted);">{{ r.meta }}</span>
+                <sc-if value="{{ r.enabled }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Enabled</span></sc-if>
+                <sc-if value="{{ r.disabled }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Disabled</span></sc-if>
+                <span style="flex: 1;"></span>
+                <span style="display: inline-flex; align-items: center; gap: 14px;">
+                  <button onClick="{{ r.preview }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .76rem; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Preview</button>
+                  <sc-if value="{{ backfillOn }}" hint-placeholder-val="{{ true }}"><button onClick="{{ r.backfill }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .76rem; color: var(--accent); cursor: pointer;" style-hover="text-decoration: underline;">Backfill</button></sc-if>
+                  <button onClick="{{ r.toggle }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .76rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">{{ r.toggleLabel }}</button>
+                  <button onClick="{{ r.revoke }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .76rem; color: var(--danger); cursor: pointer;" style-hover="text-decoration: underline;">Revoke awards</button>
+                </span>
+              </li>
+            </sc-for>
+          </ul>
+        </section>
+        </sc-if>
+
+        <sc-if value="{{ hasPreview }}" hint-placeholder-val="{{ false }}">
+        <section style="padding: 6px 22px 18px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); animation: afRise 200ms ease-out;">
+          <button onClick="{{ closePreview }}" style="display: inline-flex; align-items: center; gap: 5px; margin: 15px 0 12px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>Back to badge rules</button>
+          <h2 style="margin: 0 0 3px; font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; color: var(--text-strong);">{{ previewBadge }}</h2>
+          <p style="margin: 0 0 16px; font-family: var(--font-mono); font-size: .84rem; color: var(--text-muted);">{{ previewMeta }}</p>
+          <p style="margin: 0 0 12px; font-size: .92rem; color: var(--text-muted);">{{ previewLead }}</p>
+          <ul style="margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+            <sc-for list="{{ previewUsers }}" as="p" hint-placeholder-count="4">
+              <li style="display: flex; align-items: center; gap: 11px; padding: 11px 0; border-bottom: 1px solid var(--border-hair);">
+                <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ p.display }}" username="{{ p.username }}" size="sm" hint-size="28px,28px"></x-import>
+                <span style="font-size: .95rem; color: var(--accent);">{{ p.username }}</span>
+                <span style="margin-left: auto; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted);">{{ p.metricText }}</span>
+              </li>
+            </sc-for>
+          </ul>
+          <sc-if value="{{ previewEmpty }}" hint-placeholder-val="{{ false }}"><p style="margin: 12px 0 0; font-size: .92rem; font-style: italic; color: var(--text-muted);">No members would receive this badge.</p></sc-if>
+        </section>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Custom emoji ═══ -->
+    <sc-if value="{{ showEmoji }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px;">
+      <p style="margin: 0 0 18px; max-width: 80ch; font-size: .95rem; line-height: 1.6; color: var(--text-muted); text-wrap: pretty;">Add approved static assets to the post renderer and optionally make them available as reactions. Assets are served from the media root; nothing is uploaded here.</p>
+      <div style="display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Add or replace emoji</h2>
+          <sc-if value="{{ emojiErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ emojiErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Shortcode</span>
+              <input value="{{ emShortcode }}" onInput="{{ onEmShortcode }}" maxlength="40" placeholder="mallorn" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Name</span>
+              <input value="{{ emName }}" onInput="{{ onEmName }}" maxlength="80" placeholder="Mallorn leaf" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Asset path</span>
+              <input value="{{ emPath }}" onInput="{{ onEmPath }}" placeholder="/emoji/mallorn.webp" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">MIME type</span>
+              <select value="{{ emMime }}" onChange="{{ onEmMime }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="image/webp">image/webp</option><option value="image/png">image/png</option>
+              </select>
+            </label>
+            <sc-if value="{{ reactionsOn }}" hint-placeholder-val="{{ true }}">
+              <span style="margin-top: 2px;"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Switch" label="Allow as a reaction" checked="{{ emReaction }}" onChange="{{ onEmReaction }}" hint-size="200px,24px"></x-import></span>
+            </sc-if>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ saveEmoji }}" hint-size="110px,32px">Save emoji</x-import></span>
+          </div>
+        </section>
+
+        <section style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+          <table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: .92rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 14px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Emoji</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Name</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Asset</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Reactions</th>
+              <th scope="col" style="padding: 14px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+              <th scope="col" style="padding: 14px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Action</span></th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ emojiRows }}" as="m" hint-placeholder-count="4">
+                <tr>
+                  <td style="padding: 10px 10px 10px 0; border-bottom: 1px solid var(--border-hair);">
+                    <span style="display: inline-flex; align-items: center; gap: 9px;">
+                      <span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: var(--radius-sm); background: var(--gold-100); font-family: var(--font-label); font-size: .74rem; color: var(--gold-700);">{{ m.initial }}</span>
+                      <code style="font-family: var(--font-mono); font-size: .8rem; color: var(--text-strong);">{{ m.code }}</code>
+                    </span>
+                  </td>
+                  <td style="padding: 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ m.name }}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);"><code style="font-family: var(--font-mono); font-size: .78rem; color: var(--text-muted);">{{ m.path }}</code></td>
+                  <td style="padding: 10px; font-size: .88rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ m.reactionText }}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ m.enabled }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Enabled</span></sc-if>
+                    <sc-if value="{{ m.disabled }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">Disabled</span></sc-if>
+                  </td>
+                  <td style="padding: 10px 0 10px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);"><button onClick="{{ m.toggle }}" style="padding: 4px 12px; border-radius: var(--radius-md); border: 1.5px solid var(--border-soft); background: transparent; color: var(--text-body); font-family: var(--font-label); font-size: .72rem; letter-spacing: .04em; cursor: pointer;" style-hover="background: var(--surface-sunken);">{{ m.toggleLabel }}</button></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{ noEmoji }}" hint-placeholder-val="{{ false }}"><p style="padding: 40px 0; text-align: center; font-size: .93rem; font-style: italic; color: var(--text-muted);">No custom emoji have been added yet.</p></sc-if>
+        </section>
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showReadiness&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;allowBackfill&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;emojiReactions&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;}}">
+const STATS = [
+  { head: 'Declared', count: 24, detail: '24 declared flags' },
+  { head: 'Defaults', count: 24, detail: '20 default-on · 4 default-dark' },
+  { head: 'Effective', count: 20, detail: '20 on · 4 off' },
+  { head: 'Overrides', count: 2, detail: '1 unknown override' },
+];
+
+const GROUPS = [
+  { group: 'Core · default-on', rows: [
+    { flag: 'engagement', on: true, def: true, rollback: 'Set false to hide reactions and regard; content unaffected.' },
+    { flag: 'notifications', on: true, def: true, rollback: 'Set false to stop in-app notices; existing rows retained.' },
+    { flag: 'email', on: true, def: true, rollback: 'Set false to drain the mail worker to a no-op.', ready: { status: 'Operational configuration required', note: 'Needs a verified sending domain before the digest schedule is trustworthy.' } },
+    { flag: 'search', on: true, def: true, rollback: 'Set false to fall back to unindexed board listing.' },
+    { flag: 'dms', on: true, def: true, rollback: 'Set false to hide the messages room; threads retained.' },
+    { flag: 'server_drafts', on: true, def: true, rollback: 'GA 2026-07-02 (ADR 0010). Set false to keep drafts client-only.' },
+    { flag: 'custom_emoji', on: true, def: true, rollback: 'Set false to hide the custom set from the picker.' },
+    { flag: 'slash_giphy', on: true, def: true, override: 'on', rollback: 'GA 2026-07-02; inert until a GIPHY key is configured.', ready: { status: 'Operational configuration required', note: 'No API key present — the slash command resolves to an empty picker.' } },
+    { flag: 'community_memory', on: true, def: true, rollback: 'Thread Intelligence GA 2026-07-12. Pause generation from Operations.', ready: { status: 'Ready for acceptance', note: 'Awaiting the council’s sign-off on generated brief tone.' } },
+    { flag: 'automated_context', on: true, def: true, rollback: 'GA 2026-07-12. Companion to community_memory.', ready: { status: 'Ready for acceptance', note: 'Accepted together with community_memory.' } },
+  ] },
+  { group: 'Platform · P5 Gate A (ADR 0018)', rows: [
+    { flag: 'package_registry', on: true, def: true, rollback: 'GA 2026-07-09. Set false to freeze catalogue reads.', ready: { status: 'Ready for acceptance', note: 'Registry trust console is live; snapshot freshness is monitored.' } },
+    { flag: 'package_themes', on: true, def: true, rollback: 'GA 2026-07-09. Falls back to the built-in system theme.', ready: { status: 'Ready for acceptance', note: 'Theme safe mode covers the failure path.' } },
+    { flag: 'capabilities', on: true, def: true, rollback: 'GA 2026-07-09. Resolver posture is CAPABILITIES_MODE.', ready: { status: 'Operational configuration required', note: 'Still in shadow — legacy rules decide until the posture is set to enforce.' } },
+    { flag: 'passkeys', on: true, def: true, rollback: 'GA 2026-07-09. Set false to hide passkey sign-in and enrolment.' },
+    { flag: 'provider_registry', on: true, def: true, rollback: 'GA 2026-07-09. Generic OIDC providers are configuration, not code.', ready: { status: 'Ready for acceptance', note: 'One generic provider configured and health-checked.' } },
+    { flag: 'invitations', on: true, def: true, rollback: 'GA 2026-07-09. Set false to disable invite redemption.' },
+    { flag: 'service_secrets', on: true, def: true, rollback: 'GA 2026-07-09. Encrypted vault for provider and integration secrets.' },
+  ] },
+  { group: 'Implemented, default-dark', rows: [
+    { flag: 'group_dms', on: true, def: true, override: 'on', rollback: 'Graduated to default-on (ADR 0022). Set false to restrict messages to two parties.', ready: { status: 'Ready for acceptance', note: 'Multi-party rooms shipped; the DM console template is the remaining gap.' } },
+    { flag: 'custom_css', on: false, def: false, rollback: 'ADR 0009. Real UI exists behind the flag; enable to allow site CSS.', ready: { status: 'Missing admin operations', note: 'No revert path in the console yet — enable only with a database rollback plan.' } },
+    { flag: 'link_previews', on: false, def: false, rollback: 'Enable to unfurl links in posts (fetch egress).', ready: { status: 'Safety-blocked', note: 'Outbound fetch has no SSRF allowlist. Blocked until egress policy lands.' } },
+    { flag: 'expanded_files', on: false, def: false, rollback: 'Enable to allow non-image attachments.', ready: { status: 'Safety-blocked', note: 'Needs content scanning on the upload path.' } },
+  ] },
+  { group: 'Reserved · Gate B (no UI)', rows: [
+    { flag: 'server_extensions', on: false, def: false, rollback: 'Reserved. Enabling only unlocks the read-only Extensions probe.', ready: { status: 'Reserved (ADR 0018)', note: 'Sandbox execution is out of scope for this gate.' } },
+    { flag: 'federation', on: false, def: false, rollback: 'Reserved. No routes are registered.', ready: { status: 'Reserved (ADR 0018)', note: 'Protocol choice not yet made.' } },
+    { flag: 'analytics_export', on: false, def: false, rollback: 'Reserved. No collectors are wired.', ready: { status: 'Reserved (ADR 0018)', note: 'Waiting on the retention policy.' } },
+  ] },
+];
+
+const UNKNOWN = [{ flag: 'legacy_polls', valueText: 'true', rawValue: '"1"' }];
+
+const CATALOGUE = ['Welcome', 'First Thread', 'Trusted Answerer', 'Problem Solver', 'Loremaster of Evals', 'Anniversary'];
+
+const RULES = [
+  { id: 1, badge: 'Welcome', rule: 'post_count', threshold: 1, board: '', enabled: true },
+  { id: 2, badge: 'Trusted Answerer', rule: 'solved_count', threshold: 10, board: '', enabled: true },
+  { id: 3, badge: 'Loremaster of Evals', rule: 'reputation', threshold: 5000, board: 'evaluations', enabled: false },
+];
+
+const MEMBERS = [
+  { username: 'elrond', display: 'Elrond', post_count: 1204, thread_count: 96, reputation: 8740, solved_count: 62 },
+  { username: 'galadriel', display: 'Galadriel', post_count: 861, thread_count: 74, reputation: 5120, solved_count: 41 },
+  { username: 'erestor', display: 'Erestor', post_count: 640, thread_count: 51, reputation: 3985, solved_count: 28 },
+  { username: 'glorfindel', display: 'Glorfindel', post_count: 318, thread_count: 22, reputation: 2140, solved_count: 12 },
+  { username: 'arwen', display: 'Arwen', post_count: 254, thread_count: 19, reputation: 1760, solved_count: 9 },
+  { username: 'lindir', display: 'Lindir', post_count: 96, thread_count: 8, reputation: 410, solved_count: 2 },
+  { username: 'mellon', display: 'Mellon', post_count: 58, thread_count: 4, reputation: 305, solved_count: 1 },
+];
+
+const EMOJI = [
+  { id: 1, shortcode: 'mallorn', name: 'Mallorn leaf', path: '/emoji/mallorn.webp', mime: 'image/webp', reaction: true, enabled: true },
+  { id: 2, shortcode: 'vilya', name: 'Ring of air', path: '/emoji/vilya.webp', mime: 'image/webp', reaction: true, enabled: true },
+  { id: 3, shortcode: 'forge', name: 'Forge fire', path: '/emoji/forge.png', mime: 'image/png', reaction: false, enabled: true },
+  { id: 4, shortcode: 'palantir', name: 'Palantír', path: '/emoji/palantir.webp', mime: 'image/webp', reaction: false, enabled: false },
+];
+
+class Component extends DCLogic {
+  state = {
+    view: 'flags', flash: '', corrupt: false,
+    rules: RULES.map((r) => Object.assign({}, r)),
+    newBadge: CATALOGUE[0], newRule: 'post_count', newThreshold: '10', newBoard: '', ruleErr: '',
+    previewId: null,
+    emoji: EMOJI.map((e) => Object.assign({}, e)),
+    emShortcode: '', emName: '', emPath: '', emMime: 'image/webp', emReaction: false, emojiErr: '',
+  };
+
+  field(key) { return (e) => this.setState({ [key]: e.target.value }); }
+  ruleMeta(r) { return r.rule + ' ≥ ' + r.threshold + (r.board ? ' · #' + r.board : ''); }
+  qualifying(r) { return MEMBERS.filter((m) => m[r.rule] >= r.threshold); }
+
+  renderVals() {
+    const s = this.state;
+    const readinessOn = this.props.showReadiness !== false;
+    const backfillOn = this.props.allowBackfill !== false;
+    const reactionsOn = this.props.emojiReactions !== false;
+    const preview = s.rules.find((r) => r.id === s.previewId) || null;
+    const qualified = preview ? this.qualifying(preview) : [];
+
+    return {
+      atFlags: s.view === 'flags', offFlags: s.view !== 'flags', goFlags: () => this.setState({ view: 'flags', flash: '' }),
+      atBadges: s.view === 'badges', offBadges: s.view !== 'badges', goBadges: () => this.setState({ view: 'badges', flash: '' }),
+      atEmoji: s.view === 'emoji', offEmoji: s.view !== 'emoji', goEmoji: () => this.setState({ view: 'emoji', flash: '' }),
+      showFlags: s.view === 'flags', showBadges: s.view === 'badges', showEmoji: s.view === 'emoji',
+      flash: !!s.flash, flashText: s.flash,
+
+      readinessOn,
+      corrupt: s.corrupt,
+      corruptLabel: s.corrupt ? 'Restore valid overrides' : 'Simulate a corrupt settings.features value',
+      toggleCorrupt: () => this.setState((st) => ({ corrupt: !st.corrupt })),
+      stats: s.corrupt
+        ? [STATS[0], STATS[1], { head: 'Effective', count: 20, detail: 'code defaults in effect' }, { head: 'Overrides', count: 0, detail: 'all overrides ignored' }]
+        : STATS,
+      groups: GROUPS.map((g) => ({
+        group: g.group,
+        rows: g.rows.map((r) => {
+          const on = s.corrupt ? r.def : r.on;
+          return {
+            flag: r.flag, on: on, off: !on,
+            defaultText: r.def ? 'default-on' : 'default-off',
+            hasOverride: !s.corrupt && !!r.override, noOverride: s.corrupt || !r.override,
+            overrideText: r.override || '',
+            rollback: r.rollback,
+            ready: !!r.ready, notReady: !r.ready,
+            readyStatus: r.ready ? r.ready.status : '',
+            readyNote: r.ready ? r.ready.note : '',
+          };
+        }),
+      })),
+      unknownRows: s.corrupt ? [] : UNKNOWN,
+
+      catalogue: CATALOGUE.map((c) => ({ name: c })),
+      newBadge: s.newBadge, onNewBadge: this.field('newBadge'),
+      newRule: s.newRule, onNewRule: this.field('newRule'),
+      newThreshold: s.newThreshold, onNewThreshold: this.field('newThreshold'),
+      newBoard: s.newBoard, onNewBoard: this.field('newBoard'),
+      ruleErr: !!s.ruleErr, ruleErrText: s.ruleErr,
+      createRule: () => {
+        const t = Number(s.newThreshold);
+        if (!(t >= 1)) return this.setState({ ruleErr: 'The threshold must be a whole number of 1 or more.' });
+        if (s.rules.some((r) => r.badge === s.newBadge && r.rule === s.newRule && r.board === s.newBoard)) {
+          return this.setState({ ruleErr: 'A rule for that badge and metric already exists on this scope.' });
+        }
+        this.setState((st) => ({
+          rules: st.rules.concat([{ id: Date.now(), badge: st.newBadge, rule: st.newRule, threshold: t, board: st.newBoard, enabled: true }]),
+          ruleErr: '', newThreshold: '10',
+          flash: 'Rule created — ' + st.newBadge + ' awards at ' + st.newRule + ' ≥ ' + t + '.',
+        }));
+      },
+      rules: s.rules.map((r) => ({
+        badge: r.badge, meta: this.ruleMeta(r), enabled: r.enabled, disabled: !r.enabled,
+        toggleLabel: r.enabled ? 'Disable' : 'Enable',
+        toggle: () => this.setState((st) => ({
+          rules: st.rules.map((x) => (x.id === r.id ? Object.assign({}, x, { enabled: !x.enabled }) : x)),
+          flash: r.badge + (r.enabled ? ' rule disabled — no new awards will be made.' : ' rule enabled.'),
+        })),
+        preview: () => this.setState({ previewId: r.id, flash: '' }),
+        backfill: () => this.setState({ flash: 'Backfilled ' + this.qualifying(r).length + ' award(s) for ' + r.badge + '. Each grant is audited.' }),
+        revoke: () => this.setState({ flash: 'All ' + r.badge + ' awards made by this rule were revoked.' }),
+      })),
+      noPreview: !preview, hasPreview: !!preview,
+      closePreview: () => this.setState({ previewId: null }),
+      previewBadge: preview ? preview.badge : '',
+      previewMeta: preview ? this.ruleMeta(preview) : '',
+      previewLead: qualified.length ? qualified.length + ' member(s) meet this rule today.' : '',
+      previewUsers: qualified.map((m) => ({ username: m.username, display: m.display, metricText: 'Metric: ' + m[preview.rule].toLocaleString() })),
+      previewEmpty: !!preview && qualified.length === 0,
+      backfillOn,
+
+      reactionsOn,
+      emShortcode: s.emShortcode, onEmShortcode: this.field('emShortcode'),
+      emName: s.emName, onEmName: this.field('emName'),
+      emPath: s.emPath, onEmPath: this.field('emPath'),
+      emMime: s.emMime, onEmMime: this.field('emMime'),
+      emReaction: s.emReaction, onEmReaction: () => this.setState((st) => ({ emReaction: !st.emReaction })),
+      emojiErr: !!s.emojiErr, emojiErrText: s.emojiErr,
+      saveEmoji: () => {
+        const code = s.emShortcode.trim();
+        if (!/^[A-Za-z0-9_+-]{2,40}$/.test(code)) return this.setState({ emojiErr: 'Shortcodes are 2–40 characters: letters, numbers, underscore, plus or hyphen.' });
+        if (!s.emName.trim()) return this.setState({ emojiErr: 'A display name is required.' });
+        if (!/^\/.+\.(webp|png)$/i.test(s.emPath.trim())) return this.setState({ emojiErr: 'The asset path must be an absolute path ending in .webp or .png.' });
+        const existing = s.emoji.find((m) => m.shortcode === code);
+        this.setState((st) => ({
+          emoji: existing
+            ? st.emoji.map((m) => (m.shortcode === code ? Object.assign({}, m, { name: st.emName.trim(), path: st.emPath.trim(), mime: st.emMime, reaction: st.emReaction }) : m))
+            : st.emoji.concat([{ id: Date.now(), shortcode: code, name: st.emName.trim(), path: st.emPath.trim(), mime: st.emMime, reaction: st.emReaction, enabled: true }]),
+          emojiErr: '', emShortcode: '', emName: '', emPath: '', emReaction: false,
+          flash: existing ? ':' + code + ': replaced.' : ':' + code + ': added to the catalogue.',
+        }));
+      },
+      emojiRows: s.emoji.map((m) => ({
+        code: ':' + m.shortcode + ':', name: m.name, path: m.path,
+        initial: m.shortcode.slice(0, 2),
+        reactionText: m.reaction ? 'Allowed' : 'Post rendering only',
+        enabled: m.enabled, disabled: !m.enabled,
+        toggleLabel: m.enabled ? 'Disable' : 'Enable',
+        toggle: () => this.setState((st) => ({
+          emoji: st.emoji.map((x) => (x.id === m.id ? Object.assign({}, x, { enabled: !x.enabled }) : x)),
+          flash: ':' + m.shortcode + ':' + (m.enabled ? ' disabled — it will render as plain text.' : ' enabled.'),
+        })),
+      })),
+      noEmoji: s.emoji.length === 0,
+    };
+  }
+}
+
+</script>
+</body>
+</html>

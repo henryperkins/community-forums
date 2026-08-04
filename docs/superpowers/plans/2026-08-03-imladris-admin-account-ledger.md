@@ -1,0 +1,537 @@
+# LEDGER — consolidated deviation ledger (Stage 1, Imladris admin/account migration)
+
+Date: 2026-08-03. Consolidates twelve `D-*.md` reports, twelve `V-*.md` adversarial verdicts, seven
+`R-*.md` re-anchor addenda, `R-cross-cutting.md`, `S-synthesis.md`, `S-admin-ia.md`, and `F1`–`F5`.
+
+## 0. How to read this file
+
+**Only the four sanctioned deviation classes appear in the ledger** — `feature-added`,
+`feature-removed`, `feature-changed`, `constraint`. `copy` differences are *not* deviations; they are
+plain work, and they appear here only as per-screen counts in §2. Aesthetic preference is never a
+sanctioned deviation and no row in §1 rests on one.
+
+**Precedence used throughout:** `DECISIONS.md` > `DESIGN.md` > `SCHEMA.md` >
+`ADMIN.md`/`USER.md`/`COMMUNITY.md`/`COMPOSER.md` > the Imladris design system. Where a `V-*` report
+reclassified a row, the **verified** classification is used. Where an `R-*` addendum struck or
+inverted a row, the addendum wins. Where `R-cross-cutting.md` settled a cross-screen question, it
+wins over every per-screen report.
+
+**Deduplication.** A constraint that recurs on ten screens is **one** row scoped to "all admin
+screens". The ledger is therefore far shorter than the sum of the per-screen counts in §2 (which are
+pre-dedup, per-report figures). Row IDs are stable: `C-nn` constraint, `FA-nn` feature-added,
+`FC-nn` feature-changed, `FR-nn` feature-removed.
+
+**Sort order:** classification (constraint → feature-added → feature-changed → feature-removed),
+then screen ("all …" scopes first, then alphabetical).
+
+### 0.1 The mid-pass mirror refresh — what it inverted
+
+Seven design screens were overwritten while they were being diffed. On all six admin screens the
+per-screen sticky 58px topbar (star SVG + `Imladris` wordmark + `Back to the council`) **and** the
+two-column head block (the gold `Operator desk · <Area>` eyebrow + the `Admin mode` pill) were
+replaced by one line:
+
+```html
+<x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="…" hint-size="100%,101px"></x-import>
+```
+
+with page padding `26px 28px 110px` → `22px 28px 110px`, `h1` `2.4rem`/`margin 7px 0 0` →
+`2.1rem`/`margin 0`, and sub-nav top margin `22px` → `16px`. `AdminOverview` additionally lost its
+trailing `Moderation · Content · People · …` span.
+
+**Consequence, applied everywhere in this ledger: there is no eyebrow on any current admin design
+screen.** `components/admin/admin.card.html:43` documents the removal verbatim. Every report row
+that said "add an eyebrow to production" is **inverted**: the correct action is to **delete**
+production's page-head eyebrows. Per `R-cross-cutting` §8 that is **12 deletions**
+(`admin/{audit:12, branding:11, custom_emoji:12, dashboard:6, features:6, moderation:16,
+settings:14, thread_intelligence:6}` and `mod/{appeals:12, approvals:12, reports:18, user:27}`),
+**no test pins any of them**, and the five *in-pane section* eyebrows are **kept**
+(`dashboard.php:20,41,66,86`; `branding.php:99`). Classification: `copy` — so it is not a ledger row.
+Deleting the four `mod/*` eyebrows also discharges four `Warden's table` fiction strings.
+
+`AccountSettings.dc.html` is a **member** screen and was **not** part of that refactor: it still
+carries its own topbar, the `Your seat at the council` eyebrow and a 2.4rem `h1`. **Do not carry the
+admin inversion across to it.** Its only upstream change was the deletion of the Reading ▸ Pagination
+`Default sort` select (grid `1fr 1fr 1fr` → `1fr 1fr`).
+
+### 0.2 Rows struck before consolidation (recorded so they are not resurrected)
+
+| Struck row | Source | Why |
+|---|---|---|
+| `D-admin-content` R1 — add eyebrow `Operator desk · Content` | R-admin-content §2 | The quoted string is **fabricated**; it exists nowhere in the design system except as a record of its own deletion. |
+| `D-admin-people` C1, `D-admin-appearance` #2/#41, `D-admin-notifications` D3, `D-admin-settings` row 4 — add an eyebrow | R-* addenda + R-cross-cutting §8 | Inverted: delete production's instead. |
+| `D-admin-overview` row 7 — the pseudo-nav `Moderation · Content · …` span | R-admin-overview §2 | Deleted upstream; no difference remains. |
+| `D-admin-overview` row 57 — an unfiltered-vs-filtered empty split | V/R4 | Neither side models it; inventing a state is not a sanctioned deviation. |
+| `D-account-settings` #62 — `Default sort` (feature-removed) | R-account-settings §D-1 | The design converged on production. **F2 conflict C1 closes at source** — nothing to refuse, nothing to record. |
+| `D-shell` S41 — "`.admin-bar*`/`.admin-tier*` have no CSS" (the report's #1 blocker) | V-shell R2 | Refuted: the complete skin is at `docs/design-system/imladris/components.css:324–342`. |
+| `D-shell` S50 / `F3` headline — "`/admin/thread-intelligence` has no flag guard; fix regardless" | R-cross-cutting §12 | Wrong. The 200 with both TI flags dark is **deliberate** (ADR 0019, `AppAdminThreadIntelligenceTest:29-71`, `docs/runbooks/thread_intelligence.md` §12). "Fixing" it turns the suite red. |
+| `D-admin-settings` row 52 / S5 — "the design does not represent Feature flags" | V/R1 | Refuted: `AdminFeatures.dc.html` is 492 lines and owns flags + badge rules + custom emoji. Out of scope for admin-settings. |
+| `D-admin-appearance` Slice 5 — "custom emoji is not modelled anywhere" | V/R2 | Refuted: `AdminFeatures.dc.html:216-283` models it in full. |
+| `D-admin-appearance` #1, #66 | R-admin-appearance §b.1, §b.6 | #1 describes deleted markup; #66 (custom-property names) is not a difference — CSSOM writes are not CSP-governed. |
+| `D-admin-integrations` rows 65, 85 (both `feature-removed`) | V/MC1, MC2 | Row 65's own columns read "no empty branch" on **both** sides; row 85 is an out-of-scope production robustness gap. `feature_removed` for this screen is **0**. |
+| `D-admin-features` #11 recovery drill — filed `feature-removed` | V/M5 | Re-filed as **design-only prototype scaffolding**, explicitly out of scope, so nobody builds it later (kept in §1 as FR-24 with that wording). |
+| `D-admin-members` #58 (role-change flag coupling) | V/M3 | Records *agreement*, not a deviation. Moved to the ADR audit table. |
+| `D-admin-overview` N2 — "do not build the page-level sub-nav" | R-cross-cutting §10 | Superseded: the per-area tab strip **is** adopted as part of the C-01/FC-01 spec amendment. |
+| `D-admin-integrations` row 86 / slice S1 — author new CSS into `public/assets/imladris.css` | R-cross-cutting §1 | That file is **generated** and fingerprinted. Redirect to `app.css`, as the other nine reports say. |
+
+---
+
+## 1. THE CONSOLIDATED DEVIATION LEDGER
+
+### 1.1 `constraint` — a hard production constraint blocks verbatim copy
+
+Every row names its constraint. Any row that could not name one was dropped as a copy difference.
+
+| Design screen | Section / component | Classification | What differs | Why |
+|---|---|---|---|---|
+| C-01 · all admin screens | Console information architecture — `AdminNav`'s flat ten-area tier vs production's grouped rail | constraint | The design deletes the eight-group 224px vertical rail (26 leaves, `_nav.php:7-50`) and replaces it with `<nav class="admin-tier" aria-label="Admin areas">` over ten pills (`AdminNav.jsx:8-19,60-73`). It has no Moderation area and no grouping element. | **Named spec + binding ADR.** `ADMIN.md` §9.2 says verbatim *"Left-nav, grouped:"* followed by the eight-group table; §9.4 says *"Same look, distinct mode — reuse the app shell and tokens."* `docs/adr/0023:17` records the grouped nav as a **shipped** remediation *"per ADMIN §9.2"*. ADMIN.md outranks a design-system pull. Adopting the tier therefore requires a recorded amendment to **§9.2 and §9.4 together** in ADR 0024 (replacement text supplied in `R-cross-cutting` §10) — it is a spec amendment, not a restyle slice. Blast radius: `AppAdminNavIaTest:31-36`, `AppAdminDashboardRemediationTest:77-120`, `admin-dashboard.spec.ts:61,93-105`, `AppImladrisFidelityTest:81`, plus `app.js:766-875` and `app.css:2800-2932`, `:3279-3387`. |
+| C-02 · all admin screens | The identity row is the *only* chrome | constraint | `.admin-bar-id` holds exactly mark + wordmark + exit link + mode pill (`AdminNav.jsx:51-59`). It deletes the search form, notification bell, user monogram/identity and log-out that `templates/partials/topbar.php:12-52` renders on every admin page today. | `ADMIN.md` §9.4 *"reuse the app shell and tokens."* This must be an explicitly recorded **retention** (keep them, style them in the idiom) or an accepted removal — it cannot be silent. Note the design itself keeps a right cluster on the member screen (`AccountSettings.dc.html:30-34`: monogram, name, `Log out`). |
+| C-03 · all admin screens | Feature-gated panels and tabs rendered unconditionally | constraint | The design renders every panel and every tab live in every state: Custom CSS, Extensions, Tags, Roles, Tokens, Webhooks, Providers, Invitations, Badge rules, Custom emoji, Thread Intelligence. | **Feature flags.** `AdminRoleController:29-31`, `AdminApiTokenController:16-17`, `AdminWebhookController:20-21`, `AdminProviderController`, `AdminExtensionController:20-22` and `TagController` all throw `NotFoundException` when dark, so a tab strip must never link a dark route: render `is-disabled` + `aria-disabled="true"` + `data-destination="…"` + the verbatim `Disabled until the feature flag is enabled` (`_nav.php:78-86`, pinned `AppAdminNavIaTest:39-46`). **Three asymmetries must survive:** `/admin/features` is admin-only but **not** flag-gated and stays reachable with all 57 flags off (`AppAdminFeaturesTest:133-164`); `/admin/thread-intelligence` answers **200** with both TI flags dark **by design** (ADR 0019, `AppAdminThreadIntelligenceTest:29-71`, runbook §12) — the one disabled tab over a live route; and `/admin/badge-rules` gates the flag *before* auth (guest → 404) while `/admin/custom-emoji` gates auth first (guest → 302). |
+| C-04 · all admin screens | Role-scoped console for `/mod/*` | constraint | The design models a single all-powerful operator and has no reduced-console state. A board moderator wearing the ten-area tier is shown ten destinations that all 403. | **Authz.** `/mod/*` gates on `requireModerationQueue()` + `requireUser()` (`ReportController:38-40,76-80`); `/admin/*` gates on `requireAdmin()`. `ADMIN.md` §9.1: *"Moderators see a reduced Console scoped to their boards."* §9.4: *"least privilege in the UI — hide what a role can't do rather than show-and-deny."* ADR 0023 D1 makes browsing a staff surface without authority a **404**. The tier must be role-filtered or omitted on `/mod/*`. |
+| C-05 · all admin screens | Table scroll regions and sr-only column headers | constraint | Design tables sit in a bare `<section style="…overflow-x:auto;">` with inline `position:absolute; clip:rect(0,0,0,0)` sr-only spans. Production wraps every admin table in `<div class="table-scroll" tabindex="0" role="region" aria-label="…">` and uses `app.css:692`. | **ADR 0021** *"a11y/label/scroll-region sweep"* + **ADR 0023 shipped item 5** (table scopes/**regions**), plus round-2 plan line **426** naming `provider_disable.php` explicitly. `app.css:3223-3227` carries a landed bugfix — `.admin .table-scroll` is `position: relative`, without which absolutely-positioned sr-only headers escape the clip and stretch the layout viewport on mobile Chrome. Named sites: `api_tokens:62`, `webhooks:61`, `webhook_detail:83`, `providers:24`, `provider_disable:29`, `users:106`, `invitations:68`, `custom_emoji:69`, `packages:30`. (`V-admin-integrations` M1 files the wrapper as `feature-added`; the disposition — *keep it* — is identical either way.) |
+| C-06 · all admin screens | Label-less inputs and empty `<th>`s | constraint | The design ships placeholder-only inputs (e.g. the brake reason at `AdminPackages:286`) and empty action headers (e.g. `AdminNotifications:174`, `AdminPeople:216`). Production ships sr-only `<label for>` and `<span class="sr-only">Actions</span>`. | **ADR 0023 shipped item 5** enumerates *"unlabeled password inputs"* and *"empty `<th>`s"* among the a11y pockets it closed. Verbatim transcription reverts a binding decision. Named: `package_security:24,26`; `registries:46,48,150`; `package_publisher` inline inputs; `email.php:177`; `role_edit.php:127`; `tags.php:52,54,56,58,75`. |
+| C-07 · all admin screens | `.pill-admin` recolour to the review pair | constraint | Four reports propose recolouring `.pill-admin` to `--surface-review`/`--on-review`. | The class has **41 call sites in three different meanings**: the `Admin mode` mode chip (39 pages), `Recovery` (`theme_safe_mode.php:11`), and — critically — the **execution-disabled emergency brake** (`package_security.php:18`). Recolouring globally repaints a kill-switch indicator in "needs review" amber. Rule: **never recolour `.pill-admin`.** Use the design's own `.admin-bar-mode` class (which carries neither `pill` nor `pill-admin`, so no descendant selector can reach the brake); reclassify the brake pill to `pill-danger` separately in the packages slice; leave `theme_safe_mode.php:11` unchanged. |
+| C-08 · all admin screens | Mobile navigation contract | constraint | The design's tier scrolls horizontally with a thin scrollbar and **zero JS** (`components.css:335-342`, with an authored rationale). Production ships a drawer (44px control, `inert`, focus trap, Escape/scrim/link close, focus restore, body scroll lock, resize cleanup — `app.js:766-875`) **plus** a no-JS expanded grid (`app.css:3290-3301`). | `ADMIN.md` §9.4 currently mandates *"the section nav in a drawer (mirrors the app's mobile pattern)"* — amending it is part of the same ADR 0024 change as C-01. Non-negotiable carry-overs whichever way it lands: **44px minimum touch target below 860px** (the design's `padding: 6px 10px` yields ~30px, and ADMIN §9.4 requires *"urgent actions work on mobile"*), the flag-dark disabled contract (C-03), and **three `<nav>` elements needing distinct accessible names** under axe. The drawer and its no-JS grid are deleted **together** or not at all — leaving either orphaned is dead chrome. |
+| C-09 · all screens | Inline `style=` / `style-hover=` / `style-focus=` / `<helmet><style>` | constraint | ~2,174 inline `style=` attributes and 193 `style-hover=`/`style-focus=` pseudo-attributes across the eleven screens, plus a `<helmet><style>` per screen. Production has **zero** inline style attributes in `templates/`. | **CSP.** `SecurityHeaders::csp()` emits `script-src 'self'; style-src 'self'` with no `unsafe-inline` and no `style-src-attr`. This is a **mechanism** constraint — the rendered result must still match exactly. Two specific traps: the budget-meter fill (`style="width:67%"`) must come from `<progress>` or a data-attribute bucket, never an inline width; and CSSOM writes (`element.style.setProperty()` from external JS) **are** legal and are the sanctioned branding-preview mechanism. Standing gate: `rg -n "<script\|<style\| on[a-z]+=" templates/ -S`. |
+| C-10 · all screens | `<script type="text/x-dc">` behaviour blocks + the `ds-base.js`/`support.js` runtime | constraint | A client state machine drives every view switch, filter, count, pager and empty state on every screen. | **Progressive enhancement** + `DESIGN.md` §6.14 (prototype runtime code never ships). Every view is a real server-rendered route; every filter is a GET form; every count is computed server-side. |
+| C-11 · all screens | `<button onClick={…}>` for navigation and mutation | constraint | Tabs, sort headers, back links and row actions are bare buttons throughout — including nine controls on `admin-members` (member name, both `All members` back links, `Cancel`, **Reveal email & IPs (audited)**, **Lift restriction**, badge **Revoke**, invitation **Revoke**, sort headers). | **PE + CSRF.** Navigation must be `<a href>`; mutation must be `<form method="post">` carrying `$this->csrfField()`. A GET may never mutate state. "Adopt the bare danger link-button" read literally is a CSRF-less GET mutation. Also `providers.spec.ts:132` and `webhooks.spec.ts:88,142` pin `getByRole('link', …)` — turning either into a `<button>` breaks PE *and* the shipped evidence. |
+| C-12 · all screens | Every `href` is `"#"`; the active item has `href={undefined}` | constraint | The design models no routes at all, and `AdminNav.jsx:70` renders the active pill as an anchor with no `href`. | Routes derive from `App::buildRouter()`. An `<a>` without `href` is not focusable and reads as a generic element to AT — production renders the active item as `<span … aria-current="page">`, which `components.css:342` (`cursor: default`) already anticipates. |
+| C-13 · all screens | 422 re-render paths | constraint | Any form restructure must carry `->errors` **and** `->old` back into the re-rendered page. 32 distinct 422 paths exist across the inventory. | **Anti-draft-loss.** `ValidationException`/`DuplicateSubmissionException` extend `RuntimeException`, not `HttpException`, so the kernel does not handle them — the controller re-renders 422 with the typed values. Highest density: `user_record.php` (six form contexts sharing `$error_context`), `role_edit.php` (four scoped contexts; **ADR 0023 deferral #4** deliberately leaves its errors unwired pending per-form id scoping — close or restate it), `structure.php` (`array_replace` so 422 context wins), the eight account panes, and `_package_review_form.php`, which has **no `old` round-trip at all** (a pre-existing gap). Also the `bulk_selected` re-tick (ADR 0023 item 4) and the `<option value="banana" selected>` fallback. |
+| C-14 · all screens | Re-auth confirms shown by a JS "reveal" | constraint | ~30 `current_password` sites (roles ×4, themes ×3, tokens, webhooks ×3, providers ×3, packages ×12, user record, account security ×4, lifecycle ×2). Several report actions describe a control that *reveals* a hidden password field. | **PE + CSP.** With JS off there is no reveal, and CSP forbids inline handlers, so the confirm must render inline, always, and be submittable in plain HTML. Compounding trap: a `required` control inside a **closed** `<details>` is not focusable — Chromium aborts the submit with a console-only error and the operator sees nothing happen (`_package_review_form.php:8,18` are both `required`). Provider enable additionally carries the `enable_error_id` row-scoped routing (`AdminProviderController:86-95`), an ADR 0023 round-2 remediation. |
+| C-15 · all screens | Imladris lexicon in every string | constraint | `council`, `wardens`, `counsel`, `regard`, `commend`, `Imladris` and the Tolkien register throughout. | **Governing rule 3:** design fiction never reaches production strings. Full design→production mapping in §3.1. Four production strings are **already fiction and test-pinned** — they need their own owner decision, not a unilateral fix (§3.2). |
+| C-16 · all screens | New tokens and the generated runtime asset | constraint | Reports prescribe `--gold-050` (four screens) and, in one case, hand-authored CSS in `public/assets/imladris.css`. | `--gold-050` **exists nowhere** (`tokens/colors.css` stops at `--gold-100`); transcribing it fails `ImladrisRuntimeAssetTest::test_every_required_runtime_variable_has_a_definition` — use `--gold-soft`. `public/assets/imladris.css` is **generated** by `ImladrisAssetBuilder` from `docs/design-system/imladris/` and fingerprinted by `config/imladris-runtime-baseline.json`; hand-editing it fails `composer check:imladris`/`verify:imladris` and is overwritten by the next build. Never `!important` (the builder hard-refuses it); never re-declare a design token in `app.css :root`; **any new semantic colour token must land in three places** — `tokens/colors.css :root`, `tokens/colors.css [data-theme="dark"]`, and `app.css`'s `@media (prefers-color-scheme: dark) { [data-theme="system"] }` block, because `layout.php` defaults to `system` and `imladris.css` has no `prefers-color-scheme` block at all. Layering: `app.css` is unlayered and beats every `@layer imladris.*` rule regardless of specificity, so "the design system already styles this" is wrong for 181 of 211 contested class names. |
+| C-17 · account-settings | `.scribe-panel` / `.scribe-panel-head` and the settings-page heading contract | constraint | Slices 3, 15 and 16 each propose deleting or converting something that is pinned. | `AppImladrisFidelityTest` pins `scribe-panel` **and** `field-grid` on `/settings/account` (`:69-70`), `scribe-panel` on four more panes (`:138`), `gem-check` on `/settings/privacy` (`:142`), the literal `<h2 class="scribe-panel-head">Password</h2>` / `…Two-factor authentication</h2>` / `…Daily digest</h2>` (`:170-171,:174`), and exactly one `<main>` per page (`:166`). `.scribe-panel`/`.scribe-panel-head` are shipped **design-system components** in `resources/imladris/components.css:237-248`, inside the `verify:imladris` closure — retiring them is a DS-inventory change, not a restyle. **Never convert an `<h2>` to a `<span>`**: keep the heading element and restyle it into the eyebrow register. |
+| C-18 · account-settings | Global dirty buffer + sticky `You have unsaved changes.` bar + `Saved to your seat.` toast | constraint | The design holds every change in a client buffer and saves the whole page from one bar. | **Anti-draft-loss + PE.** Production keeps one server-owned form per section; the bar may only be a JS decoration over real per-form POSTs, and the toast's **trigger** must stay the server flash — a client-fired toast lies when the POST fails. (The toast's *pill geometry* is mandatory copy, not optional.) |
+| C-19 · account-settings | Custom profile fields | constraint | The design renders the profile-field rows unconditionally. | **Feature flag.** `settings.php:95` renders the three `custom_label_N`/`custom_value_N` rows only `if (!empty($custom_profile_fields))`, fed from `FeatureFlags::enabled('custom_profile_fields')` (`FeatureFlags.php:73`, `AccountController.php:91`). The restyled section stays gated and the flag-off render stays clean. |
+| C-20 · admin-appearance | Custom CSS panel rendered unconditionally | constraint | The design shows the Custom CSS block with no gate. | **Feature flag + safety posture.** `custom_css` is default **OFF** *and* safety-blocked (`PHASE_5_STATUS.md` 2026-07-13). Keep the gate and the "not available on this install" explanation (`branding.php:77-92`). |
+| C-21 · admin-appearance | `theme_safe_mode.php` keeps `variant=plain` | constraint | The design models safe mode as a *card* inside the Themes tab, not a page. | Deliberate: safe mode must render **without theme chrome** (`theme_safe_mode.php:5`). This page does not receive the tier and keeps its `pill pill-admin` `Recovery` chip unchanged (C-07). |
+| C-22 · admin-content | One-click `Delete category` / `Delete` / `Archive` row buttons | constraint | The design's row buttons mutate directly, with no confirmation, no impact statistics and no thread-destination picker. | `ADMIN.md` §4.4/§4.5 and §9.4 + **ADR 0021** (board delete-with-move; hard-DELETE-with-forced-move) lock the GET confirmation route, the typed confirmation, the impact copy and the **forced move-destination picker**. The design's row buttons become links to those confirmation pages. |
+| C-23 · admin-features | `Override on` / `Override off` / `Effective on` full strings | constraint | The design shortens them to bare `on`/`off` pills. | **Fail-dark verification.** `AppAdminFeaturesTest:44-57` asserts `Override off` present **and `Override on` absent**, proving a hand-written `{"passkeys":"false"}` normalises to a rollback (`FeatureFlags::normalizeOverride:137-146`); `:36` does the same for `Effective on`. You cannot assert the absence of a bare `on` in an HTML body. Any shortening must land with a replacement assertion anchored on a stable class or `data-*` in the same commit. |
+| C-24 · admin-features | `Ready for acceptance` readiness status | constraint | The design shows it as a live readiness state. | **Retired by binding decision and negatively pinned.** `docs/adr/0022:71` retires the category with its last row; `docs/evidence/deploy-dark-features.md:33` records the 50/7 split; `AdminFeatureController.php:55-58` says so in its docblock; `AppAdminFeaturesTest:89` and `admin-features.spec.ts:91-92` assert its **absence**. Risk HIGH — the D report called it "no production concept", which invites an implementer to add it back harmlessly. |
+| C-25 · admin-integrations | Service-secret gate copy on the rotate path | constraint | With `service_secrets` off, `rotateSecret()` calls `assertSecretStoreEnabled('current_password')` (`WebhookService.php:79`), so the message *"Enable the service-secret store before creating webhooks."* is attached to a password input on a page that creates nothing. | **Feature flag.** A disabled-state notice above the *register* form (the D report's remedy) does not cover the rotate path; the gate copy must be surface-correct on both. |
+| C-26 · admin-members | The `piiGate` prop | constraint | `AdminMembers.dc.html:516` declares `piiGate` (default true); with `piiGate=false` the record renders `rec.email`, `rec.sessionIps` and `rec.postIps` immediately, with **no reveal event and no log line**. | **Authz + audit write.** Production's reveal is unconditional and audited: `AdminUserController:151-158` → `UserModerationService::revealPii()` writes exactly one `view_pii` / `admin_record_reveal` row (`:470-476`), an **ADR 0021 shipped item**. `piiGate`, `bulkActions` and `banRequiresUsername` are editor affordances, never product options — never expose any of the three. |
+| C-27 · admin-members | The one-time invitation link | constraint | Two adjacent report rows propose restyling "the flash" and restyling "the one-time-link banner" without recording that they must stay separate. | **Credential leak.** `AdminInvitationController.php:21-24` — the raw token is rendered **directly in the POST response, exactly once, never via the cookie-backed Flash** (which would leak it into a `Set-Cookie` header; `AdminApiTokenController` precedent). `create()` returns a **200 render, not a redirect** (`:59-62`). A "restyle the flash" slice must not move it. |
+| C-28 · admin-members | Typed ban confirmation | constraint | The design gates the typed username on a client toggle (`banRequiresUsername`). | **Server-enforced.** `AdminUserController.php:292-296` checks `confirm_username` unconditionally; ADR 0021. Never introduce the client-side switch. |
+| C-29 · admin-notifications | The F24 three-fact transport / From / domain block | constraint | The design opens at "Sending domain" with no transport or From status and models no fails-closed state. | **ADR 0023 item 3**, pinned at `AppAdminEmailTest:68-72,93-97`. The `.email-status-facts` block stays above the domain card and does not move or shrink. |
+| C-30 · admin-overview | Loading skeleton (six pulsing `adPulse` bars) | constraint | The design renders a `dataState: 'loading'` skeleton for the audit table. | **Progressive enhancement** — the page is server-rendered in one pass, so there is no loading state to reach. (CSP is only a footnote about *inline* delivery: a `@keyframes` block ships fine from `app.css`. `V-admin-overview` M5 corrected the D report, which led with CSP.) |
+| C-31 · admin-overview / admin-settings | Client-switched views vs real routes | constraint | Both screens switch panes from client state and expose one document. | **PE + `DESIGN.md` §5.3 crawlable URLs.** Dashboard/Audit and General/Thread-Intelligence stay two routes with two `<h1>`s; admin views stay `noindex`. |
+| C-32 · admin-packages | Extensions "reserved and dark under Gate B" body copy | constraint | `AdminPackages.dc.html:414` asserts *"the `server_extensions` flag … is reserved and dark under Gate B (ADR 0018). This page is a read-only probe"*, and `:421` *"the flag is dark — no handler is dispatched."* | **Feature flag makes the copy a factual lie in the only renderable state.** `AdminExtensionController.php:20-22` throws `NotFoundException` while `server_extensions` is dark (`FeatureFlags.php:100`), so `templates/admin/extensions.php` can only ever render with the flag **ON**. Rewrite the copy; never ship `:414`/`:421` verbatim. (The ADR 0011 citation the report leans on supports the *unavailable-probe* branch, not page reachability.) |
+| C-33 · admin-settings | Recovery controls are bare buttons with no form | constraint | `AdminSettings.dc.html:106-107` renders `{{ pauseAction }}` and `Retry provider configuration` as `<button onClick>` outside any form. | **CSRF + PE.** Production ships two `<form method="post">` + `csrfField()` (`thread_intelligence.php:49-60`). The buttons stay in forms. |
+| C-34 · admin-settings | Thread Intelligence generation contract | constraint | The design hard-codes `claude-sonnet-4-6` / `medium` / `ti.summary.v7` (`:151-153`) and adds a `Digest` column (`:174`). | `DECISIONS.md` §2 replaceable seams + `ADMIN.md` §3.10 (*"validated model/effort"*): render the configured values from the provider seam, never a literal model name. The `Digest` column is **forbidden** — `request_fingerprint` is asserted **absent** from the response body at `AppAdminThreadIntelligenceTest:63`. Also `ADR 0019` §2 forbids the design's *"The council approves; the model proposes"* claim of per-generation human approval. |
+| C-35 · admin-settings | Content-column geometry | constraint | One centred 1100px column with `padding: 22px 28px 110px` beneath a full-bleed 101px sticky bar. | Cannot be adopted without the IA amendment in C-01: production's `.admin` is a `224px minmax(0,1fr)` grid at `max-width: 1260px` (`app.css:2800-2812`). Downstream of ADR 0024. |
+
+**31 constraint rows.**
+
+### 1.2 `feature-added` — production has it, the design never modelled it → keep it and style it
+
+| Design screen | Section / component | Classification | What differs | Why |
+|---|---|---|---|---|
+| FA-01 · all admin screens | Flag-dark nav/tab disabled state | feature-added | `AdminNav.jsx` has no concept of a flag-off area or tab. | Production ships `is-disabled` + `aria-disabled="true"` + `data-destination="…"` + `Disabled until the feature flag is enabled` (`_nav.php:78-86`), pinned by `AppAdminNavIaTest:39-46`, `AppAdminDashboardRemediationTest:137` and both remediation evidence directories. Keep it; style it as a `.34`-opacity `--text-faint` item in the tier idiom. `.admin-tier-item.is-disabled` is **application-owned** in `app.css` (the design system has no such rule). Roll-up rule: a tier item is disabled only when *every* tab in its area is dark; otherwise it links to the first enabled tab. Note the design system does have a precedent — `ui_kits/admin/AdminApp.jsx` carries the pinned string byte-for-byte — so the idiom is not invented. |
+| FA-02 · all admin screens | The whole Moderation domain | feature-added | `ADMIN_AREAS` has **no Moderation area**. Five live, flag-gated, tested production templates and three flags have no design home: `/mod/reports`, `/mod/approvals`, `/mod/appeals`, `/mod/u/{id}`, `/admin/moderation`. | Keep every one. Either add an eleventh `Moderation` area at index 1 (which simultaneously preserves `ADMIN_AREAS`' relative order and `ADMIN.md` §9.2's "Moderation second" placement, and keeps ADR 0023 shipped item 6 true), or keep them out of the tier — but never delete working features. The `mod-count` badge on the Reports link is likewise unmodelled: style it as a `--surface-review`/`--on-review` pill inline in the tab. The `/mod/*` templates render **no** `admin/_nav` today, so the admin rail already links out to four destinations that drop the rail — an existing IA break the tier model would fix. Subject to C-04's role filter. |
+| FA-03 · account-settings | The Appeals rail entry | feature-added | `AccountSettings.dc.html` has no Appeals tab; `templates/appeals/index.php` is in `settings_nav.php` and is a live route behind the `appeals` flag. | Keep; restyle to the account shell only. (It also carries production-side fiction — `Council record` at `:5,28`.) |
+| FA-04 · account-settings | `/settings/composing` as its own route | feature-added | The design folds Composing *into* the Reading pane (`:349-354`) with all three switches verbatim in concept (`enter_to_send`, `show_preview`, `smart_lists`). | The **rail item** is feature-added; the **content** is modelled. This corrects `D-account-settings` H3/#65 and `D-shell` S32, both of which claimed "never modelled" (V-shell M2). Keep the route; adopt the design's content. |
+| FA-05 · account-settings | `.checkline` — a third boolean idiom | feature-added | The design models exactly one boolean control (the DS `Switch`, 13 uses). | Production has `.switchline`, `.gem-check` **and** `.checkline` (`notifications.php:38-42` pause-all; `boards.php:143` saved-feed digest). A "unify on the switch" slice that misses `.checkline` leaves the inconsistency alive on the very control it restyles. Keep and fold in. |
+| FA-06 · admin-appearance | Branding contrast enforcement | feature-added | The design models no contrast check at all. | Production computes it and **hard-blocks** with a 422 (`BrandingController.php:130-135`). Keep it — but record the divergence from **ADR 0009** (`:26-27`), which says checks must *warn* and that *"warnings can be overridden only by admins and are audited"*; production provides no override. Record in ADR 0024 before wrapping the design idiom around it. |
+| FA-07 · admin-content | Row-scoped tag errors with a 422 typed-value round-trip | feature-added | Not modelled. | `tags.php:44-47,66-72` renders a row-scoped `error-list` and replays the operator's typed values, pinned at `AppTagAdminTest:79-81`. Keep. |
+| FA-08 · admin-content | Per-field errors and the forced move-threads destination picker | feature-added | Not modelled (the design deletes without asking where threads go). | Keep — this is the behavioural half of C-22. |
+| FA-09 · admin-content | `board_edit.php` — settings + moderator roster + member roster | feature-added | The design draws an `Edit` link on each board row **to nothing**. | Keep. Adopt by **explicitly labelled extrapolation**: reuse the Add-a-board grid for settings and the category-card/board-row anatomy for the rosters. Keep the four 422 roster re-render paths (ADR 0023 #3 keeps this admin-only). |
+| FA-10 · admin-features | Honest readiness and empty states | feature-added | The design has no `Missing user UI` status, renders an empty table where production explains itself, and hard-codes `'1 unknown override'` next to its own count of `2` with no plural handling. | Keep production's `Missing user UI` (`AdminFeatureController:70`), `No undeclared keys are present in settings.features.` (`features.php:91`), and the correct singular/plural in the Overrides tile (`features.php:40`). Production is simply better. |
+| FA-11 · admin-integrations | Revoke `aria-label="Revoke the ‹name› token"` | feature-added | The design's revoke is a bare `Revoke` text button with no accessible-name disambiguation across rows. | `api_tokens.php:77`. Exactly the "differentiated row buttons" pocket ADR 0023 §5 closed elsewhere. Must survive the restyle. |
+| FA-12 · admin-integrations | Token empty state and the 409 idempotency replay | feature-added | Not modelled. | Keep verbatim: `No tokens yet. Tokens are shown once at creation and stored only as hashes.` and `That token request was already processed. No new token was minted — the original was shown once. Start again if you still need one.` |
+| FA-13 · admin-members | `required` on the moderation forms | feature-added | The design never modelled them; no production constraint compels them. | `user_record.php:92,109,114,143,159,229` (including `current_password`, which the D report's list omits) and `users_bulk_confirm.php:48`. Keep. (`V-admin-members` M1 reclassified this from `constraint`.) |
+| FA-14 · admin-members | Invitations `By` column, the 429 state, and the named skip list | feature-added | The design has five data columns, no rate-limit state, and a bare *"N administrators skipped"* clause. | Keep `creator_username` (`invitations.php:71,77`), the 429 `Too many invitations created just now…` with `old` preserved (`AdminInvitationController:44-50`), and production's richer named skip list in the bulk flashes (`AdminUserController:99-104`). |
+| FA-15 · admin-notifications | The `Detail` column | feature-added | The design's delivery log has seven columns; production has eight. | `email.php:118,133` renders `error ?? message_id` — the **only** place a failure reason is visible. Keep; style as a mono, `overflow-wrap:anywhere` cell. |
+| FA-16 · admin-notifications | Attempts as `n / max` plus a `Next retry {datetime}` sub-line | feature-added | The design shows a bare number. | `email.php:126-131`, pinned at `AppAdminEmailTest:186-187`. Keep both. |
+| FA-17 · admin-overview | Dashboard empty-audit state | feature-added | The design models no empty branch for the dashboard table (`recentAudit` slices unconditionally). | `No moderation or admin actions yet.` (`dashboard.php:100`). Keep the string; restyle only. (`V-admin-overview` M1 reclassified this from `copy`.) |
+| FA-18 · admin-overview | Audit row hover | feature-added | The design has no `tr:hover`. | `.admin .audit tr:hover td { background: var(--surface-sunken) }` (`app.css:3267`). Keep. (`V/M2`, reclassified from `copy` — "keep" is only available under feature-added.) |
+| FA-19 · admin-overview | The `unavailable` queue-card tier | feature-added | The design's ramp is rust / amber / success. | Production's third status is `unavailable` (faint), and the 2026-07-18 plan pins *exactly* three: `attention`, `clear`, `unavailable`. Keep. |
+| FA-20 · admin-packages | The `Advisories & blocklist` counts card | feature-added | Not modelled (the D report filed it `copy` with the action "drop the card"). | `package_security.php:56` renders `N advisory record(s), M local block(s)` — two live counts that exist **nowhere else** on the security console. Together with the page intro (`:14`) it is one of only two links from `/admin/packages/security` to `/admin/registries`; deleting both strands the page with zero links and zero counts. Keep. |
+| FA-21 · admin-packages | The `package_uid` row on the install plan | feature-added | The design's plan `<dl>` never modelled it. | `package_plan.php:37` is the **only** place the canonical supply-chain identifier appears on the reauth-gated install confirmation — and it is **not** in the title (`:11` is `Install plan - {name} {version}`). Dropping it from the screen where an operator types their password to install is not a presentational change. Keep. |
+| FA-22 · admin-packages | Fallback and empty states the design never modelled | feature-added | The design renders bare interpolations. | Keep all: `none stable` (`packages.php:50`), `local` / `unknown publisher` (`:40`), `unknown` for an unresolvable version (`package_detail.php:109`), `n/a` for a null history digest (`:253`), the per-release `compatible`/`incompatible` pill inside the Core-range cell (`:71-72` — a literal application of the column reorder would drop it), and the no-registries empty state (`registries.php:16-21`). |
+| FA-23 · admin-people | Capability editing on a **custom** role's record | feature-added | `capGroups` occurs exactly once, inside *Create a custom role* on the **list** view; the record's Edit-definition card has name, description, a save button and a status line — **no fieldsets** — and `recordCaps` renders only under `recordIsSystem`. The design gives a custom role's record no way to see or change its capabilities. | Production does both (`role_edit.php:57-69`, `name="capabilities[]"` at `:62`, live 422 round-trip at `:7`). Keep. Any styling is an **extrapolation** of list-page anatomy onto a card the design never modelled and must be recorded as such. |
+| FA-24 · admin-people | `.state-scheduled` / `.state-expired` assignment chips | feature-added | The design's status map has two states; production has four assignment statuses. | `app.css:3465-3497` has no rule for `scheduled`/`expired`, so they fall through to `--ink-300`. Author the missing chips — production's own states are unstyled. |
+| FA-25 · admin-settings | State-driven left rules on the Thread Intelligence status rail | feature-added | The design's three rules are **static identity colours** (`--success`, `--info`, `--warning`) with no state logic anywhere in its script. | Copying verbatim leaves a green rule under `Not ready` and pins Generation to `--warning` forever. Production must go **beyond** the design here — and it is also a live defect today: all four cards emit a bare `queue-card is-static`, so `.queue-card::before` paints `--success` even on `Not ready`/`Paused`. Fix in the pre-fix slice; record as an addition, not as fidelity. |
+| FA-26 · admin-settings | Pluralised queue units | feature-added | The design's unit is a flat `threads` for every tile. | `thread_intelligence.php:85` pluralises. Keep production's. |
+| FA-27 · shell | Server-stamped, flash-free theming | feature-added | The design stamps `data-theme` on the screen root. | `layout.php:20` stamps it on `<html>` server-side, which is strictly better (no flash) — keep. **But** F1 defect H5 is live: `--surface-staff`/`--on-staff` are missing from `app.css`'s `@media (prefers-color-scheme: dark) { [data-theme="system"] }` block while `layout.php` defaults to `system`, so the staff badge never flips for the default theme. Fix in the pre-fix slice and add a register-parity test (see C-16's three-places rule). |
+
+**27 feature-added rows.**
+
+### 1.3 `feature-changed` — same concept, different mechanics (design wins presentation, production wins behaviour)
+
+| Design screen | Section / component | Classification | What differs | Why |
+|---|---|---|---|---|
+| FC-01 · all admin screens | Admin-area navigation mechanics and route homes | feature-changed | Ten flat horizontal pills with `aria-current="page"` (`AdminNav.jsx:8-19,60-73`) vs eight grouped leaves (26 destinations) in a 224px vertical rail with a mobile drawer. The design also **re-homes ten routes**: `/admin/audit` → Overview; `/admin/users` + `/admin/invitations` → Members; `/admin/badge-rules` + `/admin/custom-emoji` + `/admin/features` → Features; `/admin/packages` + `/admin/registries` + `/admin/extensions` → Packages; `/admin/packages/publishers/{id}` → the Packages tab (its page currently passes `active => 'registries'`). | Same concept, different mechanics. These are **behavioural IA changes**, not styling: a bookmark still works but every "where do I find X" answer changes. Design wins on presentation **only after** the `ADMIN.md` §9.2/§9.4 amendment in C-01 lands and ADR 0024 supersedes the IA clause of ADR 0023 *in part*, explicitly preserving its other findings (real Moderation entries, the Appeals dashboard card, inbound links for the two orphan consoles, deferrals #1–#4). |
+| FC-02 · all admin screens | `Admin mode` mode-chip ownership | feature-changed | The design renders it **once**, in the shared identity row (`.admin-bar-mode`, `components.css:334` — `padding: 4px 12px`, `--radius-pill`, `--surface-review`/`--on-review`, `--font-label` `.72rem`/`.08em`, `text-transform: uppercase`). Production repeats `<span class="pill pill-admin">Admin mode</span>` inside `<header class="admin-head">` on 39 templates. | Same concept, different owner. Requires the shared-chrome decision from C-01; and it must land as a **new class**, never a recolour of `.pill-admin` (C-07). |
+| FC-03 · all admin screens | Mobile navigation mechanism | feature-changed | Design: `.admin-tier { overflow-x: auto; scrollbar-width: thin }` with `flex: none; white-space: nowrap` items and an authored rationale (*"a thin scrollbar is the only honest signal that Settings is off-edge"*), **zero JS**. Production: a JS drawer plus a no-JS expanded grid. | Same concept, different mechanics; the design's answer is strictly better against CSP/PE because the JS and no-JS paths become the *same* path — no `has-js` fork, no second contract, no `inert`/focus-trap/scroll-lock surface to test. The drawer's stated justification (*"mirrors the app's mobile pattern"*) evaporates once admin stops rendering `partials/sidebar.php`. Carry-overs in C-08. |
+| FC-04 · account-settings | 2FA enrollment presentation | feature-changed | The design shows an 88×88 QR "cipher" square **and** a readonly `Authenticator secret` field (`:143`); production renders the same readonly secret field (`security.php:65-67`) plus an `otpauth://` URI (`:68-71`) instead of a QR. | Same step — get the enrollment secret into the authenticator. Design wins on card layout and the 88×88 slot's position; production wins on mechanics. Reword away from *"Scan the cipher"*; **ship no empty QR box**. (Merged from two contradictory rows — `V-account-settings` MC1.) |
+| FC-05 · account-settings | Outbound-email granularity | feature-changed | The design models three per-event email switches (`:368-370`); production offers pause-all plus per-subscription `email_enabled`. | Same concept, coarser granularity. `EmailPreferenceService::pauseAllEmail/setPauseAllEmail` + `notifications.php:38-42`, and `notifications.php:63` for the per-subscription toggle. Record the **granularity reduction** against `USER.md` §4.6; do not build the three switches (the third label is also fiction). (Merged — `V-account-settings` MC2.) |
+| FC-06 · account-settings | DM-scope middle option | feature-changed | Both sides render a three-option select in the same slot; only the middle predicate and its label differ (design: *"Members I have replied to"*). | The two outer options (`Public — anyone can view`, `Members only — signed-in members`) are already **verbatim identical**. Adopt the design's register on the option that exists; do not build the middle predicate. (Reclassified from `feature-removed` — `V-account-settings` MC3.) |
+| FC-07 · admin-appearance | Custom-CSS textarea reveal | feature-changed | The design's `sc-if` **removes** the node; a CSS `:has(input[name=custom_css_enabled]:checked)` reveal only **hides** it. | A hidden textarea still posts `custom_css`, and `BrandingController.php:155` still validates it when the flag is on and the checkbox is off (`elseif ($customCssAvailable && $customCss !== '' && …)`). Same visual result, different submission semantics — decide explicitly. |
+| FC-08 · admin-appearance | Safe-mode blanking | feature-changed | The design blanks **both** the Active theme and Preview cards (`hasActive: !!active && !s.safeMode`). Production blanks Preview only — `themeData()` reads `$state['active_build_id']` directly so the Active card survives, while `previewBuildFor()` returns `null` under safe mode (`ThemeStateService.php:94-96`). | Production contradicts itself across two cards on the same page. Pick one behaviour and apply it to both. |
+| FC-09 · admin-appearance | Custom emoji's home | feature-changed | The design makes custom emoji the **third sub-tab of `AdminFeatures`** (`:33-34`, panel `:216-283`), not an Appearance page. | IA move; blocked by the same ADR 0023 item 6 discussion as FC-01. Record, do not act independently. The design's own emoji panel also hands over concrete deltas: `Allow as a reaction` is gated behind `reactionsOn` in the design but always rendered in production; `Enabled`/`Disabled` are pills in the design and bare text in production; production's `Catalogue` `<h2>` has no design counterpart. |
+| FC-10 · admin-content | Category-rename status chip | feature-changed | The design renders an inline `role="status"` chip; production uses POST→redirect→flash (`Category updated.`, `AdminController.php:115`). | Same concept, different mechanics (client state vs PRG). Adjudicate **with** the per-tag `Saved` chip, not against it. The chip's *sentence* is separately a gap — see FR-13. |
+| FC-11 · admin-content | Boundary reorder | feature-changed | The design shows an error alert: *"That category is already first in the order."* | Production's boundary move is a **tested no-op** (`AdminService.php:414-416`, `AppAdminStructureReorderTest:82`). Production wins on behaviour; do not ship the error string. |
+| FC-12 · admin-features | Page identity across three routes | feature-changed | The design is one client-tabbed document with a single `<h1>Features & badges</h1>`; production is three routes with three `<title>`s and three `<h1>`s (`features.php:2`, `badge_rules.php:4`, `badge_rule_preview.php:4`, `custom_emoji.php:4`). | Collapsing gives three URLs an identical accessible page name and **removes `Badge rule preview` from the document entirely**. It breaks `admin-features.spec.ts:83`, `gate-a.spec.ts:1084` and `gate-a.spec.ts:1112` — assertions in the repo's **only** CI workflow. Needs a per-tab `<title>` decision, and the spec updates ship in the same commit. |
+| FC-13 · admin-features | Badge-rule creation flash | feature-changed | The design's `createRule` sets `enabled: true` and flashes *"Rule created — {badge} awards at {rule} ≥ {n}."* | `BadgeRepository::createRule` inserts `is_enabled = 0` (`:141-143`) — production rules are created **inert** and award nothing until an explicit Enable and an explicit Backfill (pinned `gate-a.spec.ts:1106`, and every `AppAdminBadgeRulesTest` must POST `/enable` first). The design's sentence tells an operator a rule is live and awarding when it is not: an **accuracy regression on an audited grant path**, not a register change. Reject the create flash; only the disable/enable flashes are safely adoptable. |
+| FC-14 · admin-features | Badge-rule preview lead count | feature-changed | The design leads the preview with a count. | `BadgeRuleService::preview()['total']` is `count()` of a **LIMIT-100 page** (`:67,:71`) while `backfill()` runs at limit 1000 (`:96`), and `eligibleUsers` excludes members who already hold the badge (`:167-170`). Rendering it as *"{N} members meet this rule today."* states 100 when 5,000 qualify, and mis-states the semantics. If a lead ships it needs a real `COUNT(*)`, the design's own verb (*would receive*), and a "showing first 100" qualifier. |
+| FC-15 · admin-integrations | Provider health vocabulary | feature-changed | Design: three prose strings — `reachable · 3h ago` / `never checked` / `n/a`. Production: a four-value DB enum `unknown\|ok\|degraded\|down` (`0052_phase5_provider_registry.php:47`) written by `IdentityProviderRepository::updateHealth` and rendered raw (`providers.php:36`). | `degraded` has **no** design counterpart; `unknown` is what a builtin row renders where the design shows `n/a`. Production wins on behaviour; the mapping must be authored deliberately. **Production never emits `never checked`** — the D report's "keep `never checked`" instruction is false, and `providers.spec.ts:106,111` pin `unknown` and `down`. |
+| FC-16 · admin-integrations | Webhook delivery timing | feature-changed | The design's copy implies synchronous delivery. | `worker:webhooks` drains an async queue (`webhooks.max_attempts = 6`, `config/config.php:237`). Never claim synchronous delivery. |
+| FC-17 · admin-integrations | Save + Delete paired in one control row | feature-changed | The design pairs a primary `Save` and a danger `Delete endpoint` in a single row. | Production's delete is its **own** `<form method="post" action="…/delete">` carrying a required `current_password` (`webhook_detail.php:71-78`, re-auth locked by ADR 0021 and `WebhookService.php:147-152`). HTML forms cannot nest, and the naive `<button formaction="…/delete">` inside the Save form posts `/delete` with **no** `current_password` — a permanent 422 dead end. Requires `form="…"` attributes or a visual-only pairing of two sibling forms. |
+| FC-18 · admin-integrations | Register form on the detail page | feature-changed | The design shows the register card beside the detail view, with "only the right column swaps". | Not reproducible without a controller change: `AdminWebhookController::create()` renders `admin/webhooks` on **both** the success (`:58-64`) and `ValidationException` (`:66-76`) paths, so a register submitted from `/admin/webhooks/{id}` navigates the operator off the detail view either way. It also puts **three** identically-named `current_password` inputs on one document (`:64` rotate, `:74` delete, plus register) — password managers fill all three. |
+| FC-19 · admin-notifications | Test-send confirmation | feature-changed | The design shows an inline client success chip: *"Queued — it is at the top of the log."* | Two separable halves. **Mechanism (constraint, C-10/C-13):** no client success state ships; production uses POST→redirect→flash (`AdminEmailController.php:68`). **Placement (adoptable):** rendering the existing server flash as an inline `role="status"` beside the Send button costs zero JS and no CSRF change — adopt it or decline it in writing. The **string** must not ship: the button sends **synchronously** (`EmailOpsService.php:104-117`), so "Queued" is false. |
+| FC-20 · admin-overview | Audit page size | feature-changed | Design `PAGE_SIZE = 10`; production 50, clamped `max(1, min(200, $perPage))` at `AuditQueryService.php:72` (the repository's 200 cap is a second, lower-level bound). | Production wins on behaviour — this is an operator accountability surface — while the design wins on the pager's presentation. (Reclassified from `copy`, which had a self-contradictory "keep production" action.) |
+| FC-21 · admin-overview | Audit `Change` column | feature-changed | The design renders a prose change string. | Production renders `<details class="audit-change">` over raw `before_json`/`after_json`, because the **stored data is raw JSON, not a prose diff**. The conclusion stands on the data shape alone — the 2026-07-18 plan citation the D report used pins the *stored payloads*, not the disclosure widget. |
+| FC-22 · admin-packages | Advisory status | feature-changed | The design conflates local blocking into the advisory string (`advisory: 'locally blocked'` → `advisoryStatus`). | Production keeps `advisory_status` and `blocked` as two **independent facts** and concatenates them (`package_detail.php:52`). Same concept, different mechanics. (Reclassified from `feature-added` — the design does model local blocking, just badly.) |
+| FC-23 · admin-packages | Stale-snapshot alert scope | feature-changed | Design: `staleSnapshot: registries.some(r => r.sourceId === 'community.imladris' && **r.enabled**)`. Production: `RegistryCatalogService::overview()` loops `$this->registries->all()` with **no enabled filter** and sets `fresh` on every row (`:44-47`); `packages.php:16-17` renders the alert for every `!fresh`. | Consequence: the moment an operator adds a registry through `registries.php:120-134` ("starts disabled"), the catalogue shows a red `Stale snapshot: … never fetched` for a source they deliberately have not enabled. The `sourceId ===` half of the design predicate is fixture-bound; the **`&& r.enabled` half is a real product rule** — adopt it. |
+| FC-24 · admin-people | Permission simulator's place in the IA | feature-changed | The design gives `/admin/roles/simulator` a first-class nav tab. | Production has no nav entry — only an inbound link from `/admin/roles` (`roles.php:30`), which is the **shipped** ADR 0023 orphan-console remediation asserted at `AppAdminNavIaTest:74`. Same concept, stronger mechanics: the deferral is superseded *upward*, not reverted. **Keep the inbound link** when the tab lands. |
+
+**24 feature-changed rows.**
+
+### 1.4 `feature-removed` — the design shows it, production does not implement it
+
+**Standing rule for every row below: production builds nothing and ships no dead chrome.** Every row
+is recorded in **`docs/adr/0024-imladris-admin-account-adoption.md` §"Design-side sections with no
+production home"** — a single table (per `R-cross-cutting` §5, the eleven separately-proposed ADR
+0024s collapse into one ADR, and this ledger is that table's source). Rows that additionally map to
+an *existing* deferral name it.
+
+| Design screen | Section / component | Classification | What differs | Why |
+|---|---|---|---|---|
+| FR-01 · account-settings | The `Regard` pane — rail item, reputation ledger, `Commends` unit, event rows | feature-removed | The design ships a whole account pane: rail item (`:57-58`), ledger list, unit label `Commends` (`:179`), footnote *"Regard is earned, never granted…"* (`:207`), and event rows (`Reached` / `Loremaster` / `crossed 3,500 commends`, `:501`). | **Build nothing; ship no dead chrome.** There is no `/settings/regard` route and no per-event ledger surface: `reputation_events` is written only by `ReputationLedgerService` and `BadgeRuleService:157,222`; production's nearest analogue is the profile Commends tab (a total plus `topCommendedByUser(…, 5)`), not a ledger. Also a lexicon violation (§3.1). **ADR 0024 §Design-side gaps, entry 1.** |
+| FR-02 · account-settings | Password strength meter (five tiers) | feature-removed | Five tiers ending in `Worthy of the council` (`:594-603`). | **Build nothing; ship no dead chrome.** No meter exists; the top tier is also fiction. Note the correction: `docs/adr/0021:47-52` defers an **operator-console password-policy editor** (ADMIN §9.3), not a member-facing meter — the principle transfers but the citation does not, so **ADR 0024 §Design-side gaps, entry 2** must own this in its own right. |
+| FR-03 · account-settings | 2FA cancel/abandon affordance | feature-removed | The design offers a Cancel control mid-enrollment. | **Build nothing; ship no dead chrome.** No route exists. **ADR 0024 entry 3.** (The QR square is handled as FC-04, not here.) |
+| FR-04 · account-settings | Persistent recovery-code grid | feature-removed | The design keeps the recovery codes displayable. | **Build nothing; ship no dead chrome.** Production HMAC-hashes recovery codes and can never re-display them. **ADR 0024 entry 4.** |
+| FR-05 · account-settings | Operator-defined profile-field schema | feature-removed | *"Fields defined by the wardens"* (`:94`) and *"The wardens choose which fields exist; you choose what goes in them."* (`:96`). | **Build nothing; ship no dead chrome.** Production ships three free-form `custom_label_N`/`custom_value_N` rows behind a flag (C-19); no schema, no operator field editor. **ADR 0024 entry 5.** |
+| FR-06 · account-settings | `Hidden — wardens only` profile-visibility option | feature-removed | A fourth visibility option in the privacy select (`:264`). | **Build nothing; ship no dead chrome.** Not a production option. `USER.md` §4.7 + `DECISIONS.md` §5 #6/#8 + `templates/account/privacy.php:26-35`. **F2 conflict C5. ADR 0024 entry 6.** |
+| FR-07 · account-settings | Drafts autosave composer card | feature-removed | The design puts an autosaving composer inside the Drafts pane. | **Build nothing; ship no dead chrome.** Production has no composer inside settings. **ADR 0024 entry 7.** |
+| FR-08 · account-settings | The topbar back-out affordance | feature-removed | The member screen's topbar carries a `‹ Back to the council` exit link. | **Build nothing; ship no dead chrome** — and this is recorded **with a reason**, not waived as out of scope: production's persistent three-pane sidebar (`layout.php`, `variant=app`) *is* the back-out affordance, so a second in-page back link would be redundant chrome. **ADR 0024 entry 8.** (The lexicon half is C-15/§3.1.) |
+| FR-09 · admin-overview | The amber `Waiting` queue tier | feature-removed | Approval hold and Appeals carry an `--amber` rule and a `Waiting` state. | **Build nothing; ship no dead chrome.** `AdminDashboardService.php:66,77,84,97` emits exactly `attention\|clear\|unavailable`, and the 2026-07-18 plan Task 3 pins *"Queue card status is exactly `attention`, `clear`, or `unavailable`."* **ADR 0024 entry 9.** |
+| FR-10 · admin-overview | Attention-row ages | feature-removed | Each `Needs attention` row carries an age. | **Build nothing; ship no dead chrome.** `AdminDashboardService.php:126-169` attention entries carry **only** `label` and `href`; no age exists anywhere in the model. **ADR 0024 entry 10.** |
+| FR-11 · admin-overview | `Commends given` and the other uncomputed Community-today metrics | feature-removed | A four-card Community-today grid. | **Build nothing; ship no dead chrome.** `AdminDashboardService.php:173-186` renders **exactly two** activity cards; two columns is the correct rendering of the surviving set, not a copy difference. **ADR 0024 entry 11.** |
+| FR-12 · admin-overview | Per-panel error state and retry (`The log could not be read` / `Try again`) | feature-removed | The design models a recoverable per-panel read failure. | **Build nothing; ship no dead chrome.** A read failure becomes a kernel 500 (`src/Core/App.php:414` `catch (Throwable)` → `renderServerError`); no partial-failure path reaches a per-panel retry. **ADR 0024 entry 12.** (The loading skeleton is C-30, blocked by PE.) |
+| FR-13 · admin-overview | The `72-hour promise` appeal SLA | feature-removed | *"1 appeal past its 72-hour promise"* (`:68`, x-dc `:343`). | **Build nothing; ship no dead chrome.** No SLA is implemented. Use production's *"Open moderation appeals"* / *"N open appeals are waiting for a staff decision."* **ADR 0024 entry 13.** |
+| FR-14 · admin-content | *"the old slug keeps working"* applied to **categories** | feature-removed | The intro (`:38`) and the rename status chip (`:62`) both claim a category rename preserves the old slug. | **Build nothing; ship no dead chrome** — and delete the claim. `board_slug_history` exists for **boards** (migration 0007); categories are `id, name, position` (`0002_categories.php:11-14`) and have **no slug at all**. **ADR 0024 entry 14.** (Category slugs themselves are the same gap.) |
+| FR-15 · admin-content | Drag reorder | feature-removed | The design's row arrows imply direct manipulation. | **Build nothing; ship no dead chrome.** Production ships two POST forms per row. **ADR 0021 deferral #8.** |
+| FR-16 · admin-content | The six deferred board fields | feature-removed | The design's Add-a-board grid carries fields production does not persist. | **Build nothing; ship no dead chrome.** **ADR 0021 deferral #6.** |
+| FR-17 · admin-people | The roles search box, the `All \| Protected anchors \| Custom` segmented filter, and the filtered empty state | feature-removed | Design `:46`, `:48-55`, `:56`, `:87-92` (`No roles match this filter` / `Clear the search, or create a custom role below.`). | **Build nothing; ship no dead chrome.** `AdminRoleController::index()` ignores the request; `listWithMeta()` is unfiltered; and the table **can never be empty** — four system roles are seeded at `0050_phase5_capabilities_roles.php:183-187`. Additionally a `<form action="/admin/roles">` would break `gate-a.spec.ts:389`, `role-assignments.spec.ts:104` **and** `:204`. **ADR 0024 entry 15.** |
+| FR-18 · admin-people | Assignments on system roles | feature-removed | The design's Assign form does not distinguish system anchors. | **Build nothing; ship no dead chrome.** `RoleAssignmentService.php:71` refuses; `role_edit.php:106,221` already guard it. **ADR 0024 entry 16.** |
+| FR-19 · admin-appearance | A theme `deactivate` button | feature-removed | The design's x-dc carries `deactivate: () => this.setState({ activeId: null })`. | **Build nothing; ship no dead chrome.** No route exists (`App.php:2235-2241`). **ADR 0024 entry 17.** |
+| FR-20 · admin-notifications | Bounce / complaint ingestion | feature-removed | `const BAD = ['failed','bounced','complained']` with seeded `bounced` and `complained` delivery rows. | **Build nothing; ship no dead chrome**, and make **no promise** of automatic bounce/complaint capture — no ingest path exists. **ADR 0024 entry 18.** |
+| FR-21 · admin-notifications | *"The log keeps thirty days. Widen the filters to see more of it."* | feature-removed | A retention claim in the delivery-log empty state (`:146`). | **Build nothing; ship no dead chrome**, and do not ship the sentence: no retention purge exists. **ADR 0024 entry 19.** |
+| FR-22 · admin-notifications | `verify` / `reset` delivery kinds | feature-removed | Two kind options in the log filter (`:95-96`). | **Build nothing; ship no dead chrome.** Structurally unreachable — verification and reset mail bypass `email_deliveries` entirely (`EmailVerificationService.php:120`), so those rows can never exist. **ADR 0024 entry 20.** |
+| FR-23 · admin-settings | `Invitations feature is enabled` checkbox | feature-removed | A flag toggle inside the Registration card (`:70`). | **Build nothing; ship no dead chrome.** Enablement is a deliberate `settings.features` write, not a settings-page toggle; the console is read-only about flags by rule (`AdminFeatures.dc.html:47` states production's own no-toggles rule verbatim). **ADR 0024 entry 21.** |
+| FR-24 · admin-settings | The `All` / `Failed only` evidence filter | feature-removed | A segmented filter over the generation-evidence table (`:160-165`). | **Build nothing; ship no dead chrome.** Not implemented. **ADR 0024 entry 22.** |
+| FR-25 · admin-settings | The evidence `Digest` column | feature-removed | A `sha256:…` column on the evidence table (`:174`). | **Build nothing; ship no dead chrome** — and it is affirmatively **forbidden**: `request_fingerprint` is asserted **absent** from the response body at `AppAdminThreadIntelligenceTest:63`. **ADR 0024 entry 23** (see also C-34). |
+| FR-26 · admin-features | The recovery drill | feature-removed | `Recovery drill —` / `Simulate a corrupt settings.features value` / `Restore valid overrides` (`:50-51`, `toggleCorrupt` at `:393`). | **Build nothing; ship no dead chrome** — and record it explicitly as **design-only prototype scaffolding, out of scope**, rather than as a product gap, so nobody builds it later. (`V-admin-features` M5: the "gap" label invites exactly that.) **ADR 0024 entry 24.** |
+| FR-27 · admin-features | The design's readiness assignments and its `federation` / `analytics_export` flags | feature-removed | The design enumerates flags production does not declare and assigns readiness states that downgrade `custom_css` from `Safety-blocked`. | **Build nothing; ship no dead chrome.** Neither flag exists in `FeatureFlags::DEFAULTS` (57 declared / 50 on / 7 off, pinned `AppAdminFeaturesTest:31-33`); rows enumerate from `DEFAULTS` only. The design omits 33 further real flags, so its flag data must not be trusted at all — the mirror's own `PRODUCTION.md` is stale in the same direction (it still lists `group_dms` as dark though it graduated 2026-07-18). **ADR 0024 entry 25.** |
+| FR-28 · admin-features | *"Assets are served from the media root; nothing is uploaded here."* | feature-removed | A second sentence proposed for the custom-emoji intro (`:219`). | **Build nothing; ship no dead chrome**, and do not ship the sentence. `CustomEmojiService::validStaticPath:212-216` accepts `^/emoji/….(png\|webp)$` **or** `^/media/\d+$`, but only `/media/{id}` is a route (`App.php:2030`); there is **no `/emoji/*` route** and no `public/emoji/` directory — the operator creates it by hand at the web root. The sentence points an operator at the wrong place for the very path shape production's own placeholder suggests. **ADR 0024 entry 26.** |
+| FR-29 · admin-members | The *"skipped — administrator"* bulk pre-flight marker on the **warn** path | feature-removed | The design marks admin rows as auto-skipped and labels the button with an "actionable" count, for every bulk action. | **Build nothing for warn; ship no dead chrome.** Only `suspend()` (`UserModerationService.php:296-301`) and `ban()` (`:337-341`) call `requireGovernable()`; **`warn()` (`:69-76`) does not** — it refuses **self** only, and a self-first batch rethrows while `$done === 0` (`:695-699`), aborting the whole batch at 422. A static "skipped" marker cannot represent an order-dependent abort, and shipping it would make the screen lie about a moderation action production is about to take. If the marker ships at all it is `suspend`-only, with predicate `role === 'admin' \|\| id === actor` (the design's own predicate omits self while its blurb claims otherwise). **Do not change `warn()` to make the design true.** **ADR 0024 entry 27.** |
+| FR-30 · admin-packages | The Extensions tab rendered **live** while the flag is dark | feature-removed | `AdminPackages.dc.html:33-34` renders Extensions as a live tab in every state, with a body asserting the page is a read-only probe *while* `server_extensions` is dark. | **Build nothing; ship no dead chrome.** Production cannot render that state at all — `AdminExtensionController.php:20-22` 404s while the flag is dark. Ship the tab **disabled** with the pinned note (FA-01) and rewrite the callout copy (C-32). This is the `feature-removed` the D report's *"none found"* sweep missed. **ADR 0024 entry 28.** |
+
+**30 feature-removed rows.**
+
+### 1.5 Not deviations — recorded so they are not mistaken for one
+
+- **`/admin/thread-intelligence` answering 200 with both TI flags dark** is deliberate (ADR 0019 +
+  `AppAdminThreadIntelligenceTest:29-71` + runbook §12). The Stage-2 obligation is the *opposite* of
+  "fix it": the Settings area's Thread Intelligence tab keeps the `flags_any` disabled treatment
+  **while the route keeps answering 200**, and ADR 0024 records the asymmetry so a tier-partial
+  author does not "simplify" it away.
+- **API-token expiry visibility** (`ApiTokenRepository:52` selects `expires_at`; `api_tokens.php:72`
+  keys status only on `revoked_at`, so an expired token renders `active`) is a real production gap,
+  but the design models no expiry state either — it is **not** a design deviation and is recorded as
+  an out-of-scope robustness note.
+- **Renames that move a pinned selector are `copy` work with contract risk**, listed only so they
+  are scheduled with their spec updates in the same commit: `Reports` → `Reports open`
+  (`admin-dashboard.spec.ts:99-101` uses `toHaveText`, i.e. full-string equality); `Remove` →
+  `Release` (`gate-a.spec.ts:1281` — **not** `AppAdminEmailTest:124-133`, which asserts only the
+  redirect and row presence); `Custom emoji saved.` (`a11y.spec.ts:487`, `gate-a.spec.ts:727`);
+  `Badge rule created.` and the two count regexes (`gate-a.spec.ts:1103,1127,1137`); the three
+  heading names under an `<h1>` collapse (`admin-features.spec.ts:83`, `gate-a.spec.ts:1084,1112`);
+  the four `<h2>` headings pinned by role at `gate-a.spec.ts:1266-1269`; and the `→` on *View full
+  audit log* — a CSS `::after` enters the accessible name that `admin-dashboard.spec.ts:105`
+  matches, so use the house `<span aria-hidden="true">→</span>` pattern and relax the
+  byte-identical PHPUnit pin at `AppAdminDashboardRemediationTest:280` in the same commit.
+- **`docs/adr/0021` and `docs/adr/0023` are never silently reverted.** ADR 0023's IA clause is
+  superseded **in part and explicitly** by ADR 0024 (C-01/FC-01); every other 0023 finding and all
+  four of its deferrals survive, and deferral #4 (`role_edit.php` field-error wiring) must be
+  **closed or restated**, not dropped.
+
+---
+
+## 2. Per-screen classification counts (corrected)
+
+Counts are per-report, **before** the deduplication in §1 — so the "same constraint on ten screens"
+appears ten times here and once there. `copy` is reported for completeness; it is not a deviation.
+
+| Design screen | copy | feature-added | feature-removed | feature-changed | constraint |
+|---|---:|---:|---:|---:|---:|
+| shell (cross-screen chrome) | 33 | 5 | 1 | 1 | 13 |
+| admin-overview | 41 | 8 | 8 | 7 | 4 |
+| admin-content | 33 | 5 | 1 | 4 | 9 |
+| admin-people | 35 | 11 | 2 | 4 | 10 |
+| admin-members | 66 | 26 | 1 | 2 | 7 |
+| admin-appearance | 38 | 9 | 1 | 10 | 14 |
+| admin-notifications | 43 | 14 | 2 | 5 | 11 |
+| admin-integrations | 57 | 13 | 0 | 14 | 9 |
+| admin-packages | 58 | 40 | 1 | 8 | 4 |
+| admin-features | 39 | 12 | 4 | 9 | 11 |
+| admin-settings | 27 | 14 | 2 | 5 | 13 |
+| account-settings | 73 | 13 | 7 | 14 | 11 |
+| **Total** | **543** | **170** | **30** | **83** | **116** |
+
+Derivations for the seven re-anchored screens are taken verbatim from their `R-*` addenda
+(`R-admin-overview` §6, `R-admin-content` §6, `R-admin-people` §F, `R-admin-appearance` §e,
+`R-admin-notifications` §7, `R-admin-settings` §6, `R-account-settings` §H). For the five screens
+with no addendum the D-report tally was adjusted by the explicit reclassifications and added rows in
+its `V-*` verdict:
+
+- **shell** — D 29/7/1/0/11 → V-shell M1 (S11 `feature-added`→`copy`), M2 (S32 →`copy`), M4
+  (S8/S9 `copy`→`constraint`, spec conflict), R2 (S41 struck), plus new rows N1 (`feature-added`),
+  N5/N9/N11/N12 (`copy`), N10 (`constraint`); and S15 re-filed `feature-added`→`feature-changed`
+  because the design *does* have a responsive answer (`components.css:335-339`, R-cross-cutting §10).
+- **admin-members** — D 61/24/1/2/6 → V M1 (`constraint`→`feature-added`), M2
+  (`constraint`→`feature-changed`), M3 (row 58 removed — records agreement), M4
+  (`constraint`→`copy`), M5 (`feature-changed`→`copy`), R4 (row 1 `copy`→`constraint`), plus new
+  rows N1/N2/N4/N9 (`constraint`), N3 (`feature-added`), N5/N6×2/N7 (`copy`).
+- **admin-integrations** — D 55/11/2/13/5 → V MC1 + MC2 (**both** `feature-removed` rows re-filed
+  out; the screen's `feature_removed` is **0**), MC3 (split, `feature-changed` +1), MC4
+  (rows 28/55 `copy`→`constraint`), MC5 (split, `copy` +1), plus M1 + M3 (`feature-added`), M5/M6/M7
+  (`copy`), M11 + M12 (`constraint`).
+- **admin-packages** — D 55/36/0/5/4 → V R1 (`feature-removed` +1: the live-Extensions-while-dark
+  state), M1/M2/M3 (`copy`→`feature-added` ×3), M4 (row 86 removed — an ADR deferral is not a
+  `constraint`), M5 (`constraint`→`feature-changed`), M6 (`feature-added`→`feature-changed`), plus
+  X1/X2/X8/X9 (`copy`), X3/X4 (`feature-added`), X5/X7 (`constraint`), X6 (`feature-changed`).
+- **admin-features** — D 42/12/5/7/5 → V M1 (`copy`→`constraint`), M2 + M3
+  (`copy`→`feature-changed` ×2), M5 (recovery drill re-filed as scaffolding, `feature-removed` −1),
+  plus missed items 1/2/5/6/7 (`constraint` ×5) and item 8 (`copy`).
+
+---
+
+## 3. Fiction-string table
+
+### 3.1 Design → proposed production (deduplicated across all eleven screens)
+
+A string that occurs on many screens is listed **once**, with every design file it occurs in. `x-dc:`
+denotes the `<script type="text/x-dc">` fixture block (sample data — the substitution is "render the
+real row", not "translate the words").
+
+| # | Design string (verbatim) | Design file(s) | Proposed production string |
+|---|---|---|---|
+| 1 | `Imladris` (wordmark) | `components/admin/AdminNav.jsx:53` — mounted by **all six/ten `admin-*` screens** at their `:22`; `AccountSettings.dc.html:27`; seed values `AdminAppearance x-dc:248`, `AdminSettings x-dc:220` | Do not port. Render `$brand['name']` / `$site_name` (`partials/topbar.php:11`, `layout.php`). |
+| 2 | Eight-point elven-star SVG | `AdminNav.jsx:27-30` (`Mark()` → `EightPointStar`); `AccountSettings.dc.html:26` | Do not port the *design's* mark — but note the D reports' reason is wrong: production **already ships** an eight-point star as its default mark (`partials/topbar.php:11`) and honours `$brand['logo_path']`. Keep production's. |
+| 3 | `Back to the council` | `AdminNav.jsx:44` (`backLabel` default); `AccountSettings.dc.html:29` | `Back to the forum`. A design-sanctioned non-fiction variant already exists in-system: `admin.card.html:46` demonstrates `backLabel="Leave admin"`, and `ui_kits/admin/AdminApp.jsx` uses `Back to the inbox`. |
+| 4 | `Admin mode` | `AdminNav.jsx:45` (`modeLabel` default) | **Not fiction** — already production's own string. Keep verbatim. |
+| 5 | `Your seat at the council` (page eyebrow) | `AccountSettings.dc.html:41` | `Account` — **already shipped correctly** at `account/settings.php:5`. Keep production's. |
+| 6 | `Everything the council knows about you, and everything it does on your behalf. Changes are held until you save them.` | `AccountSettings.dc.html:43` | `Everything this community knows about you, and everything it does on your behalf.` — and **drop** the second sentence: it describes the client dirty buffer production will not build (C-18). |
+| 7 | `Council` (rail group heading) | `AccountSettings.dc.html:71` | `Community`. |
+| 8 | `Regard` (rail item + footnote) | `AccountSettings.dc.html:57,58,207`; column header `AdminMembers:97`; record `<dt>` `AdminMembers:222` | On admin-members: `Reputation` (production's own term at `users.php:114`, `user_record.php:44`). On account-settings the item is **not built** (FR-01). ⚠ Production already ships `Regard` as user-visible chrome — see §3.2. |
+| 9 | `Commends` (reputation unit) | `AccountSettings.dc.html:179` | `Reputation`. ⚠ **Already shipped and TEST-PINNED** in production — see §3.2. |
+| 10 | `Regard is earned, never granted. Only you can see this ledger; others see the total.` | `AccountSettings.dc.html:207` | Do not port (FR-01). |
+| 11 | `Saved to your seat.` | `AccountSettings.dc.html:489` | `Saved.` |
+| 12 | `Worthy of the council` (top strength tier) | `AccountSettings.dc.html:603` | Do not port — the meter is not built (FR-02). |
+| 13 | `Fields defined by the wardens` | `AccountSettings.dc.html:94` | Do not port (FR-05). If ever built: `Fields defined by the operators`. |
+| 14 | `The wardens choose which fields exist; you choose what goes in them.` | `AccountSettings.dc.html:96` | Do not port. Production already ships `Add up to three public profile facts.` (`settings.php:98`). |
+| 15 | `Hidden — wardens only` | `AccountSettings.dc.html:264` | Do not port (FR-06). If ever built: `Hidden — staff only`. |
+| 16 | `Not enabled. A second factor keeps your seat at the council secure even if your password is lost.` | `AccountSettings.dc.html:134` | `Not enabled. A second factor keeps your account secure even if your password is lost.` |
+| 17 | `Scan the cipher with your authenticator, then enter the six digits it shows.` | `AccountSettings.dc.html:140` | `Add this secret to your authenticator app, then enter the six digits it shows.` (FC-04.) |
+| 18 | `Email me the weekly council summary` | `AccountSettings.dc.html:370` | Do not port — the per-event switch is not built (FC-05). If ever built: `Email me the weekly digest`. |
+| 19 | `Their public counsel stays readable — blocking is not moderation.` | `AccountSettings.dc.html:432` | `Their public posts stay readable — blocking is not moderation.` |
+| 20 | `Reversible. Your seat stays sign-in capable, but counsel and posting are blocked until you reactivate.` | `AccountSettings.dc.html:456` | `Reversible. Your account stays sign-in capable, but replying and posting are blocked until you reactivate.` |
+| 21 | `…Public counsel is preserved under a deleted-member identity; everything that identifies you is purged.` | `AccountSettings.dc.html:463` | `…Public posts are preserved under a deleted-member identity; everything that identifies you is purged.` |
+| 22 | `You still earn regard; you just won't be ranked publicly.` | `AccountSettings.dc.html:269` | `You still earn reputation; you just won't be ranked publicly.` ⚠ **Already shipped as fiction** at `account/privacy.php:40` — see §3.2. |
+| 23 | `Europe / Rivendell` (timezone option) | `AccountSettings.dc.html:364` | A real IANA identifier — production already lists them all (`SettingsController.php:137`). |
+| 24 | `Rivendell` (Location sample) | `AccountSettings.dc.html:99` | Neutral placeholder, or leave the field empty. |
+| 25 | `IMLA DRIS 7K2F 9QD4 H1PB` (authenticator-secret sample) | `AccountSettings.dc.html:143` | The real generated secret from `MfaService::startEnrollment`. |
+| 26 | `imla-3kf9-2a`, `imla-77qd-h1`, … (recovery-code samples) | `AccountSettings x-dc:543` | Real generated codes; the `imla-` prefix must never appear. |
+| 27 | `Reached` / `Loremaster` / `crossed 3,500 commends`; ledger actors `Arwen`, `Galadriel`, `Glorfindel`, `Elrond` | `AccountSettings x-dc:498-503` | Do not port (FR-01). |
+| 28 | `The Commons`, `Vilya · Expose` (board-category samples) | `AccountSettings x-dc:549,554` | Real categories from `CategoryRepository::all()`. ⚠ `Vilya · Expose` is **also hard-coded as a production placeholder** at `account/boards.php:84` — replace it there too. |
+| 29 | `Saruman`, `Gríma` (blocked-member samples); `Erestor` / `erestor@imladris.council` | `AccountSettings x-dc:545-546,609,616` | Real rows from `BlockRepository::listBlocked`; sample addresses use `@example.com`. |
+| 30 | Draft/subscription samples — `The rite framing lands for me…`, `Evaluations as ritual, not gate`, `#evaluations`, `#audit-trails`, `#interpretability`, `Where should ratified decisions live?` | `AccountSettings x-dc:248,507-509,539-541` | Real rows; sample boards use neutral names. |
+| 31 | `Start with the live queues and health signals, then review what has changed across the council.` | `AdminOverview.dc.html:42` | `…across the community.` — **already shipped correctly** at `admin/dashboard.php:15`. |
+| 32 | `Commends given` (activity card) | `AdminOverview x-dc:366` | Drop the card — the metric is not computed (FR-11). If reputation is ever surfaced: `Reputation given`. |
+| 33 | `1 appeal past its 72-hour promise` / `1 past the 72-hour promise` | `AdminOverview.dc.html:68`, `x-dc:343` | No SLA exists (FR-13). Use `Open moderation appeals` / `N open appeals are waiting for a staff decision.` |
+| 34 | `Wardens may now merge tags` (audit sample reason) | `AdminOverview x-dc:277` | `Moderators may now merge tags` — sample data; never seed it into fixtures. |
+| 35 | `Keeper of the record — 100 accepted`; `Off-topic, moved to #lore`; `ledger-sync`; actors `erestor`, `elrond`, `glorfindel`, `melian`, `celebrian` | `AdminOverview x-dc:266-289,275,344` | Neutral fixture handles / badge names from the real catalogue; production computes no webhook-health attention line at all. |
+| 36 | `Categories order the council's rooms; boards are the rooms themselves.` | `AdminContent.dc.html:38` | `Categories group boards; boards are where topics live.` |
+| 37 | `A council needs at least one room. Add a category below, then put a board inside it.` | `AdminContent.dc.html:47` | `A forum needs at least one board. Add a category below, then put a board inside it.` |
+| 38 | Seed categories `The council`, `The archive`, `Wardens`; seed boards `Counsel`/`counsel`, `Wardens`/`wardens`, `Lore` | `AdminContent x-dc:296,297,300,302,305,306` | Sample data only — never ship. Neutral: `General`, `Archive`, `Staff`; `Announcements`/`announcements`. |
+| 39 | `The warden's table. Staff only.` (board description) | `AdminContent x-dc:306` | `The moderation queue. Staff only.` (note the typographic apostrophe `’`). |
+| 40 | Tag descriptions `Vocabulary and the council lexicon.`, `Queues, holds, and the warden's table.`, `Tokens, registers, and the twilight theme.` | `AdminContent x-dc:317,319,326` | `Vocabulary and the tag catalogue.`, `Queues, holds, and moderation.`, `Tokens, registers, and the dark theme.` |
+| 41 | Role names `Warden` / `The warden's table.`, `Elder`, `Member` / `Everyone with a seat.`, `Tag warden` / `custom.tag_warden` | `AdminPeople x-dc:364-368` | `Moderator` / `Site moderator (compatibility anchor)`, `Admin`, `User` / `Authenticated member (compatibility anchor)`, `Tag moderator` / `custom.tag_moderator` — production's seeded values (`0050_phase5_capabilities_roles.php:183-187`). |
+| 42 | Role keys `core.role.member` / `core.role.moderator` / `core.role.admin` | `AdminPeople x-dc:364-366` | `system.user` / `system.moderator` / `system.admin` — the real seeded keys. |
+| 43 | `Grant or revoke a mark of esteem.` (capability description) | `AdminPeople x-dc:356` | The key does not exist. Nearest is `core.user.manage` — *"Administer member records: titles, signatures, and manual badges."* In general "mark of esteem" → "badge". |
+| 44 | `placeholder="erestor"` on the simulator Actor field; sample users `erestor`, `glorfindel`, `lindir`, `melian`, `bilbo`, `celebrian`, `elrond`, `galadriel`; `board — Practice` / `category — The archive` | `AdminPeople.dc.html:289`, `x-dc:373-382,396,374-379` | Leave the placeholder empty (production has none); resolve names server-side. |
+| 45 | `The chrome the council wears.` | `AdminAppearance.dc.html:38` | `The chrome this community wears.` |
+| 46 | `Safe mode drops the council back to the built-in chrome without uninstalling anything.` | `AdminAppearance.dc.html:131` | `Safe mode returns the site to the built-in chrome without uninstalling anything.` |
+| 47 | `No package theme is active. The council wears the built-in chrome.` | `AdminAppearance.dc.html:154` | `No package theme is active. The site uses the built-in chrome.` |
+| 48 | `…so safe mode can always bring the council home.` | `AdminAppearance.dc.html:204` | `…so safe mode can always restore the built-in chrome.` |
+| 49 | `The council needs a name.` | `AdminAppearance x-dc:279`; `AdminSettings.dc.html:49` | Keep production's precise, pinned message: `Site name must be 1–80 characters.` (`AdminSettingsService.php:72`, `BrandingController.php:120`; pinned `AppAdminDashboardRemediationTest:220`). |
+| 50 | Theme package samples `Imladris Classic` / `rb.theme.imladris-classic`, `Twilight Hall`, `Mallorn`, `Greyhavens` | `AdminAppearance x-dc:239-242,339` | Neutral sample package names + namespaces. |
+| 51 | `council.imladris.example` (sending-domain sample) | `AdminNotifications.dc.html:42` | `mail.example.com` (only the placeholder register matters — production renders the real domain). |
+| 52 | `Your weekly council digest` (×6); `Confirm your seat at the council` (×2) | `AdminNotifications x-dc:270-284,273,281` | `Your weekly digest`; `Confirm your email address` — and note the second row can never appear at all (FR-22). |
+| 53 | `The council stays readable throughout.` (seeded banner) | `AdminNotifications x-dc:311` | `The site stays readable throughout.` |
+| 54 | `Galadriel mentioned you in #practice`; `Erestor replied to your topic`; `The lexicon has moved to #lore. Old links still resolve.`; `@imladris.example` addresses ×13; actors `elrond`, `erestor` | `AdminNotifications x-dc:270-297,337,428` | `A member mentioned you in #general`; `A member replied to your topic`; `The FAQ has moved to #help. Old links still resolve.`; `@example.com` / `@example.test`; real `actor_username`. |
+| 55 | `The name the council goes by — in the topbar, in every email, and on the sign-in page.` | `AdminSettings.dc.html:40` | `The name this community goes by — in the topbar, in every email, and on the sign-in page.` |
+| 56 | `Automated context for long topics. The council approves; the model proposes. …` | `AdminSettings.dc.html:83` | `Automated context for long topics. Staff set the terms; the model proposes and local validation decides. …` — **ADR 0019 §2 forbids claiming per-generation human approval.** |
+| 57 | `claude-sonnet-4-6` / `medium` / `ti.summary.v7`; `Nominal`; `Last run 6 minutes ago`; `sha256:4b1e…c802` | `AdminSettings.dc.html:151-153,152,154,174` | Server-rendered from the validated provider configuration; the real heartbeat classification; `human_datetime($dashboard['heartbeat']['completed_at'])`; **no digest at all** (C-34/FR-25). |
+| 58 | Demo hosts `https://ops.imladris.council/hooks/forum`, `https://id.imladris.council/realms/council`, `Council Keycloak`, `mellon@imladris.council`, `haldir@lorien.test`, `Haldir`, `Mellon` | `AdminIntegrations.dc.html:397,411,412` | Fixtures: `https://ops.example.com/hooks/forum`, `https://id.example.com/realms/main`, `Corporate Keycloak`, `first@example.com`, neutral usernames. |
+| 59 | Token/secret prefixes `iml_pat_`, `whsec_iml_` | `AdminIntegrations x-dc:464,489,511` | Production already mints `rbt_` (`ApiTokenService.php:96`) and bare hex (`WebhookService.php:57`) — no change. |
+| 60 | `community.imladris` (the only fiction in **markup** on admin-packages) | `AdminPackages.dc.html:53` | Already dynamic in production: `<?= $e($registry['source_id']) ?>` (`packages.php:18`). |
+| 61 | Package fixtures — `Council registry`, `Lórien mirror`, `https://packages.imladris.council`, `https://registry.lorien.example`, `Imladris Council`/`imladris-council`, `Lórien Works`, `Orthanc Labs`, `imladris/anti-abuse`, `imladris/digest`, `lorien/twilight-theme`, `orthanc/exporter`, `Anti-abuse scanner`, `Daily digest`, `Twilight theme`, `Archive exporter`, `imladris-2026-a`, `IML-2026-0031`, `@elrond` | `AdminPackages x-dc:487-546` | All dynamic (`display_name`, `base_url`, `publisher_name`, `package_uid`, `key_id`, `advisory_uid`, audit actor). |
+| 62 | `Awaiting the council's sign-off on generated brief tone.` | `AdminFeatures.dc.html:309` | Not applicable — the whole `Ready for acceptance` status is retired (C-24). |
+| 63 | `Loremaster of Evals`; badge catalogue samples `Welcome`, `First Thread`, `Trusted Answerer`, `Problem Solver`, `Anniversary`; preview users `elrond`, `galadriel`, `erestor`, `glorfindel`, `arwen`, `lindir`, `mellon` | `AdminFeatures x-dc:336,341,345-351`; `AdminMembers x-dc:517` | Data-driven from `BadgeRepository` / `BadgeRuleService::preview()`; no literal ships. |
+| 64 | Emoji placeholders `mallorn`, `Mallorn leaf`, `/emoji/mallorn.webp`; catalogue samples `vilya`/`Ring of air`, `forge`/`Forge fire`, `palantir`/`Palantír` | `AdminFeatures.dc.html:227,231,235`, `x-dc:355-358` | Keep production's `party` / `Party` / `/emoji/party.webp` (`custom_emoji.php:31,36,41`); catalogue rows come from `CustomEmojiService::catalogue()`. |
+| 65 | Board-scope options `evaluations`, `audit-trails`, `interpretability`, `introductions` | `AdminFeatures.dc.html:162`; `AdminMembers.dc.html:470` | Real board names from `BoardRepository::allOrdered()`. |
+| 66 | `https://imladris.example/join/{token}` | `AdminMembers x-dc:840` | `{app.url}/invite/{token}` — production's real shape (`AdminInvitationController.php:58-61`). |
+| 67 | Title ladder `Master of the House`, `Legend`, `Loremaster`, `Counsellor`, `Companion`, `Newcomer` | `AdminMembers x-dc:520-537` | Operator-set `users.title`; configured ladder labels from `TitleService::derive()` (floor label is `New`). |
+| 68 | Free-text fixtures — `Misrepresenting the council record.`, `Fabricated audit entries`, `Do not reinstate without a full review of the audit trail.`, `Volunteered to keep the evaluations board through the summer.`; `by @elrond` / `by @galadriel` / `by @system`; `@imladris.council`, `@orthanc.test`, `@lorien.test` | `AdminMembers x-dc` warning/ban/note/history fixtures | Operator-authored free text and real usernames/emails behind the PII gate; never shipped. |
+| 69 | `Et Eärello Endorenna utúlien.` | *(not a design string — see §3.2)* | — |
+
+**69 deduplicated fiction rows.** Two non-lexicon but equally unshippable design strings are tracked
+alongside them because a verbatim copy would ship a falsehood, not a register violation:
+*"Renaming is safe — the old slug keeps working."* and *"Archiving hides a board without losing a
+word of it."* (`AdminContent.dc.html:38`) — see FR-14 and `ADMIN.md` §4.4 (archive is
+read-only-but-visible-and-searchable). Also non-fiction but flagged: the design's `★`/`☆` at
+`AccountSettings:323-324` violate the design system's own no-emoji-in-chrome rule — and production
+has the same violation at `account/boards.php:37`.
+
+### 3.2 Production strings that are **already** fiction
+
+**TEST-PINNED — each needs its own owner decision; do not change inside this migration.**
+
+| Production string | Where | Test pin |
+|---|---|---|
+| `Removed by a warden` | `templates/partials/post_deleted.php:13` | `AppDeletedPostStubTest:38,49,60,89`; `thread-content-presentation.spec.ts:76`. **Shipped by ADR 0023 item 2.** |
+| `Commends` | `templates/partials/post.php:33` | `AppCouncilTopicFidelityTest:48,51`; `AppProfileFidelityTest:15` — which states explicitly that the kit label *"is not changed"*. |
+| `Private counsel` / `in counsel` | `templates/dm/show.php:23`, `partials/dm_list.php:26,33`, `dm/new.php:24,39` | `AppImladrisFidelityTest:293,302`. |
+| `sort=commends` (query value) | `/u/{username}` | `AppProfileActivityTest:188-194`. |
+
+**FREE to change — unpinned, and in or adjacent to this migration's scope.**
+
+| Production string | Where | Proposed | Note |
+|---|---|---|---|
+| `Operator desk` ×3, `Accountability`, `Appearance`, `Runtime controls`, `Moderation`, `Operations` (page-head eyebrows) | `admin/{dashboard:6, branding:11, settings:14, audit:12, custom_emoji:12, features:6, moderation:16, thread_intelligence:6}` | **Delete** | Not fiction, but deleted design; §0.1. No test pins any of them. |
+| `Warden's table` ×4 | `mod/{reports:18, approvals:12, appeals:12, user:27}` | **Delete with the eyebrow** | Deleting the eyebrow discharges all four fiction strings at once — record it so the de-fiction slice does not double-count them. |
+| `Council record` / `The council record keeps the original action and your reason together.` | `appeals/index.php:5,28` | `Moderation` / `The moderation record keeps…` | |
+| `…and preview before the council sees the updated hall.` | `admin/branding.php:20` | `…and preview the change before it goes live for everyone.` | The only fiction hit in the whole appearance surface. |
+| `You still earn regard; you just won't be ranked publicly.` | `account/privacy.php:40` | `You still earn reputation; …` | |
+| `Regard`, `Regard recognises contribution; it grants no powers.`, `…regard`, `.profile-regard-*`, `?tab=commends` | `profile/show.php:269,270,314`; `ProfileController.php:78,137` | `Reputation` / matching classes | ⚠ **Scope decision required.** Changing only `privacy.php:40` leaves the member console saying *reputation* while the public profile two clicks away says *Regard*. Either de-fiction repo-wide or record the inconsistency deliberately. Note `?tab=commends` is adjacent to the **pinned** `sort=commends`. |
+| `Welcome back to the council`; `Your seat at the council is ready.` | `auth/login.php:4`; `auth/verify.php:7` | `Welcome back`; `Your account is ready.` | |
+| `Et Eärello Endorenna utúlien.` | `layout.php:74` (`variant=auth` colophon) | Delete, or a plain tagline | Shell-adjacent; touched by any `layout.php` slice. |
+| `Vilya · Expose` | `account/boards.php:84` (hard-coded placeholder) | A real category name | |
+| `The council` | `leaderboard.php:5` | `Community` | Outside admin/account scope; listed for completeness. |
+| `Remove topic (warden)` / `Remove (warden)` | `partials/post_toolbar.php:55,101` | `Remove topic (moderator)` / `Remove (moderator)` | Outside scope, and adjacent to the **pinned** `Removed by a warden` — decide together. |
+
+---
+
+## 4. DESIGN-SIDE GAPS — design sections with no production home
+
+**Every entry: do not build it, and do not ship dead chrome.** Each is recorded in
+`docs/adr/0024-imladris-admin-account-adoption.md` §"Design-side sections with no production home",
+one table, one owner. This is the full list; the ledger rows in §1.4 carry the evidence.
+
+| # | Gap | Screen | Ledger row |
+|---|---|---|---|
+| 1 | `Regard` rail item + reputation-ledger pane (and `Commends given` as a metric) | account-settings | FR-01 |
+| 2 | Password strength meter, five tiers | account-settings | FR-02 |
+| 3 | 2FA cancel/abandon affordance (and the empty QR square) | account-settings | FR-03 / FC-04 |
+| 4 | Persistent recovery-code grid | account-settings | FR-04 |
+| 5 | Operator-defined profile-field schema | account-settings | FR-05 |
+| 6 | `Hidden — wardens only` visibility option | account-settings | FR-06 |
+| 7 | `Members I have replied to` DM scope (the middle predicate only) | account-settings | FC-06 |
+| 8 | Per-event email switches ×3 | account-settings | FC-05 |
+| 9 | Drafts autosave composer card | account-settings | FR-07 |
+| 10 | The topbar back-out affordance on the settings surface | account-settings | FR-08 |
+| 11 | Amber `Waiting` queue tier | admin-overview | FR-09 |
+| 12 | Attention-row ages | admin-overview | FR-10 |
+| 13 | The two uncomputed Community-today metrics | admin-overview | FR-11 |
+| 14 | Per-panel error retry (and the loading skeleton, blocked by PE) | admin-overview | FR-12 / C-30 |
+| 15 | The `72-hour promise` appeal SLA | admin-overview | FR-13 |
+| 16 | Category slugs and the "old slug keeps working" claim for categories | admin-content | FR-14 |
+| 17 | Drag reorder | admin-content | FR-15 (ADR 0021 deferral #8) |
+| 18 | The six deferred board fields | admin-content | FR-16 (ADR 0021 deferral #6) |
+| 19 | The roles filter bar and its filtered empty state | admin-people | FR-17 |
+| 20 | Assignments on system roles | admin-people | FR-18 |
+| 21 | A theme `deactivate` button | admin-appearance | FR-19 |
+| 22 | Bounce/complaint ingestion | admin-notifications | FR-20 |
+| 23 | The 30-day delivery-log retention claim | admin-notifications | FR-21 |
+| 24 | `verify` / `reset` delivery kinds | admin-notifications | FR-22 |
+| 25 | The `Invitations feature is enabled` checkbox | admin-settings | FR-23 |
+| 26 | The `All` / `Failed only` evidence filter | admin-settings | FR-24 |
+| 27 | The evidence `Digest` column (affirmatively forbidden) | admin-settings | FR-25 / C-34 |
+| 28 | The recovery drill — **design-only prototype scaffolding, out of scope** | admin-features | FR-26 |
+| 29 | `federation` / `analytics_export` flags and the design's readiness assignments | admin-features | FR-27 |
+| 30 | *"Assets are served from the media root"* | admin-features | FR-28 |
+| 31 | `Ready for acceptance` readiness status (retired by ADR 0022, negatively pinned) | admin-features | C-24 |
+| 32 | The bulk `skipped — administrator` pre-flight marker on the **warn** path | admin-members | FR-29 |
+| 33 | The Extensions tab rendered live while `server_extensions` is dark | admin-packages | FR-30 / C-32 |
+| 34 | Relative timestamps ("Last run 6 minutes ago", "reachable · 3h ago", "3 unclaimed · …") | admin-settings, admin-integrations, admin-members | **`human_relative()` is not added** (`R-cross-cutting` §6): production has no relative time anywhere by consistent practice (`grep "ago\b" templates/ src/Support/` → zero hits), relative time is unverifiable on a server-rendered page under PE, and the design's relative strings live in the same `x-dc` fixture blocks as `Erestor` and `Europe / Rivendell`. **One formatter for every admin and account timestamp: `human_datetime()`** — `audit_datetime()` is rejected; the design's difference is CSS (`--font-mono`, `.78rem`, `--text-faint`, `nowrap`), not PHP. Keep `human_date()` where a date without a time is the honest granularity (`Joined`, `Last seen`, ban `lifted`/`until`) — collapsing those to a minute-precise value in a directory is a privacy regression. |
+
+**Closed at source, not a gap:** `Default sort` (Reading ▸ Pagination). The upstream refresh deleted
+the control; the design has converged on production's `PreferenceSchema::VERSION = 3` fixed order.
+**F2 conflict C1 is closed** — do not carry it into a slice or the ADR.
+
+---
+
+## 5. PRODUCTION-SIDE UNREPRESENTED — production pages with no design representation
+
+Coverage arithmetic: `templates/admin/` holds 42 files, three `_`-prefixed partials → **39 pages**;
+the eleven design screens cover **37**.
+
+| Surface | Route | Flag | Recommended policy |
+|---|---|---|---|
+| `templates/admin/moderation.php` — Anti-abuse (mode select + blocked words) | `GET/POST /admin/moderation` | `anti_abuse` (ON) | **Restyle to the shared chrome only** (console chrome + shared component CSS); **no body adoption**. This is the only admin page with **zero** design content anywhere — `grep` across the eleven screens hits only an audit-log fixture row and a triage line on `AdminOverview`, and a fictional *package named* "Anti-abuse scanner" on `AdminPackages`. Raise the ownership gap upstream in the design project and record it in ADR 0024. |
+| `templates/admin/board_edit.php` — board settings + moderator roster + member roster | `GET /admin/boards/{id}/edit` + four roster POSTs | core | **Adopt by extrapolation, explicitly labelled as extrapolation** (FA-09): reuse the Add-a-board grid for settings and the category-card/board-row anatomy for the rosters. The design draws an `Edit` link to nothing. Keep the four 422 roster re-render paths; ADR 0023 #3 keeps this admin-only. It is also **visited by no Playwright spec at all**. |
+| `templates/mod/reports.php` | `GET /mod/reports` | `moderation_queue` (ON) | **Conditional `/mod` chrome slice.** Restyle to the shared chrome; **role-filter or omit the tier** (C-04) — never show a board moderator ten destinations that all 403. Out of scope: reports-queue bulk actions (ADR 0023 deferral #1). Also carries the `Warden's table` eyebrow (§3.2). Its `.mod-subnav` is already structurally the design's underline tab strip — the generalisation is a rename plus 2px of padding and .02rem of type, not new authoring. |
+| `templates/mod/approvals.php` | `GET /mod/approvals` | `moderation_queue` | Same. `grep "Approvals"` across all ten admin screens returns **zero hits**. Thread-level restore stays deferred (ADR 0023 deferral #2). |
+| `templates/mod/appeals.php` | `GET /mod/appeals` | `appeals` (ON) | Same. `AdminOverview` has an `Appeals` **counter** only. |
+| `templates/mod/user.php` | `GET /mod/u/{id}` | core — ADR 0023 D1 makes it a 404 without authority | Same. The moderator-scoped record; `AdminMembers` models only the **admin** record. Note `admin-remediation.spec.ts:298` asserts `Audit trail` is **absent** here — never introduce the string. A deputy-facing roster stays deferred (ADR 0023 deferral #3). |
+| `templates/appeals/index.php` (member-facing) | `GET /appeals` | `appeals` | **Restyle to the account shell only**; the rail entry already exists. `AccountSettings` has no Appeals tab, so the rail item is recorded as `feature-added` (FA-03). Also carries `Council record` fiction (§3.2). |
+| `templates/account/composing.php` | `GET/POST /settings/composing` | core | **Keep the route; adopt the design's Composing *content***, which lives inside the Reading pane at `AccountSettings.dc.html:349-354` (three switches, verbatim in concept). The **rail item** is `feature-added`, not "never modelled" (FA-04) — this corrects `D-account-settings` H3/#65 and `D-shell` S32. |
+| `GET /admin/email/export` (CSV) | — | `email` | **Leave alone.** Behaviour-only, no page. Style only the link that reaches it. Note `email.php:97` hard-codes the status list instead of reading `AdminEmailController::STATUSES`, which drives validation *and* this export — a two-copy drift worth one line in the slice. |
+| `GET /settings/preferences/export` | — | core | **Leave alone.** Style the link. |
+| `POST /admin/link-previews/{id}/refresh\|purge` | — | `link_previews` (**OFF**) | **Leave alone; defer with the ADR.** **ADR 0021 deferral #7** already owns it as "Missing admin operations". Do **not** invent a console. |
+| `templates/admin/extensions.php` | `GET /admin/extensions` | `server_extensions` (**OFF**) | **Represented but unshippable as drawn.** Ship the tab **disabled** with the pinned note and rewrite the callout copy — see FR-30 / C-32. |
+| `templates/admin/tags.php` + `tag_merge_confirm.php` | `/admin/tags`, `/admin/tags/{id}/merge` | `tags` (ON) | Represented in the design, but **visited by no Playwright spec** — only a nav-destination assertion. A new `content-console.spec.ts` must be authored (none exists). |
+| Seven account panes — `/settings/{privacy,appearance,notifications,connections,sessions,blocks,boards}` | — | core / mixed | Represented in the design, but **visited by no Playwright spec**. A new `account-console.spec.ts` must be authored. Under `DESIGN.md` §13 every screen here is UI-visible, so PHPUnit alone is never sufficient — and `.github/workflows/browser-evidence.yml` runs `npm run evidence` (15 of 28 specs) as the **only** CI. `role-assignments.spec.ts` is reachable from no named script at all and must be added to `evidence`. |
+
+---
+
+## 6. Standing execution rules carried out of Stage 1
+
+These are not deviations; they are the conditions under which any Stage-2 slice may run. Recorded
+here because the ledger is the artifact Stage 2 reads.
+
+1. **One ADR, one plan doc, one owner.** `docs/adr/0024-imladris-admin-account-adoption.md` and
+   `docs/superpowers/plans/2026-08-03-imladris-admin-account-adoption.md`. The eleven separately
+   proposed `0024-*.md` files collapse into sections of the one ADR — otherwise DESIGN §13's
+   "deferrals are never silently dropped" fails by accident. Local mirror deltas append to the
+   existing `LOCAL_RECONCILIATION.md`. No slice opens a second ADR.
+2. **A blocking live defect precedes every slice.** `composer build:imladris`, `check:imladris` and
+   `verify:imladris` are **all red right now on a clean checkout**: the mid-pass DesignSync refresh
+   rewrote `manifest.json` (`unresolved_gaps` no longer `[]`) and `production-contract.json`
+   (`reconciled_through_commit` and `surface_specs` deleted). Repair is commit 1 of the first slice;
+   **do not bump `reconciled_through_commit`** — `ImladrisRuntimeAssetTest` pins the literal
+   `6d81da590a12bd09bb8d0e282c042aa03d755a94`.
+3. **`.admin-bar`/`.admin-tier` CSS ships from the build, not by hand.** The builder reads
+   `docs/design-system/imladris/`; `resources/imladris/` and `public/assets/imladris.css` are
+   **outputs**. The eleven tier class names appear **zero** times in `app.css`, so they are
+   uncontested and the layered rules render as authored. The application complement
+   (`.admin-console`, `.admin-title`, `.admin-tabs`, `.admin-tab*`, `.admin-tier-item.is-disabled`,
+   `.admin-pane`, every ≤860px rule) is hand-authored **unlayered in `app.css`**.
+4. **`.presence-staff` reintroduces the AA regression the mirror fixed.** Building to get the tier
+   also ships `background: var(--gold-100); color: var(--gold-700)` — 3.55:1 against a 4.5:1
+   requirement, and it does not flip in the twilight register. Patch it to
+   `--surface-staff`/`--on-staff` in the mirror before the build, record it in
+   `LOCAL_RECONCILIATION.md`, and raise it upstream. Rule-level exclusion from the build is not
+   available (`CSS_SOURCES` takes whole files).
+5. **`config/imladris-runtime-baseline.json` is refreshed exactly once per merge, on `main`, by the
+   merger, as the immediately-following commit.** No slice branch may contain a change to that file;
+   the digest is not mergeable, and resolving a conflict by picking either side is silently wrong.
+   Only `application_surface.sha256` is refreshable.
+6. **Standing per-slice gates:** the CSP scan (`rg -n "<script|<style| on[a-z]+=" templates/ -S`);
+   `vendor/bin/phpunit` read to completion with a private `DB_TEST_DATABASE`; the named Playwright
+   specs on **desktop and mobile**; a `javaScriptEnabled:false` pass over every touched route;
+   screenshots to `docs/evidence/<slice>/{desktop,mobile,comparisons}/`; and axe under
+   `data-theme="system"` + `prefers-color-scheme: dark`.

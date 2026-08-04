@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Admin — members & invitations" description="The member directory with filters, sorting and audited bulk moderation; the full user record (PII reveal, restrictions, role change, warnings, notes, badges, history); and invitation issue/revoke with the one-time link" -->
+<helmet>
+<script src="./ds-base.js"></script>
+<style>
+  html { scrollbar-gutter: stable; }
+  body { margin: 0; background: var(--surface-page); }
+  @keyframes amRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+
+<div data-screen-label="Admin — members" style="min-height: 100vh; background: var(--surface-page); font-family: var(--font-body); color: var(--text-body);">
+
+  <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.AdminNav" area="members" hint-size="100%,101px"></x-import>
+
+  <div style="max-width: 1160px; margin: 0 auto; padding: 22px 28px 110px;">
+
+    <h1 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2.1rem; line-height: 1.1; letter-spacing: -0.01em; color: var(--text-strong);">Members &amp; invitations</h1>
+
+    <nav aria-label="Member sections" style="display: flex; flex-wrap: wrap; gap: 2px; margin: 16px 0 0; border-bottom: 1px solid var(--border-hair);">
+      <sc-if value="{{ atDirectory }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goDirectory }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Directory</button></sc-if>
+      <sc-if value="{{ offDirectory }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goDirectory }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Directory</button></sc-if>
+      <sc-if value="{{ atInvites }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goInvites }}" aria-current="page" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid var(--gold-500); background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-strong); cursor: pointer;">Invitations</button></sc-if>
+      <sc-if value="{{ offInvites }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goInvites }}" style="padding: 9px 15px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; font-family: var(--font-label); font-size: .84rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Invitations</button></sc-if>
+    </nav>
+
+    <sc-if value="{{ flash }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; align-items: flex-start; gap: 11px; margin-top: 20px; padding: 12px 16px; background: var(--surface-done); border: 1px solid var(--green-200); border-left: 3px solid var(--success); border-radius: var(--radius-md); animation: amRise 200ms ease-out;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--on-done)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.4l2.4 2.4 4.6-5"></path></svg>
+        <p style="margin: 0; font-size: .93rem; line-height: 1.5; color: var(--on-done);">{{ flashText }}</p>
+      </div>
+    </sc-if>
+
+    <!-- ═══ Directory ═══ -->
+    <sc-if value="{{ showDirectory }}" hint-placeholder-val="{{ true }}">
+    <div style="padding-top: 24px;">
+
+      <section style="padding: 18px 22px 16px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 13px 16px;">
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Search</span>
+            <input type="search" value="{{ dq }}" onInput="{{ onQ }}" maxlength="80" placeholder="Username, name, or email" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Role</span>
+            <select value="{{ drole }}" onChange="{{ onRole }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              <option value="">Any role</option><option value="user">User</option><option value="moderator">Moderator</option><option value="admin">Admin</option>
+            </select>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">State</span>
+            <select value="{{ dstatus }}" onChange="{{ onStatus }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              <option value="">Any state</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="banned">Banned</option><option value="deactivated">Deactivated</option>
+            </select>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Last seen</span>
+            <select value="{{ dseen }}" onChange="{{ onSeen }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              <option value="">Any time</option><option value="1">Past 24 hours</option><option value="7">Past 7 days</option><option value="30">Past 30 days</option><option value="90">Past 90 days</option><option value="never">Never</option>
+            </select>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Min posts</span>
+            <input type="number" min="0" value="{{ dmin }}" onInput="{{ onMin }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Max posts</span>
+            <input type="number" min="0" value="{{ dmax }}" onInput="{{ onMax }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+          <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ applyFilters }}" hint-size="118px,32px">Apply filters</x-import>
+          <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="ghost" onClick="{{ resetFilters }}" hint-size="70px,32px">Reset</x-import>
+          <span style="margin-left: auto; font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ resultLabel }}</span>
+        </div>
+      </section>
+
+      <sc-if value="{{ bulkError }}" hint-placeholder-val="{{ false }}">
+        <p role="alert" style="margin: 14px 0 0; padding: 10px 14px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .9rem; color: var(--danger);">{{ bulkErrorText }}</p>
+      </sc-if>
+
+      <section style="margin-top: 16px; padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+        <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: .92rem;">
+          <thead><tr>
+            <th scope="col" style="width: 34px; padding: 11px 6px 9px 0; border-bottom: 1px solid var(--border-soft);"><input type="checkbox" checked="{{ allSelected }}" onChange="{{ toggleAll }}" aria-label="Select all members on this page" style="width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;"></th>
+            <th scope="col" style="padding: 11px 10px 9px 0; text-align: left; border-bottom: 1px solid var(--border-soft);"><button onClick="{{ sortUser }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-strong);">Member{{ arrowUser }}</button></th>
+            <th scope="col" style="padding: 11px 10px 9px; text-align: left; border-bottom: 1px solid var(--border-soft);"><button onClick="{{ sortRole }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-strong);">Role{{ arrowRole }}</button></th>
+            <th scope="col" style="padding: 11px 10px 9px; text-align: left; border-bottom: 1px solid var(--border-soft);"><button onClick="{{ sortState }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-strong);">State{{ arrowState }}</button></th>
+            <th scope="col" style="padding: 11px 10px 9px; text-align: right; border-bottom: 1px solid var(--border-soft);"><button onClick="{{ sortRep }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-strong);">Regard{{ arrowRep }}</button></th>
+            <th scope="col" style="padding: 11px 10px 9px; text-align: right; border-bottom: 1px solid var(--border-soft);"><button onClick="{{ sortPosts }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-strong);">Posts{{ arrowPosts }}</button></th>
+            <th scope="col" style="padding: 11px 10px 9px; text-align: left; border-bottom: 1px solid var(--border-soft); font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint);">Last seen</th>
+            <th scope="col" style="padding: 11px 0 9px 10px; text-align: left; border-bottom: 1px solid var(--border-soft);"><button onClick="{{ sortJoined }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); cursor: pointer;" style-hover="color: var(--text-strong);">Joined{{ arrowJoined }}</button></th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ rows }}" as="u" hint-placeholder-count="6">
+              <tr>
+                <td style="padding: 10px 6px 10px 0; border-bottom: 1px solid var(--border-hair);"><input type="checkbox" checked="{{ u.selected }}" onChange="{{ u.toggle }}" aria-label="{{ u.selectLabel }}" style="width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;"></td>
+                <td style="padding: 10px 10px 10px 0; border-bottom: 1px solid var(--border-hair);">
+                  <span style="display: inline-flex; align-items: center; gap: 9px;">
+                    <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ u.display }}" username="{{ u.username }}" size="sm" hint-size="28px,28px"></x-import>
+                    <button onClick="{{ u.open }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-body); font-size: .95rem; color: var(--accent); text-decoration: none; cursor: pointer;" style-hover="text-decoration: underline;">{{ u.username }}</button>
+                    <span style="color: var(--text-faint); font-size: .88rem;">{{ u.display }}</span>
+                  </span>
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                  <sc-if value="{{ u.isAdmin }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--brand-subtle); color: var(--green-800); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">admin</span></sc-if>
+                  <sc-if value="{{ u.isMod }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--gold-100); color: var(--gold-700); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">moderator</span></sc-if>
+                  <sc-if value="{{ u.isUser }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">user</span></sc-if>
+                  <sc-if value="{{ u.boardMod }}" hint-placeholder-val="{{ false }}"><span style="margin-left: 5px; padding: 1px 8px; border-radius: 999px; background: var(--surface-info); color: var(--on-info); font-family: var(--font-label); font-size: .63rem; letter-spacing: .05em;">board mod</span></sc-if>
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                  <sc-if value="{{ u.stActive }}" hint-placeholder-val="{{ true }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--success);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--leaf);"></span>active</span></sc-if>
+                  <sc-if value="{{ u.stSuspended }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--on-review);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--amber);"></span>suspended</span></sc-if>
+                  <sc-if value="{{ u.stBanned }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--danger);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--rust);"></span>banned</span></sc-if>
+                  <sc-if value="{{ u.stDeactivated }}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-label); font-size: .72rem; color: var(--text-muted);"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ink-300);"></span>deactivated</span></sc-if>
+                </td>
+                <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ u.repText }}</td>
+                <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ u.posts }}</td>
+                <td style="padding: 10px; font-size: .88rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ u.lastSeenText }}</td>
+                <td style="padding: 10px 0 10px 10px; font-size: .88rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ u.joined }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 44px 20px; text-align: center;">
+            <h3 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 1.2rem; color: var(--text-strong);">No members match these filters</h3>
+            <p style="margin: 6px 0 0; font-size: .93rem; color: var(--text-muted);">Reset the filters to see the whole directory.</p>
+          </div>
+        </sc-if>
+      </section>
+
+      <sc-if value="{{ bulkOn }}" hint-placeholder-val="{{ true }}">
+      <fieldset style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 16px 0 0; padding: 15px 20px; background: var(--surface-sunken); border: 1px solid var(--border-hair); border-radius: var(--radius-lg);">
+        <legend style="padding: 0 8px; font-family: var(--font-label); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-ink);">Bulk actions</legend>
+        <select value="{{ bulkAction }}" onChange="{{ onBulkAction }}" aria-label="Bulk action" style="padding: 7px 11px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-raised); font-family: var(--font-body); font-size: .9rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          <option value="">Choose an action…</option><option value="warn">Warn selected</option><option value="suspend">Suspend selected</option>
+        </select>
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ reviewBulk }}" hint-size="150px,32px">Review and apply…</x-import>
+        <span style="font-family: var(--font-label); font-size: .74rem; letter-spacing: .04em; color: var(--text-faint);">{{ selectedLabel }}</span>
+        <p style="flex: 1 1 100%; margin: 2px 0 0; font-size: .88rem; color: var(--text-muted);">You confirm the shared reason on the next screen; every member is actioned and audited individually.</p>
+      </fieldset>
+      </sc-if>
+
+      <nav aria-label="Pagination" style="display: flex; gap: 9px; margin-top: 18px;">
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" disabled="{{ true }}" hint-size="96px,32px">Previous</x-import>
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" hint-size="72px,32px">Next</x-import>
+      </nav>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Bulk confirmation ═══ -->
+    <sc-if value="{{ showBulk }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px; animation: amRise 220ms ease-out;">
+      <button onClick="{{ cancelBulk }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>All members</button>
+      <section style="max-width: 720px; padding: 22px 24px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <h2 style="margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.5rem; color: var(--text-strong);">{{ bulkTitle }}</h2>
+        <p style="margin: 0 0 16px; max-width: 68ch; font-size: .93rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">{{ bulkBlurb }}</p>
+        <ul style="margin: 0 0 18px; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+          <sc-for list="{{ bulkSubjects }}" as="s" hint-placeholder-count="3">
+            <li style="display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ s.display }}" username="{{ s.username }}" size="sm" hint-size="28px,28px"></x-import>
+              <span style="font-family: var(--font-mono); font-size: .85rem; color: var(--text-strong);">{{ s.at }}</span>
+              <span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">{{ s.role }}</span>
+              <span style="font-family: var(--font-label); font-size: .72rem; color: var(--text-faint);">{{ s.status }}</span>
+              <sc-if value="{{ s.skipped }}" hint-placeholder-val="{{ false }}"><span style="margin-left: auto; font-family: var(--font-label); font-size: .7rem; color: var(--on-review);">skipped — administrator</span></sc-if>
+            </li>
+          </sc-for>
+        </ul>
+        <sc-if value="{{ bulkFormError }}" hint-placeholder-val="{{ false }}">
+          <p role="alert" style="margin: 0 0 13px; padding: 10px 14px; background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised)); border-left: 3px solid var(--rust); border-radius: var(--radius-md); font-size: .9rem; color: var(--danger);">{{ bulkFormErrorText }}</p>
+        </sc-if>
+        <div style="display: flex; flex-direction: column; gap: 13px;">
+          <label style="display: flex; flex-direction: column; gap: 5px;">
+            <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Reason (shared; shown to each member)</span>
+            <input value="{{ bulkReason }}" onInput="{{ onBulkReason }}" maxlength="255" style="padding: 9px 12px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .95rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+          </label>
+          <sc-if value="{{ bulkIsSuspend }}" hint-placeholder-val="{{ false }}">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Until (UTC, optional — blank is indefinite)</span>
+              <input value="{{ bulkUntil }}" onInput="{{ onBulkUntil }}" placeholder="YYYY-MM-DD HH:MM:SS" style="padding: 9px 12px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+          </sc-if>
+          <div style="display: flex; align-items: center; gap: 11px; margin-top: 3px;">
+            <sc-if value="{{ bulkIsSuspend }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="danger" onClick="{{ applyBulk }}" hint-size="150px,32px">{{ bulkConfirmLabel }}</x-import></sc-if>
+            <sc-if value="{{ bulkIsWarn }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ applyBulk }}" hint-size="150px,32px">{{ bulkConfirmLabel }}</x-import></sc-if>
+            <button onClick="{{ cancelBulk }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .8rem; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--text-strong);">Cancel</button>
+          </div>
+        </div>
+      </section>
+    </div>
+    </sc-if>
+
+    <!-- ═══ User record ═══ -->
+    <sc-if value="{{ showRecord }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px; animation: amRise 220ms ease-out;">
+      <button onClick="{{ backToDirectory }}" style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 14px; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); cursor: pointer;" style-hover="color: var(--accent);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>All members</button>
+
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+        <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Monogram" name="{{ rec.display }}" username="{{ rec.username }}" size="xl" gilt="{{ true }}" hint-size="64px,64px"></x-import>
+        <span>
+          <h2 style="margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 2rem; line-height: 1.1; color: var(--text-strong);">{{ rec.display }}</h2>
+          <span style="display: block; margin-top: 3px; font-family: var(--font-mono); font-size: .88rem; color: var(--text-muted);">{{ rec.at }}</span>
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; align-items: start;">
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 14px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Status</h3>
+          <dl style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px 18px; margin: 0;">
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Role</dt><dd style="margin: 4px 0 0; font-size: .98rem; color: var(--text-strong);">{{ rec.role }}</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">State</dt><dd style="margin: 4px 0 0; font-size: .98rem; color: var(--text-strong);">{{ rec.status }}</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Regard</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .95rem; color: var(--text-strong);">{{ rec.repText }}</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Posts</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .95rem; color: var(--text-strong);">{{ rec.posts }}</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Joined</dt><dd style="margin: 4px 0 0; font-size: .95rem; color: var(--text-body);">{{ rec.joined }}</dd></div>
+            <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Last seen</dt><dd style="margin: 4px 0 0; font-size: .95rem; color: var(--text-body);">{{ rec.lastSeenText }}</dd></div>
+          </dl>
+          <sc-if value="{{ rec.suspendedUntil }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 14px 0 0; padding: 9px 13px; background: var(--surface-review); border-radius: var(--radius-md); font-size: .9rem; color: var(--on-review);">Suspended until {{ rec.suspendedUntilText }}</p>
+          </sc-if>
+          <p style="margin: 14px 0 0;"><a href="#" style="font-size: .92rem; color: var(--accent);">View public profile</a></p>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 6px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Contact &amp; signals</h3>
+          <sc-if value="{{ piiHidden }}" hint-placeholder-val="{{ true }}">
+            <p style="margin: 0 0 14px; max-width: 60ch; font-size: .92rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Email and recently observed IPs are hidden by default (ADMIN §5.5). Revealing them writes a <code style="font-family: var(--font-mono); font-size: .82rem;">view_pii</code> audit entry naming you.</p>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" onClick="{{ revealPii }}" hint-size="200px,32px">Reveal email &amp; IPs (audited)</x-import>
+          </sc-if>
+          <sc-if value="{{ piiShown }}" hint-placeholder-val="{{ false }}">
+            <dl style="display: flex; flex-direction: column; gap: 11px; margin: 12px 0 0;">
+              <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Email</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .88rem; color: var(--text-strong);">{{ rec.email }}</dd></div>
+              <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Recent session IPs</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);">{{ rec.sessionIps }}</dd></div>
+              <div><dt style="font-family: var(--font-label); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint);">Recent post IPs</dt><dd style="margin: 4px 0 0; font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);">{{ rec.postIps }}</dd></div>
+            </dl>
+            <p style="margin: 13px 0 0; font-size: .88rem; color: var(--text-muted);">Shown for this view only; this access was written to the audit log. IPs are anonymised on the retention schedule.</p>
+          </sc-if>
+        </section>
+      </div>
+
+      <section style="margin-top: 18px; padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+        <h3 style="margin: 0 0 6px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Account restrictions</h3>
+        <sc-if value="{{ rec.restricted }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0 18px; padding: 12px 16px; background: var(--surface-review); border-radius: var(--radius-md);">
+            <span style="font-size: .93rem; color: var(--on-review);">{{ rec.restrictionText }}</span>
+            <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ liftRestriction }}" hint-size="120px,32px">Lift restriction</x-import>
+          </div>
+        </sc-if>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; margin-top: 14px;">
+          <div>
+            <h4 style="margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; color: var(--text-strong);">Suspend</h4>
+            <p style="margin: 0 0 12px; font-size: .9rem; line-height: 1.5; color: var(--text-muted);">Temporary read-only state; reversible with Lift and auto-expires when an Until is set.</p>
+            <sc-if value="{{ suspendErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 10px; font-size: .88rem; color: var(--danger);">{{ suspendErrText }}</p></sc-if>
+            <div style="display: flex; flex-direction: column; gap: 11px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Reason</span>
+                <input value="{{ suspendReason }}" onInput="{{ onSuspendReason }}" maxlength="255" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Until (UTC, optional)</span>
+                <input value="{{ suspendUntil }}" onInput="{{ onSuspendUntil }}" placeholder="YYYY-MM-DD HH:MM:SS" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .85rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="danger" onClick="{{ doSuspend }}" hint-size="90px,32px">Suspend</x-import></span>
+            </div>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 1.15rem; color: var(--text-strong);">Permanent ban</h4>
+            <p style="margin: 0 0 12px; font-size: .9rem; line-height: 1.5; color: var(--text-muted);">{{ banBlurb }}</p>
+            <sc-if value="{{ banErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 10px; font-size: .88rem; color: var(--danger);">{{ banErrText }}</p></sc-if>
+            <div style="display: flex; flex-direction: column; gap: 11px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Reason</span>
+                <input value="{{ banReason }}" onInput="{{ onBanReason }}" maxlength="255" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <sc-if value="{{ banGate }}" hint-placeholder-val="{{ true }}">
+                <label style="display: flex; flex-direction: column; gap: 5px;">
+                  <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">{{ banConfirmLabel }}</span>
+                  <input value="{{ banConfirm }}" onInput="{{ onBanConfirm }}" autoComplete="off" spellCheck="{{ false }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                </label>
+              </sc-if>
+              <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="danger" onClick="{{ doBan }}" hint-size="130px,32px">Ban permanently</x-import></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 18px; margin-top: 18px; align-items: start;">
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Role</h3>
+          <sc-if value="{{ roleErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 10px; font-size: .88rem; color: var(--danger);">{{ roleErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 11px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Role</span>
+              <select value="{{ roleSel }}" onChange="{{ onRoleSel }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="user">user</option><option value="moderator">moderator</option><option value="admin">admin</option>
+              </select>
+            </label>
+            <sc-if value="{{ reauthOn }}" hint-placeholder-val="{{ true }}">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Your current password</span>
+                <input type="password" value="{{ rolePwd }}" onInput="{{ onRolePwd }}" autoComplete="current-password" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </sc-if>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="danger" onClick="{{ doRole }}" hint-size="110px,32px">Change role</x-import></span>
+          </div>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Staff actions</h3>
+          <div style="display: flex; flex-direction: column; gap: 11px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Warning reason (shown to the member)</span>
+              <input value="{{ warnReason }}" onInput="{{ onWarnReason }}" maxlength="255" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ doWarn }}" hint-size="130px,32px">Record warning</x-import></span>
+            <label style="display: flex; flex-direction: column; gap: 5px; margin-top: 6px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Private staff note</span>
+              <textarea value="{{ noteBody }}" onInput="{{ onNoteBody }}" rows="3" style="padding: 9px 12px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .93rem; line-height: 1.5; color: var(--text-body); resize: vertical;" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);"></textarea>
+            </label>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="secondary" onClick="{{ doNote }}" hint-size="100px,32px">Add note</x-import></span>
+          </div>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 6px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Cosmetic title</h3>
+          <p style="margin: 0 0 12px; font-size: .9rem; color: var(--text-muted);">Effective: <strong style="color: var(--text-strong);">{{ rec.effectiveTitle }}</strong> · Derived ladder: {{ rec.derivedTitle }}</p>
+          <div style="display: flex; flex-direction: column; gap: 11px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Title override</span>
+              <input value="{{ titleField }}" onInput="{{ onTitle }}" maxlength="64" placeholder="(none)" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <div style="display: flex; gap: 9px;">
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ saveTitle }}" hint-size="90px,32px">Save title</x-import>
+              <x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" variant="ghost" onClick="{{ clearTitle }}" hint-size="180px,32px">Clear (revert to derived)</x-import>
+            </div>
+          </div>
+        </section>
+
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">Badges</h3>
+          <div style="display: flex; flex-direction: column; gap: 11px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Grant a manual badge</span>
+              <select value="{{ badgePick }}" onChange="{{ onBadgePick }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <sc-for list="{{ badgeCatalogue }}" as="b" hint-placeholder-count="5"><option value="{{ b.name }}">{{ b.name }}</option></sc-for>
+              </select>
+            </label>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ grantBadge }}" hint-size="110px,32px">Grant badge</x-import></span>
+            <ul style="margin: 6px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--border-hair);">
+              <sc-for list="{{ heldBadges }}" as="b" hint-placeholder-count="2">
+                <li style="display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+                  <span aria-hidden="true" style="color: var(--star); font-size: .95rem;">✦</span>
+                  <span style="font-size: .95rem; color: var(--text-body);">{{ b.name }}</span>
+                  <button onClick="{{ b.revoke }}" style="margin-left: auto; border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--danger); cursor: pointer;" style-hover="text-decoration: underline;">Revoke</button>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{ noBadges }}" hint-placeholder-val="{{ false }}"><p style="margin: 4px 0 0; font-size: .9rem; font-style: italic; color: var(--text-muted);">No manual badges granted.</p></sc-if>
+          </div>
+        </section>
+      </div>
+
+      <section style="margin-top: 18px; padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs);">
+        <h3 style="margin: 0 0 14px; font-family: var(--font-label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-ink);">History</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          <div>
+            <h4 style="margin: 0 0 8px; font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; color: var(--text-strong);">Warnings</h4>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+              <sc-for list="{{ recWarnings }}" as="w" hint-placeholder-count="1">
+                <li style="padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+                  <span style="display: block; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ w.when }}</span>
+                  <span style="display: block; margin-top: 3px; font-size: .93rem; color: var(--text-body);">{{ w.reason }}</span>
+                  <span style="display: block; margin-top: 2px; font-size: .84rem; color: var(--text-faint);">{{ w.by }}</span>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{ noWarnings }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: .9rem; font-style: italic; color: var(--text-muted);">No warnings.</p></sc-if>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 8px; font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; color: var(--text-strong);">Bans &amp; suspensions</h4>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+              <sc-for list="{{ recBans }}" as="b" hint-placeholder-count="1">
+                <li style="padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+                  <span style="display: block; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ b.when }}</span>
+                  <span style="display: block; margin-top: 3px; font-size: .93rem; color: var(--text-body);">{{ b.text }}</span>
+                  <span style="display: block; margin-top: 2px; font-size: .84rem; color: var(--text-faint);">{{ b.by }}</span>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{ noBans }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: .9rem; font-style: italic; color: var(--text-muted);">No ban history.</p></sc-if>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 8px; font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; color: var(--text-strong);">Private staff notes</h4>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+              <sc-for list="{{ recNotes }}" as="n" hint-placeholder-count="1">
+                <li style="padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+                  <span style="display: block; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ n.when }}</span>
+                  <span style="display: block; margin-top: 3px; font-size: .93rem; color: var(--text-body);">{{ n.body }}</span>
+                  <span style="display: block; margin-top: 2px; font-size: .84rem; color: var(--text-faint);">{{ n.by }}</span>
+                </li>
+              </sc-for>
+            </ul>
+            <sc-if value="{{ noNotes }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: .9rem; font-style: italic; color: var(--text-muted);">No staff notes.</p></sc-if>
+          </div>
+          <div>
+            <h4 style="margin: 0 0 8px; font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; color: var(--text-strong);">Audit trail</h4>
+            <ul style="margin: 0; padding: 0; list-style: none;">
+              <sc-for list="{{ recLog }}" as="l" hint-placeholder-count="2">
+                <li style="padding: 9px 0; border-bottom: 1px solid var(--border-hair);">
+                  <span style="display: block; font-family: var(--font-mono); font-size: .74rem; color: var(--text-faint);">{{ l.when }}</span>
+                  <span style="display: block; margin-top: 3px; font-family: var(--font-mono); font-size: .86rem; color: var(--text-body);">{{ l.action }}</span>
+                  <span style="display: block; margin-top: 2px; font-size: .84rem; color: var(--text-faint);">{{ l.by }}</span>
+                </li>
+              </sc-for>
+            </ul>
+            <p style="margin: 11px 0 0;"><a href="#" style="font-size: .9rem; color: var(--accent);">Full trail in the audit log</a></p>
+          </div>
+        </div>
+      </section>
+    </div>
+    </sc-if>
+
+    <!-- ═══ Invitations ═══ -->
+    <sc-if value="{{ showInvites }}" hint-placeholder-val="{{ false }}">
+    <div style="padding-top: 24px;">
+      <sc-if value="{{ inviteLink }}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; padding: 13px 17px; background: var(--gold-050); border: 1px solid var(--gold-200); border-left: 3px solid var(--gold-500); border-radius: var(--radius-md); animation: amRise 200ms ease-out;">
+          <strong style="font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--gold-700);">Copy this invitation link now — it will not be shown again:</strong>
+          <code style="padding: 3px 9px; border-radius: var(--radius-sm); background: var(--surface-raised); font-family: var(--font-mono); font-size: .84rem; color: var(--text-strong);">{{ inviteLinkText }}</code>
+        </div>
+      </sc-if>
+
+      <div style="display: grid; grid-template-columns: minmax(320px, 400px) 1fr; gap: 18px; align-items: start;">
+        <section style="padding: 20px 22px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+          <h2 style="margin: 0 0 6px; font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; color: var(--text-strong);">Issue an invitation</h2>
+          <p style="margin: 0 0 16px; font-size: .92rem; line-height: 1.55; color: var(--text-muted); text-wrap: pretty;">Invitations admit one member per use, expire automatically, and never grant staff or custom roles. Bind to an email address or a domain to restrict who can redeem.</p>
+          <sc-if value="{{ inviteErr }}" hint-placeholder-val="{{ false }}"><p role="alert" style="margin: 0 0 12px; font-size: .88rem; color: var(--danger);">{{ inviteErrText }}</p></sc-if>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Bind to email (optional)</span>
+              <input type="email" value="{{ inviteEmail }}" onInput="{{ onInviteEmail }}" placeholder="person@example.com" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Bind to domain (optional)</span>
+              <input value="{{ inviteDomain }}" onInput="{{ onInviteDomain }}" placeholder="example.com" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Max uses (1–25)</span>
+                <input type="number" min="1" max="25" value="{{ inviteUses }}" onInput="{{ onInviteUses }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 5px;">
+                <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Expires in days (1–90)</span>
+                <input type="number" min="1" max="90" value="{{ inviteDays }}" onInput="{{ onInviteDays }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-mono); font-size: .88rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+              </label>
+            </div>
+            <label style="display: flex; flex-direction: column; gap: 5px;">
+              <span style="font-family: var(--font-label); font-size: .66rem; letter-spacing: .11em; text-transform: uppercase; color: var(--text-faint);">Grant board membership (optional)</span>
+              <select value="{{ inviteBoard }}" onChange="{{ onInviteBoard }}" style="padding: 8px 11px; box-sizing: border-box; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--surface-page); font-family: var(--font-body); font-size: .92rem; color: var(--text-body);" style-focus="outline: none; border-color: var(--gold-500); box-shadow: 0 0 0 3px var(--focus-ring);">
+                <option value="">No board grant</option><option value="evaluations">evaluations</option><option value="audit-trails">audit-trails</option><option value="interpretability">interpretability</option>
+              </select>
+            </label>
+            <span><x-import component-from-global-scope="ImladrisDesignSystem_c3e027.Button" size="sm" onClick="{{ issueInvite }}" hint-size="140px,32px">Issue invitation</x-import></span>
+          </div>
+        </section>
+
+        <section style="padding: 6px 20px 10px; background: var(--surface-raised); border: 1px solid var(--border-hair); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow-x: auto;">
+          <table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: .92rem;">
+            <thead><tr>
+              <th scope="col" style="padding: 11px 10px 9px 0; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Created</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Binding</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: right; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Uses</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Expires</th>
+              <th scope="col" style="padding: 11px 10px 9px; text-align: left; font-family: var(--font-label); font-weight: 400; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); border-bottom: 1px solid var(--border-soft);">Status</th>
+              <th scope="col" style="padding: 11px 0 9px 10px; border-bottom: 1px solid var(--border-soft);"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0);">Actions</span></th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ inviteRows }}" as="i" hint-placeholder-count="4">
+                <tr>
+                  <td style="padding: 10px 10px 10px 0; font-family: var(--font-mono); font-size: .8rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ i.created }}</td>
+                  <td style="padding: 10px; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ i.binding }}</td>
+                  <td style="padding: 10px; text-align: right; font-family: var(--font-mono); font-size: .82rem; color: var(--text-body); border-bottom: 1px solid var(--border-hair);">{{ i.uses }}</td>
+                  <td style="padding: 10px; font-size: .88rem; color: var(--text-muted); border-bottom: 1px solid var(--border-hair);">{{ i.expires }}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ i.isActive }}" hint-placeholder-val="{{ true }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-done); color: var(--on-done); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">active</span></sc-if>
+                    <sc-if value="{{ i.isRedeemed }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: var(--surface-sunken); color: var(--text-muted); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">redeemed</span></sc-if>
+                    <sc-if value="{{ i.isRevoked }}" hint-placeholder-val="{{ false }}"><span style="padding: 1px 9px; border-radius: 999px; background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised)); color: var(--danger); font-family: var(--font-label); font-size: .66rem; letter-spacing: .06em;">revoked</span></sc-if>
+                  </td>
+                  <td style="padding: 10px 0 10px 10px; text-align: right; border-bottom: 1px solid var(--border-hair);">
+                    <sc-if value="{{ i.isActive }}" hint-placeholder-val="{{ true }}"><button onClick="{{ i.revoke }}" style="border: 0; padding: 0; background: transparent; font-family: var(--font-label); font-size: .74rem; color: var(--danger); cursor: pointer;" style-hover="text-decoration: underline;">Revoke</button></sc-if>
+                    <sc-if value="{{ i.notActive }}" hint-placeholder-val="{{ false }}"><span style="color: var(--text-faint);">—</span></sc-if>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;bulkActions&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;piiGate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;banRequiresUsername&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;}}">
+const CATALOGUE = ['Welcome', 'First Thread', 'Trusted Answerer', 'Problem Solver', 'Loremaster of Evals', 'Anniversary'];
+
+const USERS = [
+  { id: 12, username: 'elrond', display: 'Elrond', role: 'admin', status: 'active', rep: 8740, posts: 1204, seenDays: 0, lastSeen: '2 hours ago', joined: '14 Feb 2018', email: 'elrond@imladris.council', sessionIps: '10.4.1.19, 10.4.1.22', postIps: '10.4.1.19', title: 'Master of the House', derived: 'Legend', boardMod: false,
+    badges: ['Anniversary'], warnings: [], bans: [], notes: [], log: [{ when: '3 days ago', action: 'user.role_change', by: 'by @system' }] },
+  { id: 88, username: 'galadriel', display: 'Galadriel', role: 'moderator', status: 'active', rep: 5120, posts: 861, seenDays: 0, lastSeen: '20 minutes ago', joined: '2 Mar 2019', email: 'galadriel@imladris.council', sessionIps: '10.4.2.7', postIps: '10.4.2.7, 10.4.2.9', title: '', derived: 'Loremaster', boardMod: false,
+    badges: ['Trusted Answerer'], warnings: [], bans: [], notes: [{ when: '11 Jun 2026', body: 'Volunteered to keep the evaluations board through the summer.', by: 'by @elrond' }], log: [{ when: '2 weeks ago', action: 'user.role_change', by: 'by @elrond' }] },
+  { id: 51, username: 'erestor', display: 'Erestor', role: 'user', status: 'active', rep: 3985, posts: 640, seenDays: 1, lastSeen: 'yesterday', joined: '9 Sep 2021', email: 'erestor@imladris.council', sessionIps: '10.4.3.31', postIps: '10.4.3.31', title: '', derived: 'Counsellor', boardMod: true,
+    badges: ['Problem Solver'], warnings: [], bans: [], notes: [], log: [] },
+  { id: 64, username: 'glorfindel', display: 'Glorfindel', role: 'user', status: 'active', rep: 2140, posts: 318, seenDays: 3, lastSeen: '3 days ago', joined: '21 Jan 2022', email: 'glorfindel@imladris.council', sessionIps: '10.4.4.5', postIps: '10.4.4.5', title: '', derived: 'Counsellor', boardMod: false,
+    badges: [], warnings: [], bans: [], notes: [], log: [] },
+  { id: 77, username: 'arwen', display: 'Arwen', role: 'user', status: 'active', rep: 1760, posts: 254, seenDays: 0, lastSeen: '4 hours ago', joined: '30 Apr 2023', email: 'arwen@imladris.council', sessionIps: '10.4.5.2', postIps: '10.4.5.2', title: '', derived: 'Companion', boardMod: false,
+    badges: [], warnings: [], bans: [], notes: [], log: [] },
+  { id: 93, username: 'lindir', display: 'Lindir', role: 'user', status: 'suspended', rep: 410, posts: 96, seenDays: 8, lastSeen: '8 days ago', joined: '2 Nov 2024', email: 'lindir@imladris.council', sessionIps: '10.4.6.14', postIps: '10.4.6.14', title: '', derived: 'Newcomer', boardMod: false, suspendedUntil: '2026-08-09 00:00:00',
+    badges: [], warnings: [{ when: '18 Jul 2026', reason: 'Reposting the same appeal across four boards.', by: 'by @galadriel' }], bans: [{ when: '25 Jul 2026', text: 'read-only (suspension) · Continued cross-posting after a warning · until 9 Aug 2026', by: 'by @galadriel' }], notes: [], log: [{ when: '25 Jul 2026', action: 'user.suspend', by: 'by @galadriel' }] },
+  { id: 90, username: 'saruman', display: 'Saruman', role: 'user', status: 'banned', rep: 12, posts: 41, seenDays: 120, lastSeen: '4 months ago', joined: '17 Mar 2025', email: 'saruman@orthanc.test', sessionIps: '198.51.100.7', postIps: '198.51.100.7', title: '', derived: 'Newcomer', boardMod: false,
+    badges: [], warnings: [{ when: '2 Feb 2026', reason: 'Misrepresenting the council record.', by: 'by @elrond' }], bans: [{ when: '14 Feb 2026', text: 'full ban · Fabricated audit entries · indefinite', by: 'by @elrond' }], notes: [{ when: '14 Feb 2026', body: 'Do not reinstate without a full review of the audit trail.', by: 'by @elrond' }], log: [{ when: '14 Feb 2026', action: 'user.ban', by: 'by @elrond' }] },
+  { id: 101, username: 'mellon', display: 'Mellon', role: 'user', status: 'active', rep: 305, posts: 58, seenDays: 20, lastSeen: '20 days ago', joined: '11 Jan 2026', email: 'mellon@imladris.council', sessionIps: '10.4.7.8', postIps: '10.4.7.8', title: '', derived: 'Newcomer', boardMod: false,
+    badges: [], warnings: [], bans: [], notes: [], log: [] },
+  { id: 108, username: 'haldir', display: 'Haldir', role: 'user', status: 'deactivated', rep: 96, posts: 22, seenDays: 999, lastSeen: '', joined: '3 May 2026', email: 'haldir@lorien.test', sessionIps: '', postIps: '', title: '', derived: 'Newcomer', boardMod: false,
+    badges: [], warnings: [], bans: [], notes: [], log: [] },
+];
+
+const INVITES = [
+  { id: 1, created: '28 Jul 2026', email: 'nimrodel@example.com', domain: '', used: 0, max: 1, expires: 'in 12 days', status: 'active' },
+  { id: 2, created: '19 Jul 2026', email: '', domain: 'imladris.council', used: 3, max: 10, expires: 'in 3 days', status: 'active' },
+  { id: 3, created: '2 Jul 2026', email: 'mellon@imladris.council', domain: '', used: 1, max: 1, expires: 'redeemed 11 Jul', status: 'redeemed' },
+  { id: 4, created: '20 Jun 2026', email: '', domain: '', used: 0, max: 5, expires: 'revoked 24 Jun', status: 'revoked' },
+];
+
+const EMPTY_FILTERS = { q: '', role: '', status: '', seen: '', min: '', max: '' };
+
+class Component extends DCLogic {
+  state = {
+    view: 'directory',
+    users: USERS.map((u) => Object.assign({}, u)),
+    draft: Object.assign({}, EMPTY_FILTERS),
+    filters: Object.assign({}, EMPTY_FILTERS),
+    sort: 'joined', dir: 'desc',
+    selected: [], bulkAction: '', bulkError: '', bulkReason: '', bulkUntil: '', bulkFormError: '', bulkKind: 'warn',
+    recordId: null, pii: false, flash: '',
+    suspendReason: '', suspendUntil: '', suspendErr: '',
+    banReason: '', banConfirm: '', banErr: '',
+    roleSel: 'user', rolePwd: '', roleErr: '',
+    warnReason: '', noteBody: '', titleField: '', badgePick: CATALOGUE[0],
+    invites: INVITES.map((i) => Object.assign({}, i)),
+    inviteEmail: '', inviteDomain: '', inviteUses: '1', inviteDays: '14', inviteBoard: '', inviteLink: '', inviteErr: '',
+  };
+
+  setDraft(key) { return (e) => this.setState((s) => ({ draft: Object.assign({}, s.draft, { [key]: e.target.value }) })); }
+  field(key) { return (e) => this.setState({ [key]: e.target.value }); }
+  sortBy(key) {
+    return () => this.setState((s) => (s.sort === key ? { dir: s.dir === 'asc' ? 'desc' : 'asc' } : { sort: key, dir: 'asc' }));
+  }
+  arrow(key, s) { return s.sort === key ? (s.dir === 'asc' ? ' ▲' : ' ▼') : ''; }
+  patch(id, fn) {
+    this.setState((s) => ({ users: s.users.map((u) => (u.id === id ? fn(Object.assign({}, u)) : u)) }));
+  }
+  today() { return '2 Aug 2026'; }
+
+  visible(s) {
+    const f = s.filters;
+    let rows = s.users.filter((u) => {
+      if (f.q) {
+        const q = f.q.toLowerCase();
+        if (!(u.username + ' ' + u.display + ' ' + u.email).toLowerCase().includes(q)) return false;
+      }
+      if (f.role && u.role !== f.role) return false;
+      if (f.status && u.status !== f.status) return false;
+      if (f.seen === 'never' && u.lastSeen !== '') return false;
+      if (f.seen && f.seen !== 'never' && u.seenDays > Number(f.seen)) return false;
+      if (f.min !== '' && u.posts < Number(f.min)) return false;
+      if (f.max !== '' && u.posts > Number(f.max)) return false;
+      return true;
+    });
+    const key = s.sort;
+    const mul = s.dir === 'asc' ? 1 : -1;
+    rows = rows.slice().sort((a, b) => {
+      if (key === 'rep' || key === 'posts') return (a[key === 'rep' ? 'rep' : 'posts'] - b[key === 'rep' ? 'rep' : 'posts']) * mul;
+      if (key === 'joined') return (a.id - b.id) * mul;
+      const av = key === 'user' ? a.username : key === 'role' ? a.role : a.status;
+      const bv = key === 'user' ? b.username : key === 'role' ? b.role : b.status;
+      return av.localeCompare(bv) * mul;
+    });
+    return rows;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const rows = this.visible(s);
+    const rec = s.users.find((u) => u.id === s.recordId) || s.users[0];
+    const bulkOn = this.props.bulkActions !== false;
+    const banGate = this.props.banRequiresUsername !== false;
+    const piiGate = this.props.piiGate !== false;
+    const subjects = s.users.filter((u) => s.selected.indexOf(u.id) !== -1);
+    const actionable = subjects.filter((u) => u.role !== 'admin');
+    const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+
+    return {
+      atDirectory: s.view !== 'invites', offDirectory: s.view === 'invites',
+      atInvites: s.view === 'invites', offInvites: s.view !== 'invites',
+      goDirectory: () => this.setState({ view: 'directory', flash: '' }),
+      goInvites: () => this.setState({ view: 'invites', flash: '' }),
+      showDirectory: s.view === 'directory', showBulk: s.view === 'bulk', showRecord: s.view === 'record', showInvites: s.view === 'invites',
+      flash: !!s.flash, flashText: s.flash,
+
+      dq: s.draft.q, drole: s.draft.role, dstatus: s.draft.status, dseen: s.draft.seen, dmin: s.draft.min, dmax: s.draft.max,
+      onQ: this.setDraft('q'), onRole: this.setDraft('role'), onStatus: this.setDraft('status'), onSeen: this.setDraft('seen'), onMin: this.setDraft('min'), onMax: this.setDraft('max'),
+      applyFilters: () => this.setState((st) => ({ filters: Object.assign({}, st.draft), selected: [] })),
+      resetFilters: () => this.setState({ draft: Object.assign({}, EMPTY_FILTERS), filters: Object.assign({}, EMPTY_FILTERS) }),
+      resultLabel: plural(rows.length, 'member') + ' of ' + s.users.length,
+
+      arrowUser: this.arrow('user', s), arrowRole: this.arrow('role', s), arrowState: this.arrow('state', s),
+      arrowRep: this.arrow('rep', s), arrowPosts: this.arrow('posts', s), arrowJoined: this.arrow('joined', s),
+      sortUser: this.sortBy('user'), sortRole: this.sortBy('role'), sortState: this.sortBy('state'),
+      sortRep: this.sortBy('rep'), sortPosts: this.sortBy('posts'), sortJoined: this.sortBy('joined'),
+
+      allSelected: rows.length > 0 && rows.every((u) => s.selected.indexOf(u.id) !== -1),
+      toggleAll: () => this.setState((st) => {
+        const ids = this.visible(st).map((u) => u.id);
+        const all = ids.every((id) => st.selected.indexOf(id) !== -1);
+        return { selected: all ? [] : ids, bulkError: '' };
+      }),
+      rows: rows.map((u) => ({
+        username: u.username, display: u.display, posts: u.posts, joined: u.joined,
+        repText: u.rep.toLocaleString(), lastSeenText: u.lastSeen || 'never',
+        selectLabel: 'Select ' + u.username,
+        selected: s.selected.indexOf(u.id) !== -1,
+        isAdmin: u.role === 'admin', isMod: u.role === 'moderator', isUser: u.role === 'user',
+        boardMod: u.boardMod,
+        stActive: u.status === 'active', stSuspended: u.status === 'suspended', stBanned: u.status === 'banned', stDeactivated: u.status === 'deactivated',
+        toggle: () => this.setState((st) => ({
+          selected: st.selected.indexOf(u.id) !== -1 ? st.selected.filter((x) => x !== u.id) : st.selected.concat([u.id]),
+          bulkError: '',
+        })),
+        open: () => this.setState({ view: 'record', recordId: u.id, pii: false, flash: '', suspendReason: '', suspendUntil: '', suspendErr: '', banReason: '', banConfirm: '', banErr: '', roleSel: u.role, rolePwd: '', roleErr: '', warnReason: '', noteBody: '', titleField: u.title }),
+      })),
+      noRows: rows.length === 0,
+
+      bulkOn,
+      bulkAction: s.bulkAction,
+      onBulkAction: (e) => this.setState({ bulkAction: e.target.value, bulkError: '' }),
+      selectedLabel: s.selected.length === 0 ? 'None selected' : plural(s.selected.length, 'member') + ' selected',
+      bulkError: !!s.bulkError, bulkErrorText: s.bulkError,
+      reviewBulk: () => {
+        if (s.selected.length === 0) return this.setState({ bulkError: 'Select at least one member before choosing a bulk action.' });
+        if (!s.bulkAction) return this.setState({ bulkError: 'Choose an action to apply to the selected members.' });
+        this.setState({ view: 'bulk', bulkKind: s.bulkAction, bulkFormError: '', bulkReason: '', bulkUntil: '' });
+      },
+
+      bulkIsSuspend: s.bulkKind === 'suspend', bulkIsWarn: s.bulkKind !== 'suspend',
+      bulkTitle: (s.bulkKind === 'suspend' ? 'Suspend ' : 'Warn ') + plural(subjects.length, 'member'),
+      bulkBlurb: s.bulkKind === 'suspend'
+        ? 'Every selected member becomes read-only until the expiry (blank is indefinite). Your own account and other administrators are skipped automatically. Each suspension is audited individually and reversible with Lift.'
+        : 'Every selected member receives the same formal warning; it appears on their record and counts toward their history. Each warning is audited individually.',
+      bulkSubjects: subjects.map((u) => ({ username: u.username, display: u.display, at: '@' + u.username, role: u.role, status: u.status, skipped: u.role === 'admin' })),
+      bulkConfirmLabel: (s.bulkKind === 'suspend' ? 'Suspend ' : 'Warn ') + plural(actionable.length, 'member'),
+      bulkReason: s.bulkReason, onBulkReason: this.field('bulkReason'),
+      bulkUntil: s.bulkUntil, onBulkUntil: this.field('bulkUntil'),
+      bulkFormError: !!s.bulkFormError, bulkFormErrorText: s.bulkFormError,
+      cancelBulk: () => this.setState({ view: 'directory', bulkFormError: '' }),
+      applyBulk: () => {
+        if (!s.bulkReason.trim()) return this.setState({ bulkFormError: 'A shared reason is required — it is shown to every member and written to each audit entry.' });
+        const kind = s.bulkKind;
+        const reason = s.bulkReason.trim();
+        const until = s.bulkUntil.trim();
+        const ids = actionable.map((u) => u.id);
+        this.setState((st) => ({
+          users: st.users.map((u) => {
+            if (ids.indexOf(u.id) === -1) return u;
+            const n = Object.assign({}, u);
+            if (kind === 'suspend') {
+              n.status = 'suspended';
+              n.suspendedUntil = until || '';
+              n.bans = [{ when: this.today(), text: 'read-only (suspension) · ' + reason + ' · ' + (until ? 'until ' + until : 'indefinite'), by: 'by @elrond' }].concat(u.bans);
+              n.log = [{ when: this.today(), action: 'user.suspend', by: 'by @elrond' }].concat(u.log);
+            } else {
+              n.warnings = [{ when: this.today(), reason: reason, by: 'by @elrond' }].concat(u.warnings);
+              n.log = [{ when: this.today(), action: 'user.warn', by: 'by @elrond' }].concat(u.log);
+            }
+            return n;
+          }),
+          view: 'directory', selected: [], bulkAction: '', bulkFormError: '',
+          flash: (kind === 'suspend' ? 'Suspended ' : 'Warned ') + plural(ids.length, 'member') + ' — each action was audited individually.'
+            + (subjects.length > ids.length ? ' ' + plural(subjects.length - ids.length, 'administrator') + ' skipped.' : ''),
+        }));
+      },
+
+      rec: {
+        display: rec.display, username: rec.username, at: '@' + rec.username, role: rec.role, status: rec.status,
+        repText: rec.rep.toLocaleString(), posts: rec.posts, joined: rec.joined, lastSeenText: rec.lastSeen || 'never',
+        email: rec.email, sessionIps: rec.sessionIps || 'none recorded', postIps: rec.postIps || 'none recorded',
+        effectiveTitle: rec.title || rec.derived, derivedTitle: rec.derived,
+        suspendedUntil: rec.status === 'suspended', suspendedUntilText: rec.suspendedUntil || 'Indefinite',
+        restricted: rec.status === 'suspended' || rec.status === 'banned',
+        restrictionText: rec.status === 'banned' ? 'This account is banned. Lifting restores it to active.' : 'This account is suspended (read-only).',
+      },
+      backToDirectory: () => this.setState({ view: 'directory', flash: '' }),
+
+      piiHidden: piiGate && !s.pii, piiShown: !piiGate || s.pii,
+      revealPii: () => { this.setState({ pii: true }); this.patch(rec.id, (u) => { u.log = [{ when: this.today(), action: 'view_pii', by: 'by @elrond' }].concat(u.log); return u; }); },
+
+      suspendReason: s.suspendReason, onSuspendReason: this.field('suspendReason'),
+      suspendUntil: s.suspendUntil, onSuspendUntil: this.field('suspendUntil'),
+      suspendErr: !!s.suspendErr, suspendErrText: s.suspendErr,
+      doSuspend: () => {
+        if (!s.suspendReason.trim()) return this.setState({ suspendErr: 'A reason is required.' });
+        const reason = s.suspendReason.trim(); const until = s.suspendUntil.trim();
+        this.patch(rec.id, (u) => {
+          u.status = 'suspended'; u.suspendedUntil = until;
+          u.bans = [{ when: this.today(), text: 'read-only (suspension) · ' + reason + ' · ' + (until ? 'until ' + until : 'indefinite'), by: 'by @elrond' }].concat(u.bans);
+          u.log = [{ when: this.today(), action: 'user.suspend', by: 'by @elrond' }].concat(u.log);
+          return u;
+        });
+        this.setState({ suspendErr: '', suspendReason: '', suspendUntil: '', flash: '@' + rec.username + ' is suspended. The action was audited.' });
+      },
+      liftRestriction: () => {
+        this.patch(rec.id, (u) => {
+          u.status = 'active'; u.suspendedUntil = '';
+          u.log = [{ when: this.today(), action: 'user.lift', by: 'by @elrond' }].concat(u.log);
+          return u;
+        });
+        this.setState({ flash: 'Restriction lifted — @' + rec.username + ' is active again.' });
+      },
+      banBlurb: banGate
+        ? 'Revokes access until an admin lifts it. Type the username to confirm — this is the record’s most consequential action.'
+        : 'Revokes access until an admin lifts it.',
+      banGate,
+      banConfirmLabel: 'Type ' + rec.username + ' to confirm',
+      banReason: s.banReason, onBanReason: this.field('banReason'),
+      banConfirm: s.banConfirm, onBanConfirm: this.field('banConfirm'),
+      banErr: !!s.banErr, banErrText: s.banErr,
+      doBan: () => {
+        if (!s.banReason.trim()) return this.setState({ banErr: 'A reason is required.' });
+        if (banGate && s.banConfirm.trim() !== rec.username) return this.setState({ banErr: 'The username does not match — type ' + rec.username + ' exactly to confirm.' });
+        const reason = s.banReason.trim();
+        this.patch(rec.id, (u) => {
+          u.status = 'banned';
+          u.bans = [{ when: this.today(), text: 'full ban · ' + reason + ' · indefinite', by: 'by @elrond' }].concat(u.bans);
+          u.log = [{ when: this.today(), action: 'user.ban', by: 'by @elrond' }].concat(u.log);
+          return u;
+        });
+        this.setState({ banErr: '', banReason: '', banConfirm: '', flash: '@' + rec.username + ' is banned. The action was audited.' });
+      },
+
+      reauthOn: true,
+      roleSel: s.roleSel, onRoleSel: this.field('roleSel'),
+      rolePwd: s.rolePwd, onRolePwd: this.field('rolePwd'),
+      roleErr: !!s.roleErr, roleErrText: s.roleErr,
+      doRole: () => {
+        if (!s.rolePwd) return this.setState({ roleErr: 'Changing a role is a reauthenticated action — confirm your password.' });
+        if (s.roleSel === rec.role) return this.setState({ roleErr: '@' + rec.username + ' already holds that role.' });
+        const next = s.roleSel;
+        this.patch(rec.id, (u) => {
+          u.role = next;
+          u.log = [{ when: this.today(), action: 'user.role_change → ' + next, by: 'by @elrond' }].concat(u.log);
+          return u;
+        });
+        this.setState({ roleErr: '', rolePwd: '', flash: '@' + rec.username + ' is now ' + next + '.' });
+      },
+
+      warnReason: s.warnReason, onWarnReason: this.field('warnReason'),
+      doWarn: () => {
+        if (!s.warnReason.trim()) return this.setState({ flash: '' });
+        const reason = s.warnReason.trim();
+        this.patch(rec.id, (u) => {
+          u.warnings = [{ when: this.today(), reason: reason, by: 'by @elrond' }].concat(u.warnings);
+          u.log = [{ when: this.today(), action: 'user.warn', by: 'by @elrond' }].concat(u.log);
+          return u;
+        });
+        this.setState({ warnReason: '', flash: 'Warning recorded on @' + rec.username + '’s record.' });
+      },
+      noteBody: s.noteBody, onNoteBody: this.field('noteBody'),
+      doNote: () => {
+        if (!s.noteBody.trim()) return;
+        const body = s.noteBody.trim();
+        this.patch(rec.id, (u) => { u.notes = [{ when: this.today(), body: body, by: 'by @elrond' }].concat(u.notes); return u; });
+        this.setState({ noteBody: '', flash: 'Private staff note added.' });
+      },
+
+      titleField: s.titleField, onTitle: this.field('titleField'),
+      saveTitle: () => { const t = s.titleField.trim(); this.patch(rec.id, (u) => { u.title = t; return u; }); this.setState({ flash: t ? 'Cosmetic title set to “' + t + '”.' : 'Cosmetic title cleared.' }); },
+      clearTitle: () => { this.patch(rec.id, (u) => { u.title = ''; return u; }); this.setState({ titleField: '', flash: 'Cosmetic title reverted to the derived ladder.' }); },
+
+      badgeCatalogue: CATALOGUE.map((b) => ({ name: b })),
+      badgePick: s.badgePick, onBadgePick: this.field('badgePick'),
+      grantBadge: () => {
+        const pick = s.badgePick;
+        if (rec.badges.indexOf(pick) !== -1) return this.setState({ flash: '@' + rec.username + ' already holds ' + pick + '.' });
+        this.patch(rec.id, (u) => {
+          u.badges = u.badges.concat([pick]);
+          u.log = [{ when: this.today(), action: 'badge.grant · ' + pick, by: 'by @elrond' }].concat(u.log);
+          return u;
+        });
+        this.setState({ flash: pick + ' granted to @' + rec.username + '.' });
+      },
+      heldBadges: rec.badges.map((b) => ({
+        name: b,
+        revoke: () => { this.patch(rec.id, (u) => { u.badges = u.badges.filter((x) => x !== b); u.log = [{ when: this.today(), action: 'badge.revoke · ' + b, by: 'by @elrond' }].concat(u.log); return u; }); this.setState({ flash: b + ' revoked from @' + rec.username + '.' }); },
+      })),
+      noBadges: rec.badges.length === 0,
+
+      recWarnings: rec.warnings, noWarnings: rec.warnings.length === 0,
+      recBans: rec.bans, noBans: rec.bans.length === 0,
+      recNotes: rec.notes, noNotes: rec.notes.length === 0,
+      recLog: rec.log,
+
+      inviteLink: !!s.inviteLink, inviteLinkText: s.inviteLink,
+      inviteEmail: s.inviteEmail, onInviteEmail: this.field('inviteEmail'),
+      inviteDomain: s.inviteDomain, onInviteDomain: this.field('inviteDomain'),
+      inviteUses: s.inviteUses, onInviteUses: this.field('inviteUses'),
+      inviteDays: s.inviteDays, onInviteDays: this.field('inviteDays'),
+      inviteBoard: s.inviteBoard, onInviteBoard: this.field('inviteBoard'),
+      inviteErr: !!s.inviteErr, inviteErrText: s.inviteErr,
+      issueInvite: () => {
+        const uses = Number(s.inviteUses || 1);
+        const days = Number(s.inviteDays || 14);
+        if (s.inviteEmail && s.inviteDomain) return this.setState({ inviteErr: 'Bind to an email address or a domain — not both.' });
+        if (!(uses >= 1 && uses <= 25)) return this.setState({ inviteErr: 'Max uses must be between 1 and 25.' });
+        if (!(days >= 1 && days <= 90)) return this.setState({ inviteErr: 'Expiry must be between 1 and 90 days.' });
+        const token = 'inv_' + Math.random().toString(36).slice(2, 14);
+        this.setState((st) => ({
+          invites: [{ id: Date.now(), created: this.today(), email: st.inviteEmail, domain: st.inviteDomain, used: 0, max: uses, expires: 'in ' + days + ' days', status: 'active' }].concat(st.invites),
+          inviteLink: 'https://imladris.example/join/' + token,
+          inviteErr: '', inviteEmail: '', inviteDomain: '', inviteUses: '1', inviteDays: '14', inviteBoard: '',
+        }));
+      },
+      inviteRows: s.invites.map((i) => ({
+        created: i.created,
+        binding: i.email ? i.email : i.domain ? '@' + i.domain : 'any email',
+        uses: i.used + '/' + i.max,
+        expires: i.expires,
+        isActive: i.status === 'active', isRedeemed: i.status === 'redeemed', isRevoked: i.status === 'revoked', notActive: i.status !== 'active',
+        revoke: () => this.setState((st) => ({
+          invites: st.invites.map((x) => (x.id === i.id ? Object.assign({}, x, { status: 'revoked', expires: 'revoked ' + this.today() }) : x)),
+          flash: 'Invitation revoked — the link no longer redeems.',
+        })),
+      })),
+    };
+  }
+}
+
+</script>
+</body>
+</html>

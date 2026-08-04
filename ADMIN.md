@@ -560,18 +560,43 @@ Moderators see a **reduced Console** scoped to their boards (Reports, Audit, lim
 
 ### 9.2 Console information architecture
 
-Left-nav, grouped:
+> **Amended 2026-08-03 (ADR 0024).** This section previously specified a grouped **left-nav** over
+> eight sections. It now specifies a two-level horizontal chrome, adopting the Imladris
+> `components/admin/AdminNav` model. ADR 0023's console-IA clause is superseded *in part*: its three
+> other findings — real Moderation entries, the Appeals dashboard card, and inbound links for the two
+> orphan consoles — are unchanged and still binding.
 
-| Section | Contains |
+A persistent two-row **console bar**, then the page, then the page's own sections:
+
+1. **Identity row** — the community mark and name, an exit link back to the forum, the operator's
+   search / notifications / identity / sign-out cluster, and a persistent **Admin mode** indicator.
+2. **Area tier** — one horizontal row of the eleven areas below. The active area is marked
+   `aria-current="page"` and is not a link. An area whose every entry is behind a disabled flag
+   renders disabled — never removed, never a live link to a dark route.
+3. **Page heading**, then the **area's own section tabs** (underline register, 2–4 per area), then
+   the pane. The three ranks are visually distinct: pill tier, display heading, underline tabs.
+
+| Area | Contains |
 |---|---|
-| **Dashboard** | Health at a glance: open reports, approval/hold items, new users today, active users, recent mod actions, system flags. |
-| **Moderation** | Reports queue · Audit log · Automation rules (filters, throttles, approvals). |
+| **Overview** | Dashboard · Audit log. |
+| **Moderation** | Reports queue · Approvals · Appeals · Anti-abuse (filters, throttles, blocked words). |
 | **Content** | Boards & Categories · Thread tags/prefixes. |
-| **People** | Users directory · Roles & Moderators · Bans · Approval queue. |
+| **People** | Roles & capabilities · Permission simulator. |
+| **Members** | Users directory (+ the per-user admin record, bans) · Invitations. |
 | **Appearance** | Branding · Themes/skins · Custom CSS. |
-| **Notifications** | Staff alerts matrix · Email templates · Announcements/broadcast. |
-| **Integrations** | Plugins · Webhooks · API tokens. |
-| **Settings** | General · Registration · Security · Email · Privacy/Legal · Advanced. |
+| **Notifications** | Email delivery · Announcements/broadcast. |
+| **Integrations** | API tokens · Webhooks · Sign-in providers. |
+| **Packages** | Package catalogue (install plan → consent → enable) · Registry trust · Extensions. |
+| **Features** | Feature flags · Badge rules · Custom emoji. |
+| **Settings** | General · Registration · Thread Intelligence. |
+
+The page heading is a property of the **area**, not the leaf page (e.g. `/admin/structure` and
+`/admin/tags` both sit under **Boards & tags**, with the old per-page headings demoted to tab
+labels). A drill-in — a board, a role, a user record, a package — renders a back link and an `<h2>`
+below the tab strip, never a second `<h1>`, and keeps its parent tab lit.
+
+Every area and every tab is a real route reachable as a plain link, so the whole console navigates
+with JavaScript disabled.
 
 ### 9.3 Key screens (wireframe-level)
 
@@ -585,13 +610,13 @@ Left-nav, grouped:
 
 ### 9.4 Design principles for the Console
 
-- **Same look, distinct mode** — reuse the app shell and tokens; a persistent "Admin" indicator so no one confuses it with the public site.
+- **Same tokens, distinct mode** — the console is its own shell (§9.2's console bar replaces the member topbar and board rail) but is built from the same tokens and components as the forum, with a persistent "Admin" indicator so no one confuses it with the public site. *(Amended 2026-08-03, ADR 0024; previously "reuse the app shell".)*
 - **Safe by default** — confirm destructive actions (typed confirmation for irreversible ones), show impact, prefer reversible/soft operations, dry-run where feasible.
 - **Audit everything** — every config and content change writes to the log (§3.6).
 - **Search-first lists** with filters and **bulk actions** — admins work at scale.
 - **Progressive disclosure** — basic settings up front, advanced behind a toggle.
 - **Least privilege in the UI** — hide what a role can't do rather than show-and-deny.
-- **Responsive** — urgent actions (handle a report, ban) work on mobile; the console collapses to one column with the section nav in a drawer (mirrors the app's mobile pattern).
+- **Responsive** — urgent actions (handle a report, ban) work on mobile; the console collapses to one column, the area tier scrolls horizontally with a visible thin scrollbar (the honest signal that areas are off-edge), and the section tabs wrap. Touch targets stay ≥44px below 860px. No drawer, no focus trap, no JavaScript: the console nav works identically with scripting disabled. *(Amended 2026-08-03, ADR 0024; previously "the section nav in a drawer".)*
 
 ### 9.5 First-run setup wizard
 
