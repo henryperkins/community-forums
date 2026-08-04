@@ -3195,6 +3195,14 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     font-size: 1.25rem;
     margin-top: 0;
 }
+.admin-console .card {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-xs);
+    overflow-x: auto;
+}
 .admin-console .stacked .field,
 .admin-console .stacked label.field {
     width: 100%;
@@ -3252,13 +3260,13 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .admin-console .audit th {
     text-align: left;
     padding: 8px 10px;
-    border-bottom: 1.5px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-soft);
     font-family: var(--font-label);
-    letter-spacing: .04em;
+    letter-spacing: .12em;
     text-transform: uppercase;
-    font-size: .68rem;
-    color: var(--gold-ink);
-    font-weight: var(--weight-medium);
+    font-size: .66rem;
+    color: var(--text-faint);
+    font-weight: 400;
     white-space: nowrap;
 }
 .admin-console .audit td {
@@ -3282,11 +3290,226 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 }
 .admin-console .audit code {
     font-family: var(--font-mono);
-    font-size: .82em;
+    font-size: .76rem;
     background: var(--surface-sunken);
-    color: var(--text-strong);
+    color: var(--text-body);
     padding: 1px 6px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
+}
+.admin-console .audit .mono {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+.admin-console .audit .numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+/* Shared console components. The global forum/account primitives stay intact;
+   the console receives the Imladris register only inside its own shell. */
+.state-empty {
+    padding: 34px 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.state-empty h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: var(--weight-medium);
+    color: var(--text-strong);
+}
+.state-empty p {
+    margin: 7px auto 0;
+    max-width: 52ch;
+    line-height: 1.5;
+}
+.state-empty a {
+    display: inline-block;
+    margin-top: 12px;
+}
+.admin-console .pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 16px;
+}
+.admin-console .pager-control {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 7px 15px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .78rem;
+    letter-spacing: .04em;
+    text-decoration: none;
+}
+.admin-console a.pager-control:hover {
+    background: var(--surface-sunken);
+}
+.admin-console .pager-control.is-disabled {
+    color: var(--text-faint);
+    cursor: not-allowed;
+    opacity: .62;
+}
+.admin-console .pager-label {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .76rem;
+    letter-spacing: .06em;
+}
+.admin-console .filter-grid {
+    align-items: flex-end;
+}
+.admin-console .filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    margin-top: 14px;
+}
+.admin-console .filter-result-count {
+    margin-left: auto;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .04em;
+}
+.admin-console .confirm-card {
+    max-width: 680px;
+    border-left: 3px solid var(--rust);
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .impact-list {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 7px 18px;
+    margin: 16px 0 20px;
+}
+.admin-console .impact-list dt {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.admin-console .impact-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text-strong);
+}
+.admin-console .impact-list code {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.admin-console .callout {
+    margin: 12px 0;
+    padding: 11px 14px;
+    border: 1px solid var(--border-hair);
+    border-left: 3px solid var(--info);
+    border-radius: var(--radius-md);
+    background: var(--surface-info);
+    color: var(--on-info);
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.admin-console .callout-review {
+    border-color: var(--gold-200);
+    border-left-color: var(--warning);
+    background: var(--surface-review);
+    color: var(--on-review);
+}
+.admin-console .callout-danger {
+    border-color: color-mix(in srgb, var(--rust) 35%, transparent);
+    border-left-color: var(--rust);
+    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
+    color: var(--danger);
+}
+.admin-console .reauth-field {
+    display: grid;
+    gap: 6px;
+    width: 100%;
+    max-width: 360px;
+    margin-top: 14px;
+}
+.admin-console .reauth-field > span:first-child {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-console .check-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+.admin-console .check-grid fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 12px 14px 13px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+}
+.admin-console .check-grid legend {
+    padding: 0 6px;
+    color: var(--gold-ink);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-console .check-grid label {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 4px 0;
+    color: var(--text-body);
+    font-size: .88rem;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.admin-console .check-grid code {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.admin-console .spec-list {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 7px 18px;
+    margin: 12px 0 0;
+}
+.admin-console .spec-list dt {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.admin-console .spec-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.admin-console .admin-split {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 18px;
+    align-items: start;
+}
+.admin-console .admin-split--fixed {
+    display: grid;
+    grid-template-columns: 330px 1fr;
+    gap: 16px;
+    align-items: start;
 }
 @media (max-width: 860px) {
     /* The console collapses to one column; the area tier scrolls horizontally
@@ -3347,6 +3570,14 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     .activity-table-shell.is-unneeded .table-scroll-cue {
         opacity: 0;
         visibility: hidden;
+    }
+    .admin-console .check-grid,
+    .admin-console .admin-split,
+    .admin-console .admin-split--fixed {
+        grid-template-columns: 1fr;
+    }
+    .admin-console .pager {
+        flex-wrap: wrap;
     }
 }
 @media (max-width: 520px) {
@@ -3413,6 +3644,41 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .state-banned::before,
 .state-deactivated::before {
     background: var(--rust);
+}
+.admin-console .state {
+    gap: 0;
+    padding: 1px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-pending);
+    color: var(--on-pending);
+    font-size: .66rem;
+    letter-spacing: .06em;
+}
+.admin-console .state::before {
+    display: none;
+}
+.admin-console .state-active,
+.admin-console .state-sent {
+    background: var(--surface-done);
+    color: var(--on-done);
+}
+.admin-console .state-queued,
+.admin-console .state-pending,
+.admin-console .state-paused,
+.admin-console .state-suspended,
+.admin-console .state-scheduled {
+    background: var(--surface-review);
+    color: var(--on-review);
+}
+.admin-console .state-revoked,
+.admin-console .state-failed,
+.admin-console .state-bounced,
+.admin-console .state-complained,
+.admin-console .state-banned,
+.admin-console .state-deactivated,
+.admin-console .state-expired {
+    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
+    color: var(--danger);
 }
 /* Role chips for the admin roster + user record: Marcellus uppercase pill,
    gilt for admin, evergreen for moderator, muted for plain members. */

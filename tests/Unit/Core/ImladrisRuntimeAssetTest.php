@@ -112,6 +112,114 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertStringContainsString('background-image: var(--surface-texture, none)', $css);
     }
 
+    public function test_shared_console_component_css_is_scoped_and_keeps_existing_layout_guardrails(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $rule = static function (string $selector) use ($css): string {
+            self::assertSame(
+                1,
+                preg_match('/' . preg_quote($selector, '/') . '\s*\{(?<declarations>[^}]*)\}/s', $css, $match),
+                $selector . ' is missing from the application stylesheet.',
+            );
+
+            return $match['declarations'];
+        };
+
+        $globalCard = $rule('.card');
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface\)/', $globalCard);
+        self::assertMatchesRegularExpression('/overflow-x:\s*auto/', $globalCard);
+
+        $consoleCard = $rule('.admin-console .card');
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-raised\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/border:\s*1px solid var\(--border-hair\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-lg\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/padding:\s*18px 20px/', $consoleCard);
+        self::assertMatchesRegularExpression('/box-shadow:\s*var\(--shadow-xs\)/', $consoleCard);
+        self::assertMatchesRegularExpression('/overflow-x:\s*auto/', $consoleCard);
+        self::assertDoesNotMatchRegularExpression('/overflow:\s*visible/', $consoleCard);
+
+        $auditHeading = $rule('.admin-console .audit th');
+        self::assertMatchesRegularExpression('/font-size:\s*\.66rem/', $auditHeading);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.12em/', $auditHeading);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-faint\)/', $auditHeading);
+        self::assertMatchesRegularExpression('/font-weight:\s*400/', $auditHeading);
+        self::assertMatchesRegularExpression('/border-bottom:\s*1px solid var\(--border-soft\)/', $auditHeading);
+        $auditMono = $rule('.admin-console .audit .mono');
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-mono\)/', $auditMono);
+        self::assertMatchesRegularExpression('/font-size:\s*\.78rem/', $auditMono);
+        $auditCode = $rule('.admin-console .audit code');
+        self::assertMatchesRegularExpression('/font-size:\s*\.76rem/', $auditCode);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-body\)/', $auditCode);
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-sm\)/', $auditCode);
+        self::assertMatchesRegularExpression('/font-variant-numeric:\s*tabular-nums/', $rule('.admin-console .audit .numeric'));
+        self::assertMatchesRegularExpression('/text-align:\s*right/', $rule('.admin-console .audit .numeric'));
+
+        $tableScroll = $rule('.admin-console .table-scroll');
+        self::assertMatchesRegularExpression('/position:\s*relative/', $tableScroll);
+        self::assertMatchesRegularExpression('/overflow-x:\s*auto/', $tableScroll);
+        self::assertMatchesRegularExpression('/outline:\s*2px solid var\(--accent\)/', $rule('.admin-console .table-scroll:focus-visible'));
+        self::assertMatchesRegularExpression('/min-width:\s*760px/', $rule('.admin-console .table-scroll > .audit'));
+        self::assertMatchesRegularExpression('/min-width:\s*940px/', $rule('.admin-console .table-scroll.table-scroll-wide > .audit'));
+
+        $state = $rule('.admin-console .state');
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-pill\)/', $state);
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-pending\)/', $state);
+        self::assertMatchesRegularExpression('/color:\s*var\(--on-pending\)/', $state);
+        self::assertMatchesRegularExpression('/display:\s*none/', $rule('.admin-console .state::before'));
+        self::assertMatchesRegularExpression(
+            '/\.admin-console \.state-active\s*,\s*\.admin-console \.state-sent\s*\{[^}]*background:\s*var\(--surface-done\)[^}]*color:\s*var\(--on-done\)/s',
+            $css,
+        );
+        self::assertMatchesRegularExpression(
+            '/\.admin-console \.state-queued[^}]*\.admin-console \.state-scheduled\s*\{[^}]*background:\s*var\(--surface-review\)[^}]*color:\s*var\(--on-review\)/s',
+            $css,
+        );
+        self::assertMatchesRegularExpression(
+            '/\.admin-console \.state-revoked[^}]*\.admin-console \.state-expired\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--rust\) 12%, var\(--surface-raised\)\)[^}]*color:\s*var\(--danger\)/s',
+            $css,
+        );
+
+        foreach (['.state-empty', '.admin-console .pager', '.admin-console .filter-actions',
+            '.admin-console .confirm-card', '.admin-console .impact-list', '.admin-console .callout',
+            '.admin-console .reauth-field', '.admin-console .check-grid', '.admin-console .spec-list',
+            '.admin-console .admin-split', '.admin-console .admin-split--fixed'] as $selector) {
+            $rule($selector);
+        }
+
+        $pager = $rule('.admin-console .pager');
+        self::assertMatchesRegularExpression('/justify-content:\s*space-between/', $pager);
+        self::assertMatchesRegularExpression('/gap:\s*14px/', $pager);
+        self::assertMatchesRegularExpression('/margin-top:\s*16px/', $pager);
+        $pagerLabel = $rule('.admin-console .pager-label');
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-label\)/', $pagerLabel);
+        self::assertMatchesRegularExpression('/font-size:\s*\.76rem/', $pagerLabel);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.06em/', $pagerLabel);
+        self::assertDoesNotMatchRegularExpression('/font-variant-numeric:\s*tabular-nums/', $pagerLabel);
+
+        $filterResultCount = $rule('.admin-console .filter-result-count');
+        self::assertMatchesRegularExpression('/font-size:\s*\.74rem/', $filterResultCount);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.04em/', $filterResultCount);
+        self::assertDoesNotMatchRegularExpression('/text-transform:\s*uppercase/', $filterResultCount);
+
+        $checkFieldset = $rule('.admin-console .check-grid fieldset');
+        self::assertMatchesRegularExpression('/padding:\s*12px 14px 13px/', $checkFieldset);
+        self::assertMatchesRegularExpression('/border-radius:\s*var\(--radius-md\)/', $checkFieldset);
+        $checkLabel = $rule('.admin-console .check-grid label');
+        self::assertMatchesRegularExpression('/padding:\s*4px 0/', $checkLabel);
+        self::assertMatchesRegularExpression('/font-size:\s*\.88rem/', $checkLabel);
+        self::assertMatchesRegularExpression('/line-height:\s*1\.4/', $checkLabel);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-body\)/', $checkLabel);
+        self::assertMatchesRegularExpression('/cursor:\s*pointer/', $checkLabel);
+
+        self::assertMatchesRegularExpression('/grid-template-columns:\s*repeat\(auto-fit, minmax\(330px,\s*1fr\)\)/', $rule('.admin-console .admin-split'));
+        self::assertMatchesRegularExpression('/grid-template-columns:\s*330px 1fr/', $rule('.admin-console .admin-split--fixed'));
+
+        foreach (['.scribe-panel', '.scribe-panel-head', '.brand-cols', '.brand-preview', '.field-grid'] as $preserved) {
+            self::assertStringContainsString($preserved, $css, $preserved . ' must remain available.');
+        }
+        self::assertStringNotContainsString('--gold-050', $css);
+    }
+
     public function test_application_quiet_thread_rows_reset_design_system_hover_motion(): void
     {
         $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
