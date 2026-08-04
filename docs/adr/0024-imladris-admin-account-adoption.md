@@ -166,8 +166,10 @@ raised upstream in the design project** rather than invented here.
 
 ADR 0021 deferral #7 (`link_previews` admin operations) — still deferred; no console is invented.
 ADR 0023 deferrals #1 (reports-queue bulk actions), #2 (thread-level restore), #3 (deputy-facing
-roster) — still deferred. ADR 0023 deferral #4 (`role_edit.php` field errors deliberately unwired
-pending per-form id scoping) is **closed or restated** in the People slice, not silently changed.
+roster) — still deferred. The People slice **closes the `role_edit.php` half of ADR 0023 deferral
+#4**: definition, clone, assignment and per-row renewal errors receive context-unique ids and
+programmatic input linkage without weakening their existing scoped 422 round-trips. The
+`registries.php` half remains explicitly deferred.
 
 ---
 

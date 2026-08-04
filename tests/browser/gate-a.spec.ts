@@ -16,7 +16,12 @@ import { promisify } from 'node:util';
  * server-rendered POST→redirect auth path works in a real browser.
  */
 
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
+const EVIDENCE_DIR = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
+);
 const execFileAsync = promisify(execFile);
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
@@ -386,13 +391,16 @@ test('role editor: create a custom role and simulate a decision (no-JS forms)', 
   await visit(page, '/admin/roles');
   await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Roles');
-  await expect(page.getByRole('heading', { level: 2, name: 'Roles' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
+  await expect(page.locator('[data-role-count]')).toHaveText(/\d+ roles?/);
+  await expect(page.locator('.role-kind-system').first()).toHaveText('Protected anchor');
   await expect(page.getByText('system.admin')).toBeVisible();
 
   const roleName = `Board Helper ${info.project.name}`;
   await page.fill('input[name="name"]', roleName);
   await page.check('input[name="capabilities[]"][value="core.thread.lock"]');
   await page.check('input[name="capabilities[]"][value="core.thread.pin"]');
+  await expect(page.locator('[data-role-capability-count]')).toHaveText('2 capabilities selected');
   await page.fill('input[name="current_password"]', 'password123');
   await page.click('form[action="/admin/roles"] button[type="submit"]');
   await expect(page.getByText(roleName)).toBeVisible();
@@ -402,7 +410,8 @@ test('role editor: create a custom role and simulate a decision (no-JS forms)', 
   await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Permission simulator');
   await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
-  await expect(page.getByText('Denied')).toBeVisible();
+  await expect(page.locator('.role-simulator-verdict-denied')).toHaveText('Denied');
+  await expect(page.locator('.role-simulator-result')).toBeVisible();
   await shot(page, info, '31-admin-role-simulator');
 });
 
@@ -525,7 +534,7 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
   await setThemeSafeMode(page, true);
 });
 
-test('mobile no-JS keeps navigation reachable without an inert drawer button', async ({ browser, baseURL }, info) => {
+test('mobile no-JS keeps navigation reachable and role decoration optional', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'mobile', 'mobile-only progressive enhancement check');
 
   const context = await browser.newContext({
@@ -540,6 +549,14 @@ test('mobile no-JS keeps navigation reachable without an inert drawer button', a
     await visit(page, '/');
     await expect(page.locator('.nav-toggle')).toBeHidden();
     await expect(page.locator('#sidebar-nav')).toBeVisible();
+
+    await login(page, 'admin@retro.test');
+    await visit(page, '/admin/roles');
+    await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+    await expect(page.locator('[data-role-capability-count]')).toHaveCount(0);
+    await page.getByRole('link', { name: 'Permission simulator', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/roles\/simulator$/);
+    await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
   } finally {
     await context.close();
   }

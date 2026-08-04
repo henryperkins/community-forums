@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\RoleAssignmentRepository;
 use App\Repository\SettingRepository;
 use Tests\Support\TestCase;
 
@@ -65,12 +66,64 @@ final class AppRoleAssignmentTest extends TestCase
     {
         ['roleId' => $roleId] = $this->seedRole();
         $r = $this->post('/admin/roles/' . $roleId . '/assignments', [
-            'username' => 'nobody-here', 'scope_type' => 'site', 'scope_id' => '',
-            'starts_at' => '', 'ends_at' => '', 'reason' => 'keep me',
+            'username' => 'nobody-here', 'scope_type' => 'category', 'scope_id' => '424242',
+            'starts_at' => '2030-01-02 03:04', 'ends_at' => '2031-02-03 04:05',
+            'reason' => 'keep every assignment field',
             'current_password' => 'password123',
         ]);
         $this->assertStatus(422, $r);
-        $this->assertSeeText($r, 'keep me'); // anti-draft-loss: typed input survives
+        $body = $r->body();
+        self::assertStringContainsString('value="nobody-here"', $body);
+        self::assertMatchesRegularExpression('/<option value="category"\s+selected>Category<\/option>/', $body);
+        self::assertStringContainsString('value="424242"', $body);
+        self::assertStringContainsString('value="2030-01-02 03:04"', $body);
+        self::assertStringContainsString('value="2031-02-03 04:05"', $body);
+        self::assertStringContainsString('value="keep every assignment field"', $body);
+    }
+
+    public function test_all_four_assignment_statuses_render_as_distinct_title_case_chips(): void
+    {
+        ['admin' => $admin, 'roleId' => $roleId] = $this->seedRole();
+        $assignments = new RoleAssignmentRepository($this->db);
+        $now = time();
+
+        $active = $this->makeUser(['username' => 'status_active']);
+        $scheduled = $this->makeUser(['username' => 'status_scheduled']);
+        $expired = $this->makeUser(['username' => 'status_expired']);
+        $revoked = $this->makeUser(['username' => 'status_revoked']);
+
+        $assignments->create([
+            'subject_id' => (int) $active['id'], 'role_id' => $roleId,
+            'grantor_id' => (int) $admin['id'],
+            'starts_at' => gmdate('Y-m-d H:i:s', $now - 3600),
+            'ends_at' => gmdate('Y-m-d H:i:s', $now + 3600),
+        ]);
+        $assignments->create([
+            'subject_id' => (int) $scheduled['id'], 'role_id' => $roleId,
+            'grantor_id' => (int) $admin['id'],
+            'starts_at' => gmdate('Y-m-d H:i:s', $now + 3600),
+            'ends_at' => gmdate('Y-m-d H:i:s', $now + 7200),
+        ]);
+        $assignments->create([
+            'subject_id' => (int) $expired['id'], 'role_id' => $roleId,
+            'grantor_id' => (int) $admin['id'],
+            'starts_at' => gmdate('Y-m-d H:i:s', $now - 7200),
+            'ends_at' => gmdate('Y-m-d H:i:s', $now - 3600),
+        ]);
+        $revokedId = $assignments->create([
+            'subject_id' => (int) $revoked['id'], 'role_id' => $roleId,
+            'grantor_id' => (int) $admin['id'],
+        ]);
+        $assignments->revoke($revokedId, (int) $admin['id']);
+
+        $body = $this->get('/admin/roles/' . $roleId)->body();
+        foreach (['active' => 'Active', 'scheduled' => 'Scheduled', 'expired' => 'Expired', 'revoked' => 'Revoked'] as $class => $label) {
+            self::assertMatchesRegularExpression(
+                '/<span class="(?=[^"]*\brole-assignment-status\b)(?=[^"]*\brole-assignment-status-' . $class . '\b)[^"]*">' . $label . '<\/span>/',
+                $body,
+                $label . ' must have its own semantic status class.',
+            );
+        }
     }
 
     public function test_renew_validation_error_rerenders_422_preserving_input(): void

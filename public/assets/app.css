@@ -4783,6 +4783,678 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .admin-console .admin-content .content-tag-pager {
     margin-top: 16px;
 }
+
+/* — Admin people: AdminPeople.dc.html body adoption (Slice 7). —
+   The shared console owns the area heading and tabs. These rules copy the
+   roles list, record, assignments and simulator into external, namespaced CSS
+   so strict CSP, real routes and the server-rendered no-JS forms all survive. */
+.admin-console .admin-roles {
+    gap: 0;
+}
+.admin-console .admin-roles .role-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 0 0 20px;
+    padding: 13px 16px;
+    border: 1px solid var(--river-200);
+    border-left: 3px solid var(--info);
+    border-radius: var(--radius-md);
+    background: var(--surface-info);
+    color: var(--on-info);
+}
+.admin-console .admin-roles .role-callout > svg {
+    flex: 0 0 auto;
+    margin-top: 2px;
+}
+.admin-console .admin-roles .role-callout p {
+    max-width: 82ch;
+    margin: 0;
+    color: var(--on-info);
+    font-size: .93rem;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.admin-console .admin-roles .role-callout code {
+    font-family: var(--font-mono);
+    font-size: .84rem;
+}
+.admin-console .admin-roles .role-callout a {
+    color: inherit;
+    text-decoration: underline;
+}
+.admin-console .admin-roles .role-list-meta {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 12px;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .04em;
+}
+.admin-console .admin-roles .role-table-card {
+    padding: 6px 20px 10px;
+    overflow: visible;
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .admin-roles .role-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .92rem;
+}
+.admin-console .admin-roles .role-table th {
+    padding: 11px 10px 9px;
+}
+.admin-console .admin-roles .role-table td {
+    padding: 10px;
+}
+.admin-console .admin-roles .role-table th:first-child,
+.admin-console .admin-roles .role-table td:first-child {
+    padding-left: 0;
+}
+.admin-console .admin-roles .role-table th:last-child,
+.admin-console .admin-roles .role-table td:last-child {
+    padding-right: 0;
+    text-align: right;
+}
+.admin-console .admin-roles .role-table td:first-child {
+    color: var(--text-strong);
+}
+.admin-console .admin-roles .role-key {
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .76rem;
+}
+.admin-console .admin-roles .role-kind,
+.admin-console .admin-roles .role-assignment-status {
+    display: inline-flex;
+    padding: 1px 9px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .06em;
+    white-space: nowrap;
+}
+.admin-console .admin-roles .role-kind-system {
+    background: var(--surface-review);
+    color: var(--on-review);
+}
+.admin-console .admin-roles .role-kind-custom {
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+}
+.admin-console .admin-roles .role-number {
+    text-align: right;
+}
+.admin-console .admin-roles td.role-number {
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .82rem;
+}
+.admin-console .admin-roles td.role-version {
+    color: var(--text-muted);
+}
+.admin-console .admin-roles .role-row-action {
+    display: inline-flex;
+    padding: 4px 12px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .72rem;
+    letter-spacing: .04em;
+    text-decoration: none;
+}
+.admin-console .admin-roles .role-row-action:hover,
+.admin-console .admin-roles .role-row-action:focus-visible {
+    background: var(--surface-sunken);
+    text-decoration: none;
+}
+.admin-console .admin-roles .role-create-card {
+    margin-top: 22px;
+    padding: 20px 22px;
+    box-shadow: none;
+}
+.admin-console .admin-roles .role-create-card > h2,
+.admin-console .admin-roles .role-simulator-form-card > h2,
+.admin-console .admin-roles .role-simulator-result > h2 {
+    margin: 0 0 6px;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 500;
+}
+.admin-console .admin-roles .role-section-intro {
+    max-width: 66ch;
+    margin: 0 0 16px;
+    color: var(--text-muted);
+    font-size: .93rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.admin-console .admin-roles .role-definition-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 14px 18px;
+}
+.admin-console .admin-roles .role-form-label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+.admin-console .admin-roles .role-form-label > span:first-child {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-console .admin-roles .role-form-label .input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 8px 11px;
+    border-color: var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: .92rem;
+}
+.admin-console .admin-roles .role-form-label .input:focus {
+    border-color: var(--gold-500);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.admin-console .admin-roles .role-capability-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+.admin-console .admin-roles .role-capability-grid fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 12px 14px 13px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+}
+.admin-console .admin-roles .role-capability-grid legend {
+    padding: 0 6px;
+    color: var(--gold-ink);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-console .admin-roles .role-capability-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 4px 0;
+    color: var(--text-body);
+    font-size: .88rem;
+    line-height: 1.4;
+    cursor: pointer;
+}
+.admin-console .admin-roles .role-capability-option > input {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin-top: 3px;
+    accent-color: var(--accent);
+}
+.admin-console .admin-roles .role-capability-option > span {
+    min-width: 0;
+}
+.admin-console .admin-roles .role-capability-option code {
+    color: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.admin-console .admin-roles .role-capability-description {
+    color: var(--text-muted);
+}
+.admin-console .admin-roles .role-risk {
+    margin-left: 6px;
+    padding: 0 7px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
+    color: var(--danger);
+    font-family: var(--font-label);
+    font-size: .62rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.admin-console .admin-roles .role-capability-locked {
+    margin-left: 6px;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .03em;
+}
+.admin-console .admin-roles .role-create-footer,
+.admin-console .admin-roles .role-definition-footer {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    margin-top: 18px;
+}
+.admin-console .admin-roles .role-reauth-field {
+    flex: 0 1 280px;
+    min-width: 0;
+}
+.admin-console .admin-roles .role-create-footer > .btn,
+.admin-console .admin-roles .role-simulator-actions > .btn {
+    padding: 9px 20px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-family: var(--font-label);
+    font-size: .8rem;
+    letter-spacing: .04em;
+    box-shadow: none;
+}
+.admin-console .admin-roles .role-definition-footer > .btn,
+.admin-console .admin-roles .role-assign-actions > .btn {
+    padding: 9px 18px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-family: var(--font-label);
+    font-size: .8rem;
+    letter-spacing: .04em;
+    box-shadow: none;
+}
+.admin-console .admin-roles .role-create-footer > .btn:hover,
+.admin-console .admin-roles .role-definition-footer > .btn:hover,
+.admin-console .admin-roles .role-assign-actions > .btn:hover,
+.admin-console .admin-roles .role-simulator-actions > .btn:hover {
+    filter: brightness(1.08);
+}
+.admin-console .admin-roles .role-capability-count {
+    margin-left: auto;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .04em;
+}
+.admin-console .admin-roles .field-error {
+    margin: 6px 0 0;
+}
+
+/* Role record. Its area-owned H1 stays in the shared console; the record is
+   the design's second-level heading and keeps the Roles tab active. */
+.admin-console .admin-role-record .admin-back {
+    gap: 6px;
+    margin-bottom: 14px;
+    letter-spacing: .04em;
+}
+.admin-console .admin-role-record .role-record-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+.admin-console .admin-role-record .admin-record-title {
+    margin: 0;
+}
+.admin-console .admin-role-record .role-record-heading > span {
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .9rem;
+}
+.admin-console .admin-role-record .role-record-note {
+    max-width: 74ch;
+    margin: 8px 0 20px;
+    color: var(--text-muted);
+    font-size: .95rem;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.admin-console .admin-role-record .role-record-note code {
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .85rem;
+}
+.admin-console .admin-role-record .role-record-note strong {
+    color: var(--text-body);
+}
+.admin-console .admin-role-record .role-definition-card,
+.admin-console .admin-role-record .role-held-card,
+.admin-console .admin-role-record .role-clone-card {
+    margin-bottom: 16px;
+    padding: 18px 20px;
+    box-shadow: none;
+}
+.admin-console .admin-role-record .role-definition-card > h3,
+.admin-console .admin-role-record .role-held-card > h3,
+.admin-console .admin-role-record .role-clone-card > h3,
+.admin-console .admin-role-record .role-assignments-card > h3 {
+    margin: 0 0 12px;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+.admin-console .admin-role-record .role-definition-card > h3 {
+    margin-bottom: 14px;
+}
+.admin-console .admin-role-record .role-definition-footer .role-reauth-field {
+    flex-basis: 240px;
+}
+.admin-console .admin-role-record .role-held-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.admin-console .admin-role-record .role-held-list li {
+    color: var(--text-muted);
+    font-size: .88rem;
+}
+.admin-console .admin-role-record .role-held-list code {
+    color: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.admin-console .admin-role-record .role-clone-card > h3 {
+    margin-bottom: 6px;
+}
+.admin-console .admin-role-record .role-clone-card .role-section-intro {
+    max-width: 64ch;
+    margin-bottom: 14px;
+    font-size: .92rem;
+}
+.admin-console .admin-role-record .role-clone-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+}
+.admin-console .admin-role-record .role-clone-form > div:first-of-type {
+    flex: 1;
+    min-width: 0;
+}
+.admin-console .admin-role-record .role-clone-form .role-reauth-field {
+    flex-basis: 240px;
+}
+.admin-console .admin-role-record .role-clone-form > .btn {
+    padding: 9px 18px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .8rem;
+    letter-spacing: .04em;
+}
+.admin-console .admin-role-record .role-clone-form > .btn:hover {
+    background: var(--surface-sunken);
+}
+.admin-console .admin-role-record .role-assignments-card {
+    padding: 18px 20px;
+    box-shadow: none;
+}
+.admin-console .admin-role-record .role-assignment-empty {
+    margin: 0 0 4px;
+    color: var(--text-faint);
+    font-size: .95rem;
+}
+.admin-console .admin-role-record .role-assignment-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+.admin-console .admin-role-record .role-assignment-table th {
+    padding: 9px 10px 8px;
+}
+.admin-console .admin-role-record .role-assignment-table td {
+    padding: 10px;
+}
+.admin-console .admin-role-record .role-assignment-table th:first-child,
+.admin-console .admin-role-record .role-assignment-table td:first-child {
+    padding-left: 0;
+}
+.admin-console .admin-role-record .role-assignment-table th:last-child,
+.admin-console .admin-role-record .role-assignment-table td:last-child {
+    padding-right: 0;
+}
+.admin-console .admin-role-record .role-assignment-member {
+    color: var(--artifact-link);
+    font-family: var(--font-mono);
+    font-size: .82rem;
+}
+.admin-console .admin-role-record .role-assignment-window {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    white-space: nowrap;
+}
+.admin-console .admin-role-record .role-assignment-status-active {
+    background: var(--surface-done);
+    color: var(--on-done);
+}
+.admin-console .admin-role-record .role-assignment-status-scheduled,
+.admin-console .admin-role-record .role-assignment-status-revoked {
+    background: var(--surface-pending);
+    color: var(--on-pending);
+}
+.admin-console .admin-role-record .role-assignment-status-expired {
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+}
+.admin-console .admin-role-record .role-assignment-action-cell {
+    text-align: right;
+}
+.admin-console .admin-role-record .role-assignment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+}
+.admin-console .admin-role-record .role-assignment-actions .linkbtn {
+    padding: 4px 11px;
+    border: 0;
+    border-radius: var(--radius-md);
+    color: var(--rust);
+    font-family: var(--font-label);
+    font-size: .72rem;
+    letter-spacing: .04em;
+}
+.admin-console .admin-role-record .role-assignment-actions .linkbtn:hover {
+    background: var(--surface-sunken);
+}
+.admin-console .admin-role-record .role-renew-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+.admin-console .admin-role-record .role-renew-form .input {
+    width: 148px;
+    min-width: 0;
+    padding: 6px 8px;
+    border-color: var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.admin-console .admin-role-record .role-renew-form input[type="password"] {
+    width: 112px;
+}
+.admin-console .admin-role-record .role-renew-form .btn {
+    padding: 6px 11px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .72rem;
+}
+.admin-console .admin-role-record .role-assignments-card > h4 {
+    margin: 22px 0 12px;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    font-weight: 400;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+.admin-console .admin-role-record .role-assign-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 16px;
+    align-items: end;
+}
+.admin-console .admin-role-record .role-assign-form > .field-error,
+.admin-console .admin-role-record .role-time-format,
+.admin-console .admin-role-record .role-assign-actions {
+    grid-column: 1 / -1;
+}
+.admin-console .admin-role-record .role-mono-input,
+.admin-console .admin-role-record .role-time-input {
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+.admin-console .admin-role-record .role-time-input {
+    font-size: .86rem;
+}
+.admin-console .admin-role-record .role-label-note {
+    letter-spacing: .02em;
+    text-transform: none;
+}
+.admin-console .admin-role-record .role-time-format {
+    margin: -4px 0 0;
+    color: var(--text-faint);
+    font-size: .78rem;
+}
+.admin-console .admin-role-record .role-assign-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Permission simulator. */
+.admin-console .admin-role-simulator .role-simulator-intro {
+    max-width: 74ch;
+    margin: 0 0 20px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.admin-console .admin-role-simulator .role-simulator-intro code {
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+.admin-console .admin-role-simulator .role-simulator-form-card,
+.admin-console .admin-role-simulator .role-simulator-result {
+    padding: 20px 22px;
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .admin-role-simulator .role-simulator-form-card > h2 {
+    margin-bottom: 16px;
+}
+.admin-console .admin-role-simulator .role-simulator-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 18px;
+    align-items: end;
+}
+.admin-console .admin-role-simulator .role-simulator-actions {
+    grid-column: 1 / -1;
+}
+.admin-console .admin-role-simulator .role-simulator-error {
+    margin-top: 16px;
+    padding: 18px 20px;
+    border-left: 3px solid var(--rust);
+    box-shadow: none;
+}
+.admin-console .admin-role-simulator .role-simulator-error > h2 {
+    margin: 0 0 6px;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+.admin-console .admin-role-simulator .role-simulator-error > p {
+    margin: 0;
+    color: var(--danger);
+    font-size: .93rem;
+}
+.admin-console .admin-role-simulator .role-simulator-result {
+    margin-top: 16px;
+}
+.admin-console .admin-role-simulator .role-simulator-result > h2 {
+    margin-bottom: 10px;
+}
+.admin-console .admin-role-simulator .role-simulator-verdict-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    color: var(--text-body);
+    font-size: 1rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.admin-console .admin-role-simulator .role-simulator-verdict {
+    padding: 2px 11px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-console .admin-role-simulator .role-simulator-verdict-allowed {
+    background: var(--surface-done);
+    color: var(--on-done);
+}
+.admin-console .admin-role-simulator .role-simulator-verdict-denied {
+    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
+    color: var(--danger);
+}
+.admin-console .admin-role-simulator .role-simulator-verdict-row code {
+    font-family: var(--font-mono);
+    font-size: .86rem;
+}
+.admin-console .admin-role-simulator .role-simulator-facts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.admin-console .admin-role-simulator .role-simulator-facts li {
+    color: var(--text-muted);
+    font-size: .93rem;
+}
+.admin-console .admin-role-simulator .role-simulator-facts code {
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .82rem;
+}
+@keyframes role-simulator-rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .admin-console .admin-role-simulator .role-simulator-result {
+        animation: role-simulator-rise 180ms var(--ease-calm) both;
+    }
+}
 @media (max-width: 860px) {
     /* The console collapses to one column; the area tier scrolls horizontally
        (its own thin scrollbar is the honest signal that areas sit off-edge) and
@@ -4800,6 +5472,53 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     .admin-console { max-width: none; padding: 18px 16px 56px; }
     .admin-console[data-area] { max-width: none; }
     .admin-title { font-size: 1.65rem; }
+    .admin-console .admin-roles .role-table,
+    .admin-console .admin-role-record .role-assignment-table {
+        min-width: 760px;
+    }
+    .admin-console .admin-roles .role-definition-grid,
+    .admin-console .admin-roles .role-capability-grid,
+    .admin-console .admin-role-record .role-held-list,
+    .admin-console .admin-role-record .role-assign-form,
+    .admin-console .admin-role-simulator .role-simulator-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .admin-console .admin-roles .role-create-footer,
+    .admin-console .admin-roles .role-definition-footer,
+    .admin-console .admin-role-record .role-clone-form {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .admin-console .admin-roles .role-reauth-field,
+    .admin-console .admin-role-record .role-clone-form .role-reauth-field {
+        flex-basis: auto;
+        width: 100%;
+    }
+    .admin-console .admin-roles .role-create-footer > .btn,
+    .admin-console .admin-roles .role-definition-footer > .btn,
+    .admin-console .admin-role-record .role-clone-form > .btn,
+    .admin-console .admin-role-record .role-assign-actions > .btn,
+    .admin-console .admin-role-simulator .role-simulator-actions > .btn,
+    .admin-console .admin-roles .role-row-action {
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+    }
+    .admin-console .admin-roles .role-capability-count {
+        margin-left: 0;
+    }
+    .admin-console .admin-role-record .role-assignment-table {
+        min-width: 940px;
+    }
+    .admin-console .admin-role-record .role-assignment-actions {
+        flex-wrap: nowrap;
+    }
+    .admin-console .admin-role-record .role-assign-form > .field-error,
+    .admin-console .admin-role-record .role-time-format,
+    .admin-console .admin-role-record .role-assign-actions,
+    .admin-console .admin-role-simulator .role-simulator-actions {
+        grid-column: 1;
+    }
     .admin-dashboard-grid,
     .admin-overview-dashboard .admin-dashboard-grid,
     .activity-card-grid {

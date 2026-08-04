@@ -46,6 +46,14 @@ final class AppRoleAdminTest extends TestCase
         $this->assertStatus(200, $resp);
         $this->assertSeeText($resp, 'system.admin');
         $this->assertSeeText($resp, 'Protected anchor');
+        $body = $resp->body();
+        self::assertStringContainsString('<h1 class="admin-title">Roles &amp; capabilities</h1>', $body);
+        self::assertStringContainsString('aria-label="Role definitions"', $body);
+        self::assertStringContainsString('class="role-kind role-kind-system"', $body);
+        self::assertStringContainsString('4 roles', $body);
+        self::assertStringNotContainsString('<h2>Roles</h2>', $body);
+        self::assertStringNotContainsString('placeholder="Search roles"', $body);
+        self::assertStringNotContainsString('No roles match this filter', $body);
         self::assertSame('noindex', $resp->getHeader('x-robots-tag'));
     }
 
@@ -83,6 +91,11 @@ final class AppRoleAdminTest extends TestCase
         $this->assertStatus(422, $resp);
         $this->assertSeeText($resp, 'Draft Role Name');
         $this->assertSeeText($resp, 'current password is incorrect');
+        self::assertMatchesRegularExpression(
+            '/<input\b(?=[^>]*\bname="capabilities\[\]")(?=[^>]*\bvalue="core\.thread\.lock")(?=[^>]*\bchecked\b)[^>]*>/',
+            $resp->body(),
+            'A create-role 422 must keep every selected capability checked.',
+        );
     }
 
     public function test_protected_capabilities_are_not_offered_and_are_rejected(): void
@@ -165,6 +178,7 @@ final class AppRoleAdminTest extends TestCase
         $this->assertStatus(200, $resp);
         $this->assertSeeText($resp, 'Allowed');
         $this->assertSeeText($resp, 'core.thread.lock');
+        self::assertStringContainsString('role-simulator-verdict-allowed', $resp->body());
         self::assertSame('noindex', $resp->getHeader('x-robots-tag'));
 
         $resp = $this->get('/admin/roles/simulator', [
@@ -173,6 +187,60 @@ final class AppRoleAdminTest extends TestCase
             'board_id' => (string) $board['id'],
         ]);
         $this->assertSeeText($resp, 'Denied');
+        self::assertStringContainsString('role-simulator-verdict-denied', $resp->body());
+        $this->assertDontSeeText($resp, 'Via role:');
+    }
+
+    public function test_submitted_simulator_requires_a_capability_server_side(): void
+    {
+        $this->enable();
+        $this->actingAs($this->makeAdmin());
+
+        $idle = $this->get('/admin/roles/simulator');
+        $this->assertStatus(200, $idle);
+        $this->assertDontSeeText($idle, 'The simulator could not answer');
+
+        // The browser's required attribute is only a convenience. A direct GET
+        // with an empty select value must still receive the server-owned error.
+        $submitted = $this->get('/admin/roles/simulator', [
+            'actor' => 'guest',
+            'capability' => '',
+            'board_id' => '',
+            'at' => '',
+        ]);
+        $this->assertStatus(200, $submitted);
+        $this->assertSeeText($submitted, 'The simulator could not answer');
+        $this->assertSeeText($submitted, 'Pick a capability to test.');
+        self::assertStringContainsString('role-simulator-error', $submitted->body());
+    }
+
+    public function test_system_record_keeps_assignments_dark_and_custom_record_keeps_its_added_capability_editor(): void
+    {
+        $this->enable();
+        $this->actingAs($this->makeAdmin());
+        $roles = new RoleRepository($this->db);
+
+        $systemId = (int) $roles->findByKey('system.moderator')['id'];
+        $system = $this->get('/admin/roles/' . $systemId);
+        $this->assertStatus(200, $system);
+        $this->assertSeeText($system, 'Capabilities held');
+        self::assertStringContainsString('href="/admin/roles"', $system->body());
+        self::assertStringNotContainsString('name="capabilities[]"', $system->body());
+        $this->assertDontSeeText($system, 'Assign this role');
+
+        $this->assertRedirect($this->post('/admin/roles', [
+            'name' => 'Record capability editor',
+            'description' => 'Ledgered FA-23 surface',
+            'capabilities' => ['core.thread.lock'],
+            'current_password' => 'password123',
+        ]));
+        $customId = (int) $roles->findByKey('custom.record_capability_editor')['id'];
+        $custom = $this->get('/admin/roles/' . $customId);
+        $this->assertStatus(200, $custom);
+        $this->assertSeeText($custom, 'Edit definition');
+        self::assertStringContainsString('name="capabilities[]"', $custom->body());
+        self::assertStringContainsString('value="core.thread.lock"', $custom->body());
+        $this->assertSeeText($custom, 'Assign this role');
     }
 
     public function test_roles_page_surfaces_the_effective_resolver_posture(): void

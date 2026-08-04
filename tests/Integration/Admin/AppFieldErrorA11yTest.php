@@ -208,6 +208,134 @@ final class AppFieldErrorA11yTest extends TestCase
         $this->assertFieldWired($response->body(), 'select', 'mime', 'err-emoji-mime');
     }
 
+    public function test_role_definition_error_is_scoped_and_programmatically_linked(): void
+    {
+        [, $roleId] = $this->makeRoleErrorSurface('definition');
+        $response = $this->post('/admin/roles/' . $roleId, [
+            'name' => '',
+            'description' => 'Typed definition description',
+            'capabilities' => ['core.thread.lock'],
+            'current_password' => 'password123',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $this->assertFieldWiredInForm(
+            $response->body(),
+            '/admin/roles/' . $roleId,
+            'input',
+            'name',
+            'err-role-definition-name',
+        );
+    }
+
+    public function test_role_clone_error_is_scoped_and_programmatically_linked(): void
+    {
+        [, $roleId] = $this->makeRoleErrorSurface('clone');
+        $response = $this->post('/admin/roles/' . $roleId . '/clone', [
+            'name' => 'Typed clone name',
+            'current_password' => 'wrong-password',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $this->assertFieldWiredInForm(
+            $response->body(),
+            '/admin/roles/' . $roleId . '/clone',
+            'input',
+            'current_password',
+            'err-role-clone-current_password',
+        );
+        self::assertStringContainsString('value="Typed clone name"', $response->body());
+    }
+
+    public function test_role_assignment_error_is_scoped_and_programmatically_linked(): void
+    {
+        [, $roleId] = $this->makeRoleErrorSurface('assignment');
+        $response = $this->post('/admin/roles/' . $roleId . '/assignments', [
+            'username' => 'missing-role-subject',
+            'scope_type' => 'site',
+            'scope_id' => '',
+            'starts_at' => '',
+            'ends_at' => '',
+            'reason' => 'Typed assignment reason',
+            'current_password' => 'password123',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $this->assertFieldWiredInForm(
+            $response->body(),
+            '/admin/roles/' . $roleId . '/assignments',
+            'input',
+            'username',
+            'err-role-assign-username',
+        );
+    }
+
+    public function test_role_renew_error_is_scoped_to_its_row_and_programmatically_linked(): void
+    {
+        [, $roleId] = $this->makeRoleErrorSurface('renew');
+        $subject = $this->makeUser(['username' => 'a11y_role_renew_subject']);
+        $this->assertRedirect($this->post('/admin/roles/' . $roleId . '/assignments', [
+            'username' => $subject['username'],
+            'scope_type' => 'site',
+            'scope_id' => '',
+            'starts_at' => '',
+            'ends_at' => gmdate('Y-m-d H:i', time() + 3600),
+            'reason' => 'A11y renew setup',
+            'current_password' => 'password123',
+        ]));
+        $assignmentId = (int) $this->db->fetchValue('SELECT id FROM role_assignments ORDER BY id DESC LIMIT 1');
+
+        $response = $this->post('/admin/role-assignments/' . $assignmentId . '/renew', [
+            'ends_at' => gmdate('Y-m-d H:i', time() + 7200),
+            'current_password' => 'wrong-password',
+        ]);
+
+        $this->assertStatus(422, $response);
+        $this->assertFieldWiredInForm(
+            $response->body(),
+            '/admin/role-assignments/' . $assignmentId . '/renew',
+            'input',
+            'current_password',
+            'err-role-renew-' . $assignmentId . '-current_password',
+        );
+        self::assertSame(1, substr_count($response->body(), 'Your current password is incorrect.'));
+    }
+
+    /** @return array{0:array<string,mixed>,1:int} */
+    private function makeRoleErrorSurface(string $suffix): array
+    {
+        (new SettingRepository($this->db))->set('features', ['capabilities' => true]);
+        $admin = $this->makeAdmin(['username' => 'a11y_role_' . $suffix]);
+        $this->actingAs($admin);
+        $this->assertRedirect($this->post('/admin/roles', [
+            'name' => 'A11y Role ' . ucfirst($suffix),
+            'description' => '',
+            'capabilities' => ['core.thread.lock'],
+            'current_password' => 'password123',
+        ]));
+        $roleId = (int) $this->db->fetchValue('SELECT id FROM roles WHERE role_key LIKE \'custom.%\' ORDER BY id DESC LIMIT 1');
+        self::assertGreaterThan(0, $roleId);
+
+        return [$admin, $roleId];
+    }
+
+    private function assertFieldWiredInForm(
+        string $body,
+        string $action,
+        string $tag,
+        string $field,
+        string $errorId,
+    ): void {
+        $matched = preg_match(
+            '/<form\b(?=[^>]*\baction="' . preg_quote($action, '/') . '")[^>]*>(?<form>.*?)<\/form>/s',
+            $body,
+            $matches,
+        );
+        self::assertSame(1, $matched, 'Expected to find form action ' . $action . '.');
+        $this->assertFieldWired((string) $matches['form'], $tag, $field, $errorId);
+        self::assertStringContainsString('id="' . $errorId . '"', $body);
+    }
+
     private function assertFieldWired(
         string $body,
         string $tag,

@@ -1082,3 +1082,28 @@
         });
     });
 })();
+
+// Admin roles: mirror the design's selected-capability count as progressive
+// enhancement on the create form only. JavaScript creates the counter, so it
+// is absent (not an empty styled placeholder) from the no-JS document;
+// capability submission remains a normal POST.
+(function () {
+    'use strict';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-role-capability-form]'), function (form) {
+        var footer = form.querySelector('.role-create-footer');
+        if (!footer) { return; }
+        var counter = document.createElement('span');
+        counter.className = 'role-capability-count';
+        counter.setAttribute('data-role-capability-count', '');
+        counter.setAttribute('aria-live', 'polite');
+        footer.appendChild(counter);
+        var update = function () {
+            var count = form.querySelectorAll('input[name="capabilities[]"]:checked:not(:disabled)').length;
+            counter.textContent = count + ' ' + (count === 1 ? 'capability' : 'capabilities') + ' selected';
+        };
+        form.addEventListener('change', function (e) {
+            if (e.target && e.target.matches && e.target.matches('input[name="capabilities[]"]')) { update(); }
+        });
+        update();
+    });
+})();

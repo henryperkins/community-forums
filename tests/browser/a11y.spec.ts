@@ -181,6 +181,7 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await visit(page, '/admin/roles');
   await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Roles');
+  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toHaveCount(0);
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/packages');
@@ -220,6 +221,13 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Permission simulator');
   await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
+  // Direct query submission bypasses native required-field blocking and
+  // proves the server-owned empty-capability error has the design's card.
+  await visit(page, '/admin/roles/simulator?actor=guest&capability=');
+  await expect(page.locator('.role-simulator-error').getByRole('heading', { level: 2, name: 'The simulator could not answer' })).toBeVisible();
+  await expect(page.locator('.role-simulator-error')).toContainText('Pick a capability to test.');
   await expectNoSeriousA11yViolations(page, info);
 
   // badge_rules graduated to default-on (GA 2026-07-02): the admin create-rule
