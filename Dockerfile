@@ -57,6 +57,16 @@ RUN composer install \
 # ---------------------------------------------------------------------------
 FROM phpbase
 
+# FUSE + an S3 client so /data can be backed by an R2 bucket. Cloudflare
+# Containers have an ephemeral filesystem: uploads, installed packages and the
+# rate-limit ledger would not survive a restart on local disk. Unused (and
+# inert) when R2_BUCKET is unset, e.g. a VPS deploy with a real volume.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends s3fs fuse3 \
+    && echo 'user_allow_other' >> /etc/fuse.conf \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /var/www/html
 
 # Application source (vendor/ and storage/ excluded via .dockerignore)

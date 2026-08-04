@@ -1,0 +1,83 @@
+{
+  // RetroBoards on Cloudflare Containers.
+  // Runbook: docs/runbooks/deployment-cloudflare.md
+  //
+  // The Worker is a thin front door: it fixes up the client-IP header and hands
+  // every request to a single container instance running the Apache/PHP image.
+  // Secrets (APP_KEY, DB_PASSWORD, DB_SSL_CA_PEM, R2 keys) are NOT here --
+  // set them with `wrangler secret put`.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "retroboards",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-08-03",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "observability": { "enabled": true },
+
+  "containers": [
+    {
+      "class_name": "ForumContainer",
+      "image": "./Dockerfile",
+      // The app is stateful and single-writer: one instance, always the same one.
+      "max_instances": 1,
+      // 1/2 vCPU, 4 GiB, 8 GB disk. `basic` (1/4 vCPU, 1 GiB) also runs it but
+      // leaves little headroom for Apache + PHP under concurrent renders.
+      "instance_type": "standard-1"
+      // Placement: pin the container near your managed MySQL, or every page
+      // render pays cross-region latency on multiple round trips. Verify the
+      // exact key against the current Containers placement docs before adding:
+      //   "regions": ["ENAM"]
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [{ "class_name": "ForumContainer", "name": "FORUM" }]
+  },
+
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ForumContainer"] }],
+
+  "routes": [{ "pattern": "forum.candidary.online", "custom_domain": true }],
+
+  "triggers": {
+    "crons": [
+      "*/5 * * * *", // worker:email, worker:webhooks
+      "0 */6 * * *", // worker:registry-refresh
+      "10 3 * * *", // worker:purge-ips, worker:attachments, worker:packages
+      "0 7 * * *" // worker:digest
+    ]
+  },
+
+  "vars": {
+    "APP_ENV": "production",
+    "APP_DEBUG": "false",
+    "APP_URL": "https://forum.candidary.online",
+    "SESSION_SECURE": "true",
+    "SECURITY_HSTS": "true",
+
+    // PlanetScale, reached over the public internet. Only DB_PASSWORD is a
+    // secret. PlanetScale serves a publicly-trusted certificate, so the trust
+    // anchor is the distro CA bundle already in the image -- no DB_SSL_CA_PEM
+    // secret is needed.
+    "DB_HOST": "gcp.connect.psdb.cloud",
+    "DB_PORT": "3306",
+    "DB_DATABASE": "imladris-db",
+    "DB_USERNAME": "yp6zfl84gzwfsatq09b5",
+    "DB_SSL": "true",
+    "DB_SSL_CA": "/etc/ssl/certs/ca-certificates.crt",
+
+    // /data is an R2 mount -- the container filesystem does not survive restarts.
+    "R2_BUCKET": "retroboards-data",
+    "R2_ACCOUNT_ID": "a77e479f6736120eadd99973dbeb705e",
+    "UPLOADS_PATH": "/data/media",
+    "PACKAGES_STORAGE_PATH": "/data/packages",
+    "RATELIMIT_PATH": "/data/ratelimit",
+
+    // The Worker overwrites X-Forwarded-For with the verified client IP, so the
+    // app must trust the hop it sees. Fill in the address the container actually
+    // reports after the first deploy -- see the runbook, "client IP" section.
+    "TRUSTED_PROXIES": "",
+
+    // Migrations run in the entrypoint on boot (single instance, no race).
+    "RUN_MIGRATIONS": "true"
+  }
+}

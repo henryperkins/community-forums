@@ -35,20 +35,57 @@ final class Database
             $this->config['charset'] ?? 'utf8mb4',
         );
 
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+            PDO::ATTR_TIMEOUT => 5,
+        ];
+
         $this->pdo = new PDO(
             $dsn,
             (string) $this->config['username'],
             (string) $this->config['password'],
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::ATTR_STRINGIFY_FETCHES => false,
-                PDO::ATTR_TIMEOUT => 5,
-            ],
+            $options + $this->tlsOptions(),
         );
 
         return $this->pdo;
+    }
+
+    /**
+     * TLS driver options for the MySQL connection. Empty (plaintext) unless
+     * db.ssl.enabled is on — a same-host/private-network connection needs no
+     * TLS, but a managed database reached over the public internet does, or the
+     * credentials and every row cross the wire in the clear.
+     *
+     * The MYSQL_ATTR_SSL_* constants only exist when pdo_mysql is loaded, so
+     * they are resolved defensively: a machine without the driver can still
+     * construct this class (unit tests never open a MySQL socket).
+     *
+     * @return array<int,mixed>
+     */
+    private function tlsOptions(): array
+    {
+        $ssl = $this->config['ssl'] ?? [];
+        if (empty($ssl['enabled'])) {
+            return [];
+        }
+
+        $options = [];
+        $ca = (string) ($ssl['ca'] ?? '');
+        if ($ca !== '' && defined('PDO::MYSQL_ATTR_SSL_CA')) {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = $ca;
+        }
+        if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+            // Verifying the server certificate requires a CA to verify it against.
+            // Without one, asking for verification fails the connection outright,
+            // so only assert it when we actually have a trust anchor.
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $ca !== ''
+                && (bool) ($ssl['verify'] ?? true);
+        }
+
+        return $options;
     }
 
     /** Allow tests to inject a pre-built PDO (e.g. a shared transaction). */

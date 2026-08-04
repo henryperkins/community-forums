@@ -2,9 +2,12 @@
   "private": true,
   "scripts": {
     "build:wysiwyg": "vite build --config vite.config.mjs",
-    "check:wysiwyg": "npm run build:wysiwyg && git diff --exit-code -- public/assets/wysiwyg-composer.js public/assets/wysiwyg-composer.css"
+    "check:wysiwyg": "npm run build:wysiwyg && git diff --exit-code -- public/assets/wysiwyg-composer.js public/assets/wysiwyg-composer.css",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.0",
     "@milkdown/core": "7.21.2",
     "@milkdown/plugin-history": "7.21.2",
     "@milkdown/plugin-listener": "7.21.2",
@@ -14,6 +17,7 @@
   },
   "devDependencies": {
     "typescript": "6.0.3",
-    "vite": "8.1.3"
+    "vite": "8.1.3",
+    "wrangler": "^4.0.0"
   }
 }

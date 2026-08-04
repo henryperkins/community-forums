@@ -27,6 +27,14 @@ return [
         'username' => Env::get('DB_USERNAME', 'retro'),
         'password' => Env::get('DB_PASSWORD', 'retropw'),
         'charset' => 'utf8mb4',
+        // TLS for the MySQL connection. Off by default (same-host or private
+        // network). Required when the database is reached over the public
+        // internet — see docs/runbooks/deployment-cloudflare.md.
+        'ssl' => [
+            'enabled' => Env::bool('DB_SSL', false),
+            'ca' => Env::get('DB_SSL_CA', ''),
+            'verify' => Env::bool('DB_SSL_VERIFY', true),
+        ],
     ],
 
     'session' => [
