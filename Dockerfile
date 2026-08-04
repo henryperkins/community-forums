@@ -64,6 +64,7 @@ FROM phpbase
 RUN apt-get update \
     && apt-get install -y --no-install-recommends s3fs fuse3 \
     && echo 'user_allow_other' >> /etc/fuse.conf \
+    && sed -ri 's!^ErrorLog .*!ErrorLog /proc/self/fd/1!' /etc/apache2/apache2.conf \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -85,6 +86,8 @@ COPY deploy/entrypoint.sh /usr/local/bin/retroboards-entrypoint
 RUN chmod +x /usr/local/bin/retroboards-entrypoint \
     && mkdir -p storage/cache storage/ratelimit storage/media \
     && chown -R www-data:www-data storage
+
+EXPOSE 8080
 
 ENTRYPOINT ["retroboards-entrypoint"]
 CMD ["apache2-foreground"]

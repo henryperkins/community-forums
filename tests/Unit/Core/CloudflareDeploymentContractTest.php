@@ -45,9 +45,13 @@ final class CloudflareDeploymentContractTest extends TestCase
     public function test_container_boot_requires_persistent_storage_and_migrates_before_apache(): void
     {
         $dockerfile = $this->read('Dockerfile');
+        $apacheVhost = $this->read('deploy/apache-vhost.conf');
         $entrypoint = $this->read('deploy/entrypoint.sh');
 
         self::assertStringContainsString('s3fs', $dockerfile);
+        self::assertStringContainsString('EXPOSE 8080', $dockerfile);
+        self::assertStringContainsString('ErrorLog /proc/self/fd/1', $apacheVhost);
+        self::assertStringContainsString("sed -ri 's!^ErrorLog .*!ErrorLog /proc/self/fd/1!'", $dockerfile);
         self::assertStringContainsString(': "${R2_ACCESS_KEY_ID:', $entrypoint);
         self::assertStringContainsString(': "${R2_SECRET_ACCESS_KEY:', $entrypoint);
         self::assertStringContainsString('php /var/www/html/bin/console migrate', $entrypoint);
