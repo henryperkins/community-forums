@@ -26,6 +26,7 @@ $tab = (string) ($tab ?? '');
 // A leaf may scope its own pane styles (the old <div class="admin x"> wrapper
 // carried this); everything else styles off .admin-console[data-area].
 $paneClass = trim((string) ($pane_class ?? ''));
+$deferFlash = !empty($defer_flash);
 $features = is_array($features ?? null) ? $features : (array) $this->shared('features', []);
 $brandName = (string) ($branding['name'] ?? $site_name ?? 'Admin');
 $viewer = $current_user ?? null;
@@ -195,5 +196,7 @@ $disabledNote = 'Disabled until the feature flag is enabled';
             <?php endforeach; ?>
         </nav>
     <?php endif; ?>
-    <?= $this->partial('partials/flash') ?>
+    <?php if (!$deferFlash): ?>
+        <?= $this->partial('partials/flash') ?>
+    <?php endif; ?>
     <div class="admin-pane<?= $paneClass !== '' ? ' ' . $e($paneClass) : '' ?>">

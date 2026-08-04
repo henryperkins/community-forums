@@ -140,11 +140,22 @@
             return contrast(v, '#ffffff') >= contrast(v, '#0f1218') ? '#ffffff' : '#0f1218';
         };
         var updateBrandPreview = function () {
-            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value : '#2f6feb';
-            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value : primary;
-            brandPreview.style.setProperty('--preview-accent', primary);
-            brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
-            brandPreview.style.setProperty('--preview-accent-2', accent);
+            var primary = brandPrimary && hex(brandPrimary.value) ? brandPrimary.value : '';
+            var accent = brandAccent && hex(brandAccent.value) ? brandAccent.value : '';
+            if (primary !== '') {
+                brandPreview.style.setProperty('--preview-accent', primary);
+                brandPreview.style.setProperty('--preview-accent-contrast', contrastToken(primary));
+            } else {
+                brandPreview.style.removeProperty('--preview-accent');
+                brandPreview.style.removeProperty('--preview-accent-contrast');
+            }
+            if (accent !== '') {
+                brandPreview.style.setProperty('--preview-accent-2', accent);
+                brandPreview.style.setProperty('--preview-accent-2-contrast', contrastToken(accent));
+            } else {
+                brandPreview.style.removeProperty('--preview-accent-2');
+                brandPreview.style.removeProperty('--preview-accent-2-contrast');
+            }
             if (previewName && brandName) { previewName.textContent = brandName.value || 'Community'; }
             if (previewTheme && brandTheme) { previewTheme.textContent = brandTheme.value.charAt(0).toUpperCase() + brandTheme.value.slice(1); }
         };

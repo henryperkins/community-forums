@@ -170,7 +170,8 @@ final class AppThemePackageTest extends TestCase
     public function test_admin_theme_routes_require_admin_and_are_noindexed(): void
     {
         $this->setFlags(['package_registry' => true, 'package_themes' => true]);
-        $installedId = $this->installedTheme();
+        $fixture = $this->installedThemeFixture();
+        $installedId = $fixture['installed_id'];
 
         $this->actingAs($this->makeUser());
         $this->assertStatus(403, $this->get('/admin/themes'));
@@ -181,6 +182,18 @@ final class AppThemePackageTest extends TestCase
         $this->assertStatus(200, $index);
         self::assertSame('noindex', $index->getHeader('x-robots-tag'));
         self::assertStringContainsString('Midnight Theme', $index->body());
+        self::assertStringContainsString('class="state state-active">Enabled</span>', $index->body());
+        self::assertStringContainsString('<h2 class="theme-activate-title">Activate Midnight Theme?</h2>', $index->body());
+
+        $installs = new InstalledPackageRepository($this->db);
+        $installs->setState($installedId, 'installed');
+        $installed = $this->get('/admin/themes');
+        self::assertStringContainsString('class="state state-installed">Installed</span>', $installed->body());
+        self::assertStringContainsString('href="/admin/packages/' . $fixture['package_id'] . '">Enable it from Packages first</a>', $installed->body());
+
+        $installs->setState($installedId, 'disabled');
+        $disabled = $this->get('/admin/themes');
+        self::assertStringContainsString('class="state state-disabled">Disabled</span>', $disabled->body());
 
         // Themes moved into the Appearance area under ADR 0024, so the packages
         // catalogue reaches it through the tier rather than through a rail that
@@ -203,6 +216,7 @@ final class AppThemePackageTest extends TestCase
         $this->actingAs($admin);
         $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
         self::assertStringContainsString('/theme/preview.css', $this->get('/')->body());
+        self::assertStringContainsString('class="theme-preview-digest"', $this->get('/admin/themes')->body());
 
         $this->actingAs($this->makeUser());
         $memberShell = $this->get('/');
@@ -263,6 +277,29 @@ final class AppThemePackageTest extends TestCase
         self::assertStringContainsString('/theme/' . $digest . '.css', $this->get('/')->body());
     }
 
+    public function test_admin_theme_index_blanks_active_and_preview_cards_in_safe_mode(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $installedId = $this->installedTheme();
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/activate', [
+            'current_password' => 'password123',
+        ]), '/admin/themes');
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/preview'), '/admin/themes');
+
+        $before = $this->get('/admin/themes');
+        $this->assertStatus(200, $before);
+        $this->assertDontSeeText($before, 'No package theme is active.');
+        $this->assertSeeText($before, 'Previewing');
+
+        $this->assertRedirect($this->post('/admin/themes/safe-mode'), '/admin/themes/safe-mode');
+        $safe = $this->get('/admin/themes');
+        $this->assertStatus(200, $safe);
+        $this->assertSeeText($safe, 'No package theme is active.');
+        $this->assertSeeText($safe, 'No session preview is active.');
+    }
+
     public function test_admin_rollback_serves_exactly_the_lkg_bytes(): void
     {
         $this->setFlags(['package_registry' => true, 'package_themes' => true]);
@@ -301,7 +338,72 @@ final class AppThemePackageTest extends TestCase
         (new InstalledPackageRepository($this->db))->setState($installedId, 'disabled');
         $disabled = $this->post('/admin/themes/' . $installedId . '/activate', ['current_password' => 'password123']);
         $this->assertStatus(422, $disabled);
-        self::assertStringContainsString('invalid_state', $disabled->body());
+        self::assertStringNotContainsString('invalid_state', $disabled->body());
+        self::assertStringContainsString('Theme packages must be enabled before activation.', $disabled->body());
+        self::assertSame(1, substr_count($disabled->body(), 'Theme packages must be enabled before activation.'));
+
+        $disabledWrongPassword = $this->post('/admin/themes/' . $installedId . '/activate', [
+            'current_password' => 'wrong',
+        ]);
+        $this->assertStatus(422, $disabledWrongPassword);
+        self::assertStringContainsString(
+            'id="err-theme-activate-password-' . $installedId . '"',
+            $disabledWrongPassword->body(),
+        );
+    }
+
+    public function test_admin_theme_password_errors_are_scoped_to_the_originating_form(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $fixture = $this->installedThemeFixture();
+        $installedId = $fixture['installed_id'];
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+
+        $activation = $this->post('/admin/themes/' . $installedId . '/activate', [
+            'current_password' => 'wrong',
+        ]);
+        $this->assertStatus(422, $activation);
+        self::assertStringContainsString('id="err-theme-activate-password-' . $installedId . '"', $activation->body());
+        self::assertStringContainsString('aria-describedby="err-theme-activate-password-' . $installedId . '"', $activation->body());
+        self::assertStringNotContainsString('id="err-theme-rollback-password"', $activation->body());
+
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/activate', [
+            'current_password' => 'password123',
+        ]), '/admin/themes');
+        $this->activateSecondThemeVersion($fixture);
+        $this->assertRedirect($this->post('/admin/themes/' . $installedId . '/activate', [
+            'current_password' => 'password123',
+        ]), '/admin/themes');
+
+        $rollback = $this->post('/admin/themes/rollback', ['current_password' => 'wrong']);
+        $this->assertStatus(422, $rollback);
+        self::assertStringContainsString('id="err-theme-rollback-password"', $rollback->body());
+        self::assertStringContainsString('aria-describedby="err-theme-rollback-password"', $rollback->body());
+        self::assertStringNotContainsString('id="err-theme-activate-password-' . $installedId . '"', $rollback->body());
+    }
+
+    public function test_theme_policy_errors_have_a_visible_fallback_when_the_originating_form_is_absent(): void
+    {
+        $this->setFlags(['package_registry' => true, 'package_themes' => true]);
+        $this->actingAs($this->makeAdmin(['password' => 'password123']));
+
+        $staleInstall = $this->post('/admin/themes/999999/preview');
+        $this->assertStatus(422, $staleInstall);
+        self::assertStringContainsString(
+            'class="callout callout-danger theme-action-error" role="alert"',
+            $staleInstall->body(),
+        );
+        self::assertStringContainsString('Theme packages must be enabled before activation.', $staleInstall->body());
+
+        $missingLkg = $this->post('/admin/themes/rollback', [
+            'current_password' => 'password123',
+        ]);
+        $this->assertStatus(422, $missingLkg);
+        self::assertStringContainsString(
+            'class="callout callout-danger theme-action-error" role="alert"',
+            $missingLkg->body(),
+        );
+        self::assertStringContainsString('No last-known-good theme build is available.', $missingLkg->body());
     }
 
     public function test_package_themes_flag_gates_public_theme_routes(): void

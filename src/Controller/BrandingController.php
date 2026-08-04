@@ -90,10 +90,12 @@ final class BrandingController extends Controller
             // every stored brand asset and colour, so it requires the typed
             // confirmation the form asks for (enforced server-side).
             if (trim($request->str('reset_confirm')) !== 'RESET') {
-                return $this->view('admin/branding', $this->formData($settings, [
-                    'site_name' => $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
-                    'errors' => ['reset_confirm' => 'Type RESET to confirm restoring the default branding.'],
-                ]), 422);
+                return $this->view('admin/branding', $this->formData($settings, array_replace(
+                    $this->submittedFormData($request, $settings),
+                    [
+                        'errors' => ['reset_confirm' => 'Type RESET to confirm restoring the default branding.'],
+                    ],
+                )), 422);
             }
             foreach ([
                 'brand_color_primary',
@@ -111,21 +113,21 @@ final class BrandingController extends Controller
             }
             $this->bustBrandCache($settings);
             $this->audit($admin->id(), 'reset');
-            return $this->redirectWithFlash('/admin/branding', 'Branding was reset to the safe defaults.');
+            return $this->redirectWithFlash('/admin/branding', 'Reset. The built-in chrome is back.');
         }
 
         $errors = [];
         $name = trim($request->str('site_name'));
         if ($name === '' || mb_strlen($name) > 80) {
-            $errors['site_name'] = 'Enter a site name (max 80 characters).';
+            $errors['site_name'] = 'Site name must be 1–80 characters.';
         }
         $primary = trim($request->str('color_primary'));
         $accent = trim($request->str('color_accent'));
         if ($primary !== '' && !self::isHex($primary)) {
-            $errors['color_primary'] = 'Use a 6-digit hex colour like #2f6fed.';
+            $errors['color_primary'] = 'Primary colour must be a hex value, e.g. #2e4a3a.';
         }
         if ($accent !== '' && !self::isHex($accent)) {
-            $errors['color_accent'] = 'Use a 6-digit hex colour like #7c3aed.';
+            $errors['color_accent'] = 'Accent colour must be a hex value, e.g. #c29a44.';
         }
         if ($primary !== '' && self::isHex($primary) && self::contrastToken($primary) === null) {
             $errors['color_primary'] = 'Choose a primary colour that supports readable button text.';
@@ -145,15 +147,19 @@ final class BrandingController extends Controller
         $flags = $this->container->get(FeatureFlags::class);
         $customCssAvailable = $flags->enabled('custom_css');
         $customCssEnabled = $customCssAvailable && $request->str('custom_css_enabled') === '1';
-        $customCss = trim((string) $request->post('custom_css', ''));
+        $customCssAck = $customCssEnabled && $request->str('custom_css_ack') === '1';
+        // A CSS-only disclosure hides the textarea but does not remove it from
+        // the request. Match the design's removed-node semantics: while the
+        // checkbox is off, ignore that posted value and preserve the saved CSS.
+        $customCss = $customCssEnabled
+            ? trim((string) $request->post('custom_css', ''))
+            : $settings->getString('brand_custom_css', '');
         if ($customCssEnabled) {
-            if ($request->str('custom_css_ack') !== '1') {
-                $errors['custom_css'] = 'Confirm that custom CSS can affect the whole site.';
+            if (!$customCssAck) {
+                $errors['custom_css'] = 'Acknowledge that custom CSS applies site-wide before saving it.';
             } elseif (($customError = self::customCssError($customCss)) !== null) {
                 $errors['custom_css'] = $customError;
             }
-        } elseif ($customCssAvailable && $customCss !== '' && ($customError = self::customCssError($customCss)) !== null) {
-            $errors['custom_css'] = $customError;
         }
 
         if ($errors !== []) {
@@ -165,6 +171,7 @@ final class BrandingController extends Controller
                 'theme_preset' => $themePreset,
                 'custom_css_enabled' => $customCssEnabled,
                 'custom_css' => $customCss,
+                'custom_css_ack' => $customCssAck,
                 'errors' => $errors,
             ]), 422);
         }
@@ -177,7 +184,9 @@ final class BrandingController extends Controller
 
         if ($customCssAvailable) {
             $settings->set('brand_custom_css_enabled', $customCssEnabled);
-            $settings->set('brand_custom_css', $customCss);
+            if ($customCssEnabled) {
+                $settings->set('brand_custom_css', $customCss);
+            }
         }
 
         // A rejected upload must not hide under a success flash: keep the old
@@ -197,7 +206,7 @@ final class BrandingController extends Controller
                 'Branding updated, but ' . implode(' ', $assetErrors) . ' The previous asset was kept.',
             );
         }
-        return $this->redirectWithFlash('/admin/branding', 'Branding updated.');
+        return $this->redirectWithFlash('/admin/branding', 'Saved. The chrome is live for everyone.');
     }
 
     /** @param array<string,mixed> $overrides */
@@ -216,9 +225,35 @@ final class BrandingController extends Controller
             'custom_css_available' => $this->container->get(FeatureFlags::class)->enabled('custom_css'),
             'custom_css_enabled' => $settings->get('brand_custom_css_enabled', false) === true,
             'custom_css' => $settings->getString('brand_custom_css', ''),
+            'custom_css_ack' => false,
+            'reset_confirm' => '',
             'errors' => [],
         ];
         return array_replace($data, $overrides);
+    }
+
+    /** @return array<string,mixed> */
+    private function submittedFormData(Request $request, SettingRepository $settings): array
+    {
+        $customCssAvailable = $this->container->get(FeatureFlags::class)->enabled('custom_css');
+        $customCssEnabled = $customCssAvailable && $request->str('custom_css_enabled') === '1';
+
+        return [
+            'site_name' => $request->str(
+                'site_name',
+                $settings->getString('site_name', (string) $this->config()->get('app.name', 'RetroBoards')),
+            ),
+            'color_primary' => $request->str('color_primary', $settings->getString('brand_color_primary', '')),
+            'color_accent' => $request->str('color_accent', $settings->getString('brand_color_accent', '')),
+            'theme_default' => $request->str('theme_default', $settings->getString('brand_theme_default', 'system')),
+            'theme_preset' => $request->str('theme_preset', $settings->getString('brand_theme_preset', 'classic')),
+            'custom_css_enabled' => $customCssEnabled,
+            'custom_css' => $customCssEnabled
+                ? trim((string) $request->post('custom_css', ''))
+                : $settings->getString('brand_custom_css', ''),
+            'custom_css_ack' => $customCssEnabled && $request->str('custom_css_ack') === '1',
+            'reset_confirm' => $request->str('reset_confirm'),
+        ];
     }
 
     /**
@@ -234,7 +269,7 @@ final class BrandingController extends Controller
             $row = $this->container->get(AttachmentService::class)->storeUpload($adminId, $file, $purpose);
         } catch (\App\Core\ValidationException $e) {
             // Keep the existing asset on a bad upload rather than 500 — but
-            // report it (a swallowed rejection under "Branding updated." reads
+            // report it (a swallowed rejection under a success flash reads
             // as success).
             $assetErrors[] = $label . ' upload was rejected: ' . $e->first();
             return;

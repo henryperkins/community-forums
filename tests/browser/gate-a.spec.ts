@@ -1,4 +1,5 @@
 import { test, expect, type Page, type TestInfo } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { execFile } from 'node:child_process';
 import http from 'node:http';
 import path from 'node:path';
@@ -22,6 +23,7 @@ const EVIDENCE_DIR = path.resolve(
   '..',
   process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser',
 );
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const execFileAsync = promisify(execFile);
 const PNG_1X1 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWP4z8AAAAMBAQCc479ZAAAAAElFTkSuQmCC';
@@ -130,6 +132,22 @@ async function clickThemePreview(page: Page, uid: string): Promise<void> {
   await expect(row).toBeVisible();
   await row.getByRole('button', { name: 'Preview' }).click();
   await expect(page.getByRole('status').getByText('Previewing this theme in your session only.')).toBeVisible();
+  await expect(page.locator('.admin-console > .flash')).toContainText('Previewing this theme in your session only.');
+}
+
+async function resetThemeEvidenceState(): Promise<void> {
+  const php = `
+require 'vendor/autoload.php';
+\\App\\Core\\Env::load(getcwd() . '/.env');
+$config = \\App\\Core\\Config::fromFile(getcwd() . '/config/config.php');
+$db = new \\App\\Core\\Database($config->get('db'));
+(new \\App\\Repository\\PackageThemeRepository($db))->setState(null, null, null);
+(new \\App\\Repository\\SettingRepository($db))->set('theme_safe_mode', '');
+`;
+  await execFileAsync('php', ['-r', php], {
+    cwd: REPO_ROOT,
+    env: { ...process.env, DB_DATABASE: process.env.DB_DATABASE ?? 'retroboards_e2e' },
+  });
 }
 
 async function activateTheme(page: Page, uid: string): Promise<void> {
@@ -482,9 +500,17 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
 });
 
 test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(60_000);
+  await resetThemeEvidenceState();
   await login(page, 'admin@retro.test');
   await setThemeSafeMode(page, false);
   const [firstThemeUid, secondThemeUid] = themeEvidenceJourneyUids(info);
+
+  await visit(page, '/admin/themes');
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('link[href*="/theme/"]')).toHaveCount(0);
+  await expect(page.getByText('No package theme is active. The site uses the built-in chrome.', { exact: true })).toBeVisible();
+  await shot(page, info, '39-admin-themes-built-in');
 
   await clickThemePreview(page, firstThemeUid);
   await expect(page.locator('link[href^="/theme/preview.css"]')).toHaveCount(1);
@@ -500,14 +526,26 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
   }
 
   await activateTheme(page, firstThemeUid);
+  await visit(page, '/admin/themes');
+  await expect(page.locator('.theme-active-card')).toContainText('Serving');
+  await shot(page, info, '40-admin-themes-active-summary');
   await visit(page, '/');
   const firstDigest = await activeThemeDigest(page);
   await shot(page, info, '40-admin-theme-active');
 
   await visit(page, '/admin/themes/safe-mode');
+  await expect(page.locator('[data-admin-tier]')).toHaveCount(0);
+  await expect(page.locator('.pill.pill-admin')).toHaveText('Recovery');
   await page.getByRole('button', { name: 'Enter safe mode' }).click();
   await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
   await shot(page, info, '41-admin-theme-safe-mode');
+
+  await visit(page, '/admin/themes');
+  await expect(page.getByText('Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.', { exact: true })).toBeVisible();
+  await expect(page.getByText('No package theme is active. The site uses the built-in chrome.', { exact: true })).toBeVisible();
+  await expect(page.getByText('No session preview is active.', { exact: true })).toBeVisible();
+  await expect(page.locator('.theme-active-card').getByText('Serving', { exact: false })).toHaveCount(0);
+  await shot(page, info, '41-admin-themes-safe-mode-summary');
   await visit(page, '/');
   await expect(page.locator('link[href*="/theme/"]')).toHaveCount(0);
 
@@ -523,11 +561,34 @@ test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', a
 
   await visit(page, '/admin/themes');
   await page.fill('form[action="/admin/themes/rollback"] input[name="current_password"]', 'password123');
-  await page.getByRole('button', { name: 'Roll back' }).click();
+  await page.getByRole('button', { name: 'Roll back to last-known-good' }).click();
   await expect(page.getByRole('status').getByText('Rolled back to the last-known-good theme.')).toBeVisible();
   await visit(page, '/');
   await expect(page.locator(`link[href="/theme/${firstDigest}.css"]`)).toHaveCount(1);
   await shot(page, info, '42-admin-theme-rollback');
+
+  const noJs = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    viewport: info.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+  });
+  try {
+    const noJsPage = await noJs.newPage();
+    await login(noJsPage, 'admin@retro.test');
+
+    await clickThemePreview(noJsPage, secondThemeUid);
+    await noJsPage.getByRole('button', { name: 'End preview' }).click();
+    await expect(noJsPage.getByRole('status').getByText('Theme preview ended.')).toBeVisible();
+
+    await activateTheme(noJsPage, secondThemeUid);
+    await visit(noJsPage, '/admin/themes');
+    await noJsPage.getByRole('button', { name: 'Enter safe mode' }).click();
+    await expect(noJsPage.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
+    await expect(noJsPage.locator('[data-admin-tier]')).toHaveCount(0);
+    await expect(noJsPage.locator('.pill.pill-admin')).toHaveText('Recovery');
+  } finally {
+    await noJs.close();
+  }
 
   // Safe mode is global, so leave the built-in theme active for later
   // evidence journeys and for the next Playwright project in this run.
@@ -910,16 +971,83 @@ test('phase 4 slash status rows consume Enter when enter-to-send is enabled', as
   await expect(page).toHaveURL(/\/c\/general$/);
 });
 
-test('phase 3 branding preview and product-tour replay', async ({ page }, info) => {
+test('phase 3 branding preview and product-tour replay', async ({ page, browser, baseURL }, info) => {
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin/branding');
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Branding');
+  await expect(page.locator('.branding-marks input[type="file"]')).toHaveCount(4);
+  await expect(page.locator('.branding-mark-action')).toHaveText(['Upload', 'Upload', 'Upload', 'Upload']);
+  await page.locator('[data-brand-primary]').fill('not-hex');
+  await page.getByRole('button', { name: 'Save branding' }).click();
+  await expect(page.locator('.branding-save-row').getByRole('alert')).toHaveText('Primary colour must be a hex value, e.g. #2e4a3a.');
   await page.locator('[data-brand-name]').fill('Lakeside Forum');
   await page.locator('[data-brand-primary]').fill('#005fcc');
   await page.locator('[data-brand-accent]').fill('#a33300');
   await expect(page.locator('[data-brand-preview-name]')).toHaveText('Lakeside Forum');
   await expect(page.locator('[data-brand-preview]')).toHaveCSS('--preview-accent', '#005fcc');
+  await expect(page.locator('.brand-preview-bar')).toHaveCSS('background-color', 'rgb(0, 95, 204)');
+  await expect(page.locator('.brand-preview-accent')).toHaveCSS('background-color', 'rgb(163, 51, 0)');
+  await expect(page.locator('.brand-preview-accent')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  const accentA11y = await new AxeBuilder({ page })
+    .include('.brand-preview-accent')
+    .withRules(['color-contrast'])
+    .analyze();
+  expect(accentA11y.violations).toEqual([]);
+  await expect(page.locator('input[name="reset_confirm"]')).toHaveValue('');
+  await page.getByRole('button', { name: 'Save branding' }).click();
+  await expect(page.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
   await shot(page, info, '18-branding-preview');
+
+  await page.locator('input[name="favicon"]').setInputFiles({
+    name: 'invalid-favicon.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('not an image'),
+  });
+  await page.getByRole('button', { name: 'Save branding' }).click();
+  const uploadRejection = page.locator('.branding-save-row .callout-review[role="status"]');
+  await expect(uploadRejection).toContainText('Branding updated, but Favicon upload was rejected:');
+  await expect(uploadRejection).toContainText('The previous asset was kept.');
+  await shot(page, info, '18-branding-upload-rejection');
+
+  const noJs = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    viewport: info.project.name === 'mobile' ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+  });
+  try {
+    const noJsPage = await noJs.newPage();
+    await login(noJsPage, 'admin@retro.test');
+    await visit(noJsPage, '/admin/branding');
+    await expect(noJsPage.locator('.brand-preview-accent')).toHaveCSS('background-color', 'rgb(163, 51, 0)');
+    await expect(noJsPage.locator('.brand-preview-accent')).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await expect(noJsPage.locator('input[name="reset_confirm"]')).toHaveValue('');
+    await noJsPage.locator('input[name="logo"]').setInputFiles({
+      name: 'brand-logo.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(PNG_1X1, 'base64'),
+    });
+    await noJsPage.getByRole('button', { name: 'Save branding' }).click();
+    await expect(noJsPage.locator('.branding-save-row').getByRole('status')).toHaveText('Saved. The chrome is live for everyone.');
+    await expect(noJsPage.locator('.branding-marks input[type="file"]')).toHaveCount(4);
+    await expect(noJsPage.locator('.branding-mark-action')).toHaveText(['Replace', 'Upload', 'Upload', 'Upload']);
+    await expect(noJsPage.locator('input[name="logo"]')).toHaveAccessibleName('Replace logo');
+
+    await noJsPage.locator('[data-brand-name]').fill('');
+    await noJsPage.locator('input[name="reset_confirm"]').fill('RESE');
+    await noJsPage.getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(noJsPage.getByText('Type RESET to confirm restoring the default branding.', { exact: true })).toBeVisible();
+    await expect(noJsPage.locator('[data-brand-name]')).toHaveValue('');
+    await expect(noJsPage.locator('input[name="reset_confirm"]')).toHaveValue('RESE');
+
+    await noJsPage.locator('input[name="reset_confirm"]').fill('RESET');
+    await noJsPage.getByRole('button', { name: 'Reset to defaults' }).click();
+    await expect(noJsPage.locator('.branding-reset-card').getByRole('status')).toHaveText('Reset. The built-in chrome is back.');
+    await expect(noJsPage.locator('.branding-mark-action')).toHaveText(['Upload', 'Upload', 'Upload', 'Upload']);
+  } finally {
+    await noJs.close();
+  }
 
   await visit(page, '/settings/account');
   const replay = page.locator('[data-tour-replay]');

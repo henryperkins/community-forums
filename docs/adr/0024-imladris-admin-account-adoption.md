@@ -128,6 +128,31 @@ Full detail in the ledger §1.1 (34 deduplicated rows). The load-bearing ones:
 
 ---
 
+## Admin appearance behavior adjudications
+
+Stage 1 found two places where a verbatim visual copy would otherwise leave server behavior
+ambiguous. They are settled for the Appearance slice as follows:
+
+1. **FC-07 — disabled custom CSS is treated as an absent control.** The CSS-only disclosure uses
+   `:has()` to hide the textarea, so a browser can still submit its value after the checkbox is
+   cleared. When `custom_css_enabled` is off, the controller ignores that posted value: it does not
+   validate it and does not overwrite the stored CSS. Only the enabled bit is cleared. This matches
+   the design's removed-node semantics and ADR 0009's promise that custom CSS can be disabled
+   without deleting it.
+2. **FC-08 — safe mode blanks both theme summaries.** While safe mode is on, the Themes view
+   exposes neither an Active theme summary nor a session Preview summary. The last-known-good state
+   remains available for recovery, and the plain, ungated `/admin/themes/safe-mode` surface keeps
+   its existing enter-without-password / password-to-exit contract. This resolves production's
+   former mismatch, where Preview blanked but Active remained visible, in favor of the design.
+
+The design has no branding contrast check. Production's existing check is retained as
+`feature-added`, but its current behavior is a documented divergence from ADR 0009: it hard-blocks
+the save with a 422 and provides neither the specified admin override nor an audit row for an
+override. This adoption does **not** silently reinterpret that hard block as ADR-0009-complete; the
+override-and-audit workflow remains a separately owned policy gap.
+
+---
+
 ## Gaps — recorded, not built
 
 ### Design shows it, production does not implement it (`feature-removed` — build nothing, ship no dead chrome)

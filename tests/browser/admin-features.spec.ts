@@ -54,7 +54,7 @@ async function expectAxeClean(page: Page, info: TestInfo, include?: string): Pro
 // certifies /admin/features under the app's own appearance.
 async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+  if (await page.getByText('Safe mode is on. Every visitor sees the built-in chrome, whatever is installed.', { exact: true }).isVisible()) {
     return false;
   }
 

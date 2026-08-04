@@ -33,14 +33,15 @@ final class AdminThemeController extends Controller
     {
         $admin = $this->requireAdmin();
         $this->gate();
+        $installId = (int) ($params['id'] ?? 0);
 
         try {
-            $build = $this->themes()->preview($admin, (int) ($params['id'] ?? 0));
+            $build = $this->themes()->preview($admin, $installId);
             $this->session()->set('theme_preview_build', (int) $build['id']);
 
             return $this->noindex($this->redirectWithFlash('/admin/themes', 'Previewing this theme in your session only.'));
         } catch (PackagePolicyException $e) {
-            return $this->indexView(['theme' => $this->policyMessage($e)], 422);
+            return $this->indexView(['theme' => $this->policyMessage($e)], 422, 'preview', $installId);
         }
     }
 
@@ -59,16 +60,17 @@ final class AdminThemeController extends Controller
     {
         $admin = $this->requireAdmin();
         $this->gate();
+        $installId = (int) ($params['id'] ?? 0);
 
         try {
-            $this->themes()->activate($admin, (string) $request->post('current_password', ''), (int) ($params['id'] ?? 0));
+            $this->themes()->activate($admin, (string) $request->post('current_password', ''), $installId);
             $this->session()->forget('theme_preview_build');
 
             return $this->noindex($this->redirectWithFlash('/admin/themes', 'Theme activated.'));
         } catch (ValidationException $e) {
-            return $this->indexView($e->errors, 422);
+            return $this->indexView($e->errors, 422, 'activate', $installId);
         } catch (PackagePolicyException $e) {
-            return $this->indexView(['theme' => $this->policyMessage($e)], 422);
+            return $this->indexView(['theme' => $this->policyMessage($e)], 422, 'activate', $installId);
         }
     }
 
@@ -83,9 +85,9 @@ final class AdminThemeController extends Controller
 
             return $this->noindex($this->redirectWithFlash('/admin/themes', 'Rolled back to the last-known-good theme.'));
         } catch (ValidationException $e) {
-            return $this->indexView($e->errors, 422);
+            return $this->indexView($e->errors, 422, 'rollback');
         } catch (PackagePolicyException $e) {
-            return $this->indexView(['theme' => $this->policyMessage($e)], 422);
+            return $this->indexView(['theme' => $this->policyMessage($e)], 422, 'rollback');
         }
     }
 
@@ -123,10 +125,17 @@ final class AdminThemeController extends Controller
     }
 
     /** @param array<string,string> $errors */
-    private function indexView(array $errors = [], int $status = 200): Response
+    private function indexView(
+        array $errors = [],
+        int $status = 200,
+        ?string $errorContext = null,
+        ?int $errorInstallId = null,
+    ): Response
     {
         return $this->noindex($this->view('admin/themes', $this->themeData() + [
             'errors' => $errors,
+            'error_context' => $errorContext,
+            'error_install_id' => $errorInstallId,
         ], $status));
     }
 
@@ -152,16 +161,19 @@ final class AdminThemeController extends Controller
         }
         unset($install);
 
+        $safeMode = $this->themes()->safeMode();
         $previewId = $this->session()->get('theme_preview_build');
-        $preview = $this->themes()->previewBuildFor(is_int($previewId) ? $previewId : null);
+        $preview = $safeMode
+            ? null
+            : $this->themes()->previewBuildFor(is_int($previewId) ? $previewId : null);
         if ($previewId !== null && $preview === null) {
             $this->session()->forget('theme_preview_build');
         }
 
         return [
-            'safe_mode' => $this->themes()->safeMode(),
+            'safe_mode' => $safeMode,
             'state' => $state,
-            'active' => $this->buildSummary($state['active_build_id']),
+            'active' => $safeMode ? null : $this->buildSummary($state['active_build_id']),
             'lkg' => $this->buildSummary($state['lkg_build_id']),
             'preview' => $preview !== null ? $this->buildSummary((int) $preview['id']) : null,
             'installs' => $installs,
@@ -203,6 +215,6 @@ final class AdminThemeController extends Controller
 
     private function policyMessage(PackagePolicyException $e): string
     {
-        return (string) $e->code . ': ' . $e->getMessage();
+        return $e->getMessage();
     }
 }

@@ -85,12 +85,94 @@ final class AppBrandingThemeTest extends TestCase
         $this->assertDontSeeText($this->get('/'), '/brand.css');
     }
 
+    public function test_reset_validation_preserves_the_submitted_branding_draft(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin-reset-draft']);
+        $this->actingAs($admin);
+        (new \App\Repository\SettingRepository($this->db))->set('features', ['custom_css' => true]);
+
+        $response = $this->post('/admin/branding', [
+            'reset' => '1',
+            'reset_confirm' => 'RESE',
+            'site_name' => 'Unsaved Forum Name',
+            'color_primary' => '#123456',
+            'color_accent' => '#abcdef',
+            'theme_default' => 'dark',
+            'theme_preset' => 'retro',
+            'custom_css_enabled' => '1',
+            'custom_css' => '.draft-rule{letter-spacing:.02em;}',
+            'custom_css_ack' => '1',
+        ]);
+
+        $this->assertStatus(422, $response);
+        self::assertStringContainsString('value="Unsaved Forum Name"', $response->body());
+        self::assertStringContainsString('value="#123456"', $response->body());
+        self::assertStringContainsString('value="#abcdef"', $response->body());
+        self::assertStringContainsString('value="RESE"', $response->body());
+        self::assertStringContainsString('.draft-rule{letter-spacing:.02em;}', $response->body());
+        self::assertStringContainsString('name="custom_css_ack" value="1" checked', $response->body());
+        self::assertStringContainsString(
+            'type="submit" name="reset" value="1" formnovalidate>Reset to defaults</button>',
+            $response->body(),
+        );
+    }
+
+    public function test_branding_success_flashes_use_the_design_register(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin-status']);
+        $this->actingAs($admin);
+
+        $this->assertRedirect($this->post('/admin/branding', [
+            'site_name' => 'Status Forum',
+            'theme_default' => 'system',
+        ]), '/admin/branding');
+        $this->assertSeeText($this->get('/admin/branding'), 'Saved. The chrome is live for everyone.');
+
+        $this->assertRedirect($this->post('/admin/branding', [
+            'reset' => '1',
+            'reset_confirm' => 'RESET',
+        ]), '/admin/branding');
+        $this->assertSeeText($this->get('/admin/branding'), 'Reset. The built-in chrome is back.');
+    }
+
+    public function test_rejected_brand_asset_uses_the_review_callout_and_keeps_the_previous_asset(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin-upload-rejection']);
+        $this->actingAs($admin);
+
+        $settings = new \App\Repository\SettingRepository($this->db);
+        $settings->set('brand_logo_path', '/media/existing-logo');
+
+        $response = $this->postFile(
+            '/admin/branding',
+            'logo',
+            $this->fakeUpload('not an image', 'invalid-logo.png', 'image/png'),
+            ['site_name' => 'Status Forum', 'theme_default' => 'system'],
+        );
+        $this->assertRedirect($response, '/admin/branding');
+
+        $rendered = $this->get('/admin/branding');
+        self::assertStringContainsString(
+            '<p class="branding-status callout callout-review" role="status">Branding updated, but Logo upload was rejected:',
+            $rendered->body(),
+        );
+        $this->assertSeeText($rendered, 'The previous asset was kept.');
+        self::assertSame('/media/existing-logo', $settings->getString('brand_logo_path'));
+    }
+
     public function test_invalid_colour_is_rejected(): void
     {
         $admin = $this->makeAdmin(['username' => 'brandadmin4']);
         $this->actingAs($admin);
-        $res = $this->post('/admin/branding', ['site_name' => 'X', 'color_primary' => 'red', 'theme_default' => 'system']);
+        $res = $this->post('/admin/branding', [
+            'site_name' => 'X',
+            'color_primary' => 'red',
+            'color_accent' => 'blue',
+            'theme_default' => 'system',
+        ]);
         $this->assertStatus(422, $res);
+        $this->assertSeeText($res, 'Primary colour must be a hex value, e.g. #2e4a3a.');
+        $this->assertSeeText($res, 'Accent colour must be a hex value, e.g. #c29a44.');
     }
 
     public function test_low_contrast_brand_colour_is_rejected(): void
@@ -140,7 +222,20 @@ final class AppBrandingThemeTest extends TestCase
             'custom_css' => '.brand-name{letter-spacing:.04em;}',
         ]);
         $this->assertStatus(422, $res);
-        $this->assertSeeText($res, 'Confirm that custom CSS can affect the whole site.');
+        $this->assertSeeText($res, 'Acknowledge that custom CSS applies site-wide before saving it.');
+
+        $draft = $this->post('/admin/branding', [
+            'site_name' => '',
+            'theme_default' => 'system',
+            'theme_preset' => 'retro',
+            'custom_css_enabled' => '1',
+            'custom_css_ack' => '1',
+            'custom_css' => '.draft-rule{letter-spacing:.02em;}',
+        ]);
+        $this->assertStatus(422, $draft);
+        $this->assertSeeText($draft, 'Site name must be 1–80 characters.');
+        self::assertStringContainsString('name="custom_css_ack" value="1" checked', $draft->body());
+        self::assertStringContainsString('.draft-rule{letter-spacing:.02em;}', $draft->body());
 
         $res = $this->post('/admin/branding', [
             'site_name' => 'CSS Forum',
@@ -179,6 +274,29 @@ final class AppBrandingThemeTest extends TestCase
 
         $this->assertStatus(422, $res);
         $this->assertSeeText($res, 'Custom CSS cannot import external stylesheets.');
+    }
+
+    public function test_disabled_custom_css_ignores_hidden_submission_without_erasing_saved_css(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'brandadmin-hidden-css']);
+        $this->actingAs($admin);
+        $settings = new \App\Repository\SettingRepository($this->db);
+        $settings->set('features', ['custom_css' => true]);
+        $settings->set('brand_custom_css_enabled', true);
+        $settings->set('brand_custom_css', '.saved-rule{letter-spacing:.03em;}');
+
+        $response = $this->post('/admin/branding', [
+            'site_name' => 'CSS Disabled Forum',
+            'theme_default' => 'system',
+            // CSS :has() hides rather than removes this textarea. The server
+            // must treat its value as absent while the checkbox is off.
+            'custom_css' => '@import url("https://evil.example/hidden.css");',
+        ]);
+
+        $this->assertRedirect($response, '/admin/branding');
+        self::assertFalse($settings->get('brand_custom_css_enabled', true));
+        self::assertSame('.saved-rule{letter-spacing:.03em;}', $settings->getString('brand_custom_css', ''));
+        $this->assertDontSeeText($this->get('/brand.css'), '.saved-rule{letter-spacing:.03em;}');
     }
 
     public function test_dark_default_theme_uses_dark_logo_variant(): void

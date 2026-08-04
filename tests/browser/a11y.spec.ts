@@ -31,6 +31,42 @@ $settings->set('features', $features);
 `);
 }
 
+function seedAdminAppearanceA11yStates(): void {
+  runPhp(`
+$settings->set('theme_safe_mode', '');
+$admin = (new \\App\\Repository\\UserRepository($db))->findByUsername('admin');
+$installs = array_values(array_filter(
+    (new \\App\\Repository\\PackageThemeRepository($db))->themeInstalls(),
+    static fn (array $install): bool => (string) $install['state'] === 'enabled',
+));
+if ($admin === null || count($installs) < 2) { throw new \\RuntimeException('Appearance axe fixtures are incomplete.'); }
+$themes = new \\App\\Repository\\PackageThemeRepository($db);
+$buildIds = [];
+foreach (array_slice($installs, 0, 2) as $install) {
+    $sourceDigest = hash('sha256', 'appearance-axe-source-' . $install['id']);
+    $build = $themes->findBuildFor((int) $install['id'], $sourceDigest);
+    if ($build === null) {
+        $buildId = $themes->createBuild([
+            'installed_package_id' => (int) $install['id'],
+            'package_id' => (int) $install['package_id'],
+            'release_id' => (int) $install['release_id'],
+            'source_digest' => $sourceDigest,
+            'token_schema_version' => 1,
+            'tokens_json' => '{}',
+            'validation_json' => '{"fixture":"appearance-axe"}',
+            'css' => '',
+            'css_digest' => hash('sha256', ''),
+            'built_by' => (int) $admin['id'],
+        ]);
+    } else {
+        $buildId = (int) $build['id'];
+    }
+    $buildIds[] = $buildId;
+}
+$themes->setState($buildIds[1], $buildIds[0], (int) $admin['id']);
+`);
+}
+
 test.beforeEach(() => {
   setWysiwygComposer(false);
 });
@@ -160,6 +196,7 @@ async function expectNoSeriousA11yViolations(page: Page, info: TestInfo, include
 }
 
 test('admin dark-surface pages have no serious axe violations', async ({ page }, info) => {
+  seedAdminAppearanceA11yStates();
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin');
@@ -189,14 +226,36 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
   await expectNoSeriousA11yViolations(page, info);
 
+  // Appearance is the Slice 8 boundary. Resolve its `system` setting through
+  // the OS-dark media query explicitly; the remaining legacy admin scans keep
+  // their established light baseline so unrelated surfaces do not masquerade
+  // as Slice 8 acceptance failures.
+  await page.emulateMedia({ colorScheme: 'dark' });
   await visit(page, '/admin/themes');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'system');
+  expect(await page.evaluate(() => matchMedia('(prefers-color-scheme: dark)').matches)).toBe(true);
   await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Themes');
+  await expect(page.locator('.admin-appearance-themes > .pane-intro')).toContainText('Safe mode returns the site to the built-in chrome');
+  await expect(page.locator('.theme-enable-link')).toBeVisible();
+  await expect(page.locator('.theme-rollback-button')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/themes/safe-mode');
-  await expect(page.getByRole('heading', { name: 'Theme safe mode' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Theme safe mode' })).toBeVisible();
+  await expect(page.locator('[data-admin-tier]')).toHaveCount(0);
+  await expect(page.locator('.pill.pill-admin')).toHaveText('Recovery');
   await expectNoSeriousA11yViolations(page, info);
+
+  await visit(page, '/admin/branding');
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Branding');
+  await expect(page.locator('.branding-marks input[type="file"]')).toHaveCount(4);
+  await page.locator('[data-brand-accent]').fill('#a33300');
+  await expect(page.locator('.brand-preview-accent')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expectNoSeriousA11yViolations(page, info);
+
+  await page.emulateMedia({ colorScheme: 'light' });
 
   await visit(page, '/admin/registries');
   await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
