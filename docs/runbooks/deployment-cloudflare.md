@@ -32,26 +32,31 @@ root with `wrangler` authenticated against the account that owns the zone.
 - **Database**: managed MySQL/MariaDB elsewhere, reached over the public
   internet **with TLS** (`DB_SSL=true`).
 
-## 2. Verify outbound MySQL before anything else
+## 2. Outbound MySQL — settled, it works
 
-**Do this first — it can invalidate the whole approach.** Cloudflare's docs
-describe container egress in terms of HTTP: the ports-`80`/`443`-only
-restriction is documented for `enableInternet = false`, and the separate
-"non-HTTP traffic" note says only that traffic on other ports is never routed
-through `outbound`/`outboundByHost` handlers — i.e. it bypasses interception,
-not that it is blocked. Read plainly, a TCP connection to port 3306 should work
-with the default `enableInternet = true`, but Cloudflare never affirmatively
-documents arbitrary TCP egress.
+Cloudflare never affirmatively documents arbitrary TCP egress from containers
+(`enableInternet` is described purely in terms of HTTP), so this was the open
+question that could have invalidated the whole approach. It has now been
+measured from inside the running production container:
 
-Prove it before migrating data. Deploy a throwaway container that runs:
+```
+DNS  gcp.connect.psdb.cloud -> 35.215.9.6   0.00s
+TCP  gcp.connect.psdb.cloud:3306            OPEN in 0.02s
+PDO  connect + SELECT VERSION()             0.33s, server 8.4.9-Vitess
+```
+
+Arbitrary TCP egress on 3306 works with the default `enableInternet = true`.
+No tunnel, no proxy, no Hyperdrive. If you ever need to re-prove it on another
+account, this is the probe:
 
 ```sh
 php -r '$c = @fsockopen("your-db-host.example.com", 3306, $e, $s, 5);
         echo $c ? "OPEN\n" : "BLOCKED: $s\n";'
 ```
 
-If that reports `BLOCKED`, stop: this deployment shape is not viable and the
-alternative is a VPS with Cloudflare Tunnel in front.
+**Latency is the real cost, not reachability.** The same probe measures ~45ms
+per round trip from `ENAM` to this PlanetScale endpoint, and a forum page issues
+dozens of queries, so pages render in ~3s. See §14.
 
 ## 3. Provision the database
 
@@ -158,6 +163,93 @@ Then confirm the app answers: `curl -sS https://forum.example.com/healthz`.
 `/healthz` is dispatched before the setup gate and the CSRF check, so it answers
 even pre-setup or with the database down.
 
+### The readiness probe must stay a static file
+
+`ForumContainer.pingEndpoint` is `ping/ping.txt`, and it must keep pointing at
+something Apache serves without entering PHP. This is not a preference — it is
+the failure that took the first working deployment down completely, and it is
+worth understanding before changing anything about it.
+
+The SDK probes `http://${pingEndpoint}`. The default value, `ping`, resolves to
+**`GET /`**. This app answers `/` with a `302` to `/setup` until an admin exists,
+and the Workers `fetch` **follows redirects**, so a single probe cost two full
+PHP+MySQL renders. Measured in situ those are ~2.7s each, against a
+`PING_TIMEOUT_MS` the SDK **hardcodes at 5000**. Every probe aborted just over
+the line and was retried every 300ms, the container was never marked ready, and
+every real request blocked in `startAndWaitForPorts()` without ever reaching
+`containerFetch`.
+
+The symptom is nasty precisely because nothing looks broken:
+
+- `curl https://forum.example.com/` hangs indefinitely, no status, no body.
+- `wrangler tail` shows the request arriving and `outcome: canceled` when the
+  client gives up, with **no exception and no log line**.
+- The container is `running`, Apache is up, s3fs is mounted, and `/healthz`
+  answers `200` normally *from inside the container*.
+- The container access log fills with `GET /` → `GET /setup` pairs at a few
+  requests a second that nobody sent.
+
+That last one is the tell: a flood of `/`+`/setup` with no matching Worker
+requests means the readiness probe is looping. Confirm by measuring the growth
+of `/var/log/apache2/access.log` over a fixed interval while sending no traffic.
+
+Two rules follow:
+
+- **Probe a static file.** `public/ping.txt` is served directly, because the
+  vhost only rewrites to `index.php` when the target does not exist. App and
+  database latency then cannot drag readiness over the limit. This deliberately
+  checks "Apache is serving", not "the app is well" — a broken app returning
+  5xx is diagnosable, a flapping readiness probe is a total outage. `/healthz`
+  remains the application health check.
+- **Keep `portReadyTimeoutMS` short** (currently `30_000`). A long window does
+  not rescue a broken boot; the SDK just re-fires the probe every 300ms for the
+  whole duration. The earlier `120_000` is what turned one bad rollout into a
+  sustained flood against the container.
+
+`tests/Unit/Core/CloudflareDeploymentContractTest.php` pins both.
+
+### Getting a shell when something is wrong
+
+`wrangler containers ssh <instance>` currently fails with
+`Web socket error: Unexpected server response: 400`, so the practical way in is
+`exec()` from the Durable Object. Add a token-gated route to `worker/index.js`
+temporarily, deploy, diagnose, then remove it and delete the secret:
+
+```js
+async runShell(commands) {
+	if (!this.ctx.container.running) await this.start();   // NOT ensureStarted --
+	const decoder = new TextDecoder();                     // a broken boot never
+	const results = [];                                    // becomes ready
+	for (const command of commands) {
+		const proc = await this.ctx.container.exec(["sh", "-c", command], { stderr: "combined" });
+		const out = await proc.output();
+		results.push({ command, exitCode: out.exitCode, output: decoder.decode(out.stdout) });
+	}
+	return results;
+}
+```
+
+```js
+// in the default fetch(), before forwarding:
+if (new URL(request.url).pathname === "/__diag") {
+	if (!env.DIAG_TOKEN || request.headers.get("X-Diag-Token") !== env.DIAG_TOKEN) {
+		return new Response("Not Found", { status: 404 });
+	}
+	return Response.json(await getContainer(env.FORUM, CONTAINER_ID)
+		.runShell(new URL(request.url).searchParams.getAll("c")));
+}
+```
+
+```sh
+curl -sS -G --data-urlencode 'c=ps aux' -H "X-Diag-Token: $TOKEN" \
+     https://forum.example.com/__diag | jq -r '.[].output'
+```
+
+Two things to know about `exec()`: it starts with an almost empty environment
+(`HOME`, `PATH`, `PWD`) rather than inheriting the container's, so read
+`/proc/1/environ` when you need the real `DB_*` values; and `output()` returns
+**ArrayBuffers**, which need a `TextDecoder`.
+
 ## 7. Fix the client IP (do not skip)
 
 `RateLimitService` keys per-IP, and `App\Security\ClientIdentifier` only honours
@@ -171,18 +263,24 @@ because the container is not addressable from the internet — only the Worker c
 reach it. What remains is telling the app to trust that hop.
 
 The peer address the container observes is Cloudflare-internal and not a
-documented stable range, so read it from a live instance rather than guessing:
+documented stable range, so it was read from a live instance rather than
+guessed — the first field of `/var/log/apache2/access.log`:
 
-```sh
-npx wrangler containers ssh main
-# inside the container:
-tail -n 20 /var/log/apache2/access.log     # first field is the peer address
+```
+10.1.0.0 - - [04/Aug/2026:08:47:01 +0000] "GET / HTTP/1.1" 302 788 "-" "-"
 ```
 
-Put the containing CIDR in `TRUSTED_PROXIES` (comma-separated, CIDRs allowed) and
-redeploy. Verify by making a request and confirming the app attributes it to your
-real address — a rate limit that never triggers from two different networks means
-it is still wrong.
+`TRUSTED_PROXIES` is therefore set to `10.0.0.0/8` — the private range
+containing that peer, since the exact address is not contractual. Trusting a
+range this wide is safe **only** because the container has no public address
+(`network.mode` is `private`, `assign_ipv4` and `assign_ipv6` both `none`): the
+Worker is the only thing that can reach it, and it overwrites `X-Forwarded-For`
+with `CF-Connecting-IP` before forwarding. `ClientIdentifier::matches()` accepts
+CIDRs, comma-separated.
+
+Re-read the peer with the `/__diag` recipe in §6 if it ever changes; the
+`wrangler containers ssh` command that used to be documented here does not
+currently work.
 
 ## 8. Configure the edge
 
@@ -228,6 +326,18 @@ denormalized counters it maintains. A tick that lands after `sleepAfter` starts
 the container first (`exec()` does not start a stopped container). Cron trigger
 changes take up to 15 minutes to propagate. Past runs are visible under **Cron
 Events** in the dashboard.
+
+`runConsole()` passes `env: this.envVars` explicitly. It has to: an `exec()`
+process does **not** inherit the variables handed to the container — it starts
+with `HOME`, `PATH`, `PWD` and nothing else. Without that, every worker would
+run with no `DB_*` configuration at all. Same reason `output()` is decoded
+through a `TextDecoder`: it hands back ArrayBuffers, not strings, so worker
+output is otherwise unreadable. Both are pinned by
+`tests/Unit/Core/CloudflareDeploymentContractTest.php`.
+
+**These have not yet been observed succeeding against real work** — the crons
+only started firing correctly once readiness was fixed, and the site has no
+content to process. Check **Cron Events** after the first `*/5` tick.
 
 ## 10. Known caveats
 
@@ -276,3 +386,57 @@ versions).
 R2 holds uploads; the database is the provider's responsibility. `tests/backup/
 rehearse.sh` rehearses restore against a throwaway database. Point off-site dumps
 at a second R2 bucket over the S3 API — egress is free.
+
+## 14. Measured latency — the open performance problem
+
+Every page render is dominated by database round trips, not by PHP:
+
+| Measurement (from inside the container) | Value |
+| --- | --- |
+| PDO connect to PlanetScale | 0.20s |
+| 20 trivial `SELECT 1` round trips | 0.90s (**~45ms each**) |
+| `SELECT COUNT(*) FROM users` | 0.06s |
+| `GET /ping.txt` (static, no PHP) | ~0.00s |
+| `GET /healthz` | ~2.6s |
+| `GET /setup` | ~2.5s |
+
+The container runs in `ENAM` (observed node `ewr14`, Newark);
+`gcp.connect.psdb.cloud` resolves to `35.215.9.6`, a GCP address that is not
+near it. At ~45ms per query, a page issuing dozens of queries spends seconds
+waiting on the network, which is exactly what the ~3s public timings show.
+
+This is the cost the `wrangler.jsonc` placement comment warns about, and it is
+**not** fixed by container sizing — the CPU is idle. The levers, in rough order
+of effect:
+
+1. **Move the database next to the container** (or pin the container to the
+   database's region via `regions`). A same-region managed MySQL should put
+   round trips in the low single-digit milliseconds.
+2. **Reduce queries per render.** `docs/runbooks/render_cache.md` covers the
+   render cache; the three-pane shell issues a lot of small lookups per page.
+3. Persistent connections would save the 0.20s connect, but not the per-query
+   cost, which is the dominant term.
+
+## 15. Current state
+
+As of 2026-08-04 the deployment serves traffic:
+
+- `https://forum.candidary.online/healthz` → `200 {"status":"ok","database":"ok"}`
+- PlanetScale `8.4.9-Vitess`, all **78** migrations applied
+- R2 bucket `retroboards-data` mounted at `/data` via s3fs
+- Secrets set: `APP_KEY`, `DB_PASSWORD`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
+
+**First-run setup has not been completed.** `SetupService::isInitialized()` is
+`adminCount() > 0`, so with no admin row every path still redirects to `/setup`,
+and the wizard is reachable by anyone who loads the site. Completing it is the
+next step, and until then the deployment should be treated as unprotected.
+
+Not yet done, tracked here so it is not lost:
+
+- §8 edge configuration (cache rules, Bot Fight Mode off, WAF on `POST /login`)
+  has not been applied to the zone.
+- The deployed code is the `deploy/cloudflare-production-20260804` branch, based
+  on `c79d0d5`. It does **not** include the Imladris admin/account work on
+  `feat/imladris-admin-account`.
+- `SendmailMailer` still has no deliverability path from the container, so email
+  fails closed (§10).
