@@ -3035,9 +3035,9 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     font-size: .65rem;
     letter-spacing: .07em;
     text-transform: uppercase;
-    color: var(--success);
+    color: var(--on-done);
 }
-.queue-status-attention .queue-card-state { color: var(--rust); }
+.queue-status-attention .queue-card-state { color: var(--danger); }
 .queue-status-unavailable .queue-card-state { color: var(--text-faint); }
 .attention-panel {
     border-left: 3px solid var(--accent-2);

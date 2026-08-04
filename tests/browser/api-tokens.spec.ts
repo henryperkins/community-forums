@@ -28,14 +28,6 @@ async function visit(page: Page, url: string): Promise<void> {
   expect(resp!.status(), `GET ${url} should not be an error`).toBeLessThan(400);
 }
 
-async function openAdminSections(page: Page): Promise<void> {
-  const toggle = page.locator('[data-admin-nav-toggle]');
-  if (await toggle.isVisible()) {
-    await toggle.click();
-    await expect(page.locator('[data-admin-nav]')).toHaveAttribute('aria-hidden', 'false');
-  }
-}
-
 async function login(page: Page, email: string): Promise<void> {
   await page.context().clearCookies();
   await page.goto('/login');
@@ -91,10 +83,10 @@ test('admin API tokens: no-JS mint shows the secret once, axe-clean, then revoke
 
   // Flag-gated discovery link off the admin dashboard (seed enables api_tokens).
   await visit(page, '/admin');
-  await openAdminSections(page);
-  await page.getByRole('link', { name: 'API tokens' }).click();
+  await page.locator('[data-admin-tier]').getByRole('link', { name: 'Integrations', exact: true }).click();
   await page.waitForURL(/\/admin\/api-tokens$/);
-  await expect(page.getByRole('heading', { name: 'API tokens' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tokens, webhooks & sign-in' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('API tokens');
   await expectNoSeriousA11yViolations(page, info); // empty-form state is accessible
 
   // Desktop + mobile share one seeded DB — unique name so rows never collide.

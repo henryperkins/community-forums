@@ -33,6 +33,21 @@ async function dismissTour(page: Page): Promise<void> {
   }
 }
 
+async function openNewTopicComposer(page: Page): Promise<void> {
+  const details = page.locator('details.composer-details#new-topic');
+  const promoted = page.locator('[data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  const summary = details.locator(':scope > summary');
+  const opener = await promoted.isVisible()
+    ? promoted
+    : (await fab.isVisible() ? fab : summary);
+  await opener.click();
+  await expect(details).toHaveJSProperty('open', true);
+  const form = details.locator('form.composer').first();
+  await expect(form).toBeVisible();
+  await expect(form.locator('textarea.composer-input')).toBeVisible();
+}
+
 function serverDraftKey(context: string): string {
   return encodeURIComponent(context).replace(/%/g, '~');
 }
@@ -94,16 +109,14 @@ async function expectServerDraftSaved(page: Page, key: string, body: string): Pr
 test('server drafts expose conflict choices and save local as next revision', async ({ page }, info) => {
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
-  await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
+  await openNewTopicComposer(page);
 
   const title = page.locator('form.composer input[name="title"]').first();
   const body = page.locator('form.composer textarea.composer-input').first();
   const key = serverDraftKey('/threads');
   await discardServerDraft(page, key);
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
-  await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
+  await openNewTopicComposer(page);
 
   await title.fill('Local conflict title');
   await body.fill('Local first draft');
@@ -132,14 +145,14 @@ test('server drafts expose conflict choices and save local as next revision', as
 test('server draft validation errors replace stale success status', async ({ page }) => {
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openNewTopicComposer(page);
 
   const title = page.locator('form.composer input[name="title"]').first();
   const body = page.locator('form.composer textarea.composer-input').first();
   const key = serverDraftKey('/threads');
   await discardServerDraft(page, key);
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openNewTopicComposer(page);
 
   await title.fill('Validation status topic');
   await body.fill('Saved before validation error');
@@ -177,14 +190,14 @@ test('drafts page keeps browser-local drafts visible while server drafts are ena
 test('failed submits keep server drafts and successful submits clear them after navigation', async ({ page }) => {
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openNewTopicComposer(page);
 
   const title = page.locator('form.composer input[name="title"]').first();
   const body = page.locator('form.composer textarea.composer-input').first();
   const key = serverDraftKey('/threads');
   await discardServerDraft(page, key);
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openNewTopicComposer(page);
 
   await title.fill('Draft retention topic');
   await body.fill('Keep this shared draft on failed submit');
@@ -221,14 +234,14 @@ test('failed submits keep server drafts and successful submits clear them after 
 test('composer discard button immediately removes the matching server draft', async ({ page }) => {
   await login(page, 'bob@retro.test');
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openNewTopicComposer(page);
 
   const title = page.locator('form.composer input[name="title"]').first();
   const body = page.locator('form.composer textarea.composer-input').first();
   const key = serverDraftKey('/threads');
   await discardServerDraft(page, key);
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  await openNewTopicComposer(page);
 
   await title.fill('Discard synced draft');
   await body.fill('This draft should disappear from both stores');

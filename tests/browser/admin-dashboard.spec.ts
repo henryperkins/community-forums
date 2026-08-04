@@ -3,20 +3,24 @@ import { expect, test, type Browser, type Page, type TestInfo } from '@playwrigh
 import path from 'node:path';
 
 /**
- * Focused evidence for the operational admin landing page and grouped admin
- * workspace. The same spec certifies the persistent desktop rail, enhanced
- * mobile drawer, server-rendered no-JS directory, overflow cue, and WCAG AA
- * serious/critical baseline at the approved 1280x800 and 390x844 viewports.
+ * Focused evidence for the operational admin landing page and shared console
+ * chrome. The same spec certifies the horizontal area tier, area tabs,
+ * server-rendered no-JS navigation, overflow cues, theme registers, and WCAG
+ * AA serious/critical baseline at the approved 1280x800 and 390x844 viewports.
  */
-const EVIDENCE_DIR = path.resolve(__dirname, '..', '..', 'docs/evidence/browser');
-const GROUPS = [
-  'Dashboard',
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const EVIDENCE_DIR = path.resolve(REPO_ROOT, process.env.RB_EVIDENCE_DIR ?? 'docs/evidence/browser');
+const TIERS = [
+  'Overview',
   'Moderation',
   'Content',
   'People',
+  'Members',
   'Appearance',
   'Notifications',
   'Integrations',
+  'Packages',
+  'Features',
   'Settings',
 ];
 
@@ -41,7 +45,6 @@ async function login(page: Page): Promise<void> {
 
 async function expectAxeClean(page: Page, info: TestInfo): Promise<void> {
   const results = await new AxeBuilder({ page })
-    .include('.admin')
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze();
   const violations = results.violations.filter((item) => item.impact === 'serious' || item.impact === 'critical');
@@ -57,36 +60,109 @@ function observeBrowserProblems(page: Page): string[] {
   return problems;
 }
 
-async function expectGroupedDirectory(page: Page): Promise<void> {
-  await expect(page.locator('.admin-nav-group-title')).toHaveText(GROUPS);
-  for (const href of [
-    '/admin', '/mod/reports', '/mod/approvals', '/mod/appeals', '/admin/audit', '/admin/moderation',
-    '/admin/structure', '/admin/tags', '/admin/users', '/admin/roles', '/admin/invitations',
-    '/admin/badge-rules', '/admin/branding', '/admin/themes', '/admin/custom-emoji',
-    '/admin/email', '/admin/announcements', '/admin/packages', '/admin/registries',
-    '/admin/webhooks', '/admin/api-tokens', '/admin/providers', '/admin/extensions',
-    '/admin/settings', '/admin/features', '/admin/thread-intelligence',
+async function expectAdminTier(page: Page): Promise<void> {
+  const tier = page.locator('[data-admin-tier]');
+  await expect(tier).toBeVisible();
+  await expect(tier.locator('.admin-tier-item')).toHaveCount(11);
+  await expect(tier.locator('.admin-tier-item')).toHaveText(TIERS);
+}
+
+async function captureThemeRegisters(page: Page, info: TestInfo): Promise<void> {
+  for (const { register, label } of [
+    { register: 'light', label: 'light' },
+    { register: 'dark', label: 'twilight' },
   ]) {
-    await expect(page.locator(`[data-admin-nav] :is(a[href="${href}"], [data-destination="${href}"])`)).toHaveCount(1);
+    await page.locator('html').evaluate((element, theme) => element.setAttribute('data-theme', theme), register);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', register);
+    await shot(page, info, `07-admin-dashboard-${label}`);
   }
 }
 
-test('desktop admin rail and operational hierarchy are complete, quiet, and axe-clean', async ({ page }, info) => {
-  test.skip(info.project.name !== 'desktop', 'desktop rail evidence uses the 1280x800 project');
+async function expectSystemDarkAxeClean(page: Page, info: TestInfo): Promise<void> {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.locator('html').evaluate((element) => element.setAttribute('data-theme', 'system'));
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'system');
+
+  const runtimeColors = await page.evaluate(() => {
+    const grid = document.querySelector('.admin-dashboard-grid');
+    if (!(grid instanceof HTMLElement)) throw new Error('Queue health grid is missing');
+
+    const clear = grid.querySelector('.queue-card.queue-status-clear .queue-card-state');
+    if (!(clear instanceof HTMLElement)) throw new Error('Seeded Clear queue state is missing');
+
+    for (const status of ['attention', 'unavailable']) {
+      if (grid.querySelector(`.queue-card.queue-status-${status} .queue-card-state`)) continue;
+
+      const card = document.createElement('div');
+      card.className = `card queue-card queue-status-${status} is-static`;
+      card.dataset.queueStatus = status;
+      card.dataset.runtimeQueueState = status;
+
+      const heading = document.createElement('span');
+      heading.className = 'queue-card-head';
+      heading.textContent = `Runtime ${status} status`;
+
+      const count = document.createElement('strong');
+      count.className = 'queue-card-count';
+      count.textContent = '0';
+
+      const detail = document.createElement('span');
+      detail.className = 'queue-card-detail';
+      detail.textContent = `Representative ${status} state for accessibility verification`;
+
+      const state = document.createElement('span');
+      state.className = 'queue-card-state';
+      state.textContent = status[0].toUpperCase() + status.slice(1);
+
+      card.append(heading, count, detail, state);
+      grid.append(card);
+    }
+
+    return Object.fromEntries([
+      ['clear', '--on-done'],
+      ['attention', '--danger'],
+      ['unavailable', '--text-faint'],
+    ].map(([status, token]) => {
+      const state = grid.querySelector(`.queue-card.queue-status-${status} .queue-card-state`);
+      if (!(state instanceof HTMLElement)) throw new Error(`${status} queue state is missing`);
+
+      const probe = document.createElement('span');
+      probe.dataset.runtimeSemanticProbe = status;
+      probe.hidden = true;
+      probe.style.color = `var(${token})`;
+      document.body.append(probe);
+
+      return [status, {
+        foreground: getComputedStyle(state).color,
+        semantic: getComputedStyle(probe).color,
+      }];
+    }));
+  });
+
+  try {
+    expect(runtimeColors.clear.foreground).toBe(runtimeColors.clear.semantic);
+    expect(runtimeColors.attention.foreground).toBe(runtimeColors.attention.semantic);
+    expect(runtimeColors.unavailable.foreground).toBe(runtimeColors.unavailable.semantic);
+    await expectAxeClean(page, info);
+  } finally {
+    await page.locator('[data-runtime-queue-state], [data-runtime-semantic-probe]').evaluateAll(
+      (nodes) => nodes.forEach((node) => node.remove()),
+    );
+  }
+}
+
+test('desktop admin tier and operational hierarchy are complete, quiet, and axe-clean', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'desktop tier evidence uses the 1280x800 project');
   const browserProblems = observeBrowserProblems(page);
 
   await login(page);
   await page.goto('/admin');
   await expect(page.getByRole('heading', { name: 'Admin console' })).toBeVisible();
 
-  const rail = page.locator('[data-admin-nav]');
-  const railBox = await rail.boundingBox();
-  expect(railBox).not.toBeNull();
-  expect(railBox!.width).toBeGreaterThanOrEqual(220);
-  expect(railBox!.width).toBeLessThanOrEqual(226);
-  expect(await rail.evaluate((element) => getComputedStyle(element).position)).toBe('sticky');
-  await expectGroupedDirectory(page);
-  await expect(rail.locator('a.active[aria-current="page"]')).toHaveAttribute('href', '/admin');
+  await expectAdminTier(page);
+  await expect(
+    page.locator('span.admin-tier-item.is-active[aria-current="page"]'),
+  ).toHaveText('Overview');
 
   const headings = page.locator('.admin-pane h2');
   await expect(headings).toContainText(['Queue health', 'Needs attention', 'Community today', 'Recent activity']);
@@ -107,74 +183,36 @@ test('desktop admin rail and operational hierarchy are complete, quiet, and axe-
   await expect(page.locator('[data-overflow-region]')).toHaveAttribute('tabindex', '0');
   await expect(page.locator('[data-overflow-cue-label]')).toBeHidden();
 
-  await expectAxeClean(page, info);
-  await shot(page, info, '07-admin-dashboard');
+  await captureThemeRegisters(page, info);
+  await expectSystemDarkAxeClean(page, info);
   expect(browserProblems).toEqual([]);
 });
 
-test('mobile drawer closes every way, contains focus, restores focus, and cleans up on resize', async ({ page }, info) => {
-  test.skip(info.project.name !== 'mobile', 'mobile drawer evidence uses the 390x844 project');
+test('mobile admin tier scrolls horizontally while page and tables keep their own overflow cues', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile tier evidence uses the 390x844 project');
   const browserProblems = observeBrowserProblems(page);
 
   await login(page);
   await page.goto('/admin');
-  const toggle = page.locator('[data-admin-nav-toggle]');
-  const nav = page.locator('[data-admin-nav]');
-  const close = page.locator('[data-admin-nav-close]');
-  const scrim = page.locator('[data-admin-nav-scrim]');
+  await expectAdminTier(page);
+  const tier = page.locator('[data-admin-tier]');
+  const tierMetrics = await tier.evaluate((element) => ({
+    overflowX: getComputedStyle(element).overflowX,
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(['auto', 'scroll']).toContain(tierMetrics.overflowX);
+  expect(tierMetrics.scrollWidth).toBeGreaterThan(tierMetrics.clientWidth);
+  const tierItemHeights = await tier.locator('.admin-tier-item').evaluateAll((items) => items.map(
+    (item) => item.getBoundingClientRect().height,
+  ));
+  expect(tierItemHeights.every((height) => height >= 44)).toBe(true);
 
-  await expect(toggle).toBeVisible();
-  const toggleBox = await toggle.boundingBox();
-  expect(toggleBox!.height).toBeGreaterThanOrEqual(44);
-  await expect(nav).toHaveAttribute('aria-hidden', 'true');
-  await expect(nav).toHaveAttribute('inert', '');
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await expect.poll(() => nav.evaluate((element) => parseFloat(getComputedStyle(element).transitionDuration)))
-    .toBeLessThanOrEqual(0.000001);
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await shot(page, info, '07-admin-dashboard');
-
-  await toggle.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.locator('body')).toHaveClass(/admin-nav-open/);
-  await expect(nav).toHaveAttribute('aria-hidden', 'false');
-  await expect(close).toBeFocused();
-  const closeBox = await close.boundingBox();
-  expect(closeBox!.height).toBeGreaterThanOrEqual(44);
-  await expectGroupedDirectory(page);
-
-  const lastLink = nav.locator('a[href]').last();
-  await lastLink.focus();
-  await page.keyboard.press('Tab');
-  await expect(close).toBeFocused();
-  await expectAxeClean(page, info);
-  await shot(page, info, '07-admin-dashboard-drawer');
-
-  await close.click();
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(toggle).toBeFocused();
-
-  await toggle.click();
-  await page.keyboard.press('Escape');
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(toggle).toBeFocused();
-
-  await toggle.click();
-  await scrim.click({ position: { x: 370, y: 20 } });
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(toggle).toBeFocused();
-
-  await toggle.click();
-  await nav.getByRole('link', { name: 'Reports', exact: true }).click();
-  await page.waitForURL(/\/mod\/reports$/);
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-
-  await page.goto('/admin');
   const region = page.locator('[data-overflow-region]');
   const shell = page.locator('[data-overflow-cue]');
   const cue = page.locator('[data-overflow-cue-label]');
   const mobileWidths = await page.evaluate(() => Object.fromEntries(
-    ['html', 'body', '.main', '.admin', '.admin-pane', '.recent-activity-card', '.activity-table-shell', '[data-overflow-region]', '.audit-recent']
+    ['html', 'body', '.admin-bar', '.admin-console', '.admin-pane', '.recent-activity-card', '.activity-table-shell', '[data-overflow-region]', '.audit-recent']
       .map((selector) => {
         const element = selector === 'html' ? document.documentElement : selector === 'body' ? document.body : document.querySelector(selector);
         return [selector, element ? { client: element.clientWidth, scroll: element.scrollWidth } : null];
@@ -192,20 +230,25 @@ test('mobile drawer closes every way, contains focus, restores focus, and cleans
   await expect(cue).toBeHidden();
   await expect.poll(() => shell.evaluate((element) => getComputedStyle(element, '::after').opacity)).toBe('0');
 
-  await toggle.click();
-  await page.setViewportSize({ width: 900, height: 844 });
-  await expect(page.locator('body')).not.toHaveClass(/admin-nav-open/);
-  await expect(nav).not.toHaveAttribute('aria-hidden', /.+/);
-  await expect(nav).not.toHaveAttribute('inert', '');
-  await expect(toggle).toBeHidden();
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(toggle).toBeVisible();
-  await expect(nav).toHaveAttribute('aria-hidden', 'true');
+  await region.evaluate((element) => {
+    element.scrollLeft = 0;
+    if (element instanceof HTMLElement) element.blur();
+    window.scrollTo(0, 0);
+  });
+  await expect.poll(() => region.evaluate((element) => element.scrollLeft)).toBe(0);
+  await expect(region).not.toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await expect(shell).not.toHaveClass(/is-at-end/);
+  await expect(cue).toBeVisible();
+  await expect.poll(() => shell.evaluate((element) => getComputedStyle(element, '::after').opacity)).toBe('1');
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
 
+  await captureThemeRegisters(page, info);
+  await expectSystemDarkAxeClean(page, info);
   expect(browserProblems).toEqual([]);
 });
 
-test('no-JS mobile admin directory remains expanded and reaches domain settings', async ({ browser, baseURL }, info) => {
+test('no-JS mobile tier and tabs remain usable and reach domain settings', async ({ browser, baseURL }, info) => {
   test.skip(info.project.name !== 'desktop', 'one explicit no-JS mobile context is sufficient');
   const context = await (browser as Browser).newContext({
     baseURL: baseURL!,
@@ -217,12 +260,14 @@ test('no-JS mobile admin directory remains expanded and reaches domain settings'
     await login(page);
     await page.goto('/admin');
     await expect(page.locator('html')).not.toHaveClass(/has-js/);
-    await expect(page.locator('[data-admin-nav-toggle]')).toBeHidden();
-    await expect(page.locator('[data-admin-nav]')).toBeVisible();
-    await expectGroupedDirectory(page);
-    await page.getByRole('link', { name: 'General & registration' }).click();
+    await expectAdminTier(page);
+    await expect(page.locator('.admin-tabs')).toBeVisible();
+    await page.locator('[data-admin-tier]').getByRole('link', { name: 'Settings', exact: true }).click();
     await page.waitForURL(/\/admin\/settings$/);
-    await expect(page.getByRole('heading', { name: 'General & registration' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'General & intelligence' })).toBeVisible();
+    await expect(page.locator('span.admin-tier-item.is-active[aria-current="page"]')).toHaveText('Settings');
+    await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('General & registration');
+    await page.mouse.move(0, 0);
     await page.screenshot({
       path: path.join(EVIDENCE_DIR, 'mobile', '07-admin-dashboard-no-js.png'),
       fullPage: true,

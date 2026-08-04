@@ -91,7 +91,9 @@ test('provider console: add a generic OIDC provider, probe health, enable, sign-
 
   // ---- add (lands disabled; secret goes to the vault) ----------------------
   await visit(page, '/admin/providers');
-  await expect(page.getByRole('heading', { name: 'Sign-in providers' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Tokens, webhooks & sign-in' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Sign-in providers');
+  await expect(page.getByRole('heading', { level: 2, name: 'Providers' })).toBeVisible();
   await page.fill('input[name="provider_key"]', key);
   await page.fill('input[name="display_name"]', label);
   await page.fill('input[name="issuer"]', 'https://gitlab.example');

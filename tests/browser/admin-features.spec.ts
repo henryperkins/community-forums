@@ -81,7 +81,8 @@ test('admin feature inventory classifies readiness and links actionable surfaces
   const themeSafeModeChanged = await enterThemeSafeMode(page);
 
   await page.goto('/admin/features');
-  await expect(page.getByRole('heading', { name: 'Feature flags' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Features & badges' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Feature flags');
   expect(await page.locator('th', { hasText: 'Readiness / next step' }).count()).toBeGreaterThan(0);
 
   // The three dark carryovers carry their categories, with links to surfaces

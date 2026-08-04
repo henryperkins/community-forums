@@ -163,28 +163,34 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await login(page, 'admin@retro.test');
 
   await visit(page, '/admin');
-  await expect(page.getByRole('heading', { name: 'Admin console' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Admin console' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Dashboard');
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/email');
-  await expect(page.getByRole('heading', { name: 'Email delivery' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Email');
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/extensions');
-  await expect(page.getByRole('heading', { name: 'Server extensions' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Extensions');
   await expect(page.getByText('browser-evidence')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/roles');
-  await expect(page.getByRole('heading', { name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Roles');
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/packages');
-  await expect(page.getByRole('heading', { name: 'Package catalogue' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/themes');
-  await expect(page.getByRole('heading', { name: 'Themes' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Branding & themes' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Themes');
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/themes/safe-mode');
@@ -192,27 +198,35 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/registries');
-  await expect(page.getByRole('heading', { name: 'Registry trust & security response' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Registry trust');
   await expectNoSeriousA11yViolations(page, info);
 
   const packageDetailPath = await openPackageDetailByUid(page, 'acme/consent-demo');
-  await expect(page.getByRole('heading', { name: 'Consent Demo Theme' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  await expect(page.getByRole('heading', { level: 2, name: 'Consent Demo Theme' })).toBeVisible();
   await expect(page.getByText('permissions await consent')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, `${packageDetailPath}/consent`);
-  await expect(page.getByRole('heading', { name: 'Consent to permissions' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
+  await expect(page.getByRole('heading', { level: 2, name: 'Consent to permissions' })).toBeVisible();
   await expect(page.getByText('Store its own settings and data', { exact: false })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, '/admin/roles/simulator');
-  await expect(page.getByRole('heading', { name: 'Permission simulator' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Roles & capabilities' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Permission simulator');
+  await expect(page.getByRole('heading', { level: 2, name: 'Simulate' })).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   // badge_rules graduated to default-on (GA 2026-07-02): the admin create-rule
   // form + rule list is the operator surface.
   await visit(page, '/admin/badge-rules');
-  await expect(page.getByRole('heading', { name: 'Badge rules' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Features & badges' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Badge rules');
   await expectNoSeriousA11yViolations(page, info);
 });
 

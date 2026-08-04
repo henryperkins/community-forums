@@ -258,7 +258,9 @@ test('admin status and restorative retry, reconcile, latch, pause, thread, and b
   try {
     await visit(page, '/admin/thread-intelligence');
     const dashboard = page.locator('.thread-intelligence-admin');
-    await expect(dashboard.getByRole('heading', { name: 'Thread Intelligence' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'General & intelligence' })).toBeVisible();
+    await expect(page.locator('.admin-tab.is-active[aria-current="page"]')).toHaveText('Thread Intelligence');
+    await expect(dashboard.getByRole('heading', { level: 2, name: 'Recovery controls' })).toBeVisible();
     await expect(dashboard).toContainText('community memory on');
     await expect(dashboard).toContainText('automated context on');
     await expect(dashboard).toContainText('Ready');
