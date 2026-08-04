@@ -521,3 +521,55 @@ test('mobile composer honors a representative keyboard inset', async ({ page }, 
   expect(box).not.toBeNull();
   expect(box!.y + box!.height).toBeLessThanOrEqual(844 - 240 + 2);
 });
+
+test('the staff badge flips register and clears AA in both', async ({ page }) => {
+  await login(page);
+  await openSeedTopic(page);
+
+  const measured: Record<string, { ratio: number; ground: string }> = {};
+  for (const theme of ['light', 'dark'] as const) {
+    await page.locator('html').evaluate((element, value) => element.setAttribute('data-theme', value), theme);
+    measured[theme] = await page.locator('[data-thread-study]').evaluate((element) => {
+      const channels = (value: string) => (value.match(/[\d.]+/g) ?? []).map(Number);
+      const luminance = (rgb: number[]) => {
+        const linear = rgb.map((channel) => {
+          const normalized = channel / 255;
+          return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+      };
+      const contrast = (a: number[], b: number[]) => {
+        const [x, y] = [luminance(a), luminance(b)];
+        return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+      };
+
+      const probe = document.createElement('span');
+      probe.className = 'badge badge-staff';
+      probe.textContent = 'Staff';
+      element.appendChild(probe);
+      const style = getComputedStyle(probe);
+      const ink = channels(style.color);
+      const chip = channels(style.backgroundColor);
+      probe.remove();
+
+      // The chip ground is translucent in the twilight register, so it has to be
+      // composited over the surface it actually sits on before being measured.
+      const under = document.createElement('span');
+      under.style.background = 'var(--surface-raised)';
+      element.appendChild(under);
+      const surface = channels(getComputedStyle(under).backgroundColor);
+      under.remove();
+
+      const alpha = chip.length > 3 ? chip[3] : 1;
+      const ground = [0, 1, 2].map((i) => alpha * chip[i] + (1 - alpha) * surface[i]);
+      return { ratio: contrast(ink, ground), ground: ground.map(Math.round).join(',') };
+    });
+  }
+
+  expect(measured.light.ratio, JSON.stringify(measured)).toBeGreaterThanOrEqual(4.5);
+  expect(measured.dark.ratio, JSON.stringify(measured)).toBeGreaterThanOrEqual(4.5);
+  // A pair built from the numbered gold ramp clears both ratios while never
+  // flipping: the chip stays light-register cream sitting on a twilight page.
+  // The ratio alone cannot catch that, so assert the ground actually changes.
+  expect(measured.dark.ground, JSON.stringify(measured)).not.toBe(measured.light.ground);
+});

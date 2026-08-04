@@ -88,7 +88,11 @@ final class SanitizationTest extends TestCase
         self::assertStringContainsString('<code>bad</code>', $clean);
         self::assertStringContainsString('<td align="center">cell</td>', $clean);
         self::assertStringContainsString('<td>bad</td>', $clean);
-        self::assertStringNotContainsString('on', $clean);
+        self::assertStringNotContainsString('onclick', $clean);
+        self::assertStringNotContainsString('onmouseover', $clean);
+        // Any surviving on* handler, not just the two seeded above. (A bare
+        // "on" substring check also matches role="region" on the code fence.)
+        self::assertDoesNotMatchRegularExpression('/\son[a-z]+\s*=/i', $clean);
         self::assertStringNotContainsString('style=', $clean);
     }
 
@@ -172,9 +176,31 @@ final class SanitizationTest extends TestCase
     public function test_code_blocks_escape_their_contents(): void
     {
         $html = $this->markdown->render("```\n<script>alert(1)</script>\n```");
-        self::assertStringContainsString('<pre>', $html);
+        self::assertStringContainsString('<pre ', $html);
         self::assertStringNotContainsString('<script>alert', $html);
         self::assertStringContainsString('&lt;script&gt;', $html);
+    }
+
+    /**
+     * The scrollable-code contract is a fixed server-owned set, mirroring the
+     * formatted-table wrapper: author-supplied tabindex/role/ARIA never survive,
+     * so a code fence cannot forge a landmark or hijack the tab order.
+     */
+    public function test_pre_accessibility_attributes_are_server_owned(): void
+    {
+        $clean = $this->sanitizer->sanitize(
+            '<pre tabindex="5" role="button" aria-label="Press me" onclick="evil()" class="x"><code>z</code></pre>',
+        );
+
+        self::assertStringContainsString(
+            '<pre tabindex="0" role="region" aria-label="Scrollable code block">',
+            $clean,
+        );
+        self::assertStringNotContainsString('tabindex="5"', $clean);
+        self::assertStringNotContainsString('role="button"', $clean);
+        self::assertStringNotContainsString('Press me', $clean);
+        self::assertStringNotContainsString('onclick', $clean);
+        self::assertStringNotContainsString('class="x"', $clean);
     }
 
     public function test_raw_html_sanitizer_strips_iframes_and_svg(): void

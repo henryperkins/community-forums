@@ -143,6 +143,49 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertSame([], array_keys($missing));
     }
 
+    /**
+     * A status pair is only correct if both registers define it. A pair built from
+     * numbered primitives (--gold-700 ink on --gold-100 ground) satisfies a contrast
+     * ratio in light and dark alike while never flipping — it stays a light-register
+     * chip sitting on a twilight page. A ratio assertion cannot see that; this can.
+     */
+    public function test_status_ledger_pairs_are_defined_in_both_colour_registers(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/imladris.css');
+
+        self::assertSame(1, preg_match('/:root\s*\{(?<light>[^}]*)\}/s', $css, $lightBlock));
+        self::assertSame(1, preg_match('/\[data-theme="dark"\]\s*\{(?<dark>[^}]*)\}/s', $css, $darkBlock));
+
+        foreach (['done', 'review', 'pending', 'info', 'staff'] as $status) {
+            foreach (['--surface-' . $status, '--on-' . $status] as $token) {
+                $pattern = '/' . preg_quote($token, '/') . '\s*:/';
+                self::assertMatchesRegularExpression(
+                    $pattern,
+                    $lightBlock['light'],
+                    $token . ' is missing from the light register.',
+                );
+                self::assertMatchesRegularExpression(
+                    $pattern,
+                    $darkBlock['dark'],
+                    $token . ' is missing from the dark register.',
+                );
+            }
+        }
+    }
+
+    public function test_staff_badge_uses_the_flipping_semantic_pair_exactly_once(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+
+        self::assertSame(
+            1,
+            preg_match_all('/\.badge-staff\b/', $css),
+            'The staff badge must be declared exactly once in the application stylesheet.',
+        );
+        self::assertMatchesRegularExpression('/\.badge-staff[^{]*\{[^}]*color:\s*var\(--on-staff\)/s', $css);
+        self::assertMatchesRegularExpression('/\.badge-staff[^{]*\{[^}]*background:\s*var\(--surface-staff\)/s', $css);
+    }
+
     public function test_asset_builder_filters_spacing_contract_from_a_crlf_checkout(): void
     {
         $root = $this->makeAssetBuilderFixture(useCrlfTextSources: true);

@@ -157,6 +157,22 @@ final class HtmlSanitizer
             return;
         }
 
+        // A code fence scrolls horizontally, so it is a keyboard-operable scroll
+        // region (WCAG 2.1.1) — the same contract the formatted-table wrapper gets
+        // above. The attributes are server-owned: anything the author supplied is
+        // stripped first, so a fence can neither forge a landmark name nor inject
+        // itself into the tab order at an arbitrary position.
+        if ($tag === 'pre') {
+            foreach (iterator_to_array($el->attributes ?? []) as $attr) {
+                $el->removeAttribute($attr->nodeName);
+            }
+            $el->setAttribute('tabindex', '0');
+            $el->setAttribute('role', 'region');
+            $el->setAttribute('aria-label', 'Scrollable code block');
+            $this->cleanChildren($el);
+            return;
+        }
+
         // Only approved media, operator emoji, or configured GIPHY sources
         // survive. An <img> without a safe src is dropped entirely so it can't
         // carry an onerror payload or hotlink an arbitrary off-site tracker.

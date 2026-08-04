@@ -368,4 +368,82 @@ final class AppThreadViewStudyTest extends TestCase
         $page = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug']);
         self::assertStringContainsString('data-post-day="2026-07-13"', $page->body());
     }
+
+    /**
+     * FT-01. Without JavaScript the thread is one document, so server order IS the
+     * reading order: topic head, then its tools, then the posts, then the composer.
+     * Topic tools and the split/merge disclosure must render INSIDE .thread-scroll —
+     * as siblings of the post stream rather than of the fixed-height column — because
+     * every in-flow sibling of .thread-scroll steals height from the reading pane.
+     *
+     * Anchored on 'thread-study-head', not '</header>': the first '</header>' in the
+     * document belongs to the topbar, which makes an order assertion vacuous.
+     */
+    public function test_no_js_document_order_keeps_tools_beneath_head_and_each_form_once(): void
+    {
+        $admin = $this->makeAdmin(['username' => 'study_order_admin']);
+        $author = $this->makeUser(['username' => 'study_order_author']);
+        $board = $this->makeBoard($this->makeCategory('Study Order'));
+        $this->db->run('UPDATE boards SET assignment_mode = ?, wiki_enabled = 1 WHERE id = ?', ['staff', $board['id']]);
+        $thread = $this->makeThread($board, $author, 'Order stays readable', 'Opening record.');
+        $this->posting()->reply($this->userEntity($author), (int) $thread['thread_id'], ['body' => 'A reply.']);
+
+        $this->actingAs($admin);
+        $html = $this->get('/t/' . $thread['thread_id'] . '-' . $thread['slug'])->body();
+
+        $scrollOpen = strpos($html, 'class="thread-scroll"');
+        $head = strpos($html, 'thread-study-head');
+        $tools = strpos($html, '<aside class="topic-tools"');
+        $restructure = strpos($html, '<div class="thread-restructure-scrim"');
+        $stream = strpos($html, 'class="post-stream"');
+        $dock = strpos($html, 'class="thread-dock"');
+
+        foreach ([
+            'thread-scroll' => $scrollOpen,
+            'thread-study-head' => $head,
+            'topic-tools aside' => $tools,
+            'thread-restructure' => $restructure,
+            'post-stream' => $stream,
+            'thread-dock' => $dock,
+        ] as $label => $offset) {
+            self::assertNotFalse($offset, $label . ' is missing from the thread document');
+        }
+
+        self::assertLessThan($head, $scrollOpen, '.thread-scroll must open before the topic head');
+        self::assertLessThan($tools, $head, 'Topic tools must follow the topic head');
+        self::assertLessThan($stream, $tools, 'Topic tools must precede the post stream');
+        self::assertLessThan($stream, $restructure, 'Split/merge must precede the post stream');
+        self::assertLessThan($dock, $stream, 'The composer dock must come last');
+
+        // The dock is the only in-flow sibling left after .thread-scroll, so both
+        // panels have to sit above the stream rather than after the dock.
+        self::assertGreaterThan($tools, $dock, 'Topic tools must no longer follow the dock');
+        self::assertGreaterThan($restructure, $dock, 'Split/merge must no longer follow the dock');
+
+        // Every authorized action still renders exactly once (app.js uses
+        // document-wide queries; a duplicate silently changes which node is trapped).
+        foreach ([
+            '/mod/t/' . $thread['thread_id'] . '/split',
+            '/mod/t/' . $thread['thread_id'] . '/merge',
+            '/mod/t/' . $thread['thread_id'] . '/pin',
+            '/mod/t/' . $thread['thread_id'] . '/lock',
+            '/t/' . $thread['thread_id'] . '/assign',
+            '/t/' . $thread['thread_id'] . '/status',
+            '/t/' . $thread['thread_id'] . '/reply',
+        ] as $action) {
+            self::assertSame(1, substr_count($html, 'action="' . $action . '"'), $action . ' must render exactly once');
+        }
+        self::assertSame(1, substr_count($html, '<aside class="topic-tools"'));
+        self::assertSame(1, substr_count($html, '<details class="thread-restructure"'));
+
+        // Split/merge must NOT become a descendant of the tools aside: app.js hides
+        // [data-topic-tools] when opening the dialog, which would hide the dialog.
+        $toolsClose = strpos($html, '</aside>', $tools);
+        self::assertNotFalse($toolsClose);
+        self::assertTrue(
+            $restructure < $tools || $restructure > $toolsClose,
+            'Split/merge must stay outside the Topic tools aside — app.js hides [data-topic-tools] '
+                . 'when opening the dialog, which would hide the dialog, its close button and its scrim.',
+        );
+    }
 }

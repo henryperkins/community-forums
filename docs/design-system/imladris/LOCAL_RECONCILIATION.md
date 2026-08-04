@@ -13,7 +13,15 @@ runtime generation:
 - The admin UI-kit seed and compiled preview use the production readiness
   classifications from `6d81da5`.
 - `--gold-800` remains in the token ramp because the production staff badge and
-  monogram variants consume it.
+  monogram variants consume it. It is now reached through `--on-staff` rather
+  than directly.
+- The status ledger carries a `--surface-staff` / `--on-staff` pair in both
+  registers, and `.badge-staff` paints from it. The authoring bundle painted the
+  badge from the numbered ramp (`--gold-700` ink on `--gold-100` ground), which
+  measures 3.55:1 against a 4.5:1 requirement; because the twilight register
+  remaps only the semantic gold tokens and never the numbered ones, that pair
+  also rendered an unflipped light-register chip on a dark page. The semantic
+  pair clears AA in both registers (6.25:1 light, 8.3:1 dark) and flips.
 
 Neither preview JavaScript nor archived application snapshots are runtime
 inputs. `resources/imladris/manifest.json` records the allowlisted closure.

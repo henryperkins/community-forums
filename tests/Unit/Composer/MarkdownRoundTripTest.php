@@ -33,7 +33,7 @@ final class MarkdownRoundTripTest extends TestCase
             'blockquote' => ['> quoted', '<blockquote>'],
             'bullet list' => ["- a\n- b", '<ul>'],
             'ordered list' => ["1. a\n2. b", '<ol>'],
-            'fenced code' => ["```\ncode\n```", '<pre><code>'],
+            'fenced code' => ["```\ncode\n```", '</code></pre>'],
             'link nofollow' => ['[t](https://example.com)', 'rel="nofollow ugc noopener noreferrer"'],
             'h2 kept' => ['## Heading', '<h2>Heading</h2>'],
             'h1 clamped to h2' => ['# Top', '<h2>Top</h2>'],
@@ -100,6 +100,18 @@ final class MarkdownRoundTripTest extends TestCase
         );
         self::assertStringContainsString('<table>', $html);
         self::assertStringContainsString('</table></div>', $html);
+    }
+
+    public function test_code_blocks_are_rendered_inside_the_keyboard_scroll_contract(): void
+    {
+        $html = $this->md()->render("```\ncode\n```");
+
+        self::assertStringContainsString(
+            '<pre tabindex="0" role="region" aria-label="Scrollable code block">',
+            $html,
+        );
+        self::assertStringContainsString('<code>', $html);
+        self::assertStringContainsString('</code></pre>', $html);
     }
 
     /** @return array<string,array{0:string}> */

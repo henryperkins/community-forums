@@ -77,6 +77,7 @@ This paragraph combines **bold**, *italic*, ~~strikethrough~~, `inline code`, a 
 ```php
 <?php
 echo "semantic code language";
+$wide = "a code fence that exceeds the narrow viewport must scroll inside its own keyboard-operable region rather than widening the page";
 ```
 
 | Left aligned | Center aligned | Right aligned | Compatibility target | Operational note |
