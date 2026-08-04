@@ -17,12 +17,37 @@ final class SettingRepository
 
     public function get(string $key, mixed $default = null): mixed
     {
-        $raw = $this->db->fetchValue('SELECT `value` FROM settings WHERE `key` = ?', [$key]);
-        if ($raw === false || $raw === null) {
-            return $default;
+        return $this->getMany([$key => $default])[$key];
+    }
+
+    /**
+     * Load multiple settings in one query and retain them for this request.
+     *
+     * @param array<string,mixed> $defaults
+     * @return array<string,mixed>
+     */
+    public function getMany(array $defaults): array
+    {
+        if ($defaults === []) {
+            return [];
         }
-        $decoded = json_decode((string) $raw, true);
-        return $decoded === null && json_last_error() !== JSON_ERROR_NONE ? $default : $decoded;
+
+        $keys = array_keys($defaults);
+        $placeholders = implode(', ', array_fill(0, count($keys), '?'));
+        $rows = $this->db->fetchAll(
+            'SELECT `key`, `value` FROM settings WHERE `key` IN (' . $placeholders . ')',
+            $keys,
+        );
+
+        $values = $defaults;
+        foreach ($rows as $row) {
+            $decoded = json_decode((string) $row['value'], true);
+            if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+                continue;
+            }
+            $values[(string) $row['key']] = $decoded;
+        }
+        return $values;
     }
 
     public function getString(string $key, string $default = ''): string

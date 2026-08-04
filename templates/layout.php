@@ -5,6 +5,7 @@ $appearance = $appearance ?? ['theme' => 'system', 'density' => 'comfortable', '
 $composing = $composing ?? ['enter_to_send' => true, 'show_preview' => true, 'smart_lists' => true];
 $brand = $branding ?? ['name' => $site_name, 'logo_path' => null, 'favicon_path' => null, 'color_primary' => '#2f6fed', 'color_accent' => '#7c3aed'];
 $themePackage = $package_theme ?? ['active_css_digest' => null, 'preview_css_digest' => null];
+$assetVersion = (string) ($asset_version ?? '1');
 $appUrl = rtrim((string) ($app_url ?? ''), '/');
 $canonical = $this->block('canonical', '');
 $robots = $this->block('robots', '');
@@ -39,9 +40,9 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
     <?php else: ?>
         <link rel="icon" href="data:,">
     <?php endif; ?>
-    <link rel="stylesheet" href="/assets/imladris.css">
-    <link rel="stylesheet" href="/assets/app.css">
-    <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="/assets/wysiwyg-composer.css"><?php endif; ?>
+    <link rel="stylesheet" href="/assets/imladris.css?v=<?= $e($assetVersion) ?>">
+    <link rel="stylesheet" href="/assets/app.css?v=<?= $e($assetVersion) ?>">
+    <?php if ($wysiwygComposerOn): ?><link rel="stylesheet" href="/assets/wysiwyg-composer.css?v=<?= $e($assetVersion) ?>"><?php endif; ?>
     <?php if (!empty($themePackage['preview_css_digest'])): ?><link rel="stylesheet" href="/theme/preview.css?v=<?= $e($themePackage['preview_css_digest']) ?>"><?php elseif (!empty($themePackage['active_css_digest'])): ?><link rel="stylesheet" href="/theme/<?= $e($themePackage['active_css_digest']) ?>.css"><?php endif; ?>
     <?php if (!empty($brand['has_custom_colors'])): ?><link rel="stylesheet" href="/brand.css?v=<?= $e($brand['version'] ?: '1') ?>"><?php endif; ?>
 </head>
@@ -79,10 +80,10 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
         <?= $content ?>
     </main>
 <?php endif; ?>
-<script src="/assets/app.js" defer></script>
-<?php if ($richComposerOn): ?><script src="/assets/composer.js" defer></script><?php endif; ?>
-<?php if ($wysiwygComposerOn): ?><script type="module" src="/assets/wysiwyg-composer.js"></script><?php endif; ?>
-<?php if (!empty($features['passkeys'])): ?><script src="/assets/passkeys.js" defer></script><?php endif; ?>
-<?php if (!empty($features['product_tour']) && ($current_user ?? null) !== null): ?><script src="/assets/tour.js" defer></script><?php endif; ?>
+<script src="/assets/app.js?v=<?= $e($assetVersion) ?>" defer></script>
+<?php if ($richComposerOn): ?><script src="/assets/composer.js?v=<?= $e($assetVersion) ?>" defer></script><?php endif; ?>
+<?php if ($wysiwygComposerOn): ?><script type="module" src="/assets/wysiwyg-composer.js?v=<?= $e($assetVersion) ?>"></script><?php endif; ?>
+<?php if (!empty($features['passkeys'])): ?><script src="/assets/passkeys.js?v=<?= $e($assetVersion) ?>" defer></script><?php endif; ?>
+<?php if (!empty($features['product_tour']) && ($current_user ?? null) !== null): ?><script src="/assets/tour.js?v=<?= $e($assetVersion) ?>" defer></script><?php endif; ?>
 </body>
 </html>

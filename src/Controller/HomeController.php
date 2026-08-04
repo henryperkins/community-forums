@@ -6,9 +6,7 @@ namespace App\Controller;
 
 use App\Core\Request;
 use App\Core\Response;
-use App\Repository\BoardRepository;
-use App\Repository\CategoryRepository;
-use App\Security\BoardPolicy;
+use App\Service\NavigationService;
 
 /**
  * Home: the category/board index (pane 1 + 2 of the three-pane shell). Hidden
@@ -25,25 +23,7 @@ final class HomeController extends Controller
     /** @param array<string,string> $params */
     public function index(Request $request, array $params): Response
     {
-        $user = $this->currentUser();
-        $policy = $this->container->get(BoardPolicy::class);
-        $categories = $this->container->get(CategoryRepository::class)->all();
-        $allBoards = $this->container->get(BoardRepository::class)->allOrdered();
-
-        // Private boards the viewer belongs to remain listed for them.
-        $memberBoardIds = $user !== null
-            ? array_flip($this->container->get(\App\Repository\BoardMemberRepository::class)->boardIdsFor($user->id()))
-            : [];
-
-        $sections = [];
-        foreach ($categories as $category) {
-            $boards = array_values(array_filter(
-                $allBoards,
-                fn (array $b): bool => (int) $b['category_id'] === (int) $category['id']
-                    && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
-            ));
-            $sections[] = ['category' => $category, 'boards' => $boards];
-        }
+        $sections = $this->container->get(NavigationService::class)->homeSections($this->currentUser());
 
         return $this->view('home', ['sections' => $sections]);
     }

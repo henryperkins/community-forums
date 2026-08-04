@@ -74,6 +74,7 @@ use App\Controller\UnsubscribeController;
 use App\Hook\FirstPartyHookRegistry;
 use App\Hook\HookEvent;
 use App\Mail\ArrayMailer;
+use App\Mail\CloudflareSmtpMailer;
 use App\Mail\Mailer;
 use App\Mail\SendmailMailer;
 use App\Search\MysqlSearchService;
@@ -210,6 +211,7 @@ use App\Service\IdentityProviderService;
 use App\Service\InvitationService;
 use App\Service\ModerationService;
 use App\Service\MfaService;
+use App\Service\NavigationService;
 use App\Service\NotificationService;
 use App\Service\OAuthService;
 use App\Service\PasskeyService;
@@ -313,6 +315,7 @@ final class App
     public const CORE_VERSION = '0.5.0-dev';
 
     private Router $router;
+    private ?string $assetVersion = null;
 
     public function __construct(
         private Config $config,
@@ -341,6 +344,17 @@ final class App
     {
         $container = $this->buildContainer($request);
 
+        if ($this->isInfrastructurePath($request->path())) {
+            $response = $this->process($container, $request);
+            SecurityHeaders::apply(
+                $response,
+                (bool) $this->config->get('security.hsts', true),
+                false,
+            );
+            $this->emitRequestTelemetry($container, $request, $response);
+            return $response;
+        }
+
         /** @var Session $session */
         $session = $container->get(Session::class);
         /** @var Flash $flash */
@@ -349,24 +363,34 @@ final class App
         $session->start($request);
         $this->heartbeat($container, $session->user());
         $flash->load($request);
-        $this->shareViewGlobals($container, $request);
-
+        $allowGiphyCsp = $this->shareViewGlobals($container, $request);
         $response = $this->process($container, $request);
-        $container->get(Telemetry::class)->emit('http.request', [
-            'method' => $request->method(),
-            'path' => $request->path(),
-            'status' => $response->status(),
-        ]);
 
         SecurityHeaders::apply(
             $response,
             (bool) $this->config->get('security.hsts', true),
-            $this->allowGiphyCsp($container),
+            $allowGiphyCsp,
         );
         $session->commit($response);
         $flash->commit($response);
+        $this->emitRequestTelemetry($container, $request, $response);
 
         return $response;
+    }
+
+    private function isInfrastructurePath(string $path): bool
+    {
+        return in_array($path, ['/healthz', '/robots.txt', '/sitemap.xml'], true);
+    }
+
+    private function emitRequestTelemetry(Container $container, Request $request, Response $response): void
+    {
+        $container->get(Telemetry::class)->emit('http.request', [
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'status' => $response->status(),
+            'database' => $container->get(Database::class)->metrics(),
+        ]);
     }
 
     private function process(Container $container, Request $request): Response
@@ -377,7 +401,7 @@ final class App
             // The health check must answer even when the database is unreachable,
             // and robots/sitemap should serve regardless of first-run state, so
             // these are dispatched BEFORE the setup gate (which queries the DB).
-            if (in_array($path, ['/healthz', '/robots.txt', '/sitemap.xml'], true)) {
+            if ($this->isInfrastructurePath($path)) {
                 [$handler, $params] = $this->router->match($request->method(), $path);
                 [$class, $method] = $handler;
                 return (new $class($container))->{$method}($request, $params);
@@ -410,8 +434,17 @@ final class App
             if ($e->redirectTo !== null) {
                 return $this->redirect($e->redirectTo, $e->statusCode() === 302 ? 302 : 303);
             }
+            if ($this->isInfrastructurePath($path)) {
+                return Response::text(
+                    $e->getMessage() !== '' ? $e->getMessage() : $this->defaultErrorMessage($e->statusCode()),
+                    $e->statusCode(),
+                );
+            }
             return $this->renderError($container, $e->statusCode(), $e->getMessage());
         } catch (Throwable $e) {
+            if ($this->isInfrastructurePath($path)) {
+                return Response::text('Something went wrong.', 500);
+            }
             return $this->renderServerError($container, $e);
         }
     }
@@ -499,7 +532,7 @@ final class App
         };
     }
 
-    private function shareViewGlobals(Container $container, Request $request): void
+    private function shareViewGlobals(Container $container, Request $request): bool
     {
         /** @var Session $session */
         $session = $container->get(Session::class);
@@ -507,16 +540,37 @@ final class App
         $flash = $container->get(Flash::class);
 
         $appName = (string) $this->config->get('app.name', 'RetroBoards');
-        $siteName = $appName;
-        $nav = [];
+        $siteSettingDefaults = [
+            'site_name' => $appName,
+            'brand_theme_default' => 'system',
+            'brand_logo_path' => '',
+            'brand_logo_light_path' => '',
+            'brand_logo_dark_path' => '',
+            'brand_favicon_path' => '',
+            'brand_color_primary' => '',
+            'brand_color_accent' => '',
+            'brand_theme_preset' => 'classic',
+            'brand_version' => '',
+            'brand_custom_css_enabled' => false,
+            'brand_custom_css' => '',
+            'giphy_public_key' => (string) $this->config->get('giphy.public_key', ''),
+            'site_announcement' => null,
+        ];
+        $siteSettings = $siteSettingDefaults;
 
         // Defensive: the shell renders before the setup gate and even on a
         // not-yet-migrated database, so a missing table must not 500 the app.
         try {
-            $siteName = $container->get(SettingRepository::class)->getString('site_name', $appName);
-            $nav = $this->buildNav($container, $session->user());
+            $siteSettings = $container->get(SettingRepository::class)->getMany($siteSettingDefaults);
         } catch (Throwable) {
-            $siteName = $appName;
+            $siteSettings = $siteSettingDefaults;
+        }
+        $siteName = is_string($siteSettings['site_name']) ? $siteSettings['site_name'] : $appName;
+
+        $nav = [];
+        try {
+            $nav = $container->get(NavigationService::class)->sidebar($session->user());
+        } catch (Throwable) {
             $nav = [];
         }
 
@@ -535,7 +589,9 @@ final class App
             if ($user !== null) {
                 $appearance = $container->get(PreferenceService::class)->appearance($user->id());
             } else {
-                $default = $container->get(SettingRepository::class)->getString('brand_theme_default', 'system');
+                $default = is_string($siteSettings['brand_theme_default'])
+                    ? $siteSettings['brand_theme_default']
+                    : 'system';
                 if (in_array($default, ['system', 'light', 'dark'], true)) {
                     $appearance['theme'] = $default;
                 }
@@ -558,7 +614,7 @@ final class App
         }
 
         // Branding (P3-07): operator name/logo/favicon/colors with safe fallbacks.
-        $branding = $this->branding($container, $siteName, $appearance);
+        $branding = $this->branding($container, $siteName, $appearance, $siteSettings);
 
         // Declarative package themes (P5-03): external CSS only, with emergency
         // safe mode and admin-only preview kept outside the DB-backed session.
@@ -590,12 +646,11 @@ final class App
             $packageTheme = ['active_css_digest' => null, 'preview_css_digest' => null];
         }
 
-        // Configured OAuth providers power the "Sign in with …" buttons. The
-        // narrow menu never hydrates registry cache blobs or builds provider
-        // objects — this runs on EVERY request, and only /login consumes it.
+        // Configured OAuth providers power the "Sign in with …" buttons. Only
+        // /login consumes the menu, so other routes do not query the registry.
         $oauthProviders = [];
         try {
-            if (!empty($features['oauth'])) {
+            if ($request->path() === '/login' && !empty($features['oauth'])) {
                 $oauthProviders = $container->get(ProviderRegistry::class)->loginMenu();
             }
         } catch (Throwable) {
@@ -609,7 +664,7 @@ final class App
         // no DB is touched. Only /login consumes this.
         $passkeysUsable = false;
         try {
-            if (!empty($features['passkeys'])) {
+            if ($request->path() === '/login' && !empty($features['passkeys'])) {
                 $passkeysUsable = $container->get(RelyingParty::class)->isUsable();
             }
         } catch (Throwable) {
@@ -634,7 +689,7 @@ final class App
         // pre-setup and against an un-migrated DB).
         $siteAnnouncement = null;
         try {
-            $value = $container->get(SettingRepository::class)->get('site_announcement', null);
+            $value = $siteSettings['site_announcement'];
             if (is_array($value) && !empty($value['active'])) {
                 $siteAnnouncement = $value;
             }
@@ -680,11 +735,37 @@ final class App
             'composing' => $composing,
             'branding' => $branding,
             'package_theme' => $packageTheme,
+            'asset_version' => $this->assetVersion(),
             'app_url' => (string) $this->config->get('app.url', ''),
             'needs_tour' => $needsTour,
             'site_announcement' => $siteAnnouncement,
             'moderation_access' => $moderationAccess,
         ]);
+
+        return !empty($features['slash_giphy'])
+            && is_string($siteSettings['giphy_public_key'])
+            && $siteSettings['giphy_public_key'] !== '';
+    }
+
+    private function assetVersion(): string
+    {
+        if ($this->assetVersion !== null) {
+            return $this->assetVersion;
+        }
+
+        $base = rtrim((string) $this->config->get('paths.base', ''), '/\\');
+        $files = array_merge(
+            glob($base . '/public/assets/*.css') ?: [],
+            glob($base . '/public/assets/*.js') ?: [],
+        );
+        sort($files);
+
+        $hash = hash_init('sha256');
+        foreach ($files as $file) {
+            hash_update($hash, basename($file) . "\0");
+            hash_update_file($hash, $file);
+        }
+        return $this->assetVersion = substr(hash_final($hash), 0, 16);
     }
 
     /**
@@ -693,9 +774,15 @@ final class App
      * the default RetroBoards chrome so the shell always renders.
      *
      * @param array<string,mixed> $appearance
+     * @param array<string,mixed> $settings
      * @return array{name:string,logo_path:?string,favicon_path:?string,color_primary:string,color_accent:string,theme_preset:string,has_custom_colors:bool,version:string}
      */
-    private function branding(Container $container, string $siteName, array $appearance = []): array
+    private function branding(
+        Container $container,
+        string $siteName,
+        array $appearance = [],
+        array $settings = [],
+    ): array
     {
         $brand = [
             'name' => $siteName,
@@ -711,15 +798,14 @@ final class App
             if (!$container->get(FeatureFlags::class)->enabled('branding')) {
                 return $brand;
             }
-            $settings = $container->get(SettingRepository::class);
-            $logo = $settings->getString('brand_logo_path', '');
-            $lightLogo = $settings->getString('brand_logo_light_path', '');
-            $darkLogo = $settings->getString('brand_logo_dark_path', '');
-            $favicon = $settings->getString('brand_favicon_path', '');
-            $primary = $settings->getString('brand_color_primary', '');
-            $accent = $settings->getString('brand_color_accent', '');
-            $preset = $settings->getString('brand_theme_preset', 'classic');
-            $brand['version'] = $settings->getString('brand_version', '');
+            $logo = is_string($settings['brand_logo_path'] ?? null) ? $settings['brand_logo_path'] : '';
+            $lightLogo = is_string($settings['brand_logo_light_path'] ?? null) ? $settings['brand_logo_light_path'] : '';
+            $darkLogo = is_string($settings['brand_logo_dark_path'] ?? null) ? $settings['brand_logo_dark_path'] : '';
+            $favicon = is_string($settings['brand_favicon_path'] ?? null) ? $settings['brand_favicon_path'] : '';
+            $primary = is_string($settings['brand_color_primary'] ?? null) ? $settings['brand_color_primary'] : '';
+            $accent = is_string($settings['brand_color_accent'] ?? null) ? $settings['brand_color_accent'] : '';
+            $preset = is_string($settings['brand_theme_preset'] ?? null) ? $settings['brand_theme_preset'] : 'classic';
+            $brand['version'] = is_string($settings['brand_version'] ?? null) ? $settings['brand_version'] : '';
             $theme = (string) ($appearance['theme'] ?? 'system');
             $selectedLogo = match ($theme) {
                 'dark' => $darkLogo !== '' ? $darkLogo : $logo,
@@ -742,8 +828,9 @@ final class App
                 $brand['theme_preset'] = $preset;
             }
             $hasCustomCss = $container->get(FeatureFlags::class)->enabled('custom_css')
-                && $settings->get('brand_custom_css_enabled', false) === true
-                && $settings->getString('brand_custom_css', '') !== '';
+                && ($settings['brand_custom_css_enabled'] ?? false) === true
+                && is_string($settings['brand_custom_css'] ?? null)
+                && $settings['brand_custom_css'] !== '';
             $brand['has_custom_colors'] = $brand['color_primary'] !== ''
                 || $brand['color_accent'] !== ''
                 || $brand['theme_preset'] !== 'classic'
@@ -757,41 +844,6 @@ final class App
     private static function isHexColor(string $value): bool
     {
         return preg_match('/^#[0-9a-fA-F]{6}$/', $value) === 1;
-    }
-
-    /**
-     * Sidebar navigation: categories with the boards visible to this viewer.
-     *
-     * @return array<int,array{category:array<string,mixed>,boards:array<int,array<string,mixed>>}>
-     */
-    private function buildNav(Container $container, ?\App\Domain\User $user): array
-    {
-        $policy = $container->get(BoardPolicy::class);
-        $categories = $container->get(CategoryRepository::class)->all();
-        $allBoards = $container->get(BoardRepository::class)->allOrdered();
-
-        // Private boards the viewer belongs to should appear in their sidebar.
-        $memberBoardIds = [];
-        $mutedBoardIds = [];
-        if ($user !== null) {
-            $memberBoardIds = array_flip($container->get(BoardMemberRepository::class)->boardIdsFor($user->id()));
-            // Muted boards are excluded from the sidebar (USER §4.3).
-            $mutedBoardIds = array_flip($container->get(UserBoardPrefRepository::class)->mutedBoardIds($user->id()));
-        }
-
-        $nav = [];
-        foreach ($categories as $category) {
-            $boards = array_values(array_filter(
-                $allBoards,
-                fn (array $b): bool => (int) $b['category_id'] === (int) $category['id']
-                    && !isset($mutedBoardIds[(int) $b['id']])
-                    && $policy->isListed($b, $user, isset($memberBoardIds[(int) $b['id']])),
-            ));
-            if ($boards !== []) {
-                $nav[] = ['category' => $category, 'boards' => $boards];
-            }
-        }
-        return $nav;
     }
 
     private function buildContainer(Request $request): Container
@@ -937,6 +989,13 @@ final class App
         $c->bind(UserPreferenceRepository::class, fn (Container $c) => new UserPreferenceRepository($c->get(Database::class)));
         $c->bind(EmailPreferenceService::class, fn (Container $c) => new EmailPreferenceService($c->get(UserPreferenceRepository::class)));
         $c->bind(UserBoardPrefRepository::class, fn (Container $c) => new UserBoardPrefRepository($c->get(Database::class)));
+        $c->bind(NavigationService::class, fn (Container $c) => new NavigationService(
+            $c->get(CategoryRepository::class),
+            $c->get(BoardRepository::class),
+            $c->get(BoardMemberRepository::class),
+            $c->get(UserBoardPrefRepository::class),
+            $c->get(BoardPolicy::class),
+        ));
         $c->bind(UserProfileFieldRepository::class, fn (Container $c) => new UserProfileFieldRepository($c->get(Database::class)));
         $c->bind(UsernameHistoryRepository::class, fn (Container $c) => new UsernameHistoryRepository($c->get(Database::class)));
         $c->bind(VerificationRepository::class, fn (Container $c) => new VerificationRepository($c->get(Database::class)));
@@ -1204,6 +1263,14 @@ final class App
                 } catch (Throwable) {
                     $fromName = (string) $config->get('app.name', '');
                 }
+            }
+            if (($mail['driver'] ?? 'sendmail') === 'cloudflare_smtp') {
+                return new CloudflareSmtpMailer(
+                    (string) ($mail['cloudflare_api_token'] ?? ''),
+                    (string) ($mail['from'] ?? ''),
+                    $fromName,
+                    timeoutSeconds: (int) ($mail['timeout_seconds'] ?? 30),
+                );
             }
             return new SendmailMailer((string) ($mail['from'] ?? ''), $fromName);
         });

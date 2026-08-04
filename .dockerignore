@@ -15,3 +15,7 @@ phpunit.xml
 *.md
 .worktrees
 imladris-design-system.zip
+worker
+wrangler.jsonc
+.wrangler
+output/wrangler-dry-run

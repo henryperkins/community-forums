@@ -15,6 +15,10 @@ use Throwable;
 final class Database
 {
     private ?PDO $pdo = null;
+    private int $connectionCount = 0;
+    private float $connectionDurationMs = 0.0;
+    private int $queryCount = 0;
+    private float $queryDurationMs = 0.0;
 
     /** @param array<string,mixed> $config db config block */
     public function __construct(private array $config)
@@ -35,20 +39,63 @@ final class Database
             $this->config['charset'] ?? 'utf8mb4',
         );
 
-        $this->pdo = new PDO(
-            $dsn,
-            (string) $this->config['username'],
-            (string) $this->config['password'],
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::ATTR_STRINGIFY_FETCHES => false,
-                PDO::ATTR_TIMEOUT => 5,
-            ],
-        );
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_STRINGIFY_FETCHES => false,
+            PDO::ATTR_TIMEOUT => 5,
+        ];
+
+        $startedAt = hrtime(true);
+        $this->connectionCount++;
+        try {
+            $this->pdo = new PDO(
+                $dsn,
+                (string) $this->config['username'],
+                (string) $this->config['password'],
+                $options + $this->tlsOptions(),
+            );
+        } finally {
+            $this->connectionDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
+        }
 
         return $this->pdo;
+    }
+
+    /**
+     * TLS driver options for the MySQL connection. Empty (plaintext) unless
+     * db.ssl.enabled is on — a same-host/private-network connection needs no
+     * TLS, but a managed database reached over the public internet does, or the
+     * credentials and every row cross the wire in the clear.
+     *
+     * The MYSQL_ATTR_SSL_* constants only exist when pdo_mysql is loaded, so
+     * they are resolved defensively: a machine without the driver can still
+     * construct this class (unit tests never open a MySQL socket).
+     *
+     * @return array<int,mixed>
+     */
+    private function tlsOptions(): array
+    {
+        $ssl = $this->config['ssl'] ?? [];
+        if (empty($ssl['enabled'])) {
+            return [];
+        }
+
+        $options = [];
+        $ca = (string) ($ssl['ca'] ?? '');
+        if ($ca !== '' && defined('PDO::MYSQL_ATTR_SSL_CA')) {
+            $options[PDO::MYSQL_ATTR_SSL_CA] = $ca;
+        }
+        if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
+            // Verifying the server certificate requires a CA to verify it against.
+            // Without one, asking for verification fails the connection outright,
+            // so only assert it when we actually have a trust anchor.
+            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $ca !== ''
+                && (bool) ($ssl['verify'] ?? true);
+        }
+
+        return $options;
     }
 
     /** Allow tests to inject a pre-built PDO (e.g. a shared transaction). */
@@ -64,9 +111,16 @@ final class Database
      */
     public function run(string $sql, array $params = []): \PDOStatement
     {
-        $stmt = $this->pdo()->prepare($sql);
-        $stmt->execute($params);
-        return $stmt;
+        $pdo = $this->pdo();
+        $startedAt = hrtime(true);
+        $this->queryCount++;
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } finally {
+            $this->queryDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
+        }
     }
 
     /** @param array<string,mixed>|list<mixed> $params */
@@ -127,10 +181,40 @@ final class Database
 
     public function ping(): bool
     {
+        $pdo = null;
         try {
-            return (int) $this->pdo()->query('SELECT 1')->fetchColumn() === 1;
+            $pdo = $this->pdo();
         } catch (PDOException) {
             return false;
         }
+
+        $startedAt = hrtime(true);
+        $this->queryCount++;
+        try {
+            return (int) $pdo->query('SELECT 1')->fetchColumn() === 1;
+        } catch (PDOException) {
+            return false;
+        } finally {
+            $this->queryDurationMs += (hrtime(true) - $startedAt) / 1_000_000;
+        }
+    }
+
+    /** @return array{connections:int,connection_ms:float,queries:int,query_ms:float} */
+    public function metrics(): array
+    {
+        return [
+            'connections' => $this->connectionCount,
+            'connection_ms' => round($this->connectionDurationMs, 3),
+            'queries' => $this->queryCount,
+            'query_ms' => round($this->queryDurationMs, 3),
+        ];
+    }
+
+    public function resetMetrics(): void
+    {
+        $this->connectionCount = 0;
+        $this->connectionDurationMs = 0.0;
+        $this->queryCount = 0;
+        $this->queryDurationMs = 0.0;
     }
 }

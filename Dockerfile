@@ -57,6 +57,19 @@ RUN composer install \
 # ---------------------------------------------------------------------------
 FROM phpbase
 
+# FUSE + an S3 client so /data can be backed by an R2 bucket. Cloudflare
+# Containers have an ephemeral filesystem: uploads, installed packages and the
+# rate-limit ledger would not survive a restart on local disk. Unused (and
+# inert) when R2_BUCKET is unset, e.g. a VPS deploy with a real volume.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends s3fs fuse3 \
+    && echo 'user_allow_other' >> /etc/fuse.conf \
+    && rm -f /var/log/apache2/error.log /var/log/apache2/access.log /var/log/apache2/other_vhosts_access.log \
+    && touch /var/log/apache2/error.log /var/log/apache2/access.log /var/log/apache2/other_vhosts_access.log \
+    && chown www-data:www-data /var/log/apache2/error.log /var/log/apache2/access.log /var/log/apache2/other_vhosts_access.log \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /var/www/html
 
 # Application source (vendor/ and storage/ excluded via .dockerignore)
@@ -75,6 +88,8 @@ COPY deploy/entrypoint.sh /usr/local/bin/retroboards-entrypoint
 RUN chmod +x /usr/local/bin/retroboards-entrypoint \
     && mkdir -p storage/cache storage/ratelimit storage/media \
     && chown -R www-data:www-data storage
+
+EXPOSE 8080
 
 ENTRYPOINT ["retroboards-entrypoint"]
 CMD ["apache2-foreground"]

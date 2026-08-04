@@ -27,6 +27,14 @@ return [
         'username' => Env::get('DB_USERNAME', 'retro'),
         'password' => Env::get('DB_PASSWORD', 'retropw'),
         'charset' => 'utf8mb4',
+        // TLS for the MySQL connection. Off by default (same-host or private
+        // network). Required when the database is reached over the public
+        // internet — see docs/runbooks/deployment-cloudflare.md.
+        'ssl' => [
+            'enabled' => Env::bool('DB_SSL', false),
+            'ca' => Env::get('DB_SSL_CA', ''),
+            'verify' => Env::bool('DB_SSL_VERIFY', true),
+        ],
     ],
 
     'session' => [
@@ -54,12 +62,14 @@ return [
     ],
 
     'mail' => [
-        // 'sendmail' uses PHP mail(); swap to an SMTP/provider adapter behind the
-        // App\Mail\Mailer interface later. Empty `from` ⇒ not configured ⇒ email
-        // fails closed (in-app notifications still deliver).
+        // 'sendmail' uses PHP mail(); 'cloudflare_smtp' submits transactional
+        // email over authenticated SMTPS. Empty credentials keep email
+        // fail-closed while in-app notifications continue.
         'driver' => Env::get('MAIL_DRIVER', 'sendmail'),
         'from' => Env::get('MAIL_FROM', ''),
         'from_name' => Env::get('MAIL_FROM_NAME', ''),
+        'cloudflare_api_token' => Env::get('CLOUDFLARE_EMAIL_API_TOKEN', ''),
+        'timeout_seconds' => (int) Env::get('MAIL_TIMEOUT_SECONDS', '30'),
     ],
 
     'paths' => [

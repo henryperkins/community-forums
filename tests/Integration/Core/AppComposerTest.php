@@ -229,7 +229,10 @@ final class AppComposerTest extends TestCase
         $defaultPage = $this->get('/c/wysiwyg-assets');
         self::assertStringContainsString('/assets/composer.js', $defaultPage->body());
         self::assertStringContainsString('/assets/wysiwyg-composer.css', $defaultPage->body());
-        self::assertStringContainsString('<script type="module" src="/assets/wysiwyg-composer.js"></script>', $defaultPage->body());
+        self::assertMatchesRegularExpression(
+            '#<script type="module" src="/assets/wysiwyg-composer\.js\?v=[a-f0-9]{16}"></script>#',
+            $defaultPage->body(),
+        );
         self::assertStringContainsString('data-wysiwyg-composer="1"', $defaultPage->body());
 
         // Operator rollback: the narrow flag removes only the WYSIWYG layer;
