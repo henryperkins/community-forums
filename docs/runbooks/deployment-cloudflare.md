@@ -418,8 +418,12 @@ Every page render is dominated by database round trips, not by PHP:
 | 20 trivial `SELECT 1` round trips | 0.90s (**~45ms each**) |
 | `SELECT COUNT(*) FROM users` | 0.06s |
 | `GET /ping.txt` (static, no PHP) | ~0.00s |
-| `GET /healthz` | ~2.8–4.8s |
-| `GET /` | ~3.0–5.6s |
+| `GET /healthz` before query-path work | ~2.8–4.8s |
+| `GET /` before query-path work | ~3.0–5.6s |
+| `GET /healthz` after `d6ab5b5` | ~0.52–0.83s |
+| `GET /` after `d6ab5b5` | ~1.42s observed |
+| Versioned `app.css` edge hit | ~0.15s |
+| Versioned `brand.css` edge hit | ~0.15s |
 
 The container currently runs in `ENAM` (observed node `ewr14`, Newark), but
 placement is unconstrained (`placement: {}` in the deployed Worker settings).
@@ -431,12 +435,12 @@ the deployment investigation does expose the origin hostname:
 waiting on the network, which is exactly what the public and container timings
 show.
 
-The dashboard-added `HYPERDRIVE_VARIABLE` binding does not change this PHP
-topology. The active Worker script etag is unchanged, `worker/index.js` never
-reads the binding, and the container still receives the original `DB_*`
-variables and connects with PDO. Hyperdrive's documented connection object is a
-Workers-runtime binding for compatible Worker database drivers; it is not a
-TCP endpoint that PHP PDO inside the container can consume.
+The dashboard-added `HYPERDRIVE_VARIABLE` binding did not change this PHP
+topology. It was removed by the `d6ab5b5` source deployment: `worker/index.js`
+never used it, and the container continues to receive the original `DB_*`
+variables and connect with PDO. Hyperdrive's documented connection object is a
+Workers-runtime binding for compatible Worker database drivers; it is not a TCP
+endpoint that PHP PDO inside the container can consume.
 
 This is the cost the `wrangler.jsonc` placement comment warns about, and it is
 **not** fixed by container sizing — the CPU is idle. The levers, in rough order
@@ -451,12 +455,12 @@ of effect:
    `"constraints": {"regions": ["ENAM"]}`. Do not add this until the database
    migration target is confirmed. A same-region managed MySQL should put round
    trips in the low single-digit milliseconds.
-2. **Reduce queries per render.** There is no page/fragment render cache.
-   `docs/runbooks/render_cache.md` only rebuilds derived Markdown `body_html`
-   and does not reduce shell queries. The verified application-side targets are:
-   request-level query count/timing, a bulk settings read for the global shell,
-   avoiding the duplicate category/board reads in `shareViewGlobals()` and
-   `HomeController`, and bypassing shell-global reads for `/healthz`.
+2. **Reduce queries per render.** `d6ab5b5` landed request-level query metrics,
+   a bulk settings read for the global shell, a request-memoized navigation
+   snapshot shared by `shareViewGlobals()` and `HomeController`, and a true
+   infrastructure-path bypass for `/healthz`. Guest home is contract-bounded to
+   eight database queries. There is still no page/fragment render cache;
+   `docs/runbooks/render_cache.md` only rebuilds derived Markdown `body_html`.
 3. Persistent connections would save the 0.20s connect, but not the per-query
    cost, which is the dominant term.
 
@@ -496,35 +500,33 @@ delete the old branch until parity and backup evidence are complete.
 As of 2026-08-04 the deployment serves traffic:
 
 - `https://forum.candidary.online/healthz` → `200 {"status":"ok","database":"ok"}`
+- Worker version `b266e6bd`, source commit `d6ab5b5`; container application
+  version 8 runs image digest `sha256:f4ebd113…` at observed node `ewr14`
 - PlanetScale `8.4.9-Vitess`, all **78** migrations applied
 - R2 bucket `retroboards-data` mounted at `/data` via s3fs
 - Secrets set: `APP_KEY`, `DB_PASSWORD`, `R2_ACCESS_KEY_ID`,
   `R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_EMAIL_API_TOKEN`
-- Four Cron Triggers are registered. Live tailing observed the `*/5` schedule
-  complete at 13:40 and 13:45 UTC with both `runConsole` RPC calls reporting
-  `outcome: ok` and no error logs. This proves command execution; a non-empty
-  email/webhook delivery still needs separate evidence.
+- `MAIL_DRIVER=cloudflare_smtp` with `noreply@candidary.online`; the sending
+  domain is onboarded and the token secret is present
+- Four Cron Triggers are registered. A post-deploy `*/5` tick completed with
+  both `runConsole` RPC calls reporting `outcome: ok` and no error logs
 - First-run setup is complete: `/` returns `200` and `/setup` redirects to `/`.
-- A dashboard/API change deployed Worker version `097ca243` with an additional
-  `HYPERDRIVE_VARIABLE` binding. Its script etag is identical to the prior
-  source-built version, the binding is unused, and health remains green. The
-  binding is not in `wrangler.jsonc`, so the next source deployment will remove
-  it unless it is deliberately added.
-
-Not yet done, tracked here so it is not lost:
-
-- The source branch now carries the §8 Worker Cache API implementation and
-  content-versioned core asset URLs. Production verification must observe one
-  `MISS` followed by `HIT` with the same `?v=` URL after deployment. Live HTML
-  has no Rocket Loader or Bot Fight script markers; method-aware login WAF is
-  deferred until the Free plan is upgraded.
+- Worker Cache API verification observed `MISS` then `HIT` for the same
+  versioned `app.css` and `brand.css` URLs; hits return in ~0.15s
 - The deployed code is the published `deploy/cloudflare-production-20260804`
-  branch, based on `c79d0d5` plus nine deployment commits. It deliberately does
-  **not** include the eight feature-only Imladris admin/account commits on the
-  separately published `feat/imladris-admin-account` branch.
+  branch at `d6ab5b5`. It deliberately does **not** include the eight
+  feature-only Imladris admin/account commits on the separately published
+  `feat/imladris-admin-account` branch.
 - The throwaway Workers `rb-nginx-test` and `rb-egress-probe`, and their
   corresponding container apps, were deleted after confirming they had no
   custom domains, routes, or Cron Triggers. Only
   `retroboards-forumcontainer` remains provisioned.
-- `SendmailMailer` still has no deliverability path from the container, so email
-  fails closed (§10).
+
+Not yet done, tracked here so it is not lost:
+
+- Execute the `gcp-us-east4` PlanetScale migration above during a write-free
+  maintenance window.
+- Upgrade the Cloudflare zone before adding a method-aware `POST /login` WAF
+  rate rule; the Free plan cannot express it.
+- Perform a recipient-level SMTP test send from `/admin/email`; configuration
+  and cron execution are proven, but mailbox delivery has not yet been observed.
