@@ -10,7 +10,7 @@ import {
 import { gfm, toggleStrikethroughCommand } from '@milkdown/preset-gfm';
 import { toggleMark } from '@milkdown/prose/commands';
 import { closeHistory } from '@milkdown/prose/history';
-import type { Node as ProseMirrorNode } from '@milkdown/prose/model';
+import { Slice, type Node as ProseMirrorNode } from '@milkdown/prose/model';
 import { Plugin, PluginKey } from '@milkdown/prose/state';
 import { Decoration, DecorationSet, type EditorView } from '@milkdown/prose/view';
 import { $prose, callCommand, getMarkdown, insert, markdownToSlice, replaceAll } from '@milkdown/utils';
@@ -164,8 +164,12 @@ function richComposerPlugin(adapter: MilkdownComposerAdapter) {
       decorations(state) {
         return buildChipDecorations(state.doc);
       },
+      handleKeyDown(_view, event) {
+        adapter.notePlainPasteIntent(event);
+        return false;
+      },
       handlePaste(view, event) {
-        return adapter.handleInternalPaste(view, event);
+        return adapter.handlePaste(view, event);
       },
     },
   }));
@@ -187,6 +191,7 @@ class MilkdownComposerAdapter {
   private toggle: HTMLButtonElement;
   private wasRequired: boolean;
   private pasteSeq = 0;
+  private plainPasteIntent = false;
 
   constructor(
     private form: HTMLFormElement,
@@ -512,23 +517,49 @@ class MilkdownComposerAdapter {
     this.replaceEditorRangeWithMarkdown({ from: state.start, to: state.end }, markdown, true);
   }
 
-  handleInternalPaste(view: EditorView, event: ClipboardEvent): boolean {
+  /**
+   * Records a Cmd/Ctrl+Shift+V "paste as plain text" request (COMPOSER.md §12) so
+   * the paste it precedes skips Markdown parsing and lands as literal characters.
+   */
+  notePlainPasteIntent(event: KeyboardEvent): void {
+    if (event.key !== 'v' && event.key !== 'V') {
+      return;
+    }
+    this.plainPasteIntent = (event.ctrlKey || event.metaKey) && event.shiftKey;
+  }
+
+  handlePaste(view: EditorView, event: ClipboardEvent): boolean {
+    const plainIntent = this.plainPasteIntent;
+    this.plainPasteIntent = false;
     if (!this.richMode || this.failed || this.destroyed) {
       return false;
     }
-    const raw = event.clipboardData?.getData('text/plain')?.trim() || '';
-    if (raw === '') {
+    const raw = event.clipboardData?.getData('text/plain') || '';
+    if (raw.trim() === '') {
       return false;
     }
-    const target = this.internalPasteTarget(raw);
-    if (!target) {
+    // An internal board/tag/topic URL keeps its own async chip rewrite.
+    if (this.scheduleInternalPasteRewrite(view, raw.trim())) {
       return false;
     }
-    const seq = ++this.pasteSeq;
-    window.setTimeout(() => {
-      this.rewriteInternalPaste(view, raw, target, seq);
-    }, 0);
-    return false;
+    if (plainIntent) {
+      return false;
+    }
+    // Rich clipboard content already carries structure — ProseMirror's HTML
+    // converter owns it (COMPOSER.md §3.3), and re-reading it as Markdown would
+    // double-interpret text the source app already marked up.
+    if ((event.clipboardData?.getData('text/html') || '') !== '') {
+      return false;
+    }
+    // Inside a fence or an inline-code run the author is pasting code, not prose:
+    // Markdown syntax there is literal content.
+    if (this.selectionIsCode(view)) {
+      return false;
+    }
+    // Canonical storage is Markdown, so plain text pasted into rich mode is read
+    // as Markdown — otherwise the serializer backslash-escapes every construct and
+    // the published post shows `## Heading` instead of a heading.
+    return this.insertMarkdownSlice(view, raw);
   }
 
   destroy(): void {
@@ -729,6 +760,58 @@ class MilkdownComposerAdapter {
     this.ready.then(applyReplacement).catch(() => {
       this.fallback.replaceSelection(markdown);
     });
+  }
+
+  private scheduleInternalPasteRewrite(view: EditorView, raw: string): boolean {
+    const target = this.internalPasteTarget(raw);
+    if (!target) {
+      return false;
+    }
+    const seq = ++this.pasteSeq;
+    window.setTimeout(() => {
+      this.rewriteInternalPaste(view, raw, target, seq);
+    }, 0);
+    return true;
+  }
+
+  private selectionIsCode(view: EditorView): boolean {
+    const { selection, storedMarks } = view.state;
+    if (selection.$from.parent.type.spec.code) {
+      return true;
+    }
+    const marks = storedMarks || selection.$from.marks();
+    return marks.some((mark) => mark.type.name === 'inlineCode' || mark.type.name === 'code');
+  }
+
+  private insertMarkdownSlice(view: EditorView, markdown: string): boolean {
+    if (!this.editor) {
+      return false;
+    }
+    let inserted = false;
+    try {
+      this.editor.action((ctx) => {
+        const parsed = markdownToSlice(markdown)(ctx);
+        if (parsed.size === 0) {
+          return;
+        }
+        // A single pasted paragraph stays open so it merges into the sentence the
+        // caret sits in. Anything with real block structure is inserted closed —
+        // an open slice lets its first block dissolve into the host paragraph,
+        // which silently downgrades a leading heading, list, or quote to prose.
+        const isLoneParagraph = parsed.content.childCount === 1
+          && parsed.content.firstChild?.type.name === 'paragraph';
+        const slice = isLoneParagraph ? parsed : new Slice(parsed.content, 0, 0);
+        view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
+        inserted = true;
+      });
+    } catch {
+      return false;
+    }
+    if (inserted) {
+      this.dirty = true;
+      this.syncRichMarkdown();
+    }
+    return inserted;
   }
 
   private internalPasteTarget(raw: string): InternalPasteTarget | null {

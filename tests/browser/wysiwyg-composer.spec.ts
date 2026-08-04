@@ -94,7 +94,18 @@ async function dismissTour(page: Page): Promise<void> {
 
 async function openNewTopicComposer(page: Page) {
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  // With JS on, app.js hides the native <details> summary and promotes the board
+  // identity button (desktop) / FAB (mobile) to the real opener; the summary is
+  // only the no-JS path. Pick whichever opener this viewport actually shows.
+  const details = page.locator('details.composer-details#new-topic');
+  const promoted = page.locator('[data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  const summary = details.locator(':scope > summary');
+  const opener = await promoted.isVisible()
+    ? promoted
+    : (await fab.isVisible() ? fab : summary);
+  await opener.click();
+  await expect(details).toHaveJSProperty('open', true);
   const form = page.locator('form.composer').first();
   await expect(form.locator('textarea.composer-input')).toBeAttached();
   return form;
@@ -150,9 +161,7 @@ test.afterEach(() => {
 test('textarea composer inserts @ mention from keyboard picker', async ({ page }) => {
   setWysiwygComposer(false);
   await login(page, 'bob@retro.test');
-  await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
-  const body = page.locator('form.composer textarea.composer-input').first();
+  const body = (await openNewTopicComposer(page)).locator('textarea.composer-input');
   await body.fill('@ali');
   await expect(page.locator('.composer-reference-menu[role="listbox"]')).toBeVisible();
   await expect(body).toHaveAttribute('aria-expanded', 'true');
@@ -163,9 +172,7 @@ test('textarea composer inserts @ mention from keyboard picker', async ({ page }
 test('textarea # picker inserts board reference and does not steal headings', async ({ page }) => {
   setWysiwygComposer(false);
   await login(page, 'bob@retro.test');
-  await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
-  const body = page.locator('form.composer textarea.composer-input').first();
+  const body = (await openNewTopicComposer(page)).locator('textarea.composer-input');
   await body.fill('# ');
   await expect(page.locator('.composer-reference-menu[role="listbox"]')).toBeHidden();
   await body.fill('#gen');
@@ -206,11 +213,10 @@ test('wysiwyg assets load under strict CSP without violations', async ({ page })
   });
 
   await login(page, 'bob@retro.test');
-  await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  const form = await openNewTopicComposer(page);
 
   await expect(page.locator('body')).toHaveAttribute('data-wysiwyg-composer', '1');
-  await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
+  await expect(form.locator('textarea.composer-input')).toBeVisible();
   expect(loadedAssets).toContain('/assets/wysiwyg-composer.js');
   expect(loadedAssets).toContain('/assets/wysiwyg-composer.css');
   expect(pageErrors).toEqual([]);
@@ -703,6 +709,83 @@ test('pasted internal topic url becomes canonical markdown chip', async ({ page 
 
   await form.getByRole('button', { name: 'Source' }).click();
   await expect(form.locator('textarea.composer-input')).toHaveValue(/\/t\/\d+-/);
+});
+
+async function pasteText(page: Page, target: Locator, text: string): Promise<void> {
+  await target.click();
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(page.url()).origin });
+  await page.evaluate(async (value) => navigator.clipboard.writeText(value), text);
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+V' : 'Control+V');
+}
+
+test('pasted markdown source becomes rich structure, not literal text', async ({ page }) => {
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  await expect(editor).toBeVisible();
+
+  const markdown = [
+    '## Pasted Heading',
+    '',
+    'Intro paragraph with `inline code`.',
+    '',
+    '- **bold item**',
+    '- second item',
+    '',
+    '> quoted line',
+  ].join('\n');
+
+  await pasteText(page, editor, markdown);
+
+  await expect(editor.locator('h2')).toHaveText('Pasted Heading');
+  await expect(editor.locator('ul li')).toHaveCount(2);
+  await expect(editor.locator('ul li strong').first()).toHaveText('bold item');
+  await expect(editor.locator('blockquote')).toContainText('quoted line');
+  await expect(editor.locator('p code').first()).toHaveText('inline code');
+
+  // Canonical Markdown must round-trip without backslash-escaping what the author
+  // pasted — an escaped body is what renders as literal `##` in the final post.
+  const title = `Pasted markdown ${Date.now()}`;
+  await form.locator('input[name="title"]').fill(title);
+  await form.locator('button[type="submit"]').click();
+  await page.waitForURL(/\/t\/\d+-/);
+
+  expect(postByTitle(title).body).not.toMatch(/\\[#*`>-]/);
+  const post = page.locator('.post-op .post-body');
+  await expect(post.locator('h2')).toHaveText('Pasted Heading');
+  await expect(post.locator('ul li')).toHaveCount(2);
+  await expect(post.locator('blockquote')).toContainText('quoted line');
+  await expect(post.locator('code').first()).toHaveText('inline code');
+});
+
+test('pasted text stays literal inside a code fence and under paste-as-plain-text', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'paste escape hatches are verified once');
+  setWysiwygComposer(true);
+  await login(page, 'bob@retro.test');
+  const form = await openNewTopicComposer(page);
+  const editor = form.locator('.wysiwyg-composer .ProseMirror');
+  const textarea = form.locator('textarea.composer-input');
+  await expect(editor).toBeVisible();
+
+  // A fence holds code, so Markdown syntax pasted into it is content, not syntax.
+  await form.getByRole('button', { name: 'Source' }).click();
+  await textarea.fill('```\n\n```');
+  await form.getByRole('button', { name: 'Rich text' }).click();
+  await editor.locator('pre').click();
+  await pasteText(page, editor.locator('pre'), '# not a heading');
+  await expect(editor.locator('pre')).toContainText('# not a heading');
+  await expect(editor.locator('h2')).toHaveCount(0);
+
+  // Cmd/Ctrl+Shift+V is the documented plain-text escape hatch (COMPOSER.md §12).
+  await form.getByRole('button', { name: 'Source' }).click();
+  await textarea.fill('');
+  await form.getByRole('button', { name: 'Rich text' }).click();
+  await editor.click();
+  await page.evaluate(async () => navigator.clipboard.writeText('## still literal'));
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+Shift+V' : 'Control+Shift+V');
+  await expect(editor).toContainText('## still literal');
+  await expect(editor.locator('h2')).toHaveCount(0);
 });
 
 test('no-op edit does not rewrite body', async ({ page }) => {
