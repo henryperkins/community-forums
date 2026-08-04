@@ -85,7 +85,13 @@ export class ForumContainer extends Container {
 	async fetch(request) {
 		await this.ensureStarted();
 
-		return this.containerFetch(request, this.defaultPort);
+		const startedAt = Date.now();
+		const response = await this.containerFetch(request, this.defaultPort);
+		console.log(
+			`container ${request.method} ${new URL(request.url).pathname} -> ${response.status} in ${Date.now() - startedAt}ms`,
+		);
+
+		return response;
 	}
 
 	/**
