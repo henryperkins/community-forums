@@ -1,8 +1,18 @@
 # RetroBoards — Cloudflare Containers deployment runbook
 
 Operating procedure for the Cloudflare deployment defined by `wrangler.jsonc`,
-`worker/index.js`, `Dockerfile`, and `deploy/`. Commands run from the project
-root with `wrangler` authenticated against the account that owns the zone.
+`worker/index.js`, `Dockerfile`, and `deploy/`, with `wrangler` authenticated
+against the account that owns the zone.
+
+> **Run every `wrangler` command from the deployment worktree, not from the
+> main checkout.** The deployment lives in a git worktree —
+> `.worktrees/cloudflare-production-20260804`, branch
+> `deploy/cloudflare-production-20260804` — and the main checkout carries its
+> own older, uncommitted `wrangler.jsonc` and `worker/`. `wrangler deploy` reads
+> whichever it is standing in, and deploying from the wrong one silently ships
+> a stale Worker **and** rebuilds the container image from stale source. That
+> has already caused one outage. `git worktree list` shows the path; prefer
+> `npx wrangler deploy --cwd <path>` if you are unsure where you are.
 
 > **Cloudflare cannot host the whole stack.** Workers runs JavaScript, Python and
 > WebAssembly — not PHP — so the application runs as a *container* fronted by a
