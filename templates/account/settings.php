@@ -4,9 +4,10 @@
     <header class="settings-head">
         <span class="eyebrow">Account</span>
         <h1>Account settings</h1>
+        <p>Everything this community knows about you, and everything it does on your behalf.</p>
     </header>
     <div class="settings">
-        <?= $this->partial('partials/settings_nav') ?>
+        <?= $this->partial('partials/settings_nav', ['active' => 'profile']) ?>
         <div class="settings-pane">
 
     <?php if (isset($email_verified) && !$email_verified): ?>

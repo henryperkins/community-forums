@@ -119,8 +119,10 @@ Every row names its constraint. Any row that could not name one was dropped as a
 | C-33 · admin-settings | Recovery controls are bare buttons with no form | constraint | `AdminSettings.dc.html:106-107` renders `{{ pauseAction }}` and `Retry provider configuration` as `<button onClick>` outside any form. | **CSRF + PE.** Production ships two `<form method="post">` + `csrfField()` (`thread_intelligence.php:49-60`). The buttons stay in forms. |
 | C-34 · admin-settings | Thread Intelligence generation contract | constraint | The design hard-codes `claude-sonnet-4-6` / `medium` / `ti.summary.v7` (`:151-153`) and adds a `Digest` column (`:174`). | `DECISIONS.md` §2 replaceable seams + `ADMIN.md` §3.10 (*"validated model/effort"*): render the configured values from the provider seam, never a literal model name. The `Digest` column is **forbidden** — `request_fingerprint` is asserted **absent** from the response body at `AppAdminThreadIntelligenceTest:63`. Also `ADR 0019` §2 forbids the design's *"The council approves; the model proposes"* claim of per-generation human approval. |
 | C-35 · admin-settings | Content-column geometry | constraint | One centred 1100px column with `padding: 22px 28px 110px` beneath a full-bleed 101px sticky bar. | Cannot be adopted without the IA amendment in C-01: production's `.admin` is a `224px minmax(0,1fr)` grid at `max-width: 1260px` (`app.css:2800-2812`). Downstream of ADR 0024. |
+| C-36 · account-settings | Silent feature-flag omission in the account rail | constraint | The reference renders a fixed set of account destinations and has no unavailable state. | Production availability is authoritative. Omit Drafts, Connections, Account, Appeals, and Replay tour entirely when `drafts`, `oauth`, `account_lifecycle`, `appeals`, or `product_tour` is dark; do not leave a disabled row, placeholder, lock, explanation, or spacing hole. |
+| C-37 · account-settings | Responsive account rail | constraint | The reference supplies a fixed 232px desktop rail and no responsive state. | Below 720px, keep one static server-rendered grouped rail above the pane, wrap its destinations, preserve 44px touch targets, and prevent document-level horizontal overflow without a drawer, disclosure, or JavaScript dependency. |
 
-**31 constraint rows.**
+**37 constraint rows.**
 
 ### 1.2 `feature-added` — production has it, the design never modelled it → keep it and style it
 
@@ -153,8 +155,9 @@ Every row names its constraint. Any row that could not name one was dropped as a
 | FA-25 · admin-settings | State-driven left rules on the Thread Intelligence status rail | feature-added | The design's three rules are **static identity colours** (`--success`, `--info`, `--warning`) with no state logic anywhere in its script. | Copying verbatim leaves a green rule under `Not ready` and pins Generation to `--warning` forever. Production must go **beyond** the design here — and it is also a live defect today: all four cards emit a bare `queue-card is-static`, so `.queue-card::before` paints `--success` even on `Not ready`/`Paused`. Fix in the pre-fix slice; record as an addition, not as fidelity. |
 | FA-26 · admin-settings | Pluralised queue units | feature-added | The design's unit is a flat `threads` for every tile. | `thread_intelligence.php:85` pluralises. Keep production's. |
 | FA-27 · shell | Server-stamped, flash-free theming | feature-added | The design stamps `data-theme` on the screen root. | `layout.php:20` stamps it on `<html>` server-side, which is strictly better (no flash) — keep. **But** F1 defect H5 is live: `--surface-staff`/`--on-staff` are missing from `app.css`'s `@media (prefers-color-scheme: dark) { [data-theme="system"] }` block while `layout.php` defaults to `system`, so the staff badge never flips for the default theme. Fix in the pre-fix slice and add a register-parity test (see C-16's three-places rule). |
+| FA-28 · account-settings | Replay tour | feature-added | The reference account rail has no tour replay control. | `USER.md` §5.7 and the existing progressive-enhancement flow expose Replay tour. Keep it as a `product_tour`-gated subordinate `<button>` after all rail groups, never as a peer link or current navigation item. |
 
-**27 feature-added rows.**
+**28 feature-added rows.**
 
 ### 1.3 `feature-changed` — same concept, different mechanics (design wins presentation, production wins behaviour)
 

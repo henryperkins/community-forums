@@ -21,6 +21,9 @@ $iconStroke = [
     'panel-right'     => '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',
     'users'           => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     'user'            => '<path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    // Copied from the Imladris account-settings rail. This profile path is
+    // intentionally distinct from the generic user glyph above.
+    'settings-profile'=> '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     'user-plus'       => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
     'bell-off'        => '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/>',
     'edit-3'          => '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
@@ -36,6 +39,15 @@ $iconStroke = [
     'lock'            => '<rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>',
     // Copied from the Imladris user-profile moderator strip.
     'shield'          => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    'eye'             => '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    'sun'             => '<circle cx="12" cy="12" r="4.6"/><path d="M12 1.5v2.2M12 20.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/>',
+    'book'            => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    'file'            => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+    'menu'            => '<path d="M3 7h18M3 12h18M3 17h18"/>',
+    'bell'            => '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    'link'            => '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    'monitor'         => '<rect x="3" y="3" width="18" height="14" rx="1.5"/><path d="M8 21h8M12 17v4"/>',
+    'archive'         => '<path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4"/>',
 ];
 $iconFilled = [
     'more-horizontal' => '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',

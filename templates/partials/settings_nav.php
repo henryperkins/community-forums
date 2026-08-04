@@ -1,34 +1,50 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
-$here = $request_path ?? '';
-$items = [
-    '/settings/account' => 'Profile',
-    '/settings/security' => 'Security',
-    '/settings/privacy' => 'Privacy',
-    '/settings/appearance' => 'Appearance',
-    '/settings/preferences' => 'Reading',
-    '/settings/composing' => 'Composing',
+$active = isset($active) && is_string($active) ? $active : '';
+$groups = [
+    [
+        'label' => 'Account',
+        'items' => [
+            ['key' => 'profile', 'label' => 'Profile', 'href' => '/settings/account', 'icon' => 'settings-profile'],
+            ['key' => 'security', 'label' => 'Security', 'href' => '/settings/security', 'icon' => 'shield'],
+            ['key' => 'privacy', 'label' => 'Privacy', 'href' => '/settings/privacy', 'icon' => 'eye'],
+        ],
+    ],
+    [
+        'label' => 'Reading & writing',
+        'items' => [
+            ['key' => 'appearance', 'label' => 'Appearance', 'href' => '/settings/appearance', 'icon' => 'sun'],
+            ['key' => 'reading', 'label' => 'Reading', 'href' => '/settings/preferences', 'icon' => 'book'],
+            ['key' => 'composing', 'label' => 'Composing', 'href' => '/settings/composing', 'icon' => 'edit-3'],
+            ['key' => 'drafts', 'label' => 'Drafts', 'href' => '/drafts', 'icon' => 'file', 'feature' => 'drafts'],
+            ['key' => 'boards', 'label' => 'Boards', 'href' => '/settings/boards', 'icon' => 'menu'],
+        ],
+    ],
+    [
+        'label' => 'Community',
+        'items' => [
+            ['key' => 'notifications', 'label' => 'Notifications', 'href' => '/settings/notifications', 'icon' => 'bell'],
+            ['key' => 'connections', 'label' => 'Connections', 'href' => '/settings/connections', 'icon' => 'link', 'feature' => 'oauth'],
+            ['key' => 'blocks', 'label' => 'Blocks', 'href' => '/settings/blocks', 'icon' => 'ban'],
+            ['key' => 'sessions', 'label' => 'Sessions', 'href' => '/settings/sessions', 'icon' => 'monitor'],
+            ['key' => 'account', 'label' => 'Account', 'href' => '/settings/account/lifecycle', 'icon' => 'archive', 'feature' => 'account_lifecycle'],
+            ['key' => 'appeals', 'label' => 'Appeals', 'href' => '/appeals', 'icon' => 'flag', 'feature' => 'appeals'],
+        ],
+    ],
 ];
-if (!empty($features['drafts'])) {
-    $items['/drafts'] = 'Drafts';
-}
-$items['/settings/notifications'] = 'Notifications';
-if (!empty($features['oauth'])) {
-    $items['/settings/connections'] = 'Connections';
-}
-$items['/settings/sessions'] = 'Sessions';
-$items['/settings/blocks'] = 'Blocks';
-$items['/settings/boards'] = 'Boards';
-if (!empty($features['account_lifecycle'])) {
-    $items['/settings/account/lifecycle'] = 'Account';
-}
-if (!empty($features['appeals'])) {
-    $items['/appeals'] = 'Appeals';
-}
 ?>
-<nav class="subnav settings-rail">
-    <?php foreach ($items as $href => $label): ?>
-        <a class="<?= $here === $href ? 'active' : '' ?>" href="<?= $e($href) ?>"><?= $e($label) ?></a>
+<nav class="settings-rail" aria-label="Settings sections">
+    <?php foreach ($groups as $group): ?>
+        <div class="settings-rail-group">
+            <span class="settings-rail-title"><?= $e($group['label']) ?></span>
+            <?php foreach ($group['items'] as $item): ?>
+                <?php if (isset($item['feature']) && empty($features[$item['feature']])): ?>
+                    <?php continue; ?>
+                <?php endif; ?>
+                <?php $isActive = $active === $item['key']; ?>
+                <a class="settings-rail-link<?= $isActive ? ' is-active' : '' ?>" data-settings-key="<?= $e($item['key']) ?>" href="<?= $e($item['href']) ?>"<?= $isActive ? ' aria-current="page"' : '' ?>><?= $this->partial('partials/icon', ['name' => $item['icon']]) ?><span><?= $e($item['label']) ?></span></a>
+            <?php endforeach; ?>
+        </div>
     <?php endforeach; ?>
     <?php if (!empty($features['product_tour'])): ?>
         <button class="linkbtn subnav-action" type="button" data-tour-replay>Replay tour</button>

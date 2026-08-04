@@ -220,6 +220,127 @@ final class ImladrisRuntimeAssetTest extends TestCase
         self::assertStringNotContainsString('--gold-050', $css);
     }
 
+    public function test_account_console_shell_pins_the_adjudicated_desktop_geometry_and_heading(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $rule = static function (string $selector) use ($css): string {
+            self::assertSame(
+                1,
+                preg_match('/' . preg_quote($selector, '/') . '\s*\{(?<declarations>[^}]*)\}/s', $css, $match),
+                $selector . ' is missing from the application stylesheet.',
+            );
+
+            return $match['declarations'];
+        };
+
+        $screen = $rule('.settings-screen');
+        self::assertMatchesRegularExpression('/max-width:\s*1064px/', $screen);
+        self::assertMatchesRegularExpression('/padding:\s*30px 28px 132px/', $screen);
+
+        self::assertMatchesRegularExpression('/margin-bottom:\s*24px/', $rule('.settings-head'));
+        $eyebrow = $rule('.settings-head .eyebrow');
+        self::assertMatchesRegularExpression('/font-size:\s*\.68rem/', $eyebrow);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.18em/', $eyebrow);
+        self::assertMatchesRegularExpression('/text-transform:\s*uppercase/', $eyebrow);
+        self::assertMatchesRegularExpression('/color:\s*var\(--gold-ink\)/', $eyebrow);
+
+        $heading = $rule('.settings-head h1');
+        self::assertMatchesRegularExpression('/margin:\s*7px 0 0/', $heading);
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-display\)/', $heading);
+        self::assertMatchesRegularExpression('/font-size:\s*2\.4rem/', $heading);
+        self::assertMatchesRegularExpression('/font-weight:\s*500/', $heading);
+        self::assertMatchesRegularExpression('/line-height:\s*1\.1/', $heading);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*-\.01em/', $heading);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-strong\)/', $heading);
+
+        $intro = $rule('.settings-head p');
+        self::assertMatchesRegularExpression('/margin:\s*8px 0 0/', $intro);
+        self::assertMatchesRegularExpression('/max-width:\s*62ch/', $intro);
+        self::assertMatchesRegularExpression('/font-size:\s*1rem/', $intro);
+        self::assertMatchesRegularExpression('/line-height:\s*1\.55/', $intro);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-muted\)/', $intro);
+        self::assertMatchesRegularExpression('/text-wrap:\s*pretty/', $intro);
+
+        $layout = $rule('.settings');
+        self::assertMatchesRegularExpression('/grid-template-columns:\s*232px minmax\(0,\s*1fr\)/', $layout);
+        self::assertMatchesRegularExpression('/gap:\s*30px/', $layout);
+    }
+
+    public function test_account_console_rail_pins_group_icon_inactive_hover_and_active_treatments(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $rule = static function (string $selector) use ($css): string {
+            self::assertSame(
+                1,
+                preg_match('/' . preg_quote($selector, '/') . '\s*\{(?<declarations>[^}]*)\}/s', $css, $match),
+                $selector . ' is missing from the application stylesheet.',
+            );
+
+            return $match['declarations'];
+        };
+
+        $rail = $rule('.settings > .settings-rail');
+        self::assertMatchesRegularExpression('/position:\s*sticky/', $rail);
+        self::assertMatchesRegularExpression('/top:\s*calc\(var\(--topbar-h\) \+ 22px\)/', $rail);
+        self::assertMatchesRegularExpression('/width:\s*232px/', $rail);
+
+        $firstTitle = $rule('.settings-rail-title');
+        self::assertMatchesRegularExpression('/padding:\s*0 0 6px 12px/', $firstTitle);
+        self::assertMatchesRegularExpression('/font-size:\s*\.62rem/', $firstTitle);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.18em/', $firstTitle);
+        self::assertMatchesRegularExpression('/text-transform:\s*uppercase/', $firstTitle);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-faint\)/', $firstTitle);
+        self::assertMatchesRegularExpression(
+            '/padding:\s*14px 0 6px 12px/',
+            $rule('.settings-rail-group + .settings-rail-group .settings-rail-title'),
+        );
+
+        $link = $rule('.settings-rail-link');
+        self::assertMatchesRegularExpression('/display:\s*flex/', $link);
+        self::assertMatchesRegularExpression('/align-items:\s*center/', $link);
+        self::assertMatchesRegularExpression('/gap:\s*10px/', $link);
+        self::assertMatchesRegularExpression('/width:\s*100%/', $link);
+        self::assertMatchesRegularExpression('/padding:\s*8px 12px/', $link);
+        self::assertMatchesRegularExpression('/border-left:\s*2px solid transparent/', $link);
+        self::assertMatchesRegularExpression('/font-family:\s*var\(--font-label\)/', $link);
+        self::assertMatchesRegularExpression('/font-size:\s*\.86rem/', $link);
+        self::assertMatchesRegularExpression('/letter-spacing:\s*\.02em/', $link);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-muted\)/', $link);
+        self::assertMatchesRegularExpression('/text-decoration:\s*none/', $link);
+
+        $hover = $rule('.settings-rail-link:not(.is-active):hover, .settings-rail-link:not(.is-active):focus-visible');
+        self::assertMatchesRegularExpression('/background:\s*var\(--surface-sunken\)/', $hover);
+        self::assertMatchesRegularExpression('/color:\s*var\(--text-body\)/', $hover);
+        self::assertMatchesRegularExpression('/text-decoration:\s*none/', $hover);
+
+        $active = $rule('.settings-rail-link.is-active');
+        self::assertMatchesRegularExpression('/border-left-color:\s*var\(--gold-500\)/', $active);
+        self::assertMatchesRegularExpression('/background:\s*var\(--brand-subtle\)/', $active);
+        self::assertMatchesRegularExpression('/color:\s*var\(--on-brand-subtle\)/', $active);
+        self::assertMatchesRegularExpression('/border-radius:\s*0 var\(--radius-md\) var\(--radius-md\) 0/', $active);
+
+        $icon = $rule('.settings-rail .icon');
+        self::assertMatchesRegularExpression('/width:\s*15px/', $icon);
+        self::assertMatchesRegularExpression('/height:\s*15px/', $icon);
+        self::assertMatchesRegularExpression('/stroke-width:\s*1\.7/', $icon);
+    }
+
+    public function test_account_console_mobile_rail_is_static_wrapped_and_touch_safe(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+        $marker = '@media (max-width: 719px) {';
+        $start = strpos($css, $marker);
+        self::assertNotFalse($start, 'The account-console mobile media block is missing.');
+        $nextMedia = strpos($css, "\n@media", $start + strlen($marker));
+        $mobile = substr($css, $start, $nextMedia === false ? null : $nextMedia - $start);
+
+        self::assertMatchesRegularExpression('/\.settings\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings > \.settings-rail\s*\{[^}]*position:\s*static/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings-rail-group\s*\{[^}]*display:\s*flex[^}]*flex-wrap:\s*wrap/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings-rail-link\s*\{[^}]*min-height:\s*44px/s', $mobile);
+        self::assertMatchesRegularExpression('/\.settings-rail \.subnav-action\s*\{[^}]*min-height:\s*44px/s', $mobile);
+    }
+
     public function test_application_quiet_thread_rows_reset_design_system_hover_motion(): void
     {
         $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
