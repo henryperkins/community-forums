@@ -209,6 +209,14 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Email');
   await expectNoSeriousA11yViolations(page, info);
 
+  await visit(page, '/admin/announcements');
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Announcements');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+  await page.locator('input[name="broadcast_email"]').check();
+  await expect(page.locator('[data-announcement-broadcast-warning]')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info);
+
   await visit(page, '/admin/extensions');
   await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Extensions');

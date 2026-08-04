@@ -1351,10 +1351,6 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     border-radius: var(--radius); padding: 8px 12px; margin: 8px 0; color: var(--text-muted);
 }
 
-/* Email status facts (F24): one line per independent fact. */
-.email-status-facts { list-style: none; padding: 0; margin: 0 0 12px; color: var(--text-muted); }
-.email-status-facts li { margin: 2px 0; }
-
 /* Deleted-reply stub (ADMIN §3.3 Restore) — staff-only render. */
 .post-deleted {
     background: var(--surface-3); border: 1px dashed var(--border);
@@ -6402,6 +6398,604 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     .theme-card-action,
     .theme-card-action .btn {
         width: 100%;
+    }
+}
+
+/* — Admin notifications: the Imladris email + announcements workbench. — */
+.admin-console .admin-notifications {
+    gap: 16px;
+}
+.admin-notifications > .flash {
+    margin-bottom: 0;
+}
+.admin-console .admin-notifications > .notification-card,
+.admin-console .admin-notifications .notification-top-grid > .notification-card {
+    margin: 0;
+    padding: 18px 20px;
+    box-shadow: none;
+}
+.admin-notifications .notification-card > h2 {
+    margin: 0 0 10px;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
+/* F24 is production-owned: keep transport, From and sending domain as three
+   independent facts, but set them in the design system's spec-list register. */
+.admin-notifications .email-status-facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 7px 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.admin-notifications .email-status-facts li {
+    display: contents;
+}
+.admin-notifications .email-status-facts strong {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    font-weight: 400;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+.admin-notifications .email-status-facts > li > span {
+    min-width: 0;
+    color: var(--text-strong);
+    overflow-wrap: anywhere;
+}
+.admin-notifications .email-status-facts code {
+    font-family: var(--font-mono);
+    font-size: .8rem;
+}
+
+.notification-top-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+.notification-domain-name {
+    margin: 0;
+    color: var(--text-body);
+    font-size: 1rem;
+}
+.notification-domain-name strong {
+    font-weight: 500;
+}
+.notification-domain-name > span {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .76rem;
+    letter-spacing: .03em;
+}
+.notification-domain-name code {
+    font-family: var(--font-mono);
+    font-size: .8rem;
+}
+.notification-domain-statuses {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 0;
+}
+.email-domain-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-review);
+    color: var(--on-review);
+    font-family: var(--font-label);
+    font-size: .7rem;
+    letter-spacing: .05em;
+}
+.email-domain-chip.is-pass {
+    background: var(--surface-done);
+    color: var(--on-done);
+}
+.email-domain-chip.is-fail {
+    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
+    color: var(--danger);
+}
+.email-domain-chip.is-unknown {
+    background: var(--surface-pending);
+    color: var(--on-pending);
+}
+.notification-domain-checked {
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .76rem;
+}
+.notification-domain-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+.notification-domain-actions .btn,
+.notification-test-actions .btn {
+    padding: 7px 15px;
+    font-size: .76rem;
+    letter-spacing: .04em;
+    box-shadow: none;
+}
+.notification-domain-actions > span {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .03em;
+}
+.notification-test-card > p {
+    max-width: 46ch;
+    margin: 0 0 14px;
+    color: var(--text-muted);
+    font-size: .92rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.notification-test-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.notification-test-actions .btn:disabled {
+    cursor: not-allowed;
+    border-color: var(--border-hair);
+    background: var(--surface-sunken);
+    color: var(--text-faint);
+    filter: none;
+    opacity: 1;
+}
+.notification-test-actions .btn:disabled:hover {
+    background: var(--surface-sunken);
+}
+.notification-inline-status {
+    color: var(--on-done);
+    font-family: var(--font-label);
+    font-size: .76rem;
+    letter-spacing: .04em;
+}
+.notification-inline-status.is-error {
+    color: var(--danger);
+}
+
+.notification-queue-section > h2 {
+    margin: 0 0 12px;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    font-weight: 400;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+.admin-notifications .notification-stat-cards {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+}
+.admin-notifications .notification-stat-cards .stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+}
+.admin-notifications .notification-stat-cards .stat-num {
+    color: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.1;
+}
+.admin-notifications .notification-stat-cards .stat-label {
+    color: var(--text-faint);
+    font-size: .68rem;
+    letter-spacing: .1em;
+}
+
+.admin-console .admin-notifications > .notification-delivery-card {
+    padding: 18px 20px 10px;
+    box-shadow: var(--shadow-sm);
+}
+.admin-notifications .notification-delivery-card > h2 {
+    margin-bottom: 14px;
+}
+.notification-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.notification-filter-field,
+.notification-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.notification-filter-field > span,
+.notification-form-field > span {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.notification-filter-form .input,
+.notification-suppression-form .input,
+.announcement-message-field textarea {
+    box-sizing: border-box;
+    border-color: var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+    color: var(--text-body);
+}
+.notification-filter-form .input {
+    padding: 7px 11px;
+    font-size: .9rem;
+}
+.notification-filter-email {
+    flex: 1;
+    min-width: 190px;
+}
+.notification-filter-email .input {
+    font-family: var(--font-mono);
+    font-size: .86rem;
+}
+.notification-filter-form .btn {
+    padding: 8px 15px;
+    font-size: .76rem;
+    letter-spacing: .04em;
+    box-shadow: none;
+}
+.notification-result-count {
+    margin-left: auto;
+    padding-bottom: 8px;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .04em;
+}
+.admin-notifications .notification-delivery-table {
+    font-size: .9rem;
+}
+.admin-console .admin-notifications .table-scroll.table-scroll-wide > .notification-delivery-table {
+    min-width: 1100px;
+}
+.admin-notifications .notification-delivery-table th {
+    padding: 9px 10px 8px;
+}
+.admin-notifications .notification-delivery-table td {
+    padding: 10px;
+}
+.admin-notifications .notification-delivery-table th:first-child,
+.admin-notifications .notification-delivery-table td:first-child,
+.admin-notifications .notification-suppression-table th:first-child,
+.admin-notifications .notification-suppression-table td:first-child,
+.admin-notifications .announcement-history-table th:first-child,
+.admin-notifications .announcement-history-table td:first-child {
+    padding-left: 0;
+}
+.admin-notifications .notification-delivery-table th:last-child,
+.admin-notifications .notification-delivery-table td:last-child,
+.admin-notifications .notification-suppression-table th:last-child,
+.admin-notifications .notification-suppression-table td:last-child,
+.admin-notifications .announcement-history-table th:last-child,
+.admin-notifications .announcement-history-table td:last-child {
+    padding-right: 0;
+}
+.notification-delivery-email {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.notification-suppression-email {
+    font-family: var(--font-mono);
+    font-size: .8rem;
+}
+.notification-attempts {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: .8rem;
+    white-space: nowrap;
+}
+.notification-attempts > span {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-faint);
+    font-size: .74rem;
+    white-space: normal;
+}
+.notification-subject,
+.notification-detail {
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.notification-detail {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    overflow-wrap: anywhere;
+}
+.admin-notifications .state-queued {
+    background: var(--surface-info);
+    color: var(--on-info);
+}
+.notification-delivery-table .action-cell {
+    text-align: right;
+}
+.notification-delivery-table .action-cell .btn {
+    padding: 4px 11px;
+    font-size: .72rem;
+    letter-spacing: .04em;
+}
+.notification-delivery-card > .state-empty {
+    padding: 38px 20px;
+}
+.notification-delivery-card > .state-empty p {
+    margin-top: 6px;
+    font-size: .93rem;
+}
+.notification-delivery-card > .pager {
+    padding-bottom: 8px;
+}
+
+.admin-console .admin-notifications > .notification-suppressions-card {
+    padding: 18px 20px 10px;
+}
+.admin-notifications .notification-suppressions-card > h2 {
+    margin-bottom: 12px;
+}
+.notification-suppression-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.notification-suppression-form .notification-form-field {
+    flex: 1;
+    max-width: 340px;
+}
+.notification-suppression-form .input {
+    padding: 8px 11px;
+    font-family: var(--font-mono);
+    font-size: .86rem;
+}
+.notification-suppression-form .btn {
+    padding: 9px 17px;
+    font-size: .78rem;
+    letter-spacing: .04em;
+}
+.notification-suppression-form > .field-error {
+    margin: 0;
+    padding-bottom: 9px;
+    font-size: .87rem;
+}
+.notification-suppression-table {
+    font-size: .9rem;
+}
+.admin-notifications .notification-suppression-table th {
+    padding: 9px 10px 8px;
+}
+.admin-notifications .notification-suppression-table td {
+    padding: 10px;
+}
+.notification-suppression-reason {
+    color: var(--text-muted);
+}
+.notification-suppression-table .action-cell {
+    text-align: right;
+}
+.admin-notifications .notification-release-button {
+    padding: 4px 11px;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: .72rem;
+    letter-spacing: .04em;
+    box-shadow: none;
+}
+.admin-notifications .notification-release-button:hover {
+    background: var(--surface-sunken);
+    color: var(--text-body);
+}
+.notification-empty-copy {
+    margin: 0;
+    color: var(--text-faint);
+    font-size: .95rem;
+}
+.notification-suppression-empty {
+    margin: 16px 0 12px;
+    font-size: .93rem;
+}
+
+.admin-console .admin-notifications > .announcement-publish-card {
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .admin-notifications > .announcement-history-card {
+    padding-bottom: 10px;
+}
+.admin-notifications .announcement-publish-card > h2 {
+    margin-bottom: 14px;
+}
+.admin-notifications .announcement-history-card > h2 {
+    margin-bottom: 12px;
+}
+.site-announcement-current {
+    margin: 0;
+    padding: 12px 16px;
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius-md);
+    background: var(--surface-review);
+    color: var(--on-review);
+    font-size: 1rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.announcement-current-meta {
+    margin: 10px 0 0;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .04em;
+}
+.announcement-clear-form {
+    margin-top: 12px;
+}
+.admin-notifications .announcement-clear-form .btn {
+    padding: 7px 15px;
+    background: transparent;
+    color: var(--rust);
+    font-size: .76rem;
+    letter-spacing: .04em;
+}
+.admin-notifications .announcement-clear-form .btn:hover {
+    background: var(--surface-sunken);
+}
+.announcement-message-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.announcement-message-field > span {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.announcement-message-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: var(--font-body);
+    font-size: .96rem;
+    line-height: 1.5;
+    resize: vertical;
+}
+.announcement-character-count {
+    margin: 5px 0 0;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .74rem;
+    text-align: right;
+}
+.announcement-options {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-top: 12px;
+}
+.announcement-options label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-body);
+    font-size: .93rem;
+    cursor: pointer;
+}
+.announcement-options input {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+.announcement-broadcast-warning {
+    display: none;
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--warning);
+    border-radius: var(--radius-md);
+    background: var(--surface-review);
+    color: var(--on-review);
+    font-size: .9rem;
+    line-height: 1.45;
+    text-wrap: pretty;
+}
+.announcement-publish-card form:has(input[name="broadcast_email"]:checked) .announcement-broadcast-warning {
+    display: block;
+}
+.announcement-publish-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 16px;
+}
+.announcement-publish-actions .btn {
+    padding: 9px 20px;
+    font-size: .8rem;
+    letter-spacing: .04em;
+}
+.announcement-publish-actions .field-error {
+    margin: 0;
+    font-size: .87rem;
+}
+.admin-notifications .announcement-history-table {
+    min-width: 760px;
+    font-size: .9rem;
+}
+.admin-notifications .announcement-history-table th {
+    padding: 9px 10px 8px;
+}
+.admin-notifications .announcement-history-table td {
+    padding: 10px;
+}
+.announcement-history-message {
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.announcement-history-channels {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .03em;
+}
+.announcement-history-empty {
+    margin-bottom: 10px;
+}
+
+@media (max-width: 760px) {
+    .notification-top-grid {
+        grid-template-columns: 1fr;
+    }
+    .notification-domain-actions,
+    .notification-test-actions,
+    .notification-suppression-form,
+    .announcement-publish-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .notification-suppression-form .notification-form-field {
+        width: 100%;
+        max-width: none;
+    }
+    .notification-suppression-form > .field-error {
+        padding-bottom: 0;
+    }
+    .notification-filter-field,
+    .notification-filter-email,
+    .notification-filter-form .btn {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+    .notification-result-count {
+        width: 100%;
+        margin-left: 0;
+        padding-bottom: 0;
+    }
+}
+@media (max-width: 460px) {
+    .admin-notifications .email-status-facts {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .admin-notifications .email-status-facts li {
+        display: grid;
+        gap: 3px;
     }
 }
 

@@ -66,6 +66,14 @@ final class AppAdminEmailTest extends TestCase
 
         $body = $this->get('/admin/email')->body();
         self::assertStringContainsString('not configured — outbound email is skipped', $body);
+        self::assertMatchesRegularExpression(
+            '/<span class="notification-inline-status is-error" role="alert">Configure your sending domain first\.<\/span>/',
+            $body,
+        );
+        self::assertDoesNotMatchRegularExpression(
+            '/<div class="flash" role="status">Configure your sending domain first\.<\/div>/',
+            $body,
+        );
         // The not-ready state keeps its assertive live region (review finding:
         // the F24 rewrite must not drop the old flash's role="alert").
         self::assertStringContainsString('Email is not ready to send', $body);
@@ -114,6 +122,16 @@ final class AppAdminEmailTest extends TestCase
         $this->actingAs($this->makeAdmin(['email' => 'sender@example.test']));
 
         $this->assertRedirectContains($this->post('/admin/email/test', []), '/admin/email');
+        $body = $this->get('/admin/email')->body();
+        self::assertMatchesRegularExpression(
+            '/<span class="notification-inline-status" role="status">Test email sent to sender@example\.test\.<\/span>/',
+            $body,
+        );
+        self::assertSame(1, substr_count($body, 'Test email sent to sender@example.test.'));
+        self::assertDoesNotMatchRegularExpression(
+            '/<div class="flash" role="status">Test email sent to sender@example\.test\.<\/div>/',
+            $body,
+        );
         self::assertSame(
             'sent',
             (string) $this->db->fetchValue("SELECT status FROM email_deliveries WHERE kind = 'test' AND email = ?", ['sender@example.test']),
@@ -128,8 +146,58 @@ final class AppAdminEmailTest extends TestCase
         $this->assertRedirectContains($this->post('/admin/email/suppressions', ['email' => 'spam@example.test']), '/admin/email');
         self::assertStringContainsString('spam@example.test', $this->get('/admin/email')->body());
 
-        $this->assertRedirectContains($this->post('/admin/email/suppressions/remove', ['email' => 'spam@example.test']), '/admin/email');
+        $released = $this->post('/admin/email/suppressions/remove', ['email' => 'spam@example.test']);
+        $this->assertRedirectContains($released, '/admin/email');
+        self::assertStringContainsString(
+            'Address released from the suppression list.',
+            urldecode(implode(' ', $released->cookieHeaders())),
+        );
         self::assertStringNotContainsString('spam@example.test', $this->get('/admin/email')->body());
+    }
+
+    public function test_unrelated_email_flash_stays_in_the_general_console_slot(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'emailgeneralflash']));
+
+        $this->assertRedirectContains(
+            $this->post('/admin/email/suppressions', ['email' => 'general-flash@example.test']),
+            '/admin/email',
+        );
+        $body = $this->get('/admin/email')->body();
+
+        self::assertStringContainsString(
+            '<div class="flash" role="status">Address added to the suppression list.</div>',
+            $body,
+        );
+        self::assertStringNotContainsString(
+            '>Address added to the suppression list.</span>',
+            $body,
+        );
+    }
+
+    public function test_suppression_reasons_and_action_labels_preserve_the_real_contract(): void
+    {
+        $suppressions = new EmailSuppressionRepository($this->db);
+        $suppressions->suppress('manual-reason@example.test', 'manual');
+        $suppressions->suppress('unsubscribe-reason@example.test', 'unsubscribe');
+        $suppressions->suppress('raw-reason@example.test', 'complaint');
+        $this->actingAs($this->makeAdmin(['username' => 'emailreasonlabels']));
+
+        $body = $this->get('/admin/email')->body();
+        self::assertStringContainsString(
+            '<td class="notification-suppression-reason">Added by an operator</td>',
+            $body,
+        );
+        self::assertStringContainsString(
+            '<td class="notification-suppression-reason">Unsubscribed by the member</td>',
+            $body,
+        );
+        self::assertStringContainsString(
+            '<td class="notification-suppression-reason">complaint</td>',
+            $body,
+        );
+        self::assertStringContainsString('<span class="sr-only">Actions</span>', $body);
+        self::assertSame(3, substr_count($body, '>Release</button>'));
     }
 
     public function test_suppress_cascades_subscription_email_channel_off(): void
@@ -153,6 +221,24 @@ final class AppAdminEmailTest extends TestCase
         $body = $this->get('/admin/email', ['kind' => 'instant'])->body();
         self::assertStringContainsString('inst@example.test', $body);
         self::assertStringNotContainsString('dig@example.test', $body);
+    }
+
+    public function test_delivery_filter_options_use_the_real_delivery_contract(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'emailfiltercontract']));
+        $body = $this->get('/admin/email')->body();
+
+        self::assertMatchesRegularExpression(
+            '/<select[^>]*name="status"[^>]*>.*?value="queued".*?value="sent".*?value="failed".*?value="suppressed".*?value="bounced".*?value="complained".*?<\/select>/s',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '/<select[^>]*name="kind"[^>]*>.*?value="instant".*?value="digest".*?value="test".*?value="system".*?<\/select>/s',
+            $body,
+        );
+        foreach (['verify', 'reset', 'mention', 'broadcast'] as $fictionalKind) {
+            self::assertStringNotContainsString('<option value="' . $fictionalKind . '">', $body);
+        }
     }
 
     public function test_admin_requeues_failed_delivery_from_dashboard(): void
@@ -183,12 +269,16 @@ final class AppAdminEmailTest extends TestCase
         $this->actingAs($this->makeAdmin());
         $body = $this->get('/admin/email')->body();
         self::assertStringContainsString('retry-meta@example.test', $body);
+        self::assertStringContainsString('<th scope="col">Detail</th>', $body);
+        self::assertStringContainsString('smtp 451 temporary failure', $body);
         self::assertStringContainsString('1 / 5', $body);
         self::assertStringContainsString('Next retry', $body);
+        self::assertStringContainsString('Download CSV', $body);
 
         $csv = $this->get('/admin/email/export')->body();
         self::assertStringContainsString('attempt_count,max_attempts,last_attempt_at,next_attempt_at', $csv);
         self::assertStringContainsString('retry-meta@example.test', $csv);
+        self::assertStringContainsString('smtp 451 temporary failure', $csv);
         self::assertStringContainsString(',1,5,', $csv);
     }
 
@@ -233,8 +323,8 @@ final class AppAdminEmailTest extends TestCase
 
         $body = $this->get('/admin/email')->body();
         self::assertStringContainsString('example.test', $body);
-        self::assertStringContainsString('SPF: pass', $body);
-        self::assertStringContainsString('DKIM: pass', $body);
+        self::assertStringContainsString('SPF pass', $body);
+        self::assertStringContainsString('DKIM pass', $body);
     }
 
     public function test_verified_domain_requirement_blocks_test_send_until_spf_and_dkim_pass(): void
@@ -317,5 +407,36 @@ final class AppAdminEmailTest extends TestCase
         $second = $this->get('/admin/email', ['email' => 'pagermark@example.test', 'page' => '2']);
         $this->assertStatus(200, $second);
         $this->assertDontSeeText($second, 'Bulk 0');
+    }
+
+    public function test_delivery_log_pager_exposes_real_two_page_boundaries(): void
+    {
+        $this->actingAs($this->makeAdmin(['username' => 'emailpagerboundaries']));
+        $deliveries = new EmailDeliveryRepository($this->db);
+        for ($i = 0; $i < 51; $i++) {
+            $deliveries->enqueue(null, 'pager-boundary@example.test', 'system', 'Boundary row ' . $i);
+        }
+
+        $first = $this->get('/admin/email', ['email' => 'pager-boundary@example.test'])->body();
+        self::assertStringContainsString('Page 1 of 2', $first);
+        self::assertStringContainsString(
+            '<span class="pager-control is-disabled" aria-disabled="true">Previous</span>',
+            $first,
+        );
+        self::assertDoesNotMatchRegularExpression('/<a[^>]*>Previous<\/a>/', $first);
+        self::assertMatchesRegularExpression('/<a class="pager-control" href="[^"]*page=2">Next<\/a>/', $first);
+        self::assertStringContainsString('Boundary row 50', $first);
+        self::assertStringNotContainsString('Boundary row 0', $first);
+
+        $second = $this->get('/admin/email', ['email' => 'pager-boundary@example.test', 'page' => 2])->body();
+        self::assertStringContainsString('Page 2 of 2', $second);
+        self::assertMatchesRegularExpression('/<a class="pager-control" href="[^"]*page=1">Previous<\/a>/', $second);
+        self::assertStringContainsString(
+            '<span class="pager-control is-disabled" aria-disabled="true">Next</span>',
+            $second,
+        );
+        self::assertDoesNotMatchRegularExpression('/<a[^>]*>Next<\/a>/', $second);
+        self::assertStringContainsString('Boundary row 0', $second);
+        self::assertStringNotContainsString('Boundary row 50', $second);
     }
 }

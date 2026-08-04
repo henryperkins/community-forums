@@ -1247,6 +1247,7 @@ final class App
             $c->get(NotificationRepository::class),
             $c->get(EmailDeliveryRepository::class),
             $c->get(WriteGate::class),
+            $c->get(UserRepository::class),
             $c->get(RateLimitService::class),
         ));
         $c->bind(UserModerationService::class, fn (Container $c) => new UserModerationService(

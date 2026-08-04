@@ -1410,10 +1410,20 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
 test('site announcement banner: publish, render, dismiss, and persist', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 
-  // Publish a dismissible banner through the real admin form (a no-JS POST).
+  // Publish a dismissible banner through the real server-rendered form.
   await visit(page, '/admin/announcements');
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Announcements');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+  await expect(page.locator('input[name="dismissible"]')).toBeChecked();
+  const broadcastWarning = page.locator('[data-announcement-broadcast-warning]');
+  await expect(broadcastWarning).toBeHidden();
+  await page.check('input[name="broadcast_email"]');
+  await expect(broadcastWarning).toBeVisible();
+  await expect(broadcastWarning).toHaveText(/This will reach [\d,]+ active members? by email\. Broadcasts cannot be recalled once the queue starts\./);
+  await page.uncheck('input[name="broadcast_email"]');
   await page.fill('textarea[name="message"]', 'Scheduled maintenance at 02:00 UTC.');
-  await page.check('input[name="dismissible"]');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('35 / 500');
   await page.getByRole('button', { name: 'Publish banner' }).click();
   await page.waitForURL((u) => u.pathname === '/admin/announcements');
 
@@ -1438,7 +1448,7 @@ test('site announcement banner: publish, render, dismiss, and persist', async ({
   await page.getByRole('button', { name: 'Clear banner' }).click();
 });
 
-test('admin email delivery: dashboard, suppress/remove, and a test-send', async ({ page }, info) => {
+test('admin email delivery: dashboard, suppress/release, and a test-send', async ({ page }, info) => {
   await login(page, 'admin@retro.test');
 
   // Notifications lands on the email tab (email flag defaults on).
@@ -1450,26 +1460,72 @@ test('admin email delivery: dashboard, suppress/remove, and a test-send', async 
   await expect(page.getByRole('heading', { level: 2, name: 'Queue status' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 2, name: 'Delivery log' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 2, name: 'Suppressed addresses' })).toBeVisible();
+  const readiness = page.getByRole('list', { name: 'Email readiness' });
+  await expect(readiness).toContainText('Transport:');
+  await expect(readiness).toContainText('From address:');
+  await expect(readiness).toContainText('Sending domain:');
+  await expect(page.getByRole('button', { name: 'Filter', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Reset', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Download CSV', exact: true })).toBeVisible();
   await shot(page, info, '22-admin-email-dashboard');
 
-  // Suppress a unique address (desktop + mobile share one DB), confirm it lists, then remove it.
+  // Suppress a unique address (desktop + mobile share one DB), confirm it lists, then release it.
   const target = `evidence-${info.project.name}-${Date.now()}@example.test`;
   await page.fill('form[action="/admin/email/suppressions"] input[name="email"]', target);
   await page.locator('form[action="/admin/email/suppressions"] button[type="submit"]').click();
   await page.waitForURL(/\/admin\/email$/);
   const row = page.locator('table tbody tr', { hasText: target });
   await expect(row).toBeVisible();
+  await expect(row).toContainText('Added by an operator');
   await shot(page, info, '23-admin-email-suppressed');
 
-  await row.getByRole('button', { name: 'Remove' }).click({ force: true });
+  await row.getByRole('button', { name: 'Release' }).click({ force: true });
   await page.waitForURL(/\/admin\/email$/);
   await expect(page.locator('table tbody tr', { hasText: target })).toHaveCount(0);
 
-  // Test-send (transport is the configured ArrayMailer in evidence runs) → flash confirmation.
+  // Test-send (transport is the configured ArrayMailer in evidence runs) → inline PRG confirmation.
   await page.locator('form[action="/admin/email/test"] button[type="submit"]').click();
   await page.waitForURL(/\/admin\/email$/);
-  await expect(page.locator('.flash')).toContainText(/Test email sent/);
+  await expect(page.locator('.notification-inline-status[role="status"]')).toContainText(/Test email sent/);
+  await expect(page.locator('.flash', { hasText: 'Test email sent' })).toHaveCount(0);
   await shot(page, info, '24-admin-email-test-sent');
+});
+
+test('admin notifications keep filters, tabs, counter, and email warning useful without JavaScript', async ({ browser, baseURL }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one explicit no-JS notification journey is sufficient');
+  const context = await browser.newContext({
+    baseURL,
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+    await visit(page, '/admin/email');
+    await expect(page.locator('html')).not.toHaveClass(/has-js/);
+    const deliveryEmailFilter = page.locator('form[method="get"][action="/admin/email"] input[name="email"]');
+    await deliveryEmailFilter.fill('slice-9-no-match@example.test');
+    await page.getByRole('button', { name: 'Filter', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/email\?.*email=slice-9-no-match%40example\.test/);
+    await expect(deliveryEmailFilter).toHaveValue('slice-9-no-match@example.test');
+    await expect(page.getByRole('heading', { name: 'Nothing matches these filters' })).toBeVisible();
+    await expect(page.getByText(/thirty days/i)).toHaveCount(0);
+    await page.getByRole('link', { name: 'Reset', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/email$/);
+    await expect(deliveryEmailFilter).toHaveValue('');
+
+    await page.getByRole('link', { name: 'Announcements', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/announcements$/);
+    await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+    const warning = page.locator('[data-announcement-broadcast-warning]');
+    await expect(warning).toBeHidden();
+    await page.check('input[name="broadcast_email"]');
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText('Broadcasts cannot be recalled once the queue starts.');
+    await shot(page, info, '24-admin-notifications-no-js');
+  } finally {
+    await context.close();
+  }
 });
 
 test('phase 4 split/merge: moderator splits a reply out then merges it back', async ({ page }, info) => {

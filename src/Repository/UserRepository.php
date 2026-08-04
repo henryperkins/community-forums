@@ -182,6 +182,14 @@ final class UserRepository
         return (int) $this->db->fetchValue('SELECT COUNT(*) FROM users');
     }
 
+    public function activeCountExcluding(int $userId): int
+    {
+        return (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM users WHERE status = 'active' AND id <> ?",
+            [$userId],
+        );
+    }
+
     public function adminCount(): int
     {
         return (int) $this->db->fetchValue("SELECT COUNT(*) FROM users WHERE role = 'admin'");

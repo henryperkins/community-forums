@@ -186,6 +186,24 @@
         }
     }
 
+    // Announcement publishing remains a normal server-rendered POST. This small
+    // decoration mirrors the design's live counter; the server renders its
+    // initial value, so the count does not disappear when JavaScript is off.
+    var announcementForm = document.querySelector('[data-announcement-form]');
+    if (announcementForm) {
+        var announcementMessage = announcementForm.querySelector('[data-announcement-message]');
+        var announcementCount = announcementForm.querySelector('[data-announcement-count]');
+        var updateAnnouncementForm = function () {
+            if (announcementMessage && announcementCount) {
+                // Array.from counts Unicode code points, matching PHP mb_strlen()
+                // rather than JavaScript's UTF-16 code-unit String.length.
+                announcementCount.textContent = Array.from(announcementMessage.value).length + ' / 500';
+            }
+        };
+        if (announcementMessage) { announcementMessage.addEventListener('input', updateAnnouncementForm); }
+        updateAnnouncementForm();
+    }
+
     // The Study thread view keeps every control usable as server-rendered HTML,
     // then promotes its quiet drawer, modal, and post toolbar once JavaScript is
     // active. Initialization only reveals hooks; all behavior is delegated so

@@ -281,6 +281,18 @@ test('announcement flood is a 429 that keeps the banner text and shows history',
   desktopOnly(info);
   await login(page, 'admin@retro.test');
   await page.goto('/admin/announcements');
+  await expect(page.getByRole('heading', { level: 1, name: 'Email & announcements' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Announcements');
+  await expect(page.locator('input[name="dismissible"]')).toBeChecked();
+  await expect(page.locator('[data-announcement-count]')).toHaveText('0 / 500');
+  await page.locator('textarea[name="message"]').fill('Council 🌿');
+  await expect(page.locator('[data-announcement-count]')).toHaveText('9 / 500');
+  const broadcastWarning = page.locator('[data-announcement-broadcast-warning]');
+  await expect(broadcastWarning).toBeHidden();
+  await page.locator('input[name="broadcast_email"]').check();
+  await expect(broadcastWarning).toBeVisible();
+  await expect(broadcastWarning).toHaveText(/This will reach [\d,]+ active members? by email\. Broadcasts cannot be recalled once the queue starts\./);
+  await page.locator('input[name="broadcast_email"]').uncheck();
   for (let i = 1; i <= 5; i++) {
     await page.locator('textarea[name="message"]').fill(`Maintenance window notice v${i} (evidence run).`);
     await page.getByRole('button', { name: 'Publish banner' }).click();

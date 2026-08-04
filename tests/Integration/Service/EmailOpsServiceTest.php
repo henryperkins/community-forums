@@ -37,6 +37,27 @@ final class EmailOpsServiceTest extends TestCase
         );
     }
 
+    public function test_dashboard_model_reports_filtered_total_pages_without_clamping_the_request(): void
+    {
+        $deliveries = new EmailDeliveryRepository($this->db);
+        for ($i = 0; $i < 5; $i++) {
+            $deliveries->enqueue(null, 'slice9-pager@example.test', 'system', 'Page row ' . $i);
+        }
+
+        $first = $this->service()->dashboardModel(null, null, 'slice9-pager@example.test', 1, 2);
+        self::assertSame(5, $first['total']);
+        self::assertSame(3, $first['total_pages'] ?? null);
+        self::assertSame(1, $first['page']);
+        self::assertTrue($first['has_next']);
+        self::assertCount(2, $first['deliveries']);
+
+        $beyond = $this->service()->dashboardModel(null, null, 'slice9-pager@example.test', 4, 2);
+        self::assertSame(3, $beyond['total_pages'] ?? null);
+        self::assertSame(4, $beyond['page']);
+        self::assertFalse($beyond['has_next']);
+        self::assertSame([], $beyond['deliveries']);
+    }
+
     public function test_send_test_enqueues_a_test_row_marks_sent_and_audits(): void
     {
         $admin = $this->userEntity($this->makeAdmin(['email' => 'ops@example.test']));
