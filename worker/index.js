@@ -67,6 +67,28 @@ export class ForumContainer extends Container {
 	}
 
 	/**
+	 * Cloudflare's SDK gives a first start about eight seconds by default. The
+	 * forum must mount R2 and confirm migrations before Apache can listen, which
+	 * can exceed that on a cold image pull. Give both allocation and readiness a
+	 * bounded two-minute window instead of aborting an otherwise healthy boot.
+	 */
+	async ensureStarted() {
+		await this.startAndWaitForPorts({
+			ports: [this.defaultPort],
+			cancellationOptions: {
+				instanceGetTimeoutMS: 120_000,
+				portReadyTimeoutMS: 120_000,
+			},
+		});
+	}
+
+	async fetch(request) {
+		await this.ensureStarted();
+
+		return this.containerFetch(request, this.defaultPort);
+	}
+
+	/**
 	 * Run a `bin/console` command inside the container and return its result.
 	 * Called over RPC from the scheduled handler.
 	 *
@@ -76,9 +98,7 @@ export class ForumContainer extends Container {
 	async runConsole(args) {
 		// exec() does not start a stopped container, and a cron tick can easily
 		// land after sleepAfter has fired.
-		if (!this.ctx.container.running) {
-			await this.start();
-		}
+		await this.ensureStarted();
 
 		// exec() runs the executable directly -- no shell, no PATH lookup, no
 		// inherited working directory. Hence absolute paths.

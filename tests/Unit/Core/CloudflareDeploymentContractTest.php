@@ -33,6 +33,15 @@ final class CloudflareDeploymentContractTest extends TestCase
         }
     }
 
+    public function test_worker_allows_cold_start_time_for_mounts_and_migrations(): void
+    {
+        $worker = $this->read('worker/index.js');
+
+        self::assertStringContainsString('startAndWaitForPorts', $worker);
+        self::assertStringContainsString('instanceGetTimeoutMS: 120_000', $worker);
+        self::assertStringContainsString('portReadyTimeoutMS: 120_000', $worker);
+    }
+
     public function test_container_boot_requires_persistent_storage_and_migrates_before_apache(): void
     {
         $dockerfile = $this->read('Dockerfile');
