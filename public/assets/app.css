@@ -819,6 +819,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     --surface-done: rgba(78,116,89,.20); --on-done: #BCD0BF;
     --warning: var(--gold-400);
     --surface-review: rgba(194,154,68,.16); --on-review: #DCC68A;
+    --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
     --pending: var(--ink-300);
     --surface-pending: var(--twilight-700); --on-pending: #AEB8B4;
     --info: var(--river-400);
@@ -861,6 +862,7 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
         --surface-done: rgba(78,116,89,.20); --on-done: #BCD0BF;
         --warning: var(--gold-400);
         --surface-review: rgba(194,154,68,.16); --on-review: #DCC68A;
+        --surface-staff: rgba(194,154,68,.16); --on-staff: var(--gold-200);
         --pending: var(--ink-300);
         --surface-pending: var(--twilight-700); --on-pending: #AEB8B4;
         --info: var(--river-400);
@@ -3528,13 +3530,17 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     overflow: hidden;
     box-shadow: var(--shadow-sm);
 }
+/* Paints from the preview custom properties, never from a static token: with JS
+   they carry the values being typed, and without JS they fall back through
+   .brand-preview to --accent, which /brand.css overrides with the saved colour.
+   Painting var(--brand) here showed neither. */
 .brand-preview-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 11px 14px;
-    background: var(--brand);
-    color: var(--parchment-50);
+    background: var(--preview-accent);
+    color: var(--preview-accent-contrast);
 }
 .brand-preview-bar strong {
     font-family: var(--font-display);
@@ -3559,7 +3565,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     letter-spacing: .04em;
     font-size: .8rem;
     color: var(--gold-700);
-    border-left: 3px solid var(--accent-2);
+    border-left: 3px solid var(--preview-accent-2);
     padding-left: 8px;
 }
 .code-area {

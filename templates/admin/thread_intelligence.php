@@ -21,23 +21,36 @@
             </section>
         <?php endif; ?>
 
+<?php
+        // .queue-card's left rule defaults to --success, so a card that renders a
+        // non-success fact has to say so or the rail reads "all green" while the
+        // page is telling the operator something is wrong. attention = a fault to
+        // act on; unavailable = deliberately off, not broken.
+        $flagsOn = !empty($dashboard['flags']['community_memory']) && !empty($dashboard['flags']['automated_context']);
+        $heartbeatState = (string) $dashboard['heartbeat']['classification'];
+        $workerStatus = match ($heartbeatState) {
+            'healthy', 'running' => '',
+            'never_run' => ' queue-status-unavailable',
+            default => ' queue-status-attention',
+        };
+        ?>
         <section class="admin-dashboard-grid" aria-label="Thread Intelligence status">
-            <div class="card queue-card is-static">
+            <div class="card queue-card is-static<?= $flagsOn ? '' : ' queue-status-unavailable' ?>">
                 <span class="queue-card-head">Product flags</span>
-                <strong class="queue-card-count"><?= !empty($dashboard['flags']['community_memory']) && !empty($dashboard['flags']['automated_context']) ? '2' : (int) !empty($dashboard['flags']['community_memory']) + (int) !empty($dashboard['flags']['automated_context']) ?></strong>
+                <strong class="queue-card-count"><?= $flagsOn ? '2' : (int) !empty($dashboard['flags']['community_memory']) + (int) !empty($dashboard['flags']['automated_context']) ?></strong>
                 <span class="queue-card-detail">community memory <?= !empty($dashboard['flags']['community_memory']) ? 'on' : 'off' ?> · automated context <?= !empty($dashboard['flags']['automated_context']) ? 'on' : 'off' ?></span>
             </div>
-            <div class="card queue-card is-static">
+            <div class="card queue-card is-static<?= !empty($dashboard['provider']['blocked']) ? ' queue-status-attention' : (!empty($dashboard['credential_ready']) ? '' : ' queue-status-unavailable') ?>">
                 <span class="queue-card-head">Provider</span>
                 <strong class="queue-card-count"><?= !empty($dashboard['credential_ready']) ? 'Ready' : 'Not ready' ?></strong>
                 <span class="queue-card-detail"><?= $e($dashboard['provider_label']) ?> · <?= !empty($dashboard['provider']['blocked']) ? 'latched' : 'available' ?></span>
             </div>
-            <div class="card queue-card is-static">
+            <div class="card queue-card is-static<?= $workerStatus ?>">
                 <span class="queue-card-head">Worker</span>
-                <strong class="queue-card-count"><?= $e($dashboard['heartbeat']['classification']) ?></strong>
+                <strong class="queue-card-count"><?= $e($heartbeatState) ?></strong>
                 <span class="queue-card-detail"><?= $e($dashboard['heartbeat']['status'] ?? 'never run') ?></span>
             </div>
-            <div class="card queue-card is-static">
+            <div class="card queue-card is-static<?= !empty($dashboard['pause']['paused']) ? ' queue-status-unavailable' : '' ?>">
                 <span class="queue-card-head">Generation</span>
                 <strong class="queue-card-count"><?= !empty($dashboard['pause']['paused']) ? 'Paused' : 'Running' ?></strong>
                 <span class="queue-card-detail">Global provider egress brake</span>
@@ -79,7 +92,8 @@
 
         <section class="admin-dashboard-grid" aria-label="Queue states">
             <?php foreach ($dashboard['queue'] as $state => $count): ?>
-                <div class="card queue-card is-static">
+                <?php $needsOperator = in_array((string) $state, ['dead', 'review_required'], true) && (int) $count > 0; ?>
+                <div class="card queue-card is-static<?= $needsOperator ? ' queue-status-attention' : '' ?>">
                     <span class="queue-card-head"><?= $e(str_replace('_', ' ', ucfirst((string) $state))) ?></span>
                     <strong class="queue-card-count"><?= (int) $count ?></strong>
                     <span class="queue-card-detail">thread<?= (int) $count === 1 ? '' : 's' ?></span>

@@ -173,6 +173,52 @@ final class ImladrisRuntimeAssetTest extends TestCase
         }
     }
 
+    /**
+     * The application owns two dark registers, not one: an explicit `[data-theme="dark"]`
+     * block and a `prefers-color-scheme` block for `[data-theme="system"]` — and
+     * `layout.php` defaults every account to `system`. `imladris.css` carries no
+     * `prefers-color-scheme` block at all, so a semantic token the application overrides
+     * for twilight has to be overridden in *both* application blocks or it silently keeps
+     * resolving to the light register for the default theme. That is how the staff badge
+     * came to render an unflipped light chip on a twilight page for most users after the
+     * fix that was supposed to flip it. Asserting the two blocks declare the same token
+     * set catches the next one at authoring time.
+     */
+    public function test_both_application_dark_registers_declare_the_same_tokens(): void
+    {
+        $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
+
+        self::assertSame(
+            1,
+            preg_match('/\[data-theme="dark"\]\s*\{(?<block>[^}]*)\}/s', $css, $explicit),
+            'The explicit twilight token block is missing.',
+        );
+        self::assertSame(
+            1,
+            preg_match(
+                '/@media\s*\(prefers-color-scheme:\s*dark\)\s*\{\s*\[data-theme="system"\]\s*\{(?<block>[^}]*)\}/s',
+                $css,
+                $system,
+            ),
+            'The system-theme twilight token block is missing.',
+        );
+
+        $tokens = static function (string $block): array {
+            preg_match_all('/(--[a-z0-9-]+)\s*:/i', $block, $found);
+            $names = array_unique($found[1]);
+            sort($names);
+
+            return $names;
+        };
+
+        self::assertSame(
+            $tokens($explicit['block']),
+            $tokens($system['block']),
+            'The [data-theme="dark"] and [data-theme="system"] dark registers declare different tokens; '
+            . 'a token missing from either one resolves to the light register for that audience.',
+        );
+    }
+
     public function test_staff_badge_uses_the_flipping_semantic_pair_exactly_once(): void
     {
         $css = (string) file_get_contents(self::ROOT . '/public/assets/app.css');
