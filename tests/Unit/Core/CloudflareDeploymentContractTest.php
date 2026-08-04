@@ -39,7 +39,47 @@ final class CloudflareDeploymentContractTest extends TestCase
 
         self::assertStringContainsString('startAndWaitForPorts', $worker);
         self::assertStringContainsString('instanceGetTimeoutMS: 120_000', $worker);
-        self::assertStringContainsString('portReadyTimeoutMS: 120_000', $worker);
+
+        // Readiness is deliberately NOT given a cold-start-sized window. The SDK
+        // retries the probe every 300ms for the whole duration, so a long window
+        // does not rescue a broken boot -- it floods the container instead.
+        self::assertStringContainsString('portReadyTimeoutMS: 30_000', $worker);
+    }
+
+    /**
+     * Regression: readiness probed `GET /`, which this app answers with a 302 to
+     * /setup. The Workers fetch follows redirects, so a single probe cost two
+     * full PHP+MySQL renders and exceeded the SDK's fixed 5s PING_TIMEOUT_MS.
+     * The container was never marked ready and every request hung.
+     */
+    public function test_readiness_probe_targets_a_static_file_not_an_app_route(): void
+    {
+        $worker = $this->read('worker/index.js');
+        $vhost = $this->read('deploy/apache-vhost.conf');
+
+        self::assertStringContainsString('pingEndpoint = "ping/ping.txt"', $worker);
+        self::assertFileExists(self::ROOT . '/public/ping.txt');
+
+        // Apache only rewrites to index.php when the target does not exist, so a
+        // real file under public/ is served without entering PHP at all.
+        self::assertStringContainsString('RewriteCond %{REQUEST_FILENAME} !-f', $vhost);
+    }
+
+    /**
+     * Regression: exec() starts with an almost empty environment (HOME, PATH,
+     * PWD) rather than inheriting the variables handed to the container, so the
+     * cron workers ran with no DB_* configuration until this was passed through.
+     */
+    public function test_cron_console_commands_receive_the_container_environment(): void
+    {
+        $worker = $this->read('worker/index.js');
+
+        self::assertMatchesRegularExpression(
+            '/exec\(\s*\["php", CONSOLE, \.\.\.args\],\s*\{\s*env: this\.envVars,/',
+            $worker,
+        );
+        // output() buffers stdout/stderr as ArrayBuffers, not strings.
+        self::assertStringContainsString('new TextDecoder()', $worker);
     }
 
     public function test_container_boot_requires_persistent_storage_and_migrates_before_apache(): void

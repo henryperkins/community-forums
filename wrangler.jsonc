@@ -17,7 +17,10 @@
   "containers": [
     {
       "class_name": "ForumContainer",
-      "image": "./Dockerfile",
+      // Pinned to the digest of the last image verified serving production
+      // traffic, to force a clean re-provision after a crash-looping rollout.
+      // Restore "./Dockerfile" to resume building from source.
+      "image": "registry.cloudflare.com/a77e479f6736120eadd99973dbeb705e/retroboards-forumcontainer@sha256:60e9ab63408e51f476eb0ee8585cb5ba0d1cf5f8090f7cb3a68d282981b1bb0c",
       // The app is stateful and single-writer: one instance, always the same one.
       "max_instances": 1,
       // 1/2 vCPU, 4 GiB, 8 GB disk. `basic` (1/4 vCPU, 1 GiB) also runs it but
@@ -73,9 +76,14 @@
     "RATELIMIT_PATH": "/data/ratelimit",
 
     // The Worker overwrites X-Forwarded-For with the verified client IP, so the
-    // app must trust the hop it sees. Fill in the address the container actually
-    // reports after the first deploy -- see the runbook, "client IP" section.
-    "TRUSTED_PROXIES": "",
+    // app must trust the hop it sees, or every request is attributed to one
+    // address and per-IP rate limiting collapses into a single global bucket.
+    // Apache logs the Cloudflare-side peer as 10.1.0.0; that address is not a
+    // documented stable value, so trust the private range that contains it.
+    // Safe here because the container has no public address (network mode is
+    // "private", assign_ipv4/assign_ipv6 both "none") -- the only thing that can
+    // reach it is the Worker, which discards any client-sent header first.
+    "TRUSTED_PROXIES": "10.0.0.0/8",
 
     // Migrations run in the entrypoint on boot (single instance, no race).
     "RUN_MIGRATIONS": "true"

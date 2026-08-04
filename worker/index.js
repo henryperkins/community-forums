@@ -26,6 +26,24 @@ const CRON_JOBS = {
 
 export class ForumContainer extends Container {
 	defaultPort = 8080; // deploy/apache-vhost.conf listens on 8080
+
+	// Readiness must be a STATIC file, not an app route.
+	//
+	// The SDK aborts this probe after PING_TIMEOUT_MS (5s) and retries every
+	// 300ms, and a container that never passes is never marked ready -- so every
+	// real request blocks in startAndWaitForPorts() instead of being served.
+	// The default `ping` resolves to `GET /`, which this app answers with a 302
+	// to /setup; the Workers fetch follows that redirect, so one probe cost two
+	// full PHP+MySQL renders (~2.7s each measured) and reliably blew the 5s
+	// budget. Apache serves public/ping.txt directly (the vhost only rewrites to
+	// index.php when the file does not exist), so this probe cannot be dragged
+	// over the limit by app or database latency.
+	//
+	// This deliberately checks "Apache is serving", not "the app is well" -- a
+	// broken app should return 5xx, which is diagnosable, rather than flap
+	// readiness, which takes the whole deployment down. Application health stays
+	// on /healthz.
+	pingEndpoint = "ping/ping.txt";
 	// A forum's traffic is bursty and a cold start pays image pull + Apache boot
 	// + migrations. An hour of idle is cheap next to that; the cron ticks above
 	// keep it warm during quiet periods anyway.
@@ -68,16 +86,21 @@ export class ForumContainer extends Container {
 
 	/**
 	 * Cloudflare's SDK gives a first start about eight seconds by default. The
-	 * forum must mount R2 and confirm migrations before Apache can listen, which
-	 * can exceed that on a cold image pull. Give both allocation and readiness a
-	 * bounded two-minute window instead of aborting an otherwise healthy boot.
+	 * forum must mount R2 and run migrations before Apache can listen, which can
+	 * exceed that on a cold image pull, so allocation gets a generous window.
+	 *
+	 * Readiness does not: once Apache is up, ping.txt answers immediately, so a
+	 * probe that keeps failing means something is genuinely wrong. Keep that
+	 * window short -- a long one does not rescue a broken boot, it just retries
+	 * the probe every 300ms for the whole duration, which is how a single failing
+	 * deploy turned into a sustained request flood against the container.
 	 */
 	async ensureStarted() {
 		await this.startAndWaitForPorts({
 			ports: [this.defaultPort],
 			cancellationOptions: {
 				instanceGetTimeoutMS: 120_000,
-				portReadyTimeoutMS: 120_000,
+				portReadyTimeoutMS: 30_000,
 			},
 		});
 	}
@@ -108,16 +131,27 @@ export class ForumContainer extends Container {
 
 		// exec() runs the executable directly -- no shell, no PATH lookup, no
 		// inherited working directory. Hence absolute paths.
-		const proc = await this.ctx.container.exec(["php", CONSOLE, ...args]);
+		//
+		// It also starts with an almost empty environment (HOME, PATH, PWD): the
+		// variables handed to the container at start are the entrypoint process's,
+		// not every later exec's. Without this the workers would run with no
+		// DB_* configuration at all and every cron tick would fail.
+		const proc = await this.ctx.container.exec(["php", CONSOLE, ...args], {
+			env: this.envVars,
+		});
 		const { stdout, stderr, exitCode } = await proc.output();
+
+		// output() buffers stdout/stderr as ArrayBuffers, not strings.
+		const decoder = new TextDecoder();
 
 		return {
 			command: args.join(" "),
 			exitCode,
-			stdout: stdout ?? "",
-			stderr: stderr ?? "",
+			stdout: stdout ? decoder.decode(stdout) : "",
+			stderr: stderr ? decoder.decode(stderr) : "",
 		};
 	}
+
 }
 
 export default {
