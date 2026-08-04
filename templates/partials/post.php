@@ -57,7 +57,7 @@ $a = mask_author($p['author_display_name'] ?? null, $p['author_username'] ?? nul
             <?php // Abbreviated inline stamp per the thread-view reference; the full
                   // UTC value stays machine-readable and on hover/long-press. ?>
             <time class="post-time" datetime="<?= $e(iso_datetime($p['created_at'])) ?>" title="<?= $e(human_datetime($p['created_at'])) ?>"><?= $e(post_datetime($p['created_at'])) ?></time>
-            <?php if (!empty($p['edited_at'])): ?><span class="muted post-edited">(edited)</span><?php endif; ?>
+            <?php if (!empty($p['edited_at'])): ?><time class="muted post-edited" datetime="<?= $e(iso_datetime($p['edited_at'])) ?>" title="<?= $e(human_datetime($p['edited_at'])) ?>">(edited)</time><?php endif; ?>
         </div>
         <div class="post-body formatted-content">
             <?= $p['body_html'] /* pre-sanitised at write time or rendered read fallback */ ?>

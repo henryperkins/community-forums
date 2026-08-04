@@ -6148,34 +6148,6 @@ body.thread-restructure-open { overflow: hidden; }
     .thread-restructure-dialog button,
     .thread-restructure-dialog select,
     .thread-restructure-dialog input { min-height: 44px; }
-    /* 4px of inline padding left the 48px identity rail no gutter, so the
-       "Commends" label reached the card edge. 10px restores it at a cost of
-       12px of measure; the reference's own value is 14px. */
-    .post { gap: 10px; padding: 12px 10px; }
-    /* Reassert the semantic same-author state after the mobile padding shorthand. */
-    .post.post-grouped { padding-block-start: 0; }
-    .post-head { min-height: 44px; padding-inline-end: 48px; }
-    .post-head .post-time { margin-left: 0; }
-    [data-thread-enhanced="1"] .post-toolbar,
-    .post-toolbar {
-        top: 12px;
-        right: 10px;
-        gap: 0;
-        padding: 0;
-        opacity: 1;
-        pointer-events: auto;
-        border: 0;
-        box-shadow: none;
-        background: transparent;
-    }
-    .post-grouped .post-toolbar { top: 0; }
-    .post-toolbar > .post-toolbar-reactions,
-    .post-toolbar > [data-quote-post],
-    .post-toolbar > form { display: none; }
-    .post-menu-touch { display: block; }
-    .post-toolbar-button,
-    .post-toolbar > form > button,
-    .post-toolbar > details > summary { width: 44px; height: 44px; }
     [data-thread-enhanced="1"] .thread-restructure[open] .thread-restructure-dialog {
         inset: 0;
         width: 100%;
@@ -6188,7 +6160,7 @@ body.thread-restructure-open { overflow: hidden; }
 }
 @keyframes study-sheet-in { from { transform: translateY(104%); } to { transform: translateY(0); } }
 
-/* — Coarse-pointer post actions.
+/* — Narrow-or-coarse post actions.
    The reference stream is a desktop artboard: the action pill floats on hover and
    costs zero layout height (ThreadView.dc.html:318). A touch surface has no hover
    and the 44px tap target is not negotiable, so the previous static row put a
@@ -6196,10 +6168,17 @@ body.thread-restructure-open { overflow: hidden; }
    height, paid again on every reply. Collapse to the overflow disclosure and park
    it at the byline's trailing edge, where the head's reserved 44px min-height
    already accounts for it; react / quote / accept move into the menu.
-   This block must stay identical to its max-width twin above — a coarse pointer
-   is not always a narrow one, and the 820px tablet case matches only this one. */
-@media (hover: none), (pointer: coarse) {
+   The query is a union, not a twin: a coarse pointer is not always a narrow one
+   (an 820px tablet matches only the pointer terms) and a narrow window on a mouse
+   is not coarse, but both want the collapsed layout — and one block cannot drift
+   from itself. The neighbouring 768px block stays separate on purpose; the sheet
+   and dialog rules in it are viewport decisions, not pointer ones. */
+@media (max-width: 768px), (hover: none), (pointer: coarse) {
+    /* 4px of inline padding left the 48px identity rail no gutter, so the
+       "Commends" label reached the card edge. 10px restores it at a cost of
+       12px of measure; the reference's own value is 14px. */
     .post { gap: 10px; padding: 12px 10px; }
+    /* Reassert the semantic same-author state after the padding shorthand. */
     .post.post-grouped { padding-block-start: 0; }
     .post-head { min-height: 44px; padding-inline-end: 48px; }
     .post-head .post-time { margin-left: 0; }
