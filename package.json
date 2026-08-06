@@ -1,6 +1,7 @@
 {
   "private": true,
   "scripts": {
+    "build": "npm run build:wysiwyg",
     "build:wysiwyg": "vite build --config vite.config.mjs",
     "check:wysiwyg": "npm run build:wysiwyg && git diff --exit-code -- public/assets/wysiwyg-composer.js public/assets/wysiwyg-composer.css",
     "deploy": "wrangler deploy",

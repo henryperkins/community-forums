@@ -158,8 +158,17 @@ the already-onboarded `candidary.online` sending domain.
 
 ```sh
 npm install
+npm run build          # compiles public/assets/wysiwyg-composer.{js,css}
 npx wrangler deploy
 ```
+
+`npm run build` is an alias for `build:wysiwyg` — the project's only asset
+compile, and the same command the image runs in `Dockerfile` stage 1. Running it
+by hand is optional (the bundles are committed, and the image rebuilds them
+regardless), but a git-connected **Workers Builds** pipeline runs `npm ci` and
+then its configured build command — `npm run build` by default — before the
+deploy command, so the script has to exist or every push fails with
+`npm error Missing script: "build"` before Wrangler is ever reached.
 
 Wrangler builds the image with Docker, pushes it to the Cloudflare registry, and
 deploys the Worker. **After the first deploy, wait several minutes**: containers
