@@ -82,6 +82,9 @@ final class AppInvitationsTest extends TestCase
         self::assertSame(1, preg_match('~/invite/([0-9a-f]{64})~', $created->body(), $m), 'the create response must show the invite URL once');
         $token = $m[1];
         self::assertStringContainsString('will not be shown again', $created->body());
+        foreach ($created->cookieHeaders() as $cookie) {
+            self::assertStringNotContainsString($token, $cookie, 'raw token must never enter a Set-Cookie header');
+        }
 
         // A later GET renders the list without the secret (show-once).
         $list = $this->get('/admin/invitations');
@@ -107,13 +110,54 @@ final class AppInvitationsTest extends TestCase
     {
         $this->enableInvitations();
         $this->actingAs($this->makeAdmin());
+        $board = $this->makeBoard($this->makeCategory('Invite board'));
         $this->get('/admin/invitations');
 
-        $res = $this->post('/admin/invitations', ['email' => 'both@example.test', 'domain' => 'example.test']);
+        $res = $this->post('/admin/invitations', [
+            'email' => 'both@example.test',
+            'domain' => 'example.test',
+            'max_uses' => '17',
+            'expires_in_days' => '44',
+            'onboarding_board_id' => (string) $board['id'],
+        ]);
         $this->assertStatus(422, $res);
-        self::assertStringContainsString('not both', $res->body());
-        self::assertStringContainsString('both@example.test', $res->body());
-        self::assertStringContainsString('example.test', $res->body());
+        self::assertStringContainsString('Bind to an email address or a domain — not both.', $res->body());
+        self::assertStringContainsString('value="both@example.test"', $res->body());
+        self::assertStringContainsString('value="example.test"', $res->body());
+        self::assertStringContainsString('value="17"', $res->body());
+        self::assertStringContainsString('value="44"', $res->body());
+        self::assertStringContainsString('value="' . (int) $board['id'] . '" selected', $res->body());
+    }
+
+    public function test_console_copies_the_imladris_members_and_invitations_anatomy(): void
+    {
+        $this->enableInvitations();
+        $this->actingAs($this->makeAdmin(['username' => 'inviteauthor']));
+        $this->get('/admin/invitations');
+        $this->post('/admin/invitations', []);
+        $revokedId = (int) $this->db->fetchValue('SELECT id FROM invitations ORDER BY id DESC LIMIT 1');
+        $this->post('/admin/invitations/' . $revokedId . '/revoke', []);
+        $this->post('/admin/invitations', []);
+
+        $body = $this->get('/admin/invitations')->body();
+        self::assertSame(1, substr_count($body, '<h1'));
+        self::assertStringContainsString('<h1 class="admin-title">Members &amp; invitations</h1>', $body);
+        self::assertStringContainsString('class="admin-tab is-active" aria-current="page">Invitations</span>', $body);
+        self::assertStringContainsString('class="member-invitations-grid"', $body);
+        self::assertStringContainsString('<span>Max uses (1–100)</span>', $body);
+        self::assertStringContainsString('<span>Expires in days (1–365)</span>', $body);
+        self::assertStringContainsString('<span>Grant board membership (optional)</span>', $body);
+        self::assertStringNotContainsString('<h2>Issued invitations</h2>', $body);
+        self::assertSame(1, substr_count($body, 'aria-label="Issued invitations"'));
+        self::assertStringContainsString('<th scope="col">By</th>', $body);
+        self::assertStringContainsString('<span class="sr-only">Actions</span>', $body);
+        self::assertStringContainsString('class="member-invitations-status is-active">active</span>', $body);
+        self::assertStringContainsString('class="member-invitations-status is-revoked">revoked</span>', $body);
+        self::assertMatchesRegularExpression('~is-revoked.*?<td class="member-invitations-actions">\s*—\s*</td>~s', $body);
+        self::assertMatchesRegularExpression(
+            '~<form[^>]+action="/admin/invitations/\d+/revoke".*?name="_token".*?<button class="linkbtn danger" type="submit">Revoke</button>~s',
+            $body,
+        );
     }
 
     public function test_revoke_marks_the_row_and_audits(): void
@@ -128,7 +172,7 @@ final class AppInvitationsTest extends TestCase
         $this->assertRedirect($res, '/admin/invitations');
 
         self::assertNotNull($this->db->fetch('SELECT revoked_at FROM invitations WHERE id = ?', [$id])['revoked_at']);
-        $this->assertSeeText($this->get('/admin/invitations'), 'Revoked');
+        $this->assertSeeText($this->get('/admin/invitations'), 'revoked');
         self::assertSame(1, (int) $this->db->fetchValue(
             "SELECT COUNT(*) FROM moderation_log WHERE target_type = 'invitation' AND target_id = ? AND action = 'invitation_revoked'",
             [$id],
@@ -145,9 +189,21 @@ final class AppInvitationsTest extends TestCase
 
         $this->assertStatus(200, $this->post('/admin/invitations', []));
         $this->assertStatus(200, $this->post('/admin/invitations', []));
-        $blocked = $this->post('/admin/invitations', []);
+        $board = $this->makeBoard($this->makeCategory('Rate limit board'));
+        $blocked = $this->post('/admin/invitations', [
+            'email' => 'limited@example.test',
+            'domain' => 'limited.test',
+            'max_uses' => '23',
+            'expires_in_days' => '61',
+            'onboarding_board_id' => (string) $board['id'],
+        ]);
         $this->assertStatus(429, $blocked);
         self::assertStringContainsString('Too many invitations', $blocked->body());
+        self::assertStringContainsString('value="limited@example.test"', $blocked->body());
+        self::assertStringContainsString('value="limited.test"', $blocked->body());
+        self::assertStringContainsString('value="23"', $blocked->body());
+        self::assertStringContainsString('value="61"', $blocked->body());
+        self::assertStringContainsString('value="' . (int) $board['id'] . '" selected', $blocked->body());
     }
 
     public function test_console_responses_carry_noindex(): void

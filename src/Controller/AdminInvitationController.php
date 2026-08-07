@@ -52,7 +52,13 @@ final class AdminInvitationController extends Controller
         try {
             $result = $this->container->get(InvitationService::class)->create($admin, $request->allInput());
         } catch (ValidationException $e) {
-            return $this->consoleView($e->errors, $e->old, 422);
+            $errors = $e->errors;
+            if (($errors['domain'] ?? null) === 'Bind to an email address or a domain, not both.') {
+                // Presentation copy follows the Imladris design while the
+                // service remains reusable outside this console.
+                $errors['domain'] = 'Bind to an email address or a domain — not both.';
+            }
+            return $this->consoleView($errors, $e->old, 422);
         }
 
         $base = rtrim((string) $this->container->get(Config::class)->get('app.url', ''), '/');

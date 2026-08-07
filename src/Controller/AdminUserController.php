@@ -50,19 +50,19 @@ final class AdminUserController extends Controller
      */
     public function bulkConfirm(Request $request, array $params): Response
     {
-        $this->requireAdmin();
+        $admin = $this->requireAdmin();
 
         $action = (string) $request->post('bulk_action', '');
         $ids = $this->selectedIds($request);
+        if ($ids === []) {
+            return $this->directoryView($request, 'Select at least one member before choosing a bulk action.', 422);
+        }
         if (!in_array($action, self::BULK_ACTIONS, true)) {
             // Keep the ticked rows ticked — the operator only forgot the action.
-            return $this->directoryView($request, 'Choose a bulk action to apply.', 422, $ids);
-        }
-        if ($ids === []) {
-            return $this->directoryView($request, 'Select at least one member first.', 422);
+            return $this->directoryView($request, 'Choose an action to apply to the selected members.', 422, $ids);
         }
 
-        return $this->bulkConfirmView($action, $ids);
+        return $this->bulkConfirmView($action, $ids, $admin->id());
     }
 
     /**
@@ -93,11 +93,23 @@ final class AdminUserController extends Controller
         } catch (ValidationException $e) {
             // Shared-input failure (reason/until) aborted before any member
             // was written — re-render the confirmation with the typed input.
-            return $this->bulkConfirmView($action, $ids, $e->errors, ['reason' => $reason, 'until' => $until], 422);
+            $errors = $e->errors;
+            if (($errors['reason'] ?? null) === 'A reason is required.') {
+                $errors['reason'] = 'A shared reason is required — it is shown to every member and written to each audit entry.';
+            }
+            return $this->bulkConfirmView(
+                $action,
+                $ids,
+                $admin->id(),
+                $errors,
+                ['reason' => $reason, 'until' => $until],
+                422,
+            );
         }
 
         $verb = $action === 'suspend' ? 'Suspended' : 'Warned';
-        $message = $verb . ' ' . $result['done'] . ' member' . ($result['done'] === 1 ? '' : 's') . '.';
+        $message = $verb . ' ' . $result['done'] . ' member' . ($result['done'] === 1 ? '' : 's')
+            . ' — each action was audited individually.';
         if ($result['skipped'] !== []) {
             $message .= ' Skipped: ' . implode('; ', $result['skipped']);
         }
@@ -291,7 +303,7 @@ final class AdminUserController extends Controller
         // one-form action and must not be a single accidental click.
         if (trim((string) $request->post('confirm_username', '')) !== (string) $subject['username']) {
             return $this->record($id, new ValidationException(
-                ['confirm_username' => 'Type the member\'s username exactly to confirm the ban.'],
+                ['confirm_username' => 'The username does not match — type ' . (string) $subject['username'] . ' exactly to confirm.'],
             ), 422, 'ban', ['reason' => $request->str('reason')]);
         }
         try {
@@ -371,13 +383,21 @@ final class AdminUserController extends Controller
      * @param array<string,string> $errors
      * @param array<string,string> $old
      */
-    private function bulkConfirmView(string $action, array $ids, array $errors = [], array $old = [], int $status = 200): Response
+    private function bulkConfirmView(
+        string $action,
+        array $ids,
+        int $actorId,
+        array $errors = [],
+        array $old = [],
+        int $status = 200,
+    ): Response
     {
         $subjects = $this->container->get(UserModerationService::class)->bulkPlan($action, $ids);
 
         return $this->view('admin/users_bulk_confirm', [
             'action' => $action,
             'subjects' => $subjects,
+            'actor_id' => $actorId,
             'errors' => $errors,
             'old' => $old,
         ], $status);

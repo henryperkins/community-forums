@@ -210,6 +210,102 @@ final class AppAdminUserRecordTest extends TestCase
         self::assertStringContainsString('action="/admin/users/' . $sid . '/ban"', $body);
     }
 
+    public function test_record_copies_the_imladris_anatomy_without_weakening_forms(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $subject = $this->makeUser([
+            'username' => 'recordshape',
+            'display_name' => 'Record Shape',
+            'status' => 'suspended',
+            'suspended_until' => '2030-01-02 03:04:05',
+        ]);
+        $sid = (int) $subject['id'];
+        $this->db->run('UPDATE users SET reputation = 8740, post_count = 12 WHERE id = ?', [$sid]);
+        (new BadgeRepository($this->db))->awardBySlug($sid, 'staff');
+
+        $body = $this->get('/admin/users/' . $sid)->body();
+
+        self::assertSame(1, substr_count($body, '<h1'));
+        self::assertStringContainsString('<h1 class="admin-title">Members &amp; invitations</h1>', $body);
+        self::assertStringContainsString('class="admin-tab is-active" aria-current="page">Directory</span>', $body);
+        self::assertStringContainsString('class="member-record-identity"', $body);
+        self::assertStringContainsString('class="member-record-monogram"', $body);
+        self::assertStringContainsString('monogram-gilt', $body);
+        self::assertStringContainsString('<h2>Record Shape</h2>', $body);
+        self::assertStringContainsString('class="member-record-summary-grid"', $body);
+
+        self::assertMatchesRegularExpression(
+            '~<dl class="member-record-status-list">.*?<dt>Role</dt><dd>user</dd>.*?<dt>State</dt><dd>suspended</dd>.*?<dt>Reputation</dt><dd>8,740</dd>.*?<dt>Posts</dt><dd>12</dd>.*?<dt>Joined</dt>.*?<dt>Last seen</dt>.*?</dl>\s*<p class="member-record-suspended">Suspended until Jan 2, 2030 at 03:04 UTC</p>\s*<p class="member-record-profile-link"><a href="/u/recordshape">View public profile</a></p>~s',
+            $body,
+        );
+        self::assertStringContainsString('class="member-record-restriction-grid"', $body);
+        self::assertStringContainsString('Until (UTC, optional)', $body);
+        self::assertStringContainsString('the record’s most consequential action', $body);
+        self::assertStringContainsString('Type recordshape to confirm', $body);
+        self::assertStringContainsString('Warning reason (shown to the member)', $body);
+        self::assertStringContainsString('Private staff note', $body);
+        self::assertStringContainsString('placeholder="(none)"', $body);
+        self::assertSame(2, substr_count($body, 'action="/admin/users/' . $sid . '/title"'));
+        self::assertStringContainsString('aria-label="Revoke the Staff badge"', $body);
+        self::assertStringContainsString('href="/admin/audit?target_type=user&amp;target_id=' . $sid . '"', $body);
+
+        foreach (['/suspend', '/ban', '/role', '/warn', '/note', '/badges/grant'] as $action) {
+            self::assertMatchesRegularExpression(
+                '~<form[^>]+action="/admin/users/' . $sid . preg_quote($action, '~') . '".*?name="_token"~s',
+                $body,
+            );
+        }
+        self::assertMatchesRegularExpression('~name="reason"[^>]*required~', $body);
+        self::assertMatchesRegularExpression('~name="confirm_username"[^>]*required~', $body);
+        self::assertMatchesRegularExpression('~name="current_password"[^>]*required~', $body);
+        self::assertMatchesRegularExpression('~name="slug"[^>]*required~', $body);
+    }
+
+    public function test_record_ban_error_uses_design_copy_and_stays_in_its_form(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $sid = (int) $this->makeUser(['username' => 'bancontext'])['id'];
+
+        $res = $this->post('/admin/users/' . $sid . '/ban', [
+            'reason' => 'ban-specific draft',
+            'confirm_username' => 'wrong-name',
+        ]);
+
+        $this->assertStatus(422, $res);
+        $body = $res->body();
+        self::assertStringContainsString('The username does not match — type bancontext exactly to confirm.', $body);
+        self::assertMatchesRegularExpression('~action="/admin/users/' . $sid . '/suspend".*?name="reason"[^>]*value=""~s', $body);
+        self::assertMatchesRegularExpression('~action="/admin/users/' . $sid . '/ban".*?name="reason"[^>]*value="ban-specific draft"~s', $body);
+        self::assertSame('active', (string) $this->db->fetchValue('SELECT status FROM users WHERE id = ?', [$sid]));
+    }
+
+    public function test_pii_reveal_is_audited_once_and_only_for_that_response(): void
+    {
+        $this->actingAs($this->makeAdmin());
+        $subject = $this->makeUser(['username' => 'piionce', 'email' => 'piionce@example.test']);
+        $sid = (int) $subject['id'];
+
+        $before = $this->get('/admin/users/' . $sid);
+        self::assertStringNotContainsString('piionce@example.test', $before->body());
+        self::assertStringContainsString('action="/admin/users/' . $sid . '/pii"', $before->body());
+
+        $revealed = $this->post('/admin/users/' . $sid . '/pii');
+        $this->assertStatus(200, $revealed);
+        self::assertStringContainsString('class="member-record-pii-value"', $revealed->body());
+        self::assertStringContainsString('piionce@example.test', $revealed->body());
+        self::assertSame(1, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE action = 'view_pii' AND target_id = ? AND reason = 'admin_record_reveal'",
+            [$sid],
+        ));
+
+        $later = $this->get('/admin/users/' . $sid);
+        self::assertStringNotContainsString('piionce@example.test', $later->body());
+        self::assertSame(1, (int) $this->db->fetchValue(
+            "SELECT COUNT(*) FROM moderation_log WHERE action = 'view_pii' AND target_id = ?",
+            [$sid],
+        ));
+    }
+
     public function test_admin_cannot_see_suspend_ban_controls_on_own_record(): void
     {
         $admin = $this->makeAdmin(['username' => 'selfadmin']);

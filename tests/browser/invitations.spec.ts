@@ -110,10 +110,11 @@ test('invitations: show-once issue + revoke console, invite-only registration, u
   try {
     // ---- issue: the raw link is rendered exactly once --------------------
     await visit(page, '/admin/invitations');
-    await expect(page.getByRole('heading', { name: 'Invitations', level: 1 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Members & invitations', level: 1 })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Member sections' }).getByText('Invitations', { exact: true })).toHaveAttribute('aria-current', 'page');
     await page.click('form[action="/admin/invitations"] button[type="submit"]'); // defaults: 1 use, 14 days
     await expect(page.getByText('Copy this invitation link now')).toBeVisible();
-    const inviteUrl = await page.locator('.flash code').innerText();
+    const inviteUrl = await page.locator('.member-invitations-once code').innerText();
     const token = inviteUrl.match(/\/invite\/([0-9a-f]{64})/)?.[1];
     expect(token, `show-once panel must contain the invite URL (got: ${inviteUrl})`).toBeTruthy();
     await expectNoSeriousA11yViolations(page, info);
@@ -123,8 +124,8 @@ test('invitations: show-once issue + revoke console, invite-only registration, u
     await page.click('form[action="/admin/invitations"] button[type="submit"]');
     await page.locator('table tbody tr').first().getByRole('button', { name: 'Revoke' }).click();
     await expect(page.getByRole('status').getByText('Invitation revoked.')).toBeVisible();
-    await expect(page.locator('table tbody tr', { hasText: 'Revoked' }).first()).toBeVisible();
-    await expect(page.locator('table tbody tr', { hasText: 'Active' }).first()).toBeVisible();
+    await expect(page.locator('table tbody tr', { hasText: 'revoked' }).first()).toBeVisible();
+    await expect(page.locator('table tbody tr', { hasText: 'active' }).first()).toBeVisible();
     // The raw token never reappears in the list (show-once, hash-only at rest).
     await expect(page.locator('body')).not.toContainText(token!);
     await shot(page, info, '70-admin-invitations-list');

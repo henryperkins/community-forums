@@ -1095,20 +1095,43 @@
     }
 })();
 
-// --- Admin console remediation (2026-07-18): bulk-select toggle -------------
-// Users directory: the header checkbox toggles every row checkbox on the page
-// (ADMIN §5.1 bulk-select). Selection works without JS — this only saves
-// fifty clicks. Self-contained IIFE so it appends safely after the main one.
+// --- Admin member directory: bulk selection enhancement ---------------------
+// The form and its checked-count fallback are server-rendered. JavaScript only
+// mirrors the design's live count and makes the page-level checkbox convenient.
 (function () {
     'use strict';
-    document.addEventListener('change', function (e) {
-        var t = e.target;
-        if (!t || !t.matches || !t.matches('[data-bulk-toggle]')) { return; }
-        var form = t.closest('form');
-        if (!form) { return; }
-        Array.prototype.forEach.call(form.querySelectorAll('input[name="selected[]"]'), function (box) {
-            box.checked = t.checked;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-member-bulk-form]'), function (form) {
+        var toggle = form.querySelector('[data-bulk-toggle]');
+        var counter = form.querySelector('[data-bulk-selected-count]');
+        var boxes = form.querySelectorAll('input[name="selected[]"]');
+
+        var update = function () {
+            var selected = form.querySelectorAll('input[name="selected[]"]:checked').length;
+            if (counter) {
+                counter.textContent = selected === 0
+                    ? 'None selected'
+                    : selected + ' ' + (selected === 1 ? 'member' : 'members') + ' selected';
+            }
+            if (toggle) {
+                toggle.checked = boxes.length > 0 && selected === boxes.length;
+                toggle.indeterminate = selected > 0 && selected < boxes.length;
+            }
+        };
+
+        form.addEventListener('change', function (e) {
+            var target = e.target;
+            if (!target || !target.matches) { return; }
+            if (target.matches('[data-bulk-toggle]')) {
+                Array.prototype.forEach.call(boxes, function (box) {
+                    box.checked = target.checked;
+                });
+            }
+            if (target.matches('[data-bulk-toggle], input[name="selected[]"]')) {
+                update();
+            }
         });
+
+        update();
     });
 })();
 

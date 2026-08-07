@@ -114,6 +114,55 @@ test('bulk warn flows through an explicit confirmation step', async ({ page }, i
   await expect(page.getByRole('status')).toContainText('Warned');
 });
 
+test('member directory mirrors selection count while keeping the server form authoritative', async ({ page }, info) => {
+  desktopOnly(info);
+  await login(page, 'admin@retro.test');
+  await page.goto('/admin/users');
+
+  const count = page.locator('[data-bulk-selected-count]');
+  const alice = page.locator('tr', { hasText: 'alice' }).locator('input[name="selected[]"]');
+  const bob = page.locator('tr', { hasText: 'bob' }).locator('input[name="selected[]"]');
+  await expect(count).toHaveText('None selected');
+  await alice.check();
+  await expect(count).toHaveText('1 member selected');
+  await bob.check();
+  await expect(count).toHaveText('2 members selected');
+  await alice.uncheck();
+  await expect(count).toHaveText('1 member selected');
+
+  await page.locator('[data-bulk-toggle]').check();
+  const selected = await page.locator('input[name="selected[]"]:checked').count();
+  await expect(count).toHaveText(`${selected} members selected`);
+  await shot(page, info, 'remediation-member-directory');
+});
+
+test('no-JS bulk validation preserves checked members and renders their count', async ({ browser, baseURL }, info) => {
+  desktopOnly(info);
+  const context = await (browser as Browser).newContext({
+    baseURL: baseURL!,
+    javaScriptEnabled: false,
+    viewport: { width: 1280, height: 900 },
+  });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin@retro.test');
+    await page.goto('/admin/users');
+    const alice = page.locator('tr', { hasText: 'alice' }).locator('input[name="selected[]"]');
+    const bob = page.locator('tr', { hasText: 'bob' }).locator('input[name="selected[]"]');
+    await alice.check();
+    await bob.check();
+    await page.getByRole('button', { name: 'Review and apply…' }).click();
+
+    await expect(page.getByRole('alert')).toContainText('Choose an action to apply to the selected members.');
+    await expect(page.locator('[data-bulk-selected-count]')).toHaveText('2 members selected');
+    await expect(alice).toBeChecked();
+    await expect(bob).toBeChecked();
+    await shot(page, info, 'remediation-member-directory-no-js-422');
+  } finally {
+    await context.close();
+  }
+});
+
 test('audit log lists actions and filters by action key', async ({ page }, info) => {
   desktopOnly(info);
   await login(page, 'admin@retro.test');
