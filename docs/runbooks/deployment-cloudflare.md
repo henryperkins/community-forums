@@ -410,30 +410,40 @@ at a second R2 bucket over the S3 API — egress is free.
 
 ## 14. Measured latency — the open performance problem
 
+**Status 2026-08-06: the DB move to `gcp-us-east4` is live.** Two separate
+latency wins landed in one cutover: the branch region AND the access hostname.
+
 Every page render is dominated by database round trips, not by PHP:
 
-| Measurement (from inside the container) | Value |
-| --- | --- |
-| PDO connect to PlanetScale | 0.20s |
-| 20 trivial `SELECT 1` round trips | 0.90s (**~45ms each**) |
-| `SELECT COUNT(*) FROM users` | 0.06s |
-| `GET /ping.txt` (static, no PHP) | ~0.00s |
-| `GET /healthz` before query-path work | ~2.8–4.8s |
-| `GET /` before query-path work | ~3.0–5.6s |
-| `GET /healthz` after `d6ab5b5` | ~0.52–0.83s |
-| `GET /` after `d6ab5b5` | ~1.42s observed |
-| Versioned `app.css` edge hit | ~0.15s |
-| Versioned `brand.css` edge hit | ~0.15s |
+| Measurement (from inside the container) | Before move | After move |
+| --- | --- | --- |
+| PDO connect to PlanetScale | 0.20s (us-central1) | ~0.13s |
+| `SELECT 1` round trip | ~45ms | **~11ms** |
+| `GET /healthz` (container-side) | ~0.52–0.83s | ~0.35s |
+| `GET /` (container-side) | ~1.42s observed | ~0.78s observed |
+| Public `GET /` TTFB | ~1.42s | **~0.56–0.85s** |
+| Versioned `app.css` edge hit | ~0.15s | ~0.15s |
+| Font burst (8 fonts, cold) | 0.7–3.2s each | **0.09–0.22s each** |
 
-The container currently runs in `ENAM` (observed node `ewr14`, Newark), but
-placement is unconstrained (`placement: {}` in the deployed Worker settings).
-The PlanetScale hostname uses rotating GCP addresses, so an address lookup is
-not a reliable region inventory. The Hyperdrive configuration created during
-the deployment investigation does expose the origin hostname:
-`gcp-us-central1.connect.psdb.cloud`, placing the database in GCP `us-central1`
-(Iowa). At ~45ms per query, a page issuing dozens of queries spends seconds
-waiting on the network, which is exactly what the public and container timings
-show.
+The container runs in `ENAM` (observed node `ewr14`, Newark) with
+`"constraints": {"regions": ["ENAM"]}` set. The database is PlanetScale
+`production-east` on GCP `us-east4` (Ashburn).
+
+**The access hostname matters as much as the branch region.** The generic
+anycast host `gcp.connect.psdb.cloud` resolved (at connection time) to a GCP LB
+in **Montréal** for this deployment, costing ~64ms per query from ENAM. The
+region-scoped host **`gcp-us-east4.connect.psdb.cloud`** routes to the regional
+LB and measures ~11ms per query from the container (10× `SELECT 1` = 107ms
+measured in situ, 2026-08-06). The production-east branch was created with
+`safe migrations` **off**, so the cutover was a straight promote; the generic
+host remains valid for the us-central1 rollback branch.
+
+Other 2026-08-06 changes: fonts (`/assets/fonts/`) now go through the Worker
+edge cache (`s-maxage=3600`) — previously every cold visit fired 8 uncached
+parallel font requests at the single container instance, which queues
+concurrent requests beyond ~7 at ~1s each; and the image now sets
+`opcache.validate_timestamps=0` (production container, files never change at
+runtime).
 
 The dashboard-added `HYPERDRIVE_VARIABLE` binding did not change this PHP
 topology. It was removed by the `d6ab5b5` source deployment: `worker/index.js`
@@ -446,15 +456,11 @@ This is the cost the `wrangler.jsonc` placement comment warns about, and it is
 **not** fixed by container sizing — the CPU is idle. The levers, in rough order
 of effect:
 
-1. **Move the database next to the container.** Pinning `ENAM` alone does not
-   improve the current `ewr14` → `us-central1` path because the container is
-   already in ENAM. Migrate the database to an eastern region near the
-   container, or move to a managed MySQL provider there. After that, constrain
-   the container so restarts cannot move it away. Current Wrangler syntax nests
-   placement under the container entry:
-   `"constraints": {"regions": ["ENAM"]}`. Do not add this until the database
-   migration target is confirmed. A same-region managed MySQL should put round
-   trips in the low single-digit milliseconds.
+1. **Move the database next to the container.** ✅ **Done 2026-08-06.** The
+   database migrated to `gcp-us-east4` and the container is pinned to ENAM.
+   Future placement changes must keep the pair in the same region and re-measure
+   the *access-host* route: a region-scoped hostname is required, the generic
+   anycast host is not location-predictable.
 2. **Reduce queries per render.** `d6ab5b5` landed request-level query metrics,
    a bulk settings read for the global shell, a request-memoized navigation
    snapshot shared by `shareViewGlobals()` and `HomeController`, and a true
@@ -464,11 +470,20 @@ of effect:
 3. Persistent connections would save the 0.20s connect, but not the per-query
    cost, which is the dominant term.
 
-### PlanetScale east-region migration
+### PlanetScale east-region migration — EXECUTED 2026-08-06
 
-The selected target is `gcp-us-east4` (Ashburn, Virginia), near the current
-ENAM container placement. PlanetScale does not move an existing production
-branch in place. Its documented region-change procedure is:
+Executed as documented below. Notes from the run: a new-region branch is
+**schema-only** (116 tables, zero rows) — the dump/restore is mandatory, not
+belt-and-suspenders. `pscale branch create` + dump (6s) + restore (45s) +
+promote took ~2 minutes total; the write-loss window is only what lands on
+`main` between the final dump and the app cutover. After promotion, switch
+`DB_HOST` to the **region-scoped** access host (`gcp-us-east4.connect.psdb.cloud`),
+not the generic one the CLI reports (`gcp.connect.psdb.cloud` routes through a
+distant anycast LB; measured 63.6ms/query vs 10.7ms/query from ENAM). The
+instance must be recreated for new Worker env vars to apply — the Containers
+SDK only applies `envVars` at container start, so a vars-only deploy does not
+reach a warm instance; force it with a real image change (any content change in
+the Docker build context produces a new digest and recreates the instance).
 
 1. Install/authenticate the PlanetScale CLI and create a new branch in the
    target region:
@@ -497,26 +512,37 @@ delete the old branch until parity and backup evidence are complete.
 
 ## 15. Current state
 
-As of 2026-08-04 the deployment serves traffic:
+As of 2026-08-06 the deployment serves traffic:
 
 - `https://forum.candidary.online/healthz` → `200 {"status":"ok","database":"ok"}`
-- Worker version `b266e6bd`, source commit `d6ab5b5`; container application
-  version 8 runs image digest `sha256:f4ebd113…` at observed node `ewr14`
-- PlanetScale `8.4.9-Vitess`, all **78** migrations applied
+- Worker version `109934a0`; container application version 11 runs image digest
+  `sha256:3ef28880…` at pinned node `ewr14` (`constraints.regions: ["ENAM"]`)
+- PlanetScale `8.4.11-Vitess`, branch **`production-east`** (`gcp-us-east4`,
+  production since 2026-08-06), all **80** migrations applied
+- `DB_HOST` = `gcp-us-east4.connect.psdb.cloud` (region-scoped; ~11ms/query from
+  the container), app credentials `production-app`; rollback branch `main`
+  (`gcp-us-central1`) retained with the old password
+- The generic `gcp.connect.psdb.cloud` anycast host was measured at 63.6ms/query
+  from ENAM (Montréal LB) — do not use it for this deployment
+- Fonts (`/assets/fonts/`) now edge-cached by the Worker (`s-maxage=3600`),
+  killing the cold-visit 8-request burst against the container
+- Image sets `opcache.validate_timestamps=0` (+256MB memory, 20k files)
 - R2 bucket `retroboards-data` mounted at `/data` via s3fs
-- Secrets set: `APP_KEY`, `DB_PASSWORD`, `R2_ACCESS_KEY_ID`,
+- Secrets set: `APP_KEY`, `DB_PASSWORD` (production-east), `R2_ACCESS_KEY_ID`,
   `R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_EMAIL_API_TOKEN`
 - `MAIL_DRIVER=cloudflare_smtp` with `noreply@candidary.online`; the sending
   domain is onboarded and the token secret is present
 - Four Cron Triggers are registered. A post-deploy `*/5` tick completed with
   both `runConsole` RPC calls reporting `outcome: ok` and no error logs
 - First-run setup is complete: `/` returns `200` and `/setup` redirects to `/`.
-- Worker Cache API verification observed `MISS` then `HIT` for the same
-  versioned `app.css` and `brand.css` URLs; hits return in ~0.15s
+- Worker Cache API verification observed `MISS` then `HIT` for versioned
+  `app.css`/`brand.css` and for fonts; hits return in ~0.1–0.15s
+- Latency after the 2026-08-06 move: public home TTFB ~0.56–0.85s (was ~1.42s),
+  warm browser load (LCP/FCP) ~0.9s, cold font burst 0.09–0.22s each
 - The deployed code is the published `deploy/cloudflare-production-20260804`
-  branch at `d6ab5b5`. It deliberately does **not** include the eight
-  feature-only Imladris admin/account commits on the separately published
-  `feat/imladris-admin-account` branch.
+  branch at `5fd1ba0`, fast-forwarded to `main`. It deliberately does **not**
+  include the eight feature-only Imladris admin/account commits on the
+  separately published `feat/imladris-admin-account` branch.
 - The throwaway Workers `rb-nginx-test` and `rb-egress-probe`, and their
   corresponding container apps, were deleted after confirming they had no
   custom domains, routes, or Cron Triggers. Only
@@ -524,9 +550,11 @@ As of 2026-08-04 the deployment serves traffic:
 
 Not yet done, tracked here so it is not lost:
 
-- Execute the `gcp-us-east4` PlanetScale migration above during a write-free
-  maintenance window.
 - Upgrade the Cloudflare zone before adding a method-aware `POST /login` WAF
   rate rule; the Free plan cannot express it.
 - Perform a recipient-level SMTP test send from `/admin/email`; configuration
   and cron execution are proven, but mailbox delivery has not yet been observed.
+- Web Analytics is injected by the zone but blocked by the app's strict CSP
+  (`script-src 'self'`, no nonce) — disable it in the dashboard or add
+  `static.cloudflareinsights.com` to `script-src`; it currently only produces a
+  console error.
