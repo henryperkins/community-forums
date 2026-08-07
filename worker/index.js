@@ -31,7 +31,8 @@ function isPublicAssetRequest(request) {
 	}
 	const url = new URL(request.url);
 	return url.pathname === "/brand.css"
-		|| (url.pathname.startsWith("/assets/") && url.searchParams.has("v"));
+		|| (url.pathname.startsWith("/assets/") && url.searchParams.has("v"))
+		|| url.pathname.startsWith("/assets/fonts/");
 }
 
 function withCacheStatus(response, status) {
