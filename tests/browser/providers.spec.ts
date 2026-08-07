@@ -52,11 +52,13 @@ async function login(page: Page, email: string): Promise<void> {
 
 async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+  // Structural state read: the enter and exit forms are mutually exclusive
+  // (theme_safe_mode.php:43-69), so the status prose can be reworded freely.
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  if (!await enter.isVisible({ timeout: 2000 }).catch(() => false)) {
     return false;
   }
 
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
   await enter.click();
   await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
   return true;

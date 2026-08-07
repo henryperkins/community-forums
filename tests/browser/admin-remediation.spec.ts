@@ -279,7 +279,7 @@ test('member record reveals PII only on audited demand and ban needs the typed u
   await banForm.locator('input[name="reason"]').fill('Rationale that must survive the failed confirm.');
   await banForm.locator('input[name="confirm_username"]').fill('wrong-name');
   await banForm.getByRole('button', { name: /Ban/ }).click();
-  await expect(page.locator('body')).toContainText('Type the member');
+  await expect(page.locator('body')).toContainText('The username does not match');
   await expect(page.locator('input[name="reason"][value*="survive"]')).toHaveCount(1);
   await shot(page, info, 'remediation-ban-typed-confirmation');
 });

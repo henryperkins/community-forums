@@ -74,21 +74,21 @@ $daysValue = array_key_exists('expires_in_days', $inviteOld) ? (string) $inviteO
                     <div class="table-scroll" tabindex="0" role="region" aria-label="Issued invitations">
                         <table class="audit member-invitations-table">
                             <thead>
-                                <tr><th scope="col">Created</th><th scope="col">By</th><th scope="col">Binding</th><th scope="col">Uses</th><th scope="col">Expires</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+                                <tr><th scope="col">Created</th><th scope="col">By</th><th scope="col">Binding</th><th scope="col" class="member-invitations-uses">Uses</th><th scope="col">Expires</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
                             </thead>
                             <tbody>
                             <?php foreach ($rows as $row): ?>
                                 <?php $inviteStatus = strtolower((string) $row['status']); ?>
                                 <tr>
                                     <td class="member-invitations-created"><?= $e(human_datetime((string) $row['created_at'])) ?></td>
-                                    <td><?= $e($row['creator_username'] ?? 'system') ?></td>
+                                    <td class="member-invitations-by"><?= $e($row['creator_username'] ?? 'system') ?></td>
                                     <td>
                                         <?php if ($row['email'] !== null): ?><?= $e($row['email']) ?>
                                         <?php elseif ($row['domain'] !== null): ?>@<?= $e($row['domain']) ?>
                                         <?php else: ?><span class="muted">any email</span><?php endif; ?>
                                     </td>
                                     <td class="member-invitations-uses"><?= (int) $row['used_count'] ?>/<?= (int) $row['max_uses'] ?></td>
-                                    <td><?= $row['expires_at'] !== null ? $e(human_datetime((string) $row['expires_at'])) : '—' ?></td>
+                                    <td class="member-invitations-expires"><?= $row['expires_at'] !== null ? $e(human_datetime((string) $row['expires_at'])) : '—' ?></td>
                                     <td><span class="member-invitations-status is-<?= $e($inviteStatus) ?>"><?= $e($inviteStatus) ?></span></td>
                                     <td class="member-invitations-actions">
                                         <?php if ($inviteStatus === 'active'): ?>

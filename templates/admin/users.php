@@ -1,7 +1,7 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 $this->layout('layout');
-$this->section('title', 'Members & invitations');
+$this->section('title', 'Directory');
 $this->section('variant', 'admin');
 $filters = $filters ?? [];
 $users = $users ?? [];

@@ -1,7 +1,6 @@
 <?php /** @var \App\Core\View $this */ ?>
 <?php
 $this->layout('layout');
-$this->section('title', 'Members & invitations');
 $this->section('variant', 'admin');
 $action = (string) ($action ?? 'warn');
 $isSuspend = $action === 'suspend';
@@ -21,6 +20,8 @@ foreach ($subjects as $subject) {
     $subjectRows[] = ['subject' => $subject, 'skipped' => $skipped];
 }
 $verb = $isSuspend ? 'Suspend' : 'Warn';
+// Drill-ins name the action, not the area (cf. structure_confirm, tag_merge_confirm).
+$this->section('title', $verb . ' members');
 ?>
 <?= $this->partial('admin/_member_tabs', ['active' => 'directory', 'pane_class' => 'member-bulk-confirm']) ?>
     <a class="admin-back member-bulk-back" href="/admin/users">

@@ -228,6 +228,18 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .btn.danger, .danger { color: var(--danger); }
 .btn.danger { background: var(--danger); color: #fff; }
 .btn.danger:hover { background: color-mix(in srgb, var(--danger) 82%, #000); }
+/* --danger deliberately flips to a light rust tint for dark surfaces (#DB8C73),
+   which is right for destructive *text* and wrong as a *fill* behind white ink —
+   the design system's own pairing (components.css:33) measures 3.2:1 there. Pin
+   the fill to the fixed rust the light register already shows, so the button
+   looks the same in both and white ink stays at 6.2:1. Both dark registers,
+   because layout.php defaults data-theme to `system`. */
+[data-theme="dark"] .btn.danger { background: var(--rust); color: #fff; }
+[data-theme="dark"] .btn.danger:hover { background: color-mix(in srgb, var(--rust) 82%, #000); }
+@media (prefers-color-scheme: dark) {
+    [data-theme="system"] .btn.danger { background: var(--rust); color: #fff; }
+    [data-theme="system"] .btn.danger:hover { background: color-mix(in srgb, var(--rust) 82%, #000); }
+}
 /* Secondary (parchment outline) + ghost (quiet wash) — referenced by templates,
    previously undefined so they fell back to the primary fill. */
 .btn-secondary {
@@ -10007,7 +10019,9 @@ body.thread-restructure-open { overflow: hidden; }
 /* Directory and bulk confirmation. The design's table card remains wrapped
    by the shipped focusable scroll region (ADR 0021 / ADR 0023). */
 .admin-console .admin-members.member-directory,
-.admin-console .admin-members.member-bulk-confirm {
+.admin-console .admin-members.member-bulk-confirm,
+.admin-console .admin-members.member-record,
+.admin-console .admin-members.member-invitations {
     gap: 0;
 }
 .admin-console .member-directory-filters {
@@ -10189,13 +10203,17 @@ body.thread-restructure-open { overflow: hidden; }
     line-height: normal;
     text-transform: none;
 }
+/* Semantic pairs, never the numbered ramp: --green-800 and --gold-700 are fixed
+   values that do not flip, so pairing them with a flipping wash collapses to
+   1.1:1 in twilight. This is the same regression the mirror's
+   --surface-staff/--on-staff correction fixed for the staff badge and presence chip. */
 .admin-console .member-directory-role.is-admin {
-    background: var(--brand-subtle);
-    color: var(--green-800);
+    background: var(--surface-done);
+    color: var(--on-done);
 }
 .admin-console .member-directory-role.is-moderator {
-    background: var(--gold-100);
-    color: var(--gold-700);
+    background: var(--surface-staff);
+    color: var(--on-staff);
 }
 .admin-console .member-directory-board-mod {
     margin-left: 5px;
@@ -10225,8 +10243,12 @@ body.thread-restructure-open { overflow: hidden; }
     height: 6px;
     background: var(--ink-300);
 }
+/* The design paints this .72rem label with --success (AdminMembers.dc.html:120),
+   which resolves to --green-400 in twilight: 4.44:1 on the raised surface. Keep
+   the green family and the design's --leaf dot, but take the dark-safe
+   foreground for the text, exactly as C-38/C-42 do for the river-blue links. */
 .admin-console .member-directory-state.is-active {
-    color: var(--success);
+    color: var(--on-done);
 }
 .admin-console .member-directory-state.is-active::before {
     background: var(--leaf);
@@ -10474,5 +10496,656 @@ body.thread-restructure-open { overflow: hidden; }
     .member-bulk-skipped {
         flex-basis: 100%;
         margin-left: 38px;
+    }
+}
+
+/* --- Imladris admin members — record & invitations (Slice 11) ------------- */
+/* The design's per-node inline styles become external classes (C-01); the
+   rendered result matches AdminMembers.dc.html:205-509 value for value. The
+   decorative amRise entrance is not adopted — no other console surface imports
+   it and the keyframe ships nowhere in production. */
+
+/* Record — identity row */
+.admin-console .member-record-back {
+    margin-bottom: 14px;
+}
+.member-record-identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+.member-record-monogram {
+    display: inline-flex;
+}
+.member-record-monogram .monogram {
+    width: 64px;
+    height: 64px;
+    font-size: 1.5rem;
+}
+.admin-console .member-record-identity h2 {
+    margin: 0;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1.1;
+}
+.member-record-handle {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+
+/* Record — shared card anatomy */
+.admin-console .member-record-card {
+    margin: 0;
+    padding: 20px 22px;
+    overflow: visible;
+}
+.admin-console .member-record-card > h3 {
+    margin: 0 0 14px;
+    color: var(--gold-ink);
+    font-family: var(--font-label);
+    font-size: .68rem;
+    font-weight: 400;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.admin-console .member-record-contact > h3,
+.admin-console .member-record-restrictions > h3,
+.admin-console .member-record-title > h3 {
+    margin-bottom: 6px;
+}
+.member-record-copy {
+    max-width: 60ch;
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    font-size: .9rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+.member-record-copy strong {
+    color: var(--text-strong);
+}
+.member-record-copy code {
+    font-family: var(--font-mono);
+    font-size: .82rem;
+}
+.member-record-empty {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: .9rem;
+    font-style: italic;
+}
+
+/* Record — Status card */
+.member-record-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 18px;
+    align-items: start;
+}
+.member-record-status-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 14px 18px;
+    margin: 0;
+}
+.member-record-status-list dt,
+.member-record-pii-list dt {
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .64rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.member-record-status-list dd {
+    margin: 4px 0 0;
+    color: var(--text-strong);
+    font-size: .98rem;
+}
+/* The six terms are fixed in design order — Role · State · Reputation · Posts ·
+   Joined · Last seen — and pinned as such by AppAdminUserRecordTest, so the
+   design's per-term type is addressed positionally rather than by extra markup. */
+.member-record-status-list div:nth-child(3) dd,
+.member-record-status-list div:nth-child(4) dd {
+    font-family: var(--font-mono);
+    font-size: .95rem;
+}
+.member-record-status-list div:nth-child(5) dd,
+.member-record-status-list div:nth-child(6) dd {
+    color: var(--text-body);
+    font-size: .95rem;
+}
+.member-record-suspended {
+    margin: 14px 0 0;
+    padding: 9px 13px;
+    border-radius: var(--radius-md);
+    background: var(--surface-review);
+    color: var(--on-review);
+    font-size: .9rem;
+}
+.member-record-profile-link {
+    margin: 14px 0 0;
+}
+.admin-console .member-record-profile-link a {
+    color: var(--accent);
+    font-size: .92rem;
+}
+
+/* Record — Contact & signals */
+.admin-console .member-record-contact .member-record-copy {
+    margin: 0 0 14px;
+    font-size: .92rem;
+    line-height: 1.55;
+}
+.member-record-pii-list {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    margin: 12px 0 0;
+}
+.member-record-pii-value {
+    margin: 4px 0 0;
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+.member-record-pii-list div:first-child .member-record-pii-value {
+    color: var(--text-strong);
+}
+.admin-console .member-record-contact .member-record-pii-list ~ .member-record-copy {
+    margin: 13px 0 0;
+    font-size: .88rem;
+}
+
+/* Record — Account restrictions */
+.admin-console .member-record-restrictions {
+    margin-top: 18px;
+}
+.member-record-restriction-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 18px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background: var(--surface-review);
+}
+.member-record-restriction-banner > span {
+    color: var(--on-review);
+    font-size: .93rem;
+}
+.member-record-restriction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 22px;
+    margin-top: 14px;
+}
+.admin-console .member-record-restriction-grid h4,
+.admin-console .member-record-history-grid h4 {
+    margin: 0 0 4px;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+.admin-console .member-record-history-grid h4 {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+/* Record — form controls (design lines 263-357) */
+.admin-console .member-record-form {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    margin: 0;
+}
+.admin-console .member-record-form .field,
+.admin-console .member-record-title-controls .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    margin: 0;
+}
+.admin-console .member-record-form .field > span:first-child,
+.admin-console .member-record-title-controls .field > span:first-child {
+    margin: 0;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    font-weight: 400;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+.admin-console .member-record-form .input,
+.admin-console .member-record-title-controls .input {
+    box-sizing: border-box;
+    padding: 8px 11px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-page);
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: .92rem;
+    box-shadow: none;
+}
+.admin-console .member-record-form select.input {
+    appearance: auto;
+    padding-right: 11px;
+    background-image: none;
+}
+.admin-console .member-record-form input[type="password"],
+.admin-console .member-record-form input[name="until"],
+.admin-console .member-record-form input[name="confirm_username"] {
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+.admin-console .member-record-form textarea.input {
+    padding: 9px 12px;
+    font-size: .93rem;
+    line-height: 1.5;
+    resize: vertical;
+}
+.admin-console .member-record-form .input:focus-visible,
+.admin-console .member-record-title-controls .input:focus-visible {
+    outline: none;
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.admin-console .member-record-form .form-actions {
+    margin: 0;
+}
+.admin-console .member-record-note-form {
+    margin-top: 6px;
+}
+
+/* Record — second card grid; the flag-gated Profile media cell is production's
+   (FA: profile_media), placed between Cosmetic title and Badges. */
+.member-record-action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+    align-items: start;
+}
+.member-record-media-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.member-record-media-row .avatar-img {
+    width: 64px;
+    height: 64px;
+}
+
+/* Record — Cosmetic title. Production splits Save and Clear into two forms so a
+   no-JS submit is unambiguous (ledger M2, feature-changed); `display: contents`
+   keeps the design's single field-then-button-pair composition. */
+.member-record-title-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 9px;
+}
+.admin-console .member-record-title-save {
+    display: contents;
+}
+.admin-console .member-record-title-save .field {
+    flex: 1 1 100%;
+}
+.admin-console .member-record-title-save > .field-error {
+    flex: 1 1 100%;
+    margin: 0;
+}
+.admin-console .member-record-title-clear {
+    margin: 0;
+}
+
+/* Record — Badges */
+.member-record-badge-list {
+    margin: 6px 0 0;
+    padding: 0;
+    border-top: 1px solid var(--border-hair);
+    list-style: none;
+}
+.member-record-badge-list li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-hair);
+    color: var(--text-body);
+    font-size: .95rem;
+}
+.member-record-badge-icon {
+    color: var(--star);
+    font-size: .95rem;
+}
+.admin-console .member-record-badge-list .linkbtn.danger,
+.admin-console .member-invitations-actions .linkbtn.danger {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--danger);
+    font-family: var(--font-label);
+    font-size: .74rem;
+}
+.admin-console .member-record-badge-list .linkbtn.danger {
+    margin-left: auto;
+}
+.admin-console .member-record-badge-list .linkbtn.danger:hover,
+.admin-console .member-invitations-actions .linkbtn.danger:hover {
+    text-decoration: underline;
+}
+
+/* Record — History */
+.admin-console .member-record-history {
+    margin-top: 18px;
+}
+.member-record-history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+.member-record-history-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.member-record-history-list li {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.member-record-when {
+    display: block;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: .74rem;
+}
+.member-record-body {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-body);
+    font-size: .93rem;
+}
+.member-record-audit-action {
+    font-family: var(--font-mono);
+    font-size: .86rem;
+}
+.member-record-by,
+.member-record-ban-period {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-faint);
+    font-size: .84rem;
+}
+.member-record-ban-period {
+    display: inline;
+    margin-top: 0;
+}
+.member-record-audit-link {
+    margin: 11px 0 0;
+}
+.admin-console .member-record-audit-link a {
+    color: var(--accent);
+    font-size: .9rem;
+}
+
+/* Invitations — the show-once panel (never the cookie-backed Flash) */
+.member-invitations-once {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding: 13px 17px;
+    border: 1px solid var(--gold-200);
+    border-left: 3px solid var(--gold-500);
+    border-radius: var(--radius-md);
+    background: var(--gold-soft);
+}
+.member-invitations-once strong {
+    /* The design inks this on the gold wash with --gold-700, which measures
+       3.55:1 — the very pairing LOCAL_RECONCILIATION corrects for the staff badge.
+       Keep the wash, take the semantic foreground. */
+    color: var(--on-staff);
+    font-family: var(--font-label);
+    font-size: .8rem;
+    letter-spacing: .03em;
+}
+.member-invitations-once code {
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    color: var(--text-strong);
+    font-family: var(--font-mono);
+    font-size: .84rem;
+    overflow-wrap: anywhere;
+}
+
+/* Invitations — two-column composition */
+.member-invitations-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 400px) 1fr;
+    gap: 18px;
+    align-items: start;
+}
+/* Grid items default to min-width:auto, so the 560px-min invitations table would
+   stretch its card and then the document — `.admin-pane > *` only reaches the
+   pane's own children. Let the card shrink and the labelled scroll region scroll. */
+.member-invitations-grid > *,
+.member-record-summary-grid > *,
+.member-record-action-grid > *,
+.member-record-restriction-grid > *,
+.member-record-history-grid > * {
+    min-width: 0;
+}
+.admin-console .member-invitations-issue {
+    margin: 0;
+    padding: 20px 22px;
+    overflow: visible;
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .member-invitations-issue > h2 {
+    margin: 0 0 6px;
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 500;
+}
+.member-invitations-copy {
+    max-width: 60ch;
+    margin: 0 0 16px;
+    color: var(--text-muted);
+    font-size: .92rem;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.admin-console .member-invitations-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+}
+.admin-console .member-invitations-form .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    margin: 0;
+}
+.admin-console .member-invitations-form .field > span:first-child {
+    margin: 0;
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    font-weight: 400;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+.admin-console .member-invitations-form .input {
+    box-sizing: border-box;
+    padding: 8px 11px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-page);
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: .92rem;
+    box-shadow: none;
+}
+.admin-console .member-invitations-form select.input {
+    appearance: auto;
+    padding-right: 11px;
+    background-image: none;
+}
+.admin-console .member-invitations-form input[type="number"] {
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+.admin-console .member-invitations-form .input:focus-visible {
+    outline: none;
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.member-invitations-number-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.admin-console .member-invitations-form .form-actions {
+    margin: 0;
+}
+
+/* Invitations — issued list. The card keeps the ADR 0021 focusable scroll
+   region; the design's bare overflow-x section is not a substitute for it. */
+.admin-console .member-invitations-list {
+    margin: 0;
+    padding: 6px 20px 10px;
+    overflow: visible;
+    box-shadow: var(--shadow-sm);
+}
+.member-invitations-empty {
+    margin: 14px 0;
+    color: var(--text-muted);
+    font-size: .9rem;
+    font-style: italic;
+}
+.admin-console .member-invitations-list .table-scroll > .member-invitations-table {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+    font-size: .92rem;
+}
+.admin-console .member-invitations-table th {
+    padding: 11px 10px 9px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text-faint);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    font-weight: 400;
+    letter-spacing: .12em;
+    text-align: left;
+    text-transform: uppercase;
+}
+.admin-console .member-invitations-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-hair);
+    color: var(--text-body);
+}
+.admin-console .member-invitations-table th:first-child,
+.admin-console .member-invitations-table td:first-child {
+    padding-left: 0;
+}
+.admin-console .member-invitations-table th:last-child,
+.admin-console .member-invitations-table td:last-child {
+    padding-right: 0;
+}
+.admin-console .member-invitations-table th.member-invitations-uses,
+.admin-console .member-invitations-table td.member-invitations-uses,
+.admin-console .member-invitations-table td.member-invitations-actions {
+    text-align: right;
+}
+/* The design's table is six columns of fixture-short values; production adds the
+   issuer column (FA-14) and renders real UTC datetimes, so inside the design's
+   1fr right column the atomic cells would otherwise wrap mid-word ("admi/n",
+   "activ/e"). Keep them whole and let the shipped scroll region earn its keep —
+   which is what the design's own `overflow-x: auto` section anticipated. */
+.admin-console .member-invitations-table th,
+.admin-console .member-invitations-table td.member-invitations-created,
+.admin-console .member-invitations-table td.member-invitations-expires,
+.admin-console .member-invitations-table td.member-invitations-uses,
+.admin-console .member-invitations-table td.member-invitations-by,
+.admin-console .member-invitations-table td.member-invitations-actions,
+.admin-console .member-invitations-table .member-invitations-status {
+    white-space: nowrap;
+}
+.admin-console .member-invitations-table td.member-invitations-created {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: .8rem;
+}
+.admin-console .member-invitations-table td.member-invitations-uses {
+    font-family: var(--font-mono);
+    font-size: .82rem;
+}
+.admin-console .member-invitations-table td.member-invitations-expires {
+    color: var(--text-muted);
+    font-size: .88rem;
+}
+.member-invitations-status {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .06em;
+}
+.member-invitations-status.is-active {
+    background: var(--surface-done);
+    color: var(--on-done);
+}
+.member-invitations-status.is-revoked {
+    background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised));
+    color: var(--danger);
+}
+
+@media (max-width: 860px) {
+    .member-invitations-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-console .member-record-card,
+    .admin-console .member-invitations-issue {
+        padding-inline: 16px;
+    }
+    .admin-console .member-invitations-list {
+        padding-inline: 16px;
+    }
+    .member-record-identity {
+        gap: 12px;
+    }
+    .member-record-monogram .monogram {
+        width: 52px;
+        height: 52px;
+        font-size: 1.25rem;
+    }
+    .admin-console .member-record-identity h2 {
+        font-size: 1.6rem;
+    }
+    .member-invitations-number-grid {
+        grid-template-columns: 1fr;
     }
 }

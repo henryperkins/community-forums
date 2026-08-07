@@ -49,11 +49,16 @@ async function login(page: Page, email: string): Promise<void> {
 
 async function enterThemeSafeMode(page: Page): Promise<boolean> {
   await page.goto('/admin/themes/safe-mode');
-  if (await page.getByText('Safe mode is on. The built-in system theme is being served.', { exact: true }).isVisible()) {
+  // Read the state structurally, not from prose: the enter and exit forms are
+  // mutually exclusive (theme_safe_mode.php:43-69), so the enter button's absence
+  // is the state. Matching the status sentence broke silently when the Imladris
+  // appearance slice reworded it and left this helper clicking a button that the
+  // already-on page never renders.
+  const enter = page.getByRole('button', { name: 'Enter safe mode' });
+  if (!await enter.isVisible({ timeout: 2000 }).catch(() => false)) {
     return false;
   }
 
-  const enter = page.getByRole('button', { name: 'Enter safe mode' });
   await enter.click();
   await expect(page.getByRole('status').getByText('Theme safe mode is on.')).toBeVisible();
   return true;
@@ -102,6 +107,9 @@ test.afterAll(async ({ browser }) => {
 });
 
 test('invitations: show-once issue + revoke console, invite-only registration, uniform invalid banner (axe-clean)', async ({ page }, info) => {
+  // Six full-page captures (2x on mobile), two axe passes and a full registration
+  // round trip do not fit the 30s default at the phone viewport.
+  test.setTimeout(120_000);
   const who = `${info.project.name}${Date.now().toString(36)}`.replace(/[^a-zA-Z0-9]/g, '').slice(-12);
 
   await login(page, 'admin@retro.test');

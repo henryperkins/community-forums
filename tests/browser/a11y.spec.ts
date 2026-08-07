@@ -557,8 +557,8 @@ test('phase 4 profile media panels have no serious axe violations', async ({ pag
   await visit(page, '/admin/users');
   await page.getByRole('link', { name: 'bob', exact: true }).click();
   await page.waitForURL(/\/admin\/users\/\d+$/);
-  await expect(page.locator('.profile-media-card')).toBeVisible();
-  await expectNoSeriousA11yViolations(page, info, '.profile-media-card');
+  await expect(page.locator('.member-record-profile-media')).toBeVisible();
+  await expectNoSeriousA11yViolations(page, info, '.member-record-profile-media');
 });
 
 test('phase 4 custom emoji surfaces have no serious axe violations', async ({ page }, info) => {

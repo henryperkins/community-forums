@@ -782,7 +782,7 @@ test('phase 4 profile media: avatar upload, signature, and admin moderation', as
   await page.getByRole('link', { name: 'bob', exact: true }).click();
   await page.waitForURL(/\/admin\/users\/\d+$/);
 
-  const profileMedia = page.locator('.profile-media-card');
+  const profileMedia = page.locator('.member-record-profile-media');
   await expect(profileMedia).toBeVisible();
   await expect(profileMedia.getByRole('button', { name: 'Remove avatar' })).toBeVisible();
   await expect(profileMedia.getByRole('button', { name: 'Remove signature' })).toBeVisible();
@@ -1224,7 +1224,10 @@ test('admin per-user record: badges + title', async ({ page }, info) => {
   await page.waitForURL(/\/admin\/users\/\d+$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Members & invitations' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Directory');
-  await expect(page.getByRole('heading', { level: 2, name: /bob/ })).toBeVisible();
+  // The record leads with the design's identity row: the display name is the h2 and
+  // the @handle sits beneath it (AdminMembers.dc.html:210-211), not inside the heading.
+  await expect(page.getByRole('heading', { level: 2, name: /bob/i })).toBeVisible();
+  await expect(page.locator('.member-record-handle')).toHaveText('@bob');
 
   // Grant a manual badge (no-JS form post).
   await page.locator('form[action$="/badges/grant"] select[name="slug"]').selectOption('staff');
@@ -1232,7 +1235,7 @@ test('admin per-user record: badges + title', async ({ page }, info) => {
   await page.waitForURL(/\/admin\/users\/\d+$/);
   // Scope to the held-badges list: a bare getByText('Staff') would also match the
   // (non-visible) <option> in the grant <select>, which precedes it in the DOM.
-  await expect(page.locator('ul.link-list').getByText('Staff')).toBeVisible();
+  await expect(page.locator('ul.member-record-badge-list').getByText('Staff')).toBeVisible();
   await shot(page, info, '15-admin-user-record');
 
   // Revoke it.
