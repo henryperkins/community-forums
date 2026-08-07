@@ -22,13 +22,13 @@
       "max_instances": 1,
       // 1/2 vCPU, 4 GiB, 8 GB disk. `basic` (1/4 vCPU, 1 GiB) also runs it but
       // leaves little headroom for Apache + PHP under concurrent renders.
-      "instance_type": "standard-1"
-      // Placement: pin the container near your managed MySQL, or every page
-      // render pays cross-region latency on multiple round trips. Confirm the
-      // database region first, then add the current Containers syntax:
-      // "constraints": {
-      //   "regions": ["ENAM"]
-      // }
+      "instance_type": "standard-1",
+      // Pin the container to ENAM (current node ewr14). Safe now that the
+      // database lives in gcp-us-east4 (Ashburn) -- see docs/runbooks/
+      // deployment-cloudflare.md §14. Added with the 2026-08-06 DB move.
+      "constraints": {
+        "regions": ["ENAM"]
+      }
     }
   ],
 
@@ -60,14 +60,17 @@
     "MAIL_FROM_NAME": "",
     "MAIL_TIMEOUT_SECONDS": "30",
 
-    // PlanetScale, reached over the public internet. Only DB_PASSWORD is a
+    // PlanetScale, reached over the public internet. Region-scoped access host
+    // (gcp-us-east4 = Ashburn): the generic anycast host (gcp.connect.psdb.cloud)
+    // routes ewr14 traffic via a Montréal LB and costs ~64ms/query; the
+    // regional host measures ~11ms/query from ENAM. Only DB_PASSWORD is a
     // secret. PlanetScale serves a publicly-trusted certificate, so the trust
     // anchor is the distro CA bundle already in the image -- no DB_SSL_CA_PEM
     // secret is needed.
-    "DB_HOST": "gcp.connect.psdb.cloud",
+    "DB_HOST": "gcp-us-east4.connect.psdb.cloud",
     "DB_PORT": "3306",
     "DB_DATABASE": "imladris-db",
-    "DB_USERNAME": "yp6zfl84gzwfsatq09b5",
+    "DB_USERNAME": "6k06usb0aevvpn69bmmf",
     "DB_SSL": "true",
     "DB_SSL_CA": "/etc/ssl/certs/ca-certificates.crt",
 
