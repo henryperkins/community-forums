@@ -11149,3 +11149,484 @@ body.thread-restructure-open { overflow: hidden; }
         grid-template-columns: 1fr;
     }
 }
+
+/* --- Imladris admin integrations (Slice 12) ------------------------------- */
+/* Tokens, webhooks and sign-in providers. The design's flash and one-time
+   secret plates are console chrome, so they are scoped to .admin-console
+   rather than repainting every forum surface's .flash. */
+@keyframes aiRise {
+    /* The reference fades this status text from transparent. That composites an
+       otherwise AA-safe foreground below 4.5:1 during the entry; keep its rise
+       and duration, but leave the message fully legible in every frame. */
+    from { transform: translateY(6px); }
+    to { transform: none; }
+}
+.admin-console .flash {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--success);
+    border-radius: var(--radius-md);
+    font-size: .93rem;
+    line-height: 1.5;
+    animation: aiRise 200ms var(--ease-calm) both;
+}
+/* The check is a mask, not markup: partials/flash is shared with every other
+   surface, and a masked pseudo-element keeps the icon token-driven so it flips
+   with --on-done instead of baking one register's ink into a data URI. */
+.admin-console .flash::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    background: var(--on-done);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8.5 12.4l2.4 2.4 4.6-5'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M8.5 12.4l2.4 2.4 4.6-5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.admin-console > .flash { margin: 20px 0 0; }
+.admin-pane > .flash { margin: 0; }
+.admin-console .flash-error { border-left-color: var(--rust); }
+.admin-console .flash-error::before {
+    background: var(--danger);
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4.5 21 19.5H3z'/%3E%3Cpath d='M12 10v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4.5 21 19.5H3z'/%3E%3Cpath d='M12 10v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+}
+/* A minted credential is not a success message — the design gives it a gold
+   plate. --surface-staff/--on-staff is the gilt semantic pair; the design's
+   raw --gold-700 ink does not flip and measures badly on the twilight wash. */
+.admin-console .flash-secret {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 13px 17px;
+    background: var(--surface-staff);
+    border-color: color-mix(in srgb, var(--gold-500) 34%, transparent);
+    border-left: 3px solid var(--gold-500);
+    color: var(--on-staff);
+}
+.admin-console .flash-secret::before { display: none; }
+.admin-console .flash-secret strong {
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: .8rem;
+    letter-spacing: .03em;
+    color: var(--on-staff);
+}
+.admin-console .flash-secret code {
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-mono);
+    font-size: .84rem;
+    color: var(--text-strong);
+}
+
+/* Panel geometry: the create/register card beside its table. */
+.admin-console .admin-integrations { gap: 0; }
+.integrations-two-up {
+    display: grid;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+.integrations-two-up > * { min-width: 0; }
+.admin-console .integrations-form-card,
+.admin-console .integrations-add-card,
+.admin-console .webhook-detail-card,
+.admin-console .provider-disable-card {
+    margin: 0;
+    padding: 20px 22px;
+    overflow: visible;
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .integrations-add-card { max-width: 560px; margin-top: 18px; }
+.admin-console .provider-disable-card { max-width: 720px; padding: 22px 24px; }
+.admin-console .integrations-table-card {
+    margin: 0;
+    padding: 6px 20px 10px;
+    overflow: visible;
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .integrations-form-card > h2:first-child,
+.admin-console .integrations-add-card > h2:first-child {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: var(--text-strong);
+}
+.admin-console .integrations-table-card > h3 {
+    margin: 15px 0 10px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.2rem;
+    color: var(--text-strong);
+}
+.integrations-card-intro {
+    margin: 0 0 10px;
+    font-size: .92rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.integrations-card-intro code,
+.integrations-hint code,
+.integrations-env-hint code,
+.provider-disable-blurb code {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+}
+.integrations-intro {
+    margin: 0;
+    max-width: 92ch;
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.admin-console .integrations-providers > .integrations-intro { margin-bottom: 18px; }
+
+/* Form anatomy: the design's uppercase micro-label needs a real <span>, so
+   every label in this area carries one. */
+.admin-console .admin-integrations .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0;
+}
+.admin-console .admin-integrations .field > span:first-child {
+    margin: 0;
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: .66rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.admin-console .admin-integrations .input {
+    box-sizing: border-box;
+    margin-top: 0;
+    padding: 8px 11px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background-color: var(--surface-page);
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: .92rem;
+    box-shadow: none;
+}
+.admin-console .admin-integrations .input:focus-visible {
+    outline: none;
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.admin-console .admin-integrations .integrations-mono-input,
+.admin-console .admin-integrations .integrations-url-input,
+.admin-console .admin-integrations .integrations-secret-input,
+.admin-console .admin-integrations .integrations-number {
+    font-family: var(--font-mono);
+    font-size: .86rem;
+}
+.admin-console .admin-integrations label.field-compact { max-width: 200px; }
+.admin-console .admin-integrations label.field-narrow { max-width: 320px; }
+.admin-console .admin-integrations .stacked { display: flex; flex-direction: column; gap: 13px; }
+.admin-console .admin-integrations .stacked > .field-error { margin: -8px 0 0; }
+.admin-console .admin-integrations .form-actions { margin-top: 1px; }
+.integrations-hint {
+    margin: -8px 0 0;
+    max-width: 64ch;
+    font-size: .82rem;
+    line-height: 1.45;
+    color: var(--text-faint);
+}
+.admin-console .integrations-checkset {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+}
+.admin-console .integrations-checkset > legend {
+    padding: 0 6px;
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: .64rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.admin-console .admin-integrations .integrations-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 0;
+    padding: 5px 0;
+    cursor: pointer;
+}
+.admin-console .admin-integrations .integrations-check input[type="checkbox"] {
+    flex: 0 0 auto;
+    margin-top: 3px;
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+.integrations-check > span {
+    font-size: .89rem;
+    line-height: 1.45;
+    color: var(--text-body);
+}
+.integrations-check code {
+    padding: 0;
+    background: none;
+    font-family: var(--font-mono);
+    font-size: .8rem;
+    color: var(--text-strong);
+}
+.integrations-field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 13px;
+}
+
+/* Tables. Every one keeps its shipped focusable, labelled scroll region. */
+/* The reference tables use their content to size columns. The legacy audit
+   table is fixed-layout, which split token scopes and status words mid-word. */
+.admin-console .integrations-table {
+    table-layout: auto;
+    font-size: .92rem;
+}
+.admin-console .table-scroll > .integrations-tokens-table { min-width: 620px; }
+.admin-console .table-scroll > .integrations-hooks-table { min-width: 560px; }
+.admin-console .table-scroll > .integrations-deliveries-table { min-width: 520px; }
+.admin-console .table-scroll > .integrations-providers-table { min-width: 820px; }
+.admin-console .integrations-table th { padding: 14px 10px 9px; }
+.admin-console .integrations-table td { padding: 11px 10px; vertical-align: middle; }
+.admin-console .integrations-table th:first-child,
+.admin-console .integrations-table td:first-child { padding-left: 0; }
+.admin-console .integrations-table th:last-child,
+.admin-console .integrations-table td:last-child { padding-right: 0; }
+/* Beat .admin-console .audit th's legacy left alignment without leaking this
+   number treatment to unrelated admin tables. */
+.admin-console .integrations-table .integrations-col-numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.admin-console .integrations-col-actions {
+    text-align: right;
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+.admin-console .integrations-table .integrations-strong { color: var(--text-strong); }
+.admin-console .integrations-table td.integrations-mono {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+/* Scope identifiers are one API contract token, never two wrapped fragments.
+   The labelled scroll region handles the rare narrow-table case. */
+.admin-console .integrations-tokens-table td.integrations-mono {
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+.admin-console .integrations-table td.integrations-when,
+.admin-console .integrations-table td.integrations-quiet {
+    font-size: .86rem;
+    color: var(--text-muted);
+}
+.admin-console .integrations-table td.integrations-col-numeric {
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    color: var(--text-body);
+}
+.admin-console .integrations-table td.integrations-error-cell {
+    font-size: .86rem;
+    color: var(--text-muted);
+}
+.admin-console .integrations-table .state { white-space: nowrap; }
+.admin-console .integrations-table td.integrations-empty {
+    color: var(--text-muted);
+    font-size: .88rem;
+}
+.integrations-placeholder { color: var(--text-faint); }
+.admin-console .integrations-rowbtn {
+    font-family: var(--font-label);
+    font-size: .74rem;
+    letter-spacing: .02em;
+}
+.admin-console .integrations-rowbtn:hover { text-decoration: underline; }
+.admin-console .integrations-error-cell .inline-form { display: inline-flex; margin-left: 8px; }
+.admin-console .state-delivered {
+    background: var(--surface-done);
+    color: var(--on-done);
+}
+.admin-console .state-dead {
+    background: color-mix(in srgb, var(--rust) 12%, var(--surface-raised));
+    color: var(--danger);
+}
+.state-delivered::before { background: var(--leaf); }
+.state-dead::before { background: var(--rust); }
+
+/* Webhook detail: one card, action row above the fields, per the design. */
+.webhook-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 9px 12px;
+    margin-bottom: 18px;
+}
+.webhook-reauth-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 9px;
+}
+.webhook-reauth-form > .field-error { flex: 1 0 100%; margin: 0; }
+.integrations-danger-note {
+    margin: 18px 0 0;
+    max-width: 70ch;
+    font-size: .88rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+.webhook-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 11px 14px;
+    margin-top: 12px;
+}
+
+/* Providers table row anatomy. */
+.provider-key {
+    padding: 0;
+    background: none;
+    font-family: var(--font-mono);
+    font-size: .76rem;
+    color: var(--text-faint);
+}
+.admin-console .integrations-table td.provider-health {
+    font-size: .86rem;
+    color: var(--text-body);
+}
+.provider-health-when { color: var(--text-muted); }
+.provider-status {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .06em;
+}
+.provider-status.is-on {
+    background: var(--surface-done);
+    color: var(--on-done);
+}
+.provider-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 12px;
+}
+.provider-enable-form {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 9px;
+    text-align: left;
+}
+.provider-enable-form > .field-error { flex: 1 0 100%; margin: 0; }
+.integrations-env-hint {
+    font-size: .82rem;
+    color: var(--text-faint);
+    white-space: normal;
+}
+
+/* The disable drill-in. */
+.provider-disable-blurb {
+    margin: 0 0 16px;
+    max-width: 70ch;
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--text-body);
+    text-wrap: pretty;
+}
+.provider-disable-none {
+    margin: 0 0 16px;
+    font-size: .92rem;
+    color: var(--text-muted);
+}
+.provider-sole-warning {
+    margin: 0 0 14px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--rust);
+    border-radius: var(--radius-md);
+    background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised));
+    font-size: .92rem;
+    line-height: 1.55;
+    color: var(--danger);
+    text-wrap: pretty;
+}
+.provider-sole-region { margin: 0 0 18px; }
+.provider-sole-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border-hair);
+}
+.provider-sole-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.provider-sole-row .monogram {
+    width: 28px;
+    height: 28px;
+    font-size: .72rem;
+}
+.provider-sole-name { font-size: .95rem; }
+.provider-sole-email {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+.provider-disable-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 11px 14px;
+    margin-top: 2px;
+}
+.provider-disable-cancel {
+    font-family: var(--font-label);
+    font-size: .8rem;
+    color: var(--text-muted);
+}
+.provider-disable-cancel:hover { color: var(--text-strong); }
+
+@media (max-width: 900px) {
+    .integrations-two-up { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+    .admin-console .integrations-form-card,
+    .admin-console .integrations-add-card,
+    .admin-console .webhook-detail-card,
+    .admin-console .provider-disable-card,
+    .admin-console .integrations-table-card { padding-inline: 16px; }
+    .provider-sole-row { flex-wrap: wrap; }
+    .provider-sole-email { margin-left: 39px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-console .flash { animation: none; }
+}

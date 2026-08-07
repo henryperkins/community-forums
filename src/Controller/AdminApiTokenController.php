@@ -49,7 +49,14 @@ final class AdminApiTokenController extends Controller
     {
         $admin = $this->requireAdmin();
         $this->gate();
-        $this->container->get(ApiTokenService::class)->revoke($admin, (int) ($params['id'] ?? 0));
-        return $this->redirectWithFlash('/admin/api-tokens', 'API token revoked.');
+        $name = $this->container->get(ApiTokenService::class)->revoke($admin, (int) ($params['id'] ?? 0));
+        // A revoke that changed nothing (unknown id, already revoked) has no name to
+        // quote, so it reports the outcome without claiming this call did the closing.
+        return $this->redirectWithFlash(
+            '/admin/api-tokens',
+            $name !== null
+                ? '“' . $name . '” was revoked — calls with it now fail closed.'
+                : 'That token is already revoked — calls with it fail closed.',
+        );
     }
 }

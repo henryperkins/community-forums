@@ -380,19 +380,19 @@ test('webhook pause/resume flashes say which happened and delete is reauthed', a
     .click();
 
   await page.getByRole('button', { name: 'Pause' }).click();
-  await expect(page.getByRole('status')).toContainText('Webhook paused');
+  await expect(page.getByRole('status')).toContainText('Endpoint paused');
   await page.getByRole('button', { name: 'Resume' }).click();
-  await expect(page.getByRole('status')).toContainText('Webhook resumed');
+  await expect(page.getByRole('status')).toContainText('Endpoint resumed');
   await shot(page, info, 'remediation-webhook-flashes');
 
-  const deleteForm = page.locator('form:has(button:text("Delete webhook"))');
+  const deleteForm = page.locator('form:has(button:text("Delete endpoint"))');
   await deleteForm.locator('input[name="current_password"]').fill('wrong-password');
-  await deleteForm.getByRole('button', { name: 'Delete webhook' }).click();
+  await deleteForm.getByRole('button', { name: 'Delete endpoint' }).click();
   await expect(page.locator('.field-error').first()).toBeVisible();
   await shot(page, info, 'remediation-webhook-delete-reauth');
-  const retryForm = page.locator('form:has(button:text("Delete webhook"))');
+  const retryForm = page.locator('form:has(button:text("Delete endpoint"))');
   await retryForm.locator('input[name="current_password"]').fill('password123');
-  await retryForm.getByRole('button', { name: 'Delete webhook' }).click();
+  await retryForm.getByRole('button', { name: 'Delete endpoint' }).click();
   await expect(page.getByRole('status')).toContainText('deleted');
 });
 

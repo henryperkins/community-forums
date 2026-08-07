@@ -95,7 +95,10 @@ test('provider console: add a generic OIDC provider, probe health, enable, sign-
   await visit(page, '/admin/providers');
   await expect(page.getByRole('heading', { level: 1, name: 'Tokens, webhooks & sign-in' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Sign-in providers');
-  await expect(page.getByRole('heading', { level: 2, name: 'Providers' })).toBeVisible();
+  // The design's tables sit in unheaded cards, so the roster is identified by its
+  // shipped scroll region's accessible name rather than a card <h2> (ADR 0023 §5).
+  await expect(page.getByRole('region', { name: 'Sign-in providers' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Add an OIDC provider' })).toBeVisible();
   await page.fill('input[name="provider_key"]', key);
   await page.fill('input[name="display_name"]', label);
   await page.fill('input[name="issuer"]', 'https://gitlab.example');
@@ -103,7 +106,7 @@ test('provider console: add a generic OIDC provider, probe health, enable, sign-
   await page.fill('input[name="client_secret"]', 'evidence-client-secret');
   await page.fill('form[action="/admin/providers"] input[name="current_password"]', 'password123');
   await page.click('form[action="/admin/providers"] button[type="submit"]');
-  await expect(page.getByRole('status').getByText('Provider added (disabled). Run "Test connection", then enable it.')).toBeVisible();
+  await expect(page.getByRole('status').getByText(`${label} was added, disabled. Run "Test connection", then enable it.`)).toBeVisible();
 
   const row = page.locator('table tbody tr', { hasText: label });
   await expect(row).toContainText('Disabled');
@@ -118,7 +121,7 @@ test('provider console: add a generic OIDC provider, probe health, enable, sign-
   const enableForm = page.locator('table tbody tr', { hasText: label }).locator('form[action$="/enable"]');
   await enableForm.locator('input[name="current_password"]').fill('password123');
   await enableForm.locator('button[type="submit"]').click();
-  await expect(page.getByRole('status').getByText(`${label} is now offered at sign-in.`)).toBeVisible();
+  await expect(page.getByRole('status').getByText(`${label} is enabled and now offered on the sign-in page.`)).toBeVisible();
   await expect(page.locator('table tbody tr', { hasText: label })).toContainText('Enabled');
 
   await expectNoSeriousA11yViolations(page, info);
@@ -135,7 +138,7 @@ test('provider console: add a generic OIDC provider, probe health, enable, sign-
   await visit(page, '/admin/providers');
   await page.locator('table tbody tr', { hasText: label }).getByRole('link', { name: 'Disable…' }).click();
   await page.waitForURL(/\/admin\/providers\/\d+\/disable$/);
-  await expect(page.getByRole('heading', { name: `Disable ${label}` })).toBeVisible();
+  await expect(page.getByRole('heading', { name: `Before you disable ${label}` })).toBeVisible();
   await expect(page.getByText('No accounts rely on this provider as their only sign-in method.')).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
   await shot(page, info, '68-provider-disable-confirm');

@@ -1203,9 +1203,9 @@ test('admin webhooks: register shows the secret once, domain event delivers', as
     // events cannot queue ahead of the next project's live receiver and spend
     // that test's delivery deadline retrying a closed port.
     await page.fill('form[action$="/delete"] input[name="current_password"]', 'password123');
-    await page.getByRole('button', { name: 'Delete webhook' }).click();
+    await page.getByRole('button', { name: 'Delete endpoint' }).click();
     await page.waitForURL(/\/admin\/webhooks$/);
-    await expect(page.getByText('Webhook deleted.')).toBeVisible();
+    await expect(page.getByText('Endpoint deleted — its delivery history and signing secret are gone with it.')).toBeVisible();
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }

@@ -42,8 +42,8 @@ anti-draft-loss, "done requires evidence").
 | Slice | Area | Status |
 |---|---|---|
 | 0–10 | adjudication → settings/TI | **Done, with evidence** (`docs/evidence/imladris-admin-account-slice-{2..10}/` each have `design-qa.md` + desktop/mobile/twilight captures) |
-| 11 | admin-members (users, user_record, bulk_confirm, invitations) | **Code done** (`565aa10`), **evidence MISSING** — no `slice-11` dir, no `design-qa.md` |
-| 12 | admin-integrations (api_tokens, webhooks*, providers*) | **Not started** |
+| 11 | admin-members (users, user_record, bulk_confirm, invitations) | **Done, with evidence** (`docs/evidence/imladris-admin-account-slice-11/`) |
+| 12 | admin-integrations (api_tokens, webhooks*, providers*) | **Done, with evidence** (`docs/evidence/imladris-admin-account-slice-12/` + `integrations-console.spec.ts`) |
 | 13 | admin-features (features, badge_rules*, custom_emoji) | **Not started** |
 | 14 | admin-packages (9 package/registry/extension templates + 2 partials) | **Not started** |
 | 15 | account A — substrate, Profile, Security | **Not started** |
@@ -92,24 +92,21 @@ columns dictate, and decide at closeout whether they join `npm run evidence`.
 
 ## Execution order
 
-1. **Close Slice 11's evidence gate first** — the current tip's unfinished
-   obligation: run the six gates against `/admin/users`, `/admin/invitations`,
-   user record, bulk confirm (both flows, incl. the no-JS 422), capture
-   `docs/evidence/imladris-admin-account-slice-11/`, write `design-qa.md`
-   reviewed against `D-admin-members.md` / `V-admin-members.md` /
-   `R-admin-members.md`, commit.
-2. **Push the branch** (`git push -u origin feat/imladris-admin-account`) so
+1. ~~Close Slice 11's evidence gate~~ — done (`17a8d90` + `slice-11/`).
+2. ~~Slice 12 admin-integrations~~ — done (this session; `slice-12/` +
+   `integrations-console.spec.ts`).
+3. **Push the branch** (`git push -u origin feat/imladris-admin-account`) so
    work is never local-only again.
-3. **Slices 12 → 13 → 14 → 15 → 16 → 17 → 18** in sequence. They are
-   independent once 2–3 landed (they did); keep the order anyway so the ledger
-   and evidence stay chronological. One commit per slice, gates green, evidence
-   committed with it.
-4. **Slice 19 closeout**: de-fiction pass — the four test-pinned fiction strings
-   (`Removed by a warden`, `Commends`, `Private counsel`, `sort=commends`) and
-   the `Regard` chrome need an **owner decision before merging** (ADR 0024
-   obligation 5; `profile/show.php` renders `Regard`, so fix both surfaces or
-   neither); full evidence sweep; unpinned fiction strings.
-5. **Merge into main**:
+4. **Slices 13 → 14 → 15 → 16 → 17 → 18** in sequence. They are independent
+   once 2–3 landed (they did); keep the order anyway so the ledger and evidence
+   stay chronological. One commit per slice, gates green, evidence committed
+   with it.
+5. **Slice 19 closeout**: de-fiction pass — the four test-pinned fiction strings
+    (`Removed by a warden`, `Commends`, `Private counsel`, `sort=commends`) and
+    the `Regard` chrome need an **owner decision before merging** (ADR 0024
+    obligation 5; `profile/show.php` renders `Regard`, so fix both surfaces or
+    neither); full evidence sweep; unpinned fiction strings.
+ 6. **Merge into main**:
    - Branch fully green: `composer test` clean, `composer check:imladris`
      clean, evidence committed.
    - `git checkout main && git pull` — main has moved since the branch was cut

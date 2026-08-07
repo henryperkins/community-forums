@@ -103,7 +103,7 @@ final class AdminWebhookController extends Controller
         $id = (int) ($params['id'] ?? 0);
         try {
             $this->service()->update($admin, $id, $request->str('name'), $request->str('url'), (array) $request->post('events', []));
-            return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Webhook updated.');
+            return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Endpoint configuration saved.');
         } catch (ValidationException $e) {
             $model = $this->service()->detailModel($id);
             if ($model === null) {
@@ -132,7 +132,9 @@ final class AdminWebhookController extends Controller
         $this->service()->setActive($admin, $id, $active);
         return $this->redirectWithFlash(
             '/admin/webhooks/' . $id,
-            $active ? 'Webhook resumed — deliveries will flow on the next worker run.' : 'Webhook paused — no deliveries will be attempted.',
+            // Register follows the design ("endpoint"); the worker clause stays —
+            // delivery is asynchronous here and the design's copy implies otherwise.
+            $active ? 'Endpoint resumed — deliveries will flow on the next worker run.' : 'Endpoint paused — no deliveries will be attempted.',
         );
     }
 
@@ -188,7 +190,7 @@ final class AdminWebhookController extends Controller
         if (!$outcome['deleted']) {
             return $this->view('admin/webhook_detail', (array) $outcome['model'], $outcome['status']);
         }
-        return $this->redirectWithFlash('/admin/webhooks', 'Webhook deleted.');
+        return $this->redirectWithFlash('/admin/webhooks', 'Endpoint deleted — its delivery history and signing secret are gone with it.');
     }
 
     /** @param array<string,string> $params */
@@ -198,6 +200,6 @@ final class AdminWebhookController extends Controller
         $this->gate();
         $id = (int) ($params['id'] ?? 0);
         $this->service()->replay($admin, $id, (int) ($params['deliveryId'] ?? 0));
-        return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Delivery re-queued.');
+        return $this->redirectWithFlash('/admin/webhooks/' . $id, 'Delivery re-queued — the worker will retry it on its next run.');
     }
 }
