@@ -4,7 +4,7 @@
     "application_baseline": {
         "reconciled_through_commit": "6d81da590a12bd09bb8d0e282c042aa03d755a94",
         "composer_contract": "COMPOSER.md v0.8",
-        "surface_sha256": "79d99fbbc18502e400353cc660737a4cd68c7cc6bfb9e498d2dc4444cac59eb9"
+        "surface_sha256": "5c08de9427d066a306159d4fe7e0789a7e77fa250f56cd5ec6730550f696df72"
     },
     "design_contract": {
         "source": "docs/design-system/imladris/production-contract.json",
