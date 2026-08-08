@@ -42,7 +42,7 @@ merge into `main`. Governing rule, do not relitigate:
 | 14 | admin-packages | **Done** — `9a35f72`, slice-14 evidence (8 templates + 2 partials) |
 | 15 | account A — Profile, Security | **Done** — `ae4de7a`, slice-15 evidence |
 | 16 | account B — 8 panes | **Done** — slice-16 evidence (8 templates, 2 controllers, 3 PHPUnit files, the spec extension) |
-| 17 | account C — Boards, Drafts, Lifecycle (+ `composer.js`) | **Not started** |
+| 17 | account C — Boards, Drafts, Lifecycle (+ `composer.js`) | **Done** — slice-17 evidence (3 templates, `composer.js` drafts rows, 2 controllers, 2 PHPUnit files, 2 browser specs) |
 | 18 | `/mod/*` chrome | **Not started** |
 | 19 | closeout — de-fiction, evidence sweep, merge prep | **Not started** |
 

@@ -73,9 +73,13 @@ final class AppImladrisFidelityTest extends TestCase
     public function test_account_panel_heads_are_real_headings(): void
     {
         // Security and Notifications already render their panel heads as <h2>, and
-        // AppImladrisFidelityTest pins those literals. /settings/account was the last
-        // page still emitting a <span class="scribe-panel-head">, which left its
-        // panels outside the heading outline for anyone navigating by heading.
+        // AppImladrisFidelityTest pins those literals. Slice 15 converted
+        // /settings/account and recorded it as "the last page still emitting a
+        // <span class="scribe-panel-head">" -- which was wrong: privacy,
+        // appearance, preferences and composing all still did, and this test only
+        // ever fetched /settings/account so it never noticed. Slice 16 converted
+        // those four and pins them in
+        // test_settings_pages_keep_one_main_landmark_and_real_section_headings.
         // C-17 forbids the reverse conversion; this pins the direction that is safe.
         $this->actingAs($this->makeUser(['username' => 'heading-scribe']));
 
@@ -303,6 +307,52 @@ final class AppImladrisFidelityTest extends TestCase
         self::assertStringContainsString('Public tagged topic', $adminDetail);
         self::assertStringContainsString('Private tagged topic', $adminDetail);
         self::assertStringContainsString('Hidden tagged topic', $adminDetail);
+    }
+
+    /**
+     * Slice 17 -- Boards, Drafts and Account lifecycle. The three panes join the
+     * register slices 4, 15 and 16 certified: one `.scribe-panel` per section,
+     * a real `<h2 class="scribe-panel-head">` per section, and -- on /drafts --
+     * the pane's own row vocabulary rather than the moderation queue's
+     * `.report-*`, which templates/mod/reports.php owns.
+     */
+    public function test_slice17_account_panes_carry_the_console_register(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['username' => 'slice17_scribe']);
+        $this->actingAs($user);
+
+        foreach ([
+            '/settings/boards' => 'Organize your boards',
+            '/drafts' => 'Drafts',
+            '/settings/account/lifecycle' => 'Export account data',
+        ] as $path => $head) {
+            $res = $this->get($path);
+            $this->assertStatus(200, $res);
+            $body = $res->body();
+            self::assertStringContainsString('scribe-panel', $body, $path . ' should sit on the console panel.');
+            self::assertStringContainsString('<h2 class="scribe-panel-head">' . $head . '</h2>', $body, $path . ' should title its panel with a real heading.');
+            self::assertStringNotContainsString('<span class="scribe-panel-head">', $body, $path . ' should not demote a panel head to a span.');
+            self::assertSame(1, substr_count($body, '<main '), $path . ' should render only the layout main landmark.');
+        }
+
+        // The drafts pane keeps the hooks composer.js reads for the
+        // browser-local list, and no longer borrows the reports vocabulary.
+        $drafts = $this->get('/drafts')->body();
+        self::assertStringContainsString('data-drafts-list', $drafts);
+        self::assertStringContainsString('data-local-drafts-list', $drafts);
+        self::assertStringNotContainsString('report-row', $drafts);
+        self::assertStringNotContainsString('report-excerpt', $drafts);
+
+        // Lifecycle marks its destructive section, and both re-auth fields carry
+        // their own scoped error ids.
+        $lifecycle = $this->get('/settings/account/lifecycle')->body();
+        self::assertStringContainsString('scribe-panel danger-zone', $lifecycle);
+        self::assertStringContainsString('Delete account', $lifecycle);
+
+        // The invented folder name the ledger flagged is gone (fiction table 3.2).
+        $boards = $this->get('/settings/boards')->body();
+        self::assertStringNotContainsString('Vilya', $boards);
     }
 
     public function test_lapidary_toggle_css_covers_gem_variants_and_captions(): void

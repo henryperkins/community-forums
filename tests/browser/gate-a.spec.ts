@@ -669,7 +669,10 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   // persisted above is titled from the composer label and shows its body excerpt.
   await visit(page, '/drafts');
   const draftsList = page.locator('[data-drafts-list][data-server-drafts]');
-  const serverDraftRows = draftsList.locator('.report-row:not([data-local-draft-row])');
+  // Slice 17: the /drafts pane has its own row vocabulary. It used to borrow
+  // `.report-row` from the moderation queue (templates/mod/reports.php), which
+  // is a different surface with a different owner.
+  const serverDraftRows = draftsList.locator('.account-draft-row:not([data-local-draft-row])');
   await expect(serverDraftRows).toContainText('New topic');
   await expect(serverDraftRows).toContainText('Browser evidence');
   await expect(page.getByRole('heading', { name: 'Saved in this browser' })).toBeVisible();
@@ -678,7 +681,8 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   const discard = page.getByRole('button', { name: 'Discard' });
   await discard.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'nearest' }));
   await discard.click();
-  await expect(page.locator('[data-drafts-list]')).toContainText('No server drafts yet.');
+  // Slice 17 took the design's empty-state copy (AccountSettings.dc.html:243).
+  await expect(page.locator('[data-drafts-list]')).toContainText('No drafts. Anything you start writing is kept here automatically.');
   // Clear the browser-local mirror so the upload sub-journey opens an empty composer.
   await page.evaluate(() => { try { localStorage.removeItem('rb-draft:bob:/threads'); } catch (e) {} });
 
@@ -700,7 +704,7 @@ test('phase 3 composer, drafts, upload, and preferences JS journeys', async ({ p
   await page.waitForURL(/\/t\/\d+-/);
   // A successful submit clears the synced server draft on the next navigation.
   await visit(page, '/drafts');
-  await expect(page.locator('[data-drafts-list]')).toContainText('No server drafts yet.');
+  await expect(page.locator('[data-drafts-list]')).toContainText('No drafts. Anything you start writing is kept here automatically.');
 });
 
 test('phase 4 content references render read-gated cards for public targets and redact private targets', async ({ page }, info) => {

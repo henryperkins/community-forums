@@ -506,3 +506,82 @@ test('refused set-password re-renders inline on the connections pane', async ({ 
   await expect(page.getByRole('heading', { level: 2, name: 'Connected accounts' })).toHaveCount(1);
   await shot(page, 'desktop', 's16-connections-422');
 });
+
+// ─── Slice 17: Boards, Drafts and Account lifecycle ─────────────────────────
+const SLICE17_PANES = [
+  ['/settings/boards', 'boards', 'Organize your boards'],
+  ['/drafts', 'drafts', 'Drafts'],
+  ['/settings/account/lifecycle', 'account', 'Export account data'],
+] as const;
+
+test('slice 17 panes are axe-clean in light twilight and system-dark registers', async ({ page }, info: TestInfo) => {
+  test.skip(info.project.name !== 'desktop', 'axe and register parity are captured once on desktop');
+  const original = readFeatureMap();
+  try {
+    writeFeatureMap(featureState(original, true));
+    await login(page);
+    for (const [href, name, head] of SLICE17_PANES) {
+      await page.goto(href);
+      await expect(page.getByRole('heading', { level: 2, name: head })).toHaveCount(1);
+
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'light'));
+      await expectAxeClean(page, `${name} light`);
+      await shot(page, 'comparisons', `s17-${name}-light`);
+
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'dark'));
+      await expectAxeClean(page, `${name} twilight`);
+      await shot(page, 'comparisons', `s17-${name}-twilight`);
+
+      await page.emulateMedia({ colorScheme: 'dark' });
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'system'));
+      await expectAxeClean(page, `${name} system-dark`);
+      await shot(page, 'comparisons', `s17-${name}-system-dark`);
+      await page.emulateMedia({ colorScheme: 'light' });
+    }
+  } finally {
+    writeFeatureMap(original);
+  }
+});
+
+test('slice 17 panes fit their width and keep the drafts hooks', async ({ page }, info: TestInfo) => {
+  const original = readFeatureMap();
+  const folder = info.project.name === 'mobile' ? 'mobile' : 'desktop';
+  try {
+    writeFeatureMap(featureState(original, true));
+    await login(page);
+    for (const [href, name] of SLICE17_PANES) {
+      await page.goto(href);
+      await expectOneCurrent(page, name);
+      await expectNoOverflow(page, `${name} @ ${info.project.name}`);
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'light'));
+      await shot(page, folder, `s17-${name}-light`);
+      await page.locator('html').evaluate((node) => node.setAttribute('data-theme', 'dark'));
+      await shot(page, folder, `s17-${name}-twilight`);
+    }
+
+    // The pane head must survive composer.js, which wipes [data-drafts-list].
+    await page.goto('/drafts');
+    await expect(page.getByRole('heading', { level: 2, name: 'Drafts' })).toBeVisible();
+    await expect(page.locator('[data-drafts-list]')).toHaveCount(1);
+    await expect(page.locator('.account-draft-head')).toHaveCount(1);
+    // The moderation queue's vocabulary must not be back on this pane.
+    await expect(page.locator('.report-row, .report-excerpt')).toHaveCount(0);
+  } finally {
+    writeFeatureMap(original);
+  }
+});
+
+test('slice 17 lifecycle scopes a refused deletion to its own form', async ({ page }, info: TestInfo) => {
+  test.skip(info.project.name !== 'desktop', 'the 422 round-trip is captured once on desktop');
+  await login(page);
+  await page.goto('/settings/account/lifecycle');
+  const remove = page.locator('form[action="/settings/account/delete/request"]');
+  await remove.locator('input[name="current_password"]').fill('definitely-wrong');
+  await remove.locator('button[type="submit"]').click();
+  await page.waitForLoadState('load');
+
+  // The message lands on the delete form, not on the deactivate form above it.
+  await expect(page.locator('#err-delete-current_password')).toBeVisible();
+  await expect(page.locator('#err-deactivate-current_password')).toHaveCount(0);
+  await shot(page, 'desktop', 's17-lifecycle-422');
+});

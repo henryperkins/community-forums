@@ -119,6 +119,37 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertSame('canceled', (string) $this->db->fetchValue('SELECT status FROM account_deletion_requests WHERE id = ?', [(int) $row['id']]));
     }
 
+    /**
+     * Slice 17. /deactivate and /delete/request both post `current_password`
+     * and both re-render through lifecycleView, so an unscoped error bag lit
+     * the *deactivate* form's inline error when a *deletion* was refused --
+     * pointing the member at the wrong control on the page's destructive
+     * section. The controller now says which action failed and the pane scopes
+     * the replay to that form.
+     */
+    public function test_a_refused_lifecycle_action_scopes_its_error_to_its_own_form(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['username' => 'scoped_lifecycle', 'password' => 'password123']);
+        $this->actingAs($user);
+        $this->get('/settings/account/lifecycle');
+
+        $delete = $this->post('/settings/account/delete/request', ['current_password' => 'wrong-password']);
+        $this->assertStatus(422, $delete);
+        $body = $delete->body();
+        self::assertStringContainsString('id="err-delete-current_password"', $body);
+        self::assertStringNotContainsString('id="err-deactivate-current_password"', $body);
+
+        $deactivate = $this->post('/settings/account/deactivate', ['current_password' => 'wrong-password']);
+        $this->assertStatus(422, $deactivate);
+        $other = $deactivate->body();
+        self::assertStringContainsString('id="err-deactivate-current_password"', $other);
+        self::assertStringNotContainsString('id="err-delete-current_password"', $other);
+
+        // Neither refusal changed the account.
+        self::assertSame('active', (string) $this->users()->find((int) $user['id'])['status']);
+    }
+
     public function test_final_active_admin_cannot_deactivate_or_request_deletion(): void
     {
         $admin = $this->makeAdmin(['username' => 'owner', 'password' => 'password123']);
