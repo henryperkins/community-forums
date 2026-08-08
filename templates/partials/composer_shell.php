@@ -8,8 +8,17 @@
  *
  * Optional: body_name, form_id, form_class, expanded, body_error, identity,
  * allow_anonymous, anonymous_checked, anonymous_disclosure, no_draft,
- * no_wysiwyg, thread_composer, wrapper_slot, below_input_slot,
+ * no_wysiwyg, thread_composer, wrapper_slot, header_slot, below_input_slot,
  * before_submit_slot.
+ *
+ * wrapper_slot vs header_slot: both carry a mount's extra fields, but
+ * wrapper_slot renders OUTSIDE .composer-box (its fields read as their own
+ * region — the DM "To"/"Group title" labelled fields, the /compose board
+ * picker) while header_slot renders as the first row INSIDE the box, sharing
+ * the shell's border, focus ring, and horizontal inset. A placeholder-only
+ * field that belongs to the composer itself — the New Topic title — uses
+ * header_slot so the composer reads as one surface instead of a detached
+ * input stacked above a framed component.
  */
 $shellContexts = ['reply', 'new_thread', 'dm', 'edit'];
 $shellContext = (string) ($context ?? '');
@@ -40,6 +49,7 @@ $shellNoDraft = !empty($no_draft);
 $shellNoWysiwyg = !empty($no_wysiwyg);
 $shellThreadComposer = !empty($thread_composer);
 $shellWrapperSlot = ($wrapper_slot ?? null) instanceof \Closure ? $wrapper_slot : null;
+$shellHeaderSlot = ($header_slot ?? null) instanceof \Closure ? $header_slot : null;
 $shellBelowInputSlot = ($below_input_slot ?? null) instanceof \Closure ? $below_input_slot : null;
 $shellBeforeSubmitSlot = ($before_submit_slot ?? null) instanceof \Closure ? $before_submit_slot : null;
 
@@ -62,7 +72,18 @@ $shellSubmitStatusId = 'composer-submit-status-' . $shellInstance;
     <input type="hidden" name="idempotency_key" value="<?= $e(bin2hex(random_bytes(16))) ?>">
     <?php if ($shellWrapperSlot !== null): ?><?php $shellWrapperSlot(); ?><?php endif; ?>
     <div class="composer-box">
-        <div class="composer-format-slot" data-composer-format-slot></div>
+        <?php if ($shellHeaderSlot !== null): ?><div class="composer-header"><?php $shellHeaderSlot(); ?></div><?php endif; ?>
+        <div class="composer-format-slot" data-composer-format-slot>
+            <span class="composer-format-aside">
+                <span data-composer-mode-slot></span>
+                <?php if ($shellThreadComposer): ?>
+                    <?php /* Minimizing folds the dock away without discarding anything; it only
+                              works once the composer script installs the expansion controller, so
+                              it stays hidden until then rather than rendering an inert control. */ ?>
+                    <button type="button" class="composer-minimize" data-composer-minimize hidden aria-label="Minimize reply" title="Minimize reply"><?= $this->partial('partials/icon', ['name' => 'chevron-down']) ?></button>
+                <?php endif; ?>
+            </span>
+        </div>
         <?php if ($shellBodyError !== ''): ?><p class="field-error" id="<?= $e($shellBodyErrorId) ?>"><?= $e($shellBodyError) ?></p><?php endif; ?>
         <textarea class="composer-input" id="<?= $e($shellBodyId) ?>" name="<?= $e($shellBodyName) ?>" rows="4" maxlength="<?= $shellMaxlength ?>" placeholder="<?= $e($shellPlaceholder) ?>"<?= $shellBodyError !== '' ? ' aria-describedby="' . $e($shellBodyErrorId) . '"' : '' ?> required><?= $e($shellBodyValue) ?></textarea>
         <?php if ($shellBelowInputSlot !== null): ?><?php $shellBelowInputSlot(); ?><?php endif; ?>

@@ -182,15 +182,24 @@ async function setThemeSafeMode(page: Page, enabled: boolean): Promise<void> {
 
 async function dismissTour(page: Page): Promise<void> {
   const skip = page.getByRole('button', { name: 'Skip' });
-  if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) {
+  if (await page.locator('body[data-tour="1"]').count()) {
+    await expect(skip).toBeVisible();
     await skip.click();
-    await expect(page.locator('.tour-popover')).toHaveCount(0);
   }
+  await expect(page.locator('.tour-popover')).toHaveCount(0);
 }
 
 async function openNewTopicComposer(page: Page): Promise<void> {
   await visit(page, '/c/general');
-  await page.locator('details.composer-details > summary').click();
+  const details = page.locator('details.composer-details#new-topic');
+  const promoted = page.locator('[data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  const summary = details.locator(':scope > summary');
+  const opener = await promoted.isVisible()
+    ? promoted
+    : (await fab.isVisible() ? fab : summary);
+  await opener.click();
+  await expect(details).toHaveJSProperty('open', true);
   await expect(page.locator('form.composer textarea.composer-input').first()).toBeVisible();
 }
 
@@ -742,8 +751,14 @@ test('phase 4 custom emoji: admin catalogue, Markdown render, and reaction', asy
   await expect(page.locator('.post-body code').filter({ hasText: token })).toBeVisible();
   const emojiPost = page.locator('article[data-post]').first();
   await emojiPost.hover();
-  await emojiPost.locator('.reaction-add > summary').click();
-  await page.getByRole('button', { name: token }).click();
+  const toolbar = emojiPost.locator('[data-post-toolbar]');
+  const picker = toolbar.locator('.reaction-add > summary');
+  if (await picker.isVisible()) {
+    await picker.click();
+  } else {
+    await toolbar.locator('[data-post-menu] > summary').click();
+  }
+  await toolbar.getByRole('button', { name: token }).click();
   await expect(page.locator('.reaction-on').filter({ hasText: token })).toBeVisible();
   const postBody = page.locator('.post-body').first();
   const reactions = page.locator('.reactions').first();
@@ -1219,7 +1234,8 @@ test('admin can reorder and archive boards', async ({ page }, info) => {
   await page.getByRole('button', { name: 'Unarchive board' }).click();
   await expect(page).toHaveURL(/\/admin\/structure/);
   await visit(page, '/c/feedback');
-  await expect(page.locator('details.composer-details')).toBeVisible();
+  await expect(page.locator('details.composer-details#new-topic')).toHaveCount(1);
+  await expect(page.locator('[data-open-topic-composer]')).toBeVisible();
   await shot(page, info, '23-board-unarchived');
 });
 

@@ -42,7 +42,11 @@ async function login(page: Page, email = 'alice@retro.test'): Promise<void> {
   await page.click('button[type="submit"]');
   await expect(page).toHaveURL(/\/inbox(?:\?|$)/);
   const skip = page.getByRole('button', { name: 'Skip' });
-  if (await skip.isVisible().catch(() => false)) await skip.click();
+  if (await page.locator('body[data-tour="1"]').count()) {
+    await expect(skip).toBeVisible();
+    await skip.click();
+  }
+  await expect(page.locator('.tour-popover')).toHaveCount(0);
 }
 
 async function openSeedTopic(page: Page): Promise<void> {

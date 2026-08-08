@@ -30,9 +30,23 @@ async function login(page: Page, email: string): Promise<void> {
   await page.click('button[type="submit"]');
   await page.waitForURL((u) => !u.pathname.endsWith('/login'));
   const skip = page.getByRole('button', { name: 'Skip' });
-  if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) {
+  if (await page.locator('body[data-tour="1"]').count()) {
+    await expect(skip).toBeVisible();
     await skip.click();
   }
+  await expect(page.locator('.tour-popover')).toHaveCount(0);
+}
+
+async function openTopicComposer(page: Page): Promise<void> {
+  const details = page.locator('details.composer-details#new-topic');
+  const promoted = page.locator('[data-open-topic-composer]');
+  const fab = page.locator('a.fab[href="#new-topic"]');
+  const summary = details.locator(':scope > summary');
+  const opener = await promoted.isVisible()
+    ? promoted
+    : (await fab.isVisible() ? fab : summary);
+  await opener.click();
+  await expect(details).toHaveJSProperty('open', true);
 }
 
 function desktopOnly(info: TestInfo): void {
@@ -332,7 +346,7 @@ test('board delete previews the authoritative count including hidden content', a
   await expect(page.locator('body')).toContainText(boardName);
 
   await page.goto(`/c/${boardSlug}`);
-  await page.locator('details.composer-details > summary').click();
+  await openTopicComposer(page);
   const composer = page.locator('form.composer').first();
   await composer.locator('input[name="title"]').fill('Hidden cargo topic');
   await composer.locator('textarea.composer-input').fill('This topic is about to be soft-deleted.');

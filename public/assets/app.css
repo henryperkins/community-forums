@@ -969,11 +969,41 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 }
 .composer-box .composer-input:focus { border: 0; outline: 0; box-shadow: none; }
 .composer-box > .field-error { margin: 0; padding: 8px 12px 0; }
+/* The rich editor is the same body region as the textarea, wearing the same
+   inset and the same height budget — one container, one border, one focus ring
+   (the box's). Its own framing is neutralised in the WYSIWYG bundle. */
+.composer-box .wysiwyg-composer .ProseMirror {
+    min-height: 82px;
+    max-height: min(42dvh, 360px);
+    padding: 10px 12px;
+    overflow-y: auto;
+}
 
-.composer-format-slot { position: relative; min-width: 0; padding: 7px 8px 0; }
-.composer-format-slot:empty { display: none; }
+/* A mount's own header field (the New Topic title) sits inside the box and
+   shares its inset, so the composer reads as one surface instead of a detached
+   input stacked above a framed component. The box owns the only focus ring. */
+.composer-header { min-width: 0; border-bottom: 1px solid var(--border-hair); }
+.composer-header > .input {
+    min-width: 0;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-weight: var(--weight-semibold);
+}
+.composer-header > .input:focus { outline: 0; box-shadow: none; }
+.composer-header > .field-error { margin: 0; padding: 8px 12px 0; }
+
+.composer-format-slot { position: relative; display: flex; align-items: center; gap: 6px; min-width: 0; padding: 7px 8px 0; }
+.composer-format-aside { order: 2; display: inline-flex; align-items: center; flex: 0 0 auto; gap: 4px; margin-left: auto; }
+/* Without JS the row holds only its empty slots; without a mode control or a
+   usable minimise button it has nothing to show. */
+.composer-format-slot:empty,
+.composer-format-slot:not(:has(.composer-toolbar, .composer-mode-toggle, [data-composer-minimize]:not([hidden]))) { display: none; }
 .composer-toolbar {
+    order: 1;
     display: flex;
+    flex: 1 1 auto;
     flex-wrap: nowrap;
     align-items: center;
     gap: 3px;
@@ -1020,6 +1050,8 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-format-toggle:focus-visible,
 .composer-attach-toggle:focus-visible,
 .composer-emoji-toggle:focus-visible,
+.composer-mode-toggle:focus-visible,
+.composer-minimize:focus-visible,
 .composer-preview-toggle:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -1138,6 +1170,28 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
 .composer-preview-toggle[aria-expanded="true"] { border-color: var(--border-hair); background: var(--surface-sunken); color: var(--text-strong); }
 .composer-attach-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
 .composer-emoji-toggle { min-width: 30px; padding-inline: 5px; font-size: 1rem; }
+/* Editor mode and minimise are tertiary: they ride at the quiet end of the
+   formatting row and must not read as peers of Preview, Cancel or Send. */
+.composer-mode-toggle,
+.composer-minimize {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding: 3px 7px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font: .74rem/1 var(--font-label);
+    letter-spacing: .02em;
+    cursor: pointer;
+}
+.composer-minimize[hidden] { display: none; }
+.composer-mode-toggle:hover,
+.composer-minimize:hover { border-color: var(--border-hair); background: var(--surface-sunken); color: var(--text-strong); }
+.composer-minimize { width: 26px; min-width: 26px; padding: 0; }
+.composer-minimize .icon { width: 15px; height: 15px; }
 .composer-identity { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: min(250px, 32vw); color: var(--text-muted); font-size: .8rem; }
 .composer-identity .monogram { width: 24px; height: 24px; flex: 0 0 24px; font-size: .58rem; }
 .composer-identity-copy { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1360,6 +1414,8 @@ a:hover { text-decoration: underline; text-decoration-color: var(--gold-500); }
     .composer-emoji-toggle,
     .composer-emoji-close,
     .composer-emoji-cell,
+    .composer-mode-toggle,
+    .composer-minimize,
     .composer-preview-toggle { min-width: 44px; min-height: 44px; }
 }
 
@@ -1905,7 +1961,11 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         padding: 10px 14px 14px;
     }
     .inbox-reading.is-open [data-inbox-reading-content] { height: calc(100% - 48px); }
-    .has-js .reply-composer:not(.is-expanded) .composer-box {
+    /* Gated on the composer script's own stamp rather than the global .has-js:
+       only wireExpansion() can reopen a folded dock, so if composer.js never
+       runs the shell must stay fully expanded instead of collapsing into a
+       one-line surface with no way out. */
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-box {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -1913,15 +1973,16 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         padding: 3px;
         border-radius: var(--radius-pill);
     }
-    .has-js .reply-composer:not(.is-expanded) .composer-format-slot,
-    .has-js .reply-composer:not(.is-expanded) .composer-upload-tray,
-    .has-js .reply-composer:not(.is-expanded) .composer-actions-start,
-    .has-js .reply-composer:not(.is-expanded) .composer-actions-end > :not(.composer-send),
-    .has-js .reply-composer:not(.is-expanded) .composer-meta-row,
-    .has-js .reply-composer:not(.is-expanded) [data-composer-after-box],
-    .has-js .reply-composer:not(.is-expanded) .wysiwyg-source-toggle { display: none; }
-    .has-js .reply-composer:not(.is-expanded) .composer-input,
-    .has-js .reply-composer:not(.is-expanded) .wysiwyg-composer {
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-header,
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-format-slot,
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-upload-tray,
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-actions-start,
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-actions-end > :not(.composer-send),
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-meta-row,
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) [data-composer-after-box],
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .wysiwyg-source-toggle { display: none; }
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-input,
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .wysiwyg-composer {
         grid-column: 1;
         grid-row: 1;
         width: 100%;
@@ -1932,10 +1993,10 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         resize: none;
         overflow: hidden;
     }
-    .has-js .reply-composer:not(.is-expanded) .wysiwyg-composer .ProseMirror {
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .wysiwyg-composer .ProseMirror {
         height: 44px; min-height: 44px; max-height: 44px; padding: 10px 12px; overflow: hidden;
     }
-    .has-js .reply-composer:not(.is-expanded) .composer-actions-bar {
+    .reply-composer[data-composer-dock="1"]:not(.is-expanded) .composer-actions-bar {
         grid-column: 2;
         grid-row: 1;
         padding: 0;

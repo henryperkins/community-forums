@@ -106,6 +106,7 @@
         } catch (e) {}
         form._rbPreviewController = null;
         form._rbSubmitController = null;
+        form._rbExpansion = null;
         form._rbComposerEnhance = null;
     }
 
@@ -2088,6 +2089,7 @@
             }
             requestSeq++;
             dialog.hidden = true;
+            watchPlacement(false);
             trigger.setAttribute('aria-expanded', 'false');
             if (destination === 'trigger') {
                 trigger.focus();
@@ -2233,14 +2235,60 @@
                 if (seq === requestSeq) { closeDialog('trigger'); }
             });
         }
+        // Above the mobile breakpoint the dialog is anchored to the box and rises
+        // from its top edge. How much room that leaves depends on the mount — a
+        // centred New Topic modal sits far higher up the page than a thread dock
+        // — so the side is chosen by available room AND the height is capped to
+        // it, otherwise a shell sitting high in the viewport pushes the dialog
+        // off the top edge. Below the breakpoint the dialog is a fixed bottom
+        // sheet that sizes itself, so the inline cap is cleared.
+        function placeDialog() {
+            if (dialog.hidden) { return; }
+            var anchored = window.innerWidth > 640;
+            var boxRect = box.getBoundingClientRect();
+            var margin = 15;   // the 7px offset plus an 8px viewport gutter
+            var roomAbove = boxRect.top - margin;
+            var roomBelow = window.innerHeight - boxRect.bottom - margin;
+            var below = anchored && roomBelow > roomAbove;
+            dialog.classList.toggle('is-below', below);
+            dialog.style.maxHeight = anchored
+                ? Math.max(160, Math.min(440, window.innerHeight * 0.3, below ? roomBelow : roomAbove)) + 'px'
+                : '';
+        }
+        // The shell keeps moving under an open dialog: the New Topic modal is
+        // centred, so anything that changes its height — the :has() switch to
+        // overflow:visible on open, a debounced preview response landing, an
+        // upload chip appearing — shifts the box the dialog is anchored to.
+        // Placing once at open would leave it hanging off the viewport edge, so
+        // placement follows the shell for as long as the dialog is open. The
+        // dialog is out of flow and only its own max-height changes, so this
+        // cannot feed back into the observed size.
+        var placementObserver = typeof window.ResizeObserver === 'function'
+            ? new window.ResizeObserver(function () { placeDialog(); })
+            : null;
+        function watchPlacement(on) {
+            if (placementObserver) {
+                if (on) { placementObserver.observe(form); } else { placementObserver.disconnect(); }
+            }
+            if (on) {
+                window.addEventListener('resize', placeDialog);
+                window.addEventListener('scroll', placeDialog, true);
+            } else {
+                window.removeEventListener('resize', placeDialog);
+                window.removeEventListener('scroll', placeDialog, true);
+            }
+        }
+        addCleanup(form, function () { watchPlacement(false); });
+
         function openDialog() {
             var active = activeAdapter();
             rememberedSelection = active && typeof active.rememberSelection === 'function'
                 ? active.rememberSelection() : { start: adapter.ta.selectionStart || 0, end: adapter.ta.selectionEnd || 0 };
-            var boxRect = box.getBoundingClientRect();
-            dialog.classList.toggle('is-below', window.innerWidth > 640
-                && (window.innerHeight - boxRect.bottom) > boxRect.top);
+            // Unhide first: the modal's :has() rule reflows around the open
+            // dialog, and placement must measure the position that leaves.
             dialog.hidden = false;
+            placeDialog();
+            watchPlacement(true);
             trigger.setAttribute('aria-expanded', 'true');
             search.value = '';
             requestItems('');
@@ -2469,6 +2517,158 @@
         form._rbSubmitController = { attach: attach };
     }
 
+    // ---- Expansion / minimize (the inline reply dock) ---------------------
+    // The reply dock rests as a one-line entry surface and opens when a member
+    // engages with it. Expansion is deliberately TWO-way, and which way depends
+    // on whether there is a draft to protect:
+    //
+    //   empty  + interest leaves  -> fold back up (nothing is at stake)
+    //   filled + interest leaves  -> stay open (auto-folding would hide a draft)
+    //   filled + explicit minimize -> fold up, keeping every byte of state
+    //
+    // Minimizing is NOT cancelling: the only thing that changes is this class.
+    // The textarea, the Milkdown document, the local and server drafts, the
+    // upload tray, and the editor's rich/source mode are all untouched, so
+    // reopening restores the draft exactly as it was left.
+    var DOCK_SELECTOR = '.reply-composer';
+    var dockPointerWatch = false;
+
+    function composerIsEmpty(form) {
+        // Canonical Markdown, not the textarea: in rich mode the textarea only
+        // catches up on the adapter's next sync, so reading it directly would
+        // call a composer with a live Milkdown document "empty" and fold a real
+        // draft away.
+        var adapter = form._rbComposerAdapter || form._rbComposerFallbackAdapter;
+        var markdown = null;
+        if (adapter && typeof adapter.getMarkdown === 'function') {
+            try { markdown = adapter.getMarkdown(); } catch (e) { markdown = null; }
+        }
+        if (markdown === null || markdown === undefined) {
+            var ta = form.querySelector('.composer-input');
+            markdown = ta ? ta.value : '';
+        }
+        if (String(markdown).trim() !== '') { return false; }
+        // An upload in flight is composer state even while the body still reads
+        // empty — its Markdown only lands when the request resolves.
+        var tray = shellPart(form, '[data-composer-upload-tray]');
+        return !tray || tray.children.length === 0;
+    }
+
+    function watchDockPointer() {
+        if (dockPointerWatch) { return; }
+        dockPointerWatch = true;
+        // Focus alone is not enough: tapping a non-focusable region of the page
+        // on mobile Safari moves no focus at all, so an empty dock would stay
+        // open forever. pointerdown fires for those taps and resolves the target
+        // before any focus change, and capture keeps a stopPropagation() inside
+        // an unrelated widget from swallowing it.
+        document.addEventListener('pointerdown', function (event) {
+            var open = document.querySelectorAll(DOCK_SELECTOR + '.is-expanded[data-composer-dock="1"]');
+            for (var i = 0; i < open.length; i++) {
+                var form = open[i];
+                if (form.contains(event.target)) { continue; }
+                if (form._rbExpansion) { form._rbExpansion.collapseIfEmpty(); }
+            }
+        }, true);
+    }
+
+    function wireExpansion(form) {
+        if (!form.matches || !form.matches(DOCK_SELECTOR)) { return; }
+        var minimize = shellPart(form, '[data-composer-minimize]');
+        var dockMedia = typeof window.matchMedia === 'function'
+            ? window.matchMedia('(max-width: 860px)')
+            : null;
+        // Stamping the dock here (rather than relying on the global .has-js) is
+        // what lets the compact CSS apply: if this script never runs, the shell
+        // stays fully expanded instead of collapsing into a dock nothing can
+        // reopen.
+        form.setAttribute('data-composer-dock', '1');
+        if (minimize) {
+            var syncMinimize = function () { minimize.hidden = !dockMedia || !dockMedia.matches; };
+            syncMinimize();
+            if (dockMedia) { listenWithCleanup(form, dockMedia, 'change', syncMinimize); }
+        }
+        watchDockPointer();
+
+        function isExpanded() { return form.classList.contains('is-expanded'); }
+
+        function expand(focusEditor) {
+            form.classList.add('is-expanded');
+            if (!focusEditor) { return; }
+            var adapter = form._rbComposerAdapter || form._rbComposerFallbackAdapter;
+            if (adapter && typeof adapter.focus === 'function') {
+                try { adapter.focus(); } catch (e) {}
+            }
+        }
+
+        function minimizeDock() {
+            if (!isExpanded()) { return; }
+            // Leaving the caret in a clipped one-line dock keeps the soft
+            // keyboard up over a composer the member just put away.
+            var active = document.activeElement;
+            if (active && active !== document.body && form.contains(active) && typeof active.blur === 'function') {
+                active.blur();
+            }
+            form.classList.remove('is-expanded');
+        }
+
+        function collapseIfEmpty() {
+            if (isExpanded() && composerIsEmpty(form)) { form.classList.remove('is-expanded'); }
+        }
+
+        listenWithCleanup(form, form, 'focusin', function () { expand(false); });
+        listenWithCleanup(form, form, 'input', function () { expand(false); });
+        listenWithCleanup(form, form, 'click', function (event) {
+            if (isExpanded()) { return; }
+            // Two controls must never read as "open the dock": the send button
+            // submits the draft already in it, and the minimize button has just
+            // folded it — this listener runs after the button's own handler, so
+            // without the guard a minimize click would immediately reopen.
+            if (!event.target.closest) { return; }
+            if (event.target.closest('.composer-send, [data-composer-minimize]')) { return; }
+            expand(true);
+        });
+        listenWithCleanup(form, form, 'focusout', function () {
+            // Deferred by a tick: during any internal move (editor -> toolbar,
+            // Source toggle, emoji dialog, a suggestion option) focusout fires
+            // before the new element takes focus, so activeElement is only
+            // trustworthy afterwards. Every composer popover mounts inside the
+            // form, so one contains() check covers all of them.
+            window.setTimeout(function () {
+                if (form._rbComposerDestroyed) { return; }
+                if (form.contains(document.activeElement)) { return; }
+                collapseIfEmpty();
+            }, 0);
+            // Deliberately no document.hasFocus() guard: tabbing past the last
+            // control leaves the page for the browser chrome, which reads as
+            // "the window lost focus" but IS the member leaving the composer.
+            // The cases that guard would have covered are already handled by
+            // contains(): opening the attachment picker clicks a hidden input
+            // and leaves the trigger button focused inside the form, and a
+            // window blur keeps activeElement on the editor.
+        });
+        if (minimize) {
+            listenWithCleanup(form, minimize, 'click', minimizeDock);
+        }
+
+        form._rbExpansion = {
+            isExpanded: isExpanded,
+            expand: expand,
+            minimize: minimizeDock,
+            collapseIfEmpty: collapseIfEmpty
+        };
+        // Local draft restoration happens synchronously before this controller
+        // is installed, so its input event cannot expand the dock. Derive the
+        // initial presentation from the canonical adapter state instead of
+        // hiding a restored draft in the compact shell.
+        if (!composerIsEmpty(form)) { expand(false); }
+        addCleanup(form, function () {
+            form._rbExpansion = null;
+            form.removeAttribute('data-composer-dock');
+            if (minimize) { minimize.hidden = true; }
+        });
+    }
+
     function enhance(form, prefs) {
         var ta = form.querySelector('.composer-input');
         if (!ta) { return; }
@@ -2506,6 +2706,9 @@
         // leave a misleading, unrecoverable draft that the next load discards.
         if (draftsEnabled() && !form.hasAttribute('data-no-draft')) { wireDrafts(form, adapter); }
         wireUploads(form, adapter);
+        // Last: emptiness is read through the active adapter, so the dock must
+        // be wired after the WYSIWYG upgrade and the draft restore have settled.
+        wireExpansion(form);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
