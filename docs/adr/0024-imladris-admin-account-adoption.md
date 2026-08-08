@@ -274,8 +274,8 @@ discharged and what it deliberately did not, so nothing is silently dropped.
 | 1 | Two new Playwright specs (`content-console`, `account-console`) | **Done.** Both exist, and the per-area pattern was extended further than the obligation asked: `members-`, `integrations-`, `features-`, `packages-` and now `mod-console.spec.ts` (Slice 18). |
 | 2 | `role-assignments.spec.ts` joins `npm run evidence` | **Done** — it is in the aggregate script's third group. |
 | 3 | `.admin-bar`/`.admin-tier` CSS ships from the build, never hand-written | **Done and now gated** by `ImladrisRuntimeAssetTest::test_app_css_never_overrides_a_design_owned_console_class`. Generalising that gate to all 150 shadowed classes remains the real fix for `C-50`. |
-| 4 | `config/imladris-runtime-baseline.json` refreshed once per merge, on `main`, by the merger | **Outstanding by design, and it is the merge blocker.** See below. |
-| 5 | Fiction never ships | **Partly discharged; the remainder needs an owner decision.** Ledger §3.3 is the full accounting. |
+| 4 | `config/imladris-runtime-baseline.json` refreshed once per merge, on `main`, by the merger | **Done** — refreshed to `5c08de94…` in `c6831f9`, the commit immediately following merge `6184bbd`. |
+| 5 | Fiction never ships | **Partly discharged; the remainder needs an owner decision — open, but no longer blocking.** Ledger §3.3 is the full accounting; see "Resolved on merge" for why the merge is copy-neutral on it. |
 
 ### What still needs the owner
 
@@ -305,6 +305,36 @@ side is wrong in both directions. Take `main`'s side in the merge, then refresh 
 the immediately-following commit. **Slices 16–18 touch that file, the design mirror, `resources/imladris/`
 and `public/assets/imladris.css` not at all** (verified: `git diff --name-only d58ed42..HEAD` over those
 paths is empty), so the blocker is exactly those four pre-existing commits.
+
+### Resolved on merge (2026-08-08)
+
+The branch merged into `main` as `6184bbd`, with the digest refresh as the immediately-following
+commit `c6831f9`, exactly as prescribed above. The merged surface digests to `5c08de94…` — neither
+parent's value, confirming the prediction that picking a side would have pinned `main` to a digest
+describing a tree that never existed.
+
+**Obligation 5 (fiction) was reclassified from blocking to open.** It had been recorded as a merge
+blocker, but the merge is copy-neutral on it: `Removed by a warden`, `Commends`, `Private counsel`,
+`Regard` and `The council` all ship on `main` byte-identically to the branch, and the branch is a net
+*reduction* (slice 18 removes `The council` from `appeals/index.php`). A merge cannot ship fiction
+that is already shipped, so the copy decision is genuinely independent of the merge and does not gate
+it. The decision itself — fix both surfaces or neither — remains open and unmade.
+
+Two things surfaced during the merge that the pre-merge analysis had not:
+
+1. **The mail transports were a semantic conflict, not a textual one.** `main` and the branch each
+   added a Cloudflare transport under a different driver name with disjoint config, and both rewrote
+   the same `Mailer` binding. The deployment pins `MAIL_DRIVER=cloudflare_smtp`, which the branch's
+   `MailerFactory` did not implement — taking it as written would have fallen through to
+   `SendmailMailer` and stopped production email silently. Resolved by keeping both transports behind
+   the factory seam; pinned by two new tests. This also fixes a pre-existing `main` defect: the cron
+   workers built their own transport and were already sending via sendmail while the web app used
+   Cloudflare.
+2. **The evidence PNGs cannot be resolved by a side-pick.** 44 conflicted (42 → branch, the two
+   `49-custom-emoji-thread` captures → main), but no blob on either side depicts the merged render,
+   and a further ~51 admin/account captures moved on `main` only and fast-forward to pre-Imladris
+   chrome with no conflict marker at all. A full `npm run evidence` regeneration on `main` is the
+   only correct resolution and is now the open follow-up.
 
 ## Post-review remediation (2026-08-08)
 

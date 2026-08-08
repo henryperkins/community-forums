@@ -486,7 +486,7 @@ Discharged during the migration rather than in one final sweep:
 
 Not discharged, and why:
 
-- **`You still earn regard…`** (`account/privacy.php`) — free to change here, but ADR 0024 obligation 5 says **fix both surfaces or neither**, and `profile/show.php` + `ProfileController` ship `Regard` as user-visible chrome. Changing only the account pane creates the two-surfaces-disagreeing state this table warns about. **Owner decision, blocks the merge.**
+- **`You still earn regard…`** (`account/privacy.php`) — free to change here, but ADR 0024 obligation 5 says **fix both surfaces or neither**, and `profile/show.php` + `ProfileController` ship `Regard` as user-visible chrome. Changing only the account pane creates the two-surfaces-disagreeing state this table warns about. **Owner decision — still open, but it does NOT block the merge** (reclassified 2026-08-08, see ADR 0024 "Resolved on merge"): every string in this "not discharged" group already ships on `main` byte-identically, so merging cannot introduce fiction that is not already live.
 - **`Remove topic (warden)` / `Remove (warden)`** (`partials/post_toolbar.php`) — adjacent to the **pinned** `Removed by a warden`; this table already says decide together.
 - **`The council`** (`leaderboard.php`) — test-pinned, see the corrected row above.
 - **`In council` / `Open to the council`** (`templates/thread.php:57`, `:171`) — **newly found by Slice 19 and not in any earlier inventory.** Stage 1 inventoried the eleven admin/account screens, so the thread surface was never swept for fiction. Recorded here so the next thread-surface slice inherits it rather than rediscovering it.
