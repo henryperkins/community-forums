@@ -2,12 +2,12 @@
 <?php $this->layout('layout'); $this->section('title', 'Appeals'); ?>
 <div class="settings-screen">
     <header class="settings-head">
-        <span class="eyebrow">Council record</span>
+        <span class="eyebrow">Moderation</span>
         <h1>Appeals</h1>
     </header>
     <div class="settings">
         <?= $this->partial('partials/settings_nav') ?>
-        <div class="settings-pane mod-pane">
+        <div class="settings-pane">
 
     <?php if (!empty($errors)): ?>
         <div class="card error-list" role="alert">
@@ -25,7 +25,7 @@
     <?php if (!empty($eligiblePosts) || !empty($eligibleLogs)): ?>
         <section class="card">
             <h2>Appealable actions</h2>
-            <p class="member-note">Explain what should be reviewed. The council record keeps the original action and your reason together.</p>
+            <p class="member-note">Explain what should be reviewed. The moderation record keeps the original action and your reason together.</p>
             <ul class="report-list">
                 <?php foreach ($eligiblePosts as $post): ?>
                     <?php $oldReason = (($old['target_type'] ?? '') === 'post' && (int) ($old['target_id'] ?? 0) === (int) $post['id']) ? (string) ($old['reason'] ?? '') : ''; ?>

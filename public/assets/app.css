@@ -8041,74 +8041,17 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
 }
 .dm-group.mine .dm-body blockquote { border-left-color: var(--gold-400); }
 
-/* — Moderation: warden's table and member appeal surfaces. — */
-.mod {
-    max-width: 1120px;
-    margin: 0 auto;
-    width: 100%;
-    padding: 24px 28px 64px;
-}
-.mod-head {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    margin-bottom: 4px;
-}
-.mod-head .eyebrow {
-    display: block;
-    white-space: nowrap;
-    line-height: 1;
-    margin: 0 0 5px;
-}
-.mod-head h1 {
-    font-size: 1.9rem;
-    margin: 0;
-    line-height: 1.1;
-    white-space: nowrap;
-}
-.mod-head > span:first-child {
-    min-width: 0;
-}
-.mod-pill {
-    margin-left: auto;
-    color: var(--green-800);
-    background: var(--brand-subtle);
-    box-shadow: inset 0 0 0 1px var(--green-200);
-}
-.mod-subnav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    margin: 14px 0 22px;
-    border-bottom: 1px solid var(--border-hair);
-}
-.mod-subnav a,
-.mod-subnav button {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-label);
-    letter-spacing: .03em;
-    font-size: .82rem;
-    color: var(--text-muted);
-    background: none;
-    border: 0;
-    cursor: pointer;
-    padding: 9px 13px;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    white-space: nowrap;
-}
-.mod-subnav a:hover,
-.mod-subnav button:hover {
-    color: var(--text-strong);
-    text-decoration: none;
-}
-.mod-subnav a.active,
-.mod-subnav button.active {
-    color: var(--text-strong);
-    border-bottom-color: var(--accent-2);
-}
+/* — Moderation queues. —
+   Slice 18 moved /mod/reports, /mod/approvals, /mod/appeals and /mod/u/{id}
+   onto the shared operator console chrome (admin/_console), which ADR 0024
+   decision 2 makes the eleventh area. That retired this surface's own
+   `.mod`, `.mod-head`, `.mod-pill`, `.mod-subnav` and `.mod-pane` chrome --
+   deleted here rather than left as dead rules, since nothing in templates/,
+   public/assets/*.js or the specs referenced them once the swap landed.
+
+   The queue count survives: the `mod-count` badge is `feature-added` (the
+   design's tier models no counts), so it is kept and now rides the console's
+   own tab. */
 .mod-count {
     font-family: var(--font-mono);
     font-size: .68rem;
@@ -8122,7 +8065,7 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     color: var(--text-muted);
     border: 1px solid var(--border-hair);
 }
-.mod-subnav .active .mod-count {
+.admin-tab.is-active .mod-count {
     background: var(--gold-100);
     color: var(--gold-700);
     border-color: var(--gold-200);
@@ -8131,29 +8074,6 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
     background: #F3E2DC;
     color: var(--rust);
     border-color: color-mix(in srgb, var(--rust) 30%, transparent);
-}
-.mod-pane {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-.mod-pane .board-header {
-    margin-bottom: 4px;
-}
-.mod-pane .board-header h1 {
-    font-size: 1.4rem;
-    margin: 0 0 3px;
-}
-.mod-pane .board-header .muted {
-    margin: 0;
-    max-width: 70ch;
-}
-.mod-pane h2 {
-    font-size: 1.2rem;
-    margin: 8px 0 6px;
-}
-.mod-pane .card > h2:first-child {
-    margin-top: 0;
 }
 .report-list {
     list-style: none;

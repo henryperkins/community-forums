@@ -2,6 +2,7 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Moderate · ' . ($subject['username'] ?? ''));
+$this->section('variant', 'admin');
 $display = ($subject['display_name'] ?? '') !== '' ? $subject['display_name'] : ($subject['username'] ?? '');
 $uid = (int) $subject['id'];
 $status = (string) ($subject['status'] ?? 'active');
@@ -21,22 +22,8 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
     return $ctx === $context ? (string) ($old[$field] ?? '') : '';
 };
 ?>
-<div class="mod reports-view">
-    <header class="mod-head">
-        <span>
-            <span class="eyebrow">Warden's table</span>
-            <h1><?= $e($display) ?> <span class="muted">@<?= $e($subject['username']) ?></span></h1>
-        </span>
-        <span class="pill mod-pill">Moderation</span>
-    </header>
-
-    <nav class="mod-subnav" aria-label="Moderation queues">
-        <a href="/mod/reports">Reports</a>
-        <a href="/mod/approvals">Approval hold</a>
-        <a href="/mod/appeals">Appeals</a>
-    </nav>
-
-    <div class="mod-pane">
+<?= $this->partial('admin/_console', ['area' => 'moderation', 'tab' => 'reports']) ?>
+        <h2 class="admin-record-title"><?= $e($display) ?> <span class="muted">@<?= $e($subject['username']) ?></span></h2>
         <?php if ($ctx !== null && $errs !== [] && (!empty($is_self) || !in_array($ctx, ['warn', 'note'], true))): ?>
             <?php
             // Failed action whose form is not on this page (suspend/ban/lift
@@ -213,5 +200,4 @@ $oldv = function (string $context, string $field) use ($ctx, $old): string {
             <?php endif; ?>
             <?php endif; ?>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>

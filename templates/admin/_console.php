@@ -23,6 +23,23 @@
  */
 $area = (string) ($area ?? '');
 $tab = (string) ($tab ?? '');
+/*
+ * Optional per-tab queue counts, e.g. ['reports' => 4, 'approvals' => 2]. Only
+ * the Moderation area passes them today: the `mod-count` badge on the Reports
+ * tab is ADR 0024 `feature-added` (production has it, the design never modelled
+ * it), so it is kept and styled rather than dropped in the chrome swap. Absent
+ * or zero renders nothing, so every other area is unchanged.
+ */
+$counts = is_array($counts ?? null) ? $counts : [];
+$urgentTabs = is_array($urgent_tabs ?? null) ? $urgent_tabs : [];
+$tabCount = function (string $key) use ($counts, $urgentTabs, $e): string {
+    $n = (int) ($counts[$key] ?? 0);
+    if ($n <= 0) {
+        return '';
+    }
+    $class = 'mod-count' . (!empty($urgentTabs[$key]) ? ' is-urgent' : '');
+    return ' <span class="' . $class . '">' . $e((string) $n) . '</span>';
+};
 // A leaf may scope its own pane styles (the old <div class="admin x"> wrapper
 // carried this); everything else styles off .admin-console[data-area].
 $paneClass = trim((string) ($pane_class ?? ''));
@@ -189,9 +206,9 @@ $disabledNote = 'Disabled until the feature flag is enabled';
                         <span class="subnav-item-note"><?= $e($disabledNote) ?></span>
                     </span>
                 <?php elseif ($key === $tab): ?>
-                    <span class="admin-tab is-active" aria-current="page"><?= $e($item['label']) ?></span>
+                    <span class="admin-tab is-active" aria-current="page"><?= $e($item['label']) ?><?= $tabCount($key) ?></span>
                 <?php else: ?>
-                    <a class="admin-tab" href="<?= $e($item['href']) ?>"><?= $e($item['label']) ?></a>
+                    <a class="admin-tab" href="<?= $e($item['href']) ?>"><?= $e($item['label']) ?><?= $tabCount($key) ?></a>
                 <?php endif; ?>
             <?php endforeach; ?>
         </nav>

@@ -481,11 +481,46 @@ final class AppImladrisFidelityTest extends TestCase
         $res = $this->get('/mod/reports');
 
         $this->assertStatus(200, $res);
-        $this->assertSeeText($res, 'mod-head');
-        $this->assertSeeText($res, 'mod-subnav');
-        $this->assertSeeText($res, 'mod-pane');
+        // Slice 18: the moderation queues moved onto the shared operator console
+        // chrome, which ADR 0024 decision 2 makes the eleventh area. The three
+        // classes this used to name (`mod-head`, `mod-subnav`, `mod-pane`) were
+        // this surface's own chrome and are deliberately gone, together with the
+        // `Warden's table` eyebrow they carried.
+        $this->assertSeeText($res, 'admin-tier');
+        $this->assertSeeText($res, 'admin-tabs');
+        $this->assertSeeText($res, 'admin-pane');
+        self::assertStringNotContainsString("Warden's table", $res->body());
+        self::assertStringNotContainsString('mod-subnav', $res->body());
         $this->assertSeeText($res, 'report-row is-urgent');
         $this->assertSeeText($res, 'wardens-table-report-marker');
+    }
+
+    /**
+     * Slice 18 -- ADMIN.md §9.4 least privilege, ADR 0024 constraint 4. /mod/* is
+     * moderator-reachable while /admin/* needs requireAdmin(), so the console
+     * tier a moderator sees on a queue must be reduced to the one area they can
+     * actually open. Showing ten areas that all 403 would be show-and-deny.
+     */
+    public function test_moderator_sees_only_the_moderation_area_on_a_queue(): void
+    {
+        // Board authority comes from board_moderators, not users.role: a bare
+        // 'moderator' role reaches nothing, so assign the board explicitly.
+        $board = $this->makeBoard($this->makeCategory('Warden Scope'), ['name' => 'Warden Scope']);
+        $mod = $this->makeUser(['username' => 'queue_warden']);
+        (new \App\Repository\BoardModeratorRepository($this->db))->assign((int) $board['id'], (int) $mod['id']);
+        $this->actingAs($mod);
+
+        $res = $this->get('/mod/reports');
+        $this->assertStatus(200, $res);
+        $body = $res->body();
+        self::assertStringContainsString('admin-tier', $body);
+        self::assertStringContainsString('Moderation', $body);
+        // No admin-only area is offered.
+        foreach (['/admin/structure', '/admin/users', '/admin/settings', '/admin/branding'] as $adminOnly) {
+            self::assertStringNotContainsString('href="' . $adminOnly . '"', $body, $adminOnly . ' must not appear in a moderator tier.');
+        }
+        // The queue still titles itself from the area, and no leaf emits an h1.
+        self::assertSame(1, substr_count($body, '<h1'), 'the area owns the single h1');
     }
 
     public function test_topic_workflow_renders_topic_tools_controls(): void

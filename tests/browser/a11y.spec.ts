@@ -360,7 +360,10 @@ test('staff appeals queue has no serious axe violations (resolve form)', async (
 
   await login(page, 'alice@retro.test');
   await visit(page, '/mod/appeals');
-  await expect(page.getByRole('heading', { name: 'Appeals queue' })).toBeVisible();
+  // Slice 18 moved the moderation queues onto the shared operator console, so
+  // the area owns the single h1 and the lit tab names the queue.
+  await expect(page.getByRole('heading', { level: 1, name: 'Queues & anti-abuse' })).toBeVisible();
+  await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText(/Appeals/);
   const resolveForm = page.locator('form.appeal-resolve').first();
   await expect(resolveForm).toBeVisible();
   await expectNoSeriousA11yViolations(page, info, '.appeal-resolve');

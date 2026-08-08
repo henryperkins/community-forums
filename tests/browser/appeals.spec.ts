@@ -93,7 +93,13 @@ test('member opens an appeal and staff resolves it through the no-JS queue', asy
   await login(page, 'alice@retro.test');
 
   await visit(page, '/mod/appeals');
-  await expect(page.getByRole('heading', { name: 'Appeals queue' })).toBeVisible();
+  // Slice 18 moved the moderation queues onto the shared operator console, so
+  // the area owns the single h1 ('Queues & anti-abuse') and the lit tab names
+  // the queue -- the same one-area-heading contract slice 14 certified for the
+  // packages drill-ins. No leaf emits an h1 of its own any more.
+  await expect(page.getByRole('heading', { level: 1, name: 'Queues & anti-abuse' })).toBeVisible();
+  await expect(page.locator('.admin-tab.is-active')).toHaveText(/Appeals/);
+  await expect(page.getByRole('heading', { level: 2, name: 'Appeals' })).toBeVisible();
   const queueRow = page.locator('li.report-row').filter({ has: page.locator('form.appeal-resolve') }).first();
   await expect(queueRow).toBeVisible();
   await shot(page, info, '45-appeals-staff-queue');

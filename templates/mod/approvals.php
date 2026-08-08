@@ -2,26 +2,12 @@
 <?php
 $this->layout('layout');
 $this->section('title', 'Approval queue');
+$this->section('variant', 'admin');
 $this->section('robots', 'noindex, nofollow');
 $topicCount = count($pending_threads ?? []);
 $replyCount = count($pending_posts ?? []);
 ?>
-<div class="mod reports-view">
-    <header class="mod-head">
-        <span>
-            <span class="eyebrow">Warden's table</span>
-            <h1>Approval queue</h1>
-        </span>
-        <span class="pill mod-pill">Moderation</span>
-    </header>
-
-    <nav class="mod-subnav" aria-label="Moderation queues">
-        <a href="/mod/reports">Reports</a>
-        <a class="active" href="/mod/approvals">Approval hold <span class="mod-count"><?= $topicCount + $replyCount ?></span></a>
-        <a href="/mod/appeals">Appeals</a>
-    </nav>
-
-    <div class="mod-pane">
+<?= $this->partial('admin/_console', ['area' => 'moderation', 'tab' => 'approvals', 'counts' => ['approvals' => $topicCount + $replyCount]]) ?>
         <header class="board-header">
             <h2>Approval hold</h2>
             <p class="muted">Content held by anti-abuse rules or board approval. Approving publishes it and runs the normal counters and notifications; rejecting removes it.</p>
@@ -71,5 +57,4 @@ $replyCount = count($pending_posts ?? []);
                 </ul>
             <?php endif; ?>
         </section>
-    </div>
-</div>
+<?= $this->partial('admin/_console_end') ?>
