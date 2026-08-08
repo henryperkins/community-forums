@@ -2963,6 +2963,7 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .admin-bar-right {
     margin-left: auto;
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 12px;
     min-width: 0;
@@ -2987,6 +2988,12 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
 .admin-bar-user:hover { color: var(--text-strong); text-decoration: none; }
 .admin-bar-username { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-bar-action-label { font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; }
+@media (max-width: 900px) {
+    .admin-bar-right { gap: 10px; }
+    .admin-bar-search,
+    .admin-bar-action-label,
+    .admin-bar-username { display: none; }
+}
 /* Disabled areas keep the note the nav contract has always carried; it is read
    out but never occupies a line of its own in the pill row. */
 .admin-tier-item.is-disabled {
@@ -3254,7 +3261,8 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     font-family: var(--font-label);
     font-size: .76rem;
 }
-.activity-table-shell {
+.activity-table-shell,
+.member-directory-table-shell {
     position: relative;
     min-width: 0;
     max-width: 100%;
@@ -5600,11 +5608,6 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
        the section tabs wrap. No drawer, no focus trap, no JavaScript — the
        console nav behaves identically with scripting disabled.
        ADMIN.md §9.4, amended by ADR 0024. */
-    .admin-bar-id { height: auto; flex-wrap: wrap; gap: 10px; padding: 10px 16px; }
-    .admin-bar-right { gap: 10px; }
-    .admin-bar-search { display: none; }
-    .admin-bar-action-label, .admin-bar-username { display: none; }
-    .admin-tier { padding: 0 16px 9px; }
     /* Urgent actions have to work on a phone: 44px minimum target. */
     .admin-tier-item { min-height: 44px; display: inline-flex; align-items: center; padding: 8px 12px; }
     .admin-tab { min-height: 44px; display: inline-flex; align-items: center; }
@@ -5697,7 +5700,8 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         font-size: .68rem;
         transition: opacity var(--dur-fast) var(--ease-calm);
     }
-    .activity-table-shell::after {
+    .activity-table-shell::after,
+    .member-directory-table-shell::after {
         content: "";
         position: absolute;
         z-index: 2;
@@ -5710,9 +5714,13 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
         transition: opacity var(--dur-fast) var(--ease-calm);
     }
     .activity-table-shell.is-at-end::after,
-    .activity-table-shell.is-unneeded::after { opacity: 0; }
+    .activity-table-shell.is-unneeded::after,
+    .member-directory-table-shell.is-at-end::after,
+    .member-directory-table-shell.is-unneeded::after { opacity: 0; }
     .activity-table-shell.is-at-end .table-scroll-cue,
-    .activity-table-shell.is-unneeded .table-scroll-cue {
+    .activity-table-shell.is-unneeded .table-scroll-cue,
+    .member-directory-table-shell.is-at-end .table-scroll-cue,
+    .member-directory-table-shell.is-unneeded .table-scroll-cue {
         opacity: 0;
         visibility: hidden;
     }
@@ -10084,6 +10092,42 @@ body.thread-restructure-open { overflow: hidden; }
     border-color: var(--gold-500);
     box-shadow: 0 0 0 3px var(--focus-ring);
 }
+.member-directory-advanced-filters {
+    margin: 14px 0 0;
+    border-top: 1px solid var(--border-hair);
+}
+.member-directory-advanced-filters > summary {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: var(--font-label);
+    font-size: .72rem;
+    letter-spacing: .08em;
+    list-style: none;
+    text-transform: uppercase;
+}
+.member-directory-advanced-filters > summary::marker { content: ""; }
+.member-directory-advanced-filters > summary::-webkit-details-marker { display: none; }
+.member-directory-advanced-filters > summary::after {
+    content: "+";
+    margin-left: auto;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+}
+.member-directory-advanced-filters[open] > summary::after { content: "-"; }
+.member-directory-advanced-filters > summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+@media (max-width: 860px) {
+    .member-directory-advanced-filters > summary { min-height: 44px; }
+}
+.member-directory-advanced-filter-grid {
+    margin-top: 10px;
+}
 .admin-console .member-directory-filter-actions {
     display: flex;
     align-items: center;
@@ -10482,6 +10526,7 @@ body.thread-restructure-open { overflow: hidden; }
     }
     .admin-console .member-directory-filter-actions {
         align-items: stretch;
+        flex-wrap: wrap;
     }
     .member-directory-result-count {
         flex: 1 1 100%;

@@ -375,6 +375,37 @@ final class AdminUserBulkTest extends TestCase
         $this->assertDontSeeText($res, 'No users match these filters.');
     }
 
+    public function test_directory_keeps_advanced_filters_disclosed_after_a_get_round_trip(): void
+    {
+        $this->actingAs($this->makeAdmin());
+
+        $initial = $this->get('/admin/users');
+
+        $this->assertStatus(200, $initial);
+        $body = $initial->body();
+        self::assertMatchesRegularExpression(
+            '/<div class="filter-grid member-directory-filter-grid member-directory-common-filter-grid">[\s\S]*?name="q"[\s\S]*?name="role"[\s\S]*?name="status"[\s\S]*?<\/div>\s*<details class="member-directory-advanced-filters">/',
+            $body,
+        );
+        self::assertStringContainsString('<summary>More filters</summary>', $body);
+        self::assertStringNotContainsString('<details class="member-directory-advanced-filters" open>', $body);
+        self::assertStringContainsString('class="member-directory-table-shell" data-overflow-cue', $body);
+        self::assertStringContainsString('role="region" aria-label="User directory" data-overflow-region', $body);
+
+        $filtered = $this->get('/admin/users', ['last_seen' => '7']);
+
+        $this->assertStatus(200, $filtered);
+        self::assertStringContainsString('<details class="member-directory-advanced-filters" open>', $filtered->body());
+        self::assertStringContainsString('<option value="7" selected>Past 7 days</option>', $filtered->body());
+
+        $zeroPostRange = $this->get('/admin/users', ['min_posts' => '0', 'max_posts' => '0']);
+
+        $this->assertStatus(200, $zeroPostRange);
+        self::assertStringContainsString('<details class="member-directory-advanced-filters" open>', $zeroPostRange->body());
+        self::assertStringContainsString('name="min_posts" class="input member-directory-number-input" min="0" value="0"', $zeroPostRange->body());
+        self::assertStringContainsString('name="max_posts" class="input member-directory-number-input" min="0" value="0"', $zeroPostRange->body());
+    }
+
     public function test_member_tabs_disable_the_invitations_destination_when_the_flag_is_dark(): void
     {
         $admin = $this->makeAdmin();

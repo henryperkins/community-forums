@@ -19,6 +19,13 @@ $resultLabel = $memberCount . ' member' . ($memberCount === 1 ? '' : 's') . ' of
 $selectedLabel = $selectedCount === 0
     ? 'None selected'
     : $selectedCount . ' member' . ($selectedCount === 1 ? '' : 's') . ' selected';
+$hasAdvancedFilters = false;
+foreach (['last_seen', 'joined_from', 'joined_to', 'min_posts', 'max_posts'] as $key) {
+    if ((string) ($filters[$key] ?? '') !== '') {
+        $hasAdvancedFilters = true;
+        break;
+    }
+}
 
 /** Sortable column header that preserves the active filters and toggles direction. */
 $sortHeader = function (string $key, string $label, string $class = '') use ($filters, $sort, $dir, $e): string {
@@ -39,7 +46,7 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
 <?= $this->partial('admin/_member_tabs', ['active' => 'directory', 'pane_class' => 'member-directory']) ?>
     <section class="card member-directory-filters">
         <form method="get" action="/admin/users" class="filter-form member-directory-filter-form">
-            <div class="filter-grid member-directory-filter-grid">
+            <div class="filter-grid member-directory-filter-grid member-directory-common-filter-grid">
                 <label class="field">
                     <span>Search</span>
                     <input type="search" name="q" class="input" maxlength="80" value="<?= $e($filters['q'] ?? '') ?>" placeholder="Username, name, or email">
@@ -63,34 +70,39 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                         <option value="deactivated"<?= $sel('status', 'deactivated') ?>>Deactivated</option>
                     </select>
                 </label>
-                <label class="field">
-                    <span>Last seen</span>
-                    <select name="last_seen" class="input">
-                        <option value="">Any time</option>
-                        <option value="1"<?= $sel('last_seen', '1') ?>>Past 24 hours</option>
-                        <option value="7"<?= $sel('last_seen', '7') ?>>Past 7 days</option>
-                        <option value="30"<?= $sel('last_seen', '30') ?>>Past 30 days</option>
-                        <option value="90"<?= $sel('last_seen', '90') ?>>Past 90 days</option>
-                        <option value="never"<?= $sel('last_seen', 'never') ?>>Never</option>
-                    </select>
-                </label>
-                <label class="field">
-                    <span>Joined from</span>
-                    <input type="date" name="joined_from" class="input" value="<?= $e($filters['joined_from'] ?? '') ?>">
-                </label>
-                <label class="field">
-                    <span>Joined to</span>
-                    <input type="date" name="joined_to" class="input" value="<?= $e($filters['joined_to'] ?? '') ?>">
-                </label>
-                <label class="field">
-                    <span>Min posts</span>
-                    <input type="number" name="min_posts" class="input member-directory-number-input" min="0" value="<?= $e($filters['min_posts'] ?? '') ?>">
-                </label>
-                <label class="field">
-                    <span>Max posts</span>
-                    <input type="number" name="max_posts" class="input member-directory-number-input" min="0" value="<?= $e($filters['max_posts'] ?? '') ?>">
-                </label>
             </div>
+            <details class="member-directory-advanced-filters"<?= $hasAdvancedFilters ? ' open' : '' ?>>
+                <summary>More filters</summary>
+                <div class="filter-grid member-directory-filter-grid member-directory-advanced-filter-grid">
+                    <label class="field">
+                        <span>Last seen</span>
+                        <select name="last_seen" class="input">
+                            <option value="">Any time</option>
+                            <option value="1"<?= $sel('last_seen', '1') ?>>Past 24 hours</option>
+                            <option value="7"<?= $sel('last_seen', '7') ?>>Past 7 days</option>
+                            <option value="30"<?= $sel('last_seen', '30') ?>>Past 30 days</option>
+                            <option value="90"<?= $sel('last_seen', '90') ?>>Past 90 days</option>
+                            <option value="never"<?= $sel('last_seen', 'never') ?>>Never</option>
+                        </select>
+                    </label>
+                    <label class="field">
+                        <span>Joined from</span>
+                        <input type="date" name="joined_from" class="input" value="<?= $e($filters['joined_from'] ?? '') ?>">
+                    </label>
+                    <label class="field">
+                        <span>Joined to</span>
+                        <input type="date" name="joined_to" class="input" value="<?= $e($filters['joined_to'] ?? '') ?>">
+                    </label>
+                    <label class="field">
+                        <span>Min posts</span>
+                        <input type="number" name="min_posts" class="input member-directory-number-input" min="0" value="<?= $e($filters['min_posts'] ?? '') ?>">
+                    </label>
+                    <label class="field">
+                        <span>Max posts</span>
+                        <input type="number" name="max_posts" class="input member-directory-number-input" min="0" value="<?= $e($filters['max_posts'] ?? '') ?>">
+                    </label>
+                </div>
+            </details>
             <input type="hidden" name="sort" value="<?= $e($sort) ?>">
             <input type="hidden" name="direction" value="<?= $e($dir) ?>">
             <div class="form-actions member-directory-filter-actions">
@@ -115,8 +127,10 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
         <input type="hidden" name="page" value="<?= $page ?>">
 
         <section class="card member-directory-table-card">
-            <div class="table-scroll" tabindex="0" role="region" aria-label="User directory">
-                <table class="audit member-directory-table">
+            <div class="member-directory-table-shell" data-overflow-cue>
+                <p class="table-scroll-cue" data-overflow-cue-label>Scroll for state, activity, and dates <span aria-hidden="true">→</span></p>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="User directory" data-overflow-region>
+                    <table class="audit member-directory-table">
                     <thead>
                         <tr>
                             <th scope="col" class="col-select"><input type="checkbox" data-bulk-toggle aria-label="Select all members on this page"></th>
@@ -163,7 +177,8 @@ $sortHeader = function (string $key, string $label, string $class = '') use ($fi
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
 
             <?php if ($users === []): ?>
