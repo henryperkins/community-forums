@@ -14,7 +14,7 @@ This project is the **source of truth**: the tokens consumers link, the reusable
 
 ## Sources
 
-Built by reading the product's own code. The authoritative material, in **`henryperkins/community-forums`** (vanilla PHP + MySQL, server-rendered) at commit **`3fa5704e`** (main, 2026-08-02 — see `manifest.json`):
+Built by reading the product's own code. The authoritative material, in **`henryperkins/community-forums`** (vanilla PHP + MySQL, server-rendered) at commit **`4efe4e33`** (main, 2026-07-14 — see `manifest.json`):
 
 - `public/assets/app.css` — the **authoritative token + component CSS**, transcribed into `tokens/` and `components.css`, values unchanged.
 - `templates/partials/*.php` — the real markup (topbar, sidebar, thread_row, post, monogram) the React primitives recreate.

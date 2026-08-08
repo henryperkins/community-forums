@@ -568,6 +568,196 @@ final class ImladrisRuntimeAssetTest extends TestCase
         );
     }
 
+    public function test_design_surface_digest_matches_the_recorded_baseline(): void
+    {
+        // The five CSS files in CSS_SOURCES are the only design inputs the builder
+        // reads, so nothing downstream noticed if the mirror was re-synced with a
+        // reordered, renamed or deleted admin screen. This digest is the tripwire.
+        // It proves nothing about fidelity — only that the design moved.
+        $baseline = json_decode(
+            (string) file_get_contents(self::ROOT . '/config/imladris-design-baseline.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+        $recorded = $baseline['design_surface']['sha256'] ?? null;
+        self::assertIsString($recorded);
+
+        $builder = new ImladrisAssetBuilder(self::ROOT);
+
+        self::assertSame(
+            $recorded,
+            $builder->designSurfaceDigest(),
+            'The Imladris design screens changed after the last adoption. Re-review the adopted '
+            . 'surfaces against the new design, then refresh config/imladris-design-baseline.json '
+            . 'with: php bin/build-imladris-assets.php --print-design-digest',
+        );
+    }
+
+    public function test_app_css_never_overrides_a_design_owned_console_class(): void
+    {
+        // ADR 0024 obligation 3: the console bar and area tier ship from
+        // composer build:imladris. app.css is unlayered, so a bare re-declaration
+        // there silently beats the @layer rule at any specificity — the exact
+        // failure the obligation exists to prevent, and until now unguarded.
+        //
+        // The gate is property-level, not name-level, because the application
+        // legitimately *complements* these classes: .admin-bar-brand adds a
+        // text-decoration reset the design never declares (its prototype has no
+        // global anchor style). Qualified selectors (:hover, .is-disabled,
+        // descendant) and responsive @media rules are the sanctioned complement
+        // and are out of scope here; a bare top-level redeclaration of a property
+        // the design already sets is not.
+        $design = self::bareClassProperties(
+            (string) file_get_contents(self::ROOT . '/public/assets/imladris.css'),
+        );
+        $application = self::bareClassProperties(
+            (string) file_get_contents(self::ROOT . '/public/assets/app.css'),
+        );
+
+        $owned = array_filter(
+            array_keys($design),
+            static fn (string $selector): bool => preg_match('/^\.admin-(bar|tier)/', $selector) === 1,
+        );
+        self::assertNotEmpty($owned, 'imladris.css should own the console bar and tier classes.');
+
+        $collisions = [];
+        foreach ($owned as $selector) {
+            foreach (array_keys(array_intersect_key($application[$selector] ?? [], $design[$selector])) as $property) {
+                $collisions[] = $selector . ' { ' . $property . ' }';
+            }
+        }
+
+        self::assertSame(
+            [],
+            $collisions,
+            'app.css re-declares a property the Imladris layer already sets on a design-owned '
+            . 'console class. Because app.css is unlayered it wins silently. Either drop the '
+            . 'declaration or qualify the selector (:hover, a state class, a descendant, or a '
+            . 'responsive @media rule).',
+        );
+    }
+
+    public function test_design_mirror_provenance_is_self_consistent(): void
+    {
+        // README.md cites the inspected commit in prose and defers to manifest.json
+        // for it ("see manifest.json"). They had drifted apart — the README named
+        // 3fa5704e, an unrelated fly-DB merge five days after the manifest's own
+        // 2026-07-14 inspection of 4efe4e33 — so the mirror disagreed with itself
+        // about which product commit it was built from.
+        $mirror = self::ROOT . '/docs/design-system/imladris';
+        $manifest = json_decode(
+            (string) file_get_contents($mirror . '/manifest.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+        $commit = $manifest['inspected_commit'] ?? null;
+        self::assertIsString($commit);
+        self::assertMatchesRegularExpression('/^[0-9a-f]{40}$/', $commit);
+
+        $readme = (string) file_get_contents($mirror . '/README.md');
+
+        self::assertStringContainsString(
+            substr($commit, 0, 8),
+            $readme,
+            'docs/design-system/imladris/README.md names a different inspected commit than '
+            . 'manifest.json, which it cites as the source of that fact.',
+        );
+    }
+
+    /**
+     * Every top-level rule whose selector is a bare class, as class => property set.
+     * At-rule blocks (@media, @supports, @keyframes) are removed first: rules inside
+     * them are deliberate responsive/state complements, not silent overrides.
+     *
+     * @return array<string,array<string,true>>
+     */
+    private static function bareClassProperties(string $css): array
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+        $css = self::stripAtRuleBlocks($css);
+
+        $map = [];
+        if (preg_match_all('/([^{}]+)\{([^{}]*)\}/s', $css, $matches, PREG_SET_ORDER) === false) {
+            return $map;
+        }
+
+        foreach ($matches as $rule) {
+            $properties = [];
+            foreach (explode(';', $rule[2]) as $declaration) {
+                $name = strtolower(trim(explode(':', $declaration, 2)[0]));
+                if ($name !== '') {
+                    $properties[$name] = true;
+                }
+            }
+            if ($properties === []) {
+                continue;
+            }
+            foreach (explode(',', $rule[1]) as $selector) {
+                $selector = trim($selector);
+                if (preg_match('/^\.[A-Za-z0-9_-]+$/', $selector) === 1) {
+                    $map[$selector] = ($map[$selector] ?? []) + $properties;
+                }
+            }
+        }
+
+        return $map;
+    }
+
+    private static function stripAtRuleBlocks(string $css): string
+    {
+        $out = '';
+        $length = strlen($css);
+        $i = 0;
+
+        while ($i < $length) {
+            if ($css[$i] !== '@') {
+                $out .= $css[$i];
+                $i++;
+                continue;
+            }
+
+            $cursor = $i;
+            while ($cursor < $length && $css[$cursor] !== '{' && $css[$cursor] !== ';') {
+                $cursor++;
+            }
+            if ($cursor >= $length) {
+                break;
+            }
+            if ($css[$cursor] === ';') {
+                $i = $cursor + 1;   // a statement at-rule: @import, @charset
+                continue;
+            }
+
+            $depth = 0;
+            $end = null;
+            for ($k = $cursor; $k < $length; $k++) {
+                if ($css[$k] === '{') {
+                    $depth++;
+                } elseif ($css[$k] === '}') {
+                    $depth--;
+                    if ($depth === 0) {
+                        $end = $k;
+                        break;
+                    }
+                }
+            }
+            if ($end === null) {
+                break;      // unbalanced; stop rather than mis-parse
+            }
+
+            // @layer is a grouping at-rule, not a conditional one: imladris.css
+            // wraps every rule it owns in `@layer imladris.components { … }`, so
+            // dropping the block would hide the very selectors under audit.
+            // Descend into it; drop @media/@supports/@keyframes wholesale.
+            if (strtolower(substr(trim(substr($css, $i + 1, $cursor - $i - 1)), 0, 5)) === 'layer') {
+                $out .= self::stripAtRuleBlocks(substr($css, $cursor + 1, $end - $cursor - 1));
+            }
+            $i = $end + 1;
+        }
+
+        return $out;
+    }
+
     private function makeAssetBuilderFixture(bool $useCrlfTextSources = false): string
     {
         $root = sys_get_temp_dir() . '/rb-imladris-eol-' . bin2hex(random_bytes(6));
@@ -590,6 +780,16 @@ final class ImladrisRuntimeAssetTest extends TestCase
                     'files' => [],
                     'extensions' => [],
                     'excluded' => [],
+                    'sha256' => hash('sha256', "\n"),
+                ],
+            ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",
+            'config/imladris-design-baseline.json' => json_encode([
+                'design_surface' => [
+                    'roots' => [],
+                    'files' => [],
+                    'extensions' => [],
+                    'excluded' => [],
+                    'excluded_names' => [],
                     'sha256' => hash('sha256', "\n"),
                 ],
             ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n",

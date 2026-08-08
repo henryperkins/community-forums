@@ -68,3 +68,47 @@ Three upstream states were **deliberately not taken**, because the mirror is ahe
 `.thread-list.is-board`, `.presence-widget`). Taking it requires
 `composer build:imladris`, which regenerates production assets, so it lands with the
 console-chrome slice rather than with the documentation refresh.
+
+## 2026-08-08 — two mirror facts corrected, and one artifact declared inert
+
+Both found by the verification audit that followed Slice 13, and both are cases of the
+mirror reading as more authoritative than it is.
+
+- **`README.md` provenance corrected to `4efe4e33` (2026-07-14).** It named `3fa5704e`
+  "(main, 2026-08-02 — see `manifest.json`)" while `manifest.json:6-7` records
+  `4efe4e33db6475ce9c59190ba82c72cbd7d4b868` / `2026-07-14`. The README cites the
+  manifest as the source of that fact, so the manifest wins; `3fa5704e` is a merge of an
+  unrelated Fly DB-connection PR and is implausible as an inspection anchor, whereas
+  `4efe4e33` matches the manifest's own `inspected_at` to the day. Now pinned by
+  `ImladrisRuntimeAssetTest::test_design_mirror_provenance_is_self_consistent`, so the
+  two cannot drift apart again. **Raise the correction upstream** rather than letting the
+  next sync reintroduce it.
+- **`_adherence.oxlintrc.json` is an upstream authoring aid, not a production gate.**
+  608 lines of `react/*` and `no-restricted-imports` rules over `components/**`, i.e. it
+  lints the design system's own JSX. Nothing in this repo references it (`git grep`
+  returns only the file itself) and nothing should: production ships no JSX, and the
+  design-system React is never built here. It is kept — deleting a mirrored file only
+  creates sync drift, and it will be re-added on the next sync — but it is recorded here
+  as **inert by design** so it stops reading as unenforced enforcement. The same applies
+  to `PRODUCTION_PARITY.md` and `RUNTIME_CONTRACT.md`: prose contracts, no enforcing code.
+  What *is* enforced lives in `ImladrisAssetBuilder` and `ImladrisRuntimeAssetTest`.
+
+## 2026-08-08 — the design screens are now digested
+
+`config/imladris-design-baseline.json` records a sha256 over
+`docs/design-system/imladris/{templates,components}/**` (excluding the binary
+`.thumbnail` previews). Only the five files in `ImladrisAssetBuilder::CSS_SOURCES` were
+builder inputs before this, so the screens — the things every slice actually adopts
+against — could change on a sync with no gate noticing.
+
+**Whoever syncs the mirror refreshes this digest in the same commit:**
+
+```bash
+php bin/build-imladris-assets.php --print-design-digest
+```
+
+It is a change detector, not a fidelity proof: it says "the design you adopted against
+has moved, go and re-review", nothing more. It deliberately does **not** live in
+`config/imladris-runtime-baseline.json`, which is refreshed once per merge on `main` by
+the merger (ADR 0024 obligation 4) and which no slice branch may contain a change to —
+the design surface moves on the mirror's cadence, not the merge cadence.

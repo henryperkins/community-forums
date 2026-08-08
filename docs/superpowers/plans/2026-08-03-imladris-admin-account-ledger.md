@@ -537,10 +537,22 @@ here because the ledger is the artifact Stage 2 reads.
    `6d81da590a12bd09bb8d0e282c042aa03d755a94`.
 3. **`.admin-bar`/`.admin-tier` CSS ships from the build, not by hand.** The builder reads
    `docs/design-system/imladris/`; `resources/imladris/` and `public/assets/imladris.css` are
-   **outputs**. The eleven tier class names appear **zero** times in `app.css`, so they are
-   uncontested and the layered rules render as authored. The application complement
-   (`.admin-console`, `.admin-title`, `.admin-tabs`, `.admin-tab*`, `.admin-tier-item.is-disabled`,
-   `.admin-pane`, every ≤860px rule) is hand-authored **unlayered in `app.css`**.
+   **outputs**. The application complement (`.admin-console`, `.admin-title`, `.admin-tabs`,
+   `.admin-tab*`, `.admin-tier-item.is-disabled`, `.admin-pane`, every ≤860px rule) is
+   hand-authored **unlayered in `app.css`**.
+
+   *Corrected 2026-08-08.* This rule used to claim the eleven tier class names appear **zero** times
+   in `app.css`. They do not: `.admin-bar-brand`, `.admin-bar-id`, `.admin-bar-mode`, `.admin-tier`
+   and `.admin-tier-item` are declared in **both** files. On inspection every one is a sanctioned
+   complement — a `:hover`, a state class, a descendant qualifier, a ≤860px rule, or (in the single
+   bare case, `.admin-bar-brand { text-decoration: none; }`) a property the design never declares,
+   because the design prototype has no global anchor style to reset. So the *intent* held; the
+   *stated test* for it was wrong, and "the eleven names are uncontested" is not a safe thing to
+   believe. The real rule is property-level: **`app.css` must not set a property the Imladris layer
+   already sets on the same design-owned class**, because `app.css` is unlayered and wins silently
+   at any specificity. That is now enforced —
+   `ImladrisRuntimeAssetTest::test_app_css_never_overrides_a_design_owned_console_class` (ADR 0024
+   obligation 3, previously unguarded).
 4. **`.presence-staff` reintroduces the AA regression the mirror fixed.** Building to get the tier
    also ships `background: var(--gold-100); color: var(--gold-700)` — 3.55:1 against a 4.5:1
    requirement, and it does not flip in the twilight register. Patch it to
@@ -556,3 +568,13 @@ here because the ledger is the artifact Stage 2 reads.
    specs on **desktop and mobile**; a `javaScriptEnabled:false` pass over every touched route;
    screenshots to `docs/evidence/<slice>/{desktop,mobile,comparisons}/`; and axe under
    `data-theme="system"` + `prefers-color-scheme: dark`.
+7. **The design screens are digested; whoever syncs the mirror re-baselines them.** *Added
+   2026-08-08.* `config/imladris-design-baseline.json` holds a sha256 over
+   `docs/design-system/imladris/{templates,components}/**`. Before this, the only design inputs any
+   program read were the five CSS files in `ImladrisAssetBuilder::CSS_SOURCES`, so the mirror could
+   be re-synced with a reordered, renamed or deleted **screen** — the thing every slice adopts
+   against — and every gate stayed green. Refresh it in the same commit as the sync:
+   `php bin/build-imladris-assets.php --print-design-digest`. It is a change detector, **not** a
+   fidelity proof: it says "the design moved, go and re-review". It is a **separate file from**
+   rule 5's runtime baseline on purpose — the design surface moves on the mirror's cadence, not the
+   merge cadence, so a slice branch may and should carry a change to *this* one.

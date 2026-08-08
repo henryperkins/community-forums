@@ -9,10 +9,17 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 $builder = new ImladrisAssetBuilder(dirname(__DIR__));
 $check = in_array('--check', $argv, true);
 $printApplicationDigest = in_array('--print-application-digest', $argv, true);
+$printDesignDigest = in_array('--print-design-digest', $argv, true);
 
 try {
     if ($printApplicationDigest) {
         fwrite(STDOUT, $builder->applicationSurfaceDigest() . PHP_EOL);
+        exit(0);
+    }
+    if ($printDesignDigest) {
+        // Refresh path for whoever syncs the design mirror: paste this into
+        // config/imladris-design-baseline.json in the same commit as the sync.
+        fwrite(STDOUT, $builder->designSurfaceDigest() . PHP_EOL);
         exit(0);
     }
     if ($check) {
