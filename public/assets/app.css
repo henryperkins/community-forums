@@ -11630,3 +11630,534 @@ body.thread-restructure-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .admin-console .flash { animation: none; }
 }
+
+/* --- Imladris admin features (Slice 13) ----------------------------------- */
+/* Feature flags, badge rules, badge-rule preview and the custom emoji
+   catalogue. The design is inline style= throughout; under style-src 'self'
+   every rule lands here as a class. Scoped .admin-console (or
+   .admin-console .admin-features for form/input overrides) so the forum
+   surfaces are untouched. */
+
+/* Two-up geometry, shared by badge rules and the emoji catalogue. A plain
+   wrapper, not a card: the design's columns each carry their own card. */
+.features-two-up {
+    display: grid;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+}
+.features-two-up > * { min-width: 0; }
+
+/* .card ships margin-bottom: 18px and overflow-x: auto; .admin-pane already
+   provides the 22px rhythm and every table here has its own scroll region. */
+.admin-console .card.features-stat,
+.admin-console .card.features-group-card,
+.admin-console .card.features-unknown-card,
+.admin-console .card.features-form-card,
+.admin-console .card.features-rules-card,
+.admin-console .card.features-table-card,
+.admin-console .card.features-preview-card {
+    margin: 0;
+    overflow: visible;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ---- Feature flags ---- */
+.features-intro { max-width: 92ch; }
+
+.features-corrupt-alert {
+    /* The shared .callout-danger ladder at a 9% wash, per the design. */
+    margin: 0;
+    background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised));
+    font-size: .92rem;
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+
+.features-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+}
+.admin-console .card.features-stat {
+    padding: 16px 18px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+}
+.features-stat-head {
+    display: block;
+    font-family: var(--font-label);
+    font-size: .64rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.features-stat-count {
+    display: block;
+    margin: 7px 0 4px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--text-strong);
+}
+.features-stat-detail {
+    display: block;
+    font-size: .86rem;
+    color: var(--text-muted);
+}
+
+.admin-console .card.features-group-card,
+.admin-console .card.features-unknown-card {
+    padding: 6px 20px 12px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+}
+.admin-console .card.features-unknown-card { padding: 20px 22px; }
+.features-group-title {
+    margin: 14px 0 4px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.3rem;
+    color: var(--text-strong);
+}
+.admin-console .card.features-unknown-card .features-group-title { margin: 0 0 6px; }
+
+.admin-console .table-scroll > .features-flags-table { min-width: 820px; }
+.admin-console .table-scroll > .features-unknown-table { min-width: 0; }
+.admin-console .features-table td { border-bottom: 1px solid var(--border-hair); }
+/* Top alignment is the flags table's own spec — its Rollback and Readiness
+   cells wrap to several lines against single-line neighbours. */
+.admin-console .features-flags-table td { vertical-align: top; }
+/* The flag key is a mono chip. Styled by descendant selector because the
+   <code> stays classless — two PHPUnit assertions match it byte-for-byte. */
+.admin-console .features-flags-table td.features-flag-cell code {
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    color: var(--text-strong);
+}
+.features-flag-cell { padding-left: 0; }
+
+.features-effective {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-label);
+    font-size: .72rem;
+}
+/* The design inks the on-word `--success`. On the twilight card that resolves
+   to --green-400 on --twilight-800 and measures 4.44:1 — just under AA for the
+   .72rem label. --on-done is the semantic success ink and clears it in both
+   registers; the dot keeps the design's --leaf/--green-400 hue. */
+.features-effective.is-on { color: var(--on-done); }
+.features-effective.is-off { color: var(--text-muted); }
+.features-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+.features-effective.is-on .features-dot { background: var(--leaf); }
+.features-effective.is-off .features-dot { background: var(--ink-300); }
+
+.admin-console .features-flags-table td.features-default {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+/* C-45: the design pairs --gold-100 with --gold-700, a fixed-ramp pair that
+   does not flip and measures 3.55:1 in the light register — below AA for the
+   .66rem label. --surface-staff/--on-staff is the gilt semantic pair and
+   measures 6.25:1 light, flipping correctly in twilight. */
+.features-override-pill {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-staff);
+    color: var(--on-staff);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .06em;
+}
+.features-override-none {
+    color: var(--text-faint);
+    font-size: .86rem;
+}
+.admin-console .features-flags-table td.features-rollback {
+    max-width: 34ch;
+    font-size: .88rem;
+    line-height: 1.5;
+    color: var(--text-body);
+    text-wrap: pretty;
+}
+.admin-console .features-flags-table td.features-readiness { max-width: 30ch; }
+.features-readiness-note {
+    margin: 5px 0 0;
+    font-size: .84rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.features-readiness-empty {
+    color: var(--text-faint);
+    font-size: .86rem;
+}
+
+.features-legend {
+    margin: 0;
+    max-width: 92ch;
+    font-size: .88rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.features-legend strong { color: var(--text-body); }
+.features-note {
+    margin: 0 0 14px;
+    max-width: 78ch;
+    font-size: .9rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+
+/* ---- Shared form chrome (badge rules + custom emoji) ---- */
+.admin-console .card.features-form-card {
+    padding: 20px 22px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+}
+.admin-console .features-form-card > h2 {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: var(--text-strong);
+}
+.features-card-intro {
+    margin: 0 0 16px;
+    font-size: .92rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.admin-console .admin-features .stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.admin-console .admin-features .stacked > .field,
+.admin-console .admin-features .stacked > label,
+.admin-console .admin-features .stacked > .form-actions,
+.admin-console .admin-features .stacked > .field-error,
+.admin-console .admin-features .stacked > .features-field-pair { margin-bottom: 0; }
+.admin-console .admin-features .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin: 0;
+}
+.admin-console .admin-features .field > span:first-child {
+    margin-bottom: 0;
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: .66rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.admin-console .admin-features .input {
+    padding: 8px 11px;
+    box-sizing: border-box;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+    font-size: .92rem;
+    color: var(--text-body);
+}
+.admin-console .admin-features .input:focus {
+    outline: none;
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.admin-console .admin-features input[type="number"].input,
+.admin-console .admin-features input[name="shortcode"].input,
+.admin-console .admin-features input[name="image_path"].input,
+.admin-console .admin-features select[name="mime"].input {
+    font-family: var(--font-mono);
+    font-size: .88rem;
+}
+.features-field-pair {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 12px;
+    align-items: start;
+}
+.features-field-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+.features-field-cell > .field-error { margin: 0; }
+
+/* The reaction control keeps its native checkbox — it must submit with the
+   form when JavaScript is off — painted into the design's switch track. */
+.admin-console .admin-features .features-switch { gap: 10px; padding: 0; }
+.admin-console .admin-features .features-switch input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 20px;
+    margin: 0;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    cursor: pointer;
+    transition: background-color 140ms var(--ease-calm), border-color 140ms var(--ease-calm);
+}
+.admin-console .admin-features .features-switch input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    transition: transform 140ms var(--ease-calm), background-color 140ms var(--ease-calm);
+}
+.admin-console .admin-features .features-switch input[type="checkbox"]:checked {
+    background: var(--surface-done);
+    border-color: var(--success);
+}
+.admin-console .admin-features .features-switch input[type="checkbox"]:checked::before {
+    transform: translateX(14px);
+    background: var(--success);
+}
+.admin-console .admin-features .features-switch input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+.admin-console .admin-features .features-switch > span { font-size: .92rem; }
+
+/* ---- Badge rules list ---- */
+.admin-console .card.features-rules-card {
+    padding: 6px 22px 14px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+}
+.features-rules-title {
+    margin: 15px 0 12px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: var(--text-strong);
+}
+.admin-console .features-rule-list {
+    margin: 0;
+    border-top: 1px solid var(--border-hair);
+}
+.admin-console .features-rule-list > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.features-rule-star {
+    color: var(--star);
+    font-size: 1rem;
+}
+.features-rule-name {
+    font-size: 1rem;
+    color: var(--text-strong);
+}
+.features-rule-meta {
+    font-family: var(--font-mono);
+    font-size: .8rem;
+    color: var(--text-muted);
+}
+.features-rule-actions {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-left: auto;
+}
+.admin-console .features-rowbtn {
+    font-family: var(--font-label);
+    font-size: .76rem;
+    padding: 0;
+}
+.admin-console .features-rowbtn:hover { text-decoration: underline; }
+.admin-console .linkbtn.muted.features-rowbtn { color: var(--text-muted); }
+.admin-console .linkbtn.muted.features-rowbtn:hover {
+    color: var(--text-strong);
+    text-decoration: none;
+}
+
+/* Title-case status labels, so the lower-case-token .state vocabulary is not
+   the right primitive. Both variants take a flipping semantic pair. */
+.features-pill {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .06em;
+    white-space: nowrap;
+}
+.features-pill.is-on { background: var(--surface-done); color: var(--on-done); }
+.features-pill.is-off { background: var(--surface-sunken); color: var(--text-muted); }
+
+.features-empty {
+    margin: 0;
+    padding: 40px 0;
+    text-align: center;
+    font-size: .93rem;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* ---- Badge rule preview ---- */
+.admin-console .card.features-preview-card {
+    padding: 6px 22px 18px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    animation: aiRise 200ms var(--ease-calm) both;
+}
+.features-preview-badge {
+    margin: 15px 0 3px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.5rem;
+    color: var(--text-strong);
+}
+.features-preview-meta {
+    margin: 0 0 16px;
+    font-family: var(--font-mono);
+    font-size: .84rem;
+    color: var(--text-muted);
+}
+.admin-console .features-preview-list {
+    margin: 0;
+    border-top: 1px solid var(--border-hair);
+}
+.admin-console .features-preview-list > li {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.features-preview-list .monogram {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    font-size: .74rem;
+}
+.features-preview-list a { font-size: .95rem; }
+.features-preview-metric {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    color: var(--text-muted);
+}
+
+/* ---- Custom emoji catalogue ---- */
+.admin-console .card.features-table-card {
+    padding: 6px 20px 10px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+}
+.admin-console .table-scroll > .features-emoji-table { min-width: 560px; }
+.admin-console .features-emoji-table th { padding: 14px 10px 9px; }
+.features-emoji-cell { white-space: nowrap; }
+.features-emoji-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 9px;
+    vertical-align: middle;
+    border-radius: var(--radius-sm);
+    background: var(--surface-staff);
+}
+.features-emoji-chip img {
+    display: block;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+.features-emoji-name { color: var(--text-body); }
+.features-emoji-path {
+    font-family: var(--font-mono);
+    font-size: .78rem;
+    color: var(--text-muted);
+    /* An asset path has no spaces, so without this its whole length becomes the
+       column's min-content: the table then exceeds its 560px floor, outgrows
+       what .table-scroll can absorb, and stretches the document at 390px. The
+       design's fixture paths are short enough never to show this. */
+    overflow-wrap: anywhere;
+}
+.features-emoji-reactions {
+    font-size: .88rem;
+    color: var(--text-muted);
+}
+.admin-console .features-col-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+.admin-console .features-col-actions .inline-form { justify-content: flex-end; }
+.admin-console .features-toggle-btn {
+    padding: 4px 12px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .72rem;
+    letter-spacing: .04em;
+}
+.admin-console .features-toggle-btn:hover {
+    background: var(--surface-sunken);
+    color: var(--text-strong);
+}
+
+@media (max-width: 900px) {
+    /* minmax(0, …), never a bare 1fr: a bare fr track floors at min-content, so
+       the catalogue table's 560px min-width would escape its scroll region and
+       stretch the document at 390px. */
+    .features-two-up { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+    .admin-console .card.features-form-card,
+    .admin-console .card.features-rules-card,
+    .admin-console .card.features-table-card,
+    .admin-console .card.features-preview-card,
+    .admin-console .card.features-group-card,
+    .admin-console .card.features-unknown-card { padding-inline: 16px; }
+    .features-field-pair { grid-template-columns: 1fr; }
+    .features-rule-actions { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-console .features-preview-card { animation: none; }
+    .admin-console .admin-features .features-switch input[type="checkbox"],
+    .admin-console .admin-features .features-switch input[type="checkbox"]::before { transition: none; }
+}

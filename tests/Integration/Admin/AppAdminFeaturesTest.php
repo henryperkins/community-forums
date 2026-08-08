@@ -167,4 +167,58 @@ final class AppAdminFeaturesTest extends TestCase
             $page->body(),
         );
     }
+
+    public function test_corrupt_overrides_banner_is_an_alert(): void
+    {
+        // The incident banner is the one thing on this page a screen-reader user
+        // must hear without hunting for it. Slice 13 restyled it from a bare
+        // .field-error to the console's danger callout; the role is what makes
+        // the restyle safe, so pin it rather than the class alone.
+        (new SettingRepository($this->db))->set('features', 'not-an-object');
+        $this->actingAs($this->makeAdmin(['username' => 'corrupt-alert-admin']));
+
+        $page = $this->get('/admin/features');
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('class="callout callout-danger features-corrupt-alert" role="alert"', $page->body());
+        self::assertStringContainsString('not a JSON object', $page->body());
+    }
+
+    public function test_corrupt_overrides_tiles_report_code_defaults(): void
+    {
+        // With the blob unreadable, an "N on · N off" tile would read as a live
+        // override count that no longer exists. The tiles must say so instead.
+        (new SettingRepository($this->db))->set('features', 'not-an-object');
+        $this->actingAs($this->makeAdmin(['username' => 'corrupt-tiles-admin']));
+
+        $page = $this->get('/admin/features');
+        $body = $page->body();
+
+        $this->assertStatus(200, $page);
+        self::assertStringContainsString('code defaults in effect', $body);
+        self::assertStringContainsString('all overrides ignored', $body);
+        self::assertStringNotContainsString(' unknown override', $body);
+    }
+
+    public function test_readiness_legend_renders_outside_every_table(): void
+    {
+        // The legend names "Reserved (ADR 0018)" in prose. admin-features.spec.ts
+        // counts that string inside `table .state` and requires exactly four, so
+        // the legend must sit between the last group table and Unknown overrides
+        // — never inside a table, and never back in the pane intro.
+        $this->actingAs($this->makeAdmin(['username' => 'legend-admin']));
+
+        $page = $this->get('/admin/features');
+        $body = $page->body();
+
+        $this->assertStatus(200, $page);
+        $legend = strpos($body, '<p class="features-legend">');
+        self::assertNotFalse($legend, 'the readiness legend should render');
+
+        $lastTableEnd = strrpos(substr($body, 0, $legend), '</table>');
+        self::assertNotFalse($lastTableEnd, 'the legend should follow the group tables');
+        self::assertGreaterThan($lastTableEnd, $legend);
+        self::assertLessThan(strpos($body, 'Unknown overrides'), $legend);
+        self::assertStringContainsString('Reserved (ADR 0018)', substr($body, $legend, 1200));
+    }
 }

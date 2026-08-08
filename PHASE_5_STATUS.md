@@ -1376,6 +1376,10 @@ The default-on review fixed the correctness/coverage/docs findings in-branch; th
 - **Test-hygiene consolidation:** promote one `protected setFlags(array)` to `Tests\Support\TestCase` (~20 private copies + 3 inline spellings today); consider a `FeatureFlags::GATE_A`/`GATE_B` structural constant consumed by the posture test and admin inventory so future graduations edit one source; the 47/10 count pin lives in both `AppFeatureFlagTest` and the designated `AppAdminFeaturesTest` canary.
 - **Runbooks for the B2 quartet:** `service_secrets`, `api_tokens`, `webhooks`, `first_party_hooks` still have no per-flag runbook (pre-existing gap, now live-by-default surfaces); until then `docs/runbooks/operations.md` §2 is the rollback recipe.
 
+### Imladris Slice 13 follow-up (2026-08-07, deferred)
+
+- **Duplicate badge rules are not guarded.** `BadgeRuleService::create` (`src/Service/BadgeRuleService.php:44-59`) validates badge, rule type, threshold and board scope independently, so two rules with an identical `(badge_id, rule_type, board_id)` triple can both be stored — and both audit their own grant against the same members. The Imladris design refuses that create (`docs/design-system/imladris/templates/admin-features/AdminFeatures.dc.html:424-426`); the restyle slice did **not** adopt the copy, because a message promising the invariant without an index behind it is worse than silence. Closing it needs a service check *plus* a unique index on `(badge_id, rule_type, board_id)`, which is a schema migration with a backfill decision for any duplicates already stored. Recorded as `FR-31` in `docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md`.
+
 ## Dark-flag readiness audit (2026-07-13)
 
 A live enable-and-drive audit of the eight remaining default-dark flags was

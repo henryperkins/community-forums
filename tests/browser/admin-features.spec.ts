@@ -111,8 +111,9 @@ test('admin feature inventory classifies readiness and links actionable surfaces
   await expect(rolesLink).toHaveAttribute('href', '/admin/roles');
   await expect(flagRow(page, 'slash_giphy').getByText('Operational configuration required')).toHaveCount(0);
 
-  // The Gate B reservation renders on all four rows (the fifth match is the
-  // legend copy in the pane intro), and the dark extensions console is never
+  // The Gate B reservation renders on all four rows. The readiness legend that
+  // also names it sits below the tables (Slice 13 moved it out of the intro), so
+  // the table-scoped count stays at four. The dark extensions console is never
   // linked (the nav shows it disabled instead).
   await expect(page.locator('table .state').filter({ hasText: 'Reserved (ADR 0018)' })).toHaveCount(4);
   await expect(page.locator('a[href="/admin/extensions"]')).toHaveCount(0);

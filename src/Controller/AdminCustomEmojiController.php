@@ -41,16 +41,19 @@ final class AdminCustomEmojiController extends Controller
     public function enable(Request $request, array $params): Response
     {
         $admin = $this->requireEmojiAdmin();
-        $this->container->get(CustomEmojiService::class)->setEnabled($admin, (string) ($params['shortcode'] ?? ''), true);
-        return $this->redirectWithFlash('/admin/custom-emoji', 'Custom emoji enabled.');
+        $shortcode = (string) ($params['shortcode'] ?? '');
+        $this->container->get(CustomEmojiService::class)->setEnabled($admin, $shortcode, true);
+        // A catalogue of many rows must not flash a generic outcome; name the row.
+        return $this->redirectWithFlash('/admin/custom-emoji', ':' . $shortcode . ': enabled.');
     }
 
     /** @param array<string,string> $params */
     public function disable(Request $request, array $params): Response
     {
         $admin = $this->requireEmojiAdmin();
-        $this->container->get(CustomEmojiService::class)->setEnabled($admin, (string) ($params['shortcode'] ?? ''), false);
-        return $this->redirectWithFlash('/admin/custom-emoji', 'Custom emoji disabled.');
+        $shortcode = (string) ($params['shortcode'] ?? '');
+        $this->container->get(CustomEmojiService::class)->setEnabled($admin, $shortcode, false);
+        return $this->redirectWithFlash('/admin/custom-emoji', ':' . $shortcode . ': disabled — it will render as plain text.');
     }
 
     /** @param array<string,mixed> $overlay */
