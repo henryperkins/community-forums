@@ -1376,6 +1376,27 @@ The default-on review fixed the correctness/coverage/docs findings in-branch; th
 - **Test-hygiene consolidation:** promote one `protected setFlags(array)` to `Tests\Support\TestCase` (~20 private copies + 3 inline spellings today); consider a `FeatureFlags::GATE_A`/`GATE_B` structural constant consumed by the posture test and admin inventory so future graduations edit one source; the 47/10 count pin lives in both `AppFeatureFlagTest` and the designated `AppAdminFeaturesTest` canary.
 - **Runbooks for the B2 quartet:** `service_secrets`, `api_tokens`, `webhooks`, `first_party_hooks` still have no per-flag runbook (pre-existing gap, now live-by-default surfaces); until then `docs/runbooks/operations.md` §2 is the rollback recipe.
 
+### Imladris admin/account migration — Stage 2 code-complete (2026-08-08)
+
+Slices 0–18 of ADR 0024 have landed on `feat/imladris-admin-account` with per-slice evidence under
+`docs/evidence/imladris-admin-account-slice-*/`. The closing four:
+
+- **Slice 16** (`3c9233e`) — the eight remaining account panes. Unified eleven boolean controls on the
+  design-system Switch (three idioms became one, and `role="switch"` now ships), converted four panel
+  heads from `<span>` to `<h2>`, and fixed a live anti-draft-loss defect: `setPassword` caught
+  `ValidationException` and redirected, so the pane's error slot could never render.
+- **Slice 17** (`6ace057`) — Boards, Drafts, Lifecycle and the drafts-row half of `composer.js`. Fixed a
+  second live defect: `/deactivate` and `/delete/request` share a field name, so a refused deletion lit
+  the wrong form's error on the page's destructive section.
+- **Slice 18** (`56b055b`) — the moderation queues moved onto the shared console chrome, which retired
+  their own chrome and discharged four fiction eyebrows in one move.
+- **Slice 19** — closeout: the unpinned de-fiction, the evidence sweep, and the accounting in ADR 0024's
+  new "Closeout status" section.
+
+**Not merged.** The merge is blocked on `config/imladris-runtime-baseline.json`, which four earlier
+commits rewrite against ledger §6 rule 5, and on the owner decision about the five test-pinned fiction
+strings (ADR 0024 obligation 5, "fix both surfaces or neither"). Both are recorded in ADR 0024.
+
 ### Imladris Slice 15 follow-up (2026-08-08, deferred)
 
 - **`app.css` shadows 150 shipped design-system components.** `imladris.css` ships the DS inside

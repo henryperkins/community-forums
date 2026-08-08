@@ -76,7 +76,6 @@ $wysiwygComposerOn = $richComposerOn && !empty($features['wysiwyg_composer']);
         </a>
         <?= $this->partial('partials/flash') ?>
         <?= $content ?>
-        <p class="auth-colophon">Et Eärello Endorenna utúlien.</p>
     </main>
 <?php else: ?>
     <main class="container" id="main">

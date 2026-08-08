@@ -466,8 +466,30 @@ has the same violation at `account/boards.php:37`.
 | `Welcome back to the council`; `Your seat at the council is ready.` | `auth/login.php:4`; `auth/verify.php:7` | `Welcome back`; `Your account is ready.` | |
 | `Et Eärello Endorenna utúlien.` | `layout.php:74` (`variant=auth` colophon) | Delete, or a plain tagline | Shell-adjacent; touched by any `layout.php` slice. |
 | `Vilya · Expose` | `account/boards.php:84` (hard-coded placeholder) | A real category name | |
-| `The council` | `leaderboard.php:5` | `Community` | Outside admin/account scope; listed for completeness. |
+| `The council` | `leaderboard.php:5` | — | **CORRECTED 2026-08-08 (Slice 19): this row is wrong — the string is TEST-PINNED.** `AppLeaderboardFidelityTest::test_header_has_the_council_eyebrow_and_a_sentence_case_title` pins it in the test *name* as well as the body. Slice 19 changed it, went red, and reverted. It belongs in §3.2's **TEST-PINNED** table with the other four and needs the same owner decision. Doubly out of scope: it is not an admin or account surface. |
 | `Remove topic (warden)` / `Remove (warden)` | `partials/post_toolbar.php:55,101` | `Remove topic (moderator)` / `Remove (moderator)` | Outside scope, and adjacent to the **pinned** `Removed by a warden` — decide together. |
+
+### 3.3 De-fiction pass — what Slice 19 discharged, and what it could not
+
+Discharged during the migration rather than in one final sweep:
+
+| String | Where | Discharged by |
+|---|---|---|
+| `Operator desk` ×3, `Accountability`, `Appearance`, `Runtime controls`, `Moderation`, `Operations` page-head eyebrows | `admin/*` | Slices 5–13, with the eyebrows the design deletes (§0.1) |
+| `…and preview before the council sees the updated hall.` | `admin/branding.php` | Slice 8 |
+| `Vilya · Expose` | `account/boards.php` | **Slice 17** |
+| `Warden's table` ×4 | `mod/{reports,approvals,appeals,user}` | **Slice 18**, by deleting the eyebrow with the chrome swap — one move, four strings, as this table predicted. Do not count them again. |
+| `Council record` / `The council record keeps…` | `appeals/index.php` | **Slice 18** |
+| `Welcome back to the council` | `auth/login.php` | **Slice 19** → `Welcome back` |
+| `Your seat at the council is ready.` | `auth/verify.php` | **Slice 19** → `Your account is ready.` |
+| `Et Eärello Endorenna utúlien.` | `layout.php` auth colophon | **Slice 19** — deleted. A decorative quotation has no truthful replacement, and "Delete" was this table's first remedy. Its `auth-colophon` class was pinned, so the assertion and the now-dead rule went with it. |
+
+Not discharged, and why:
+
+- **`You still earn regard…`** (`account/privacy.php`) — free to change here, but ADR 0024 obligation 5 says **fix both surfaces or neither**, and `profile/show.php` + `ProfileController` ship `Regard` as user-visible chrome. Changing only the account pane creates the two-surfaces-disagreeing state this table warns about. **Owner decision, blocks the merge.**
+- **`Remove topic (warden)` / `Remove (warden)`** (`partials/post_toolbar.php`) — adjacent to the **pinned** `Removed by a warden`; this table already says decide together.
+- **`The council`** (`leaderboard.php`) — test-pinned, see the corrected row above.
+- **`In council` / `Open to the council`** (`templates/thread.php:57`, `:171`) — **newly found by Slice 19 and not in any earlier inventory.** Stage 1 inventoried the eleven admin/account screens, so the thread surface was never swept for fiction. Recorded here so the next thread-surface slice inherits it rather than rediscovering it.
 
 ---
 

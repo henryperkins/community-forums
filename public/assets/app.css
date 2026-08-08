@@ -2577,16 +2577,6 @@ body[data-route="thread"] [data-thread-enhanced="1"].thread-conversation {
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-.auth-colophon {
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: .95rem;
-    color: var(--gold-400);
-    opacity: .75;
-    text-align: center;
-    margin: 0;
-}
-
 /* — Settings: account console shell and lapidary form register. — */
 .settings-screen {
     max-width: 1064px;

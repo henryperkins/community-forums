@@ -258,3 +258,50 @@ Three upstream states the local mirror deliberately does not take:
    `Removed by a warden`, `Commends`, `Private counsel`, `sort=commends`. They are out of scope here
    and need their own owner decision; note `profile/show.php` also ships `Regard` as user-visible
    chrome, so a partial fix would leave two surfaces disagreeing two clicks apart.
+
+---
+
+## Closeout status (Slice 19, 2026-08-08)
+
+Stage 2 is code-complete: slices 0–18 have landed with per-slice evidence under
+`docs/evidence/imladris-admin-account-slice-*/`. This section records what the closeout
+discharged and what it deliberately did not, so nothing is silently dropped.
+
+### The five delivery obligations
+
+| # | Obligation | Status |
+|---|---|---|
+| 1 | Two new Playwright specs (`content-console`, `account-console`) | **Done.** Both exist, and the per-area pattern was extended further than the obligation asked: `members-`, `integrations-`, `features-`, `packages-` and now `mod-console.spec.ts` (Slice 18). |
+| 2 | `role-assignments.spec.ts` joins `npm run evidence` | **Done** — it is in the aggregate script's third group. |
+| 3 | `.admin-bar`/`.admin-tier` CSS ships from the build, never hand-written | **Done and now gated** by `ImladrisRuntimeAssetTest::test_app_css_never_overrides_a_design_owned_console_class`. Generalising that gate to all 150 shadowed classes remains the real fix for `C-50`. |
+| 4 | `config/imladris-runtime-baseline.json` refreshed once per merge, on `main`, by the merger | **Outstanding by design, and it is the merge blocker.** See below. |
+| 5 | Fiction never ships | **Partly discharged; the remainder needs an owner decision.** Ledger §3.3 is the full accounting. |
+
+### What still needs the owner
+
+1. **The four test-pinned fiction strings** — `Removed by a warden`, `Commends`, `Private counsel`,
+   `sort=commends` — plus the `Regard` chrome `profile/show.php` renders. Obligation 5 says **fix both
+   surfaces or neither**, so the account pane's `regard` sentence was deliberately left alone.
+   **This blocks the merge.** Slice 19 adds a fifth to the list: `leaderboard.php`'s `The council` is
+   also test-pinned (`AppLeaderboardFidelityTest` pins it in the test *name*), which ledger §3.2 had
+   mislabelled as free to change — corrected there.
+2. **`C-50`** — `app.css` shadows 150 shipped design-system components. Deliberately unfixed: the
+   comparison is name-level, so it does not prove the values agree, and deleting a drifted copy changes
+   rendering on the composer and thread surfaces. Slice 16 declined the one deletion it could have made
+   safely (`.gem-*`, left with zero consumers) to keep the rule intact.
+3. **Do the seven `*-console` specs join `npm run evidence`?** `account-`, `content-`, `members-`,
+   `integrations-`, `features-`, `packages-` and `mod-console` run in no CI, so their pins rot silently.
+   Slices 12–18 each deferred this; it is a CI-shape decision, not a code change.
+4. **`registries.php` field-error wiring** (ADR 0023 deferral 4) — still open; closing it needs
+   `AdminRegistryController::consoleView()` to stop broadcasting one flat bag to every registry card.
+5. **`FR-31`** — the duplicate badge-rule guard needs a unique index before the design's copy is honest.
+
+### The merge blocker, restated with the values
+
+Four commits on this branch rewrite `config/imladris-runtime-baseline.json`, which ledger §6 rule 5
+forbids: `8cc3894`, `b474e45`, `a8a6da6`, `bdbacd7`. It is a genuine **three-way** divergence —
+merge-base `f8a09441…`, `main` `79d99fbb…`, branch `749c0de1…` — so resolving it by picking either
+side is wrong in both directions. Take `main`'s side in the merge, then refresh the digest on `main` as
+the immediately-following commit. **Slices 16–18 touch that file, the design mirror, `resources/imladris/`
+and `public/assets/imladris.css` not at all** (verified: `git diff --name-only d58ed42..HEAD` over those
+paths is empty), so the blocker is exactly those four pre-existing commits.

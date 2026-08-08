@@ -52,7 +52,10 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'auth-brand');
         $this->assertSeeText($res, 'auth-eyebrow');
         $this->assertSeeText($res, 'auth-form');
-        $this->assertSeeText($res, 'auth-colophon');
+        // Slice 19 de-fiction: the auth colophon carried a decorative
+        // quotation with no truthful replacement, so the element is deleted
+        // (ledger §3.2). The rest of the auth-stage composition is unchanged.
+        self::assertStringNotContainsString('auth-colophon', $res->body());
     }
 
     public function test_settings_account_renders_the_lapidary_console(): void
