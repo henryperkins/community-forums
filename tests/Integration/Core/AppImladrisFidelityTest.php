@@ -517,13 +517,38 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertStatus(200, $res);
         $body = $res->body();
         self::assertStringContainsString('admin-tier', $body);
-        self::assertStringContainsString('Moderation', $body);
-        // No admin-only area is offered.
-        foreach (['/admin/structure', '/admin/users', '/admin/settings', '/admin/branding'] as $adminOnly) {
+        // Pin the area label itself, not the substring: aria-label="Moderation
+        // sections" satisfied a bare 'Moderation' unconditionally, so this
+        // assertion used to hold even with the tier empty.
+        self::assertStringContainsString('>Moderation</span>', $body, 'the moderation area is the one area offered');
+        // No admin-only destination is offered -- neither as an AREA on the rail
+        // nor as a TAB inside the one area the moderator keeps. /admin/moderation
+        // is the tab case: it sits in the Moderation area but is behind
+        // requireAdmin(), so it must be filtered out rather than rendered and denied.
+        foreach (['/admin/structure', '/admin/users', '/admin/settings', '/admin/branding', '/admin/moderation'] as $adminOnly) {
             self::assertStringNotContainsString('href="' . $adminOnly . '"', $body, $adminOnly . ' must not appear in a moderator tier.');
         }
+        self::assertStringNotContainsString('Anti-abuse', $body, 'the admin-only tab is dropped, not rendered disabled');
+        // The mode chip names the mode they are actually in.
+        self::assertStringNotContainsString('Admin mode', $body, 'a board moderator is not in admin mode');
         // The queue still titles itself from the area, and no leaf emits an h1.
         self::assertSame(1, substr_count($body, '<h1'), 'the area owns the single h1');
+    }
+
+    /**
+     * The other side of the filter: an admin keeps every tab, so the fix above
+     * cannot have hidden the Anti-abuse console from the role that owns it.
+     */
+    public function test_admin_still_sees_the_anti_abuse_tab_on_a_moderation_queue(): void
+    {
+        $this->actingAs($this->makeAdmin());
+
+        $res = $this->get('/mod/reports');
+        $this->assertStatus(200, $res);
+        $body = $res->body();
+        self::assertStringContainsString('href="/admin/moderation"', $body, 'an admin keeps the anti-abuse tab');
+        self::assertStringContainsString('Anti-abuse', $body);
+        self::assertStringContainsString('Admin mode', $body);
     }
 
     public function test_topic_workflow_renders_topic_tools_controls(): void

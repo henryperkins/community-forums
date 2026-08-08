@@ -305,3 +305,26 @@ side is wrong in both directions. Take `main`'s side in the merge, then refresh 
 the immediately-following commit. **Slices 16–18 touch that file, the design mirror, `resources/imladris/`
 and `public/assets/imladris.css` not at all** (verified: `git diff --name-only d58ed42..HEAD` over those
 paths is empty), so the blocker is exactly those four pre-existing commits.
+
+## Post-review remediation (2026-08-08)
+
+An adversarial review of slices 16–19 confirmed five defects. All are fixed on this branch; each is
+recorded where it belongs rather than only here.
+
+| # | Defect | Fix | Recorded in |
+|---|---|---|---|
+| 1 | Slice 18 filtered the console's **area rail** by role but not its **tab row**, and the one area a moderator keeps contains `antiabuse` → `/admin/moderation`, behind `requireAdmin()`. A board moderator was shown a fourth tab that 403s — the show-and-deny constraint C-04 forbids, reintroduced by the fix for it. | Tabs carry `admin_only`; `$visibleTabs()` applies the tier's predicate to the tab row and to `$firstHref`. | Ledger C-04 |
+| 2 | The guard test passed anyway — it listed four `/admin/*` hrefs, not `/admin/moderation`, and its positive assertion was satisfied unconditionally by `aria-label="Moderation sections"`. | Assertion set extended; positive pin tightened to `>Moderation</span>`; `test_admin_still_sees_the_anti_abuse_tab_on_a_moderation_queue` added so the filter cannot over-reach. | Ledger C-04 |
+| 3 | `_console.php` told a non-admin moderator they were in **`Admin mode`**. | Renders `Moderation` for a non-admin viewer — the string the retired `.mod-pill` chrome carried on these same four pages. `.admin-bar-mode` unchanged (C-07/FC-02 intact). | Ledger §3.2 copy row 4 |
+| 4 | `lifecycle.php`'s scoped 422 replay could land nowhere: each scoped form sits on one branch of its section, and `lifecycleView()` re-reads status/pending, so a state change between GET and POST re-rendered the other branch — a 422 page showing no error at all. | Scope only where the form is actually rendered; anything left over falls back to the alert card. | This table |
+| 5 | Slice 18's QA claimed the retired `/mod/*` CSS was "deleted, not orphaned"; one `.mod` rule inside the `≤860px` block survived with no consumer, and the spec's negative locator omitted `.mod` so nothing enforced the claim. | Rule deleted; `.mod` added to the locator; the false claim corrected in place. | Slice-18 `design-qa.md` |
+
+Also closed: `mod-console.spec.ts`'s queue-count assertion was `count() >= 0`, true of any locator — it
+stayed green with the badge deleted outright. It now pins the badge's **value** against the rendered
+rows. Two header claims in that spec were corrected rather than fixed, because the coverage they named
+exists elsewhere: it does not visit `/mod/u/{id}` (`admin-remediation.spec.ts:287` does), and its no-JS
+`.admin-tier a` assertion is admin-scoped by construction.
+
+**None of this changes the merge blocker above**, which remains the owner's call. The `app.css` edit in
+item 5 moves the application digest again — expected, and it is why obligation 4 refreshes on `main`
+after the merge rather than on the branch.

@@ -8038,6 +8038,8 @@ summary.dm-new-btn::-webkit-details-marker { display: none; }
    `.mod`, `.mod-head`, `.mod-pill`, `.mod-subnav` and `.mod-pane` chrome --
    deleted here rather than left as dead rules, since nothing in templates/,
    public/assets/*.js or the specs referenced them once the swap landed.
+   (2026-08-08: one `.mod` rule inside the <=860px block outlived that sweep and
+   has now been removed too. mod-console.spec.ts pins all five names at zero.)
 
    The queue count survives: the `mod-count` badge is `feature-added` (the
    design's tier models no counts), so it is kept and now rides the console's
@@ -9507,9 +9509,6 @@ span.wf-btn {
     .admin-console .audit th,
     .admin-console .audit td {
         padding: 7px 6px;
-    }
-    .mod {
-        padding: 20px 14px 56px;
     }
     .approval-actions {
         width: 100%;

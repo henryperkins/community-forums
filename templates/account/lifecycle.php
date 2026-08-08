@@ -9,9 +9,17 @@ $errors = $errors ?? [];
 // bag lit the deactivate form's inline error for a refused *deletion*. The
 // controller knows which action failed and says so.
 $errorForm = (string) ($error_form ?? '');
-$deactivateErrors = $errorForm === 'deactivate' ? $errors : [];
-$deleteErrors = $errorForm === 'delete' ? $errors : [];
-$unscoped = $errorForm === '' ? $errors : [];
+// Each scoped form only exists on one branch of its section, and lifecycleView()
+// re-reads status/pending on every render — so a state change between GET and
+// POST (a second tab, a concurrent request) can re-render the OTHER branch and
+// leave a scoped error with no element to attach to. Scope only where the form
+// is actually on the page; anything left over falls back to the alert card
+// rather than vanishing into a silent 422.
+$deactivateVisible = $status !== 'deactivated';
+$deleteVisible = $pending === null;
+$deactivateErrors = ($errorForm === 'deactivate' && $deactivateVisible) ? $errors : [];
+$deleteErrors = ($errorForm === 'delete' && $deleteVisible) ? $errors : [];
+$unscoped = ($deactivateErrors === [] && $deleteErrors === []) ? $errors : [];
 ?>
 <div class="settings-screen">
     <header class="settings-head">

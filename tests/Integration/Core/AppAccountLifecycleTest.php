@@ -150,6 +150,33 @@ final class AppAccountLifecycleTest extends TestCase
         self::assertSame('active', (string) $this->users()->find((int) $user['id'])['status']);
     }
 
+    /**
+     * The other half of that scoping. Each scoped form lives on one branch of
+     * its section and lifecycleView() re-reads status/pending on every render,
+     * so a state change between GET and POST re-renders the OTHER branch --
+     * leaving the scoped error with no element to attach to. It must fall back
+     * to the alert card, never a 422 page that says nothing failed.
+     */
+    public function test_a_scoped_lifecycle_error_falls_back_when_its_form_is_not_rendered(): void
+    {
+        $this->makeAdmin();
+        $user = $this->makeUser(['username' => 'stale_lifecycle', 'password' => 'password123']);
+        $this->actingAs($user);
+
+        // Deletion is requested (as a second tab would have done), so the
+        // delete-request form is replaced by the cancel form.
+        $this->assertStatus(303, $this->post('/settings/account/delete/request', ['current_password' => 'password123']));
+        self::assertSame('pending_deletion', (string) $this->users()->find((int) $user['id'])['status']);
+
+        // The stale tab now submits the delete form that no longer renders.
+        $stale = $this->post('/settings/account/delete/request', ['current_password' => 'wrong-password']);
+        $this->assertStatus(422, $stale);
+        $body = $stale->body();
+        self::assertStringNotContainsString('id="err-delete-current_password"', $body, 'the scoped slot is not on this branch');
+        $this->assertSeeText($stale, 'Your current password is incorrect.');
+        self::assertStringContainsString('error-list', $body, 'the message falls back to the alert card');
+    }
+
     public function test_final_active_admin_cannot_deactivate_or_request_deletion(): void
     {
         $admin = $this->makeAdmin(['username' => 'owner', 'password' => 'password123']);

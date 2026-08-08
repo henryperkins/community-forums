@@ -63,7 +63,11 @@ $areas = [
         'reports' => ['label' => 'Reports', 'href' => '/mod/reports', 'flag' => 'moderation_queue'],
         'approvals' => ['label' => 'Approvals', 'href' => '/mod/approvals', 'flag' => 'moderation_queue'],
         'appeals' => ['label' => 'Appeals', 'href' => '/mod/appeals', 'flag' => 'appeals'],
-        'antiabuse' => ['label' => 'Anti-abuse', 'href' => '/admin/moderation', 'flag' => 'anti_abuse'],
+        // admin_only: the Moderation area is the one area a board moderator can
+        // open, but this tab lands on /admin/moderation, which is behind
+        // requireAdmin(). Rendering it to a moderator is the show-and-deny the
+        // tier filter below exists to prevent.
+        'antiabuse' => ['label' => 'Anti-abuse', 'href' => '/admin/moderation', 'flag' => 'anti_abuse', 'admin_only' => true],
     ]],
     'content' => ['label' => 'Content', 'h1' => 'Boards & tags', 'aria' => 'Content sections', 'tabs' => [
         'structure' => ['label' => 'Boards & categories', 'href' => '/admin/structure'],
@@ -123,10 +127,24 @@ $tabEnabled = static function (array $item) use ($features): bool {
 // Least privilege (ADMIN.md §9.4): /admin/* needs requireAdmin(), /mod/* only a
 // moderator. Showing a board moderator ten areas that all 403 would be
 // show-and-deny, so the tier is reduced to what they can actually open.
+// A null viewer is treated as unfiltered — this partial only renders on authed
+// admin/mod routes, and the tier has always read it that way.
+$adminViewer = $viewer === null || $viewer->isAdmin();
 $tierAreas = $areas;
-if ($viewer !== null && !$viewer->isAdmin()) {
+if (!$adminViewer) {
     $tierAreas = array_intersect_key($areas, ['moderation' => true]);
 }
+
+// The same rule one level down. Reducing the AREA tier is not enough: the one
+// area a moderator keeps has an admin-only tab in it, so the tab row needs the
+// identical filter or the least-privilege guarantee only holds on the rail.
+$visibleTabs = static function (array $tabs) use ($adminViewer): array {
+    if ($adminViewer) {
+        return $tabs;
+    }
+
+    return array_filter($tabs, static fn (array $item): bool => empty($item['admin_only']));
+};
 
 $current = $areas[$area] ?? null;
 $disabledNote = 'Disabled until the feature flag is enabled';
@@ -171,15 +189,25 @@ $disabledNote = 'Disabled until the feature flag is enabled';
                     </button>
                 </form>
             <?php endif; ?>
-            <span class="admin-bar-mode">Admin mode</span>
+            <?php /* ADMIN.md §9.4 wants a persistent indicator so this is never
+                     confused with the public site — but a board moderator on
+                     /mod/* is not in admin mode, and every /admin/* destination
+                     403s for them. Name the mode they are actually in; the
+                     retired /mod chrome called it "Moderation" too. */ ?>
+            <span class="admin-bar-mode"><?= $adminViewer ? 'Admin mode' : 'Moderation' ?></span>
         </div>
     </div>
     <nav class="admin-tier" aria-label="Admin areas" data-admin-tier>
         <?php foreach ($tierAreas as $key => $meta): ?>
             <?php
-            $enabledTabs = array_filter($meta['tabs'], $tabEnabled);
+            $areaTabs = $visibleTabs($meta['tabs']);
+            $enabledTabs = array_filter($areaTabs, $tabEnabled);
+            // $areaTabs can now be empty in principle (an area whose every tab is
+            // admin_only, seen by a moderator), and reset([]) is false — indexing
+            // that warns, which failOnWarning turns red. Resolve through a list.
+            $fallback = array_values($areaTabs);
             $firstHref = $enabledTabs === []
-                ? (string) (reset($meta['tabs'])['href'] ?? '/admin')
+                ? (string) ($fallback[0]['href'] ?? '/admin')
                 : (string) (reset($enabledTabs)['href']);
             ?>
             <?php if ($key === $area): ?>
@@ -199,7 +227,7 @@ $disabledNote = 'Disabled until the feature flag is enabled';
     <?php if ($current !== null): ?>
         <h1 class="admin-title"><?= $e($current['h1']) ?></h1>
         <nav class="admin-tabs" aria-label="<?= $e($current['aria']) ?>">
-            <?php foreach ($current['tabs'] as $key => $item): ?>
+            <?php foreach ($visibleTabs($current['tabs']) as $key => $item): ?>
                 <?php if (!$tabEnabled($item)): ?>
                     <span class="admin-tab is-disabled" aria-disabled="true" data-destination="<?= $e($item['href']) ?>">
                         <span class="subnav-item-label"><?= $e($item['label']) ?></span>

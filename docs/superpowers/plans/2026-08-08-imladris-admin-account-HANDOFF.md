@@ -190,8 +190,30 @@ commit.
 
 **`main` has moved and is still moving.** It is now at `2ac40df` (merge of PR #60), which includes
 `44c00d1` *"Give the mobile reply composer a two-way expansion state and one frame"* and
-`9a47d99` *"finalize pr-59 browser evidence and composer assets"*. **Slice 17 touches
-`public/assets/composer.js`** — expect a real conflict there and re-check `main` before merging.
+`9a47d99` *"finalize pr-59 browser evidence and composer assets"*.
+
+**CORRECTED 2026-08-08 — the predicted `composer.js` conflict does not happen, and the real conflict
+list is longer than this document said.** Measured with `git merge-tree --write-tree --name-only
+2ac40df e3fb733`:
+
+- **`public/assets/composer.js` auto-merges.** `main`'s hunks sit at ~106 / 2088 / 2233 / 2469 / 2506;
+  slice 17's at ~1001–1080. No textual overlap, and the regions are semantically unrelated (mobile
+  reply expansion vs the drafts-pane rows). Do not hand-resolve it.
+- **Nine source files DO conflict**, most unlisted here before: `.env.example`, `config/config.php`,
+  `config/imladris-runtime-baseline.json`, `resources/imladris/manifest.json`, **`src/Core/App.php`**,
+  **`src/Core/Database.php`**, `tests/browser/gate-a.spec.ts`, `tests/browser/package.json`,
+  `tests/browser/server-drafts.spec.ts` — plus ~200 binary evidence PNGs under
+  `docs/evidence/browser/`.
+- **`tests/browser/gate-a.spec.ts` is the one to resolve carefully.** It is the entire content of
+  `.github/workflows/browser-evidence.yml`, and `main` rewrote `dismissTour()` **and**
+  `openNewTopicComposer()` in a single hunk while the branch carries the *old* `dismissTour` next to a
+  byte-identical copy of main's *new* `openNewTopicComposer`. Taking the branch's side — the natural
+  move, since half the hunk already looks right — silently reverts main's tour fix in the only spec CI
+  runs. **Correct resolution: `main`'s `dismissTour` + either side's `openNewTopicComposer`.**
+- After merging, confirm `gate-a.spec.ts`'s drafts assertions moved to the slice-17 markup
+  (`.account-draft-row`, the new empty-state copy) — main's `:569/:578/:600` still pin `.report-row`
+  and `No server drafts yet.`. Those hunks do not overlap, so they auto-merge to the branch side; the
+  check is that nothing re-introduced the old strings.
 
 Then:
 

@@ -62,6 +62,11 @@ a design translation.
   `.mod-subnav`/`.mod-pane` rules. Verified first that nothing in `templates/`, `public/assets/*.js` or
   any spec still referenced them. Unlike Slice 16's `.gem-*` case these are **app-local** names, not
   design-owned ones, so `C-50` does not apply and there is no reason to keep them.
+  **CORRECTED 2026-08-08 (slice 16-19 review): this claim was not true when written.** The sweep
+  caught the top-level rules but missed `.mod { padding: 20px 14px 56px }` inside the `≤860px` media
+  block, which survived with no consumer — and `mod-console.spec.ts`'s negative locator listed
+  `.mod-head, .mod-subnav, .mod-pane, .mod-pill` but not `.mod`, so nothing enforced the claim
+  either. Both are fixed: the rule is deleted and `.mod` is now in the locator.
 - **No inline script/style/handlers.** The CSP scan over all seven touched templates returns nothing.
   The console nav is entirely JavaScript-free, and the no-JS walk pins that.
 
