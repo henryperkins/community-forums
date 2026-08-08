@@ -60,6 +60,18 @@ async function login(page: Page): Promise<void> {
   if (await skip.isVisible({ timeout: 1000 }).catch(() => false)) await skip.click();
 }
 
+async function saveSiteName(page: Page, siteName: string): Promise<void> {
+  await page.goto('/admin/settings');
+  const siteForm = page.locator('form[action="/admin/site"]');
+  await siteForm.locator('input[name="site_name"]').fill(siteName);
+  const [response] = await Promise.all([
+    page.waitForResponse((candidate) => candidate.url().endsWith('/admin/site') && candidate.request().method() === 'POST'),
+    siteForm.getByRole('button', { name: 'Save name', exact: true }).click(),
+  ]);
+  expect(response.status()).toBe(303);
+  await expect(page.getByRole('status')).toContainText('Site name updated.');
+}
+
 async function createUserTargetAuditRow(page: Page): Promise<void> {
   await page.goto('/admin/users');
   const row = page.locator('tr', { hasText: 'alice' });
@@ -93,6 +105,14 @@ async function expectAdminTier(page: Page): Promise<void> {
   await expect(tier).toBeVisible();
   await expect(tier.locator('.admin-tier-item')).toHaveCount(11);
   await expect(tier.locator('.admin-tier-item')).toHaveText(TIERS);
+}
+
+async function expectNoDocumentOverflow(page: Page): Promise<void> {
+  const dimensions = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    document: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
 }
 
 async function captureThemeRegisters(page: Page, info: TestInfo, evidenceName = '07-admin-dashboard'): Promise<void> {
@@ -283,6 +303,74 @@ test('desktop admin tier and operational hierarchy are complete, quiet, and axe-
 
   await captureThemeRegisters(page, info);
   await expectSystemDarkAxeClean(page, info);
+  expect(browserProblems).toEqual([]);
+});
+
+test('the console identity row compacts before the 860px content layout breakpoint', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the 900px transition is covered by the desktop project');
+  const browserProblems = observeBrowserProblems(page);
+
+  await page.setViewportSize({ width: 900, height: 800 });
+  await login(page);
+  await page.goto('/admin');
+
+  await expect(page.locator('.admin-bar-search')).toBeHidden();
+  await expect(page.locator('.admin-bar-username')).toBeHidden();
+  await expect(page.locator('.admin-bar-action-label')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Log out' })).toBeVisible();
+  const tier = page.locator('[data-admin-tier]');
+  const tierMetrics = await tier.evaluate((element) => ({
+    overflowX: getComputedStyle(element).overflowX,
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(['auto', 'scroll']).toContain(tierMetrics.overflowX);
+  expect(tierMetrics.scrollWidth).toBeGreaterThan(tierMetrics.clientWidth);
+  await expectNoDocumentOverflow(page);
+  await shot(page, info, 'admin-header-900px');
+  expect(browserProblems).toEqual([]);
+});
+
+test('the 900px console header preserves a long site name without horizontal overflow', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the 900px transition is covered by the desktop project');
+  const browserProblems = observeBrowserProblems(page);
+  const longSiteName = 'W'.repeat(80);
+  let siteNameChanged = false;
+
+  await page.setViewportSize({ width: 900, height: 800 });
+  await login(page);
+  await page.goto('/admin/settings');
+  const originalSiteName = await page.locator('form[action="/admin/site"] input[name="site_name"]').inputValue();
+  try {
+    await saveSiteName(page, longSiteName);
+    siteNameChanged = true;
+    await page.goto('/admin');
+
+    const brand = page.locator('.admin-bar-brand');
+    const wordmark = page.locator('.admin-bar-wordmark');
+    await expect(brand).toHaveAttribute('aria-label', longSiteName);
+    await expect(wordmark).toHaveText(longSiteName);
+    const wordmarkMetrics = await wordmark.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        clientWidth: (element as HTMLElement).clientWidth,
+        scrollWidth: (element as HTMLElement).scrollWidth,
+        overflow: style.overflow,
+        textOverflow: style.textOverflow,
+        whiteSpace: style.whiteSpace,
+      };
+    });
+    expect(wordmarkMetrics).toMatchObject({
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    });
+    expect(wordmarkMetrics.scrollWidth).toBeGreaterThan(wordmarkMetrics.clientWidth);
+    await expectNoDocumentOverflow(page);
+    await shot(page, info, 'admin-header-900px-long-brand');
+  } finally {
+    if (siteNameChanged) await saveSiteName(page, originalSiteName);
+  }
   expect(browserProblems).toEqual([]);
 });
 

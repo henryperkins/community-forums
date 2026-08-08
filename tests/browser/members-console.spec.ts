@@ -139,8 +139,54 @@ test('the directory copies the filter grid, roster anatomy and bulk bar in every
   // The shipped focusable scroll region survives the restyle (ADR 0021 / 0023).
   await expect(page.locator('.member-directory-table-card [role="region"][tabindex="0"]'))
     .toHaveAttribute('aria-label', 'User directory');
+  const advancedFilters = page.locator('details.member-directory-advanced-filters');
+  await expect(advancedFilters).not.toHaveAttribute('open', '');
+  await expect(advancedFilters.locator('summary')).toHaveText('More filters');
 
   await exerciseThemeRegisters(page, info, 'members-directory');
+});
+
+test('the mobile directory signals the member table scroll boundary', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'the 390px project verifies the member table cue');
+  const browserProblems: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') browserProblems.push(`console: ${message.text()}`);
+  });
+  page.on('pageerror', (error) => browserProblems.push(`pageerror: ${error.message}`));
+
+  await login(page);
+  await page.goto('/admin/users');
+  await expectMembersArea(page, 'Directory');
+
+  const shell = page.locator('.member-directory-table-shell[data-overflow-cue]');
+  const region = shell.locator('[data-overflow-region]');
+  const cue = shell.locator('[data-overflow-cue-label]');
+  await expect(region).toHaveAttribute('role', 'region');
+  await expect(region).toHaveAttribute('tabindex', '0');
+  await expect(cue).toBeVisible();
+  expect(await shell.evaluate((element) => getComputedStyle(element, '::after').opacity)).toBe('1');
+  await region.focus();
+  await expect(region).toBeFocused();
+  await shot(page, info, 'members-directory-table-cue');
+  await region.evaluate((element) => { element.scrollLeft = element.scrollWidth; });
+  await expect(shell).toHaveClass(/is-at-end/);
+  await expect(cue).toBeHidden();
+  await expect.poll(() => shell.evaluate((element) => getComputedStyle(element, '::after').opacity)).toBe('0');
+  expect(browserProblems).toEqual([]);
+});
+
+test('the directory disclosure keeps a 44px target through the 860px console range', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'the 800px console breakpoint is covered by the desktop project');
+
+  await page.setViewportSize({ width: 800, height: 800 });
+  await login(page);
+  await page.goto('/admin/users');
+
+  const summary = page.locator('details.member-directory-advanced-filters > summary');
+  await expect(summary).toHaveText('More filters');
+  expect(await summary.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+  await expectNoDocumentOverflow(page);
+  await shot(page, info, 'members-directory-800px');
 });
 
 test('the bulk confirmation copies the subject list and actionable count in every register', async ({ page }, info) => {
@@ -196,10 +242,21 @@ test('every members route stays whole with JavaScript disabled', async ({ browse
     await expectMembersArea(page, 'Directory');
     await expect(page.locator('[data-bulk-selected-count]')).toHaveText('None selected');
     await expect(page.locator('th[aria-sort] a.member-directory-sort').first()).toBeVisible();
+    const advancedFilters = page.locator('details.member-directory-advanced-filters');
+    await expect(advancedFilters).not.toHaveAttribute('open', '');
+    await advancedFilters.locator('summary').click();
+    await expect(advancedFilters).toHaveAttribute('open', '');
+    await page.locator('select[name="last_seen"]').selectOption('7');
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page).toHaveURL(/[?&]last_seen=7(?:&|$)/);
+    await expect(advancedFilters).toHaveAttribute('open', '');
+    await expect(page.locator('select[name="last_seen"]')).toHaveValue('7');
     await expectNoDocumentOverflow(page);
     await shot(page, info, 'members-directory-no-js');
 
     // Bulk confirmation reached by a real POST, not a JS view switch.
+    await page.goto('/admin/users');
+    await expectMembersArea(page, 'Directory');
     await page.locator('tr', { hasText: 'alice' }).locator('input[name="selected[]"]').check();
     await page.locator('select[name="bulk_action"]').selectOption('warn');
     await page.getByRole('button', { name: 'Review and apply…' }).click();

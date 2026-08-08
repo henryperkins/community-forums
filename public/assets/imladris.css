@@ -690,19 +690,29 @@ code, pre, kbd, samp { font-family: var(--font-mono); }
    duplicate of a page's own underline sub-tabs one heading below it. */
 .admin-bar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--surface-raised) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-hair); }
 .admin-bar-id { display: flex; align-items: center; gap: 16px; height: 58px; padding: 0 26px; box-sizing: border-box; }
-.admin-bar-brand { display: inline-flex; align-items: center; gap: 10px; flex: none; color: var(--accent); }
-.admin-bar-wordmark { font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em; }
+.admin-bar-brand { display: inline-flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; max-width: 100%; color: var(--accent); }
+.admin-bar-wordmark { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: var(--weight-semibold); font-size: 1.25rem; color: var(--text-strong); letter-spacing: .01em; }
 .admin-bar-exit { display: inline-flex; align-items: center; gap: 5px; flex: none; white-space: nowrap; font-family: var(--font-label); font-size: .78rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none; }
 .admin-bar-exit:hover { color: var(--accent); }
 .admin-bar-mode { margin-left: auto; flex: none; padding: 4px 12px; border-radius: var(--radius-pill); background: var(--surface-review); color: var(--on-review); font-family: var(--font-label); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
 /* Overflow stays visible on purpose: below ~900px the tier scrolls, and a thin
    scrollbar is the only honest signal that Settings is off-edge. */
-.admin-tier { display: flex; gap: 4px; padding: 0 26px 9px; overflow-x: auto; scrollbar-width: thin; }
+.admin-tier { display: flex; gap: 4px; padding: 0 26px 9px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border-hair) transparent; }
 .admin-tier::-webkit-scrollbar { height: 4px; }
+.admin-tier::-webkit-scrollbar-track { background: transparent; }
 .admin-tier::-webkit-scrollbar-thumb { background: var(--border-hair); border-radius: 999px; }
 .admin-tier-item { flex: none; white-space: nowrap; padding: 6px 10px; border: 0; border-radius: var(--radius-md); background: transparent; font-family: var(--font-label); font-size: .8rem; letter-spacing: .03em; color: var(--text-muted); text-decoration: none; cursor: pointer; }
 .admin-tier-item:hover { color: var(--text-strong); background: var(--surface-sunken); }
 .admin-tier-item.is-active { background: var(--brand-subtle); color: var(--on-brand-subtle); font-weight: var(--weight-medium); cursor: default; }
+
+@media (max-width: 900px) {
+    .admin-bar-id { min-height: 58px; height: auto; gap: 10px; padding: 10px 16px; }
+    .admin-tier { padding: 0 16px 9px; }
+}
+
+@media (max-width: 860px) {
+    .admin-bar-id { flex-wrap: wrap; }
+}
 
 /* ── Identity decorations — tier pill, regard stat, author byline ─────────────
    The person is a first-class object in the council: every byline pairs a
