@@ -1,5 +1,11 @@
 # HANDOFF — finish `feat/imladris-admin-account` and merge it into main
 
+> **SUPERSEDED 2026-08-08 by `2026-08-08-imladris-admin-account-HANDOFF.md`.** Slices 13, 14 and 15
+> have since landed (`46cafde`, `9a35f72`, `ae4de7a`), so this file's status table and execution
+> order are stale — it still lists slice 13 as not started. Its tooling notes and standing rules
+> remain broadly accurate, but read the newer handoff for the current state, the two new gates, the
+> isolated pre-existing reds, and the runtime-baseline merge blocker. Kept for history.
+
 Written 2026-08-06 by the session that ran the Cloudflare perf work. This is the
 prompt/handoff for the session that finishes the branch. Branch:
 **`feat/imladris-admin-account`** — worktree
