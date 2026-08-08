@@ -205,11 +205,21 @@ class MilkdownComposerAdapter {
 
     this.toggle = document.createElement('button');
     this.toggle.type = 'button';
-    this.toggle.className = 'btn btn-secondary btn-small wysiwyg-source-toggle';
+    // A compact editor-mode control, not a generic secondary button: as a
+    // btn-secondary sitting after the body it read as a standalone shelf
+    // competing with Preview/Cancel/Send. The shell offers a named slot in the
+    // formatting row for it; the old position is kept as a fallback so an
+    // older cached shell still gets a working toggle.
+    this.toggle.className = 'composer-mode-toggle wysiwyg-source-toggle';
     this.toggle.textContent = 'Source';
 
     textarea.parentNode?.insertBefore(this.host, textarea);
-    textarea.parentNode?.insertBefore(this.toggle, textarea.nextSibling);
+    const modeSlot = form.querySelector<HTMLElement>('[data-composer-mode-slot]');
+    if (modeSlot) {
+      modeSlot.appendChild(this.toggle);
+    } else {
+      textarea.parentNode?.insertBefore(this.toggle, textarea.nextSibling);
+    }
     textarea.classList.add('is-wysiwyg-source-hidden');
     textarea.required = false;
     this.toggle.addEventListener('click', () => this.toggleSourceMode());

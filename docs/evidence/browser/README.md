@@ -28,8 +28,19 @@ admin record (`14-admin-users`, `15-admin-user-record`), board reorder + archive
 `23-admin-email-suppressed`, `24-admin-email-test-sent`). (Numeric prefixes repeat
 across these independently-authored specs; the full filenames are distinct.)
 
-These are generated, not hand-made — regenerate with `cd tests/browser && npm run
-evidence`, or download the `gate-a-browser-evidence` artifact from the
+The mobile-composer refinement adds a before/after pair at the same 390×844
+viewport and the two states the reply dock's expansion model introduces:
+`90-composer-reply-expanded-before/after` (the nested editor card and the
+standalone Source shelf, then the single framed surface),
+`91-composer-new-topic-before/after` (the detached title above a framed
+component, then the title as the composer's header field),
+`92-composer-reply-collapsed`, and
+`93-composer-reply-folded-after-outside-tap` (an empty dock folding back up).
+The `-before` frames are the only hand-staged files here — captured from the
+pre-change tree for comparison — and are not reproduced by `npm run evidence`.
+
+The rest are generated, not hand-made — regenerate with `cd tests/browser && npm
+run evidence`, or download the `gate-a-browser-evidence` artifact from the
 **Browser evidence** GitHub Actions workflow. See `tests/browser/README.md`.
 
 The current carryover branch also includes `25-poll-voted`, which proves the

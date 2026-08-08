@@ -1,19 +1,15 @@
+/* The rich editor is an interior region of the shared shell, never a card of
+   its own: .composer-box already owns the composer's border, background,
+   radius, inset shadow and focus ring, so a second frame here is what produced
+   the double-framed editor. Sizing lives with the shell in app.css, next to the
+   .composer-input rules it has to match. */
 .wysiwyg-composer {
-  border: 1px solid var(--border);
-  background: var(--surface-raised);
-  border-radius: 8px;
-  min-height: 9rem;
+  min-width: 0;
 }
 
 .wysiwyg-composer .ProseMirror {
-  min-height: 9rem;
-  padding: 10px 12px;
   outline: none;
   white-space: pre-wrap;
-}
-
-.wysiwyg-source-toggle {
-  margin-top: 8px;
 }
 
 .composer-input.is-wysiwyg-source-hidden {

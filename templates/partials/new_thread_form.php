@@ -2,11 +2,20 @@
 <?php
 $newThreadBoardId = (int) $board['id'];
 $newThreadInstance = 'new-thread-board-' . $newThreadBoardId;
-$newThreadWrapper = function () use ($board, $errors, $old, $e): void {
+$newThreadTitleId = 'composer-title-' . $newThreadInstance;
+$newThreadTitleErrorId = 'composer-title-error-' . $newThreadInstance;
+$newThreadTitleError = trim((string) ($errors['title'] ?? ''));
+// board_id is a hidden field, so it can sit outside the box; the title is the
+// composer's own header field and belongs inside it.
+$newThreadWrapper = function () use ($board): void {
     ?>
     <input type="hidden" name="board_id" value="<?= (int) $board['id'] ?>">
-    <?php if (!empty($errors['title'])): ?><p class="field-error"><?= $e($errors['title']) ?></p><?php endif; ?>
-    <input type="text" name="title" class="input" placeholder="Title" maxlength="160" value="<?= $e($old['title'] ?? '') ?>" required>
+    <?php
+};
+$newThreadHeader = function () use ($old, $e, $newThreadTitleId, $newThreadTitleErrorId, $newThreadTitleError): void {
+    ?>
+    <?php if ($newThreadTitleError !== ''): ?><p class="field-error" id="<?= $e($newThreadTitleErrorId) ?>"><?= $e($newThreadTitleError) ?></p><?php endif; ?>
+    <input type="text" id="<?= $e($newThreadTitleId) ?>" name="title" class="input" placeholder="Title" maxlength="160" value="<?= $e($old['title'] ?? '') ?>"<?= $newThreadTitleError !== '' ? ' aria-describedby="' . $e($newThreadTitleErrorId) . '"' : '' ?> aria-label="Topic title" required>
     <?php
 };
 $newThreadBeforeSubmit = function (): void {
@@ -33,5 +42,6 @@ $newThreadBeforeSubmit = function (): void {
     'anonymous_checked' => !empty($old['is_anonymous']),
     'anonymous_disclosure' => 'Your name is hidden from other members; moderators can still see it.',
     'wrapper_slot' => $newThreadWrapper,
+    'header_slot' => $newThreadHeader,
     'before_submit_slot' => $newThreadBeforeSubmit,
 ]) ?>
