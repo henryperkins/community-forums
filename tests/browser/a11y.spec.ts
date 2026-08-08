@@ -289,7 +289,9 @@ test('admin dark-surface pages have no serious axe violations', async ({ page },
   await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
   await expect(page.getByRole('heading', { level: 2, name: 'Consent Demo Theme' })).toBeVisible();
-  await expect(page.getByText('permissions await consent')).toBeVisible();
+  // Slice 14 pluralises this notice; the consent-demo fixture seeds exactly one
+  // pending permission, so it now reads "1 permission awaits consent."
+  await expect(page.getByText(/permissions? awaits? consent/)).toBeVisible();
   await expectNoSeriousA11yViolations(page, info);
 
   await visit(page, `${packageDetailPath}/consent`);

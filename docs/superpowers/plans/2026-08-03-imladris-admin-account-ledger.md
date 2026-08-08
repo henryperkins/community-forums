@@ -135,7 +135,9 @@ Every row names its constraint. Any row that could not name one was dropped as a
 
 | C-48 · admin-features | `--gold-100` / `--gold-700` on the override pill and the emoji chip | constraint | `AdminFeatures.dc.html:90` inks the override pill `--gold-700` on `--gold-100`, and `:265` frames the emoji chip with the same pair. Both are fixed ramp values: neither flips for the twilight register, and the pair measures **3.55:1** even in the light register — below AA for the `.66rem` label it carries. This is `C-45` recurring on a pill-heavy screen. | **WCAG 2.1 AA.** Take the gilt *semantic* pair `--surface-staff` / `--on-staff`, which measures **6.25:1** light and flips correctly (`tokens/colors.css:98,156`). The design's gilt intent is preserved; only the ramp binding changes. Applies to `.features-override-pill` and `.features-emoji-chip`. |
 
-**48 constraint rows.**
+| C-49 · admin-packages | The install-state chip and the extensions `ok` label | constraint | Two more fixed-ramp inks, both worse than `C-48`. (a) `AdminPackages.dc.html:78` inks the install-state chip `--green-800` on `--brand-subtle`. `--brand-subtle` **flips** for the twilight register while the ramp ink does not, so the pair measures **10.08:1 light but 1.10:1 dark** — effectively invisible. (b) `:452` inks the run-history `ok` label `--success` at `.72rem`, measuring **4.91:1 light / 4.45:1 dark** — 0.05 below AA, the same miss `C-44` corrected elsewhere. | **WCAG 2.1 AA.** Both take `--surface-done` / `--on-done` — the pair the design itself uses for the sibling compatibility chip eight lines later (`:84`) — measuring **10.08:1 / 7.71:1**. Zero visual change in the light register. Applies to `.packages-pill.is-install` and the extensions run-history `ok` chip. Also settled here: the design's rust wash is inconsistent with itself (9% at `:53`, 10% at `:88`); production uses **9% for banners and 10% for chips**, both ≥ 4.93:1 against `--danger` in either register. |
+
+**49 constraint rows.**
 
 ### 1.2 `feature-added` — production has it, the design never modelled it → keep it and style it
 

@@ -27,6 +27,25 @@ final class AppAdminExtensionsTest extends TestCase
         $this->assertStatus(404, $this->get('/admin/extensions'));
     }
 
+    public function test_flag_note_is_a_callout_and_never_claims_the_flag_is_dark(): void
+    {
+        // C-32: the design's copy for this note says the surface is "reserved and dark
+        // under Gate B" and that "no handler is dispatched". Both are false in the only
+        // state production can render — AdminExtensionController 404s while the flag is
+        // off, so reaching this page means the flag is ON.
+        $this->setFlags(['server_extensions' => true]);
+        $this->actingAs($this->makeAdmin(['username' => 'ext-note-admin']));
+
+        $body = $this->get('/admin/extensions')->body();
+
+        self::assertStringContainsString('class="callout extension-flag-note"', $body);
+        self::assertStringContainsString('Global emergency disable', $body);
+        self::assertStringContainsString('<code>server_extensions</code>', $body);
+        self::assertStringNotContainsString('reserved and dark', $body);
+        self::assertStringNotContainsString('no handler is dispatched', $body);
+        self::assertStringNotContainsString('wasm-runtime', $body);
+    }
+
     public function test_extensions_admin_page_lists_handlers_and_probe(): void
     {
         $this->setFlags(['server_extensions' => true]);

@@ -439,7 +439,11 @@ test('package registry: staff-only read-only catalogue browse (Inc 2)', async ({
   await visit(page, '/admin/packages');
   await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
-  await expect(page.getByRole('heading', { level: 2, name: 'Packages' })).toBeVisible();
+  // Slice 14: the design's catalogue card carries no heading — the area h1 and the
+  // lit tab already name the surface, so the labelled scroll region is the
+  // accessible name now. Mirrors a11y.spec.ts's treatment of the removed <h2>Roles</h2>.
+  await expect(page.getByRole('heading', { level: 2, name: 'Packages', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Package catalogue' })).toBeVisible();
   await expect(page.locator('code', { hasText: lifecyclePackageUid(info) }).first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Details' }).first()).toBeVisible();
   await shot(page, info, '32-admin-package-catalogue');
@@ -447,7 +451,10 @@ test('package registry: staff-only read-only catalogue browse (Inc 2)', async ({
   await openLifecyclePackageDetail(page, info);
   await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
-  await expect(page.getByRole('heading', { level: 2, name: /Releases \(immutable/ })).toBeVisible();
+  // Slice 14: the design splits this into an h3 section title plus a caption, so the
+  // immutability sentence is no longer part of the heading's accessible name.
+  await expect(page.getByRole('heading', { level: 3, name: 'Releases' })).toBeVisible();
+  await expect(page.getByText('Immutable: any changed byte is a new release.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Install plan' })).toBeVisible();
   await shot(page, info, '33-admin-package-detail');
 
@@ -466,7 +473,7 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
   await page.getByRole('button', { name: 'Install plan' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
-  await expect(page.getByRole('heading', { level: 2, name: /^Install plan - / })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: /^Install plan — / })).toBeVisible();
   await expect(page.getByText('Store its own settings and data', { exact: false })).toBeVisible();
   await shot(page, info, '35-admin-package-install-plan');
 
@@ -491,12 +498,17 @@ test('package lifecycle: plan, consent, enable, and update re-consent (Inc 3)', 
   await expect(page.getByRole('heading', { level: 1, name: 'Packages & registries' })).toBeVisible();
   await expect(page.locator('span.admin-tab.is-active[aria-current="page"]')).toHaveText('Packages');
   await expect(page.getByRole('heading', { level: 2, name: /^Approve update to / })).toBeVisible();
-  await expect(page.getByText('api.example.com')).toBeVisible();
+  // Slice 14: the design's permission row renders the human label and the machine
+  // key as separate elements, so the host string now appears in both. Assert the
+  // key, which is the fact this step is really about.
+  await expect(page.locator('code.packages-rule-id', { hasText: 'api.example.com' })).toBeVisible();
   await shot(page, info, '38-admin-package-update-diff');
 
   await page.fill('input[name="current_password"]', 'password123');
   await page.getByRole('button', { name: 'Grant and continue' }).click();
-  await expect(page.getByRole('row', { name: /^Version 1\.1\.0$/ })).toBeVisible();
+  // Slice 14: the installed facts are the design's <dl> fact grid, not a table, so
+  // there is no row role to address any more.
+  await expect(page.locator('.packages-install-facts')).toContainText('1.1.0');
 });
 
 test('theme packages: preview, activate, safe mode, and LKG rollback (Inc 4)', async ({ page, browser, baseURL }, info) => {

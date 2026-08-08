@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration\Core;
 
+use App\Repository\PackageRegistryRepository;
 use App\Repository\SettingRepository;
 use Tests\Support\Phase5\RegistryFixtures;
 use Tests\Support\Phase5\SigningHarness;
@@ -39,7 +40,12 @@ final class AppRegistryCatalogTest extends TestCase
 
     public function test_admin_catalogue_lists_packages_with_badges_and_noindex(): void
     {
-        $this->seedCatalog();
+        $ids = $this->seedCatalog();
+        // RegistryFixtures seeds the source disabled. The freshness banner is now
+        // scoped to registries the operator actually enabled (FC-23), so enable it
+        // here — this test is about the banner rendering, and the suppression case
+        // has its own test below.
+        (new PackageRegistryRepository($this->db))->setEnabled((int) $ids['registry_id'], true);
         $this->actingAs($this->makeAdmin());
 
         $resp = $this->get('/admin/packages');
@@ -48,7 +54,23 @@ final class AppRegistryCatalogTest extends TestCase
         self::assertStringContainsString('acme/midnight-theme', $resp->body());
         self::assertStringContainsString('Midnight Theme', $resp->body());
         self::assertStringContainsString('reviewed_declarative', $resp->body());
-        self::assertStringContainsString('Stale snapshot', $resp->body(), 'the fixture registry has no verified snapshot yet, so the freshness banner shows');
+        self::assertStringContainsString('Stale snapshot', $resp->body(), 'an enabled registry with no verified snapshot shows the freshness banner');
+    }
+
+    public function test_stale_alert_is_suppressed_for_a_disabled_registry(): void
+    {
+        // A registry added through /admin/registries "starts disabled until you
+        // enable it with your password". Painting a red never-fetched alarm for a
+        // source the operator deliberately left off reports a fault that does not
+        // exist — the freshness fact is still computed, only the alert is scoped.
+        $this->seedCatalog();
+        $this->actingAs($this->makeAdmin());
+
+        $resp = $this->get('/admin/packages');
+
+        $this->assertStatus(200, $resp);
+        self::assertStringContainsString('acme/midnight-theme', $resp->body(), 'the catalogue still lists cached metadata');
+        self::assertStringNotContainsString('Stale snapshot', $resp->body());
     }
 
     public function test_detail_shows_provenance_and_release_rows(): void

@@ -12161,3 +12161,507 @@ body.thread-restructure-open { overflow: hidden; }
     .admin-console .admin-features .features-switch input[type="checkbox"],
     .admin-console .admin-features .features-switch input[type="checkbox"]::before { transition: none; }
 }
+
+/* --- Imladris admin packages (Slice 14) ----------------------------------- */
+/* The signed package catalogue, install detail, plan, consent, security
+   response, publisher record, registry trust and the extensions probe. The
+   design is inline style= throughout; under style-src 'self' every rule lands
+   here as a class. Scoped .admin-console (or .admin-console .admin-packages for
+   form/input overrides) so the forum surfaces are untouched. .pill-admin is NOT
+   touched (C-07): the emergency brake takes the new .pill-danger instead. */
+
+/* ---- Shared geometry ---- */
+.packages-intro-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.packages-intro {
+    flex: 1 1 420px;
+    margin: 0;
+    max-width: 78ch;
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.packages-intro-action {
+    margin-left: auto;
+    font-family: var(--font-label);
+    font-size: .8rem;
+    color: var(--accent);
+    white-space: nowrap;
+}
+.packages-intro-action:hover { text-decoration: underline; }
+.packages-lead {
+    margin: 0 0 18px;
+    max-width: 92ch;
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    text-wrap: pretty;
+}
+.packages-record-uid {
+    margin: 0 0 20px;
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    color: var(--text-muted);
+}
+/* WCAG 1.4.1: these prose classes replace .muted on several surfaces, and the
+   existing underline hook at app.css:154 is scoped to .muted / .audit-flags. A
+   link inside them would otherwise be distinguishable by colour alone — axe
+   caught this on the security console's registry-trust pointer. */
+.admin-console .packages-lead a,
+.admin-console .packages-intro a,
+.admin-console .packages-section-caption a,
+.admin-console .packages-rule-detail a,
+.admin-console .packages-fact-value a,
+.admin-console .packages-consent-notice a,
+.admin-console .packages-refusal a {
+    text-decoration: underline;
+    text-decoration-thickness: .08em;
+    text-underline-offset: .18em;
+}
+.packages-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+.packages-card-head .admin-record-title { margin: 0; }
+.packages-eyebrow {
+    margin: 0 0 12px;
+    font-family: var(--font-label);
+    font-size: .68rem;
+    font-weight: 400;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+}
+.packages-section-title {
+    margin: 15px 0 4px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.25rem;
+    color: var(--text-strong);
+}
+.packages-section-title.is-md { font-size: 1.3rem; }
+.packages-section-title.is-lg { font-size: 1.4rem; }
+.packages-card-head .packages-section-title { margin: 0; }
+.packages-section-caption {
+    margin: 0 0 10px;
+    font-size: .88rem;
+    color: var(--text-muted);
+}
+
+/* ---- Card skins, then the mandatory .card reset ---- */
+.admin-console .card.packages-table-card,
+.admin-console .card.packages-panel-card,
+.admin-console .card.packages-record-card,
+.admin-console .card.packages-registry-card,
+.admin-console .card.packages-brake-card,
+.admin-console .card.packages-integration-card {
+    margin: 0;
+    overflow: visible;
+    border: 1px solid var(--border-hair);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-sm);
+}
+.admin-console .card.packages-table-card { padding: 6px 20px 10px; }
+.admin-console .card.packages-panel-card { padding: 20px 22px; box-shadow: var(--shadow-xs); }
+.admin-console .card.packages-record-card { max-width: 720px; padding: 22px 24px; }
+.admin-console .card.packages-record-card.is-narrow { max-width: 660px; }
+.admin-console .card.packages-registry-card,
+.admin-console .card.packages-brake-card { padding: 20px 22px; }
+
+/* ---- Chips ---- */
+.packages-pill {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-label);
+    font-size: .66rem;
+    letter-spacing: .06em;
+    white-space: nowrap;
+}
+.packages-pill.is-done { background: var(--surface-done); color: var(--on-done); }
+.packages-pill.is-review { background: var(--surface-review); color: var(--on-review); }
+/* C-49: the design inks the install-state chip --green-800 on --brand-subtle.
+   --brand-subtle flips for dark while the ramp ink does not: measured 10.08:1
+   light but 1.10:1 in twilight. --surface-done/--on-done is the pair the design
+   itself uses for the sibling compatibility chip and measures 10.08 / 7.71. */
+.packages-pill.is-install { background: var(--surface-done); color: var(--on-done); }
+.packages-pill.is-off { background: var(--surface-sunken); color: var(--text-muted); }
+.packages-pill.is-danger {
+    background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised));
+    color: var(--danger);
+}
+/* A new house sibling of .pill-admin, which is never recoloured: it is the
+   accent-filled operator chip and carries three different meanings across 41
+   call sites. */
+.pill-danger {
+    background: color-mix(in srgb, var(--rust) 10%, var(--surface-raised));
+    color: var(--danger);
+}
+
+/* ---- Tables ---- */
+.admin-console .packages-table {
+    /* legacy .audit is table-layout: fixed, which splits mono digests mid-word */
+    table-layout: auto;
+}
+.admin-console .packages-table th,
+.admin-console .packages-table td {
+    padding: 10px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border-hair);
+}
+.admin-console .packages-table th:first-child,
+.admin-console .packages-table td:first-child { padding-left: 0; }
+.admin-console .packages-table th:last-child,
+.admin-console .packages-table td:last-child { padding-right: 0; }
+.admin-console .packages-table thead th {
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: .64rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    border-bottom: 1px solid var(--border-soft);
+}
+.admin-console .table-scroll > .packages-catalogue-table { min-width: 860px; }
+.admin-console .table-scroll > .packages-releases-table { min-width: 1040px; }
+.admin-console .table-scroll > .packages-publishers-table { min-width: 640px; }
+.admin-console .table-scroll > .packages-advisories-table { min-width: 760px; }
+.admin-console .table-scroll > .registry-keys-table { min-width: 940px; }
+.admin-console .table-scroll > .packages-credentials-table { min-width: 720px; }
+.admin-console .table-scroll > .extension-handlers-table { min-width: 560px; }
+.admin-console .packages-col-actions { text-align: right; white-space: nowrap; }
+.admin-console .packages-col-nowrap { white-space: nowrap; }
+
+/* ---- Cell typography ---- */
+.packages-name {
+    display: block;
+    font-size: .98rem;
+    color: var(--text-strong);
+}
+.packages-uid {
+    font-family: var(--font-mono);
+    font-size: .76rem;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+.packages-via {
+    display: block;
+    margin-top: 2px;
+    font-size: .82rem;
+    color: var(--text-faint);
+}
+.packages-mono {
+    font-family: var(--font-mono);
+    font-size: .82rem;
+    color: var(--text-body);
+}
+.packages-none { color: var(--text-faint); font-size: .86rem; }
+.packages-empty {
+    margin: 8px 0 0;
+    font-size: .9rem;
+    font-style: italic;
+    color: var(--text-muted);
+}
+.admin-console td.packages-empty { text-align: center; padding: 28px 0; }
+
+/* ---- The ruled list: nine consumers across the slice ---- */
+.admin-console .packages-rule-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border-hair);
+}
+.admin-console .packages-rule-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-hair);
+}
+.admin-console .packages-rule-row.is-stacked { display: block; padding: 10px 0; }
+.packages-rule-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+.packages-rule-main { flex: 1; min-width: 0; }
+.packages-rule-label {
+    display: block;
+    font-size: .94rem;
+    color: var(--text-body);
+}
+.packages-rule-head .packages-rule-label { display: inline; }
+.packages-rule-id {
+    font-family: var(--font-mono);
+    font-size: .76rem;
+    color: var(--text-faint);
+    overflow-wrap: anywhere;
+}
+.packages-rule-meta {
+    font-family: var(--font-label);
+    font-size: .72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.packages-rule-when {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: .74rem;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+.packages-rule-detail {
+    display: block;
+    margin-top: 3px;
+    font-size: .86rem;
+    color: var(--text-muted);
+}
+
+/* ---- Fact lists ---- */
+.packages-facts {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    margin: 0;
+}
+.packages-fact-grid,
+.packages-install-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px 16px;
+    margin: 12px 0 16px;
+}
+.packages-plan-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px 18px;
+    margin: 0 0 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border-hair);
+}
+.packages-fact-term {
+    font-family: var(--font-label);
+    font-size: .64rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+.packages-fact-value {
+    margin: 4px 0 0;
+    font-size: .93rem;
+    color: var(--text-body);
+    overflow-wrap: anywhere;
+}
+.packages-fact-value.is-mono { font-family: var(--font-mono); font-size: .9rem; }
+
+/* ---- Actions, inputs, disclosures ---- */
+.packages-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 9px;
+    margin: 0 0 18px;
+}
+.admin-console .packages-action-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+}
+.admin-console .packages-inline-select {
+    padding: 5px 9px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+    font-family: var(--font-body);
+    font-size: .85rem;
+    color: var(--text-body);
+}
+.admin-console .packages-secret-input {
+    padding: 8px 11px;
+    box-sizing: border-box;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: var(--surface-page);
+    font-family: var(--font-mono);
+    font-size: .88rem;
+    color: var(--text-body);
+}
+.admin-console .packages-inline-select:focus,
+.admin-console .packages-secret-input:focus {
+    outline: none;
+    border-color: var(--gold-500);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.admin-console .packages-rowbtn {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-body);
+    font-family: var(--font-label);
+    font-size: .72rem;
+    letter-spacing: .04em;
+    text-decoration: none;
+}
+.admin-console .packages-rowbtn:hover { background: var(--surface-sunken); text-decoration: none; }
+.admin-console .packages-textbtn {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-label);
+    font-size: .74rem;
+    color: var(--accent);
+    white-space: nowrap;
+}
+.admin-console .packages-textbtn:hover { text-decoration: underline; }
+.admin-console .packages-textbtn.is-danger { color: var(--danger); }
+.packages-revoke-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+.packages-revoke-form > .field-error { flex: 1 0 100%; }
+.packages-status-forms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.packages-brake-row {
+    align-items: center;
+    gap: 8px;
+}
+.packages-disclosure {
+    margin-top: 14px;
+    border-top: 1px solid var(--border-hair);
+    padding-top: 12px;
+}
+.packages-disclosure > summary {
+    font-family: var(--font-label);
+    font-size: .76rem;
+    letter-spacing: .03em;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+.packages-disclosure > summary:hover { color: var(--accent); }
+.admin-console .packages-review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 210px;
+}
+.admin-console .admin-packages .packages-field-compact { margin: 0; }
+.admin-console .admin-packages .packages-field-compact > span {
+    display: block;
+    margin-bottom: 3px;
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: .64rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+/* ---- Advisory / refusal surfaces ---- */
+/* The design uses a 9% rust wash for banners and 10% for chips; both measure
+   >= 4.93:1 against --danger in either register. */
+.admin-console .packages-stale-alert,
+.admin-console .packages-refusal {
+    margin: 0;
+    background: color-mix(in srgb, var(--rust) 9%, var(--surface-raised));
+    text-wrap: pretty;
+}
+.admin-console .packages-consent-notice { margin: 0 0 14px; }
+
+/* ---- Registry trust ---- */
+.registry-toggle-form { margin-left: auto; }
+.registry-snapshot {
+    margin: 0 0 14px;
+    font-size: .9rem;
+    color: var(--text-muted);
+}
+
+/* ---- Server extensions ---- */
+.admin-console .extension-flag-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 13px 16px;
+}
+.admin-console .extension-flag-note > svg { flex: 0 0 auto; margin-top: 2px; }
+.admin-console .extension-flag-note > p {
+    margin: 0;
+    max-width: 84ch;
+    font-size: .93rem;
+    line-height: 1.55;
+}
+.extension-probe-state { font-size: 1rem; color: var(--text-strong); }
+.extension-probe-adapter {
+    font-family: var(--font-mono);
+    font-size: .84rem;
+    color: var(--text-muted);
+}
+.extension-probe-reason {
+    margin: 8px 0 0;
+    font-size: .89rem;
+    color: var(--text-muted);
+}
+
+/* ---- Package integration ---- */
+/* Qualified so the nested one-time-credential plate does not fight .card. */
+.admin-console .packages-integration-card .card.reveal {
+    margin: 12px 0;
+    padding: 14px 16px;
+    border: 1px solid var(--gold-200);
+    border-radius: var(--radius-md);
+    background: var(--surface-review);
+    color: var(--on-review);
+    box-shadow: none;
+}
+.admin-console .integration-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+    /* minmax(0, …), never a bare 1fr: a bare fr track floors at min-content, so a
+       table's min-width would escape its scroll region and stretch the document. */
+    .admin-console .admin-packages .admin-split { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+    .admin-console .card.packages-table-card,
+    .admin-console .card.packages-panel-card,
+    .admin-console .card.packages-record-card,
+    .admin-console .card.packages-registry-card,
+    .admin-console .card.packages-brake-card,
+    .admin-console .card.packages-integration-card { padding-inline: 16px; }
+    .packages-fact-grid,
+    .packages-install-facts,
+    .packages-plan-facts { grid-template-columns: minmax(0, 1fr); }
+    .packages-intro-action { margin-left: 0; }
+    .registry-toggle-form { margin-left: 0; }
+    .packages-rule-when { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-console .admin-packages .packages-panel-card,
+    .admin-console .admin-packages .packages-record-card { animation: none; }
+}
