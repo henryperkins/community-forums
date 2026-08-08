@@ -21,8 +21,11 @@
     <?php endif; ?>
 
     <?php if (!empty($profile_media)): ?>
+        <?php // The panel head is a real heading, as it already is on Security and
+              // Notifications. It was the only scribe-panel head still rendering as a
+              // <span>, which left this page's panels outside the heading outline. ?>
         <section class="scribe-panel profile-media-panel">
-            <span class="scribe-panel-head">Avatar</span>
+            <h2 class="scribe-panel-head">Avatar</h2>
             <?php if (!empty($old['avatar_path'])): ?>
                 <div class="avatar-row">
                     <img class="monogram avatar-img monogram-gilt" src="<?= $e($old['avatar_path']) ?>" alt="" width="64" height="64">
@@ -56,7 +59,7 @@
 
     <form method="post" action="/settings/account" class="stacked scribe-panel">
         <?= $this->csrfField() ?>
-        <span class="scribe-panel-head">Identity</span>
+        <h2 class="scribe-panel-head">Identity</h2>
         <label class="field">
             <span>Email <span class="muted">(not editable in this version)</span></span>
             <input type="email" class="input input-engraved" value="<?= $e($email ?? '') ?>" disabled>

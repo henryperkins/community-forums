@@ -70,6 +70,21 @@ final class AppImladrisFidelityTest extends TestCase
         $this->assertSeeText($res, 'field-grid');
     }
 
+    public function test_account_panel_heads_are_real_headings(): void
+    {
+        // Security and Notifications already render their panel heads as <h2>, and
+        // AppImladrisFidelityTest pins those literals. /settings/account was the last
+        // page still emitting a <span class="scribe-panel-head">, which left its
+        // panels outside the heading outline for anyone navigating by heading.
+        // C-17 forbids the reverse conversion; this pins the direction that is safe.
+        $this->actingAs($this->makeUser(['username' => 'heading-scribe']));
+
+        $body = $this->get('/settings/account')->body();
+
+        self::assertStringContainsString('<h2 class="scribe-panel-head">Identity</h2>', $body);
+        self::assertStringNotContainsString('<span class="scribe-panel-head">', $body);
+    }
+
     public function test_admin_dashboard_renders_the_operator_console_register(): void
     {
         $admin = $this->makeAdmin(['username' => 'operator']);

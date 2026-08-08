@@ -24,23 +24,28 @@ $recoveryCodes = $new_recovery_codes ?? [];
             <input type="password" name="current_password" class="input" autocomplete="current-password" required>
             <?php if (!empty($errors['current_password'])): ?><span class="field-error"><?= $e($errors['current_password']) ?></span><?php endif; ?>
         </label>
-        <label class="field">
-            <span>New password</span>
-            <input type="password" name="new_password" class="input" autocomplete="new-password" required>
-            <?php if (!empty($errors['new_password'])): ?><span class="field-error"><?= $e($errors['new_password']) ?></span><?php endif; ?>
-        </label>
-        <label class="field">
-            <span>Confirm new password</span>
-            <input type="password" name="new_password_confirm" class="input" autocomplete="new-password" required>
-            <?php if (!empty($errors['new_password_confirm'])): ?><span class="field-error"><?= $e($errors['new_password_confirm']) ?></span><?php endif; ?>
-        </label>
+        <?php // copy: the design pairs the new and confirm fields on one row. The
+              // strength meter beside them is FR-02 — five tiers ending in a fiction
+              // string, over a scorer production does not have. Build nothing. ?>
+        <div class="field-grid">
+            <label class="field">
+                <span>New password</span>
+                <input type="password" name="new_password" class="input" autocomplete="new-password" required>
+                <?php if (!empty($errors['new_password'])): ?><span class="field-error"><?= $e($errors['new_password']) ?></span><?php endif; ?>
+            </label>
+            <label class="field">
+                <span>Confirm new password</span>
+                <input type="password" name="new_password_confirm" class="input" autocomplete="new-password" required>
+                <?php if (!empty($errors['new_password_confirm'])): ?><span class="field-error"><?= $e($errors['new_password_confirm']) ?></span><?php endif; ?>
+            </label>
+        </div>
         <button class="btn" type="submit">Change password</button>
     </form>
 
     <section class="stacked scribe-panel">
         <h2 class="scribe-panel-head">Two-factor authentication</h2>
         <?php if (!empty($totp['enabled'])): ?>
-            <p class="muted">Enabled. <?= (int) $totp['unused_recovery_codes'] ?> recovery code<?= (int) $totp['unused_recovery_codes'] === 1 ? '' : 's' ?> remaining.</p>
+            <p class="totp-state"><span class="totp-state-pill">Enabled</span> <span class="muted"><?= (int) $totp['unused_recovery_codes'] ?> recovery code<?= (int) $totp['unused_recovery_codes'] === 1 ? '' : 's' ?> remaining &mdash; each works once.</span></p>
         <?php elseif (!empty($totp['pending'])): ?>
             <p class="muted">Enrollment started. Verify a code to finish enabling two-factor authentication.</p>
         <?php else: ?>
@@ -86,9 +91,13 @@ $recoveryCodes = $new_recovery_codes ?? [];
             </div>
         <?php endif; ?>
 
+        <?php // feature-removed FR-04: the design keeps a recovery-code grid permanently
+              // displayable. Production HMAC-hashes the codes and can never re-show them,
+              // so they appear exactly once — here, immediately after generation. ?>
         <?php if (!empty($recoveryCodes)): ?>
             <div class="stacked">
-                <h3>Recovery codes</h3>
+                <h3 class="totp-codes-head">Recovery codes</h3>
+                <p class="muted">Copy these now &mdash; they are shown only once, and each works once.</p>
                 <ul class="code-list">
                     <?php foreach ($recoveryCodes as $code): ?>
                         <li><code><?= $e($code) ?></code></li>

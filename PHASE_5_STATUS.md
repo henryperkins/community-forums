@@ -1376,6 +1376,21 @@ The default-on review fixed the correctness/coverage/docs findings in-branch; th
 - **Test-hygiene consolidation:** promote one `protected setFlags(array)` to `Tests\Support\TestCase` (~20 private copies + 3 inline spellings today); consider a `FeatureFlags::GATE_A`/`GATE_B` structural constant consumed by the posture test and admin inventory so future graduations edit one source; the 47/10 count pin lives in both `AppFeatureFlagTest` and the designated `AppAdminFeaturesTest` canary.
 - **Runbooks for the B2 quartet:** `service_secrets`, `api_tokens`, `webhooks`, `first_party_hooks` still have no per-flag runbook (pre-existing gap, now live-by-default surfaces); until then `docs/runbooks/operations.md` §2 is the rollback recipe.
 
+### Imladris Slice 15 follow-up (2026-08-08, deferred)
+
+- **`app.css` shadows 150 shipped design-system components.** `imladris.css` ships the DS inside
+  `@layer imladris.*`; `app.css` is unlayered and beats every layered rule at any specificity. A
+  property-level comparison of bare class selectors finds 150 design-owned classes redeclared in
+  `app.css` — 124 of which set *only* properties the DS also sets (a stale copy that silently wins),
+  26 of which add extras. `.scribe-panel` is byte-equivalent to `imladris.css:600-605`. The
+  comparison is name-level, so it does **not** prove the values agree: wherever one has drifted,
+  deleting the `app.css` copy changes rendering, on the composer and thread surfaces as much as on
+  account. Closing it needs a value-level diff, a per-class ruling, and browser evidence across every
+  affected surface. ADR 0024 obligation 3 states this invariant for eleven `.admin-bar*`/`.admin-tier*`
+  names and `ImladrisRuntimeAssetTest::test_app_css_never_overrides_a_design_owned_console_class`
+  enforces it for those — generalising that gate to all 150 is the real fix. Recorded as `C-50` in
+  `docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md`.
+
 ### Imladris Slice 13 follow-up (2026-08-07, deferred)
 
 - **Duplicate badge rules are not guarded.** `BadgeRuleService::create` (`src/Service/BadgeRuleService.php:44-59`) validates badge, rule type, threshold and board scope independently, so two rules with an identical `(badge_id, rule_type, board_id)` triple can both be stored — and both audit their own grant against the same members. The Imladris design refuses that create (`docs/design-system/imladris/templates/admin-features/AdminFeatures.dc.html:424-426`); the restyle slice did **not** adopt the copy, because a message promising the invariant without an index behind it is worse than silence. Closing it needs a service check *plus* a unique index on `(badge_id, rule_type, board_id)`, which is a schema migration with a backfill decision for any duplicates already stored. Recorded as `FR-31` in `docs/superpowers/plans/2026-08-03-imladris-admin-account-ledger.md`.

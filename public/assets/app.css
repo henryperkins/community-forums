@@ -12665,3 +12665,67 @@ body.thread-restructure-open { overflow: hidden; }
     .admin-console .admin-packages .packages-panel-card,
     .admin-console .admin-packages .packages-record-card { animation: none; }
 }
+
+/* --- Imladris account: Profile & Security (Slice 15) ---------------------- */
+/* The account panes already sit on the shipped design-system substrate
+   (.scribe-panel, .scribe-panel-head, .input-engraved, .field-row) that
+   imladris.css owns, so this slice adds only what the Profile and Security
+   bodies need beyond it. Note C-17: .scribe-panel/.scribe-panel-head are DS
+   components pinned by AppImladrisFidelityTest — never convert their heading
+   element to a <span>, and never fork their skin here. */
+
+/* The design's Enabled chip for a live second factor (:154). --surface-done /
+   --on-done is the flipping semantic pair; the design's own border sits on
+   --green-200, which is a fixed ramp value, so the chip takes the pair only. */
+.totp-state {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 0 0 6px;
+}
+.totp-state-pill {
+    display: inline-flex;
+    padding: 2px 11px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-done);
+    color: var(--on-done);
+    font-family: var(--font-label);
+    font-size: .6rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+.totp-codes-head {
+    margin: 12px 0 9px;
+    font-family: var(--font-label);
+    font-weight: 400;
+    font-size: .8rem;
+    letter-spacing: .04em;
+    color: var(--text-body);
+}
+/* The design lays the codes out as a three-across chip grid (:156-159) rather
+   than a bulleted two-column list, so a code is selectable as a unit. */
+.code-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    columns: auto;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+.code-list li {
+    padding: 7px 11px;
+    background: var(--surface-sunken);
+    box-shadow: var(--shadow-inset);
+    text-align: center;
+}
+.code-list code {
+    font-family: var(--font-mono);
+    font-size: .8rem;
+    color: var(--text-body);
+}
+
+@media (max-width: 760px) {
+    .code-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
